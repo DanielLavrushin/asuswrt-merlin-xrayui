@@ -1,0 +1,9 @@
+www/
+.vscode/
+custom_settings.txt
+addons/
+scripts/
+addons/
+
+!addons/xray-ui/
+!scripts/xray

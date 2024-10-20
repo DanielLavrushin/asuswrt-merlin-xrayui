@@ -43,26 +43,21 @@
       var custom_settings;
 
       function uuid() {
-        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-          const r = (Math.random() * 16) | 0,
-            v = c === "x" ? r : (r & 0x3) | 0x8;
-          return v.toString(16);
-        });
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => ((Math.random() * 16) | 0).toString(16));
       }
 
       function loadCustomSettings() {
-        custom_settings = JSON.parse(`<% get_custom_settings(); %>`);
+        try {
+          custom_settings = JSON.parse(`<% get_custom_settings(); %>`);
+        } catch (e) {
+          console.error("Error parsing custom settings:", e);
+        }
       }
 
       function loadXraySettings() {
         if (custom_settings) {
           xray.isEnabled = custom_settings.xray_enable == "true";
         }
-        console.log(xray);
-      }
-
-      function enable_xray(state) {
-        xray.isEnabled = state;
       }
 
       function initial() {
@@ -70,7 +65,7 @@
         show_menu();
         loadCustomSettings();
         loadXraySettings();
-        check_server_status();
+        checkServerStatus();
         refreshConfig();
       }
 
@@ -179,49 +174,24 @@
 
         console.log("sniffing", xray.config.inbounds[0].settings.sniffing);
       }
-      function populate_clients(clients) {
-        document.getElementById("xray_table_clients_empty").style.display = "table-row";
-        if (clients.length > 0) {
-          populate_clients([]);
-          document.getElementById("xray_table_clients_empty").style.display = "none";
-        }
-        let table = document.getElementById("xray_table_clients");
+
+      function populate_clients(clients = []) {
+        const table = document.getElementById("xray_table_clients");
         table.querySelectorAll(".xray_clients_row").forEach((row) => row.remove());
+        document.getElementById("xray_table_clients_empty").style.display = clients.length ? "none" : "table-row";
 
         clients.forEach((client) => {
-          let row = document.createElement("tr");
+          const row = document.createElement("tr");
           row.className = "xray_clients_row";
-          row.xray_client = client;
-          let email = document.createElement("td");
-          email.innerText = client.email;
 
-          let id = document.createElement("td");
-          id.innerText = client.id;
-
-          let level = document.createElement("td");
-          level.innerText = client.level;
-
-          let actions = document.createElement("td");
-          let deleteButton = document.createElement("input");
-          deleteButton.classList.add("remove_btn");
-          deleteButton.title = "Delete client entry";
-          deleteButton.onclick = function () {
-            clients_delete(client, row);
-          };
-
-          let getConf = document.createElement("a");
-          getConf.href = "#";
-          getConf.innerText = "Get Config";
-          getConf.className = "button_gen button_gen_small";
-          getConf.onclick = function () {};
-
-          actions.appendChild(deleteButton);
-          actions.appendChild(getConf);
-
-          row.appendChild(email);
-          row.appendChild(id);
-          row.appendChild(actions);
-
+          row.innerHTML = `
+            <td>${client.email}</td>
+            <td>${client.id}</td>
+            <td>
+              <input class="remove_btn" title="Delete client entry" />
+              <a href="#" class="button_gen button_gen_small">Get Config</a>
+            </td>`;
+          row.querySelector(".remove_btn").onclick = () => clients_delete(client, row);
           table.appendChild(row);
         });
       }
@@ -247,19 +217,17 @@
           level: 0,
         };
 
-        //validate username
-        var isEmailUnique = inbounds.settings.clients.every((c) => c.email !== client.email);
-        if (!isEmailUnique) {
-          document.form.xray_clients_add_email.value = "";
+        if (inbounds.settings.clients.some((c) => c.email === client.email)) {
           alert("Email already exists");
           return;
         }
+
         if (client.email.length == 0) {
           alert("Email cannot be empty");
           return;
         }
-        //validate id lenght
-        const byteLength = new Blob([document.form.xray_clients_add_id.value]);
+
+        const byteLength = new Blob([client.id]);
         if (byteLength > 30) {
           alert("Id must be less than 30 bytes");
         }
@@ -275,20 +243,10 @@
         }, 1000);
       }
 
-      function escape_param(param) {
-        param = param.replace("@", "--at--").replace("_", "--under--");
-        return param;
-      }
-
-      function check_server_status() {
-        let label = document.getElementById("xray_server_status_label");
-        if (xray.server.isRunning) {
-          label.classList.add("hint-color");
-          label.innerText = "is up & running";
-        } else {
-          label.classList.remove("hint-color");
-          label.innerText = "stopped";
-        }
+      function checkServerStatus() {
+        const label = document.getElementById("xray_server_status_label");
+        label.innerText = xray.server.isRunning ? "is up & running" : "stopped";
+        label.classList.toggle("hint-color", xray.server.isRunning);
       }
 
       function setCurrentPage() {
@@ -296,62 +254,21 @@
         document.form.current_page.value = window.location.pathname.substring(1);
       }
 
-      function hideshow(elm, show) {
-        if (elm) {
-          if (elm instanceof HTMLElement) {
-            elm.style.display = show ? "block" : "none";
-          } else if (elm instanceof NodeList || elm instanceof HTMLCollection || elm instanceof Array) {
-            elm.forEach((e) => (e.style.display = show ? "block" : "none"));
-          } else if (elm instanceof String) {
-            document.querySelectorAll(elm).forEach((e) => (e.style.display = show ? "block" : "none"));
-          }
-        }
-      }
-
       function protocolChange() {
-        let protocol = document.form.xray_protocol.value;
-        let table_clients = document.getElementById("xray_table_inbound_clients");
+        const protocol = document.form.xray_protocol.value;
+        const table_clients = document.getElementById("xray_table_inbound_clients");
 
-        hideshow(table_clients, false);
-
-        switch (protocol) {
-          case "vless":
-            hideshow(table_clients, true);
-            break;
-          case "vmess":
-            hideshow(table_clients, true);
-            break;
-          case "http":
-            break;
-          case "shadowsocks":
-            break;
-          case "trojan":
-            break;
-          case "wireguard":
-            break;
-        }
+        const protocolsWithClients = ["vless", "vmess"];
+        table_clients.style.display = protocolsWithClients.includes(protocol) ? "block" : "none";
       }
 
       function serverStatus(action) {
-        switch (action) {
-          case "start":
-            document.formScriptActions.action_script.value = xray.commands.serverStart;
-            break;
-          case "restart":
-            document.formScriptActions.action_script.value = xray.commands.serverRestart;
-            break;
-          case "stop":
-            document.formScriptActions.action_script.value = xray.commands.serverStop;
-            break;
-        }
-        document.formScriptActions.submit();
-        showhide("xray_server_status_links", false);
+        submitForm(xray.commands[`server${action.charAt(0).toUpperCase() + action.slice(1)}`]);
         document.getElementById("xray_server_status_label").innerText = "processing...";
-        setTimeout(() => {
-          showhide("xray_server_status_links", true);
-          location.reload();
-        }, 2e3);
+
+        setTimeout(() => location.reload(), 2000);
       }
+
       function hint(link, content) {
         link.onmouseout = nd;
         overlib(content, HAUTO, VAUTO);

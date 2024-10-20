@@ -127,9 +127,9 @@ make_clean_config() {
 }
 
 client_delete() {
-    local email=$(unescape_param "$1")
-    local id=$(unescape_param "$2")
     local tempconfig=$(make_clean_config)
+    local email=$(am_settings_get xray_client_email)
+    local id=$(am_settings_get xray_client_id)
 
     logger "xrayui" "Removing client from Xray $xray_config: email=$email, id=$id"
 
@@ -145,21 +145,22 @@ client_delete() {
         logger "xrayui" "Failed to remove client $email with id $id."
     fi
     rm -f $tempconfig
+    am_settings_del xray_client_email
+    am_settings_del xray_client_id
 }
 
 client_add() {
-    local email=$(unescape_param "$1")
-    local id=$(unescape_param "$2")
-    local level="$3"
     local tempconfig=$(make_clean_config)
+    local email=$(am_settings_get xray_client_email)
+    local id=$(am_settings_get xray_client_id)
 
-    logger "xrayui" "Adding new client to Xray $xray_config: email=$email, id=$id, level=$level"
+    logger "xrayui" "Adding new client to Xray $xray_config: email=$email, id=$id, level=0"
 
     jq --arg email "$email" --arg id "$id" '
     .inbounds[].settings.clients += [{
         "email": $email,
         "id": $id,
-        "level": '"$level"'
+        "level": 0
     }]
     ' $tempconfig >"/tmp/xray-config.json" && mv /tmp/xray-config.json "$xray_config"
 
@@ -170,6 +171,13 @@ client_add() {
         logger "xrayui" "Failed to add client $email."
     fi
     rm -f $tempconfig
+    am_settings_del xray_client_email
+    am_settings_del xray_client_id
+}
+am_settings_del() {
+
+    local key="$1"
+    sed -i "/$key/d" /jffs/addons/custom_settings.txt
 }
 
 unescape_param() {
@@ -264,11 +272,11 @@ service_event)
     elif [ "$2" = "client" ]; then
         case "$3" in
         "add")
-            client_add "$4" "$5" "$6"
+            client_add
             exit 0
             ;;
         "delete")
-            client_delete "$4" "$5"
+            client_delete
             exit 0
             ;;
         esac

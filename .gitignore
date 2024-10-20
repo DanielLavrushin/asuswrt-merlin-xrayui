@@ -1,5 +1,6 @@
 # Ignore these directories
 www/
+wwwext/
 .vscode/
 custom_settings.txt
 

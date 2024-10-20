@@ -52,15 +52,6 @@
 
       function loadCustomSettings() {
         custom_settings = JSON.parse(`<% get_custom_settings(); %>`);
-
-        for (var prop in custom_settings) {
-          if (Object.prototype.hasOwnProperty.call(custom_settings, prop)) {
-            if (prop.indexOf("xray") == -1) {
-              delete custom_settings[prop];
-            }
-          }
-        }
-        console.log(custom_settings);
       }
 
       function loadXraySettings() {
@@ -83,16 +74,8 @@
         refreshConfig();
       }
 
-      function applySettings() {
-        custom_settings.xray_enable = xray.isEnabled;
-        document.getElementById("amng_custom").value = JSON.stringify(custom_settings);
-
-        document.form.submit();
-      }
-
       function refreshConfig() {
-        document.formScriptActions.action_script.value = xray.commands.refreshConfig;
-        document.formScriptActions.submit();
+        submitForm(xray.commands.refreshConfig, null, 1);
         setTimeout(load_xray_config, 1e3);
       }
 
@@ -106,8 +89,34 @@
           success: function (json) {
             xray.config = json;
             config_to_form();
+            hideLoading();
           },
         });
+      }
+
+      function submitForm(action, payload, wait = 0) {
+        form = document.formScriptActions;
+        form.action_wait.value = wait;
+        showLoading();
+        let amngCustomField;
+        if (payload) {
+          for (var prop in payload) {
+            if (Object.prototype.hasOwnProperty.call(payload, prop)) {
+              custom_settings[prop] = payload[prop];
+            }
+          }
+          form.amng_custom.value = JSON.stringify(custom_settings);
+        } else {
+          amngCustomField = form.amng_custom;
+          if (amngCustomField) {
+            amngCustomField = amngCustomField.parentNode.removeChild(amngCustomField);
+          }
+        }
+        form.action_script.value = action;
+        form.submit();
+        if (!payload && amngCustomField) {
+          form.appendChild(amngCustomField);
+        }
       }
 
       function config_to_form() {
@@ -169,12 +178,15 @@
 
       function clients_delete(client, row) {
         let inbounds = xray.config.inbounds[0];
-        let payload = `${xray.commands.clientDelete}_${escape_param(client.email)}_${escape_param(client.id)}`;
-        document.formScriptActions.action_script.value = payload;
-        document.formScriptActions.submit();
+
+        submitForm(xray.commands.clientDelete, { xray_client_email: client.email, xray_client_id: client.id });
+
         inbounds.settings.clients = inbounds.settings.clients.filter((c) => c.email !== client.email || c.id !== client.id);
         row.remove();
         populate_clients(inbounds.settings.clients);
+        setTimeout(() => {
+          hideLoading();
+        }, 1000);
       }
 
       function clients_add() {
@@ -202,15 +214,15 @@
           alert("Id must be less than 30 bytes");
         }
 
-        let payload = `${xray.commands.clientAdd}_${escape_param(client.email)}_${escape_param(client.id)}_0`;
-        document.formScriptActions.action_script.value = payload;
-        document.formScriptActions.submit();
+        submitForm(xray.commands.clientAdd, { xray_client_email: client.email, xray_client_id: client.id });
+
         inbounds.settings.clients.push(client);
         populate_clients(inbounds.settings.clients);
         setTimeout(() => {
           document.form.xray_clients_add_email.value = "";
           document.form.xray_clients_add_id.value = uuid();
-        }, 200);
+          hideLoading();
+        }, 1000);
       }
 
       function escape_param(param) {
@@ -311,16 +323,16 @@
     <div id="Loading" class="popup_bg"></div>
     <iframe name="hidden_frame" id="hidden_frame" src="about:blank" width="0" height="0" frameborder="0"></iframe>
     <form method="post" name="form" id="ruleForm" action="/start_apply.htm" target="hidden_frame">
-      <input type="hidden" name="action_script" value="start_uiDivStats" />
       <input type="hidden" name="current_page" value="" />
       <input type="hidden" name="next_page" value="" />
+      <input type="hidden" name="group_id" value="" />
       <input type="hidden" name="modified" value="0" />
       <input type="hidden" name="action_mode" value="apply" />
-      <input type="hidden" name="action_wait" value="2" />
+      <input type="hidden" name="action_wait" value="5" />
       <input type="hidden" name="first_time" value="" />
-      <input type="hidden" name="SystemCmd" value="" />
+      <input type="hidden" name="action_script" value="" />
       <input type="hidden" name="preferred_lang" id="preferred_lang" value="<% nvram_get("preferred_lang"); %>"> <input type="hidden" name="firmver" value="<% nvram_get("firmver"); %>">
-      <input type="hidden" name="amng_custom" id="amng_custom" value="" />
+      <input type="hidden" name="amng_custom" value="" />
       <table class="content" align="center" cellpadding="0" cellspacing="0">
         <tr>
           <td width="17">&nbsp;</td>
@@ -440,12 +452,11 @@
       </table>
     </form>
     <form method="post" name="formScriptActions" action="/start_apply.htm" target="hidden_frame">
-      <input type="hidden" name="productid" value="<% nvram_get("productid"); %>">
-      <input type="hidden" name="current_page" value="" />
-      <input type="hidden" name="next_page" value="" />
       <input type="hidden" name="action_mode" value="apply" />
       <input type="hidden" name="action_script" value="" />
+      <input type="hidden" name="modified" value="0" />
       <input type="hidden" name="action_wait" value="" />
+      <input type="hidden" name="amng_custom" value="" />
     </form>
     <div id="footer"></div>
   </body>

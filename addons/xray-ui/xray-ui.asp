@@ -139,38 +139,22 @@
       }
 
       function buildSniffing() {
-        let snifChck = document.form.xray_sniffing_enabled;
-        let metaChck = document.form.xray_sniffing_meta_enabled;
+        const form = document.form;
+        const snifChck = form.xray_sniffing_enabled.checked;
+        const metaChck = form.xray_sniffing_meta_enabled.checked;
 
-        let snif_do_row = document.getElementById("xray_sniffing_destoverride");
-        let snif_meta_row = document.getElementById("xray_sniffing_metadataonly");
+        const snif_do_row = document.getElementById("xray_sniffing_destoverride");
+        const snif_meta_row = document.getElementById("xray_sniffing_metadataonly");
 
-        snif_meta_row.style.display = snifChck.checked ? "table-row" : "none";
-        snif_do_row.style.display = snifChck.checked && !metaChck.checked ? "table-row" : "none";
+        snif_meta_row.style.display = snifChck ? "table-row" : "none";
+        snif_do_row.style.display = snifChck && !metaChck ? "table-row" : "none";
 
-        if (snifChck.checked) {
-          let destOverride = [];
-          if (document.form.xray_sniffing_do_http.checked) {
-            destOverride.push("http");
-          }
-          if (document.form.xray_sniffing_do_tls.checked) {
-            destOverride.push("tls");
-          }
-          if (document.form.xray_sniffing_do_quic.checked) {
-            destOverride.push("quic");
-          }
-          if (document.form.xray_sniffing_do_fakedns.checked) {
-            destOverride.push("fakedns");
-          }
-          xray.config.inbounds[0].settings.sniffing = {
-            enabled: true,
-            destOverride: destOverride,
-          };
-        } else {
-          xray.config.inbounds[0].settings.sniffing = {
-            enabled: false,
-          };
-        }
+        const destOverride = snifChck && !metaChck ? ["http", "tls", "quic", "fakedns"].filter((protocol) => form[`xray_sniffing_do_${protocol}`].checked) : [];
+
+        xray.config.inbounds[0].settings.sniffing = {
+          enabled: snifChck,
+          destOverride: destOverride,
+        };
 
         console.log("sniffing", xray.config.inbounds[0].settings.sniffing);
       }

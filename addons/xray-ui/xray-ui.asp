@@ -105,6 +105,7 @@
               custom_settings[prop] = payload[prop];
             }
           }
+
           form.amng_custom.value = JSON.stringify(custom_settings);
         } else {
           amngCustomField = form.amng_custom;
@@ -123,12 +124,61 @@
         document.form.xray_clients_add_id.value = uuid();
         let inbounds = xray.config.inbounds[0];
         let outbounds = xray.config.outbounds[0];
+        let snif_do_row = document.getElementById("xray_sniffing_destoverride");
+        let snif_meta_row = document.getElementById("xray_sniffing_metadataonly");
 
-        document.form.xray_inbound_port.value = inbounds.port;
+        if (inbounds.port) {
+          let port = `${inbounds.port}`.split("-");
+          document.form.xray_inbound_port_from.value = port[0];
+          document.form.xray_inbound_port_to.value = port[port.length - 1];
+        }
+
         document.form.xray_protocol.value = inbounds.protocol;
+        document.form.xray_inbound_address.value = inbounds.listen || "0.0.0.0";
+
+        document.form.xray_sniffing.value = inbounds.settings.sniffing && inbounds.settings.sniffing.enabled;
+        snif_meta_row.style.display = inbounds.settings.sniffing && inbounds.settings.sniffing.enabled ? "table-row" : "none";
+        snif_do_row.style.display = inbounds.settings.sniffing && inbounds.settings.sniffing.enabled && !inbounds.settings.sniffing.metadataOnly ? "table-row" : "none";
+
         populate_clients(inbounds.settings.clients);
       }
 
+      function buildSniffing() {
+        let snifChck = document.form.xray_sniffing_enabled;
+        let metaChck = document.form.xray_sniffing_meta_enabled;
+
+        let snif_do_row = document.getElementById("xray_sniffing_destoverride");
+        let snif_meta_row = document.getElementById("xray_sniffing_metadataonly");
+
+        snif_meta_row.style.display = snifChck.checked ? "table-row" : "none";
+        snif_do_row.style.display = snifChck.checked && !metaChck.checked ? "table-row" : "none";
+
+        if (snifChck.checked) {
+          let destOverride = [];
+          if (document.form.xray_sniffing_do_http.checked) {
+            destOverride.push("http");
+          }
+          if (document.form.xray_sniffing_do_tls.checked) {
+            destOverride.push("tls");
+          }
+          if (document.form.xray_sniffing_do_quic.checked) {
+            destOverride.push("quic");
+          }
+          if (document.form.xray_sniffing_do_fakedns.checked) {
+            destOverride.push("fakedns");
+          }
+          xray.config.inbounds[0].settings.sniffing = {
+            enabled: true,
+            destOverride: destOverride,
+          };
+        } else {
+          xray.config.inbounds[0].settings.sniffing = {
+            enabled: false,
+          };
+        }
+
+        console.log("sniffing", xray.config.inbounds[0].settings.sniffing);
+      }
       function populate_clients(clients) {
         document.getElementById("xray_table_clients_empty").style.display = "table-row";
         if (clients.length > 0) {
@@ -302,6 +352,10 @@
           location.reload();
         }, 2e3);
       }
+      function hint(link, content) {
+        link.onmouseout = nd;
+        overlib(content, HAUTO, VAUTO);
+      }
     </script>
     <style>
       .button_gen_small {
@@ -371,10 +425,47 @@
                                 </td>
                               </tr>
                               <tr>
+                                <th>
+                                  <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'The listening address, either an IP address or a Unix domain socket. The default value is <b>0.0.0.0</b>, which means accepting connections on all network interfaces.');">The listening address</a>
+                                </th>
+                                <td>
+                                  <input type="text" maxlength="15" class="input_20_table" name="xray_inbound_address" onkeypress="return validator.isIPAddr(this, event);" autocomplete="off" autocorrect="off" autocapitalize="off" />
+                                  <span class="hint-color">default: 0.0.0.0</span>
+                                </td>
+                              </tr>
+                              <tr>
                                 <th>Inbound Port</th>
                                 <td>
-                                  <input type="text" maxlength="5" class="input_6_table" name="xray_inbound_port" value="" autocorrect="off" autocapitalize="off" onKeyPress="return validator.isNumber(this,event);" />
-                                  <span class="hint-color"></span>
+                                  <input type="text" maxlength="5" class="input_6_table" name="xray_inbound_port_from" value="" autocorrect="off" autocapitalize="off" onKeyPress="return validator.isNumber(this,event);" />
+                                  -
+                                  <input type="text" maxlength="5" class="input_6_table" name="xray_inbound_port_to" value="" autocorrect="off" autocapitalize="off" onKeyPress="return validator.isNumber(this,event);" />
+                                </td>
+                              </tr>
+                              <tr>
+                                <th>The port allocation strategy</th>
+                                <td>
+                                  <select name="xray_port_allocate" class="input_option" onchange="allocateChange(this)">
+                                    <option value="always">always</option>
+                                    <option value="random">random</option>
+                                  </select>
+                                </td>
+                              </tr>
+                              <tr>
+                                <th>
+                                  <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'The interval for refreshing randomly allocated ports in minutes.');">Refresh</a>
+                                </th>
+                                <td>
+                                  <input type="text" maxlength="2" class="input_6_table" name="xray_allocate_refresh" onkeypress="return validator.isNumber(this,event);" value="" />
+                                  <span class="hint-color">The minimum is 2, and recommended is 5</span>
+                                </td>
+                              </tr>
+                              <tr>
+                                <th>
+                                  <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'The number of randomly allocated ports.');">Concurrency</a>
+                                </th>
+                                <td>
+                                  <input type="text" maxlength="2" class="input_6_table" name="xray_allocate_concurrency" onkeypress="return validator.isNumber(this,event);" value="" />
+                                  <span class="hint-color">The minimum is 1, and recommended is 3</span>
                                 </td>
                               </tr>
                               <tr>
@@ -385,7 +476,6 @@
                                 </th>
                                 <td>
                                   <select name="xray_protocol" class="input_option" onchange="protocolChange(this)">
-                                    <option value=""></option>
                                     <option value="vless">vless</option>
                                     <option value="vmess">vmess</option>
                                     <option value="http">http</option>
@@ -400,6 +490,73 @@
                                 <th>TLS Certificate</th>
                                 <td>
                                   <input class="button_gen" type="button" value="Renew" onClick="certificate_renew();" />
+                                </td>
+                              </tr>
+                              <tr>
+                                <th>
+                                  <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Traffic sniffing is mainly used in transparent proxies.');">Sniffing</a>
+                                </th>
+                                <td>
+                                  <input type="radio" name="xray_sniffing" id="xray_sniffing_enabled" class="input" value="true" onchange="buildSniffing()" />
+                                  <label for="xray_sniffing_enabled" class="settingvalue">Enabled</label>
+                                  <input type="radio" name="xray_sniffing" id="xray_sniffing_disabled" class="input" value="false" onchange="buildSniffing()" checked />
+                                  <label for="xray_sniffing_disabled" class="settingvalue">Disabled</label>
+                                </td>
+                              </tr>
+                              <tr id="xray_sniffing_metadataonly">
+                                <th>
+                                  <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'When enabled, only use the connection\'s metadata to sniff the target address. ');">Metadata only</a>
+                                </th>
+                                <td>
+                                  <input type="radio" name="xray_sniffing_meta" id="xray_sniffing_meta_enabled" class="input" value="true" onchange="buildSniffing()" />
+                                  <label for="xray_sniffing_meta_enabled" class="settingvalue">Enabled</label>
+                                  <input type="radio" name="xray_sniffing_meta" id="xray_sniffing_meta_disabled" class="input" value="false" onchange="buildSniffing()" checked />
+                                  <label for="xray_sniffing_meta_disabled" class="settingvalue">Disabled</label>
+                                </td>
+                              </tr>
+                              <tr id="xray_sniffing_destoverride">
+                                <th>
+                                  <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'When the traffic is of a specified type, reset the destination of the current connection to the target address included in the list.');">Destination Override</a>
+                                </th>
+                                <td>
+                                  <input type="checkbox" name="xray_sniffing_do_http" id="xray_sniffing_do_http" class="input" value="http" onchange="buildSniffing()" />
+                                  <label for="xray_sniffing_do_http" class="settingvalue">HTTP</label>
+                                  <input type="checkbox" name="xray_sniffing_do_tls" id="xray_sniffing_do_tls" class="input" value="tls" onchange="buildSniffing()" />
+                                  <label for="xray_sniffing_do_tls" class="settingvalue">TLS</label>
+                                  <input type="checkbox" name="xray_sniffing_do_quic" id="xray_sniffing_do_quic" class="input" value="quic" onchange="buildSniffing()" />
+                                  <label for="xray_sniffing_do_quic" class="settingvalue">QUIC</label>
+                                  <input type="checkbox" name="xray_sniffing_do_fakedns" id="xray_sniffing_do_fakedns" class="input" value="fakedns" onchange="buildSniffing()" />
+                                  <label for="xray_sniffing_do_fakedns" class="settingvalue">FAKEDNS</label>
+                                </td>
+                              </tr>
+                              <tr>
+                                <th>
+                                  <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'The underlying protocol of the transport used by the data stream of the connection');">Network</a>
+                                </th>
+                                <td>
+                                  <select name="xray_network" class="input_option">
+                                    <option value="tcp">tcp</option>
+                                    <option value="kcp">kcp</option>
+                                    <option value="ws">ws</option>
+                                    <option value="http">http</option>
+                                    <option value="grpc">grpc</option>
+                                    <option value="httpupgrade">httpupgrade</option>
+                                    <option value="splithttp">splithttp</option>
+                                  </select>
+                                  <span class="hint-color">default: tcp</span>
+                                </td>
+                              </tr>
+                              <tr>
+                                <th>
+                                  <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Whether to enable transport layer encryption. ');">Security</a>
+                                </th>
+                                <td>
+                                  <select name="xray_security" class="input_option">
+                                    <option value="none">none</option>
+                                    <option value="tls">tls</option>
+                                    <option value="reality">reality</option>
+                                  </select>
+                                  <span class="hint-color">default: none</span>
                                 </td>
                               </tr>
                             </table>
@@ -427,17 +584,6 @@
                                 </tr>
                                 <tr class="data_tr" id="xray_table_clients_empty"><td colspan="3" style="color: rgb(255, 204, 0)">No data in table.</td></tr>
                               </tbody>
-                            </table>
-                            <table width="100%" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#6b8fa3" class="FormTable SettingsTable tableApi_table" style="border: 0px" id="xray_table_config">
-                              <thead>
-                                <tr>
-                                  <td colspan="2">Logs</td>
-                                </tr>
-                              </thead>
-                              <tr>
-                                <th>Status</th>
-                                <td></td>
-                              </tr>
                             </table>
                           </div>
                         </td>

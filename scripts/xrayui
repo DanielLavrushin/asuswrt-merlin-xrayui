@@ -1,0 +1,304 @@
+#!/bin/sh
+
+source /usr/sbin/helper.sh
+
+readonly SCRIPT_NAME="xrayui"
+
+ENABLED=yes
+PROCS=xray
+ARGS="run -config /opt/etc/xray/config.json"
+PREARGS=""
+DESC="Xray Core UI"
+PATH=/opt/bin:/opt/sbin:/sbin:/bin:/usr/sbin:/usr/bin
+PIDFILE=/var/run/xray.pid
+
+xray_addons_asp_page=/jffs/addons/xray-ui/xray-ui.asp
+
+xray_config="/opt/etc/xray/config.json"
+dir_xrayui="/www/user/xray-ui"
+xray_ui_config="$dir_xrayui/xray-config.json"
+
+start() {
+    logger "xrayui" "Starting $DESC"
+    xray $ARGS >/dev/null 2>&1 &
+    echo $! >$PIDFILE
+}
+
+stop() {
+    logger "xrayui" "Stopping $DESC"
+    killall xray
+}
+
+restart() {
+    stop
+    start
+}
+
+mount_ui() {
+    nvram get rc_support | grep -q am_addons
+    if [ $? != 0 ]; then
+        echo "This firmware does not support addons!"
+        exit 5
+    fi
+
+    am_get_webui_page $xray_addons_asp_page
+
+    if [ "$am_webui_page" = "none" ]; then
+        echo "Unable to install XRAYUI"
+        exit 5
+    fi
+    echo "Mounting XRAYUI as $am_webui_page"
+
+    cp $xray_addons_asp_page /www/user/$am_webui_page
+
+    if [ ! -f /tmp/menuTree.js ]; then
+        cp /www/require/modules/menuTree.js /tmp/
+        mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
+    fi
+
+    sed -i "/url: \"Advanced_GRE_Content.asp\", tabName:/a {url: \"$am_webui_page\", tabName: \"X-RAY\"}," /tmp/menuTree.js
+
+    umount /www/require/modules/menuTree.js && mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
+
+    am_settings_set xray_ui_page $am_webui_page
+    xray_ui_page=$(am_settings_get xray_ui_page)
+
+    refresh_xray_config
+
+    echo "XRAYUI mounted successfully as $xray_ui_page"
+}
+
+unmount_ui() {
+    nvram get rc_support | grep -q am_addons
+    if [ $? != 0 ]; then
+        echo "This firmware does not support addons!"
+        exit 5
+    fi
+
+    xray_ui_page=$(am_settings_get xray_ui_page)
+
+    if [ -z "$xray_ui_page" ]; then
+        echo "No XRAYUI page found to unmount."
+        exit 5
+    fi
+
+    echo "Unmounting XRAYUI $xray_ui_page"
+    rm -fr /www/user/$xray_ui_page
+
+    if [ ! -f /tmp/menuTree.js ]; then
+        echo "menuTree.js not found, skipping unmount"
+        exit 5
+    fi
+
+    echo "Removing XRAYUI entry from menuTree.js"
+    sed -i "\\~$xray_ui_page~d" /tmp/menuTree.js
+
+    umount /www/require/modules/menuTree.js && mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
+
+    echo "XRAYUI $xray_ui_page unmounted successfully"
+}
+
+remount_ui() {
+    unmount_ui
+    mount_ui
+}
+
+refresh_xray_config() {
+    xray_ui_page=$(am_settings_get xray_ui_page)
+
+    if [ ! -d $dir_xrayui ]; then
+        echo "Directory $dir_xrayui does not exist. Creating it."
+        mkdir -p "$dir_xrayui"
+    fi
+
+    if [ -f "$xray_config" ]; then
+        echo "Copying xray config to $xray_ui_config"
+        sed 's/\/\/.*//' "$xray_config" >"$xray_ui_config"
+    else
+        echo "Source config file $xray_config not found!"
+        exit 1
+    fi
+}
+
+make_clean_config() {
+    local tempconfig="/tmp/xray-config-clean.json"
+    sed 's/\/\/.*//' "$xray_config" >$tempconfig
+    echo $tempconfig
+}
+
+client_delete() {
+    local email=$(unescape_param "$1")
+    local id=$(unescape_param "$2")
+    local tempconfig=$(make_clean_config)
+
+    logger "xrayui" "Removing client from Xray $xray_config: email=$email, id=$id"
+
+    # Use jq to filter out the client matching both email and id
+    jq --arg email "$email" --arg id "$id" '
+    .inbounds[].settings.clients |= map(select(.email != $email or .id != $id))
+    ' $tempconfig >"/tmp/xray-config.json" && mv /tmp/xray-config.json "$xray_config"
+
+    if [ $? -eq 0 ]; then
+        logger "xrayui" "Client $email with id $id removed successfully."
+        refresh_xray_config
+    else
+        logger "xrayui" "Failed to remove client $email with id $id."
+    fi
+    rm -f $tempconfig
+}
+
+client_add() {
+    local email=$(unescape_param "$1")
+    local id=$(unescape_param "$2")
+    local level="$3"
+    local tempconfig=$(make_clean_config)
+
+    logger "xrayui" "Adding new client to Xray $xray_config: email=$email, id=$id, level=$level"
+
+    jq --arg email "$email" --arg id "$id" '
+    .inbounds[].settings.clients += [{
+        "email": $email,
+        "id": $id,
+        "level": '"$level"'
+    }]
+    ' $tempconfig >"/tmp/xray-config.json" && mv /tmp/xray-config.json "$xray_config"
+
+    if [ $? -eq 0 ]; then
+        logger "xrayui" "Client $email added successfully."
+        refresh_xray_config
+    else
+        logger "xrayui" "Failed to add client $email."
+    fi
+    rm -f $tempconfig
+}
+
+unescape_param() {
+    local param="$1"
+    param=$(echo "$param" | sed 's/--at--/@/g' | sed 's/--under--/_/g')
+    echo "$param"
+}
+
+cert_renew() {
+    local cert_dir="/opt/etc/xray/cert"
+    local cert_file="$cert_dir/xray-cert.pem"
+    local key_file="$cert_dir/xray-key.pem"
+    local tempconfig=$(make_clean_config)
+
+    if [ ! -d "$cert_dir" ]; then
+        logger "xrayui" "Directory $cert_dir does not exist. Creating it."
+        mkdir -p "$cert_dir"
+    fi
+
+    logger "xrayui" "Generating self-signed certificate for Xray in $cert_dir..."
+
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+        -keyout "$key_file" \
+        -out "$cert_file" \
+        -subj "/CN=xray/O=Local Xray/C=US"
+
+    if [ $? -eq 0 ]; then
+        logger "xrayui" "Certificate and key successfully generated:"
+        logger "xrayui" "Certificate: $cert_file"
+        logger "xrayui" "Private Key: $key_file"
+    else
+        logger "xrayui" "Failed to generate certificate."
+        return 1
+    fi
+
+    jq --arg cert_file "$cert_file" --arg key_file "$key_file" '
+    .inbounds[] |= (.streamSettings = {
+        "network": "tcp",
+        "security": "tls",
+        "tlsSettings": {
+            "certificates": [
+                {
+                    "certificateFile": $cert_file,
+                    "keyFile": $key_file
+                }
+            ],
+            "allowInsecure": false
+        }
+    })
+    ' "$tempconfig" >"/tmp/xray-config.json" && mv /tmp/xray-config.json "$xray_config"
+
+    if [ $? -eq 0 ]; then
+        logger "xrayui" "TLS settings added to Xray config successfully."
+    else
+        logger "xrayui" "Failed to update Xray config with TLS settings."
+        return 1
+    fi
+}
+
+case "$1" in
+start)
+    start
+    ;;
+stop)
+    stop
+    ;;
+restart)
+    restart
+    ;;
+mount_ui)
+    mount_ui
+    ;;
+unmount_ui)
+    unmount_ui
+    ;;
+remount_ui)
+    remount_ui
+    ;;
+service_event)
+    logger "xrayui" "Service event params: [$2] [$3] [$4] [$5] [$6] [$7] [$8] [$9] [$10]"
+    if [ "$2" = "refreshconfig" ]; then
+        refresh_xray_config
+        exit 0
+    elif [ "$2" = "certificate" ]; then
+        case "$3" in
+        "renew")
+            cert_renew
+            exit 0
+            ;;
+        esac
+        exit 0
+    elif [ "$2" = "client" ]; then
+        case "$3" in
+        "add")
+            client_add "$4" "$5" "$6"
+            exit 0
+            ;;
+        "delete")
+            client_delete "$4" "$5"
+            exit 0
+            ;;
+        esac
+        exit 0
+    elif [ "$2" = "serverstatus" ]; then
+        logger "xrayui" "serverstatus $3"
+        case "$3" in
+        "start")
+            start
+            exit 0
+            ;;
+        "restart")
+            restart
+            exit 0
+            ;;
+        "stop")
+            stop
+            exit 0
+            ;;
+        *)
+            exit 1
+            ;;
+        esac
+    fi
+    exit 0
+    ;;
+*)
+    echo "Usage: $0 {start|stop|restart|mount_ui|unmount_ui|remount_ui}"
+    exit 1
+    ;;
+esac
+
+exit 0

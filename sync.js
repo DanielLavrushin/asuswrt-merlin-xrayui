@@ -7,10 +7,10 @@ async function uploadFiles() {
 
     try {
         await client.access({
-            host: '192.168.1.1',
-            port: 21,
-            user: 'webaddons',
+            host: process.env.FTP_ROUTER,
+            user: process.env.FTP_USERNAME,
             password: process.env.FTP_PASSWORD,
+            port: 21,
             secure: false
         });
 

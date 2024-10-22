@@ -23,7 +23,7 @@
               <tbody>
                 <tr>
                   <td valign="top">
-                    <table width="760px" border="0" cellpadding="4" cellspacing="0" class="FormTitle" id="FormTitle">
+                    <table width="760px" border="0" cellpadding="4" cellspacing="0" class="FormTitle">
                       <tbody>
                         <tr bgcolor="#4D595D">
                           <td valign="top">
@@ -32,7 +32,7 @@
                               <div class="formfonttitle" id="scripttitle" style="text-align: center">X-RAY Core</div>
                               <div id="formfontdesc" class="formfontdesc">This UI control page provides a simple interface to manage and monitor the X-ray Core's configuration and it's status.</div>
                               <div style="margin: 10px 0 10px 5px" class="splitLine"></div>
-                              <table width="100%" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#6b8fa3" class="FormTable SettingsTable" style="border: 0px" id="xray_table_config">
+                              <table width="100%" bordercolor="#6b8fa3" class="FormTable">
                                 <thead>
                                   <tr>
                                     <td colspan="2">Configuration</td>
@@ -52,9 +52,9 @@
                                   <tr>
                                     <th>Inbound Port</th>
                                     <td>
-                                      <input type="text" maxlength="5" class="input_6_table" name="xray_inbound_port_from" value="" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
+                                      <input type="text" maxlength="5" class="input_6_table" name="xray_inbound_port_from" v-model="server_port1" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
                                       -
-                                      <input type="text" maxlength="5" class="input_6_table" name="xray_inbound_port_to" value="" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
+                                      <input type="text" maxlength="5" class="input_6_table" name="xray_inbound_port_to" v-model="server_port2" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
                                     </td>
                                   </tr>
                                   <tr>
@@ -250,37 +250,10 @@
                                 </tbody>
                               </table>
                             </div>
-                            <div class="formfontdesc">
-                              <table width="100%" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#6b8fa3" class="FormTable SettingsTable tableApi_table" style="border: 0px" id="xray_table_inbound_clients">
-                                <thead>
-                                  <tr>
-                                    <td colspan="3">Clients</td>
-                                  </tr>
-                                </thead>
-                                <tbody id="xray_table_clients">
-                                  <tr class="row_title">
-                                    <th>Username</th>
-                                    <th>Id</th>
-                                    <th></th>
-                                  </tr>
-                                  <tr class="row_title">
-                                    <td>
-                                      <input name="xray_clients_add_email" type="text" class="input_25_table" />
-                                    </td>
-                                    <td>
-                                      <input name="xray_clients_add_id" maxlength="36" type="text" class="input_25_table" />
-                                    </td>
-                                    <td>
-                                      <input type="button" class="add_btn" onclick="clients_add();" value="" />
-                                      <a href="#" class="button_gen button_gen_small" style="visibility: hidden">Get Congig</a>
-                                    </td>
-                                  </tr>
-                                  <tr class="data_tr" id="xray_table_clients_empty">
-                                    <td colspan="3" style="color: rgb(255, 204, 0)">No data in table.</td>
-                                  </tr>
-                                </tbody>
-                              </table>
+                            <div id="divApply" class="apply_gen">
+                              <input class="button_gen" @click.prevent="applyServerSettings()" type="button" value="Apply" />
                             </div>
+                            <clients></clients>
                           </td>
                         </tr>
                       </tbody>
@@ -297,26 +270,79 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent } from "vue";
+  import { defineComponent, inject, computed } from "vue";
   import MainMenu from "./MainMenu.vue";
   import TabMenu from "./TabMenu.vue";
   import SubMenu from "./SubMenu.vue";
+  import Clients from "./Clients.vue";
   import ServerStatus from "./ServerStatus.vue";
+
+  import XrayObject from "../modules/XrayConfig";
 
   export default defineComponent({
     name: "MainForm",
-    data() {
-      return {
-        xray_ui_page: window.xray.custom_settings.xray_ui_page,
-      };
-    },
     components: {
       TabMenu,
       MainMenu,
       SubMenu,
+      Clients,
       ServerStatus,
+    },
+    setup() {
+      const serverConfig = inject("serverConfig") as XrayObject;
+
+      const server_port1 = computed({
+        get() {
+          if (serverConfig.inbounds?.[0]?.port) {
+            let port = `${serverConfig.inbounds[0].port}`.split("-");
+            return parseInt(port[0], 10);
+          }
+          return 1080;
+        },
+        set(value: number) {
+          if (serverConfig.inbounds?.[0]) {
+            const port2 = server_port2.value;
+            if (value === port2) {
+              serverConfig.inbounds[0].port == `${value}`;
+            } else {
+              serverConfig.inbounds[0].port = `${value}-${port2}`;
+            }
+          }
+        },
+      });
+
+      const server_port2 = computed({
+        get() {
+          if (serverConfig.inbounds?.[0]?.port) {
+            let port = `${serverConfig.inbounds[0].port}`.split("-");
+            return parseInt(port[1] || port[0], 10);
+          }
+          return 1080;
+        },
+        set(value: number) {
+          if (serverConfig.inbounds?.[0]) {
+            const port1 = server_port1.value;
+            if (port1 === value) {
+              serverConfig.inbounds[0].port = `${port1}`;
+            } else {
+              serverConfig.inbounds[0].port = `${port1}-${value}`;
+            }
+          }
+        },
+      });
+
+      const applyServerSettings = () => {
+        console.log("Server config", serverConfig.inbounds[0].port);
+      };
+
+      const xray_ui_page = window.xray.custom_settings.xray_ui_page;
+
+      return {
+        server_port1,
+        server_port2,
+        xray_ui_page,
+        applyServerSettings,
+      };
     },
   });
 </script>
-
-<style scoped></style>

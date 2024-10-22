@@ -1,3 +1,4 @@
+import XrayObject from "./modules/XrayConfig";
 export {};
 
 interface XrayUiCustomSettings {

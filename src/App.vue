@@ -8,9 +8,8 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, getCurrentInstance, onMounted, ref } from "vue";
-
-  import engine from "./modules/Engine";
+  import { defineComponent, ref, onMounted, provide, getCurrentInstance } from "vue";
+  import engine from "./modules/Engine"; // Assuming engine handles the loading
   import TopBanner from "./components/TopBanner.vue";
   import Loading from "./components/Loading.vue";
   import HiddenFrame from "./components/HiddenFrame.vue";
@@ -31,7 +30,9 @@
     setup() {
       const requestform = ref<HTMLFormElement | null>(null);
 
-      onMounted(() => {
+      const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+      onMounted(async () => {
         window.show_menu();
         const instance = getCurrentInstance();
         const requestform = instance?.proxy?.$refs.requestform as InstanceType<typeof RequestForm>;
@@ -39,15 +40,19 @@
         if (requestform) {
           let form = requestform.getForm();
           engine.init(form);
-          engine.submit("xrayui_refreshconfig");
-          setTimeout(engine.loadXrayConfig, 1e3);
+          engine.submit(window.xray.commands.refreshConfig);
+
+          await delay(1000);
+          await engine.loadXrayConfig();
         } else {
           console.error("Form element is not found");
         }
       });
 
+      provide("serverConfig", engine.serverConfig);
       return {
         requestform,
+        serverConfig: engine.serverConfig,
       };
     },
   });

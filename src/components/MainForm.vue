@@ -253,7 +253,7 @@
                             <div id="divApply" class="apply_gen">
                               <input class="button_gen" @click.prevent="applyServerSettings()" type="button" value="Apply" />
                             </div>
-                            <clients></clients>
+                            <clients :clients="serverConfig.inbounds[0].settings?.clients"></clients>
                           </td>
                         </tr>
                       </tbody>
@@ -341,6 +341,7 @@
         server_port1,
         server_port2,
         xray_ui_page,
+        serverConfig,
         applyServerSettings,
       };
     },

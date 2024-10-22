@@ -34,14 +34,26 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent } from "vue";
+  import { defineComponent, inject, computed } from "vue";
+
+  import XrayObject from "../modules/XrayConfig";
 
   export default defineComponent({
     name: "Clients",
-    methods: {
-      addClient() {
-        console.log("Client added");
-      },
+    setup() {
+      const serverConfig = inject("serverConfig") as XrayObject;
+
+      const addClient = () => {
+        console.log("Server config", serverConfig);
+      };
+
+      const xray_ui_page = window.xray.custom_settings.xray_ui_page;
+
+      return {
+        xray_ui_page,
+        serverConfig,
+        addClient,
+      };
     },
   });
 </script>

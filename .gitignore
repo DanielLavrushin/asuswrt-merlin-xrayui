@@ -1,13 +1,10 @@
-# Ignore these directories
 www/
 wwwext/
-.vscode/
 custom_settings.txt
+node_modules/
 
-# Ignore all files and subdirectories in addons/ and scripts/
+.env
+
 addons/*
 scripts/*
-
-# Whitelist specific subdirectories in addons/ and scripts/
-!addons/xray-ui/
-!scripts/xrayui
+dist/

@@ -1,0 +1,4 @@
+{
+"prettier.vueIndentScriptAndStyle": true,
+"prettier.printWidth": 1000
+}

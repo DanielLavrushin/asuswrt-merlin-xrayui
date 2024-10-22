@@ -1,0 +1,50 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="-1" />
+    <link rel="shortcut icon" href="images/favicon.png" />
+    <link rel="icon" href="images/favicon.png" />
+    <title>X-RAY Server</title>
+    <link rel="stylesheet" type="text/css" href="index_style.css" />
+    <link rel="stylesheet" type="text/css" href="form_style.css" />
+    <link rel="stylesheet" type="text/css" href="/js/table/table.css" />
+
+    <script language="JavaScript" type="text/javascript" src="/js/jquery.js"></script>
+    <script language="JavaScript" type="text/javascript" src="/js/jquery.js"></script>
+    <script language="JavaScript" type="text/javascript" src="/js/httpApi.js"></script>
+    <script language="JavaScript" type="text/javascript" src="/state.js"></script>
+    <script language="JavaScript" type="text/javascript" src="/general.js"></script>
+    <script language="JavaScript" type="text/javascript" src="/popup.js"></script>
+    <script language="JavaScript" type="text/javascript" src="/help.js"></script>
+    <script language="JavaScript" type="text/javascript" src="/tmhist.js"></script>
+    <script language="JavaScript" type="text/javascript" src="/tmmenu.js"></script>
+    <script language="JavaScript" type="text/javascript" src="/validator.js"></script>
+    <script language="JavaScript" type="text/javascript" src="/switcherplugin/jquery.iphone-switch.js"></script>
+    <script>
+        var xray = {
+            custom_settings: custom_settings = JSON.parse(`<% get_custom_settings(); %>`),
+            server: {
+                isRunning: parseInt('<% sysinfo("pid.xray"); %>') > 0,
+            },
+            commands: {
+                refreshConfig: "xrayui_refreshconfig",
+                serverStart: "xrayui_serverstatus_start",
+                serverRestart: "xrayui_serverstatus_restart",
+                serverStop: "xrayui_serverstatus_stop",
+                clientDelete: "xrayui_client_delete",
+                clientAdd: "xrayui_client_add",
+            },
+        };
+    </script>
+</head>
+
+<body id="app">
+    <script src="/ext/xray-ui/app.js"></script>
+</body>
+
+</html>

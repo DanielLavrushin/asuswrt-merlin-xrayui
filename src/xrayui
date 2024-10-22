@@ -47,9 +47,11 @@ mount_ui() {
         echo "Unable to install XRAYUI"
         exit 5
     fi
+    
     echo "Mounting XRAYUI as $am_webui_page"
 
     cp $xray_addons_asp_page /www/user/$am_webui_page
+    cp /jffs/addons/xray-ui/app.js /www/user/xray-ui/app.js
 
     if [ ! -f /tmp/menuTree.js ]; then
         cp /www/require/modules/menuTree.js /tmp/

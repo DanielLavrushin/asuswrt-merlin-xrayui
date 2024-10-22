@@ -1,0 +1,322 @@
+<template>
+  <form method="post" name="form" id="ruleForm" action="/start_apply.htm" target="hidden_frame">
+    <input type="hidden" name="current_page" :value="xray_ui_page" />
+    <input type="hidden" name="next_page" :value="xray_ui_page" />
+    <input type="hidden" name="group_id" value="" />
+    <input type="hidden" name="modified" value="0" />
+    <input type="hidden" name="action_mode" value="apply" />
+    <input type="hidden" name="action_wait" value="5" />
+    <input type="hidden" name="first_time" value="" />
+    <input type="hidden" name="action_script" value="" />
+    <input type="hidden" name="amng_custom" value="" />
+    <table class="content" align="center" cellpadding="0" cellspacing="0">
+      <tbody>
+        <tr>
+          <td width="17">&nbsp;</td>
+          <td valign="top" width="202">
+            <main-menu></main-menu>
+            <sub-menu></sub-menu>
+          </td>
+          <td valign="top">
+            <tab-menu></tab-menu>
+            <table width="98%" border="0" align="left" cellpadding="0" cellspacing="0">
+              <tbody>
+                <tr>
+                  <td valign="top">
+                    <table width="760px" border="0" cellpadding="4" cellspacing="0" class="FormTitle" id="FormTitle">
+                      <tbody>
+                        <tr bgcolor="#4D595D">
+                          <td valign="top">
+                            <div class="formfontdesc">
+                              <div>&nbsp;</div>
+                              <div class="formfonttitle" id="scripttitle" style="text-align: center">X-RAY Core</div>
+                              <div id="formfontdesc" class="formfontdesc">This UI control page provides a simple interface to manage and monitor the X-ray Core's configuration and it's status.</div>
+                              <div style="margin: 10px 0 10px 5px" class="splitLine"></div>
+                              <table width="100%" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#6b8fa3" class="FormTable SettingsTable" style="border: 0px" id="xray_table_config">
+                                <thead>
+                                  <tr>
+                                    <td colspan="2">Configuration</td>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <server-status></server-status>
+                                  <tr>
+                                    <th>
+                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'The listening address, either an IP address or a Unix domain socket. The default value is <b>0.0.0.0</b>, which means accepting connections on all network interfaces.');">The listening address</a>
+                                    </th>
+                                    <td>
+                                      <input type="text" maxlength="15" class="input_20_table" name="xray_inbound_address" onkeypress="return validator.isIPAddr(this, event);" autocomplete="off" autocorrect="off" autocapitalize="off" />
+                                      <span class="hint-color">default: 0.0.0.0</span>
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <th>Inbound Port</th>
+                                    <td>
+                                      <input type="text" maxlength="5" class="input_6_table" name="xray_inbound_port_from" value="" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
+                                      -
+                                      <input type="text" maxlength="5" class="input_6_table" name="xray_inbound_port_to" value="" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <th>The port allocation strategy</th>
+                                    <td>
+                                      <select name="xray_allocate" class="input_option" onchange="allocateChange()">
+                                        <option value="always">always</option>
+                                        <option value="random">random</option>
+                                      </select>
+                                    </td>
+                                  </tr>
+                                  <tr class="xray_alopt_row">
+                                    <th>
+                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'The interval for refreshing randomly allocated ports in minutes.');">Refresh</a>
+                                    </th>
+                                    <td>
+                                      <input type="text" maxlength="2" class="input_6_table" name="xray_allocate_refresh" onkeypress="return validator.isNumber(this,event);" value="" />
+                                      <span class="hint-color">The minimum is 2, and recommended is 5</span>
+                                    </td>
+                                  </tr>
+                                  <tr class="xray_alopt_row">
+                                    <th>
+                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'The number of randomly allocated ports.');">Concurrency</a>
+                                    </th>
+                                    <td>
+                                      <input type="text" maxlength="2" class="input_6_table" name="xray_allocate_concurrency" onkeypress="return validator.isNumber(this,event);" value="" />
+                                      <span class="hint-color">The minimum is 1, and recommended is 3</span>
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <th>
+                                      Protocol
+                                      <br />
+                                      <i>The connection protocol name.</i>
+                                    </th>
+                                    <td>
+                                      <select name="xray_protocol" class="input_option" onchange="protocolChange(this)">
+                                        <option value="vless">vless</option>
+                                        <option value="vmess">vmess</option>
+                                        <option value="http">http</option>
+                                        <option value="shadowsocks">shadowsocks</option>
+                                        <option value="trojan">trojan</option>
+                                        <option value="wireguard">wireguard</option>
+                                      </select>
+                                      <span class="hint-color">default: vmess</span>
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <th>TLS Certificate</th>
+                                    <td>
+                                      <input class="button_gen" type="button" value="Renew" onclick="certificate_renew();" />
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <th>
+                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Traffic sniffing is mainly used in transparent proxies.');">Sniffing</a>
+                                    </th>
+                                    <td>
+                                      <input type="radio" name="xray_sniffing" id="xray_sniffing_enabled" class="input" value="true" onchange="buildSniffing()" />
+                                      <label for="xray_sniffing_enabled" class="settingvalue">Enabled</label>
+                                      <input type="radio" name="xray_sniffing" id="xray_sniffing_disabled" class="input" value="false" onchange="buildSniffing()" checked />
+                                      <label for="xray_sniffing_disabled" class="settingvalue">Disabled</label>
+                                    </td>
+                                  </tr>
+                                  <tr id="xray_sniffing_metadataonly">
+                                    <th>
+                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'When enabled, only use the connection\'s metadata to sniff the target address. ');">Metadata only</a>
+                                    </th>
+                                    <td>
+                                      <input type="radio" name="xray_sniffing_meta" id="xray_sniffing_meta_enabled" class="input" value="true" onchange="buildSniffing()" />
+                                      <label for="xray_sniffing_meta_enabled" class="settingvalue">Enabled</label>
+                                      <input type="radio" name="xray_sniffing_meta" id="xray_sniffing_meta_disabled" class="input" value="false" onchange="buildSniffing()" checked />
+                                      <label for="xray_sniffing_meta_disabled" class="settingvalue">Disabled</label>
+                                    </td>
+                                  </tr>
+                                  <tr id="xray_sniffing_destoverride">
+                                    <th>
+                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'When the traffic is of a specified type, reset the destination of the current connection to the target address included in the list.');">Destination Override</a>
+                                    </th>
+                                    <td>
+                                      <input type="checkbox" name="xray_sniffing_do_http" id="xray_sniffing_do_http" class="input" value="http" onchange="buildSniffing()" />
+                                      <label for="xray_sniffing_do_http" class="settingvalue">HTTP</label>
+                                      <input type="checkbox" name="xray_sniffing_do_tls" id="xray_sniffing_do_tls" class="input" value="tls" onchange="buildSniffing()" />
+                                      <label for="xray_sniffing_do_tls" class="settingvalue">TLS</label>
+                                      <input type="checkbox" name="xray_sniffing_do_quic" id="xray_sniffing_do_quic" class="input" value="quic" onchange="buildSniffing()" />
+                                      <label for="xray_sniffing_do_quic" class="settingvalue">QUIC</label>
+                                      <input type="checkbox" name="xray_sniffing_do_fakedns" id="xray_sniffing_do_fakedns" class="input" value="fakedns" onchange="buildSniffing()" />
+                                      <label for="xray_sniffing_do_fakedns" class="settingvalue">FAKEDNS</label>
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <th>
+                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'The underlying protocol of the transport used by the data stream of the connection');">Network</a>
+                                    </th>
+                                    <td>
+                                      <select name="xray_network" class="input_option" onchange="networkChange()">
+                                        <option value="tcp">tcp</option>
+                                        <option value="kcp">kcp</option>
+                                        <option value="ws">ws</option>
+                                        <option value="http">http</option>
+                                        <option value="grpc">grpc</option>
+                                        <option value="httpupgrade">httpupgrade</option>
+                                        <option value="splithttp">splithttp</option>
+                                      </select>
+                                      <span class="hint-color">default: tcp</span>
+                                    </td>
+                                  </tr>
+                                  <tr class="xray_network_opt_row xray_network_opt_row_tcp">
+                                    <th>
+                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Only used for inbound, indicating whether to accept the PROXY protocol.');">Accept the PROXY protocol</a>
+                                    </th>
+                                    <td>
+                                      <input type="checkbox" name="xray_network_tcp_accept_proxy" class="input" value="true" onchange="buildSniffing()" />
+                                      <span class="hint-color">default: false</span>
+                                    </td>
+                                  </tr>
+                                  <tr class="xray_network_opt_row xray_network_opt_row_kcp">
+                                    <th>
+                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Maximum transmission unit. It indicates the maxium bytes that an UDP packet can carry');">MTU</a>
+                                    </th>
+                                    <td>
+                                      <input type="text" maxlength="4" class="input_6_table" name="xray_network_kcp_mtu" onkeypress="return validator.isNumber(this,event);" value="1350" />
+                                      <span class="hint-color">Recommended value is between 576 and 1460, default is 1350</span>
+                                    </td>
+                                  </tr>
+                                  <tr class="xray_network_opt_row xray_network_opt_row_kcp">
+                                    <th>
+                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Transmission time interval, measured in milliseconds (ms), determines how often mKCP sends data');">TTI</a>
+                                    </th>
+                                    <td>
+                                      <input type="text" maxlength="3" class="input_6_table" name="xray_network_kcp_tti" onkeypress="return validator.isNumber(this,event);" value="50" />
+                                      <span class="hint-color">Please choose a value between 10 and 100, default is 50</span>
+                                    </td>
+                                  </tr>
+                                  <tr class="xray_network_opt_row xray_network_opt_row_kcp">
+                                    <th>
+                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Uplink capacity refers to the maximum bandwidth used by the host to send data, measured in MB/s (note: Byte, not bit). It can be set to 0, indicating a very small');">Uplink Capacity</a>
+                                    </th>
+                                    <td>
+                                      <input type="text" maxlength="3" class="input_6_table" name="xray_network_kcp_uplinkCapacity" onkeypress="return validator.isNumber(this,event);" value="5" />
+                                      <span class="hint-color">default: 5</span>
+                                    </td>
+                                  </tr>
+                                  <tr class="xray_network_opt_row xray_network_opt_row_kcp">
+                                    <th>
+                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Downlink capacity refers to the maximum bandwidth used by the host to receive data, measured in MB/s (note: Byte, not bit). It can be set to 0, indicating a very small bandwidth.');">Downlink Capacity</a>
+                                    </th>
+                                    <td>
+                                      <input type="text" maxlength="3" class="input_6_table" name="xray_network_kcp_downlinkCapacity" onkeypress="return validator.isNumber(this,event);" value="20" />
+                                      <span class="hint-color">default: 20</span>
+                                    </td>
+                                  </tr>
+                                  <tr class="xray_network_opt_row xray_network_opt_row_kcp">
+                                    <th>
+                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Whether or not to enable congestion control. When congestion control is enabled, Xray will detect network quality. It will send less packets when packet loss is severe, or more packets when network is not fully filled.');">Congestion</a>
+                                    </th>
+                                    <td>
+                                      <input type="checkbox" name="xray_network_kcp_congestion" class="input" value="true" />
+                                      <span class="hint-color">default: false</span>
+                                    </td>
+                                  </tr>
+                                  <tr class="xray_network_opt_row xray_network_opt_row_kcp">
+                                    <th>
+                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'The read buffer size for a single connection, measured in MB');">Read buffer size</a>
+                                    </th>
+                                    <td>
+                                      <input type="text" maxlength="3" class="input_6_table" name="xray_network_kcp_readbufsize" onkeypress="return validator.isNumber(this,event);" value="2" />
+                                      <span class="hint-color">default: 2</span>
+                                    </td>
+                                  </tr>
+                                  <tr class="xray_network_opt_row xray_network_opt_row_kcp">
+                                    <th>
+                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'The write buffer size for a single connection, measured in MB');">Write buffer size</a>
+                                    </th>
+                                    <td>
+                                      <input type="text" maxlength="3" class="input_6_table" name="xray_network_kcp_writebufsize" onkeypress="return validator.isNumber(this,event);" value="2" />
+                                      <span class="hint-color">default: 2</span>
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <th>
+                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Whether to enable transport layer encryption. ');">Security</a>
+                                    </th>
+                                    <td>
+                                      <select name="xray_security" class="input_option">
+                                        <option value="none">none</option>
+                                        <option value="tls">tls</option>
+                                        <option value="reality">reality</option>
+                                      </select>
+                                      <span class="hint-color">default: none</span>
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
+                            <div class="formfontdesc">
+                              <table width="100%" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#6b8fa3" class="FormTable SettingsTable tableApi_table" style="border: 0px" id="xray_table_inbound_clients">
+                                <thead>
+                                  <tr>
+                                    <td colspan="3">Clients</td>
+                                  </tr>
+                                </thead>
+                                <tbody id="xray_table_clients">
+                                  <tr class="row_title">
+                                    <th>Username</th>
+                                    <th>Id</th>
+                                    <th></th>
+                                  </tr>
+                                  <tr class="row_title">
+                                    <td>
+                                      <input name="xray_clients_add_email" type="text" class="input_25_table" />
+                                    </td>
+                                    <td>
+                                      <input name="xray_clients_add_id" maxlength="36" type="text" class="input_25_table" />
+                                    </td>
+                                    <td>
+                                      <input type="button" class="add_btn" onclick="clients_add();" value="" />
+                                      <a href="#" class="button_gen button_gen_small" style="visibility: hidden">Get Congig</a>
+                                    </td>
+                                  </tr>
+                                  <tr class="data_tr" id="xray_table_clients_empty">
+                                    <td colspan="3" style="color: rgb(255, 204, 0)">No data in table.</td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </form>
+</template>
+
+<script lang="ts">
+  import { defineComponent } from "vue";
+  import MainMenu from "./MainMenu.vue";
+  import TabMenu from "./TabMenu.vue";
+  import SubMenu from "./SubMenu.vue";
+  import ServerStatus from "./ServerStatus.vue";
+
+  export default defineComponent({
+    name: "MainForm",
+    data() {
+      return {
+        xray_ui_page: window.xray.custom_settings.xray_ui_page,
+      };
+    },
+    components: {
+      TabMenu,
+      MainMenu,
+      SubMenu,
+      ServerStatus,
+    },
+  });
+</script>
+
+<style scoped></style>

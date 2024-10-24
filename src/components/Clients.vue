@@ -1,12 +1,12 @@
 <template>
   <div class="formfontdesc">
-    <table width="100%" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#6b8fa3" class="FormTable SettingsTable tableApi_table" style="border: 0px" id="xray_table_inbound_clients">
+    <table class="FormTable SettingsTable tableApi_table" id="xray_table_inbound_clients">
       <thead>
         <tr>
           <td colspan="3">Clients</td>
         </tr>
       </thead>
-      <tbody id="xray_table_clients">
+      <tbody>
         <tr class="row_title">
           <th>Username</th>
           <th>Id</th>
@@ -14,19 +14,24 @@
         </tr>
         <tr class="row_title">
           <td>
-            <input name="xray_clients_add_email" type="text" class="input_25_table" />
+            <input v-model="newClient.email" type="text" class="input_25_table" placeholder="Username" />
           </td>
           <td>
-            <input name="xray_clients_add_id" maxlength="36" type="text" class="input_25_table" />
+            <input v-model="newClient.id" maxlength="36" class="input_25_table" placeholder="Client ID" />
           </td>
-
           <td>
-            <input type="button" class="add_btn" @click="addClient()" value="" />
-            <a href="#" class="button_gen button_gen_small" style="visibility: hidden">Get Congig</a>
+            <button class="add_btn" @click="addClient">Add</button>
           </td>
         </tr>
-        <tr class="data_tr" id="xray_table_clients_empty">
-          <td colspan="3" style="color: rgb(255, 204, 0)">No data in tab`le.</td>
+        <tr v-if="!clients.length" class="data_tr">
+          <td colspan="3" style="color: #ffcc00">No data in table.</td>
+        </tr>
+        <tr v-for="(client, index) in clients" :key="index" class="data_tr">
+          <td>{{ client.email }}</td>
+          <td>{{ client.id }}</td>
+          <td>
+            <button @click="removeClient(client)" class="button_gen button_gen_small">Remove</button>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -34,28 +39,58 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, inject, computed } from "vue";
-
-  import XrayObject from "../modules/XrayConfig";
+  const zero_uuid = "00000000-0000-0000-0000-000000000000";
+  import { engine, SubmtActions } from "../modules/Engine";
+  import { defineComponent, ref, PropType } from "vue";
+  import { XrayInboundClientObject } from "../modules/XrayConfig";
 
   export default defineComponent({
     name: "Clients",
-    setup() {
-      const serverConfig = inject("serverConfig") as XrayObject;
+    props: {
+      clients: {
+        type: Array as PropType<XrayInboundClientObject[]>,
+        default: () => [],
+      },
+    },
+    methods: {
+      uuid() {
+        return zero_uuid.replace(/[xy]/g, (c) => {
+          const r = (Math.random() * 16) | 0;
+          return c === "x" ? r.toString(16) : ((r & 0x3) | 0x8).toString(16);
+        });
+      },
+    },
+    setup(props, { emit }) {
+      const newClient = ref({
+        email: "",
+        id: "",
+      });
 
-      const addClient = () => {
-        console.log("Server config", serverConfig);
+      const resetNewForm = () => {
+        newClient.value.id = this.uuid();
+        newClient.value.email = "";
       };
 
-      const xray_ui_page = window.xray.custom_settings.xray_ui_page;
+      const addClient = () => {
+        if (newClient.value.email && newClient.value.id) {
+          engine.submit(SubmtActions.clientAdd, newClient.value);
+
+          newClient.value.email = "";
+          resetNewForm();
+        }
+      };
+
+      const removeClient = (client: XrayInboundClientObject) => {
+        engine.submit(SubmtActions.clientDelete, client);
+      };
+
+      resetNewForm();
 
       return {
-        xray_ui_page,
-        serverConfig,
+        newClient,
         addClient,
+        removeClient,
       };
     },
   });
 </script>
-
-<style scoped></style>

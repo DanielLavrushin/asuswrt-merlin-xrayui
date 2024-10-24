@@ -59,6 +59,27 @@
 </script>
 
 <style>
+  .hint-color {
+    float: right;
+    margin-right: 5px;
+  }
+  .FormTable td span.label {
+    float: left;
+    color: white;
+    padding: 0 5px;
+    border-radius: 5px;
+    margin: 4px 0 0 0;
+    font-weight: bold;
+  }
+  .FormTable td span.label-error {
+    background-color: red;
+  }
+  .FormTable td span.label-success {
+    background-color: green;
+  }
+  .row-buttons {
+    float: right;
+  }
   .button_gen_small {
     min-width: auto;
     border-radius: 4px;
@@ -71,5 +92,10 @@
 
   .input_100_table {
     width: 70%;
+  }
+
+  td .hint-color {
+    margin-left: 5px;
+    vertical-align: middle;
   }
 </style>

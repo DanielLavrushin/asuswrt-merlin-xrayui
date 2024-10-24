@@ -12,11 +12,14 @@ class XrayObject {
 
 class XrayInboundObject {
   public port: string | undefined;
+  public listen: string | undefined;
   public protocol: string | undefined;
   public settings: XrayInboundSettingsObject | undefined;
 }
 
 class XrayInboundSettingsObject {
+  public network: string | undefined;
+  public security: string | undefined;
   public clients: XrayInboundClientObject[] = [];
 
   constructor() {
@@ -34,3 +37,4 @@ class XrayInboundClientObject {
 class XrayOutboundObject {}
 
 export default XrayObject;
+export { XrayInboundObject, XrayInboundSettingsObject, XrayInboundClientObject, XrayOutboundObject };

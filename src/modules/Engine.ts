@@ -1,6 +1,14 @@
 import axios from "axios";
 import { reactive } from "vue";
 import XrayObject from "./XrayConfig";
+class SubmtActions {
+  public static refreshConfig: string = "xrayui_refreshconfig";
+  public static serverStart: string = "xrayui_serverstatus_start";
+  public static serverRestart: string = "xrayui_serverstatus_restart";
+  public static serverStop: string = "xrayui_serverstatus_stop";
+  public static clientDelete: string = "xrayui_client_delete";
+  public static clientAdd: string = "xrayui_client_add";
+}
 
 class Engine {
   private form: HTMLFormElement | null = null;
@@ -37,3 +45,5 @@ class Engine {
 
 let engine = new Engine();
 export default engine;
+
+export { SubmtActions, engine };

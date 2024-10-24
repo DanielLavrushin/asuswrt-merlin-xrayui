@@ -45,16 +45,16 @@
                                       <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'The listening address, either an IP address or a Unix domain socket. The default value is <b>0.0.0.0</b>, which means accepting connections on all network interfaces.');">The listening address</a>
                                     </th>
                                     <td>
-                                      <input type="text" maxlength="15" class="input_20_table" name="xray_inbound_address" onkeypress="return validator.isIPAddr(this, event);" autocomplete="off" autocorrect="off" autocapitalize="off" />
+                                      <input type="text" maxlength="15" class="input_20_table" v-model="listen" onkeypress="return validator.isIPAddr(this, event);" autocomplete="off" autocorrect="off" autocapitalize="off" />
                                       <span class="hint-color">default: 0.0.0.0</span>
                                     </td>
                                   </tr>
                                   <tr>
                                     <th>Inbound Port</th>
                                     <td>
-                                      <input type="text" maxlength="5" class="input_6_table" name="xray_inbound_port_from" v-model="server_port1" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
+                                      <input type="text" maxlength="5" class="input_6_table" v-model="server_port1" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
                                       -
-                                      <input type="text" maxlength="5" class="input_6_table" name="xray_inbound_port_to" v-model="server_port2" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
+                                      <input type="text" maxlength="5" class="input_6_table" v-model="server_port2" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
                                     </td>
                                   </tr>
                                   <tr>
@@ -150,7 +150,7 @@
                                       <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'The underlying protocol of the transport used by the data stream of the connection');">Network</a>
                                     </th>
                                     <td>
-                                      <select name="xray_network" class="input_option" onchange="networkChange()">
+                                      <select class="input_option" v-model="selectedNetwork">
                                         <option value="tcp">tcp</option>
                                         <option value="kcp">kcp</option>
                                         <option value="ws">ws</option>
@@ -162,78 +162,7 @@
                                       <span class="hint-color">default: tcp</span>
                                     </td>
                                   </tr>
-                                  <tr class="xray_network_opt_row xray_network_opt_row_tcp">
-                                    <th>
-                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Only used for inbound, indicating whether to accept the PROXY protocol.');">Accept the PROXY protocol</a>
-                                    </th>
-                                    <td>
-                                      <input type="checkbox" name="xray_network_tcp_accept_proxy" class="input" value="true" onchange="buildSniffing()" />
-                                      <span class="hint-color">default: false</span>
-                                    </td>
-                                  </tr>
-                                  <tr class="xray_network_opt_row xray_network_opt_row_kcp">
-                                    <th>
-                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Maximum transmission unit. It indicates the maxium bytes that an UDP packet can carry');">MTU</a>
-                                    </th>
-                                    <td>
-                                      <input type="text" maxlength="4" class="input_6_table" name="xray_network_kcp_mtu" onkeypress="return validator.isNumber(this,event);" value="1350" />
-                                      <span class="hint-color">Recommended value is between 576 and 1460, default is 1350</span>
-                                    </td>
-                                  </tr>
-                                  <tr class="xray_network_opt_row xray_network_opt_row_kcp">
-                                    <th>
-                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Transmission time interval, measured in milliseconds (ms), determines how often mKCP sends data');">TTI</a>
-                                    </th>
-                                    <td>
-                                      <input type="text" maxlength="3" class="input_6_table" name="xray_network_kcp_tti" onkeypress="return validator.isNumber(this,event);" value="50" />
-                                      <span class="hint-color">Please choose a value between 10 and 100, default is 50</span>
-                                    </td>
-                                  </tr>
-                                  <tr class="xray_network_opt_row xray_network_opt_row_kcp">
-                                    <th>
-                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Uplink capacity refers to the maximum bandwidth used by the host to send data, measured in MB/s (note: Byte, not bit). It can be set to 0, indicating a very small');">Uplink Capacity</a>
-                                    </th>
-                                    <td>
-                                      <input type="text" maxlength="3" class="input_6_table" name="xray_network_kcp_uplinkCapacity" onkeypress="return validator.isNumber(this,event);" value="5" />
-                                      <span class="hint-color">default: 5</span>
-                                    </td>
-                                  </tr>
-                                  <tr class="xray_network_opt_row xray_network_opt_row_kcp">
-                                    <th>
-                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Downlink capacity refers to the maximum bandwidth used by the host to receive data, measured in MB/s (note: Byte, not bit). It can be set to 0, indicating a very small bandwidth.');">Downlink Capacity</a>
-                                    </th>
-                                    <td>
-                                      <input type="text" maxlength="3" class="input_6_table" name="xray_network_kcp_downlinkCapacity" onkeypress="return validator.isNumber(this,event);" value="20" />
-                                      <span class="hint-color">default: 20</span>
-                                    </td>
-                                  </tr>
-                                  <tr class="xray_network_opt_row xray_network_opt_row_kcp">
-                                    <th>
-                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Whether or not to enable congestion control. When congestion control is enabled, Xray will detect network quality. It will send less packets when packet loss is severe, or more packets when network is not fully filled.');">Congestion</a>
-                                    </th>
-                                    <td>
-                                      <input type="checkbox" name="xray_network_kcp_congestion" class="input" value="true" />
-                                      <span class="hint-color">default: false</span>
-                                    </td>
-                                  </tr>
-                                  <tr class="xray_network_opt_row xray_network_opt_row_kcp">
-                                    <th>
-                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'The read buffer size for a single connection, measured in MB');">Read buffer size</a>
-                                    </th>
-                                    <td>
-                                      <input type="text" maxlength="3" class="input_6_table" name="xray_network_kcp_readbufsize" onkeypress="return validator.isNumber(this,event);" value="2" />
-                                      <span class="hint-color">default: 2</span>
-                                    </td>
-                                  </tr>
-                                  <tr class="xray_network_opt_row xray_network_opt_row_kcp">
-                                    <th>
-                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'The write buffer size for a single connection, measured in MB');">Write buffer size</a>
-                                    </th>
-                                    <td>
-                                      <input type="text" maxlength="3" class="input_6_table" name="xray_network_kcp_writebufsize" onkeypress="return validator.isNumber(this,event);" value="2" />
-                                      <span class="hint-color">default: 2</span>
-                                    </td>
-                                  </tr>
+                                  <component :is="networkComponent" :config="networkConfig" />
                                   <tr>
                                     <th>
                                       <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Whether to enable transport layer encryption. ');">Security</a>
@@ -270,18 +199,23 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, inject, computed } from "vue";
+  import { defineComponent, inject, computed, ref } from "vue";
   import MainMenu from "./MainMenu.vue";
   import TabMenu from "./TabMenu.vue";
   import SubMenu from "./SubMenu.vue";
   import Clients from "./Clients.vue";
   import ServerStatus from "./ServerStatus.vue";
 
+  import NetworkKcp from "./transport/Kcp.vue";
+  import NetworkTcp from "./transport/Tcp.vue";
+
   import XrayObject from "../modules/XrayConfig";
 
   export default defineComponent({
     name: "MainForm",
     components: {
+      NetworkKcp,
+      NetworkTcp,
       TabMenu,
       MainMenu,
       SubMenu,
@@ -289,7 +223,35 @@
       ServerStatus,
     },
     setup() {
+      const selectedNetwork = ref("tcp");
+      const networkConfig = ref({
+        acceptProxy: false,
+        mtu: 1350,
+      });
+
+      const networkComponent = computed(() => {
+        switch (selectedNetwork.value) {
+          case "tcp":
+            return NetworkTcp;
+          case "kcp":
+            return NetworkKcp;
+          default:
+            return null;
+        }
+      });
+
       const serverConfig = inject("serverConfig") as XrayObject;
+      const listen = computed({
+        get() {
+          if (serverConfig.inbounds?.[0]?.listen) {
+            return serverConfig.inbounds?.[0]?.listen;
+          }
+          return "0.0.0.0";
+        },
+        set(value: string) {
+          serverConfig.inbounds[0].listen == value;
+        },
+      });
 
       const server_port1 = computed({
         get() {
@@ -338,10 +300,14 @@
       const xray_ui_page = window.xray.custom_settings.xray_ui_page;
 
       return {
+        listen: listen,
         server_port1,
         server_port2,
         xray_ui_page,
         serverConfig,
+        selectedNetwork,
+        networkConfig,
+        networkComponent,
         applyServerSettings,
       };
     },

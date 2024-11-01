@@ -9,13 +9,14 @@
 
 <script lang="ts">
   import { defineComponent, ref, onMounted, provide, getCurrentInstance } from "vue";
-  import engine from "./modules/Engine"; // Assuming engine handles the loading
-  import TopBanner from "./components/TopBanner.vue";
-  import Loading from "./components/Loading.vue";
-  import HiddenFrame from "./components/HiddenFrame.vue";
+  import TopBanner from "./components/asus/TopBanner.vue";
+  import Loading from "./components/asus/Loading.vue";
+  import HiddenFrame from "./components/asus/HiddenFrame.vue";
+  import AsusFooter from "./components/asus/Footer.vue";
+
+  import engine from "./modules/Engine";
   import MainForm from "./components/MainForm.vue";
   import RequestForm from "./components/RequestForm.vue";
-  import AsusFooter from "./components/Footer.vue";
 
   export default defineComponent({
     name: "App",

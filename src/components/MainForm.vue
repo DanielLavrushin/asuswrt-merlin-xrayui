@@ -183,6 +183,7 @@
                               <input class="button_gen" @click.prevent="applyServerSettings()" type="button" value="Apply" />
                             </div>
                             <clients :clients="serverConfig.inbounds[0].settings?.clients"></clients>
+                            <clients-online></clients-online>
                           </td>
                         </tr>
                       </tbody>
@@ -201,9 +202,10 @@
 <script lang="ts">
   import { defineComponent, inject, computed, ref } from "vue";
   import MainMenu from "./MainMenu.vue";
-  import TabMenu from "./TabMenu.vue";
-  import SubMenu from "./SubMenu.vue";
+  import TabMenu from "./asus/TabMenu.vue";
+  import SubMenu from "./asus/SubMenu.vue";
   import Clients from "./Clients.vue";
+  import ClientsOnline from "./ClientsOnline.vue";
   import ServerStatus from "./ServerStatus.vue";
 
   import NetworkKcp from "./transport/Kcp.vue";
@@ -221,6 +223,7 @@
       SubMenu,
       Clients,
       ServerStatus,
+      ClientsOnline,
     },
     setup() {
       const selectedNetwork = ref("tcp");

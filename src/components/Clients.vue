@@ -67,7 +67,7 @@
       });
 
       const resetNewForm = () => {
-        newClient.value.id = this.uuid();
+        newClient.value.id = ""; //this.uuid();
         newClient.value.email = "";
       };
 

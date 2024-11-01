@@ -188,6 +188,37 @@ unescape_param() {
     echo "$param"
 }
 
+get_connected_clients() {
+    echo "Saving connected clients to JSON file..."
+
+    temp_file="/tmp/xray_clients_online.json"
+    >$temp_file
+
+    ips=$(netstat -an | grep ':4433' | grep 'ESTABLISHED' | awk -F'[: ]+' '{print $8}' | sed 's/::ffff://' | sort | uniq)
+
+    for ip in $ips; do
+        if [ -n "$ip" ]; then
+            emails=$(grep "$ip" /tmp/xray_access.log | awk -F'email: ' '{print $2}' | sort | uniq | sed 's/^/"/; s/$/"/' | tr '\n' ',' | sed 's/,$//')
+
+            if [ -n "$emails" ]; then
+                echo "{\"ip\": \"$ip\", \"email\": [$emails]}," >>$temp_file
+            else
+                echo "{\"ip\": \"$ip\", \"email\": []}," >>$temp_file
+            fi
+        fi
+    done
+
+    if [ -s "$temp_file" ]; then
+        json_array="[$(sed '$ s/,$//' $temp_file)]"
+    else
+        json_array="[]"
+    fi
+
+    echo "$json_array" >$dir_xrayui/clients-online.json
+    rm -f $temp_file
+    echo "$json_array"
+}
+
 cert_renew() {
     local cert_dir="/opt/etc/xray/cert"
     local cert_file="$cert_dir/xray-cert.pem"
@@ -262,6 +293,9 @@ service_event)
     logger "xrayui" "Service event params: [$2] [$3] [$4] [$5] [$6] [$7] [$8] [$9] [$10]"
     if [ "$2" = "refreshconfig" ]; then
         refresh_xray_config
+        exit 0
+    elif [ "$2" = "connectedclients" ]; then
+        get_connected_clients
         exit 0
     elif [ "$2" = "certificate" ]; then
         case "$3" in

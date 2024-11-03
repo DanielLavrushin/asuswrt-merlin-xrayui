@@ -130,8 +130,17 @@ make_clean_config() {
 
 client_delete() {
     local tempconfig=$(make_clean_config)
-    local email=$(am_settings_get xray_client_email)
-    local id=$(am_settings_get xray_client_id)
+    local payload=$(am_settings_get xray_payload)
+
+    if [ -z "$payload" ]; then
+        logger "xrayui" "Payload is empty. Cannot add client."
+        rm -f "$tempconfig"
+        return 1
+    fi
+
+    local email id level
+    email=$(echo "$payload" | jq -r '.email')
+    id=$(echo "$payload" | jq -r '.id')
 
     logger "xrayui" "Removing client from Xray $xray_config: email=$email, id=$id"
 
@@ -147,14 +156,24 @@ client_delete() {
         logger "xrayui" "Failed to remove client $email with id $id."
     fi
     rm -f $tempconfig
-    am_settings_del xray_client_email
-    am_settings_del xray_client_id
+    refresh_xray_config
+
+    am_settings_del xray_payload
 }
 
 client_add() {
     local tempconfig=$(make_clean_config)
-    local email=$(am_settings_get xray_client_email)
-    local id=$(am_settings_get xray_client_id)
+    local payload=$(am_settings_get xray_payload)
+
+    if [ -z "$payload" ]; then
+        logger "xrayui" "Payload is empty. Cannot add client."
+        rm -f "$tempconfig"
+        return 1
+    fi
+
+    local email id level
+    email=$(echo "$payload" | jq -r '.email')
+    id=$(echo "$payload" | jq -r '.id')
 
     logger "xrayui" "Adding new client to Xray $xray_config: email=$email, id=$id, level=0"
 
@@ -173,9 +192,12 @@ client_add() {
         logger "xrayui" "Failed to add client $email."
     fi
     rm -f $tempconfig
-    am_settings_del xray_client_email
-    am_settings_del xray_client_id
+
+    refresh_xray_config
+
+    am_settings_del xray_payload
 }
+
 am_settings_del() {
 
     local key="$1"

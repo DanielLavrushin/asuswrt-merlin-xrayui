@@ -1,14 +1,14 @@
 <template>
   <top-banner></top-banner>
   <loading></loading>
-  <hidden-frame></hidden-frame>
+  <hidden-frame @asus-submit-complete="engine.handleSubmitCompletion"></hidden-frame>
   <main-form></main-form>
   <request-form ref="requestform"></request-form>
   <asus-footer></asus-footer>
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, onMounted, provide, getCurrentInstance } from "vue";
+  import { defineComponent, ref, onMounted, provide, getCurrentInstance, reactive } from "vue";
   import TopBanner from "./components/asus/TopBanner.vue";
   import Loading from "./components/asus/Loading.vue";
   import HiddenFrame from "./components/asus/HiddenFrame.vue";
@@ -29,6 +29,9 @@
       AsusFooter,
     },
     setup() {
+      const xrayConfig = engine.xrayConfig;
+      provide("xrayConfig", xrayConfig);
+
       const requestform = ref<HTMLFormElement | null>(null);
 
       const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -41,19 +44,20 @@
         if (requestform) {
           let form = requestform.getForm();
           engine.init(form);
-          engine.submit(window.xray.commands.refreshConfig);
+          engine.submit(window.xray.commands.refreshConfig, null, engine.defaultSubmission);
 
           await delay(1000);
+
           await engine.loadXrayConfig();
         } else {
           console.error("Form element is not found");
         }
       });
 
-      provide("serverConfig", engine.serverConfig);
       return {
+        engine,
         requestform,
-        serverConfig: engine.serverConfig,
+        xrayConfig: engine.xrayConfig,
       };
     },
   });
@@ -65,7 +69,6 @@
     margin-right: 5px;
   }
   .FormTable td span.label {
-    float: left;
     color: white;
     padding: 0 5px;
     border-radius: 5px;
@@ -84,8 +87,8 @@
   .button_gen_small {
     min-width: auto;
     border-radius: 4px;
-    margin: 5px;
-    float: right;
+    padding: 5px;
+    margin: 2px;
     font-weight: normal;
     height: 20px;
     font-size: 10px;
@@ -98,5 +101,8 @@
   td .hint-color {
     margin-left: 5px;
     vertical-align: middle;
+  }
+  .FormTable td span.label {
+    padding: 5px;
   }
 </style>

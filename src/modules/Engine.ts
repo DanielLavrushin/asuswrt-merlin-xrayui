@@ -1,6 +1,6 @@
 import axios from "axios";
-import { reactive } from "vue";
-import XrayObject from "./XrayConfig";
+import xrayConfig, { XrayObject } from "./XrayConfig";
+
 class SubmtActions {
   public static refreshConfig: string = "xrayui_refreshconfig";
   public static serverStart: string = "xrayui_serverstatus_start";
@@ -11,19 +11,25 @@ class SubmtActions {
 }
 
 class Engine {
+  public xrayConfig: XrayObject = xrayConfig;
+
   private form: HTMLFormElement | null = null;
-  public serverConfig = reactive(new XrayObject());
+  private customOnSubmit: (() => Promise<void>) | null = null;
 
   public init(form: HTMLFormElement): void {
     this.form = form;
   }
 
-  public submit(action: string, payload: any | null = null): void {
+  public submit(action: string, payload: any | null = null, onSubmit: () => Promise<void> = this.defaultSubmission): void {
+    this.customOnSubmit = onSubmit;
     if (this.form) {
       window.showLoading();
 
       (this.form.querySelector("input[name='action_script']") as HTMLInputElement).value = action;
-      const customSettings = JSON.stringify(payload);
+
+      window.xray.custom_settings.xray_payload = JSON.stringify(payload);
+
+      const customSettings = JSON.stringify(window.xray.custom_settings);
       (this.form.querySelector("input[name='amng_custom']") as HTMLInputElement).value = customSettings;
 
       this.form.submit();
@@ -33,14 +39,22 @@ class Engine {
   }
 
   async loadXrayConfig(): Promise<XrayObject> {
-    window.showLoading();
-    const response = await axios.get("/ext/xray-ui/xray-config.json");
-
-    Object.assign(this.serverConfig, response.data);
-
-    window.hideLoading();
-    return this.serverConfig;
+    const response = await axios.get<XrayObject>("/ext/xray-ui/xray-config.json");
+    Object.assign(this.xrayConfig, response.data);
+    return this.xrayConfig;
   }
+
+  public handleSubmitCompletion = async (): Promise<void> => {
+    if (this.customOnSubmit) {
+      await this.customOnSubmit();
+    } else {
+      await this.defaultSubmission();
+    }
+  };
+
+  defaultSubmission = async () => {
+    window.hideLoading();
+  };
 }
 
 let engine = new Engine();

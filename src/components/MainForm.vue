@@ -23,7 +23,7 @@
               <tbody>
                 <tr>
                   <td valign="top">
-                    <table width="760px" border="0" cellpadding="4" cellspacing="0" class="FormTitle">
+                    <table width="760px" border="0" cellpadding="4" cellspacing="0" id="FormTitle" class="FormTitle">
                       <tbody>
                         <tr bgcolor="#4D595D">
                           <td valign="top">
@@ -40,50 +40,7 @@
                                 </thead>
                                 <tbody>
                                   <server-status></server-status>
-                                  <tr>
-                                    <th>
-                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'The listening address, either an IP address or a Unix domain socket. The default value is <b>0.0.0.0</b>, which means accepting connections on all network interfaces.');">The listening address</a>
-                                    </th>
-                                    <td>
-                                      <input type="text" maxlength="15" class="input_20_table" v-model="listen" onkeypress="return validator.isIPAddr(this, event);" autocomplete="off" autocorrect="off" autocapitalize="off" />
-                                      <span class="hint-color">default: 0.0.0.0</span>
-                                    </td>
-                                  </tr>
-                                  <tr>
-                                    <th>Inbound Port</th>
-                                    <td>
-                                      <input type="text" maxlength="5" class="input_6_table" v-model="server_port1" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
-                                      -
-                                      <input type="text" maxlength="5" class="input_6_table" v-model="server_port2" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
-                                    </td>
-                                  </tr>
-                                  <tr>
-                                    <th>The port allocation strategy</th>
-                                    <td>
-                                      <select name="xray_allocate" class="input_option" onchange="allocateChange()">
-                                        <option value="always">always</option>
-                                        <option value="random">random</option>
-                                      </select>
-                                    </td>
-                                  </tr>
-                                  <tr class="xray_alopt_row">
-                                    <th>
-                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'The interval for refreshing randomly allocated ports in minutes.');">Refresh</a>
-                                    </th>
-                                    <td>
-                                      <input type="text" maxlength="2" class="input_6_table" name="xray_allocate_refresh" onkeypress="return validator.isNumber(this,event);" value="" />
-                                      <span class="hint-color">The minimum is 2, and recommended is 5</span>
-                                    </td>
-                                  </tr>
-                                  <tr class="xray_alopt_row">
-                                    <th>
-                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'The number of randomly allocated ports.');">Concurrency</a>
-                                    </th>
-                                    <td>
-                                      <input type="text" maxlength="2" class="input_6_table" name="xray_allocate_concurrency" onkeypress="return validator.isNumber(this,event);" value="" />
-                                      <span class="hint-color">The minimum is 1, and recommended is 3</span>
-                                    </td>
-                                  </tr>
+                                  <ports></ports>
                                   <tr>
                                     <th>
                                       Protocol
@@ -91,13 +48,10 @@
                                       <i>The connection protocol name.</i>
                                     </th>
                                     <td>
-                                      <select name="xray_protocol" class="input_option" onchange="protocolChange(this)">
-                                        <option value="vless">vless</option>
-                                        <option value="vmess">vmess</option>
-                                        <option value="http">http</option>
-                                        <option value="shadowsocks">shadowsocks</option>
-                                        <option value="trojan">trojan</option>
-                                        <option value="wireguard">wireguard</option>
+                                      <select v-model="inbound.protocol" class="input_option">
+                                        <option v-for="protocol in protocols" :key="protocol" :value="protocol">
+                                          {{ protocol }}
+                                        </option>
                                       </select>
                                       <span class="hint-color">default: vmess</span>
                                     </td>
@@ -105,59 +59,19 @@
                                   <tr>
                                     <th>TLS Certificate</th>
                                     <td>
-                                      <input class="button_gen" type="button" value="Renew" onclick="certificate_renew();" />
+                                      <input class="button_gen button_gen_small" type="button" value="Renew" onclick="certificate_renew();" />
                                     </td>
                                   </tr>
-                                  <tr>
-                                    <th>
-                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Traffic sniffing is mainly used in transparent proxies.');">Sniffing</a>
-                                    </th>
-                                    <td>
-                                      <input type="radio" name="xray_sniffing" id="xray_sniffing_enabled" class="input" value="true" onchange="buildSniffing()" />
-                                      <label for="xray_sniffing_enabled" class="settingvalue">Enabled</label>
-                                      <input type="radio" name="xray_sniffing" id="xray_sniffing_disabled" class="input" value="false" onchange="buildSniffing()" checked />
-                                      <label for="xray_sniffing_disabled" class="settingvalue">Disabled</label>
-                                    </td>
-                                  </tr>
-                                  <tr id="xray_sniffing_metadataonly">
-                                    <th>
-                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'When enabled, only use the connection\'s metadata to sniff the target address. ');">Metadata only</a>
-                                    </th>
-                                    <td>
-                                      <input type="radio" name="xray_sniffing_meta" id="xray_sniffing_meta_enabled" class="input" value="true" onchange="buildSniffing()" />
-                                      <label for="xray_sniffing_meta_enabled" class="settingvalue">Enabled</label>
-                                      <input type="radio" name="xray_sniffing_meta" id="xray_sniffing_meta_disabled" class="input" value="false" onchange="buildSniffing()" checked />
-                                      <label for="xray_sniffing_meta_disabled" class="settingvalue">Disabled</label>
-                                    </td>
-                                  </tr>
-                                  <tr id="xray_sniffing_destoverride">
-                                    <th>
-                                      <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'When the traffic is of a specified type, reset the destination of the current connection to the target address included in the list.');">Destination Override</a>
-                                    </th>
-                                    <td>
-                                      <input type="checkbox" name="xray_sniffing_do_http" id="xray_sniffing_do_http" class="input" value="http" onchange="buildSniffing()" />
-                                      <label for="xray_sniffing_do_http" class="settingvalue">HTTP</label>
-                                      <input type="checkbox" name="xray_sniffing_do_tls" id="xray_sniffing_do_tls" class="input" value="tls" onchange="buildSniffing()" />
-                                      <label for="xray_sniffing_do_tls" class="settingvalue">TLS</label>
-                                      <input type="checkbox" name="xray_sniffing_do_quic" id="xray_sniffing_do_quic" class="input" value="quic" onchange="buildSniffing()" />
-                                      <label for="xray_sniffing_do_quic" class="settingvalue">QUIC</label>
-                                      <input type="checkbox" name="xray_sniffing_do_fakedns" id="xray_sniffing_do_fakedns" class="input" value="fakedns" onchange="buildSniffing()" />
-                                      <label for="xray_sniffing_do_fakedns" class="settingvalue">FAKEDNS</label>
-                                    </td>
-                                  </tr>
+                                  <sniffing></sniffing>
                                   <tr>
                                     <th>
                                       <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'The underlying protocol of the transport used by the data stream of the connection');">Network</a>
                                     </th>
                                     <td>
-                                      <select class="input_option" v-model="selectedNetwork">
-                                        <option value="tcp">tcp</option>
-                                        <option value="kcp">kcp</option>
-                                        <option value="ws">ws</option>
-                                        <option value="http">http</option>
-                                        <option value="grpc">grpc</option>
-                                        <option value="httpupgrade">httpupgrade</option>
-                                        <option value="splithttp">splithttp</option>
+                                      <select class="input_option" v-model="inbound.streamSettings.network">
+                                        <option v-for="network in networks" :key="network" :value="network">
+                                          {{ network }}
+                                        </option>
                                       </select>
                                       <span class="hint-color">default: tcp</span>
                                     </td>
@@ -168,21 +82,22 @@
                                       <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Whether to enable transport layer encryption. ');">Security</a>
                                     </th>
                                     <td>
-                                      <select name="xray_security" class="input_option">
-                                        <option value="none">none</option>
-                                        <option value="tls">tls</option>
-                                        <option value="reality">reality</option>
+                                      <select class="input_option" v-model="inbound.streamSettings.security">
+                                        <option v-for="security in securities" :key="security" :value="security">
+                                          {{ security }}
+                                        </option>
                                       </select>
                                       <span class="hint-color">default: none</span>
                                     </td>
                                   </tr>
+                                  <component :is="securityComponent" />
                                 </tbody>
                               </table>
                             </div>
                             <div id="divApply" class="apply_gen">
                               <input class="button_gen" @click.prevent="applyServerSettings()" type="button" value="Apply" />
                             </div>
-                            <clients :clients="serverConfig.inbounds[0].settings?.clients"></clients>
+                            <clients></clients>
                             <clients-online></clients-online>
                           </td>
                         </tr>
@@ -200,22 +115,31 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, inject, computed, ref } from "vue";
-  import MainMenu from "./MainMenu.vue";
+  import { defineComponent, inject, computed, ref, watch } from "vue";
+
+  import MainMenu from "./asus/MainMenu.vue";
   import TabMenu from "./asus/TabMenu.vue";
   import SubMenu from "./asus/SubMenu.vue";
+
+  import Ports from "./Ports.vue";
   import Clients from "./Clients.vue";
   import ClientsOnline from "./ClientsOnline.vue";
   import ServerStatus from "./ServerStatus.vue";
+  import Sniffing from "./Sniffing.vue";
 
   import NetworkKcp from "./transport/Kcp.vue";
   import NetworkTcp from "./transport/Tcp.vue";
 
-  import XrayObject from "../modules/XrayConfig";
+  import SecurityTls from "./security/Tls.vue";
+  import SecurityReality from "./security/Reality.vue";
+
+  import xrayConfig, { XrayObject, XrayInboundObject, XrayInboundSettingsObject, XrayStreamSettingsObject } from "../modules/XrayConfig";
 
   export default defineComponent({
     name: "MainForm",
     components: {
+      Ports,
+      Sniffing,
       NetworkKcp,
       NetworkTcp,
       TabMenu,
@@ -224,16 +148,34 @@
       Clients,
       ServerStatus,
       ClientsOnline,
+      SecurityTls,
+      SecurityReality,
     },
     setup() {
-      const selectedNetwork = ref("tcp");
+      const protocols = XrayInboundObject.protocols;
+      const networks = XrayStreamSettingsObject.networkOptions;
+      const securities = XrayStreamSettingsObject.securityOptions;
+
+      const inbound = ref<XrayInboundObject>(xrayConfig.inbounds?.[0] ?? new XrayInboundObject());
+
       const networkConfig = ref({
         acceptProxy: false,
-        mtu: 1350,
+        mtu: 1200,
       });
 
+      watch(
+        () => xrayConfig?.inbounds[0],
+        (newInbound) => {
+          inbound.value = newInbound ?? new XrayInboundObject();
+          if (!newInbound) {
+            xrayConfig.inbounds[0] = inbound.value;
+          }
+        },
+        { immediate: true }
+      );
+
       const networkComponent = computed(() => {
-        switch (selectedNetwork.value) {
+        switch (inbound.value.streamSettings.network) {
           case "tcp":
             return NetworkTcp;
           case "kcp":
@@ -242,75 +184,30 @@
             return null;
         }
       });
-
-      const serverConfig = inject("serverConfig") as XrayObject;
-      const listen = computed({
-        get() {
-          if (serverConfig.inbounds?.[0]?.listen) {
-            return serverConfig.inbounds?.[0]?.listen;
-          }
-          return "0.0.0.0";
-        },
-        set(value: string) {
-          serverConfig.inbounds[0].listen == value;
-        },
+      const securityComponent = computed(() => {
+        switch (inbound.value.streamSettings.security) {
+          case "tls":
+            return SecurityTls;
+          case "kcp":
+            return SecurityReality;
+          default:
+            return null;
+        }
       });
-
-      const server_port1 = computed({
-        get() {
-          if (serverConfig.inbounds?.[0]?.port) {
-            let port = `${serverConfig.inbounds[0].port}`.split("-");
-            return parseInt(port[0], 10);
-          }
-          return 1080;
-        },
-        set(value: number) {
-          if (serverConfig.inbounds?.[0]) {
-            const port2 = server_port2.value;
-            if (value === port2) {
-              serverConfig.inbounds[0].port == `${value}`;
-            } else {
-              serverConfig.inbounds[0].port = `${value}-${port2}`;
-            }
-          }
-        },
-      });
-
-      const server_port2 = computed({
-        get() {
-          if (serverConfig.inbounds?.[0]?.port) {
-            let port = `${serverConfig.inbounds[0].port}`.split("-");
-            return parseInt(port[1] || port[0], 10);
-          }
-          return 1080;
-        },
-        set(value: number) {
-          if (serverConfig.inbounds?.[0]) {
-            const port1 = server_port1.value;
-            if (port1 === value) {
-              serverConfig.inbounds[0].port = `${port1}`;
-            } else {
-              serverConfig.inbounds[0].port = `${port1}-${value}`;
-            }
-          }
-        },
-      });
-
       const applyServerSettings = () => {
-        console.log("Server config", serverConfig.inbounds[0].port);
+        console.log(xrayConfig);
       };
 
-      const xray_ui_page = window.xray.custom_settings.xray_ui_page;
-
       return {
-        listen: listen,
-        server_port1,
-        server_port2,
-        xray_ui_page,
-        serverConfig,
-        selectedNetwork,
+        networks,
+        securities,
+        protocols,
+        xrayConfig,
+        inbound,
         networkConfig,
         networkComponent,
+        securityComponent,
+        xray_ui_page: window.xray.custom_settings.xray_ui_page,
         applyServerSettings,
       };
     },

@@ -1,5 +1,5 @@
 <template>
-  <tr class="xray_network_opt_row xray_network_opt_row_kcp">
+  <tr>
     <th>
       <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Maximum transmission unit. It indicates the maxium bytes that an UDP packet can carry');">MTU</a>
     </th>
@@ -8,7 +8,7 @@
       <span class="hint-color">Recommended value is between 576 and 1460, default is 1350</span>
     </td>
   </tr>
-  <tr class="xray_network_opt_row xray_network_opt_row_kcp">
+  <tr>
     <th>
       <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Transmission time interval, measured in milliseconds (ms), determines how often mKCP sends data');">TTI</a>
     </th>
@@ -17,7 +17,7 @@
       <span class="hint-color">Please choose a value between 10 and 100, default is 50</span>
     </td>
   </tr>
-  <tr class="xray_network_opt_row xray_network_opt_row_kcp">
+  <tr>
     <th>
       <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Uplink capacity refers to the maximum bandwidth used by the host to send data, measured in MB/s (note: Byte, not bit). It can be set to 0, indicating a very small');">Uplink Capacity</a>
     </th>
@@ -26,7 +26,7 @@
       <span class="hint-color">default: 5</span>
     </td>
   </tr>
-  <tr class="xray_network_opt_row xray_network_opt_row_kcp">
+  <tr>
     <th>
       <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Downlink capacity refers to the maximum bandwidth used by the host to receive data, measured in MB/s (note: Byte, not bit). It can be set to 0, indicating a very small bandwidth.');">Downlink Capacity</a>
     </th>
@@ -35,7 +35,7 @@
       <span class="hint-color">default: 20</span>
     </td>
   </tr>
-  <tr class="xray_network_opt_row xray_network_opt_row_kcp">
+  <tr>
     <th>
       <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'Whether or not to enable congestion control. When congestion control is enabled, Xray will detect network quality. It will send less packets when packet loss is severe, or more packets when network is not fully filled.');">Congestion</a>
     </th>
@@ -44,7 +44,7 @@
       <span class="hint-color">default: false</span>
     </td>
   </tr>
-  <tr class="xray_network_opt_row xray_network_opt_row_kcp">
+  <tr>
     <th>
       <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'The read buffer size for a single connection, measured in MB');">Read buffer size</a>
     </th>
@@ -53,7 +53,7 @@
       <span class="hint-color">default: 2</span>
     </td>
   </tr>
-  <tr class="xray_network_opt_row xray_network_opt_row_kcp">
+  <tr>
     <th>
       <a class="hintstyle" href="javascript:void(0);" onmouseover="hint(this,'The write buffer size for a single connection, measured in MB');">Write buffer size</a>
     </th>
@@ -65,7 +65,7 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, PropType } from "vue";
+  import { defineComponent, onMounted, PropType } from "vue";
 
   export default defineComponent({
     name: "Kcp",
@@ -73,6 +73,11 @@
       config: {
         type: Object as PropType<{ mtu: number }>,
         required: true,
+      },
+      setup() {
+        onMounted(() => {
+          console.log("Kcp component is mounted");
+        });
       },
     },
   });

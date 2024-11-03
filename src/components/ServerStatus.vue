@@ -6,6 +6,7 @@
       <span class="row-buttons">
         <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(restart)">Restart</a>
         <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(stop)">Stop</a>
+        <a class="button_gen button_gen_small" href="/ext/xray-ui/xray-config.json" target="_blank">Show config</a>
       </span>
     </td>
   </tr>
@@ -32,8 +33,10 @@
     },
     methods: {
       handleStatus(action: string) {
-        engine.submit(action);
-        setTimeout(() => location.reload(), 1000);
+        engine.submit(action, null, async () => {
+          console.log("Server status updated");
+          location.reload();
+        });
       },
     },
     mounted() {},

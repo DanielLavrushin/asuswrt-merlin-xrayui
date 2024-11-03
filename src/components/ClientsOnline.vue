@@ -12,8 +12,11 @@
           <th>Client</th>
         </tr>
         <tr v-for="client in clients" :key="client.ip">
-          <td>{{ client.ip }} <span class="label label-success">online</span></td>
-          <td>{{ client.email }}</td>
+          <td><span class="label label-success">online</span> {{ client.ip }}</td>
+          <td>{{ client.email.join(", ") }}</td>
+        </tr>
+        <tr v-if="!clients.length" class="data_tr">
+          <td colspan="3" style="color: #ffcc00">No one is online</td>
         </tr>
       </tbody>
     </table>
@@ -30,7 +33,7 @@
 
   interface Client {
     ip: string;
-    email: string;
+    email: string[];
   }
 
   export default defineComponent({

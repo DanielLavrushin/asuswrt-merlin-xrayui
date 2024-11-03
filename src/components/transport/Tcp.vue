@@ -1,5 +1,5 @@
 <template>
-  <tr class="xray_network_opt_row xray_network_opt_row_tcp">
+  <tr>
     <th>
       <a class="hintstyle" onmouseover="hint(this,'Only used for inbound, indicating whether to accept the PROXY protocol.');">Accept the PROXY protocol</a>
     </th>

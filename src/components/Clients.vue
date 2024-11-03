@@ -20,76 +20,105 @@
             <input v-model="newClient.id" maxlength="36" class="input_25_table" placeholder="Client ID" />
           </td>
           <td>
-            <button class="add_btn" @click="addClient">Add</button>
+            <button class="add_btn" @click.prevent="addClient"></button>
           </td>
         </tr>
         <tr v-if="!clients.length" class="data_tr">
-          <td colspan="3" style="color: #ffcc00">No data in table.</td>
+          <td colspan="3" style="color: #ffcc00">No clients registered</td>
         </tr>
         <tr v-for="(client, index) in clients" :key="index" class="data_tr">
           <td>{{ client.email }}</td>
           <td>{{ client.id }}</td>
           <td>
-            <button @click="removeClient(client)" class="button_gen button_gen_small">Remove</button>
+            <button @click.prevent="showQrCode()" class="button_gen button_gen_small">QR</button>
+            <button @click.prevent="removeClient(client)" class="button_gen button_gen_small">Remove</button>
           </td>
         </tr>
       </tbody>
     </table>
+    <modal ref="modalRef" title="QR Code Modal">
+      <qrcode-vue :value="qr_content" :size="qr_size" level="H" render-as="svg" />
+    </modal>
   </div>
 </template>
 
 <script lang="ts">
-  const zero_uuid = "00000000-0000-0000-0000-000000000000";
+  const zero_uuid = "10000000-1000-4000-8000-100000000000";
   import { engine, SubmtActions } from "../modules/Engine";
-  import { defineComponent, ref, PropType } from "vue";
+  import xrayConfig from "../modules/XrayConfig";
+  import { defineComponent, ref, reactive, watch } from "vue";
   import { XrayInboundClientObject } from "../modules/XrayConfig";
+  import QrcodeVue from "qrcode.vue";
+
+  import modal from "./Modal.vue";
 
   export default defineComponent({
     name: "Clients",
-    props: {
-      clients: {
-        type: Array as PropType<XrayInboundClientObject[]>,
-        default: () => [],
-      },
+    components: {
+      QrcodeVue,
+      modal,
     },
-    methods: {
-      uuid() {
-        return zero_uuid.replace(/[xy]/g, (c) => {
-          const r = (Math.random() * 16) | 0;
-          return c === "x" ? r.toString(16) : ((r & 0x3) | 0x8).toString(16);
-        });
-      },
-    },
+    methods: {},
     setup(props, { emit }) {
+      let uuid = () => {
+        return zero_uuid.replace(/[018]/g, (c) => (+c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (+c / 4)))).toString(16));
+      };
+
+      const clients = ref<XrayInboundClientObject[]>(xrayConfig.inbounds[0].settings?.clients ?? []);
+
+      watch(
+        () => xrayConfig?.inbounds[0].settings?.clients,
+        (newClients) => {
+          clients.value = newClients ?? [];
+        },
+        { immediate: true }
+      );
+
       const newClient = ref({
         email: "",
         id: "",
       });
 
       const resetNewForm = () => {
-        newClient.value.id = ""; //this.uuid();
+        newClient.value.id = uuid();
         newClient.value.email = "";
       };
 
-      const addClient = () => {
+      const addClient = async () => {
         if (newClient.value.email && newClient.value.id) {
-          engine.submit(SubmtActions.clientAdd, newClient.value);
-
-          newClient.value.email = "";
-          resetNewForm();
+          engine.submit(SubmtActions.clientAdd, newClient.value, async () => {
+            newClient.value.email = "";
+            resetNewForm();
+            await engine.loadXrayConfig();
+            window.hideLoading();
+          });
         }
       };
 
       const removeClient = (client: XrayInboundClientObject) => {
-        engine.submit(SubmtActions.clientDelete, client);
+        engine.submit(SubmtActions.clientDelete, client, async () => {
+          await engine.loadXrayConfig();
+          window.hideLoading();
+        });
+      };
+
+      const modalRef = ref();
+      let qr_content = ref("");
+      const showQrCode = () => {
+        qr_content.value = JSON.stringify(xrayConfig);
+        modalRef.value?.show();
       };
 
       resetNewForm();
-
       return {
+        clients,
+        qr_content,
+        qr_size: 500,
         newClient,
         addClient,
         removeClient,
+        showQrCode,
+        modalRef,
       };
     },
   });

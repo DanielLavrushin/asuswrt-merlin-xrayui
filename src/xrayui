@@ -51,7 +51,6 @@ mount_ui() {
     echo "Mounting XRAYUI as $am_webui_page"
 
     cp $xray_addons_asp_page /www/user/$am_webui_page
-    cp /jffs/addons/xray-ui/app.js /www/user/xray-ui/app.js
 
     if [ ! -f /tmp/menuTree.js ]; then
         cp /www/require/modules/menuTree.js /tmp/
@@ -66,6 +65,8 @@ mount_ui() {
     xray_ui_page=$(am_settings_get xray_ui_page)
 
     refresh_xray_config
+
+    cp /jffs/addons/xray-ui/app.js /www/user/xray-ui/app.js
 
     echo "XRAYUI mounted successfully as $xray_ui_page"
 }

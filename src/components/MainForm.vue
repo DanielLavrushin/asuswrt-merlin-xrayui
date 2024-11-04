@@ -42,11 +42,7 @@
                                   <server-status></server-status>
                                   <ports></ports>
                                   <tr>
-                                    <th>
-                                      Protocol
-                                      <br />
-                                      <i>The connection protocol name.</i>
-                                    </th>
+                                    <th>Protocol</th>
                                     <td>
                                       <select v-model="inbound.protocol" class="input_option">
                                         <option v-for="protocol in protocols" :key="protocol" :value="protocol">
@@ -54,12 +50,6 @@
                                         </option>
                                       </select>
                                       <span class="hint-color">default: vmess</span>
-                                    </td>
-                                  </tr>
-                                  <tr>
-                                    <th>TLS Certificate</th>
-                                    <td>
-                                      <input class="button_gen button_gen_small" type="button" value="Renew" onclick="certificate_renew();" />
                                     </td>
                                   </tr>
                                   <sniffing></sniffing>
@@ -83,9 +73,11 @@
                                     </th>
                                     <td>
                                       <select class="input_option" v-model="inbound.streamSettings.security">
-                                        <option v-for="security in securities" :key="security" :value="security">
-                                          {{ security }}
-                                        </option>
+                                        <template v-for="opt in securities">
+                                          <option :key="opt" :value="opt" v-if="validateAvailableSecurity(opt)">
+                                            {{ opt.toUpperCase() }}
+                                          </option>
+                                        </template>
                                       </select>
                                       <span class="hint-color">default: none</span>
                                     </td>
@@ -115,7 +107,7 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, inject, computed, ref, watch } from "vue";
+  import { defineComponent, computed, ref, watch, onMounted } from "vue";
 
   import MainMenu from "./asus/MainMenu.vue";
   import TabMenu from "./asus/TabMenu.vue";
@@ -133,7 +125,8 @@
   import SecurityTls from "./security/Tls.vue";
   import SecurityReality from "./security/Reality.vue";
 
-  import xrayConfig, { XrayObject, XrayInboundObject, XrayInboundSettingsObject, XrayStreamSettingsObject } from "../modules/XrayConfig";
+  import engine from "../modules/Engine";
+  import xrayConfig, { XrayInboundObject, XrayStreamSettingsObject } from "../modules/XrayConfig";
 
   export default defineComponent({
     name: "MainForm",
@@ -151,28 +144,28 @@
       SecurityTls,
       SecurityReality,
     },
+    methods: {
+      validateAvailableSecurity(opt: string): boolean {
+        switch (opt) {
+          case "reality":
+            if (xrayConfig.inbounds[0].streamSettings.security === opt) {
+              xrayConfig.inbounds[0].streamSettings.security = "none";
+            }
+            return this.xrayConfig.inbounds[0].protocol === "vless";
+        }
+        return true;
+      },
+      applyServerSettings(): void {
+        console.log(this.xrayConfig);
+      },
+    },
     setup() {
-      const protocols = XrayInboundObject.protocols;
-      const networks = XrayStreamSettingsObject.networkOptions;
-      const securities = XrayStreamSettingsObject.securityOptions;
-
       const inbound = ref<XrayInboundObject>(xrayConfig.inbounds?.[0] ?? new XrayInboundObject());
 
       const networkConfig = ref({
         acceptProxy: false,
         mtu: 1200,
       });
-
-      watch(
-        () => xrayConfig?.inbounds[0],
-        (newInbound) => {
-          inbound.value = newInbound ?? new XrayInboundObject();
-          if (!newInbound) {
-            xrayConfig.inbounds[0] = inbound.value;
-          }
-        },
-        { immediate: true }
-      );
 
       const networkComponent = computed(() => {
         switch (inbound.value.streamSettings.network) {
@@ -184,31 +177,36 @@
             return null;
         }
       });
+
       const securityComponent = computed(() => {
         switch (inbound.value.streamSettings.security) {
           case "tls":
             return SecurityTls;
-          case "kcp":
+          case "reality":
             return SecurityReality;
           default:
             return null;
         }
       });
-      const applyServerSettings = () => {
-        console.log(xrayConfig);
-      };
+
+      watch(
+        () => xrayConfig.inbounds?.[0],
+        (newObj) => {
+          engine.validateInbound(newObj);
+        },
+        { immediate: true }
+      );
 
       return {
-        networks,
-        securities,
-        protocols,
+        networks: XrayStreamSettingsObject.networkOptions,
+        securities: XrayStreamSettingsObject.securityOptions,
+        protocols: XrayInboundObject.protocols,
         xrayConfig,
         inbound,
         networkConfig,
         networkComponent,
         securityComponent,
         xray_ui_page: window.xray.custom_settings.xray_ui_page,
-        applyServerSettings,
       };
     },
   });

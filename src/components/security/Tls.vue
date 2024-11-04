@@ -2,40 +2,130 @@
   <tr>
     <th>Server Name</th>
     <td>
-      <input type="text" maxlength="4" class="input_25_table" />
+      <input v-model="tlsSettings.serverName" type="text" maxlength="4" class="input_20_table" />
       <span class="hint-color"></span>
     </td>
   </tr>
   <tr>
     <th>Reject unkown SNI</th>
     <td>
-      <input type="checkbox" class="input" />
+      <input v-model="tlsSettings.rejectUnknownSni" type="checkbox" class="input" />
       <span class="hint-color">default: false</span>
     </td>
   </tr>
   <tr>
     <th>Allow Insecure</th>
     <td>
-      <input type="checkbox" class="input" />
+      <input v-model="tlsSettings.allowInsecure" type="checkbox" class="input" />
+      <span class="hint-color">default: false</span>
+    </td>
+  </tr>
+  <tr>
+    <th>Don't use CA</th>
+    <td>
+      <input v-model="tlsSettings.disableSystemRoot" type="checkbox" class="input" />
+      <span class="hint-color">default: false</span>
+    </td>
+  </tr>
+  <tr>
+    <th>Session Resumption</th>
+    <td>
+      <input v-model="tlsSettings.enableSessionResumption" type="checkbox" class="input" />
       <span class="hint-color">default: false</span>
     </td>
   </tr>
   <tr>
     <th>ALPN</th>
     <td>
-      <input type="checkbox" class="input" :value="true" :id="'metaon'" />
-      <label class="settingvalue" :for="'metaon'">H2</label>
-      <input type="checkbox" class="input" :value="false" :id="'metaoff'" />
-      <label class="settingvalue" :for="'metaoff'">HTTP/1.1</label>
+      <slot v-for="(opt, index) in alpnOptions" :key="index">
+        <input type="checkbox" v-model="tlsSettings.alpn" class="input" :value="opt" :id="'destopt-' + index" />
+        <label :for="'destopt-' + index" class="settingvalue">{{ opt.toUpperCase() }}</label>
+      </slot>
+      <span class="hint-color">default: H2 & HTTP/1.1</span>
+    </td>
+  </tr>
+  <tr>
+    <th>TLS Version</th>
+    <td>
+      <select v-model="tlsSettings.minVersion" class="input_option">
+        <option v-for="opt in tlsVersions" :key="opt" :value="opt">
+          {{ opt.toFixed(1) }}
+        </option>
+      </select>
+      -
+      <select v-model="tlsSettings.maxVersion" class="input_option">
+        <option v-for="opt in tlsVersions" :key="opt" :value="opt">
+          {{ opt.toFixed(1) }}
+        </option>
+      </select>
+      <span class="hint-color">min and max version, default: 1.3</span>
+    </td>
+  </tr>
+  <tr>
+    <th>Fingerprint</th>
+    <td>
+      <select v-model="tlsSettings.fingerprint" class="input_option">
+        <option v-for="opt in fingerprintOptions" :key="opt" :value="opt">
+          {{ opt }}
+        </option>
+      </select>
+      <span class="hint-color">default: empty</span>
+    </td>
+  </tr>
+  <tr>
+    <th>TLS Certificate</th>
+    <td>
+      <input class="button_gen button_gen_small" type="button" value="Manage" onclick="certificate_renew();" />
+      <input class="button_gen button_gen_small" type="button" value="Renew" onclick="certificate_renew();" />
     </td>
   </tr>
 </template>
 
 <script lang="ts">
-  import { defineComponent } from "vue";
+  import { defineComponent, ref, watch, reactive } from "vue";
+  import xrayConfig, { XrayStreamTlsSettingsObject } from "@/modules/XrayConfig";
 
   export default defineComponent({
     name: "Tls",
+    setup() {
+      const tlsSettings = ref<XrayStreamTlsSettingsObject>(xrayConfig.inbounds?.[0].streamSettings.tlsSettings ?? new XrayStreamTlsSettingsObject());
+
+      watch(
+        () => xrayConfig.inbounds?.[0].streamSettings?.tlsSettings,
+        (newObj) => {
+          tlsSettings.value = newObj ?? new XrayStreamTlsSettingsObject();
+          if (!newObj) {
+            xrayConfig.inbounds[0].streamSettings.tlsSettings = tlsSettings.value;
+          }
+        },
+        { immediate: true }
+      );
+
+      watch(
+        () => tlsSettings.value.minVersion,
+        (newVal) => {
+          if (newVal > tlsSettings.value.maxVersion) {
+            tlsSettings.value.maxVersion = newVal;
+          }
+        }
+      );
+
+      watch(
+        () => tlsSettings.value.maxVersion,
+        (newVal) => {
+          if (newVal < tlsSettings.value.minVersion) {
+            tlsSettings.value.minVersion = newVal;
+          }
+        }
+      );
+
+      return {
+        tlsSettings,
+        tlsVersions: XrayStreamTlsSettingsObject.tlsVersionsOptions,
+        fingerprintOptions: XrayStreamTlsSettingsObject.fingerprintOptions,
+        alpnOptions: XrayStreamTlsSettingsObject.alpnOptions,
+      };
+    },
   });
 </script>
 <style scoped></style>

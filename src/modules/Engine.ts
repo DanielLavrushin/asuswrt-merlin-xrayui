@@ -1,5 +1,5 @@
 import axios from "axios";
-import xrayConfig, { XrayObject } from "./XrayConfig";
+import xrayConfig, { XrayObject, XrayInboundObject, XrayStreamTlsSettingsObject } from "./XrayConfig";
 
 class SubmtActions {
   public static refreshConfig: string = "xrayui_refreshconfig";
@@ -54,6 +54,22 @@ class Engine {
 
   defaultSubmission = async () => {
     window.hideLoading();
+  };
+
+  validateInbound = (inbound: XrayInboundObject): void => {
+    if (inbound.streamSettings?.tlsSettings) {
+      let tls = inbound.streamSettings.tlsSettings;
+      if (!tls.minVersion) {
+        tls.minVersion = 1.3;
+      }
+      if (!tls.maxVersion) {
+        tls.maxVersion = tls.minVersion;
+      }
+
+      if (!tls.alpn || tls.alpn?.length === 0) {
+        tls.alpn = XrayStreamTlsSettingsObject.alpnOptions;
+      }
+    }
   };
 }
 

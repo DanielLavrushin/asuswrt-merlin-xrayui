@@ -91,7 +91,7 @@
   .button_gen_small {
     min-width: auto;
     border-radius: 4px;
-    padding: 5px;
+    padding: 3px 5px 5px 5px;
     margin: 2px;
     font-weight: normal;
     height: 20px;

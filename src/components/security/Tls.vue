@@ -62,17 +62,6 @@
     </td>
   </tr>
   <tr>
-    <th>Fingerprint</th>
-    <td>
-      <select v-model="tlsSettings.fingerprint" class="input_option">
-        <option v-for="opt in fingerprintOptions" :key="opt" :value="opt">
-          {{ opt }}
-        </option>
-      </select>
-      <span class="hint-color">default: empty</span>
-    </td>
-  </tr>
-  <tr>
     <th>TLS Certificate</th>
     <td>
       <input class="button_gen button_gen_small" type="button" value="Manage" @click.prevent="certificate_manage()" />
@@ -135,7 +124,6 @@
         certificatesModal,
         usageOptions: XrayStreamTlsCertificateObject.usageOptions,
         tlsVersions: XrayStreamTlsSettingsObject.tlsVersionsOptions,
-        fingerprintOptions: XrayStreamTlsSettingsObject.fingerprintOptions,
         alpnOptions: XrayStreamTlsSettingsObject.alpnOptions,
       };
     },

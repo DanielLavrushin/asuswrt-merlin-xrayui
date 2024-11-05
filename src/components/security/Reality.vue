@@ -48,16 +48,16 @@
   <tr>
     <th>Private Key</th>
     <td>
-      <input v-model="realitySettings.privateKey" type="text" class="input_30_table" />
+      <input v-model="realitySettings.privateKey" type="text" class="input_30_table" readonly />
       <span class="row-buttons">
-        <input class="button_gen button_gen_small" type="button" value="Regenerate" @click.prevent="regenerate_private_key()" />
+        <input class="button_gen button_gen_small" type="button" value="Regenerate" @click.prevent="regenerate_keys()" />
       </span>
     </td>
   </tr>
   <tr>
     <th>Public Key</th>
     <td>
-      <input v-model="realitySettings.publicKey" type="text" class="input_30_table" />
+      <input v-model="realitySettings.publicKey" type="text" class="input_30_table" readonly />
     </td>
   </tr>
   <tr>
@@ -70,6 +70,7 @@
 
 <script lang="ts">
   import Modal from "../Modal.vue";
+  import engine, { SubmtActions } from "@/modules/Engine";
   import { defineComponent, ref, watch, reactive } from "vue";
   import xrayConfig, { XrayStreamRealitySettingsObject } from "@/modules/XrayConfig";
 
@@ -90,7 +91,14 @@
         window.crypto.getRandomValues(array);
         return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join("");
       },
-      regenerate_private_key() {},
+      regenerate_keys() {
+        engine.submit(SubmtActions.regenerateRealityKeys, undefined, async () => {
+          let result = await engine.getRealityKeys();
+          this.realitySettings.privateKey = result.privateKey;
+          this.realitySettings.publicKey = result.publicKey;
+          window.hideLoading();
+        });
+      },
     },
     setup() {
       const shortIdsModal = ref();

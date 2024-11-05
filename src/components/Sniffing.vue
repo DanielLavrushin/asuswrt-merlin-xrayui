@@ -48,9 +48,11 @@
     <td>
       <a>{{ sniffing.domainsExcluded.length }} domain(s)</a>
       <input class="button_gen button_gen_small" type="button" value="Manage" @click.prevent="manage_domains_exclude" />
-      <modal ref="modalRef" title="A list of domain names">
+      <modal width="400" ref="modalRef" title="A list of domain names">
         <p>If the traffic sniffing result matches a domain name in this list, the target address will not be reset.</p>
-        <textarea v-model="domainsExludedContent" class="input_100" rows="8"></textarea>
+        <div class="textarea-wrapper">
+          <textarea v-model="domainsExludedContent" class="input_100" rows="8"></textarea>
+        </div>
       </modal>
     </td>
   </tr>

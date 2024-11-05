@@ -10,6 +10,7 @@ ARGS="run -config /opt/etc/xray/config.json"
 PREARGS=""
 DESC="Xray Core UI"
 PATH=/opt/bin:/opt/sbin:/sbin:/bin:/usr/sbin:/usr/bin
+
 PIDFILE=/var/run/xray.pid
 
 xray_addons_asp_page=/jffs/addons/xray-ui/xray-ui.asp
@@ -17,6 +18,8 @@ xray_addons_asp_page=/jffs/addons/xray-ui/xray-ui.asp
 xray_config="/opt/etc/xray/config.json"
 dir_xrayui="/www/user/xray-ui"
 xray_ui_config="$dir_xrayui/xray-config.json"
+
+XRAY="xray"
 
 start() {
     logger "xrayui" "Starting $DESC"
@@ -97,6 +100,8 @@ unmount_ui() {
     sed -i "\\~$xray_ui_page~d" /tmp/menuTree.js
 
     umount /www/require/modules/menuTree.js && mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
+
+    rm -rf /www/user/xray-ui
 
     echo "XRAYUI $xray_ui_page unmounted successfully"
 }
@@ -205,14 +210,7 @@ am_settings_del() {
     sed -i "/$key/d" /jffs/addons/custom_settings.txt
 }
 
-unescape_param() {
-    local param="$1"
-    param=$(echo "$param" | sed 's/--at--/@/g' | sed 's/--under--/_/g')
-    echo "$param"
-}
-
 get_connected_clients() {
-    echo "Saving connected clients to JSON file..."
 
     temp_file="/tmp/xray_clients_online.json"
     >$temp_file
@@ -293,6 +291,54 @@ cert_renew() {
     fi
 }
 
+regenerate_reality_keys() {
+    logger "xrayui" "Regenerating Reality private and public keys..."
+
+    xray_output=$($XRAY x25519)
+    if [ $? -ne 0 ]; then
+        logger "xrayui" "Failed to run xray x25519."
+        return 1
+    fi
+
+    private_key=$(echo "$xray_output" | grep 'Private key:' | awk -F'Private key: ' '{print $2}')
+    public_key=$(echo "$xray_output" | grep 'Public key:' | awk -F'Public key: ' '{print $2}')
+
+    if [ -z "$private_key" ] || [ -z "$public_key" ]; then
+        logger "xrayui" "Failed to extract Reality keys from xray x25519 output."
+        return 1
+    fi
+
+    logger "xrayui" "Generated Reality Private Key: $private_key"
+    logger "xrayui" "Generated Reality Public Key: $public_key"
+
+    reality_json="/www/user/xray-ui/reality.json"
+
+    if [ ! -d "/www/user/xray-ui" ]; then
+        logger "xrayui" "Directory /www/user/xray-ui does not exist. Creating it."
+        mkdir -p "/www/user/xray-ui"
+        if [ $? -ne 0 ]; then
+            logger "xrayui" "Failed to create directory /www/user/xray-ui."
+            return 1
+        fi
+    fi
+
+    echo "{
+  \"privateKey\": \"$private_key\",
+  \"publicKey\": \"$public_key\"
+}" >"$reality_json"
+
+    if [ $? -eq 0 ]; then
+        logger "xrayui" "Saved Reality keys to $reality_json successfully."
+    else
+        logger "xrayui" "Failed to save Reality keys to $reality_json."
+        return 1
+    fi
+
+    chmod 600 "$reality_json"
+
+    return 0
+}
+
 case "$1" in
 start)
     start
@@ -313,7 +359,6 @@ remount_ui)
     remount_ui
     ;;
 service_event)
-    logger "xrayui" "Service event params: [$2] [$3] [$4] [$5] [$6] [$7] [$8] [$9] [$10]"
     if [ "$2" = "refreshconfig" ]; then
         refresh_xray_config
         exit 0
@@ -324,6 +369,15 @@ service_event)
         case "$3" in
         "renew")
             cert_renew
+            exit 0
+            ;;
+        esac
+        exit 0
+    elif [ "$2" = "regenerate" ]; then
+        logger "xrayui" "REGENERATE!!!!"
+        case "$3" in
+        "realitykeys")
+            regenerate_reality_keys
             exit 0
             ;;
         esac
@@ -341,7 +395,6 @@ service_event)
         esac
         exit 0
     elif [ "$2" = "serverstatus" ]; then
-        logger "xrayui" "serverstatus $3"
         case "$3" in
         "start")
             start

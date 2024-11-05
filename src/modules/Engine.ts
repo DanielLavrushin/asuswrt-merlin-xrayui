@@ -8,6 +8,7 @@ class SubmtActions {
   public static serverStop: string = "xrayui_serverstatus_stop";
   public static clientDelete: string = "xrayui_client_delete";
   public static clientAdd: string = "xrayui_client_add";
+  public static regenerateRealityKeys: string = "xrayui_regenerate_realitykeys";
 }
 
 class Engine {
@@ -20,24 +21,31 @@ class Engine {
     this.form = form;
   }
 
-  public submit(action: string, payload: any | null = null, onSubmit: () => Promise<void> = this.defaultSubmission): void {
+  public submit(action: string, payload: any | undefined = undefined, onSubmit: () => Promise<void> = this.defaultSubmission): void {
     this.customOnSubmit = onSubmit;
     if (this.form) {
       window.showLoading();
 
       (this.form.querySelector("input[name='action_script']") as HTMLInputElement).value = action;
 
-      window.xray.custom_settings.xray_payload = JSON.stringify(payload);
+      if (payload) {
+        window.xray.custom_settings.xray_payload = JSON.stringify(payload);
 
-      const customSettings = JSON.stringify(window.xray.custom_settings);
-      (this.form.querySelector("input[name='amng_custom']") as HTMLInputElement).value = customSettings;
-
+        const customSettings = JSON.stringify(window.xray.custom_settings);
+        (this.form.querySelector("input[name='amng_custom']") as HTMLInputElement).value = customSettings;
+      }
       this.form.submit();
     } else {
       console.error("Form reference is not set.");
     }
   }
 
+  async getRealityKeys(): Promise<any> {
+    const response = await axios.get<XrayObject>("/ext/xray-ui/reality.json");
+
+    let realityKeys = response.data;
+    return realityKeys;
+  }
   async loadXrayConfig(): Promise<XrayObject> {
     const response = await axios.get<XrayObject>("/ext/xray-ui/xray-config.json");
     Object.assign(this.xrayConfig, response.data);

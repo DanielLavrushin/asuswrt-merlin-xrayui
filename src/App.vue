@@ -64,6 +64,10 @@
 </script>
 
 <style>
+  input[type="checkbox"],
+  input[type="radio"] {
+    vertical-align: top;
+  }
   .hint-color {
     float: right;
     margin-right: 5px;
@@ -104,5 +108,20 @@
   }
   .FormTable td span.label {
     padding: 5px;
+  }
+  .textarea-wrapper {
+    margin: 0 10px 0 0;
+  }
+
+  textarea {
+    color: #ffffff;
+    background: #596e74;
+    border: 1px solid #929ea1;
+    font-family: Courier New, Courier, monospace;
+    font-size: 13px;
+    width: 100%;
+    padding: 3px;
+    box-sizing: content-box;
+    height: 100px;
   }
 </style>

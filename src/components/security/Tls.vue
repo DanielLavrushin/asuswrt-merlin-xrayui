@@ -2,7 +2,7 @@
   <tr>
     <th>Server Name</th>
     <td>
-      <input v-model="tlsSettings.serverName" type="text" maxlength="4" class="input_20_table" />
+      <input v-model="tlsSettings.serverName" type="text" class="input_20_table" />
       <span class="hint-color"></span>
     </td>
   </tr>
@@ -75,21 +75,32 @@
   <tr>
     <th>TLS Certificate</th>
     <td>
-      <input class="button_gen button_gen_small" type="button" value="Manage" onclick="certificate_renew();" />
-      <input class="button_gen button_gen_small" type="button" value="Renew" onclick="certificate_renew();" />
+      <input class="button_gen button_gen_small" type="button" value="Manage" @click.prevent="certificate_manage()" />
+      <input class="button_gen button_gen_small" type="button" value="Renew" @click.prevent="certificate_renew()" />
+      <certificates-modal ref="certificatesModal" :certificates="tlsSettings.certificates"></certificates-modal>
     </td>
   </tr>
 </template>
 
 <script lang="ts">
   import { defineComponent, ref, watch, reactive } from "vue";
-  import xrayConfig, { XrayStreamTlsSettingsObject } from "@/modules/XrayConfig";
+  import CertificatesModal from "../modals/CertificatesModal.vue";
+  import xrayConfig, { XrayStreamTlsSettingsObject, XrayStreamTlsCertificateObject } from "@/modules/XrayConfig";
 
   export default defineComponent({
     name: "Tls",
+    components: {
+      CertificatesModal,
+    },
+    methods: {
+      certificate_manage() {
+        this.certificatesModal.show();
+      },
+      certificate_renew() {},
+    },
     setup() {
+      const certificatesModal = ref();
       const tlsSettings = ref<XrayStreamTlsSettingsObject>(xrayConfig.inbounds?.[0].streamSettings.tlsSettings ?? new XrayStreamTlsSettingsObject());
-
       watch(
         () => xrayConfig.inbounds?.[0].streamSettings?.tlsSettings,
         (newObj) => {
@@ -121,6 +132,8 @@
 
       return {
         tlsSettings,
+        certificatesModal,
+        usageOptions: XrayStreamTlsCertificateObject.usageOptions,
         tlsVersions: XrayStreamTlsSettingsObject.tlsVersionsOptions,
         fingerprintOptions: XrayStreamTlsSettingsObject.fingerprintOptions,
         alpnOptions: XrayStreamTlsSettingsObject.alpnOptions,

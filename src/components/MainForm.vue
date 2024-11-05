@@ -148,9 +148,6 @@
       validateAvailableSecurity(opt: string): boolean {
         switch (opt) {
           case "reality":
-            if (xrayConfig.inbounds[0].streamSettings.security === opt) {
-              xrayConfig.inbounds[0].streamSettings.security = "none";
-            }
             return this.xrayConfig.inbounds[0].protocol === "vless";
         }
         return true;
@@ -179,6 +176,7 @@
       });
 
       const securityComponent = computed(() => {
+        console.log(inbound.value.streamSettings.security);
         switch (inbound.value.streamSettings.security) {
           case "tls":
             return SecurityTls;
@@ -192,6 +190,7 @@
       watch(
         () => xrayConfig.inbounds?.[0],
         (newObj) => {
+          inbound.value = newObj ?? new XrayInboundObject();
           engine.validateInbound(newObj);
         },
         { immediate: true }

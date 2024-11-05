@@ -37,10 +37,12 @@ class XrayStreamTlsCertificateObject {
 
   public ocspStapling: number = 3600;
   public oneTimeLoading: boolean = false;
-  public usage: string = "encipherment";
-  public certificateFile: string = "encipherment";
-  public keyFile: string = "encipherment";
   public buildChain: boolean = false;
+  public usage: string = "encipherment";
+  public certificateFile?: string;
+  public keyFile?: string;
+  public key?: string;
+  public certificate?: string;
 }
 
 class XrayStreamTlsSettingsObject {
@@ -147,4 +149,4 @@ class XrayOutboundObject {}
 
 let xrayConfig = reactive(new XrayObject());
 export default xrayConfig;
-export { XrayObject, XrayInboundObject, XrayInboundSettingsObject, XrayInboundClientObject, XrayOutboundObject, XrayAllocateObject, XraySniffingObject, XrayStreamSettingsObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject };
+export { XrayObject, XrayInboundObject, XrayInboundSettingsObject, XrayInboundClientObject, XrayOutboundObject, XrayAllocateObject, XraySniffingObject, XrayStreamSettingsObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsCertificateObject };

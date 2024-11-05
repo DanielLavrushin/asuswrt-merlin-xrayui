@@ -1,6 +1,6 @@
 <template>
   <div class="modal-overlay" v-if="isVisible" @click="close">
-    <div class="modal-content" @click.stop>
+    <div class="modal-content" @click.stop :style="{ width: width + 'px' }">
       <header class="modal-header">
         <h2>{{ title }}</h2>
         <button class="close-btn" @click="close">×</button>
@@ -21,10 +21,15 @@
 
   export default defineComponent({
     name: "Modal",
+    emits: ["close"],
     props: {
       title: {
         type: String,
         default: "Modal Title",
+      },
+      width: {
+        type: String,
+        default: "755",
       },
     },
     setup() {
@@ -63,7 +68,7 @@
   }
 
   .modal-content {
-    background-color: #2b373b;
+    background-color: #4d595d;
     border-radius: 5px;
     width: 650px;
     max-width: 100%;
@@ -103,13 +108,10 @@
     text-align: center;
   }
 
-  .modal-body >>> textarea {
-    color: #ffffff;
-    background-color: #576d73;
-    border: 2px ridge #777;
-    border-style: solid;
-    font-family: Courier New, Courier, monospace;
-    font-size: 13px;
-    width: 500px;
+  .modal-body >>> .modal-form-table {
+    width: 100%;
+  }
+  .modal-body >>> .modal-form-table td {
+    text-align: left;
   }
 </style>

@@ -20,16 +20,13 @@
         </tr>
       </tbody>
     </table>
-    <form ref="form" method="post" name="clientsOnlineForm" action="/start_apply.htm" target="hidden_frame">
-      <input type="hidden" name="action_mode" value="apply" />
-      <input type="hidden" name="action_script" value="xrayui_connectedclients" />
-    </form>
   </div>
 </template>
 
 <script lang="ts">
   import { defineComponent, ref, onMounted, onBeforeUnmount } from "vue";
   import axios from "axios";
+  import engine, { SubmtActions } from "../modules/Engine";
 
   interface Client {
     ip: string;
@@ -40,14 +37,7 @@
     name: "ClientsOnline",
     setup() {
       const clients = ref<Client[]>([]);
-      const form = ref<HTMLFormElement | null>(null);
       let intervalId: number | undefined;
-
-      const submitForm = () => {
-        if (form.value) {
-          form.value.submit();
-        }
-      };
 
       const fetchClients = async () => {
         try {
@@ -59,13 +49,11 @@
       };
 
       onMounted(() => {
-        submitForm();
-        fetchClients();
+        engine.submit(SubmtActions.clientsOnline, null, fetchClients);
 
         intervalId = setInterval(() => {
-          submitForm();
-          fetchClients();
-        }, 10000);
+          engine.submit(SubmtActions.clientsOnline, null, fetchClients);
+        }, 3000);
       });
 
       onBeforeUnmount(() => {
@@ -76,7 +64,6 @@
 
       return {
         clients,
-        form,
       };
     },
   });

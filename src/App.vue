@@ -42,8 +42,7 @@
         const requestform = instance?.proxy?.$refs.requestform as InstanceType<typeof RequestForm>;
 
         if (requestform) {
-          let form = requestform.getForm();
-          engine.init(form);
+          engine.init(requestform);
           engine.submit(window.xray.commands.refreshConfig, null, engine.defaultSubmission);
 
           await delay(1000);
@@ -110,7 +109,7 @@
     padding: 5px;
   }
   .textarea-wrapper {
-    margin: 0 10px 0 0;
+    margin: 0px 10px 0 2px;
   }
 
   textarea {

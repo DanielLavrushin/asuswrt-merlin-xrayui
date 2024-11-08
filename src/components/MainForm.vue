@@ -148,7 +148,11 @@
       validateAvailableSecurity(opt: string): boolean {
         switch (opt) {
           case "reality":
-            return this.xrayConfig.inbounds[0].protocol === "vless";
+            let isVless = this.xrayConfig.inbounds[0].protocol === "vless";
+            if (!isVless && this.xrayConfig.inbounds[0].streamSettings.security === opt) {
+              this.xrayConfig.inbounds[0].streamSettings.security = "none";
+            }
+            return isVless;
         }
         return true;
       },
@@ -176,7 +180,6 @@
       });
 
       const securityComponent = computed(() => {
-        console.log(inbound.value.streamSettings.security);
         switch (inbound.value.streamSettings.security) {
           case "tls":
             return SecurityTls;

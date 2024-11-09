@@ -289,6 +289,8 @@ cert_renew() {
         logger "xrayui" "Failed to update Xray config with TLS settings."
         return 1
     fi
+
+    restart
 }
 
 regenerate_reality_keys() {

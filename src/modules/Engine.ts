@@ -14,7 +14,7 @@ class SubmtActions {
 
 class Engine {
   public xrayConfig: XrayObject = xrayConfig;
-
+ private isInProgress: boolean = false; 
   private form: any = null;
   private customOnSubmit: (() => Promise<void>) | null = null;
 
@@ -22,7 +22,12 @@ class Engine {
     this.form = form;
   }
 
-  public submit(action: string, payload: any | undefined = undefined, onSubmit: () => Promise<void> = this.defaultSubmission): void {
+  public submit(action: string, payload: any | undefined = undefined, onSubmit: () => Promise<void> = this.defaultSubmission,  submitWait:number = 200): void {
+    if (this.isInProgress) {
+      console.warn("Another submission is in progress. Ignoring this submission request.");
+      return;
+    }
+    this.isInProgress = true;
     this.customOnSubmit = onSubmit;
     if (this.form) {
       this.form.setActionValue(action);
@@ -34,9 +39,8 @@ class Engine {
         this.form.setAmgValue(customSettings);
       }
       setTimeout(() => {
-        console.log("Submitting form with action: " + action, this.form);
         this.form.submit();
-      }, 200);
+      }, submitWait);
     } else {
       console.warn("Form reference is not set.");
     }
@@ -55,6 +59,7 @@ class Engine {
   }
 
   public handleSubmitCompletion = async (): Promise<void> => {
+    this.isInProgress = false;
     if (this.customOnSubmit) {
       await this.customOnSubmit();
     } else {

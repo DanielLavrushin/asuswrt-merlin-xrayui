@@ -44,7 +44,7 @@
           const response = await axios.get("/ext/xray-ui/clients-online.json");
           clients.value = response.data;
         } catch (error) {
-          console.error("Error fetching clients:", error);
+          console.warn("Error fetching clients:", error);
         }
       };
 

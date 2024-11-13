@@ -36,7 +36,7 @@
         window.showLoading();
         engine.submit(action, null, async () => {
          window.location.reload();
-        });
+        }, 1000);
       },
     },
     mounted() {},

@@ -1,0 +1,12 @@
+{
+	"recommendations": [
+		"pkief.material-icon-theme",
+		"esbenp.prettier-vscode",
+		"ms-vscode.vscode-typescript-next",
+		"vue.volar",
+		"foxundermoon.shell-format"
+	],
+	"unwantedRecommendations": [
+		
+	]
+}

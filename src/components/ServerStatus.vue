@@ -33,9 +33,9 @@
     },
     methods: {
       handleStatus(action: string) {
+        window.showLoading();
         engine.submit(action, null, async () => {
-          console.log("Server status updated");
-          location.reload();
+         window.location.reload();
         });
       },
     },

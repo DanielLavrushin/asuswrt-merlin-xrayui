@@ -33,6 +33,7 @@ stop() {
 }
 
 restart() {
+    logger "xrayui" "Restarting $DESC"
     stop
     start
 }
@@ -115,15 +116,12 @@ refresh_xray_config() {
     xray_ui_page=$(am_settings_get xray_ui_page)
 
     if [ ! -d $dir_xrayui ]; then
-        echo "Directory $dir_xrayui does not exist. Creating it."
         mkdir -p "$dir_xrayui"
     fi
 
     if [ -f "$xray_config" ]; then
-        echo "Copying xray config to $xray_ui_config"
         sed 's/\/\/.*//' "$xray_config" >"$xray_ui_config"
     else
-        echo "Source config file $xray_config not found!"
         exit 1
     fi
 }

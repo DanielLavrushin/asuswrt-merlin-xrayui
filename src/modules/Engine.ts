@@ -24,7 +24,6 @@ class Engine {
 
   public submit(action: string, payload: any | undefined = undefined, onSubmit: () => Promise<void> = this.defaultSubmission): void {
     this.customOnSubmit = onSubmit;
-
     if (this.form) {
       this.form.setActionValue(action);
 
@@ -34,7 +33,10 @@ class Engine {
         const customSettings = JSON.stringify(window.xray.custom_settings);
         this.form.setAmgValue(customSettings);
       }
-      this.form.submit();
+      setTimeout(() => {
+        console.log("Submitting form with action: " + action, this.form);
+        this.form.submit();
+      }, 200);
     } else {
       console.warn("Form reference is not set.");
     }

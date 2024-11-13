@@ -92,6 +92,7 @@
         return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join("");
       },
       regenerate_keys() {
+        window.showLoading();
         engine.submit(SubmtActions.regenerateRealityKeys, undefined, async () => {
           let result = await engine.getRealityKeys();
           this.realitySettings.privateKey = result.privateKey;

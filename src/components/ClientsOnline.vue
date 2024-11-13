@@ -50,7 +50,6 @@
 
       onMounted(() => {
         engine.submit(SubmtActions.clientsOnline, null, fetchClients);
-
         intervalId = setInterval(() => {
           engine.submit(SubmtActions.clientsOnline, null, fetchClients);
         }, 3000);

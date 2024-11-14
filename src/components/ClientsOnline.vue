@@ -24,46 +24,48 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, onMounted, onBeforeUnmount } from "vue";
-  import axios from "axios";
-  import engine, { SubmtActions } from "../modules/Engine";
+import { defineComponent, ref, onMounted, onBeforeUnmount } from "vue";
+import axios from "axios";
+import engine, { SubmtActions } from "../modules/Engine";
 
-  interface Client {
-    ip: string;
-    email: string[];
-  }
+interface Client {
+  ip: string;
+  email: string[];
+}
 
-  export default defineComponent({
-    name: "ClientsOnline",
-    setup() {
-      const clients = ref<Client[]>([]);
-      let intervalId: number | undefined;
+export default defineComponent({
+  name: "ClientsOnline",
+  setup() {
+    const clients = ref<Client[]>([]);
+    let intervalId: number | undefined;
 
-      const fetchClients = async () => {
-        try {
-          const response = await axios.get("/ext/xray-ui/clients-online.json");
-          clients.value = response.data;
-        } catch (error) {
-          console.warn("Error fetching clients:", error);
-        }
-      };
+    const fetchClients = async () => {
+      try {
+        const response = await axios.get("/ext/xray-ui/clients-online.json");
+        clients.value = response.data;
+      } catch (error) {
+        console.warn("Error fetching clients:", error);
+      }
+    };
 
-      onMounted(() => {
-        engine.submit(SubmtActions.clientsOnline, null, fetchClients);
-        intervalId = setInterval(() => {
-          engine.submit(SubmtActions.clientsOnline, null, fetchClients);
-        }, 3000);
-      });
+    onMounted(async () => {
+      await engine.submit(SubmtActions.clientsOnline);
+      await fetchClients();
+      intervalId = setInterval(async () => {
+        await engine.submit(SubmtActions.clientsOnline);
+        await fetchClients();
+      }, 3000);
+    });
 
-      onBeforeUnmount(() => {
-        if (intervalId) {
-          clearInterval(intervalId);
-        }
-      });
+    onBeforeUnmount(() => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    });
 
-      return {
-        clients,
-      };
-    },
-  });
+    return {
+      clients,
+    };
+  },
+});
 </script>

@@ -50,7 +50,8 @@
     <td>
       <input v-model="realitySettings.privateKey" type="text" class="input_30_table" readonly />
       <span class="row-buttons">
-        <input class="button_gen button_gen_small" type="button" value="Regenerate" @click.prevent="regenerate_keys()" />
+        <input class="button_gen button_gen_small" type="button" value="Regenerate"
+          @click.prevent="regenerate_keys()" />
       </span>
     </td>
   </tr>
@@ -69,79 +70,78 @@
 </template>
 
 <script lang="ts">
-  import Modal from "../Modal.vue";
-  import engine, { SubmtActions } from "@/modules/Engine";
-  import { defineComponent, ref, watch, reactive } from "vue";
-  import xrayConfig, { XrayStreamRealitySettingsObject } from "@/modules/XrayConfig";
+import Modal from "../Modal.vue";
+import engine, { SubmtActions } from "@/modules/Engine";
+import { defineComponent, ref, watch, reactive } from "vue";
+import xrayConfig, { XrayStreamRealitySettingsObject } from "@/modules/XrayConfig";
 
-  export default defineComponent({
-    name: "Reality",
-    components: {
-      Modal,
+export default defineComponent({
+  name: "Reality",
+  components: {
+    Modal,
+  },
+  methods: {
+    manage_short_ids() {
+      this.shortIdsModal.show();
     },
-    methods: {
-      manage_short_ids() {
-        this.shortIdsModal.show();
-      },
-      append_shortid() {
-        this.shortIds += this.generateShortId() + "\n";
-      },
-      generateShortId: (byteLength = 8) => {
-        const array = new Uint8Array(byteLength);
-        window.crypto.getRandomValues(array);
-        return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join("");
-      },
-      regenerate_keys() {
-        window.showLoading();
-        engine.submit(SubmtActions.regenerateRealityKeys, undefined, async () => {
-          let result = await engine.getRealityKeys();
-          this.realitySettings.privateKey = result.privateKey;
-          this.realitySettings.publicKey = result.publicKey;
-          window.hideLoading();
-        });
-      },
+    append_shortid() {
+      this.shortIds += this.generateShortId() + "\n";
     },
-    setup() {
-      const shortIdsModal = ref();
-      const realitySettings = ref<XrayStreamRealitySettingsObject>(xrayConfig.inbounds?.[0].streamSettings.realitySettings ?? new XrayStreamRealitySettingsObject());
-      const serverNames = ref(realitySettings.value.serverNames?.join("\n") ?? "");
-      const shortIds = ref(realitySettings.value.shortIds?.join("\n") ?? "");
-      watch(
-        () => serverNames.value,
-        (newObj) => {
-          if (newObj) {
-            realitySettings.value.serverNames = newObj.split("\n").filter((x) => x);
-          }
-        },
-        { immediate: true }
-      );
-      watch(
-        () => shortIds.value,
-        (newObj) => {
-          if (newObj) {
-            realitySettings.value.shortIds = newObj.split("\n").filter((x) => x);
-          }
-        },
-        { immediate: true }
-      );
-      watch(
-        () => xrayConfig.inbounds?.[0].streamSettings?.realitySettings,
-        (newObj) => {
-          realitySettings.value = newObj ?? new XrayStreamRealitySettingsObject();
-          if (!newObj) {
-            xrayConfig.inbounds[0].streamSettings.realitySettings = realitySettings.value;
-          }
-        },
-        { immediate: true }
-      );
+    generateShortId: (byteLength = 8) => {
+      const array = new Uint8Array(byteLength);
+      window.crypto.getRandomValues(array);
+      return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join("");
+    },
+    async regenerate_keys() {
+      window.showLoading();
+      await engine.submit(SubmtActions.regenerateRealityKeys, null, 1000);
+      let result = await engine.getRealityKeys();
+      this.realitySettings.privateKey = result.privateKey;
+      this.realitySettings.publicKey = result.publicKey;
+      window.hideLoading();
+    },
+  },
+  setup() {
+    const shortIdsModal = ref();
+    const realitySettings = ref<XrayStreamRealitySettingsObject>(xrayConfig.inbounds?.[0].streamSettings.realitySettings ?? new XrayStreamRealitySettingsObject());
+    const serverNames = ref(realitySettings.value.serverNames?.join("\n") ?? "");
+    const shortIds = ref(realitySettings.value.shortIds?.join("\n") ?? "");
+    watch(
+      () => serverNames.value,
+      (newObj) => {
+        if (newObj) {
+          realitySettings.value.serverNames = newObj.split("\n").filter((x) => x);
+        }
+      },
+      { immediate: true }
+    );
+    watch(
+      () => shortIds.value,
+      (newObj) => {
+        if (newObj) {
+          realitySettings.value.shortIds = newObj.split("\n").filter((x) => x);
+        }
+      },
+      { immediate: true }
+    );
+    watch(
+      () => xrayConfig.inbounds?.[0].streamSettings?.realitySettings,
+      (newObj) => {
+        realitySettings.value = newObj ?? new XrayStreamRealitySettingsObject();
+        if (!newObj) {
+          xrayConfig.inbounds[0].streamSettings.realitySettings = realitySettings.value;
+        }
+      },
+      { immediate: true }
+    );
 
-      return {
-        shortIdsModal,
-        realitySettings,
-        serverNames,
-        shortIds,
-      };
-    },
-  });
+    return {
+      shortIdsModal,
+      realitySettings,
+      serverNames,
+      shortIds,
+    };
+  },
+});
 </script>
 <style scoped></style>

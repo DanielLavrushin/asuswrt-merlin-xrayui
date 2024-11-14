@@ -205,6 +205,7 @@ client_add() {
 am_settings_del() {
 
     local key="$1"
+    logger "xrayui" "Deleting $key from custom settings."
     sed -i "/$key/d" /jffs/addons/custom_settings.txt
 }
 

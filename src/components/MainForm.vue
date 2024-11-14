@@ -47,7 +47,7 @@
                                       <select v-model="inbound.protocol" class="input_option">
                                         <option v-for="protocol in protocols" :key="protocol" :value="protocol">
                                           {{ protocol }}
-                                        </option>
+                                        </option> 'ftgv '
                                       </select>
                                       <span class="hint-color">default: vmess</span>
                                     </td>

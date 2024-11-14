@@ -14,36 +14,51 @@ class SubmtActions {
 
 class Engine {
   public xrayConfig: XrayObject = xrayConfig;
- private isInProgress: boolean = false; 
-  private form: any = null;
-  private customOnSubmit: (() => Promise<void>) | null = null;
 
-  public init(form: any): void {
-    this.form = form;
-  }
+  public submit(action: string, payload: any | undefined = undefined, delay: number = 0): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const iframeName = "hidden_frame_" + Math.random().toString(36).substring(2, 9);
+      const iframe = document.createElement("iframe");
+      iframe.name = iframeName;
+      iframe.style.display = "none";
 
-  public submit(action: string, payload: any | undefined = undefined, onSubmit: () => Promise<void> = this.defaultSubmission,  submitWait:number = 200): void {
-    if (this.isInProgress) {
-      console.warn("Another submission is in progress. Ignoring this submission request.");
-      return;
-    }
-    this.isInProgress = true;
-    this.customOnSubmit = onSubmit;
-    if (this.form) {
-      this.form.setActionValue(action);
+      document.body.appendChild(iframe);
+
+      const form = document.createElement("form");
+      form.method = "post";
+      form.action = "/start_apply.htm";
+      form.target = iframeName;
+
+      form.innerHTML = `
+        <input type="hidden" name="action_mode" value="apply" />
+        <input type="hidden" name="action_script" value="${action}" />
+        <input type="hidden" name="modified" value="0" />
+        <input type="hidden" name="action_wait" value="" />
+      `;
 
       if (payload) {
         window.xray.custom_settings.xray_payload = JSON.stringify(payload);
-
         const customSettings = JSON.stringify(window.xray.custom_settings);
-        this.form.setAmgValue(customSettings);
+
+        const amngCustomInput = document.createElement("input");
+        amngCustomInput.type = "hidden";
+        amngCustomInput.name = "amng_custom";
+        amngCustomInput.value = customSettings;
+        form.appendChild(amngCustomInput);
       }
-      setTimeout(() => {
-        this.form.submit();
-      }, submitWait);
-    } else {
-      console.warn("Form reference is not set.");
-    }
+
+      document.body.appendChild(form);
+
+      iframe.onload = () => {
+        document.body.removeChild(form);
+        document.body.removeChild(iframe);
+
+        setTimeout(() => {
+          resolve();
+        }, delay);
+      };
+      form.submit();
+    });
   }
 
   async getRealityKeys(): Promise<any> {
@@ -57,19 +72,6 @@ class Engine {
     Object.assign(this.xrayConfig, response.data);
     return this.xrayConfig;
   }
-
-  public handleSubmitCompletion = async (): Promise<void> => {
-    this.isInProgress = false;
-    if (this.customOnSubmit) {
-      await this.customOnSubmit();
-    } else {
-      await this.defaultSubmission();
-    }
-  };
-
-  defaultSubmission = async () => {
-    window.hideLoading();
-  };
 
   validateInbound = (inbound: XrayInboundObject): void => {
     if (inbound.streamSettings?.tlsSettings) {
@@ -91,4 +93,4 @@ class Engine {
 let engine = new Engine();
 export default engine;
 
-export { SubmtActions, engine };
+export { SubmtActions, Engine, engine };

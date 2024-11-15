@@ -4,10 +4,16 @@ class XrayObject {
   public log?: XrayLogObject;
   public inbounds: XrayInboundObject[] = [];
   public outbounds: XrayOutboundObject[] = [];
+  public routing?: XrayRoutingObject;
 
   constructor() {
     if (this.inbounds.length === 0) {
       this.inbounds.push(new XrayInboundObject());
+    }
+
+    if (this.outbounds.length === 0) {
+      this.outbounds.push(new XrayOutboundObject("freedom", "direct"));
+      this.outbounds.push(new XrayOutboundObject("blackhole", "block"));
     }
   }
 }
@@ -18,6 +24,32 @@ class XrayLogObject {
   public loglevel: string = "warning";
   public dnsLog: boolean = false;
   public maskAddress: string = "";
+}
+
+class XrayRoutingObject {
+  static domainStrategyOptions: string[] = ["AsIs", "IPIfNonMatch", "IPOnDemand"];
+  static domainMatcherOptions: string[] = ["hybrid", "linear"];
+  public domainStrategy: string = "AsIs";
+  public domainMatcher: string = "hybrid";
+  public rules: XrayRoutingRuleObject[] = [];
+}
+
+class XrayRoutingRuleObject {
+  static networkOptions: string[] = ["", "tcp", "udp", "tcp,udp"];
+  static protocolOptions: string[] = ["http", "tls", "bittorrent"];
+  public domainMatcher: string = "hybrid";
+  public domain?: string[];
+  public ip?: string[];
+  public port?: string;
+  public sourcePort?: string;
+  public type: string = "field";
+  public network?: string;
+  public source?: string[];
+  public protocol?: string[] = [];
+  public inboundTag?: string;
+  public outboundTag?: string;
+  public user: string[] = [];
+  public attrs?: any;
 }
 
 class XrayAllocateObject {
@@ -58,7 +90,7 @@ class XrayStreamTlsCertificateObject {
 class XrayStreamTlsSettingsObject {
   static alpnOptions: string[] = ["h2", "http/1.1"];
   static fingerprintOptions: string[] = ["", "randomized", "random", "chrome", "firefox", "ios", "android", "safari", "edge", "360", "qq"];
-  static tlsVersionsOptions: number[] = [1.0, 1.1, 1.2, 1.3];
+  static tlsVersionsOptions: string[] = ["1.0", "1.1", "1.2", "1.3"];
 
   public serverName?: string;
   public rejectUnknownSni: boolean = false;
@@ -66,8 +98,8 @@ class XrayStreamTlsSettingsObject {
   public disableSystemRoot: boolean = false;
   public enableSessionResumption: boolean = false;
   public alpn?: string[] = XrayStreamTlsSettingsObject.alpnOptions;
-  public minVersion: number | string = 1.3;
-  public maxVersion: number | string = 1.3;
+  public minVersion?: string;
+  public maxVersion?: string;
   public certificates: XrayStreamTlsCertificateObject[] = [];
   public fingerprint?: string;
   public pinnedPeerCertificateChainSha256?: string;
@@ -159,9 +191,19 @@ class XrayInboundClientObject {
 
 class XrayOutboundObject {
   public protocol: string | undefined = "freedom";
+  public tag: string | undefined = "direct";
   public settings: any = {};
+
+  constructor(protocol: string | undefined = undefined, tag: string | undefined = undefined) {
+    if (protocol) {
+      this.protocol = protocol;
+    }
+    if (tag) {
+      this.tag = tag;
+    }
+  }
 }
 
 let xrayConfig = reactive(new XrayObject());
 export default xrayConfig;
-export { XrayObject, XrayInboundObject, XrayInboundSettingsObject, XrayInboundClientObject, XrayOutboundObject, XrayAllocateObject, XraySniffingObject, XrayStreamSettingsObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsCertificateObject };
+export { XrayObject, XrayRoutingObject, XrayRoutingRuleObject, XrayInboundObject, XrayInboundSettingsObject, XrayInboundClientObject, XrayOutboundObject, XrayAllocateObject, XraySniffingObject, XrayStreamSettingsObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsCertificateObject };

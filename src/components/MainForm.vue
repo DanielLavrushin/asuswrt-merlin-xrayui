@@ -89,6 +89,7 @@
                                 </tbody>
                               </table>
                             </div>
+                            <routing></routing>
                             <div id="divApply" class="apply_gen">
                               <input class="button_gen" @click.prevent="applyServerSettings()" type="button"
                                 value="Apply" />
@@ -122,6 +123,7 @@ import Clients from "./Clients.vue";
 import ClientsOnline from "./ClientsOnline.vue";
 import ServerStatus from "./ServerStatus.vue";
 import Sniffing from "./Sniffing.vue";
+import Routing from "./Routing.vue";
 
 import NetworkKcp from "./transport/Kcp.vue";
 import NetworkTcp from "./transport/Tcp.vue";
@@ -147,6 +149,7 @@ export default defineComponent({
     ClientsOnline,
     SecurityTls,
     SecurityReality,
+    Routing,
   },
   methods: {
     validateAvailableSecurity(opt: string): boolean {
@@ -161,11 +164,11 @@ export default defineComponent({
       return true;
     },
     async applyServerSettings() {
-      let delay = 3000;
+      let delay = 5000;
 
+      window.showLoading(delay / 1000);
       const cfg = engine.constructConfig(this.xrayConfig);
       await engine.submit(SubmtActions.ConfigurationServerSave, cfg, delay);
-      window.showLoading(delay / 1000);
       await engine.loadXrayConfig();
       window.hideLoading();
     },
@@ -191,8 +194,6 @@ export default defineComponent({
     });
 
     const securityComponent = computed(() => {
-      delete inbound.value.streamSettings.tlsSettings;
-      delete inbound.value.streamSettings.realitySettings;
       switch (inbound.value.streamSettings.security) {
         case "tls":
           return SecurityTls;

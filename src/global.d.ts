@@ -19,6 +19,7 @@ interface XrayUiGlobal {
 declare global {
   interface Window {
     xray: XrayUiGlobal;
+    hint: (message: string) => void;
     show_menu: () => void;
     showLoading: (delay?: number | null) => void;
     hideLoading: () => void;

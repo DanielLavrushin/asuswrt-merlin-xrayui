@@ -42,13 +42,13 @@
     <td>
       <select v-model="tlsSettings.minVersion" class="input_option">
         <option v-for="opt in tlsVersions" :key="opt" :value="opt">
-          {{ opt.toFixed(1) }}
+          {{ opt }}
         </option>
       </select>
       -
       <select v-model="tlsSettings.maxVersion" class="input_option">
         <option v-for="opt in tlsVersions" :key="opt" :value="opt">
-          {{ opt.toFixed(1) }}
+          {{ opt }}
         </option>
       </select>
       <span class="hint-color">min and max version, default: 1.3</span>
@@ -104,18 +104,18 @@ export default defineComponent({
     );
 
     watch(
-      () => tlsSettings.value.minVersion,
+      () => tlsSettings.value.minVersion!,
       (newVal) => {
-        if (newVal > tlsSettings.value.maxVersion) {
+        if (parseFloat(newVal) > parseFloat(tlsSettings.value.maxVersion!)) {
           tlsSettings.value.maxVersion = newVal;
         }
       }
     );
 
     watch(
-      () => tlsSettings.value.maxVersion,
+      () => tlsSettings.value.maxVersion!,
       (newVal) => {
-        if (newVal < tlsSettings.value.minVersion) {
+        if (parseFloat(newVal) < parseFloat(tlsSettings.value.minVersion!)) {
           tlsSettings.value.minVersion = newVal;
         }
       }

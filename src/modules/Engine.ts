@@ -1,5 +1,5 @@
 import axios from "axios";
-import xrayConfig, { XrayObject, XrayInboundObject, XrayStreamTlsSettingsObject } from "./XrayConfig";
+import xrayConfig, { XrayObject, XrayInboundObject, XrayStreamTlsSettingsObject, XrayOutboundObject } from "./XrayConfig";
 
 class SubmtActions {
   public static ConfigurationServerSave: string = "xrayui_configuration_server";
@@ -79,7 +79,7 @@ class Engine {
     if (inbound.streamSettings?.tlsSettings) {
       let tls = inbound.streamSettings.tlsSettings;
       if (!tls.minVersion) {
-        tls.minVersion = 1.3;
+        tls.minVersion = "1.3";
       }
       if (!tls.maxVersion) {
         tls.maxVersion = tls.minVersion;
@@ -94,12 +94,13 @@ class Engine {
   public constructConfig(model: XrayObject): any {
     if (model.inbounds) {
       model.inbounds.forEach((inbound: XrayInboundObject) => {
-        if (inbound.streamSettings?.tlsSettings) {
-          inbound.streamSettings.tlsSettings.minVersion = `${inbound.streamSettings.tlsSettings.minVersion}`;
-          inbound.streamSettings.tlsSettings.maxVersion = `${inbound.streamSettings.tlsSettings.maxVersion}`;
-        }
+        console.log(typeof inbound?.streamSettings.tlsSettings?.certificates[0].ocspStapling);
       });
     }
+    model.outbounds = [];
+    model.outbounds.push(new XrayOutboundObject("freedom", "direct"));
+    model.outbounds.push(new XrayOutboundObject("blackhole", "block"));
+
     return model;
   }
 }

@@ -5,7 +5,7 @@
         <tr>
           <th>OCSP stapling</th>
           <td>
-            <input v-model="certificate.ocspStapling" type="text" maxlength="4" class="input_6_table"
+            <input v-model="certificate.ocspStapling" type="number" maxlength="4" class="input_6_table"
               onkeypress="return validator.isNumber(this,event);" />
             <span class="hint-color">default: 3600</span>
           </td>

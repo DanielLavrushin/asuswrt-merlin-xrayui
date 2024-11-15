@@ -1,6 +1,6 @@
 <template>
   <div class="formfontdesc">
-    <table class="FormTable SettingsTable tableApi_table" id="xray_table_inbound_clients">
+    <table class="FormTable SettingsTable tableApi_table">
       <thead>
         <tr>
           <td colspan="3">Clients Online</td>
@@ -11,9 +11,9 @@
           <th>Ip</th>
           <th>Client</th>
         </tr>
-        <tr v-for="client in clients" :key="client.ip">
+        <tr v-for="client in clients" :key="client.ip" class="data_tr">
           <td><span class="label label-success">online</span> {{ client.ip }}</td>
-          <td>{{ client.email.join(", ") }}</td>
+          <td>{{ client.email.filter(email => email).join(", ") }}</td>
         </tr>
         <tr v-if="!clients.length" class="data_tr">
           <td colspan="3" style="color: #ffcc00">No one is online</td>

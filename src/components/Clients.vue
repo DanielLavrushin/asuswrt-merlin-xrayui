@@ -1,6 +1,6 @@
 <template>
   <div class="formfontdesc">
-    <table class="FormTable SettingsTable tableApi_table" id="xray_table_inbound_clients">
+    <table class="FormTable SettingsTable tableApi_table">
       <thead>
         <tr>
           <td colspan="3">Clients</td>

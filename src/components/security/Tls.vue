@@ -14,13 +14,6 @@
     </td>
   </tr>
   <tr>
-    <th>Allow Insecure</th>
-    <td>
-      <input v-model="tlsSettings.allowInsecure" type="checkbox" class="input" />
-      <span class="hint-color">default: false</span>
-    </td>
-  </tr>
-  <tr>
     <th>Don't use CA</th>
     <td>
       <input v-model="tlsSettings.disableSystemRoot" type="checkbox" class="input" />
@@ -72,61 +65,70 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, watch, reactive } from "vue";
-  import CertificatesModal from "../modals/CertificatesModal.vue";
-  import xrayConfig, { XrayStreamTlsSettingsObject, XrayStreamTlsCertificateObject } from "@/modules/XrayConfig";
+import engine, { SubmtActions } from "@/modules/Engine";
+import { defineComponent, ref, watch, reactive } from "vue";
+import CertificatesModal from "../modals/CertificatesModal.vue";
+import xrayConfig, { XrayStreamTlsSettingsObject, XrayStreamTlsCertificateObject } from "@/modules/XrayConfig";
 
-  export default defineComponent({
-    name: "Tls",
-    components: {
-      CertificatesModal,
+export default defineComponent({
+  name: "Tls",
+  components: {
+    CertificatesModal,
+  },
+  methods: {
+    certificate_manage() {
+      this.certificatesModal.show();
     },
-    methods: {
-      certificate_manage() {
-        this.certificatesModal.show();
+    async certificate_renew() {
+      const delay = 5000;
+      window.showLoading(delay / 1000);
+      await engine.submit(SubmtActions.CertificateRenew, null, delay);
+      await engine.loadXrayConfig();
+      window.hideLoading();
+
+
+    },
+  },
+  setup() {
+    const certificatesModal = ref();
+    const tlsSettings = ref<XrayStreamTlsSettingsObject>(xrayConfig.inbounds?.[0].streamSettings.tlsSettings ?? new XrayStreamTlsSettingsObject());
+    watch(
+      () => xrayConfig.inbounds?.[0].streamSettings?.tlsSettings,
+      (newObj) => {
+        tlsSettings.value = newObj ?? new XrayStreamTlsSettingsObject();
+        if (!newObj) {
+          xrayConfig.inbounds[0].streamSettings.tlsSettings = tlsSettings.value;
+        }
       },
-      certificate_renew() {},
-    },
-    setup() {
-      const certificatesModal = ref();
-      const tlsSettings = ref<XrayStreamTlsSettingsObject>(xrayConfig.inbounds?.[0].streamSettings.tlsSettings ?? new XrayStreamTlsSettingsObject());
-      watch(
-        () => xrayConfig.inbounds?.[0].streamSettings?.tlsSettings,
-        (newObj) => {
-          tlsSettings.value = newObj ?? new XrayStreamTlsSettingsObject();
-          if (!newObj) {
-            xrayConfig.inbounds[0].streamSettings.tlsSettings = tlsSettings.value;
-          }
-        },
-        { immediate: true }
-      );
+      { immediate: true }
+    );
 
-      watch(
-        () => tlsSettings.value.minVersion,
-        (newVal) => {
-          if (newVal > tlsSettings.value.maxVersion) {
-            tlsSettings.value.maxVersion = newVal;
-          }
+    watch(
+      () => tlsSettings.value.minVersion,
+      (newVal) => {
+        if (newVal > tlsSettings.value.maxVersion) {
+          tlsSettings.value.maxVersion = newVal;
         }
-      );
+      }
+    );
 
-      watch(
-        () => tlsSettings.value.maxVersion,
-        (newVal) => {
-          if (newVal < tlsSettings.value.minVersion) {
-            tlsSettings.value.minVersion = newVal;
-          }
+    watch(
+      () => tlsSettings.value.maxVersion,
+      (newVal) => {
+        if (newVal < tlsSettings.value.minVersion) {
+          tlsSettings.value.minVersion = newVal;
         }
-      );
+      }
+    );
 
-      return {
-        tlsSettings,
-        certificatesModal,
-        usageOptions: XrayStreamTlsCertificateObject.usageOptions,
-        tlsVersions: XrayStreamTlsSettingsObject.tlsVersionsOptions,
-        alpnOptions: XrayStreamTlsSettingsObject.alpnOptions,
-      };
-    },
-  });
+    return {
+      tlsSettings,
+      certificatesModal,
+      usageOptions: XrayStreamTlsCertificateObject.usageOptions,
+      tlsVersions: XrayStreamTlsSettingsObject.tlsVersionsOptions,
+      alpnOptions: XrayStreamTlsSettingsObject.alpnOptions,
+    };
+  },
+});
 </script>
 <style scoped></style>

@@ -27,7 +27,7 @@
   <script language="JavaScript" type="text/javascript" src="/switcherplugin/jquery.iphone-switch.js"></script>
   <script>
     var xray = {
-      custom_settings: (custom_settings = JSON.parse(`<% get_custom_settings(); %>`)),
+      custom_settings: JSON.parse(`<% get_custom_settings(); %>`),
       server: {
         isRunning: parseInt('<% sysinfo("pid.xray"); %>') > 0,
       },
@@ -41,6 +41,7 @@
         clientAdd: "xrayui_client_add",
       },
     };
+    console.log(xray);
   </script>
 </head>
 

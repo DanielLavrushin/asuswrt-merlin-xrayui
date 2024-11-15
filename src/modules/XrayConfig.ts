@@ -1,6 +1,7 @@
 import { reactive } from "vue";
 
 class XrayObject {
+  public log?: XrayLogObject;
   public inbounds: XrayInboundObject[] = [];
   public outbounds: XrayOutboundObject[] = [];
 
@@ -9,6 +10,14 @@ class XrayObject {
       this.inbounds.push(new XrayInboundObject());
     }
   }
+}
+class XrayLogObject {
+  static levelOptions: string[] = ["debug", "info", "warning", "error", "none"];
+  public access: string = "";
+  public error: string = "";
+  public loglevel: string = "warning";
+  public dnsLog: boolean = false;
+  public maskAddress: string = "";
 }
 
 class XrayAllocateObject {
@@ -43,6 +52,7 @@ class XrayStreamTlsCertificateObject {
   public keyFile?: string;
   public key?: string;
   public certificate?: string;
+  constructor() {}
 }
 
 class XrayStreamTlsSettingsObject {
@@ -56,14 +66,16 @@ class XrayStreamTlsSettingsObject {
   public disableSystemRoot: boolean = false;
   public enableSessionResumption: boolean = false;
   public alpn?: string[] = XrayStreamTlsSettingsObject.alpnOptions;
-  public minVersion: number = 1.3;
-  public maxVersion: number = 1.3;
+  public minVersion: number | string = 1.3;
+  public maxVersion: number | string = 1.3;
   public certificates: XrayStreamTlsCertificateObject[] = [];
   public fingerprint?: string;
   public pinnedPeerCertificateChainSha256?: string;
   public masterKeyLog?: string;
 
-  constructor() {}
+  constructor() {
+    this.certificates.push(new XrayStreamTlsCertificateObject());
+  }
 }
 
 class XrayStreamRealitySettingsObject {
@@ -145,7 +157,10 @@ class XrayInboundClientObject {
   public level: number | undefined;
 }
 
-class XrayOutboundObject {}
+class XrayOutboundObject {
+  public protocol: string | undefined = "freedom";
+  public settings: any = {};
+}
 
 let xrayConfig = reactive(new XrayObject());
 export default xrayConfig;

@@ -34,8 +34,9 @@ export default defineComponent({
   },
   methods: {
     async handleStatus(action: string) {
-      window.showLoading();
-      await engine.submit(action, null);
+      let delay = 2000;
+      window.showLoading(delay / 1000);
+      await engine.submit(action, null, delay);
       window.location.reload();
     },
   },

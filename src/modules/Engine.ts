@@ -2,6 +2,8 @@ import axios from "axios";
 import xrayConfig, { XrayObject, XrayInboundObject, XrayStreamTlsSettingsObject } from "./XrayConfig";
 
 class SubmtActions {
+  public static ConfigurationServerSave: string = "xrayui_configuration_server";
+  public static CertificateRenew: string = "xrayui_certificate_renew";
   public static clientsOnline: string = "xrayui_connectedclients";
   public static refreshConfig: string = "xrayui_refreshconfig";
   public static serverStart: string = "xrayui_serverstatus_start";
@@ -88,6 +90,18 @@ class Engine {
       }
     }
   };
+
+  public constructConfig(model: XrayObject): any {
+    if (model.inbounds) {
+      model.inbounds.forEach((inbound: XrayInboundObject) => {
+        if (inbound.streamSettings?.tlsSettings) {
+          inbound.streamSettings.tlsSettings.minVersion = `${inbound.streamSettings.tlsSettings.minVersion}`;
+          inbound.streamSettings.tlsSettings.maxVersion = `${inbound.streamSettings.tlsSettings.maxVersion}`;
+        }
+      });
+    }
+    return model;
+  }
 }
 
 let engine = new Engine();

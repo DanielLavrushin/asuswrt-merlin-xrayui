@@ -1,4 +1,3 @@
-import XrayObject from "./modules/XrayConfig";
 export {};
 
 interface XrayUiCustomSettings {
@@ -21,7 +20,7 @@ declare global {
   interface Window {
     xray: XrayUiGlobal;
     show_menu: () => void;
-    showLoading: () => void;
+    showLoading: (delay?: number | null) => void;
     hideLoading: () => void;
   }
 }

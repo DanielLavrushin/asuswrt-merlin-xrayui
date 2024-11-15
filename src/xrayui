@@ -248,6 +248,10 @@ cert_renew() {
     if [ ! -d "$cert_dir" ]; then
         logger "xrayui" "Directory $cert_dir does not exist. Creating it."
         mkdir -p "$cert_dir"
+        if [ $? -ne 0 ]; then
+            logger "xrayui" "Failed to create directory $cert_dir."
+            return 1
+        fi
     fi
 
     logger "xrayui" "Generating self-signed certificate for Xray in $cert_dir..."
@@ -267,29 +271,55 @@ cert_renew() {
     fi
 
     jq --arg cert_file "$cert_file" --arg key_file "$key_file" '
-    .inbounds[] |= (.streamSettings = {
-        "network": "tcp",
-        "security": "tls",
-        "tlsSettings": {
-            "certificates": [
+    .inbounds[] |= (
+        if has("streamSettings") then
+            .streamSettings.tlsSettings.certificates = [
                 {
-                    "certificateFile": $cert_file,
-                    "keyFile": $key_file
+                    certificateFile: $cert_file,
+                    keyFile: $key_file
                 }
-            ],
-            "allowInsecure": false
-        }
-    })
-    ' "$tempconfig" >"/tmp/xray-config.json" && mv /tmp/xray-config.json "$xray_config"
+            ]
+        else
+            .streamSettings |= {
+                network: "tcp",
+                security: "tls",
+                tlsSettings: {
+                    certificates: [
+                        {
+                            certificateFile: $cert_file,
+                            keyFile: $key_file
+                        }
+                    ]
+                }
+            }
+        end
+    )
+    ' "$tempconfig" >"/tmp/xray-config.json"
 
     if [ $? -eq 0 ]; then
-        logger "xrayui" "TLS settings added to Xray config successfully."
+        mv "/tmp/xray-config.json" "$xray_config"
+        logger "xrayui" "TLS certificates updated in Xray config successfully."
     else
-        logger "xrayui" "Failed to update Xray config with TLS settings."
+        logger "xrayui" "Failed to update TLS certificates in Xray config."
+        rm -f "/tmp/xray-config.json"
         return 1
     fi
 
     restart
+    if [ $? -eq 0 ]; then
+        logger "xrayui" "Xray service restarted successfully."
+    else
+        logger "xrayui" "Failed to restart Xray service."
+        return 1
+    fi
+
+    refresh_xray_config
+    if [ $? -eq 0 ]; then
+        logger "xrayui" "Xray UI configuration refreshed successfully."
+    else
+        logger "xrayui" "Failed to refresh Xray UI configuration."
+        return 1
+    fi
 }
 
 regenerate_reality_keys() {
@@ -340,6 +370,76 @@ regenerate_reality_keys() {
     return 0
 }
 
+save_server_config() {
+    local temp_config="/tmp/xray_server_config_new.json"
+    local backup_config="/opt/etc/xray/config.json.bak"
+
+    local incoming_config
+    incoming_config=$(am_settings_get xray_payload)
+    am_settings_del xray_payload
+
+    if [ -z "$incoming_config" ]; then
+        logger "xrayui" "No new server configuration provided."
+        exit 1
+    fi
+
+    echo "$incoming_config" >"$temp_config"
+    if [ $? -ne 0 ]; then
+        logger "xrayui" "Failed to write incoming configuration to $temp_config."
+        exit 1
+    fi
+
+    jq empty "$temp_config" >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        logger "xrayui" "Invalid JSON format in incoming server configuration."
+        rm -f "$temp_config"
+        exit 1
+    fi
+
+    cp "$xray_config" "$backup_config"
+    if [ $? -ne 0 ]; then
+        logger "xrayui" "Failed to backup existing configuration to $backup_config."
+        rm -f "$temp_config"
+        exit 1
+    fi
+    logger "xrayui" "Existing configuration backed up to $backup_config."
+
+    cp "$temp_config" "$xray_config"
+    if [ $? -ne 0 ]; then
+        logger "xrayui" "Failed to apply new configuration to $xray_config."
+        cp "$backup_config" "$xray_config"
+        if [ $? -ne 0 ]; then
+            logger "xrayui" "Critical: Failed to restore configuration from backup."
+        fi
+        rm -f "$temp_config"
+        exit 1
+    fi
+    logger "xrayui" "New server configuration applied successfully."
+
+    rm -f "$temp_config"
+
+    restart
+    if [ $? -ne 0 ]; then
+        logger "xrayui" "Failed to restart Xray service after applying new configuration."
+        cp "$backup_config" "$xray_config"
+        restart
+        exit 1
+    fi
+    logger "xrayui" "Xray service restarted successfully with the new configuration."
+
+    refresh_xray_config
+    if [ $? -ne 0 ]; then
+        logger "xrayui" "Failed to refresh Xray UI configuration."
+        exit 1
+    fi
+    logger "xrayui" "Xray UI configuration refreshed successfully."
+
+    rm -f "$backup_config"
+    logger "xrayui" "Backup configuration $backup_config removed."
+    am_settings_del xray_server_config
+    exit 0
+}
+
 case "$1" in
 start)
     start
@@ -365,6 +465,14 @@ service_event)
         exit 0
     elif [ "$2" = "connectedclients" ]; then
         get_connected_clients
+        exit 0
+    elif [ "$2" = "configuration" ]; then
+        case "$3" in
+        "server")
+            save_server_config
+            exit 0
+            ;;
+        esac
         exit 0
     elif [ "$2" = "certificate" ]; then
         case "$3" in

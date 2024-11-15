@@ -30,10 +30,22 @@
                             <div class="formfontdesc">
                               <div>&nbsp;</div>
                               <div class="formfonttitle" id="scripttitle" style="text-align: center">X-RAY Core</div>
+                              <div class="xray_type_switches">
+                                <div class="xray_type_switch left" :class="{ selected: engine.mode === 'server' }"
+                                  @click.prevent="switch_type('server')">
+                                  <div>Server</div>
+                                </div>
+                                <div class="xray_type_switch right" :class="{ selected: engine.mode === 'client' }"
+                                  @click.prevent="switch_type('client')">
+                                  <div>Client</div>
+                                </div>
+                              </div>
                               <div id="formfontdesc" class="formfontdesc">This UI control page provides a simple
                                 interface to manage and monitor the X-ray Core's configuration and it's status.</div>
                               <div style="margin: 10px 0 10px 5px" class="splitLine"></div>
-                              <table width="100%" bordercolor="#6b8fa3" class="FormTable">
+                              <mode-client v-if="engine.mode == 'client'"></mode-client>
+                              <table width="100%" bordercolor="#6b8fa3" class="FormTable"
+                                v-if="engine.mode == 'server'">
                                 <thead>
                                   <tr>
                                     <td colspan="2">Configuration</td>
@@ -51,7 +63,7 @@
                                           {{ protocol }}
                                         </option>
                                       </select>
-                                      <span class="hint-color">default: vmess</span>
+                                      <span class="hint-color">default: vless</span>
                                     </td>
                                   </tr>
                                   <tr>
@@ -89,13 +101,13 @@
                                 </tbody>
                               </table>
                             </div>
-                            <routing></routing>
-                            <div id="divApply" class="apply_gen">
+                            <routing v-if="engine.mode == 'server'"></routing>
+                            <div id="divApply" class="apply_gen" v-if="engine.mode == 'server'">
                               <input class="button_gen" @click.prevent="applyServerSettings()" type="button"
                                 value="Apply" />
                             </div>
-                            <clients></clients>
-                            <clients-online></clients-online>
+                            <clients v-if="engine.mode == 'server'"></clients>
+                            <clients-online v-if="engine.mode == 'server'"></clients-online>
                           </td>
                         </tr>
                       </tbody>
@@ -125,6 +137,8 @@ import ServerStatus from "./ServerStatus.vue";
 import Sniffing from "./Sniffing.vue";
 import Routing from "./Routing.vue";
 
+import ModeClient from "./ModeClient.vue";
+
 import NetworkKcp from "./transport/Kcp.vue";
 import NetworkTcp from "./transport/Tcp.vue";
 
@@ -150,8 +164,18 @@ export default defineComponent({
     SecurityTls,
     SecurityReality,
     Routing,
+    ModeClient,
   },
   methods: {
+    async switch_type(type: string) {
+      engine.mode = type;
+      let delay = 1000;
+      window.showLoading(delay / 1000);
+      window.xray.custom_settings.xray_mode = type;
+      await engine.submit(SubmtActions.ConfigurationSetMode, { mode: type }, delay);
+      window.location.reload();
+
+    },
     validateAvailableSecurity(opt: string): boolean {
       switch (opt) {
         case "reality":
@@ -214,6 +238,7 @@ export default defineComponent({
     );
 
     return {
+      engine,
       networks: XrayStreamSettingsObject.networkOptions,
       securities: XrayStreamSettingsObject.securityOptions,
       protocols: XrayInboundObject.protocols,
@@ -227,3 +252,54 @@ export default defineComponent({
   },
 });
 </script>
+<style scoped>
+.xray_type_switches {
+  margin-top: -40px;
+  float: right;
+}
+
+.xray_type_switch {
+  cursor: pointer;
+  width: 110px;
+  height: 30px;
+  float: left;
+  background: linear-gradient(to bottom, #758084 0%, #546166 36%, #394245 100%);
+  border-color: #222728;
+  border-width: 1px;
+  border-style: solid;
+}
+
+.xray_type_switch.left {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+.xray_type_switch.right {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.xray_type_switch.selected {
+  background: none;
+  background-color: #353D40;
+  border-color: #222728;
+  border-width: 1px;
+  border-style: inset;
+
+}
+
+.xray_type_switch.selected div {
+  color: #FFFFFF;
+  font-weight: bold;
+}
+
+.xray_type_switch div {
+  text-align: center;
+  color: #CCCCCC;
+  font-size: 14px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>

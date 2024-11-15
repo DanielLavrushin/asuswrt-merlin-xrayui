@@ -2,8 +2,8 @@ export {};
 
 interface XrayUiCustomSettings {
   xray_ui_page: string;
-  xray_enable: boolean;
   xray_payload: string | undefined;
+  xray_mode: string;
 }
 
 interface XrayUiServer {

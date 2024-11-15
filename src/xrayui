@@ -148,7 +148,6 @@ client_delete() {
 
     logger "xrayui" "Removing client from Xray $xray_config: email=$email, id=$id"
 
-    # Use jq to filter out the client matching both email and id
     jq --arg email "$email" --arg id "$id" '
     .inbounds[].settings.clients |= map(select(.email != $email or .id != $id))
     ' $tempconfig >"/tmp/xray-config.json" && mv /tmp/xray-config.json "$xray_config"
@@ -370,6 +369,16 @@ regenerate_reality_keys() {
     return 0
 }
 
+switch_mode() {
+    mode=$(am_settings_get xray_payload)
+    am_settings_del xray_payload
+
+    mode_type=$(echo "$mode" | jq -r '.mode')
+    logger "xrayui" "Switching Xray mode to $mode_type"
+
+    am_settings_set xray_mode $mode_type
+}
+
 save_server_config() {
     local temp_config="/tmp/xray_server_config_new.json"
     local backup_config="/opt/etc/xray/config.json.bak"
@@ -470,6 +479,10 @@ service_event)
         case "$3" in
         "server")
             save_server_config
+            exit 0
+            ;;
+        "mode")
+            switch_mode
             exit 0
             ;;
         esac

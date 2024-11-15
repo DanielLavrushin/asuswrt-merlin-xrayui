@@ -2,6 +2,7 @@ import axios from "axios";
 import xrayConfig, { XrayObject, XrayInboundObject, XrayStreamTlsSettingsObject, XrayOutboundObject } from "./XrayConfig";
 
 class SubmtActions {
+  public static ConfigurationSetMode: string = "xrayui_configuration_mode";
   public static ConfigurationServerSave: string = "xrayui_configuration_server";
   public static CertificateRenew: string = "xrayui_certificate_renew";
   public static clientsOnline: string = "xrayui_connectedclients";
@@ -16,6 +17,7 @@ class SubmtActions {
 
 class Engine {
   public xrayConfig: XrayObject = xrayConfig;
+  public mode: string = "server";
 
   public submit(action: string, payload: any | undefined = undefined, delay: number = 0): Promise<void> {
     return new Promise((resolve, reject) => {

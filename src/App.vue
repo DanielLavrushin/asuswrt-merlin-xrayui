@@ -32,6 +32,7 @@ export default defineComponent({
     onMounted(async () => {
       window.show_menu();
       window.showLoading();
+      engine.mode = window.xray.custom_settings.xray_mode;
       await engine.submit(window.xray.commands.refreshConfig);
       await engine.loadXrayConfig();
       window.hideLoading();

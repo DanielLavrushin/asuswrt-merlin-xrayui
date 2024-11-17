@@ -44,70 +44,8 @@
                                 interface to manage and monitor the X-ray Core's configuration and it's status.</div>
                               <div style="margin: 10px 0 10px 5px" class="splitLine"></div>
                               <mode-client v-if="engine.mode == 'client'"></mode-client>
-                              <table width="100%" bordercolor="#6b8fa3" class="FormTable"
-                                v-if="engine.mode == 'server'">
-                                <thead>
-                                  <tr>
-                                    <td colspan="2">Configuration</td>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  <server-status></server-status>
-                                  <ports></ports>
-                                  <sniffing></sniffing>
-                                  <tr>
-                                    <th>Protocol</th>
-                                    <td>
-                                      <select v-model="inbound.protocol" class="input_option">
-                                        <option v-for="protocol in protocols" :key="protocol" :value="protocol">
-                                          {{ protocol }}
-                                        </option>
-                                      </select>
-                                      <span class="hint-color">default: vless</span>
-                                    </td>
-                                  </tr>
-                                  <tr>
-                                    <th>
-                                      <a class="hintstyle" href="javascript:void(0);"
-                                        onmouseover="hint(this,'The underlying protocol of the transport used by the data stream of the connection');">Network</a>
-                                    </th>
-                                    <td>
-                                      <select class="input_option" v-model="inbound.streamSettings.network">
-                                        <option v-for="network in networks" :key="network" :value="network">
-                                          {{ network }}
-                                        </option>
-                                      </select>
-                                      <span class="hint-color">default: tcp</span>
-                                    </td>
-                                  </tr>
-                                  <component :is="networkComponent" :config="networkConfig" />
-                                  <tr>
-                                    <th>
-                                      <a class="hintstyle" href="javascript:void(0);"
-                                        onmouseover="hint(this,'Whether to enable transport layer encryption. ');">Security</a>
-                                    </th>
-                                    <td>
-                                      <select class="input_option" v-model="inbound.streamSettings.security">
-                                        <template v-for="opt in securities">
-                                          <option :key="opt" :value="opt" v-if="validateAvailableSecurity(opt)">
-                                            {{ opt.toUpperCase() }}
-                                          </option>
-                                        </template>
-                                      </select>
-                                      <span class="hint-color">default: none</span>
-                                    </td>
-                                  </tr>
-                                  <component :is="securityComponent" />
-                                </tbody>
-                              </table>
+                              <mode-server v-if="engine.mode == 'server'"></mode-server>
                             </div>
-                            <routing v-if="engine.mode == 'server'"></routing>
-                            <div id="divApply" class="apply_gen" v-if="engine.mode == 'server'">
-                              <input class="button_gen" @click.prevent="applyServerSettings()" type="button"
-                                value="Apply" />
-                            </div>
-                            <clients v-if="engine.mode == 'server'"></clients>
-                            <clients-online v-if="engine.mode == 'server'"></clients-online>
                           </td>
                         </tr>
                       </tbody>
@@ -130,41 +68,21 @@ import MainMenu from "./asus/MainMenu.vue";
 import TabMenu from "./asus/TabMenu.vue";
 import SubMenu from "./asus/SubMenu.vue";
 
-import Ports from "./Ports.vue";
-import Clients from "./Clients.vue";
-import ClientsOnline from "./ClientsOnline.vue";
-import ServerStatus from "./ServerStatus.vue";
-import Sniffing from "./Sniffing.vue";
-import Routing from "./Routing.vue";
-
 import ModeClient from "./ModeClient.vue";
+import ModeServer from "./ModeServer.vue";
 
-import NetworkKcp from "./transport/Kcp.vue";
-import NetworkTcp from "./transport/Tcp.vue";
-
-import SecurityTls from "./security/Tls.vue";
-import SecurityReality from "./security/Reality.vue";
 
 import engine, { SubmtActions } from "../modules/Engine";
-import xrayConfig, { XrayInboundObject, XrayStreamSettingsObject } from "../modules/XrayConfig";
+import xrayConfig from "../modules/XrayConfig";
 
 export default defineComponent({
   name: "MainForm",
   components: {
-    Ports,
-    Sniffing,
-    NetworkKcp,
-    NetworkTcp,
     TabMenu,
     MainMenu,
     SubMenu,
-    Clients,
-    ServerStatus,
-    ClientsOnline,
-    SecurityTls,
-    SecurityReality,
-    Routing,
     ModeClient,
+    ModeServer
   },
   methods: {
     async switch_type(type: string) {
@@ -176,77 +94,13 @@ export default defineComponent({
       window.location.reload();
 
     },
-    validateAvailableSecurity(opt: string): boolean {
-      switch (opt) {
-        case "reality":
-          let isVless = this.xrayConfig.inbounds[0].protocol === "vless";
-          if (!isVless && this.xrayConfig.inbounds[0].streamSettings.security === opt) {
-            this.xrayConfig.inbounds[0].streamSettings.security = "none";
-          }
-          return isVless;
-      }
-      return true;
-    },
-    async applyServerSettings() {
-      let delay = 5000;
-
-      window.showLoading(delay / 1000);
-      const cfg = engine.constructConfig(this.xrayConfig);
-      await engine.submit(SubmtActions.ConfigurationServerSave, cfg, delay);
-      await engine.loadXrayConfig();
-      window.hideLoading();
-    },
   },
 
   setup() {
-    const inbound = ref<XrayInboundObject>(xrayConfig.inbounds?.[0] ?? new XrayInboundObject());
-
-    const networkConfig = ref({
-      acceptProxy: false,
-      mtu: 1200,
-    });
-
-    const networkComponent = computed(() => {
-      switch (inbound.value.streamSettings.network) {
-        case "tcp":
-          return NetworkTcp;
-        case "kcp":
-          return NetworkKcp;
-        default:
-          return null;
-      }
-    });
-
-    const securityComponent = computed(() => {
-      switch (inbound.value.streamSettings.security) {
-        case "tls":
-          return SecurityTls;
-        case "reality":
-          return SecurityReality;
-        default:
-          return null;
-      }
-    });
-
-    watch(
-      () => xrayConfig.inbounds?.[0],
-      (newObj) => {
-        inbound.value = newObj ?? new XrayInboundObject();
-        engine.validateInbound(newObj);
-      },
-      { immediate: true }
-    );
 
     return {
       engine,
-      networks: XrayStreamSettingsObject.networkOptions,
-      securities: XrayStreamSettingsObject.securityOptions,
-      protocols: XrayInboundObject.protocols,
       xrayConfig,
-      inbound,
-      networkConfig,
-      networkComponent,
-      securityComponent,
       xray_ui_page: window.xray.custom_settings.xray_ui_page,
     };
   },

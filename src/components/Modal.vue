@@ -1,21 +1,28 @@
 <template>
-  <div class="modal-overlay" v-if="isVisible" @click="close">
-    <div class="modal-content" @click.stop :style="{ width: width + 'px' }">
-      <header class="modal-header">
-        <h2>{{ title }}</h2>
-        <button class="close-btn" @click="close">×</button>
-      </header>
-      <div class="modal-body">
-        <slot></slot>
+  <Teleport to="body">
+    <div class="modal-overlay" v-if="isVisible" @mousedown.self="close">
+      <div class="modal-content" @click.stop :style="{ width: width + 'px' }">
+        <header class="modal-header">
+          <h2>
+            <slot name="title">
+              {{ title }}
+            </slot>
+          </h2>
+          <button class="close-btn" @click="close">×</button>
+        </header>
+        <div class="modal-body">
+          <slot></slot>
+        </div>
+        <footer class="modal-footer">
+          <span class="row-buttons">
+            <slot name="footer">
+              <button @click.prevent="close" class="button_gen button_gen_small">Close</button>
+            </slot>
+          </span>
+        </footer>
       </div>
-      <footer class="modal-footer">
-        <span class="row-buttons">
-          <slot name="footer"></slot>
-          <button @click.prevent="close" class="button_gen button_gen_small">Close</button>
-        </span>
-      </footer>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script lang="ts">
@@ -34,23 +41,25 @@ export default defineComponent({
       default: "755",
     },
   },
+  methods: {
+    onClosePressed() { },
+    async show(onClose: () => void) {
+      this.isVisible = true;
+      this.onClosePressed = onClose;
+
+    },
+    async close() {
+      this.isVisible = false;
+
+      this.$emit("close");
+      if (this.onClosePressed && typeof this.onClosePressed === "function") {
+        this.onClosePressed();
+      }
+    },
+  },
   setup() {
     const isVisible = ref(false);
-    let onClosePressed = () => { };
-    const show = (onClose: () => void) => {
-      isVisible.value = true;
-
-      onClosePressed = onClose;
-    };
-
-    const close = () => {
-      isVisible.value = false;
-      if (onClosePressed) {
-        onClosePressed();
-      }
-    };
-
-    return { isVisible, show, close };
+    return { isVisible };
   },
 });
 </script>
@@ -68,6 +77,11 @@ export default defineComponent({
   justify-content: center;
   align-items: center;
   z-index: 1000;
+}
+
+.modal-overlay:not(:last-child) {
+  background-color: rgba(0, 0, 0, 0) !important;
+  backdrop-filter: initial !important;
 }
 
 .modal-content {
@@ -117,5 +131,6 @@ export default defineComponent({
 
 .modal-body>>>.modal-form-table td {
   text-align: left;
+  line-height: 23px;
 }
 </style>

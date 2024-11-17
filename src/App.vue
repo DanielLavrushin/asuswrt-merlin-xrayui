@@ -25,6 +25,8 @@ export default defineComponent({
     AsusFooter,
   },
   setup() {
+    engine.mode = window.xray.custom_settings.xray_mode;
+    console.log("custom_settings", window.xray.custom_settings);
     window.scrollTo = () => { };
     const xrayConfig = engine.xrayConfig;
     provide("xrayConfig", xrayConfig);
@@ -32,7 +34,6 @@ export default defineComponent({
     onMounted(async () => {
       window.show_menu();
       window.showLoading();
-      engine.mode = window.xray.custom_settings.xray_mode;
       await engine.submit(window.xray.commands.refreshConfig);
       await engine.loadXrayConfig();
       window.hideLoading();
@@ -47,6 +48,12 @@ export default defineComponent({
 </script>
 
 <style>
+.hint {
+  color: #fc0 !important;
+  text-decoration: underline !important;
+  cursor: pointer;
+}
+
 input[type="checkbox"],
 input[type="radio"] {
   vertical-align: top;
@@ -55,6 +62,10 @@ input[type="radio"] {
 .hint-color {
   float: right;
   margin-right: 5px;
+}
+
+.FormTable {
+  margin-bottom: 14px
 }
 
 .FormTable td span.label {

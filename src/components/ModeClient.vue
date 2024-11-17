@@ -5,7 +5,7 @@
                 <td colspan="2">Configuration</td>
             </tr>
         </thead>
-        <tbody>
+        <tbody v-if="outbound.settings">
             <client-status></client-status>
             <tr>
                 <th>Protocol</th>
@@ -18,10 +18,11 @@
                     <span class="hint-color">default: vless</span>
                 </td>
             </tr>
-            <tr>
+            <tr v-if="outbound.settings">
                 <th>Address</th>
                 <td>
-                    <input type="text" maxlength="15" class="input_20_table" v-model="outbound.address"
+                    <input type="text" maxlength="15" class="input_20_table"
+                        v-model="outbound.settings.vnext[0].address"
                         onkeypress="return validator.isIPAddr(this, event);" autocomplete="off" autocorrect="off"
                         autocapitalize="off" />
                     <span class="hint-color"></span>
@@ -30,16 +31,31 @@
             <tr>
                 <th> Port</th>
                 <td>
-                    <input type="text" maxlength="5" class="input_6_table" v-model="outbound.port" autocorrect="off"
-                        autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
+                    <input type="number" maxlength="5" class="input_6_table" v-if="outbound.settings"
+                        v-model="outbound.settings.vnext[0].port" autocorrect="off" autocapitalize="off"
+                        onkeypress="return validator.isNumber(this,event);" />
                 </td>
             </tr>
             <tr>
                 <th> UUID</th>
                 <td>
-                    <input type="text" maxlength="34" class="input_25_table"
-                        v-model="outbound.settings.vnext[0].users[0].id" autocorrect="off" autocapitalize="off"
-                        onkeypress="return validator.isNumber(this,event);" />
+                    <input type="text" maxlength="34" class="input_25_table" v-if="outbound.settings"
+                        v-model="outbound.settings.vnext[0].users[0].id" autocorrect="off" autocapitalize="off" />
+                </td>
+            </tr>
+            <tr>
+                <th> Encryption</th>
+                <td>
+                    <input type="text" class="input_25_table" v-if="outbound.settings"
+                        v-model="outbound.settings.vnext[0].users[0].encryption" autocorrect="off"
+                        autocapitalize="off" />
+                </td>
+            </tr>
+            <tr>
+                <th> flow</th>
+                <td>
+                    <input type="text" class="input_25_table" v-if="outbound.settings"
+                        v-model="outbound.settings.vnext[0].users[0].flow" autocorrect="off" autocapitalize="off" />
                 </td>
             </tr>
         </tbody>
@@ -50,9 +66,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "vue";
-import xrayConfig, { XrayInboundObject, XrayStreamSettingsObject } from "../modules/XrayConfig";
-
+import { defineComponent, ref, watch } from "vue";
+import engine from "../modules/Engine";
+import { XrayInboundObject, XrayClientObject, XrayClientOutboundObject } from "../modules/XrayConfig";
+import { SubmtActions } from "../modules/Engine";
 import ClientStatus from "./ClientStatus.vue";
 
 export default defineComponent({
@@ -61,41 +78,31 @@ export default defineComponent({
         ClientStatus,
     },
     methods: {
-        applyClientSettings() {
-            console.log(this.config);
+        async applyClientSettings() {
+            let delay = 5000;
+
+            window.showLoading(delay / 1000);
+            await engine.submit(SubmtActions.ConfigurationClientSave, engine.xrayClientConfig, delay);
+            await engine.loadXrayConfig();
+            window.hideLoading();
         },
     },
     setup() {
-        const config = ref<any>({});
+        const config = ref<XrayClientObject>(engine.xrayClientConfig ?? new XrayClientObject());
+        const outbound = ref<XrayClientOutboundObject>(config.value.outbounds[0] ?? new XrayClientOutboundObject());
 
-        config.value.outbounds = [];
-        config.value.outbounds.push({
-            protocol: "vless",
-            settings: {
-                vnext: [
-                    {
-                        address: "",
-                        users: [{
-                            encription: "",
-                            id: "",
-                            flow: "",
-                        }],
-                    }]
+        watch(() => engine.xrayClientConfig,
+            (newVal) => {
+                config.value = newVal;
+                outbound.value = config.value.outbounds[0] ?? new XrayClientOutboundObject();
             },
-            streamSettings: {
-                network: "raw",
-                security: "reality",
-                tlsSettings: {
-                    serverName: "",
-                    allowInsecure: false,
-                },
-            },
-        });
-        const outbound = ref(config.value.outbounds[0]);
+            { immediate: true, deep: true },
+        );
+
         return {
             config,
             outbound,
-            protocols: XrayInboundObject.protocols,
+            protocols: [],
         };
     },
 });

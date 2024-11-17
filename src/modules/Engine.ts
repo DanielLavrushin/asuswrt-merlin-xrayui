@@ -1,9 +1,10 @@
 import axios from "axios";
-import xrayConfig, { XrayObject, XrayInboundObject, XrayStreamTlsSettingsObject, XrayOutboundObject } from "./XrayConfig";
+import xrayConfig, { xrayClientConfig, XrayClientObject, XrayObject, XrayInboundObject, XrayStreamTlsSettingsObject, XrayOutboundObject, IProtocolType } from "./XrayConfig";
 
 class SubmtActions {
   public static ConfigurationSetMode: string = "xrayui_configuration_mode";
   public static ConfigurationServerSave: string = "xrayui_configuration_server";
+  public static ConfigurationClientSave: string = "xrayui_configuration_client";
   public static CertificateRenew: string = "xrayui_certificate_renew";
   public static clientsOnline: string = "xrayui_connectedclients";
   public static refreshConfig: string = "xrayui_refreshconfig";
@@ -17,6 +18,7 @@ class SubmtActions {
 
 class Engine {
   public xrayConfig: XrayObject = xrayConfig;
+  public xrayClientConfig: XrayClientObject = xrayClientConfig;
   public mode: string = "server";
 
   public submit(action: string, payload: any | undefined = undefined, delay: number = 0): Promise<void> {
@@ -72,12 +74,17 @@ class Engine {
     return realityKeys;
   }
   async loadXrayConfig(): Promise<XrayObject> {
-    const response = await axios.get<XrayObject>("/ext/xray-ui/xray-config.json");
-    Object.assign(this.xrayConfig, response.data);
+    const response = await axios.get<XrayObject>(this.mode === "server" ? "/ext/xray-ui/xray-config.json" : "/ext/xray-ui/xray-config-client.json");
+    if (this.mode === "server") {
+      Object.assign(this.xrayConfig, response.data);
+    } else {
+      Object.assign(this.xrayClientConfig, response.data);
+    }
+
     return this.xrayConfig;
   }
 
-  validateInbound = (inbound: XrayInboundObject): void => {
+  validateInbound = (inbound: XrayInboundObject<IProtocolType>): void => {
     if (inbound.streamSettings?.tlsSettings) {
       let tls = inbound.streamSettings.tlsSettings;
       if (!tls.minVersion) {
@@ -92,19 +99,6 @@ class Engine {
       }
     }
   };
-
-  public constructConfig(model: XrayObject): any {
-    if (model.inbounds) {
-      model.inbounds.forEach((inbound: XrayInboundObject) => {
-        console.log(typeof inbound?.streamSettings.tlsSettings?.certificates[0].ocspStapling);
-      });
-    }
-    model.outbounds = [];
-    model.outbounds.push(new XrayOutboundObject("freedom", "direct"));
-    model.outbounds.push(new XrayOutboundObject("blackhole", "block"));
-
-    return model;
-  }
 }
 
 let engine = new Engine();

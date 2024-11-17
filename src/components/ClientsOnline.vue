@@ -48,14 +48,16 @@ export default defineComponent({
       }
     };
 
-    onMounted(async () => {
-      await engine.submit(SubmtActions.clientsOnline);
-      await fetchClients();
-      intervalId = setInterval(async () => {
+    if (engine.mode == "server") {
+      onMounted(async () => {
         await engine.submit(SubmtActions.clientsOnline);
         await fetchClients();
-      }, 3000);
-    });
+        intervalId = setInterval(async () => {
+          await engine.submit(SubmtActions.clientsOnline);
+          await fetchClients();
+        }, 3000);
+      });
+    }
 
     onBeforeUnmount(() => {
       if (intervalId) {

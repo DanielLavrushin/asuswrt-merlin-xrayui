@@ -1,22 +1,229 @@
 import { reactive } from "vue";
 
-class XrayObject {
-  public log?: XrayLogObject;
-  public inbounds: XrayInboundObject[] = [];
-  public outbounds: XrayOutboundObject[] = [];
-  public routing?: XrayRoutingObject;
+class XrayOptions {
+  static transportOptions: string[] = ["tcp", "kcp", "ws", "http", "grpc", "httpupgrade", "splithttp"];
+  static securityOptions: string[] = ["none", "tls", "reality"];
+  static logOptions: string[] = ["debug", "info", "warning", "error", "none"];
+  static networkOptions: string[] = ["tcp", "udp", "tcp,udp"];
+  static protocolOptions: string[] = ["http", "tls", "bittorrent"];
+  static domainStrategyOptions: string[] = ["AsIs", "IPIfNonMatch", "IPOnDemand"];
+  static domainMatcherOptions: string[] = ["hybrid", "linear"];
+  static usageOptions: string[] = ["encipherment", "verify", "issue"];
+  static alpnOptions: string[] = ["h2", "http/1.1"];
+  static fingerprintOptions: string[] = ["randomized", "random", "chrome", "firefox", "ios", "android", "safari", "edge", "360", "qq"];
+  static tlsVersionsOptions: string[] = ["1.0", "1.1", "1.2", "1.3"];
+}
 
-  constructor() {
-    if (this.inbounds.length === 0) {
-      this.inbounds.push(new XrayInboundObject());
-    }
+enum XrayProtocol {
+  VLESS = "vless",
+  VMESS = "vmess",
+  SHADOWSOCKS = "shadowsocks",
+  TROJAN = "trojan",
+  WIREGUARD = "wireguard",
+  SOCKS = "socks",
+  HTTP = "http",
+  DNS = "dns",
+  DOKODEMODOOR = "dokodemo-door",
+  FREEDOM = "freedom",
+  BLACKHOLE = "blackhole",
+  LOOPBACK = "loopback",
+}
 
-    if (this.outbounds.length === 0) {
-      this.outbounds.push(new XrayOutboundObject("freedom", "direct"));
-      this.outbounds.push(new XrayOutboundObject("blackhole", "block"));
+enum XrayProtocolMode {
+  Inbound = 1 << 0,
+  Outbound = 1 << 1,
+  ServerMode = 1 << 2,
+  ClientMode = 1 << 3,
+  TwoWays = Inbound | Outbound,
+  BothModes = ServerMode | ClientMode,
+  All = TwoWays | BothModes,
+}
+
+interface IProtocolType {}
+interface ITransportNetwork {}
+
+class XrayOutboundObject<IProtocolType> {
+  public protocol!: XrayProtocol;
+  public sendThrough: string = "0.0.0.0";
+  public tag?: string;
+  public settings!: IProtocolType;
+  public streamSettings?: XrayStreamSettingsObject;
+
+  constructor(protocol: XrayProtocol | undefined = undefined, settings: IProtocolType | undefined = undefined) {
+    if (protocol && settings) {
+      this.settings = settings;
+      this.protocol = protocol;
+      this.tag = "obd-" + this.protocol;
     }
   }
 }
+
+class XrayInboundObject<IProtocolType> {
+  public protocol!: XrayProtocol;
+  public listen: string = "127.0.0.1";
+  public port!: number | string;
+  public tag?: string;
+  public settings!: IProtocolType;
+  public streamSettings?: XrayStreamSettingsObject;
+  public allocate?: XrayAllocateObject;
+  public sniffing?: XraySniffingObject;
+
+  constructor(protocol: XrayProtocol | undefined = undefined, settings: IProtocolType | undefined = undefined) {
+    if (protocol && settings) {
+      this.settings = settings;
+      this.protocol = protocol;
+      this.tag = "ibd-" + this.protocol;
+    }
+  }
+}
+
+class XrayDokodemoDoorInboundObject implements IProtocolType {
+  public address!: string;
+  public port?: number;
+  public network: string = "tcp";
+  public followRedirect: boolean = false;
+  public userLevel: number = 0;
+}
+
+class XrayVmessInboundObject implements IProtocolType {
+  public clients: XrayInboundClientObject[] = [];
+}
+
+class XrayBlackholeOutboundObject implements IProtocolType {}
+
+class XrayFreedomOutboundObject implements IProtocolType {}
+
+class XrayInboundClientObject {
+  public id: string | undefined;
+  public email: string | undefined;
+  public level: number | undefined;
+}
+
+class XrayProtocolOption {
+  public protocol!: XrayProtocol;
+  public modes!: XrayProtocolMode;
+}
+
+const xrayProtocols: XrayProtocolOption[] = [
+  {
+    protocol: XrayProtocol.DOKODEMODOOR,
+    modes: XrayProtocolMode.Inbound | XrayProtocolMode.BothModes,
+  },
+  {
+    protocol: XrayProtocol.HTTP,
+    modes: XrayProtocolMode.TwoWays | XrayProtocolMode.BothModes,
+  },
+  {
+    protocol: XrayProtocol.SHADOWSOCKS,
+    modes: XrayProtocolMode.TwoWays | XrayProtocolMode.BothModes,
+  },
+  {
+    protocol: XrayProtocol.SOCKS,
+    modes: XrayProtocolMode.TwoWays | XrayProtocolMode.BothModes,
+  },
+  {
+    protocol: XrayProtocol.TROJAN,
+    modes: XrayProtocolMode.TwoWays | XrayProtocolMode.ServerMode,
+  },
+  {
+    protocol: XrayProtocol.VLESS,
+    modes: XrayProtocolMode.TwoWays | XrayProtocolMode.ServerMode,
+  },
+  {
+    protocol: XrayProtocol.VMESS,
+    modes: XrayProtocolMode.TwoWays | XrayProtocolMode.ServerMode,
+  },
+  {
+    protocol: XrayProtocol.WIREGUARD,
+    modes: XrayProtocolMode.TwoWays | XrayProtocolMode.ServerMode,
+  },
+  {
+    protocol: XrayProtocol.FREEDOM,
+    modes: XrayProtocolMode.Outbound | XrayProtocolMode.BothModes,
+  },
+  {
+    protocol: XrayProtocol.BLACKHOLE,
+    modes: XrayProtocolMode.Outbound | XrayProtocolMode.BothModes,
+  },
+  {
+    protocol: XrayProtocol.LOOPBACK,
+    modes: XrayProtocolMode.Outbound | XrayProtocolMode.BothModes,
+  },
+  {
+    protocol: XrayProtocol.DNS,
+    modes: XrayProtocolMode.Outbound | XrayProtocolMode.BothModes,
+  },
+];
+
+export { XrayBlackholeOutboundObject, XrayFreedomOutboundObject };
+export { ITransportNetwork, XrayProtocol, XrayProtocolMode, IProtocolType, XrayProtocolOption, XrayVmessInboundObject, XrayDokodemoDoorInboundObject, xrayProtocols };
+
+class XrayObject {
+  public log?: XrayLogObject;
+  public inbounds: XrayInboundObject<IProtocolType>[] = [];
+  public outbounds: XrayOutboundObject<IProtocolType>[] = [];
+  public routing?: XrayRoutingObject;
+
+  constructor() {}
+}
+
+class XrayClientObject {
+  public log?: XrayLogObject;
+  public inbounds: XrayClientInboundObject[] = [];
+  public outbounds: XrayClientOutboundObject[] = [];
+  public rooting?: XrayRoutingObject;
+
+  constructor() {
+    if (this.outbounds.length === 0) {
+      this.outbounds.push(new XrayClientOutboundObject("vless", "proxy"));
+      this.outbounds[0].settings = new XrayClientSettingsObject();
+      this.outbounds.push(new XrayClientOutboundObject("freedom", "direct"));
+      this.outbounds.push(new XrayClientOutboundObject("blackhole", "block"));
+    }
+  }
+}
+class XrayClientInboundObject {
+  public sniffing?: XraySniffingObject;
+}
+class XrayClientOutboundObject {
+  public protocol: string = "vless";
+  public tag: string = "proxy";
+  public settings?: XrayClientSettingsObject;
+  public streamSettings?: XrayStreamSettingsObject;
+
+  constructor(protocol: string | undefined = undefined, tag: string | undefined = undefined) {
+    this.protocol = protocol ? protocol : "vless";
+    this.tag = tag ? tag : "proxy";
+  }
+}
+
+class XrayClientSettingsObject {
+  public nonIPQuery?: string;
+  public vnext: XrayClientVnextObject[] = [];
+  constructor() {
+    if (this.vnext.length === 0) {
+      this.vnext.push(new XrayClientVnextObject());
+    }
+  }
+}
+
+class XrayClientVnextObject {
+  public address: string = "";
+  public port: number = 0;
+  public users: XrayClientUserObject[] = [];
+  constructor() {
+    if (this.users.length === 0) {
+      this.users.push(new XrayClientUserObject());
+    }
+  }
+}
+
+class XrayClientUserObject {
+  public id: string = "";
+  public flow: string = "xtls-rprx-vision";
+  public encryption: string = "none";
+}
+
 class XrayLogObject {
   static levelOptions: string[] = ["debug", "info", "warning", "error", "none"];
   public access: string = "";
@@ -126,13 +333,15 @@ class XrayStreamRealitySettingsObject {
   public shortId?: string;
   public spiderX?: string;
 }
-class XrayStreamTcpSettingsObject {}
-class XrayStreamKcpSettingsObject {}
-class XrayStreamWsSettingsObject {}
-class XrayStreamHttpSettingsObject {}
-class XrayStreamGrpcSettingsObject {}
-class XrayStreamHttpUpgradeSettingsObject {}
-class XrayStreamSplitHttpSettingsObject {}
+class XrayStreamTcpSettingsObject implements ITransportNetwork {
+  public acceptProxyProtocol: boolean = false;
+}
+class XrayStreamKcpSettingsObject implements ITransportNetwork {}
+class XrayStreamWsSettingsObject implements ITransportNetwork {}
+class XrayStreamHttpSettingsObject implements ITransportNetwork {}
+class XrayStreamGrpcSettingsObject implements ITransportNetwork {}
+class XrayStreamHttpUpgradeSettingsObject implements ITransportNetwork {}
+class XrayStreamSplitHttpSettingsObject implements ITransportNetwork {}
 
 class XrayStreamSettingsObject {
   static networkOptions: string[] = ["tcp", "kcp", "ws", "http", "grpc", "httpupgrade", "splithttp"];
@@ -152,29 +361,6 @@ class XrayStreamSettingsObject {
   public splithttpSettings?: XrayStreamSplitHttpSettingsObject;
 }
 
-class XrayInboundObject {
-  static protocols: string[] = ["vless", "vmess", "shadowsocks", "trojan", "wireguard"];
-
-  static defauiltPort: number = 1080;
-  static defaultListen: string = "0.0.0.0";
-  static defaultProtocol: string = "vmess";
-
-  public port: string | number = XrayInboundObject.defauiltPort;
-  public listen?: string = XrayInboundObject.defaultListen;
-  public protocol: string = XrayInboundObject.defaultProtocol;
-  public allocate?: XrayAllocateObject;
-  public settings?: XrayInboundSettingsObject;
-  public streamSettings: XrayStreamSettingsObject;
-  public sniffing?: XraySniffingObject;
-
-  constructor() {
-    this.allocate = new XrayAllocateObject();
-    this.settings = new XrayInboundSettingsObject();
-    this.sniffing = new XraySniffingObject();
-    this.streamSettings = new XrayStreamSettingsObject();
-  }
-}
-
 class XrayInboundSettingsObject {
   public network: string | undefined;
   public security: string | undefined;
@@ -183,27 +369,8 @@ class XrayInboundSettingsObject {
   constructor() {}
 }
 
-class XrayInboundClientObject {
-  public id: string | undefined;
-  public email: string | undefined;
-  public level: number | undefined;
-}
-
-class XrayOutboundObject {
-  public protocol: string | undefined = "freedom";
-  public tag: string | undefined = "direct";
-  public settings: any = {};
-
-  constructor(protocol: string | undefined = undefined, tag: string | undefined = undefined) {
-    if (protocol) {
-      this.protocol = protocol;
-    }
-    if (tag) {
-      this.tag = tag;
-    }
-  }
-}
-
 let xrayConfig = reactive(new XrayObject());
+let xrayClientConfig = reactive(new XrayClientObject());
 export default xrayConfig;
-export { XrayObject, XrayRoutingObject, XrayRoutingRuleObject, XrayInboundObject, XrayInboundSettingsObject, XrayInboundClientObject, XrayOutboundObject, XrayAllocateObject, XraySniffingObject, XrayStreamSettingsObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsCertificateObject };
+export { XrayStreamTcpSettingsObject, XrayStreamKcpSettingsObject };
+export { xrayConfig, xrayClientConfig, XrayOptions, XrayClientObject, XrayClientOutboundObject, XrayObject, XrayRoutingObject, XrayRoutingRuleObject, XrayInboundObject, XrayInboundSettingsObject, XrayInboundClientObject, XrayOutboundObject, XrayAllocateObject, XraySniffingObject, XrayStreamSettingsObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsCertificateObject };

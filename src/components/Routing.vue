@@ -1,45 +1,44 @@
 <template>
-    <div class="formfontdesc">
-        <table class="FormTable" style="width: 100%;">
-            <thead>
-                <tr>
-                    <td colspan="2">Routing</td>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th>Domain Strategy</th>
-                    <td>
-                        <select class="input_option" v-model="routing.domainStrategy">
-                            <option v-for="opt in domainStrategyOptions" :key="opt" :value="opt">
-                                {{ opt }}
-                            </option>
-                        </select>
-                        <span class="hint-color">default: AsIs</span>
-                    </td>
-                </tr>
-                <tr>
-                    <th>Domain Matcher</th>
-                    <td>
-                        <select class="input_option" v-model="routing.domainMatcher">
-                            <option v-for="opt in domainMatcherOptions" :key="opt" :value="opt">
-                                {{ opt }}
-                            </option>
-                        </select>
-                        <span class="hint-color">default: hybrid</span>
-                    </td>
-                </tr>
-                <tr>
-                    <th>Rules</th>
-                    <td>
-                        {{ routing.rules.length }} item(s)
-                        <input class="button_gen button_gen_small" type="button" value="Manage"
-                            @click.prevent="manage_rules()" />
-                        <span class="hint-color"></span>
-                        <rules-modal ref="modal" :rules="routing.rules"></rules-modal>
-                    </td>
-                </tr>
-                <!-- <tr>
+    <table class="FormTable" style="width: 100%;">
+        <thead>
+            <tr>
+                <td colspan="2">Routing</td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <th>Domain Strategy</th>
+                <td>
+                    <select class="input_option" v-model="routing.domainStrategy">
+                        <option v-for="opt in domainStrategyOptions" :key="opt" :value="opt">
+                            {{ opt }}
+                        </option>
+                    </select>
+                    <span class="hint-color">default: AsIs</span>
+                </td>
+            </tr>
+            <tr>
+                <th>Domain Matcher</th>
+                <td>
+                    <select class="input_option" v-model="routing.domainMatcher">
+                        <option v-for="opt in domainMatcherOptions" :key="opt" :value="opt">
+                            {{ opt }}
+                        </option>
+                    </select>
+                    <span class="hint-color">default: hybrid</span>
+                </td>
+            </tr>
+            <tr>
+                <th>Rules</th>
+                <td>
+                    {{ routing.rules.length }} item(s)
+                    <input class="button_gen button_gen_small" type="button" value="Manage"
+                        @click.prevent="manage_rules()" />
+                    <span class="hint-color"></span>
+                    <rules-modal ref="modal" :rules="routing.rules"></rules-modal>
+                </td>
+            </tr>
+            <!-- <tr>
                     <th>Balancers</th>
                     <td>
                         {{ routing.rules.length }} item(s)
@@ -49,9 +48,8 @@
                     </td>
                 </tr>
                 -->
-            </tbody>
-        </table>
-    </div>
+        </tbody>
+    </table>
 </template>
 
 <script lang="ts">

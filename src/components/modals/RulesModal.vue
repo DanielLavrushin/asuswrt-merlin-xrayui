@@ -157,8 +157,6 @@ export default defineComponent({
       if (this.rules.indexOf(this.rule) === -1) {
         this.rules.push(this.rule);
       }
-
-      console.log('routing', xrayConfig.routing)
     },
     edit_rule(index: number) {
       this.rule = this.rules[index];
@@ -169,7 +167,7 @@ export default defineComponent({
       this.domains = this.rule.domain?.join('\n');
       this.ips = this.rule.ip?.join('\n');
       this.source = this.rule.source?.join('\n');
-      this.users = xrayConfig.inbounds[0]?.settings?.clients.map((c) => c.email!) ?? [];
+      const users = new Array<any>();   // xrayConfig.inbounds[0]?.settings?.clients.map((c) => c.email!) ?? [];
 
       this.modalAdd.show();
 
@@ -192,7 +190,7 @@ export default defineComponent({
     const source = ref<string | undefined>(rule.value.source?.join('\n') ?? '');
 
     const outbounds = xrayConfig.outbounds.map((o) => o.tag);
-    const users = xrayConfig.inbounds[0]?.settings?.clients.map((c) => c.email!) ?? [];
+    const users = new Array<any>();   // xrayConfig.inbounds[0]?.settings?.clients.map((c) => c.email!) ?? [];
 
     return {
       domainMatcherOptions: XrayRoutingObject.domainMatcherOptions,

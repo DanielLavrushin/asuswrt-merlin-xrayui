@@ -1,16 +1,25 @@
 <template>
-  <tr>
-    <th>Server Status</th>
-    <td>
-      <span class="label" :class="{ 'label-success': isRunning, 'label-error': !isRunning }"
-        v-text="statusLabel"></span>
-      <span class="row-buttons">
-        <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(restart)">Restart</a>
-        <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(stop)">Stop</a>
-        <a class="button_gen button_gen_small" href="/ext/xray-ui/xray-config.json" target="_blank">Show config</a>
-      </span>
-    </td>
-  </tr>
+  <table width="100%" bordercolor="#6b8fa3" class="FormTable">
+    <thead>
+      <tr>
+        <td colspan="2">Configuration</td>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>Server Status</th>
+        <td>
+          <span class="label" :class="{ 'label-success': isRunning, 'label-error': !isRunning }"
+            v-text="statusLabel"></span>
+          <span class="row-buttons">
+            <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(restart)">Restart</a>
+            <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(stop)">Stop</a>
+            <a class="button_gen button_gen_small" href="/ext/xray-ui/xray-config.json" target="_blank">Show config</a>
+          </span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 </template>
 
 <script lang="ts">

@@ -16,13 +16,34 @@ PIDFILE=/var/run/xray.pid
 xray_addons_asp_page=/jffs/addons/xray-ui/xray-ui.asp
 
 xray_config="/opt/etc/xray/config.json"
+xray_config_client="/opt/etc/xray/config-client.json"
 dir_xrayui="/www/user/xray-ui"
 xray_ui_config="$dir_xrayui/xray-config.json"
+xray_ui_config_client="$dir_xrayui/xray-config-client.json"
 
 XRAY="xray"
 
 start() {
-    logger "xrayui" "Starting $DESC"
+    mode=$(am_settings_get xray_mode)
+    if [ -z "$mode" ]; then
+        logger "xrayui" "No mode found in custom settings. Defaulting to server mode."
+        mode="server"
+        am_settings_set xray_mode $mode
+    fi
+
+    logger "xrayui" "Starting Xray in $mode mode"
+
+    if [ "$mode" = "server" ]; then
+        ARGS="run -config $xray_config"
+    elif [ "$mode" = "client" ]; then
+        ARGS="run -config $xray_config_client"
+    else
+        mode="server"
+        ARGS="run -config /opt/etc/xray/config.json"
+        am_settings_set xray_mode $mode
+    fi
+
+    logger "xrayui" "Starting $DESC with $ARGS"
     xray $ARGS >/dev/null 2>&1 &
     echo $! >$PIDFILE
 }
@@ -121,8 +142,10 @@ refresh_xray_config() {
 
     if [ -f "$xray_config" ]; then
         sed 's/\/\/.*//' "$xray_config" >"$xray_ui_config"
-    else
-        exit 1
+    fi
+
+    if [ -f "$xray_config_client" ]; then
+        sed 's/\/\/.*//' "$xray_config_client" >"$xray_ui_config_client"
     fi
 }
 
@@ -379,6 +402,44 @@ switch_mode() {
     am_settings_set xray_mode $mode_type
 }
 
+save_client_config() {
+    local temp_config="/tmp/xray_client_config_new.json"
+    local backup_config="/opt/etc/xray/config-client.json.bak"
+    local incoming_config
+
+    incoming_config=$(am_settings_get xray_payload)
+    am_settings_del xray_payload
+
+    test -f $xray_config_client || touch $xray_config_client
+
+    echo "$incoming_config" >"$temp_config"
+    if [ $? -ne 0 ]; then
+        logger "xrayui" "Failed to write incoming configuration to $temp_config."
+        exit 1
+    fi
+
+    jq empty "$temp_config" >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        logger "xrayui" "Invalid JSON format in incoming server configuration."
+        rm -f "$temp_config"
+        exit 1
+    fi
+
+    cp "$xray_config_client" "$backup_config"
+    if [ $? -ne 0 ]; then
+        logger "xrayui" "Failed to backup existing configuration to $backup_config."
+        rm -f "$temp_config"
+        exit 1
+    fi
+    logger "xrayui" "Existing configuration backed up to $backup_config."
+
+    cp "$temp_config" "$xray_config_client"
+
+    refresh_xray_config
+
+    exit 0
+}
+
 save_server_config() {
     local temp_config="/tmp/xray_server_config_new.json"
     local backup_config="/opt/etc/xray/config.json.bak"
@@ -437,15 +498,7 @@ save_server_config() {
     logger "xrayui" "Xray service restarted successfully with the new configuration."
 
     refresh_xray_config
-    if [ $? -ne 0 ]; then
-        logger "xrayui" "Failed to refresh Xray UI configuration."
-        exit 1
-    fi
-    logger "xrayui" "Xray UI configuration refreshed successfully."
-
     rm -f "$backup_config"
-    logger "xrayui" "Backup configuration $backup_config removed."
-    am_settings_del xray_server_config
     exit 0
 }
 
@@ -479,6 +532,10 @@ service_event)
         case "$3" in
         "server")
             save_server_config
+            exit 0
+            ;;
+        "client")
+            save_client_config
             exit 0
             ;;
         "mode")

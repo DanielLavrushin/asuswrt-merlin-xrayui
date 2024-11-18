@@ -18,7 +18,7 @@
 <script lang="ts">
 import { defineComponent, ref } from "vue";
 import { XrayVmessInboundObject, XrayInboundObject, XrayProtocol } from "../../modules/XrayConfig"
-import VmessClients from "../VmessClients.vue";
+import VmessClients from "../clients/VmessClients.vue";
 import InboundCommon from "./InboundCommon.vue";
 export default defineComponent({
     name: "VmessInbound",

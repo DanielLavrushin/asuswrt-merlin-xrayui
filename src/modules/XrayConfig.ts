@@ -12,6 +12,9 @@ class XrayOptions {
   static alpnOptions: string[] = ["h2", "http/1.1"];
   static fingerprintOptions: string[] = ["randomized", "random", "chrome", "firefox", "ios", "android", "safari", "edge", "360", "qq"];
   static tlsVersionsOptions: string[] = ["1.0", "1.1", "1.2", "1.3"];
+  static headerTypes: string[] = ["none", "http", "srtp", "utp", "wechat-video", "dtls", "wireguard"];
+  static httpMethods: string[] = ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "TRACE", "CONNECT", "PATCH"];
+  static clientFlowOptions: string[] = ["none", "xtls-rprx-vision"];
 }
 
 enum XrayProtocol {
@@ -60,7 +63,7 @@ class XrayOutboundObject<IProtocolType> {
 
 class XrayInboundObject<IProtocolType> {
   public protocol!: XrayProtocol;
-  public listen: string = "127.0.0.1";
+  public listen: string = "0.0.0.0";
   public port!: number | string;
   public tag?: string;
   public settings!: IProtocolType;
@@ -85,20 +88,35 @@ class XrayDokodemoDoorInboundObject implements IProtocolType {
   public userLevel: number = 0;
 }
 
+class XrayVlessInboundObject implements IProtocolType {
+  public decryption: string = "none";
+  public flow: string = "none";
+  public clients: XrayVlessClientObject[] = [];
+}
+
 class XrayVmessInboundObject implements IProtocolType {
-  public clients: XrayInboundClientObject[] = [];
+  public clients: XrayVmessClientObject[] = [];
 }
 
 class XrayBlackholeOutboundObject implements IProtocolType {}
 
 class XrayFreedomOutboundObject implements IProtocolType {}
 
-class XrayInboundClientObject {
-  public id: string | undefined;
-  public email: string | undefined;
-  public level: number | undefined;
+interface IClientObject {}
+class XrayVmessClientObject implements IClientObject {
+  public id!: string;
+  public email!: string;
+  public level?: number;
 }
 
+class XrayVlessClientObject implements IClientObject {
+  public id!: string;
+  public email!: string;
+  public level?: number;
+  public flow: string = "none";
+}
+
+export { XrayVlessClientObject, XrayVmessClientObject };
 class XrayProtocolOption {
   public protocol!: XrayProtocol;
   public modes!: XrayProtocolMode;
@@ -210,18 +228,7 @@ class XrayClientSettingsObject {
 class XrayClientVnextObject {
   public address: string = "";
   public port: number = 0;
-  public users: XrayClientUserObject[] = [];
-  constructor() {
-    if (this.users.length === 0) {
-      this.users.push(new XrayClientUserObject());
-    }
-  }
-}
-
-class XrayClientUserObject {
-  public id: string = "";
-  public flow: string = "xtls-rprx-vision";
-  public encryption: string = "none";
+  public users: IClientObject[] = [];
 }
 
 class XrayLogObject {
@@ -279,6 +286,24 @@ class XraySniffingObject {
 
   constructor() {}
 }
+class XrayHeaderRequestObject {
+  public version: string = "1.1";
+  public method: string = "GET";
+  public path: string = "/";
+  public headers: any = {};
+}
+class XrayHeaderResponseObject {
+  public version: string = "1.1";
+  public status: string = "200";
+  public reason: string = "OK";
+  public headers: any = {};
+}
+
+class XrayHeaderObject {
+  public type: string = "none";
+  public request?: XrayHeaderRequestObject;
+  public response?: XrayHeaderResponseObject;
+}
 
 class XrayStreamTlsCertificateObject {
   static usageOptions: string[] = ["encipherment", "verify", "issue"];
@@ -333,23 +358,76 @@ class XrayStreamRealitySettingsObject {
   public shortId?: string;
   public spiderX?: string;
 }
+
 class XrayStreamTcpSettingsObject implements ITransportNetwork {
   public acceptProxyProtocol: boolean = false;
 }
-class XrayStreamKcpSettingsObject implements ITransportNetwork {}
-class XrayStreamWsSettingsObject implements ITransportNetwork {}
-class XrayStreamHttpSettingsObject implements ITransportNetwork {}
-class XrayStreamGrpcSettingsObject implements ITransportNetwork {}
-class XrayStreamHttpUpgradeSettingsObject implements ITransportNetwork {}
-class XrayStreamSplitHttpSettingsObject implements ITransportNetwork {}
+
+class XrayStreamKcpSettingsObject implements ITransportNetwork {
+  public mtu: number = 1350;
+  public tti: number = 50;
+  public uplinkCapacity: number = 5;
+  public downlinkCapacity: number = 20;
+  public congestion: boolean = false;
+  public readBufferSize: number = 2;
+  public writeBufferSize: number = 2;
+  public seed?: string;
+  public header: XrayHeaderObject = new XrayHeaderObject();
+}
+
+class XrayStreamWsSettingsObject implements ITransportNetwork {
+  public acceptProxyProtocol: boolean = false;
+  public path: string = "/";
+  public host?: string;
+  public headers: any = {};
+}
+
+class XrayStreamHttpSettingsObject implements ITransportNetwork {
+  public host?: string[];
+  public path: string = "/";
+  public headers: any = {};
+  read_idle_timeout?: number;
+  health_check_timeout?: number;
+  public method: string = "PUT";
+}
+
+class XrayStreamGrpcSettingsObject implements ITransportNetwork {
+  public serviceName: string = "";
+  public multiMode: boolean = false;
+  public idle_timeout: number = 60;
+  public health_check_timeout: number = 20;
+  public initial_windows_size: number = 0;
+  public permit_without_stream: boolean = false;
+}
+
+class XrayStreamHttpUpgradeSettingsObject implements ITransportNetwork {
+  public acceptProxyProtocol: boolean = false;
+  public path: string = "/";
+  public host?: string;
+  public headers: any = {};
+}
+
+class XrayXmuxObject {
+  public maxConcurrency: number = 0;
+  public maxConnections: number = 0;
+  public cMaxReuseTimes: number = 0;
+  public cMaxLifetimeMs: number = 0;
+}
+
+class XrayStreamSplitHttpSettingsObject implements ITransportNetwork {
+  public path: string = "/";
+  public host?: string;
+  public headers: any = {};
+  public scMaxEachPostBytes: number = 1 * 1024 * 1024;
+  public scMaxConcurrentPosts?: number;
+  public scMinPostsIntervalMs?: number;
+  public noSSEHeader: boolean = false;
+  public xmux: XrayXmuxObject = new XrayXmuxObject();
+}
 
 class XrayStreamSettingsObject {
-  static networkOptions: string[] = ["tcp", "kcp", "ws", "http", "grpc", "httpupgrade", "splithttp"];
-  static securityOptions: string[] = ["none", "tls", "reality"];
-
   public network?: string = "tcp";
   public security?: string = "tls";
-
   public tlsSettings?: XrayStreamTlsSettingsObject;
   public realitySettings?: XrayStreamRealitySettingsObject;
   public tcpSettings?: XrayStreamTcpSettingsObject;
@@ -359,18 +437,27 @@ class XrayStreamSettingsObject {
   public grpcSettings?: XrayStreamGrpcSettingsObject;
   public httpupgradeSettings?: XrayStreamHttpUpgradeSettingsObject;
   public splithttpSettings?: XrayStreamSplitHttpSettingsObject;
-}
 
-class XrayInboundSettingsObject {
-  public network: string | undefined;
-  public security: string | undefined;
-  public clients: XrayInboundClientObject[] = [];
-
-  constructor() {}
+  public normalizeProtocol() {
+    const networkOptions = XrayOptions.transportOptions.map((opt) => `${opt}Settings`);
+    networkOptions.forEach((prop) => {
+      if (this[prop as keyof XrayStreamSettingsObject] && !prop.startsWith(this.network!)) {
+        delete this[prop as keyof XrayStreamSettingsObject];
+      }
+    });
+  }
+  public normalizeSecurity() {
+    const securityOptions = XrayOptions.securityOptions.map((opt) => `${opt}Settings`);
+    securityOptions.forEach((prop) => {
+      if (this[prop as keyof XrayStreamSettingsObject] && !prop.startsWith(this.security!)) {
+        delete this[prop as keyof XrayStreamSettingsObject];
+      }
+    });
+  }
 }
 
 let xrayConfig = reactive(new XrayObject());
 let xrayClientConfig = reactive(new XrayClientObject());
 export default xrayConfig;
-export { XrayStreamTcpSettingsObject, XrayStreamKcpSettingsObject };
-export { xrayConfig, xrayClientConfig, XrayOptions, XrayClientObject, XrayClientOutboundObject, XrayObject, XrayRoutingObject, XrayRoutingRuleObject, XrayInboundObject, XrayInboundSettingsObject, XrayInboundClientObject, XrayOutboundObject, XrayAllocateObject, XraySniffingObject, XrayStreamSettingsObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsCertificateObject };
+export { XrayStreamTcpSettingsObject, XrayVlessInboundObject, XrayStreamKcpSettingsObject, XrayStreamWsSettingsObject, XrayStreamHttpSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamSplitHttpSettingsObject };
+export { xrayConfig, xrayClientConfig, XrayOptions, XrayClientObject, XrayClientOutboundObject, XrayObject, XrayRoutingObject, XrayRoutingRuleObject, XrayInboundObject, XrayOutboundObject, XrayAllocateObject, XraySniffingObject, XrayStreamSettingsObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsCertificateObject };

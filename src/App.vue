@@ -48,6 +48,14 @@ export default defineComponent({
 </script>
 
 <style>
+#Loading {
+  z-index: 9999;
+}
+
+#overDiv {
+  z-index: 9999;
+}
+
 .hint {
   color: #fc0 !important;
   text-decoration: underline !important;

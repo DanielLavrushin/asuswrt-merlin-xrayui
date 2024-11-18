@@ -12,8 +12,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, nextTick } from "vue";
-import engine from "../modules/Engine";
+import { defineComponent, ref } from "vue";
+import engine, { SubmtActions } from "../modules/Engine";
 
 import Modal from "./Modal.vue";
 
@@ -49,8 +49,13 @@ export default defineComponent({
 
         async applyClientSettings() {
             let delay = 5000;
-            window.showLoading(delay / 1000);
+            window.showLoading(delay / 1000, "waiting");
+            let config = await engine.prepareServerConfig();
+
+            await engine.submit(SubmtActions.ConfigurationServerSave, config, delay);
+            await engine.loadXrayConfig();
             window.hideLoading();
+            window.location.reload();
         },
     },
 

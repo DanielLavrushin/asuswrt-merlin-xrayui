@@ -25,7 +25,9 @@
                     <td><a class="hint" href="#" @click.prevent="edit_inbound(inbound)"><i><strong>
                                     {{ inbound.tag ?? "no tag" }}
                                 </strong></i>
-                        </a>
+                        </a> <text v-show="inbound.streamSettings?.network">[{{ inbound.streamSettings?.network
+                            }}]</text>
+                        <text v-show="inbound.streamSettings?.security">[{{ inbound.streamSettings?.security }}]</text>
                         <span class="row-buttons">
                             <a class="button_gen button_gen_small" href="#"
                                 @click="show_transport(inbound)">transport</a>
@@ -53,6 +55,7 @@ import Modal from "./Modal.vue";
 import { xrayProtocols, XrayInboundObject, XrayProtocolMode, IProtocolType, XrayProtocolOption, XrayProtocol } from "../modules/XrayConfig";
 import DocodemoDoorInbound from "./inbounds/DocodemoDoorInbound.vue";
 import VmessInbound from "./inbounds/VmessInbound.vue";
+import VlessInbound from "./inbounds/VlessInbound.vue";
 
 
 export default defineComponent({
@@ -60,8 +63,6 @@ export default defineComponent({
     emits: ['show-transport', 'show-sniffing'],
     components: {
         Modal,
-        DocodemoDoorInbound,
-        VmessInbound,
     },
     methods: {
         async show_transport(inbound: XrayInboundObject<IProtocolType>) {
@@ -127,6 +128,8 @@ export default defineComponent({
                     return DocodemoDoorInbound;
                 case XrayProtocol.VMESS:
                     return VmessInbound;
+                case XrayProtocol.VLESS:
+                    return VlessInbound;
                 default:
                     return null;
             }

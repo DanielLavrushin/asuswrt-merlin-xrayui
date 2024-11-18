@@ -1,14 +1,16 @@
 <template>
-  <tr v-if="transport.tcpSettings">
-    <th>
-      Accept the PROXY protocol
-    </th>
-    <td>
-      <input type="checkbox" name="xray_network_tcp_accept_proxy" class="input"
-        v-model="transport.tcpSettings.acceptProxyProtocol" />
-      <span class="hint-color">default: false</span>
-    </td>
-  </tr>
+  <tbody v-if="transport.tcpSettings">
+    <tr>
+      <th>
+        Accept the PROXY protocol
+      </th>
+      <td>
+        <input type="checkbox" name="xray_network_tcp_accept_proxy" class="input"
+          v-model="transport.tcpSettings.acceptProxyProtocol" />
+        <span class="hint-color">default: false</span>
+      </td>
+    </tr>
+  </tbody>
 </template>
 
 <script lang="ts">

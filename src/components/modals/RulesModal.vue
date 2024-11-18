@@ -37,7 +37,20 @@
           <th>Outbound Connection</th>
           <td>
             <select class="input_option" v-model="rule.outboundTag">
+              <option></option>
               <option v-for="opt in outbounds" :key="opt" :value="opt">
+                {{ opt }}
+              </option>
+            </select>
+            <span class="hint-color"></span>
+          </td>
+        </tr>
+        <tr>
+          <th>Inbound Connection</th>
+          <td>
+            <select class="input_option" v-model="rule.inboundTag">
+              <option></option>
+              <option v-for="opt in inbounds" :key="opt" :value="opt">
                 {{ opt }}
               </option>
             </select>
@@ -131,7 +144,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "vue";
+import { defineComponent, ref, watch } from "vue";
 import xrayConfig, { XrayRoutingRuleObject, XrayRoutingObject } from "@/modules/XrayConfig";
 import Modal from "../Modal.vue";
 
@@ -189,7 +202,18 @@ export default defineComponent({
     const domains = ref<string | undefined>(rule.value.domain?.join('\n') ?? '');
     const source = ref<string | undefined>(rule.value.source?.join('\n') ?? '');
 
-    const outbounds = xrayConfig.outbounds.map((o) => o.tag);
+    const outbounds = ref();
+    const inbounds = ref();
+
+
+    watch(() => xrayConfig.inbounds.length, () => {
+      inbounds.value = xrayConfig.inbounds.map((o) => o.tag);
+    });
+    watch(() => xrayConfig.inbounds.length, () => {
+      outbounds.value = xrayConfig.outbounds.map((o) => o.tag);
+    });
+
+
     const users = new Array<any>();   // xrayConfig.inbounds[0]?.settings?.clients.map((c) => c.email!) ?? [];
 
     return {
@@ -201,6 +225,7 @@ export default defineComponent({
       modalAdd,
       xrayConfig,
       outbounds,
+      inbounds,
       users,
     };
   },

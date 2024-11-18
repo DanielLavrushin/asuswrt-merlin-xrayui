@@ -293,30 +293,39 @@ cert_renew() {
     fi
 
     jq --arg cert_file "$cert_file" --arg key_file "$key_file" '
-    .inbounds[] |= (
-        if has("streamSettings") then
-            .streamSettings.tlsSettings.certificates = [
-                {
+            .inbounds[]?.streamSettings?.tlsSettings.certificates |=
+                if . != null then
+                if any(.[]?; .usage == "encipherment") then
+                    map(
+                    if .usage == "encipherment" then
+                        .certificateFile = $cert_file |
+                        .keyFile = $key_file
+                    else
+                        .
+                    end
+                    )
+                elif length == 0 then
+                    [
+                    {
+                        certificateFile: $cert_file,
+                        keyFile: $key_file
+                    }
+                    ]
+                else
+                    . + [{
                     certificateFile: $cert_file,
                     keyFile: $key_file
-                }
-            ]
-        else
-            .streamSettings |= {
-                network: "tcp",
-                security: "tls",
-                tlsSettings: {
-                    certificates: [
-                        {
-                            certificateFile: $cert_file,
-                            keyFile: $key_file
-                        }
-                    ]
-                }
-            }
-        end
-    )
-    ' "$tempconfig" >"/tmp/xray-config.json"
+                    }]
+                end
+                else
+                [
+                    {
+                    certificateFile: $cert_file,
+                    keyFile: $key_file
+                    }
+                ]
+                end
+' "$xray_config" >"/tmp/xray-config.json"
 
     if [ $? -eq 0 ]; then
         mv "/tmp/xray-config.json" "$xray_config"
@@ -444,9 +453,20 @@ save_server_config() {
     local temp_config="/tmp/xray_server_config_new.json"
     local backup_config="/opt/etc/xray/config.json.bak"
 
-    local incoming_config
-    incoming_config=$(am_settings_get xray_payload)
-    am_settings_del xray_payload
+    local incoming_config=""
+    local idx=0
+    local chunk
+
+    # Reconstruct payload from multiple variables
+    while :; do
+        chunk=$(am_settings_get xray_payload$idx)
+        if [ -z "$chunk" ]; then
+            break
+        fi
+        incoming_config="$incoming_config$chunk"
+        am_settings_del xray_payload$idx
+        idx=$((idx + 1))
+    done
 
     if [ -z "$incoming_config" ]; then
         logger "xrayui" "No new server configuration provided."

@@ -1,5 +1,5 @@
 import axios from "axios";
-import xrayConfig, { xrayClientConfig, XrayClientObject, XrayObject, XrayInboundObject, XrayStreamTlsSettingsObject, XrayOutboundObject, IProtocolType } from "./XrayConfig";
+import xrayConfig, { XrayStreamSettingsObject, xrayClientConfig, XrayClientObject, XrayObject } from "./XrayConfig";
 
 class SubmtActions {
   public static ConfigurationSetMode: string = "xrayui_configuration_mode";
@@ -20,6 +20,17 @@ class Engine {
   public xrayConfig: XrayObject = xrayConfig;
   public xrayClientConfig: XrayClientObject = xrayClientConfig;
   public mode: string = "server";
+  private zero_uuid: string = "10000000-1000-4000-8000-100000000000";
+
+  private splitPayload(payload: any, chunkSize: number): any[] {
+    let chunks = [];
+    let index = 0;
+    while (index < payload.length) {
+      chunks.push(payload.substr(index, chunkSize));
+      index += chunkSize;
+    }
+    return chunks;
+  }
 
   public submit(action: string, payload: any | undefined = undefined, delay: number = 0): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -43,8 +54,18 @@ class Engine {
       `;
 
       if (payload) {
-        window.xray.custom_settings.xray_payload = JSON.stringify(payload);
+        const chunkSize = 2048;
+        const payloadString = JSON.stringify(payload);
+        const chunks = this.splitPayload(payloadString, chunkSize);
+
+        chunks.forEach((chunk: any, idx) => {
+          (window.xray.custom_settings as any)[`xray_payload${idx}`] = chunk;
+        });
         const customSettings = JSON.stringify(window.xray.custom_settings);
+        if (customSettings.length > 8 * 1024) {
+          alert("Configuration is too large to submit via custom settings.");
+          return;
+        }
 
         const amngCustomInput = document.createElement("input");
         amngCustomInput.type = "hidden";
@@ -67,6 +88,25 @@ class Engine {
     });
   }
 
+  uuid = () => {
+    return this.zero_uuid.replace(/[018]/g, (c) => (+c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (+c / 4)))).toString(16));
+  };
+
+  async prepareServerConfig(): Promise<any> {
+    let config = new XrayObject();
+    Object.assign(config, this.xrayConfig);
+
+    config.inbounds.forEach((inbound) => {
+      let streamSettings = new XrayStreamSettingsObject();
+      Object.assign(streamSettings, inbound.streamSettings);
+      streamSettings?.normalizeProtocol();
+      streamSettings?.normalizeSecurity();
+      inbound.streamSettings = streamSettings;
+    });
+
+    return config;
+  }
+
   async getRealityKeys(): Promise<any> {
     const response = await axios.get<XrayObject>("/ext/xray-ui/reality.json");
 
@@ -83,22 +123,6 @@ class Engine {
 
     return this.xrayConfig;
   }
-
-  validateInbound = (inbound: XrayInboundObject<IProtocolType>): void => {
-    if (inbound.streamSettings?.tlsSettings) {
-      let tls = inbound.streamSettings.tlsSettings;
-      if (!tls.minVersion) {
-        tls.minVersion = "1.3";
-      }
-      if (!tls.maxVersion) {
-        tls.maxVersion = tls.minVersion;
-      }
-
-      if (!tls.alpn || tls.alpn?.length === 0) {
-        tls.alpn = XrayStreamTlsSettingsObject.alpnOptions;
-      }
-    }
-  };
 }
 
 let engine = new Engine();

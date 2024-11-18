@@ -1,6 +1,6 @@
 {
 "prettier.vueIndentScriptAndStyle": true,
-"prettier.printWidth": 3000,
+"prettier.printWidth": 1000,
 "files.eol": "\n",
 "editor.formatOnSave": true
 }

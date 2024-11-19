@@ -12,18 +12,18 @@
                 <inbound-common :inbound="inbound"></inbound-common>
             </tbody>
         </table>
-        <vmess-clients :clients="inbound.settings.clients"></vmess-clients>
+        <clients :clients="inbound.settings.clients"></clients>
     </div>
 </template>
 <script lang="ts">
 import { defineComponent, ref } from "vue";
 import { XrayVmessInboundObject, XrayInboundObject, XrayProtocol } from "../../modules/XrayConfig"
-import VmessClients from "../clients/VmessClients.vue";
+import Clients from "../clients/VmessClients.vue";
 import InboundCommon from "./InboundCommon.vue";
 export default defineComponent({
     name: "VmessInbound",
     components: {
-        VmessClients,
+        Clients,
         InboundCommon,
     },
     props: {

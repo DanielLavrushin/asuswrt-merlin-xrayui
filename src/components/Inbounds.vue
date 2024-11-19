@@ -56,7 +56,11 @@ import { xrayProtocols, XrayInboundObject, XrayProtocolMode, IProtocolType, Xray
 import DocodemoDoorInbound from "./inbounds/DocodemoDoorInbound.vue";
 import VmessInbound from "./inbounds/VmessInbound.vue";
 import VlessInbound from "./inbounds/VlessInbound.vue";
-
+import HttpInbound from "./inbounds/HttpInbound.vue";
+import ShadowsocksInbound from "./inbounds/ShadowsocksInbound.vue";
+import SocksInbound from "./inbounds/SocksInbound.vue";
+import TrojanInbound from "./inbounds/TrojanInbound.vue";
+import WireguardInbound from "./inbounds/WireguardInbound.vue";
 
 export default defineComponent({
     name: "Inbounds",
@@ -130,6 +134,16 @@ export default defineComponent({
                     return VmessInbound;
                 case XrayProtocol.VLESS:
                     return VlessInbound;
+                case XrayProtocol.HTTP:
+                    return HttpInbound;
+                case XrayProtocol.SHADOWSOCKS:
+                    return ShadowsocksInbound;
+                case XrayProtocol.SOCKS:
+                    return SocksInbound;
+                case XrayProtocol.TROJAN:
+                    return TrojanInbound;
+                case XrayProtocol.WIREGUARD:
+                    return WireguardInbound;
                 default:
                     return null;
             }

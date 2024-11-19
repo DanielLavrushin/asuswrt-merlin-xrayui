@@ -1,15 +1,44 @@
 <template>
-
+    <div class="formfontdesc">
+        <p>
+            The Trojan protocol.
+            Trojan is designed to work with correctly configured encrypted TLS tunnels.
+        </p>
+        <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
+            <thead>
+                <tr>
+                    <td colspan="2">Trojan</td>
+                </tr>
+            </thead>
+            <tbody>
+                <inbound-common :inbound="inbound"></inbound-common>
+            </tbody>
+        </table>
+        <clients :clients="inbound.settings.clients"></clients>
+    </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
+import { XrayTrojanInboundObject, XrayInboundObject, XrayProtocol, XrayOptions } from "../../modules/XrayConfig"
+import Clients from "../clients/TrojanClients.vue";
+import InboundCommon from "./InboundCommon.vue";
 
 export default defineComponent({
-    name: "HttpInbound",
-    setup() {
+    name: "TrojanInbound",
+    components: {
+        Clients,
+        InboundCommon,
+    },
+    props: {
+        inbound: XrayInboundObject<XrayTrojanInboundObject>,
+    },
+    setup(props) {
 
+        const inbound = ref<XrayInboundObject<XrayTrojanInboundObject>>(props.inbound ?? new XrayInboundObject<XrayTrojanInboundObject>(XrayProtocol.TROJAN, new XrayTrojanInboundObject()));
         return {
+            inbound,
+            authentications: ["noauth", "password"]
         };
     },
 });

@@ -1,8 +1,8 @@
 <template>
-  <Teleport to="body">
-    <div class="modal-overlay" v-if="isVisible" @mousedown.self="close">
-      <div class="modal-content" @click.stop :style="{ width: width + 'px' }">
-        <header class="modal-header">
+  <Teleport to="#app">
+    <div class="xray-modal-overlay" v-if="isVisible" @mousedown.self="close">
+      <div class="xray-modal-content" @click.stop :style="{ width: width + 'px' }">
+        <header class="xray-modal-header">
           <h2>
             <slot name="title">
               {{ title }}
@@ -10,10 +10,10 @@
           </h2>
           <button class="close-btn" @click="close">×</button>
         </header>
-        <div class="modal-body">
+        <div class="xray-modal-body">
           <slot></slot>
         </div>
-        <footer class="modal-footer">
+        <footer class="xray-modal-footer">
           <span class="row-buttons">
             <slot name="footer">
               <button @click.prevent="close" class="button_gen button_gen_small">Close</button>
@@ -65,7 +65,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.modal-overlay {
+.xray-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -79,12 +79,12 @@ export default defineComponent({
   z-index: 400;
 }
 
-.modal-overlay:not(:last-child) {
+.xray-modal-overlay:not(:last-child) {
   background-color: rgba(0, 0, 0, 0) !important;
   backdrop-filter: initial !important;
 }
 
-.modal-content {
+.xray-modal-content {
   background-color: #4d595d;
   border-radius: 5px;
   width: 650px;
@@ -94,7 +94,7 @@ export default defineComponent({
   border: 1px solid #222;
 }
 
-.modal-header {
+.xray-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -104,7 +104,7 @@ export default defineComponent({
   color: #ffffff;
 }
 
-.modal-header h2 {
+.xray-modal-header h2 {
   margin: 0;
 }
 
@@ -115,21 +115,21 @@ export default defineComponent({
   cursor: pointer;
 }
 
-.modal-body {
+.xray-modal-body {
   text-align: center;
   margin-top: 20px;
 }
 
-.modal-footer {
+.xray-modal-footer {
   margin-top: 20px;
   text-align: center;
 }
 
-.modal-body>>>.modal-form-table {
+.xray-modal-body>>>.modal-form-table {
   width: 100%;
 }
 
-.modal-body>>>.modal-form-table td {
+.xray-modal-body>>>.modal-form-table td {
   text-align: left;
   line-height: 23px;
 }

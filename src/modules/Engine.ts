@@ -92,6 +92,12 @@ class Engine {
     return this.zero_uuid.replace(/[018]/g, (c) => (+c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (+c / 4)))).toString(16));
   };
 
+  generateRandomBase64 = (length: number | undefined = 32): string => {
+    const randomBytes = crypto.getRandomValues(new Uint8Array(length));
+    const base64String = btoa(String.fromCharCode(...randomBytes));
+    return base64String;
+  };
+
   async prepareServerConfig(): Promise<any> {
     let config = new XrayObject();
     Object.assign(config, this.xrayConfig);

@@ -15,6 +15,7 @@ class XrayOptions {
   static headerTypes: string[] = ["none", "http", "srtp", "utp", "wechat-video", "dtls", "wireguard"];
   static httpMethods: string[] = ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "TRACE", "CONNECT", "PATCH"];
   static clientFlowOptions: string[] = ["none", "xtls-rprx-vision"];
+  static encryptionOptions: string[] = ["none", "plain", "aes-128-gcm", "aes-256-gcm", "2022-blake3-aes-128-gcm", "2022-blake3-aes-256-gcm", "2022-blake3-chacha20-poly1305"];
 }
 
 enum XrayProtocol {
@@ -98,17 +99,68 @@ class XrayVmessInboundObject implements IProtocolType {
   public clients: XrayVmessClientObject[] = [];
 }
 
+class XrayHttpInboundObject implements IProtocolType {
+  public allowTransparent: boolean = false;
+  public clients: XrayHttpClientObject[] = [];
+}
+
+class XrayShadowsocksInboundObject implements IProtocolType {
+  public network: string = "tcp";
+  public clients: XrayShadowsocksClientObject[] = [];
+}
+class XrayTrojanInboundObject implements IProtocolType {
+  public clients: XrayTrojanClientObject[] = [];
+}
+class XraySocksInboundObject implements IProtocolType {
+  public ip: string = "127.0.0.1";
+  public auth: string = "noauth";
+  public accounts: XraySocksClientObject[] = [];
+  public udp: boolean = false;
+}
+
+class XrayWireguardInboundObject implements IProtocolType {
+  public secretKey!: string;
+  public kernelMode: boolean = true;
+  public mtu: number = 1420;
+  public peers: XrayWireguardClientObject[] = [];
+}
+
 class XrayBlackholeOutboundObject implements IProtocolType {}
 
 class XrayFreedomOutboundObject implements IProtocolType {}
 
 interface IClientObject {}
+
+class XrayWireguardClientObject implements IClientObject {
+  public publicKey!: string;
+  public allowedIPs: string[] = [];
+}
+
+class XraySocksClientObject implements IClientObject {
+  public pass!: string;
+  public user!: string;
+}
+
+class XrayShadowsocksClientObject implements IClientObject {
+  public email!: string;
+  public password!: string;
+  public level?: number;
+  public method?: string = "aes-256-gcm";
+}
+
 class XrayVmessClientObject implements IClientObject {
   public id!: string;
   public email!: string;
   public level?: number;
 }
-
+class XrayHttpClientObject implements IClientObject {
+  public pass!: string;
+  public user!: string;
+}
+class XrayTrojanClientObject implements IClientObject {
+  public password!: string;
+  public email!: string;
+}
 class XrayVlessClientObject implements IClientObject {
   public id!: string;
   public email!: string;
@@ -116,7 +168,11 @@ class XrayVlessClientObject implements IClientObject {
   public flow: string = "none";
 }
 
-export { XrayVlessClientObject, XrayVmessClientObject };
+export { XrayWireguardClientObject, XrayTrojanClientObject, XraySocksClientObject, XrayShadowsocksClientObject, XrayVlessClientObject, XrayVmessClientObject, XrayHttpClientObject };
+
+export { XrayBlackholeOutboundObject, XrayFreedomOutboundObject };
+export { XrayWireguardInboundObject, XrayTrojanInboundObject, XraySocksInboundObject, XrayShadowsocksInboundObject, XrayHttpInboundObject, ITransportNetwork, XrayProtocol, XrayProtocolMode, IProtocolType, XrayProtocolOption, XrayVmessInboundObject, XrayDokodemoDoorInboundObject, xrayProtocols };
+
 class XrayProtocolOption {
   public protocol!: XrayProtocol;
   public modes!: XrayProtocolMode;
@@ -172,9 +228,6 @@ const xrayProtocols: XrayProtocolOption[] = [
     modes: XrayProtocolMode.Outbound | XrayProtocolMode.BothModes,
   },
 ];
-
-export { XrayBlackholeOutboundObject, XrayFreedomOutboundObject };
-export { ITransportNetwork, XrayProtocol, XrayProtocolMode, IProtocolType, XrayProtocolOption, XrayVmessInboundObject, XrayDokodemoDoorInboundObject, xrayProtocols };
 
 class XrayObject {
   public log?: XrayLogObject;

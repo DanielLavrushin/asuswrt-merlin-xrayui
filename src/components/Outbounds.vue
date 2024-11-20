@@ -52,6 +52,7 @@ import { xrayProtocols, XrayOutboundObject, XrayProtocolMode, IProtocolType, Xra
 
 import FreedomOutbound from "./outbounds/FreedomOutbound.vue";
 import BlackholeOutbound from "./outbounds/BlackholeOutbound.vue";
+import DnsOutbound from "./outbounds/DnsOutbound.vue";
 
 export default defineComponent({
     name: "Outbounds",
@@ -121,7 +122,8 @@ export default defineComponent({
                     return FreedomOutbound;
                 case XrayProtocol.BLACKHOLE:
                     return BlackholeOutbound;
-                case XrayProtocol.VMESS:
+                case XrayProtocol.DNS:
+                    return DnsOutbound;
                 default:
                     return null;
             }

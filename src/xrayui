@@ -155,75 +155,6 @@ make_clean_config() {
     echo $tempconfig
 }
 
-client_delete() {
-    local tempconfig=$(make_clean_config)
-    local payload=$(am_settings_get xray_payload)
-
-    if [ -z "$payload" ]; then
-        logger "xrayui" "Payload is empty. Cannot add client."
-        rm -f "$tempconfig"
-        return 1
-    fi
-
-    local email id level
-    email=$(echo "$payload" | jq -r '.email')
-    id=$(echo "$payload" | jq -r '.id')
-
-    logger "xrayui" "Removing client from Xray $xray_config: email=$email, id=$id"
-
-    jq --arg email "$email" --arg id "$id" '
-    .inbounds[].settings.clients |= map(select(.email != $email or .id != $id))
-    ' $tempconfig >"/tmp/xray-config.json" && mv /tmp/xray-config.json "$xray_config"
-
-    if [ $? -eq 0 ]; then
-        logger "xrayui" "Client $email with id $id removed successfully."
-        refresh_xray_config
-    else
-        logger "xrayui" "Failed to remove client $email with id $id."
-    fi
-    rm -f $tempconfig
-    refresh_xray_config
-
-    am_settings_del xray_payload
-}
-
-client_add() {
-    local tempconfig=$(make_clean_config)
-    local payload=$(am_settings_get xray_payload)
-
-    if [ -z "$payload" ]; then
-        logger "xrayui" "Payload is empty. Cannot add client."
-        rm -f "$tempconfig"
-        return 1
-    fi
-
-    local email id level
-    email=$(echo "$payload" | jq -r '.email')
-    id=$(echo "$payload" | jq -r '.id')
-
-    logger "xrayui" "Adding new client to Xray $xray_config: email=$email, id=$id, level=0"
-
-    jq --arg email "$email" --arg id "$id" '
-    .inbounds[].settings.clients += [{
-        "email": $email,
-        "id": $id,
-        "level": 0
-    }]
-    ' $tempconfig >"/tmp/xray-config.json" && mv /tmp/xray-config.json "$xray_config"
-
-    if [ $? -eq 0 ]; then
-        logger "xrayui" "Client $email added successfully."
-        refresh_xray_config
-    else
-        logger "xrayui" "Failed to add client $email."
-    fi
-    rm -f $tempconfig
-
-    refresh_xray_config
-
-    am_settings_del xray_payload
-}
-
 am_settings_del() {
 
     local key="$1"
@@ -401,9 +332,52 @@ regenerate_reality_keys() {
     return 0
 }
 
+regenerate_wireguard_keys() {
+    local private_key=$(reconstruct_payload)
+    local public_key
+    local json_file="/www/user/xray-ui/xray-ui-response.json"
+
+    if [ -z "$private_key" ]; then
+        private_key=$(wg genkey)
+        if [ $? -ne 0 ]; then
+            logger "xrayui" "Error: Failed to generate private key."
+            return 1
+        fi
+    fi
+
+    public_key=$(echo "$private_key" | wg pubkey)
+    if [ $? -ne 0 ]; then
+        logger "xrayui" "Error: Failed to generate public key from private key."
+        return 1
+    fi
+
+    local json_content
+    if [ -f "$json_file" ]; then
+        json_content=$(cat "$json_file")
+    else
+        json_content="{}"
+    fi
+
+    json_content=$(echo "$json_content" | jq --arg pk "$private_key" --arg pub "$public_key" \
+        '.wireguard.privatekey = $pk | .wireguard.publickey = $pub')
+
+    if [ $? -ne 0 ]; then
+        logger "xrayui" "Error: Failed to update JSON content."
+        return 1
+    fi
+
+    echo "$json_content" >"$json_file"
+
+    if [ $? -ne 0 ]; then
+        logger "xrayui" "Error: Failed to write to JSON file."
+        return 1
+    fi
+
+    return 0
+}
+
 switch_mode() {
-    mode=$(am_settings_get xray_payload)
-    am_settings_del xray_payload
+    mode=$(reconstruct_payload)
 
     mode_type=$(echo "$mode" | jq -r '.mode')
     logger "xrayui" "Switching Xray mode to $mode_type"
@@ -411,62 +385,11 @@ switch_mode() {
     am_settings_set xray_mode $mode_type
 }
 
-save_client_config() {
-    local temp_config="/tmp/xray_client_config_new.json"
-    local backup_config="/opt/etc/xray/config-client.json.bak"
-    local incoming_config
-
-    incoming_config=$(am_settings_get xray_payload)
-    am_settings_del xray_payload
-
-    test -f $xray_config_client || touch $xray_config_client
-
-    echo "$incoming_config" >"$temp_config"
-    if [ $? -ne 0 ]; then
-        logger "xrayui" "Failed to write incoming configuration to $temp_config."
-        exit 1
-    fi
-
-    jq empty "$temp_config" >/dev/null 2>&1
-    if [ $? -ne 0 ]; then
-        logger "xrayui" "Invalid JSON format in incoming server configuration."
-        rm -f "$temp_config"
-        exit 1
-    fi
-
-    cp "$xray_config_client" "$backup_config"
-    if [ $? -ne 0 ]; then
-        logger "xrayui" "Failed to backup existing configuration to $backup_config."
-        rm -f "$temp_config"
-        exit 1
-    fi
-    logger "xrayui" "Existing configuration backed up to $backup_config."
-
-    cp "$temp_config" "$xray_config_client"
-
-    refresh_xray_config
-
-    exit 0
-}
-
 save_server_config() {
     local temp_config="/tmp/xray_server_config_new.json"
     local backup_config="/opt/etc/xray/config.json.bak"
 
-    local incoming_config=""
-    local idx=0
-    local chunk
-
-    # Reconstruct payload from multiple variables
-    while :; do
-        chunk=$(am_settings_get xray_payload$idx)
-        if [ -z "$chunk" ]; then
-            break
-        fi
-        incoming_config="$incoming_config$chunk"
-        am_settings_del xray_payload$idx
-        idx=$((idx + 1))
-    done
+    local incoming_config=$(reconstruct_payload)
 
     if [ -z "$incoming_config" ]; then
         logger "xrayui" "No new server configuration provided."
@@ -522,6 +445,22 @@ save_server_config() {
     exit 0
 }
 
+reconstruct_payload() {
+    local idx=0
+    local chunk
+    local payload=""
+    while :; do
+        chunk=$(am_settings_get xray_payload$idx)
+        if [ -z "$chunk" ]; then
+            break
+        fi
+        payload="$payload$chunk"
+        am_settings_del xray_payload$idx
+        idx=$((idx + 1))
+    done
+    echo "$payload"
+}
+
 case "$1" in
 start)
     start
@@ -573,10 +512,13 @@ service_event)
         esac
         exit 0
     elif [ "$2" = "regenerate" ]; then
-        logger "xrayui" "REGENERATE!!!!"
         case "$3" in
         "realitykeys")
             regenerate_reality_keys
+            exit 0
+            ;;
+        "wgkeys")
+            regenerate_wireguard_keys
             exit 0
             ;;
         esac

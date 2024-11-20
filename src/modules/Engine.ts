@@ -1,6 +1,13 @@
 import axios from "axios";
 import xrayConfig, { XrayStreamSettingsObject, xrayClientConfig, XrayClientObject, XrayObject } from "./XrayConfig";
 
+class EngineWireguard {
+  public privatekey!: string;
+  public publickey!: string;
+}
+class EngineResponseConfig {
+  public wireguard?: EngineWireguard;
+}
 class SubmtActions {
   public static ConfigurationSetMode: string = "xrayui_configuration_mode";
   public static ConfigurationServerSave: string = "xrayui_configuration_server";
@@ -14,6 +21,7 @@ class SubmtActions {
   public static clientDelete: string = "xrayui_client_delete";
   public static clientAdd: string = "xrayui_client_add";
   public static regenerateRealityKeys: string = "xrayui_regenerate_realitykeys";
+  public static regenerateWireguardyKeys: string = "xrayui_regenerate_wgkeys";
 }
 
 class Engine {
@@ -115,10 +123,16 @@ class Engine {
 
   async getRealityKeys(): Promise<any> {
     const response = await axios.get<XrayObject>("/ext/xray-ui/reality.json");
-
     let realityKeys = response.data;
     return realityKeys;
   }
+
+  async getEngineConfig(): Promise<EngineResponseConfig> {
+    const response = await axios.get<EngineResponseConfig>("/ext/xray-ui/xray-ui-response.json");
+    let responseConfig = response.data;
+    return responseConfig;
+  }
+
   async loadXrayConfig(): Promise<XrayObject> {
     const response = await axios.get<XrayObject>(this.mode === "server" ? "/ext/xray-ui/xray-config.json" : "/ext/xray-ui/xray-config-client.json");
     if (this.mode === "server") {

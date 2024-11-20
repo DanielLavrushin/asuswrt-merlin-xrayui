@@ -128,6 +128,12 @@ class XrayWireguardInboundObject implements IProtocolType {
 class XrayBlackholeOutboundObject implements IProtocolType {}
 
 class XrayFreedomOutboundObject implements IProtocolType {}
+class XrayDnsOutboundObject implements IProtocolType {
+  public address!: string;
+  public port: number = 53;
+  public network: string = "tcp";
+  public nonIPQuery: string = "drop";
+}
 
 interface IClientObject {}
 
@@ -170,7 +176,7 @@ class XrayVlessClientObject implements IClientObject {
 
 export { XrayWireguardClientObject, XrayTrojanClientObject, XraySocksClientObject, XrayShadowsocksClientObject, XrayVlessClientObject, XrayVmessClientObject, XrayHttpClientObject };
 
-export { XrayBlackholeOutboundObject, XrayFreedomOutboundObject };
+export { XrayBlackholeOutboundObject, XrayFreedomOutboundObject, XrayDnsOutboundObject };
 export { XrayWireguardInboundObject, XrayTrojanInboundObject, XraySocksInboundObject, XrayShadowsocksInboundObject, XrayHttpInboundObject, ITransportNetwork, XrayProtocol, XrayProtocolMode, IProtocolType, XrayProtocolOption, XrayVmessInboundObject, XrayDokodemoDoorInboundObject, xrayProtocols };
 
 class XrayProtocolOption {

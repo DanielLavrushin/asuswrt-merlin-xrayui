@@ -17,6 +17,10 @@
                     <td>
                         <input type="text" class="input_25_table" v-model="inbound.settings.secretKey" />
                         <span class="hint-color"></span>
+                        <span class="row-buttons">
+                            <input class="button_gen button_gen_small" type="button" value="regenerate"
+                                @click.prevent="regen()" />
+                        </span>
                     </td>
                 </tr>
                 <tr>
@@ -36,30 +40,49 @@
                 </tr>
             </tbody>
         </table>
-        <clients :clients="inbound.settings.peers"></clients>
+        <clients :clients="inbound.settings.peers" :privateKey="privatekey"></clients>
     </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
+import engine, { SubmtActions } from "../../modules/Engine";
 import { XrayWireguardInboundObject, XrayInboundObject, XrayProtocol, XrayOptions } from "../../modules/XrayConfig"
 import Clients from "../clients/WireguardClients.vue";
 import InboundCommon from "./InboundCommon.vue";
 
 export default defineComponent({
     name: "WireguardInbound",
+
     components: {
         Clients,
         InboundCommon,
     },
+
     props: {
         inbound: XrayInboundObject<XrayWireguardInboundObject>,
     },
+
+    methods: {
+        async regen(privatekey: string | undefined = undefined) {
+            window.showLoading();
+            await engine.submit(SubmtActions.regenerateWireguardyKeys, privatekey, 1000);
+            let result = await engine.getEngineConfig();
+            if (this.inbound.settings) {
+                this.privatekey = result.wireguard?.privatekey!;
+                this.inbound.settings.secretKey = result.wireguard?.privatekey!;
+            }
+            window.hideLoading();
+        },
+    },
+
     setup(props) {
 
         const inbound = ref<XrayInboundObject<XrayWireguardInboundObject>>(props.inbound ?? new XrayInboundObject<XrayWireguardInboundObject>(XrayProtocol.WIREGUARD, new XrayWireguardInboundObject()));
+        const privatekey = ref<string>(inbound.value.settings.secretKey);
         return {
             inbound,
+            privatekey,
             authentications: ["noauth", "password"]
         };
     },

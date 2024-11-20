@@ -34,6 +34,10 @@
                     <th>Public Key</th>
                     <td>
                         <input v-model="newClient.publicKey" type="text" class="input_25_table" />
+                        <span class="row-buttons">
+                            <input class="button_gen button_gen_small" type="button" value="regenerate"
+                                @click.prevent="regen()" />
+                        </span>
                     </td>
                 </tr>
                 <tr>
@@ -58,6 +62,7 @@ import { defineComponent, ref } from "vue";
 import QrcodeVue from "qrcode.vue";
 
 import modal from "../Modal.vue";
+import engine, { SubmtActions } from "@/modules/Engine";
 
 export default defineComponent({
     name: "WireguardClients",
@@ -66,6 +71,15 @@ export default defineComponent({
         modal,
     },
     methods: {
+        async regen() {
+            window.showLoading();
+            await engine.submit(SubmtActions.regenerateWireguardyKeys, this.privateKey, 1000);
+            let result = await engine.getEngineConfig();
+            if (result.wireguard) {
+                this.newClient.publicKey = result.wireguard.publickey;
+            }
+            window.hideLoading();
+        },
 
         resetNewForm() {
             this.ips = "";
@@ -103,6 +117,7 @@ export default defineComponent({
     },
     props: {
         clients: Array<XrayWireguardClientObject>,
+        privateKey: String,
     },
 
     setup(props) {
@@ -112,8 +127,8 @@ export default defineComponent({
         const modalQr = ref();
         const modalNewClient = ref();
         const qr_content = ref("");
-        const ips = ref();
-
+        const ips = ref("");
+        const privatekey = ref<string>(props.privateKey!);
         return {
             flows: XrayOptions.clientFlowOptions,
             ips,

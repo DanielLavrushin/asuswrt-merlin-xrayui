@@ -51,9 +51,11 @@
 </template>
 
 <script lang="ts">
+import { XrayOptions } from "../../modules/Options";
+import { XrayShadowsocksClientObject } from "../../modules/ClientsObjects";
 import { defineComponent, ref } from "vue";
 import engine from "../../modules/Engine";
-import xrayConfig, { XrayOptions, XrayShadowsocksClientObject } from "../../modules/XrayConfig";
+import xrayConfig from "../../modules/XrayConfig";
 import QrcodeVue from "qrcode.vue";
 
 import modal from "../Modal.vue";

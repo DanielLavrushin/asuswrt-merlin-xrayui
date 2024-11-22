@@ -20,7 +20,7 @@
 
 <script lang="ts">
 import { defineComponent, ref, watch } from "vue";
-import { XrayOptions } from "../../modules/XrayConfig";
+import { XrayOptions } from "../../modules/Options";
 
 export default defineComponent({
     name: "Http",

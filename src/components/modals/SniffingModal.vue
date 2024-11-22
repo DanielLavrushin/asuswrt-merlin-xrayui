@@ -81,7 +81,9 @@
 <script lang="ts">
 import { defineComponent, ref, watch } from "vue";
 import Modal from "../Modal.vue";
-import { XraySniffingObject, XrayInboundObject, IProtocolType } from "../../modules/XrayConfig"
+import { XraySniffingObject } from "../../modules/CommonObjects";
+import { XrayInboundObject } from "../../modules/InboundObjects";
+import { IProtocolType } from "../../modules/Interfaces";
 
 export default defineComponent({
   name: "SniffingModal",

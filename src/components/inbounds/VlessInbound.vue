@@ -20,9 +20,12 @@
 </template>
 <script lang="ts">
 import { defineComponent, ref } from "vue";
-import { XrayVlessInboundObject, XrayInboundObject, XrayProtocol } from "../../modules/XrayConfig"
 import VlessClients from "../clients/VlessClients.vue";
 import InboundCommon from "./InboundCommon.vue";
+import { XrayProtocol } from "../../modules/CommonObjects";
+import { XrayInboundObject } from "../../modules/InboundObjects";
+import { XrayVlessInboundObject } from "../../modules/InboundObjects";
+
 export default defineComponent({
     name: "VmessInbound",
     components: {

@@ -54,7 +54,11 @@
 
 <script lang="ts">
 import { defineComponent, ref, watch } from "vue";
-import xrayConfig, { XrayRoutingObject, XrayRoutingRuleObject } from "@/modules/XrayConfig";
+
+import { XrayRoutingObject } from "../modules/CommonObjects";
+import xrayConfig from "../modules/XrayConfig";
+
+
 import RulesModal from "./modals/RulesModal.vue";
 
 export default defineComponent({

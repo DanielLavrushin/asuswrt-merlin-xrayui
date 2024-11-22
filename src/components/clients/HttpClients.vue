@@ -41,7 +41,9 @@
 </template>
 
 <script lang="ts">
-import xrayConfig, { XrayHttpClientObject, XrayOptions } from "../../modules/XrayConfig";
+import { XrayOptions } from "../../modules/Options";
+import { XrayHttpClientObject } from "../../modules/ClientsObjects";
+import xrayConfig from "../../modules/XrayConfig";
 import { defineComponent, ref } from "vue";
 import QrcodeVue from "qrcode.vue";
 

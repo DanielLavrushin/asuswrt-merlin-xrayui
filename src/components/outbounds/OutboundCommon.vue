@@ -19,7 +19,8 @@
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
-import { IProtocolType, XrayOutboundObject } from "../../modules/XrayConfig"
+import { XrayOutboundObject } from "../../modules/OutboundObjects";
+import { IProtocolType } from "../../modules/Interfaces";
 import AllocateModal from "../modals/AllocateModal.vue";
 
 export default defineComponent({

@@ -52,8 +52,10 @@
 <script lang="ts">
 import { defineComponent, ref } from "vue";
 import InboundCommon from "./InboundCommon.vue";
+import { XrayProtocol } from "./../../modules/CommonObjects";
+import { XrayDokodemoDoorInboundObject, XrayInboundObject } from "./../../modules/InboundObjects";
+import { XrayOptions } from "../../modules/Options";
 
-import { XrayDokodemoDoorInboundObject, XrayOptions, XrayInboundObject, XrayProtocol } from "../../modules/XrayConfig"
 export default defineComponent({
     name: "DocodemoDoorInbound",
     components: {

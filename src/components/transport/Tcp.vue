@@ -15,7 +15,7 @@
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
-import { XrayStreamSettingsObject } from "../../modules/XrayConfig";
+import { XrayStreamSettingsObject } from "../../modules/CommonObjects";
 
 export default defineComponent({
   name: "Tcp",

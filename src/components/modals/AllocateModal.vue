@@ -50,7 +50,10 @@
 <script lang="ts">
 import { defineComponent, ref, } from "vue";
 import Modal from "../Modal.vue";
-import { XrayAllocateObject, XrayInboundObject, IProtocolType } from "../../modules/XrayConfig";
+import { XrayAllocateObject } from "../../modules/CommonObjects";
+import { XrayInboundObject } from "../../modules/InboundObjects";
+import { IProtocolType } from "../../modules/Interfaces";
+
 
 export default defineComponent({
   name: "AllocateModal",

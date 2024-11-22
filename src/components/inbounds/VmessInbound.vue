@@ -17,9 +17,12 @@
 </template>
 <script lang="ts">
 import { defineComponent, ref } from "vue";
-import { XrayVmessInboundObject, XrayInboundObject, XrayProtocol } from "../../modules/XrayConfig"
 import Clients from "../clients/VmessClients.vue";
 import InboundCommon from "./InboundCommon.vue";
+import { XrayProtocol } from "../../modules/CommonObjects";
+import { XrayInboundObject } from "../../modules/InboundObjects";
+import { XrayVmessInboundObject } from "../../modules/InboundObjects";
+
 export default defineComponent({
     name: "VmessInbound",
     components: {
@@ -37,3 +40,4 @@ export default defineComponent({
     },
 });
 </script>
+<style scoped></style>

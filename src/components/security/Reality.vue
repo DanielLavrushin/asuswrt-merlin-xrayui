@@ -90,7 +90,7 @@
 import Modal from "../Modal.vue";
 import engine, { SubmtActions } from "@/modules/Engine";
 import { defineComponent, ref, watch } from "vue";
-import { XrayStreamRealitySettingsObject, XrayStreamSettingsObject } from "@/modules/XrayConfig";
+import { XrayStreamRealitySettingsObject, XrayStreamSettingsObject } from "@/modules/CommonObjects";
 
 export default defineComponent({
   name: "Reality",

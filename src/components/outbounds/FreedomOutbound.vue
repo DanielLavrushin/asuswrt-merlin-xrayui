@@ -16,8 +16,9 @@
 </template>
 <script lang="ts">
 import { defineComponent, ref } from "vue";
-import { XrayFreedomOutboundObject, XrayProtocol, XrayOutboundObject } from "../../modules/XrayConfig"
 import OutboundCommon from "./OutboundCommon.vue";
+import { XrayProtocol } from "../../modules/CommonObjects";
+import { XrayFreedomOutboundObject, XrayOutboundObject } from "../../modules/OutboundObjects";
 
 export default defineComponent({
     name: "FreedomOutbound",

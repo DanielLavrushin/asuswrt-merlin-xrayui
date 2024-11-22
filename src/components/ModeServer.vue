@@ -17,7 +17,9 @@ import engine, { SubmtActions } from "../modules/Engine";
 
 import Modal from "./Modal.vue";
 
-import { XrayInboundObject, XrayOutboundObject, IProtocolType } from "../modules/XrayConfig";
+import { IProtocolType } from "../modules/Interfaces";
+import { XrayInboundObject } from "../modules/InboundObjects";
+import { XrayOutboundObject } from "../modules/OutboundObjects";
 
 import ServerStatus from "./ServerStatus.vue";
 import Inbounds from "./Inbounds.vue";

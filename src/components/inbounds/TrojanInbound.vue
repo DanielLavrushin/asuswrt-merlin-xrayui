@@ -20,9 +20,11 @@
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
-import { XrayTrojanInboundObject, XrayInboundObject, XrayProtocol, XrayOptions } from "../../modules/XrayConfig"
 import Clients from "../clients/TrojanClients.vue";
 import InboundCommon from "./InboundCommon.vue";
+import { XrayProtocol } from "../../modules/CommonObjects";
+import { XrayInboundObject } from "../../modules/InboundObjects";
+import { XrayTrojanInboundObject } from "../../modules/InboundObjects";
 
 export default defineComponent({
     name: "TrojanInbound",

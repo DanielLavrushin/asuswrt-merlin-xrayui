@@ -1,5 +1,6 @@
 import axios from "axios";
-import xrayConfig, { XrayStreamSettingsObject, xrayClientConfig, XrayClientObject, XrayObject } from "./XrayConfig";
+import { xrayConfig, XrayObject } from "./XrayConfig";
+import { XrayStreamSettingsObject } from "./CommonObjects";
 
 class EngineWireguard {
   public privatekey!: string;
@@ -26,7 +27,6 @@ class SubmtActions {
 
 class Engine {
   public xrayConfig: XrayObject = xrayConfig;
-  public xrayClientConfig: XrayClientObject = xrayClientConfig;
   public mode: string = "server";
   private zero_uuid: string = "10000000-1000-4000-8000-100000000000";
 
@@ -137,8 +137,6 @@ class Engine {
     const response = await axios.get<XrayObject>(this.mode === "server" ? "/ext/xray-ui/xray-config.json" : "/ext/xray-ui/xray-config-client.json");
     if (this.mode === "server") {
       Object.assign(this.xrayConfig, response.data);
-    } else {
-      Object.assign(this.xrayClientConfig, response.data);
     }
 
     return this.xrayConfig;

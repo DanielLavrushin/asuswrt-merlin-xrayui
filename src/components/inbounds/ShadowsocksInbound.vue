@@ -28,9 +28,12 @@
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
-import { XrayShadowsocksInboundObject, XrayInboundObject, XrayProtocol, XrayOptions } from "../../modules/XrayConfig"
 import Clients from "../clients/ShadowsocksClients.vue";
 import InboundCommon from "./InboundCommon.vue";
+import { XrayProtocol } from "../../modules/CommonObjects";
+import { XrayInboundObject } from "../../modules/InboundObjects";
+import { XrayOptions } from "../../modules/Options";
+import { XrayShadowsocksInboundObject } from "../../modules/InboundObjects";
 
 export default defineComponent({
     name: "ShadowsocksInbound",

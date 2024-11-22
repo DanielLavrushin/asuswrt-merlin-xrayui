@@ -50,8 +50,13 @@
 
 <script lang="ts">
 import { defineComponent, ref, computed } from "vue";
+
+import { ITransportNetwork, IProtocolType } from "../../modules/Interfaces";
+import { XrayInboundObject } from "../../modules/InboundObjects";
+import { XrayOptions } from "../../modules/Options";
+import { XrayStreamSettingsObject, XrayStreamTcpSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject, XrayStreamSplitHttpSettingsObject, XrayStreamKcpSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamHttpSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamWsSettingsObject } from "../../modules/CommonObjects";
+
 import Modal from "../Modal.vue";
-import { XrayStreamHttpSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamSplitHttpSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamWsSettingsObject, ITransportNetwork, XrayInboundObject, IProtocolType, XrayStreamSettingsObject, XrayOptions, XrayStreamTcpSettingsObject, XrayStreamKcpSettingsObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject } from "../../modules/XrayConfig";
 
 import NetworkTcp from "../transport/Tcp.vue";
 import NetworkKcp from "../transport/Kcp.vue";

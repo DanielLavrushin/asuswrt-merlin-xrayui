@@ -85,7 +85,9 @@
 import engine, { SubmtActions } from "@/modules/Engine";
 import { defineComponent, ref, watch, reactive } from "vue";
 import CertificatesModal from "../modals/CertificatesModal.vue";
-import xrayConfig, { XrayStreamSettingsObject, XrayStreamTlsCertificateObject, XrayOptions, XrayStreamTlsSettingsObject } from "@/modules/XrayConfig";
+import { XrayStreamSettingsObject, XrayStreamTlsSettingsObject, XrayStreamTlsCertificateObject } from "@/modules/CommonObjects";
+import { XrayOptions } from "@/modules/Options";
+
 
 export default defineComponent({
   name: "Tls",

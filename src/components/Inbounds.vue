@@ -52,7 +52,16 @@
 import { defineComponent, ref, computed, nextTick } from "vue";
 import engine from "../modules/Engine";
 import Modal from "./Modal.vue";
-import { xrayProtocols, XrayInboundObject, XrayProtocolMode, IProtocolType, XrayProtocolOption, XrayProtocol } from "../modules/XrayConfig";
+
+
+import { IProtocolType } from "../modules/Interfaces";
+import { XrayProtocol } from "../modules/CommonObjects";
+import { XrayInboundObject } from "../modules/InboundObjects";
+import { XrayProtocolOption } from "../modules/CommonObjects";
+
+import { xrayProtocols } from "../modules/XrayConfig";
+import { XrayProtocolMode } from "../modules/Options";
+
 import DocodemoDoorInbound from "./inbounds/DocodemoDoorInbound.vue";
 import VmessInbound from "./inbounds/VmessInbound.vue";
 import VlessInbound from "./inbounds/VlessInbound.vue";

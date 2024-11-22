@@ -48,11 +48,21 @@
 import { defineComponent, ref, computed, nextTick } from "vue";
 import engine from "../modules/Engine";
 import Modal from "./Modal.vue";
-import { xrayProtocols, XrayOutboundObject, XrayProtocolMode, IProtocolType, XrayProtocolOption, XrayProtocol } from "../modules/XrayConfig";
+import { xrayProtocols } from "../modules/XrayConfig";
+
+import { IProtocolType } from "../modules/Interfaces";
+import { XrayProtocol } from "../modules/CommonObjects";
+import { XrayOutboundObject } from "../modules/OutboundObjects";
+import { XrayProtocolOption } from "../modules/CommonObjects";
+import { XrayProtocolMode } from "../modules/Options";
 
 import FreedomOutbound from "./outbounds/FreedomOutbound.vue";
 import BlackholeOutbound from "./outbounds/BlackholeOutbound.vue";
 import DnsOutbound from "./outbounds/DnsOutbound.vue";
+import HttpOutbound from "./outbounds/HttpOutbound.vue";
+import LoopbackOutbound from "./outbounds/LoopbackOutbound.vue";
+import VlessOutbound from "./outbounds/VlessOutbound.vue";
+import VmessOutbound from "./outbounds/VmessOutbound.vue";
 
 export default defineComponent({
     name: "Outbounds",
@@ -124,6 +134,14 @@ export default defineComponent({
                     return BlackholeOutbound;
                 case XrayProtocol.DNS:
                     return DnsOutbound;
+                case XrayProtocol.HTTP:
+                    return HttpOutbound;
+                case XrayProtocol.LOOPBACK:
+                    return LoopbackOutbound;
+                case XrayProtocol.VLESS:
+                    return VlessOutbound;
+                case XrayProtocol.VMESS:
+                    return VmessOutbound;
                 default:
                     return null;
             }

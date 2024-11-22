@@ -50,7 +50,9 @@
 
 <script lang="ts">
 import { engine } from "../../modules/Engine";
-import xrayConfig, { XrayVlessClientObject, XrayOptions } from "../../modules/XrayConfig";
+import xrayConfig from "../../modules/XrayConfig";
+import { XrayVlessClientObject } from "../../modules/ClientsObjects";
+import { XrayOptions } from "../../modules/Options";
 import { defineComponent, ref } from "vue";
 import QrcodeVue from "qrcode.vue";
 
@@ -92,24 +94,41 @@ export default defineComponent({
         alert("Id is required");
         return;
       }
+
+      if (this.mode == "outbound") {
+        client.encryption = "none";
+      }
+
       this.clients.push(client);
       this.resetNewForm();
     },
   },
   props: {
     clients: Array<XrayVlessClientObject>,
+    mode: String,
   },
 
   setup(props) {
 
     const clients = ref<XrayVlessClientObject[]>(props.clients ?? []);
     const newClient = ref<XrayVlessClientObject>(new XrayVlessClientObject());
+    const mode = ref(props.mode);
     newClient.value.id = engine.uuid();
     const modalQr = ref();
     let qr_content = ref("");
+    const flows = ref();
+
+    switch (mode.value) {
+      case "outbound":
+        flows.value = ["xtls-rprx-vision", "xtls-rprx-vision-udp443"];
+        break;
+      default:
+        flows.value = XrayOptions.clientFlowOptions;
+        break;
+    }
 
     return {
-      flows: XrayOptions.clientFlowOptions,
+      flows,
       clients,
       qr_content,
       qr_size: 500,

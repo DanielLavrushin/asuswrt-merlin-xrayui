@@ -134,4 +134,9 @@ textarea {
   box-sizing: content-box;
   height: 100px;
 }
+
+.formfontdesc p {
+  text-align: left;
+  margin-bottom: 10px;
+}
 </style>

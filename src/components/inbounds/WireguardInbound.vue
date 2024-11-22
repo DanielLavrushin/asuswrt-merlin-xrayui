@@ -47,9 +47,11 @@
 <script lang="ts">
 import { defineComponent, ref } from "vue";
 import engine, { SubmtActions } from "../../modules/Engine";
-import { XrayWireguardInboundObject, XrayInboundObject, XrayProtocol, XrayOptions } from "../../modules/XrayConfig"
 import Clients from "../clients/WireguardClients.vue";
 import InboundCommon from "./InboundCommon.vue";
+import { XrayInboundObject } from "../../modules/InboundObjects";
+import { XrayWireguardInboundObject } from "../../modules/InboundObjects";
+import { XrayProtocol } from "../../modules/CommonObjects";
 
 export default defineComponent({
     name: "WireguardInbound",

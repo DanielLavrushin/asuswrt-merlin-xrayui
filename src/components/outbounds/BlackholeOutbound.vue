@@ -18,8 +18,9 @@
 </template>
 <script lang="ts">
 import { defineComponent, ref } from "vue";
-import { XrayProtocol, XrayOutboundObject, XrayBlackholeOutboundObject } from "../../modules/XrayConfig"
 import OutboundCommon from "./OutboundCommon.vue";
+import { XrayProtocol } from "../../modules/CommonObjects";
+import { XrayBlackholeOutboundObject, XrayOutboundObject } from "../../modules/OutboundObjects";
 
 export default defineComponent({
     name: "BlackholeOutbound",

@@ -1,5 +1,5 @@
 <template>
-
+    <div>Comming soon!</div>
 </template>
 
 <script lang="ts">

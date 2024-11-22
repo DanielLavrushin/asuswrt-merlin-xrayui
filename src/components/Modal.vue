@@ -117,7 +117,7 @@ export default defineComponent({
 
 .xray-modal-body {
   text-align: center;
-  margin-top: 20px;
+  margin-top: 10px;
 }
 
 .xray-modal-footer {

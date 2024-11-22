@@ -22,19 +22,19 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>Port</th>
+                    <th>DNS server address</th>
                     <td>
-                        <input type="text" maxlength="5" class="input_6_table" v-model="proxy.settings.port"
-                            onkeypress="return validator.isNumber(this, event);" autocomplete="off" autocorrect="off"
+                        <input type="text" maxlength="15" class="input_20_table" v-model="proxy.settings.address"
+                            onkeypress="return validator.isIPAddr(this, event);" autocomplete="off" autocorrect="off"
                             autocapitalize="off" />
                         <span class="hint-color"></span>
                     </td>
                 </tr>
                 <tr>
-                    <th>Address</th>
+                    <th>DNS server port</th>
                     <td>
-                        <input type="text" maxlength="15" class="input_20_table" v-model="proxy.settings.address"
-                            onkeypress="return validator.isIPAddr(this, event);" autocomplete="off" autocorrect="off"
+                        <input type="text" maxlength="5" class="input_6_table" v-model="proxy.settings.port"
+                            onkeypress="return validator.isNumber(this, event);" autocomplete="off" autocorrect="off"
                             autocapitalize="off" />
                         <span class="hint-color"></span>
                     </td>
@@ -54,8 +54,9 @@
 </template>
 <script lang="ts">
 import { defineComponent, ref } from "vue";
-import { XrayDnsOutboundObject, XrayProtocol, XrayOutboundObject } from "../../modules/XrayConfig"
 import OutboundCommon from "./OutboundCommon.vue";
+import { XrayProtocol } from "../../modules/CommonObjects";
+import { XrayOutboundObject, XrayDnsOutboundObject } from "../../modules/OutboundObjects";
 
 export default defineComponent({
     name: "DnsOutbound",

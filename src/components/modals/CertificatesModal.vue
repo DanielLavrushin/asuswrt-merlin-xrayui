@@ -72,7 +72,7 @@
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
-import { XrayStreamTlsCertificateObject } from "@/modules/XrayConfig";
+import { XrayStreamTlsCertificateObject } from "../../modules/CommonObjects";
 import Modal from "../Modal.vue";
 
 export default defineComponent({

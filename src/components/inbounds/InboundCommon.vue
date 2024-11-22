@@ -35,8 +35,9 @@
 
 <script lang="ts">
 import { defineComponent, ref, watch } from "vue";
-import { XrayInboundObject, IProtocolType } from "../../modules/XrayConfig"
 import AllocateModal from "../modals/AllocateModal.vue";
+import { XrayInboundObject } from "../../modules/InboundObjects";
+import { IProtocolType } from "../../modules/Interfaces";
 
 export default defineComponent({
     name: "InboundCommon",

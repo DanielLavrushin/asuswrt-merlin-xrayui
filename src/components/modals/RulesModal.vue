@@ -48,13 +48,10 @@
         <tr>
           <th>Inbound Connection</th>
           <td>
-            <select class="input_option" v-model="rule.inboundTag">
-              <option></option>
-              <option v-for="opt in inbounds" :key="opt" :value="opt">
-                {{ opt }}
-              </option>
-            </select>
-            <span class="hint-color"></span>
+            <template v-for="(opt, index) in inbounds" :key="index">
+              <input v-model="rule.inboundTag" type="checkbox" class="input" :value="opt" :id="'inbound-' + index" />
+              <label :for="'inbound-' + index" class="settingvalue">{{ opt.toUpperCase() }}</label>
+            </template>
           </td>
         </tr>
         <tr>
@@ -145,8 +142,9 @@
 
 <script lang="ts">
 import { defineComponent, ref, watch } from "vue";
-import xrayConfig, { XrayRoutingRuleObject, XrayRoutingObject } from "@/modules/XrayConfig";
 import Modal from "../Modal.vue";
+import xrayConfig from "../../modules/XrayConfig";
+import { XrayRoutingRuleObject, XrayRoutingObject } from "../../modules/CommonObjects";
 
 export default defineComponent({
   name: "RulesModal",

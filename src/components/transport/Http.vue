@@ -52,7 +52,8 @@
 
 <script lang="ts">
 import { defineComponent, ref, watch } from "vue";
-import { XrayStreamSettingsObject, XrayOptions } from "../../modules/XrayConfig";
+import { XrayStreamSettingsObject } from "../../modules/CommonObjects";
+import { XrayOptions } from "../../modules/Options";
 import HeadersMapping from "./HeadersMapping.vue";
 
 export default defineComponent({

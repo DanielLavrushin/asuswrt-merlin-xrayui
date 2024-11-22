@@ -116,7 +116,7 @@ td .hint-color {
 }
 
 .FormTable td span.label {
-  padding: 5px;
+  padding: 3px 5px 3px 5px;
 }
 
 .textarea-wrapper {

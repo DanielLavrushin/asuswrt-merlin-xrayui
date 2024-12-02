@@ -2,4 +2,8 @@ interface IProtocolType {}
 interface ITransportNetwork {}
 interface IClient {}
 
-export { IProtocolType, ITransportNetwork, IClient };
+interface IXrayServer<TClient> {
+  users: TClient[];
+}
+
+export { IXrayServer, IProtocolType, ITransportNetwork, IClient };

@@ -1,8 +1,7 @@
 import { IProtocolType } from "./Interfaces";
 import { XrayProtocol } from "./Options";
-import { XrayStreamSettingsObject } from "./CommonObjects";
-import { XrayVnextObject } from "./CommonObjects";
-import { XraySocksClientObject } from "./ClientsObjects";
+import { XrayHttpServerObject, XrayStreamSettingsObject, XraySocksServerObject, XrayVmessServerObject } from "./CommonObjects";
+import { XrayVlessServerObject } from "./CommonObjects";
 
 class XrayOutboundObject<IProtocolType> {
   public protocol!: XrayProtocol;
@@ -21,22 +20,26 @@ class XrayOutboundObject<IProtocolType> {
 }
 
 class XrayVlessOutboundObject implements IProtocolType {
-  public vnext: XrayVnextObject[] = [];
+  public vnext: XrayVlessServerObject[] = [];
+  constructor() {
+    if (this.vnext.length === 0) this.vnext.push(new XrayVlessServerObject());
+  }
 }
 
 class XrayVmessOutboundObject implements IProtocolType {
-  public vnext: XrayVnextObject[] = [];
+  public vnext: XrayVmessServerObject[] = [];
+  constructor() {
+    if (this.vnext.length === 0) this.vnext.push(new XrayVmessServerObject());
+  }
 }
 
 class XrayBlackholeOutboundObject implements IProtocolType {}
 
 class XrayHttpOutboundObject implements IProtocolType {
-  public host: string[] = [];
-  public path?: string;
-  public method: string = "PUT";
-  read_idle_timeout?: number = 10;
-  health_check_timeout?: number = 15;
-  public headers: any = {};
+  public servers: XrayHttpServerObject[] = [];
+  constructor() {
+    if (this.servers.length === 0) this.servers.push(new XrayHttpServerObject());
+  }
 }
 
 class LoopbackOutboundObject implements IProtocolType {
@@ -52,9 +55,10 @@ class XrayDnsOutboundObject implements IProtocolType {
 }
 
 class XraySocksOutboundObject implements IProtocolType {
-  public address!: string;
-  public port!: number;
-  public users: XraySocksClientObject[] = [];
+  public servers: XraySocksServerObject[] = [];
+  constructor() {
+    if (this.servers.length === 0) this.servers.push(new XraySocksServerObject());
+  }
 }
 
 export { XraySocksOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, LoopbackOutboundObject, XrayBlackholeOutboundObject, XrayHttpOutboundObject, XrayVlessOutboundObject, XrayVmessOutboundObject, XrayOutboundObject };

@@ -22,7 +22,6 @@ window.LoadingTime = (seconds: number, flag: string | null) => {
 
   const updateLoading = () => {
     progressPercentage += progressIncrement;
-    console.log(`Seconds left: ${seconds}, Progress: ${progressPercentage}%`);
 
     if (seconds > 0) {
       window.showtext(proceedingMainText, "<#392#>");

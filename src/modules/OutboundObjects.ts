@@ -33,7 +33,9 @@ class XrayVmessOutboundObject implements IProtocolType {
   }
 }
 
-class XrayBlackholeOutboundObject implements IProtocolType {}
+class XrayBlackholeOutboundObject implements IProtocolType {
+  public response: { type: string } = { type: "none" }; // none, http
+}
 
 class XrayHttpOutboundObject implements IProtocolType {
   public servers: XrayHttpServerObject[] = [];
@@ -45,7 +47,14 @@ class XrayHttpOutboundObject implements IProtocolType {
 class LoopbackOutboundObject implements IProtocolType {
   public inboundTag!: string;
 }
-class XrayFreedomOutboundObject implements IProtocolType {}
+class XrayFreedomOutboundObject implements IProtocolType {
+  static strategyOptions: string[] = ["AsIs", "UseIP", "UseIPv4", "UseIPv6"];
+  static fragmentOptions: string[] = ["1-3", "tlshello"];
+  public domainStrategy: string = "AsIs";
+  public redirect: string = "";
+  public fragment: { packets: string; length: string; interval: string } = { packets: "tlshello", length: "30", interval: "2" };
+  public noises: string[] = [];
+}
 
 class XrayDnsOutboundObject implements IProtocolType {
   public address!: string;

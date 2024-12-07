@@ -43,6 +43,8 @@ start() {
         am_settings_set xray_mode $mode
     fi
 
+    test_xray_config
+
     logger "xrayui" "Starting $DESC with $ARGS"
     xray $ARGS >/dev/null 2>&1 &
     echo $! >$PIDFILE
@@ -461,6 +463,23 @@ reconstruct_payload() {
     echo "$payload"
 }
 
+test_xray_config() {
+    local output
+    if ! output=$(xray -c /opt/etc/xray/config.json -test 2>&1); then
+        message=$(echo "$output" | sed 's/"/\\"/g')
+    else
+        message="success"
+    fi
+
+    local json_file="/www/user/xray-ui/xray-ui-response.json"
+    if [ ! -f "$json_file" ]; then
+        echo '{"xray":{}}' >"$json_file"
+    fi
+
+    local updated_json=$(jq --arg msg "$message" '.xray.test = $msg' "$json_file")
+    echo "$updated_json" >"$json_file"
+}
+
 case "$1" in
 start)
     start
@@ -483,6 +502,9 @@ remount_ui)
 service_event)
     if [ "$2" = "refreshconfig" ]; then
         refresh_xray_config
+        exit 0
+    elif [ "$2" = "testconfig" ]; then
+        test_xray_config
         exit 0
     elif [ "$2" = "connectedclients" ]; then
         get_connected_clients

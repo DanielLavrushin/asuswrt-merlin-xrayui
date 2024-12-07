@@ -10,8 +10,13 @@ interface XrayUiServer {
   isRunning: boolean;
 }
 
+interface XrayRouter {
+  cpu: number;
+}
+
 interface XrayUiGlobal {
   server: XrayUiServer;
+  router: XrayRouter;
   commands: any;
   custom_settings: XrayUiCustomSettings;
 }

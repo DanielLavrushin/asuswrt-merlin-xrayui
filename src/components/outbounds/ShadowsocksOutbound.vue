@@ -1,0 +1,97 @@
+<template>
+    <div class="formfontdesc">
+        <p>Shadowsocks protocol is compatible with most other implementations.</p>
+        <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
+            <thead>
+                <tr>
+                    <td colspan="2">Shadowsocks</td>
+                </tr>
+            </thead>
+            <tbody>
+                <outbound-common :proxy="proxy"></outbound-common>
+                <tr>
+                    <th>Shadowsocks server</th>
+                    <td>
+                        <input type="text" class="input_20_table" v-model="proxy.settings.servers[0].address"
+                            autocomplete="off" autocorrect="off" autocapitalize="off" />
+                        <span class="hint-color">required</span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Proxy port</th>
+                    <td>
+                        <input type="number" maxlength="5" class="input_6_table"
+                            v-model="proxy.settings.servers[0].port" autocorrect="off" autocapitalize="off"
+                            onkeypress="return validator.isNumber(this,event);" />
+                        <span class="hint-color">required</span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Email address</th>
+                    <td>
+                        <input type="text" class="input_20_table" v-model="proxy.settings.servers[0].email"
+                            autocomplete="off" autocorrect="off" autocapitalize="off" />
+                        <span class="hint-color">optional</span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Encryption method</th>
+                    <td>
+                        <select class="input_option" v-model="proxy.settings.servers[0].method">
+                            <option v-for="(opt, index) in encryptions" :key="index" :value="opt.e">
+                                {{ opt.e }}
+                            </option>
+                        </select>
+                        <span class="hint-color">required</span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Password</th>
+                    <td>
+                        <input type="text" class="input_20_table" v-model="proxy.settings.servers[0].password"
+                            autocomplete="off" autocorrect="off" autocapitalize="off" />
+                        <button @click.prevent="generate_password()"
+                            class="button_gen button_gen_small">generate</button>
+                        <span class="hint-color">required</span>
+                    </td>
+                </tr>
+                <tr>
+                    <th> UDP over TCP</th>
+                    <td>
+                        <input type="checkbox" v-model="proxy.settings.servers[0].uot" />
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</template>
+<script lang="ts">
+import engine from "../../modules/Engine";
+import { defineComponent, ref } from "vue";
+import OutboundCommon from "./OutboundCommon.vue";
+import { XrayOutboundObject } from "../../modules/OutboundObjects";
+import { XrayShadowsocksOutboundObject } from "../../modules/OutboundObjects";
+import { XrayProtocol, XrayOptions } from "../../modules/Options";
+export default defineComponent({
+    name: "HttpOutbound",
+    components: {
+        OutboundCommon,
+    },
+    props: {
+        proxy: XrayOutboundObject<XrayShadowsocksOutboundObject>,
+    },
+    methods: {
+        generate_password() {
+            const selectedEnc = this.encryptions.find((e) => e.e === this.proxy.settings.servers[0].method);
+            this.proxy.settings.servers[0].password = engine.generateRandomBase64(selectedEnc?.l);
+        }
+    },
+    setup(props) {
+        const proxy = ref<XrayOutboundObject<XrayShadowsocksOutboundObject>>(props.proxy ?? new XrayOutboundObject<XrayShadowsocksOutboundObject>(XrayProtocol.SHADOWSOCKS, new XrayShadowsocksOutboundObject()));
+        return {
+            proxy,
+            encryptions: [{ e: "2022-blake3-aes-128-gcm", l: 16 }, { e: "2022-blake3-aes-256-gcm", l: 32 }, { e: "2022-blake3-chacha20-poly1305", l: 32 }]
+        };
+    },
+});
+</script>

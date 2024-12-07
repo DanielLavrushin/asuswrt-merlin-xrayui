@@ -73,7 +73,7 @@ class XrayStreamTlsSettingsObject {
 
   public serverName?: string;
   public rejectUnknownSni: boolean = false;
-  public allowInsecure: boolean = false;
+  public allowInsecure: boolean = true;
   public disableSystemRoot: boolean = false;
   public enableSessionResumption: boolean = false;
   public alpn?: string[] = XrayStreamTlsSettingsObject.alpnOptions;
@@ -175,13 +175,32 @@ class XrayStreamSettingsObject {
 class XrayServerObject<IClient> implements IXrayServer<IClient> {
   public address!: string;
   public port!: number;
-  public users: IClient[] = [];
+  public users?: IClient[] | undefined = [];
 }
-
+class XrayTrojanServerObject extends XrayServerObject<XrayHttpClientObject> {
+  public email?: string;
+  public password!: string;
+  public level?: number = 0;
+  constructor() {
+    super();
+    delete this.users;
+  }
+}
 class XrayHttpServerObject extends XrayServerObject<XrayHttpClientObject> {}
 class XraySocksServerObject extends XrayServerObject<XraySocksClientObject> {}
 class XrayVlessServerObject extends XrayServerObject<XrayVlessClientObject> {}
 class XrayVmessServerObject extends XrayServerObject<XrayVmessClientObject> {}
+class XrayShadowsocksServerObject extends XrayServerObject<XrayVmessClientObject> {
+  public email?: string;
+  public method: string = "2022-blake3-aes-256-gcm";
+  public password!: string;
+  public uot?: boolean;
+  public level?: number = 0;
+  constructor() {
+    super();
+    delete this.users;
+  }
+}
 
 class XrayProtocolOption {
   public protocol!: XrayProtocol;
@@ -195,4 +214,12 @@ class XrayNoiseObject {
   public delay: string | number = 0;
 }
 
-export { XrayNoiseObject, XrayHttpServerObject, XraySocksServerObject, XrayProtocolOption, XrayProtocol, XrayVlessServerObject, XrayVmessServerObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsCertificateObject, XrayStreamSettingsObject, XrayRoutingRuleObject, XrayRoutingObject, XrayLogObject, XrayAllocateObject, XraySniffingObject, XrayHeaderObject, XrayHeaderRequestObject, XrayHeaderResponseObject, XrayXmuxObject };
+class XrayPeerObject {
+  public endpoint!: string;
+  public publicKey!: string;
+  public preSharedKey?: string;
+  public allowedIPs?: string[];
+  public keepAlive?: number;
+}
+
+export { XrayTrojanServerObject, XrayPeerObject, XrayNoiseObject, XrayShadowsocksServerObject, XrayHttpServerObject, XraySocksServerObject, XrayProtocolOption, XrayProtocol, XrayVlessServerObject, XrayVmessServerObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsCertificateObject, XrayStreamSettingsObject, XrayRoutingRuleObject, XrayRoutingObject, XrayLogObject, XrayAllocateObject, XraySniffingObject, XrayHeaderObject, XrayHeaderRequestObject, XrayHeaderResponseObject, XrayXmuxObject };

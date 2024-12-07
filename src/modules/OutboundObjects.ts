@@ -1,6 +1,6 @@
 import { IProtocolType } from "./Interfaces";
 import { XrayProtocol } from "./Options";
-import { XrayHttpServerObject, XrayStreamSettingsObject, XraySocksServerObject, XrayVmessServerObject } from "./CommonObjects";
+import { XrayTrojanServerObject, XrayHttpServerObject, XrayStreamSettingsObject, XraySocksServerObject, XrayVmessServerObject, XrayNoiseObject, XrayShadowsocksServerObject, XrayPeerObject } from "./CommonObjects";
 import { XrayVlessServerObject } from "./CommonObjects";
 
 class XrayOutboundObject<IProtocolType> {
@@ -43,6 +43,30 @@ class XrayHttpOutboundObject implements IProtocolType {
     if (this.servers.length === 0) this.servers.push(new XrayHttpServerObject());
   }
 }
+class XrayShadowsocksOutboundObject implements IProtocolType {
+  public servers: XrayShadowsocksServerObject[] = [];
+  constructor() {
+    if (this.servers.length === 0) this.servers.push(new XrayShadowsocksServerObject());
+  }
+}
+class TrojanOutboundObject implements IProtocolType {
+  public servers: XrayTrojanServerObject[] = [];
+  constructor() {
+    if (this.servers.length === 0) this.servers.push(new XrayTrojanServerObject());
+  }
+}
+
+class WireguardOutboundObject implements IProtocolType {
+  static strategyOptions: string[] = ["ForceIPv6v4", "ForceIPv6", "ForceIPv4v6", "ForceIPv4", "ForceIP"];
+  public privateKey!: string;
+  public address: string[] = [];
+  public peers: XrayPeerObject[] = [];
+  public mtu: number = 1420;
+  public reserved?: number[];
+  public workers?: number = window.xray.router.cpu;
+
+  public domainStrategy: string = "ForceIP";
+}
 
 class LoopbackOutboundObject implements IProtocolType {
   public inboundTag!: string;
@@ -52,8 +76,9 @@ class XrayFreedomOutboundObject implements IProtocolType {
   static fragmentOptions: string[] = ["1-3", "tlshello"];
   public domainStrategy: string = "AsIs";
   public redirect: string = "";
-  public fragment: { packets: string; length: string; interval: string } = { packets: "tlshello", length: "30", interval: "2" };
-  public noises: string[] = [];
+  public fragment?: { packets: string; length: string; interval: string } | null = { packets: "tlshello", length: "100-200", interval: "10-20" };
+  public noises: XrayNoiseObject[] = [];
+  public proxyProtocol: number = 0; // 0: off, 1, 2
 }
 
 class XrayDnsOutboundObject implements IProtocolType {
@@ -70,4 +95,4 @@ class XraySocksOutboundObject implements IProtocolType {
   }
 }
 
-export { XraySocksOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, LoopbackOutboundObject, XrayBlackholeOutboundObject, XrayHttpOutboundObject, XrayVlessOutboundObject, XrayVmessOutboundObject, XrayOutboundObject };
+export { WireguardOutboundObject, TrojanOutboundObject, XraySocksOutboundObject, XrayShadowsocksOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, LoopbackOutboundObject, XrayBlackholeOutboundObject, XrayHttpOutboundObject, XrayVlessOutboundObject, XrayVmessOutboundObject, XrayOutboundObject };

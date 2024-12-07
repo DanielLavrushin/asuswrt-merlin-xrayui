@@ -18,21 +18,22 @@
                     <span class=" hint-color"> </span>
                 </td>
             </tr>
-            <slot v-for="(inbound, index) in config.inbounds">
-                <tr v-if="inbound.settings">
+            <slot v-for="(proxy, index) in config.inbounds">
+                <tr v-if="proxy.settings">
                     <th>{{
-                        inbound.protocol.toUpperCase() }}</th>
-                    <td><a class="hint" href="#" @click.prevent="edit_inbound(inbound)"><i><strong>
-                                    {{ inbound.tag ?? "no tag" }}
+                        proxy.protocol.toUpperCase() }}</th>
+                    <td><a class="hint" href="#" @click.prevent="edit_inbound(proxy)"><i><strong>
+                                    {{ proxy.tag ?? "no tag" }}
                                 </strong></i>
-                        </a> <text v-show="inbound.streamSettings?.network">[{{ inbound.streamSettings?.network
+                        </a> <text v-show="proxy.streamSettings?.network">[{{ proxy.streamSettings?.network
                             }}]</text>
-                        <text v-show="inbound.streamSettings?.security">[{{ inbound.streamSettings?.security }}]</text>
+                        <text v-show="proxy.streamSettings?.security">[{{ proxy.streamSettings?.security }}]</text>
                         <span class="row-buttons">
-                            <a class="button_gen button_gen_small" href="#"
-                                @click="show_transport(inbound)">transport</a>
-                            <a class="button_gen button_gen_small" href="#" @click="show_sniffing(inbound)">sniffing</a>
-                            <a class="button_gen button_gen_small" href="#" @click="remove_inbound(inbound)">x</a>
+                            <a class="button_gen button_gen_small" href="#" @click="show_transport(proxy)">transport</a>
+                            <a class="button_gen button_gen_small" href="#" @click="show_sniffing(proxy)">sniffing</a>
+                            <a class="button_gen button_gen_small" href="#" @click="remove_inbound(proxy)">&#10005;</a>
+                            <a class="button_gen button_gen_small" href="#" @click="reorder_proxy(proxy, index)"
+                                v-if="index > 0">&#8593;</a>
                         </span>
                     </td>
                 </tr>
@@ -78,6 +79,10 @@ export default defineComponent({
         Modal,
     },
     methods: {
+        reorder_proxy(proxy: XrayInboundObject<IProtocolType>, index: number) {
+            this.config.inbounds.splice(index, 1);
+            this.config.inbounds.splice(index - 1, 0, proxy);
+        },
         async show_transport(inbound: XrayInboundObject<IProtocolType>) {
             this.$emit('show-transport', inbound);
         },

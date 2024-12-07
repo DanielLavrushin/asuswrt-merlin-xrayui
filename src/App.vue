@@ -139,4 +139,12 @@ textarea {
   text-align: left;
   margin-bottom: 10px;
 }
+
+.button_info {
+  background: initial;
+  background-color: #FFCC00;
+  font-weight: bold;
+  border-radius: 10px;
+  padding: 3px 8px 5px 8px;
+}
 </style>

@@ -21,17 +21,19 @@
   <script language="JavaScript" type="text/javascript" src="/general.js"></script>
   <script language="JavaScript" type="text/javascript" src="/popup.js"></script>
   <script language="JavaScript" type="text/javascript" src="/help.js"></script>
-  <script language="JavaScript" type="text/javascript" src="/tmhist.js"></script>
-  <script language="JavaScript" type="text/javascript" src="/tmmenu.js"></script>
   <script language="JavaScript" type="text/javascript" src="/validator.js"></script>
   <script language="JavaScript" type="text/javascript" src="/switcherplugin/jquery.iphone-switch.js"></script>
   <script>
     var xray = {
       custom_settings: JSON.parse(`<% get_custom_settings(); %>`),
+      router: {
+        cpu: JSON.parse('<%cpu_core_num();%>'),
+      },
       server: {
         isRunning: parseInt('<% sysinfo("pid.xray"); %>') > 0,
       },
       commands: {
+        testConfig: "xrayui_testconfig",
         clientsOnline: 'xrayui_connectedclients',
         refreshConfig: "xrayui_refreshconfig",
         serverStart: "xrayui_serverstatus_start",

@@ -34,7 +34,7 @@
                                 {{ opt }}
                             </option>
                         </select>
-                        <span class="hint-color"></span>
+                        <span class="hint-color">default: tcp</span>
                     </td>
                 </tr>
                 <tr>

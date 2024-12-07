@@ -40,11 +40,11 @@
         <tr>
           <th>ALPN</th>
           <td>
-            <slot v-for="(opt, index) in alpnOptions" :key="index">
+            <template v-for="(opt, index) in alpnOptions" :key="index">
               <input type="checkbox" v-model="transport.tlsSettings.alpn" class="input" :value="opt"
                 :id="'destopt-' + index" />
               <label :for="'destopt-' + index" class="settingvalue">{{ opt.toUpperCase() }}</label>
-            </slot>
+            </template>
             <span class="hint-color">default: H2 & HTTP/1.1</span>
           </td>
         </tr>
@@ -83,7 +83,7 @@
 
 <script lang="ts">
 import engine, { SubmtActions } from "@/modules/Engine";
-import { defineComponent, ref, watch, reactive } from "vue";
+import { defineComponent, ref, watch } from "vue";
 import CertificatesModal from "../modals/CertificatesModal.vue";
 import { XrayStreamSettingsObject, XrayStreamTlsSettingsObject, XrayStreamTlsCertificateObject } from "@/modules/CommonObjects";
 import { XrayOptions } from "@/modules/Options";

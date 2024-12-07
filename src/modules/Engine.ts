@@ -8,6 +8,7 @@ class EngineWireguard {
 }
 class EngineResponseConfig {
   public wireguard?: EngineWireguard;
+  public xray?: { test: string };
 }
 class SubmtActions {
   public static ConfigurationSetMode: string = "xrayui_configuration_mode";
@@ -101,6 +102,7 @@ class Engine {
   };
 
   generateRandomBase64 = (length: number | undefined = 32): string => {
+    console.log("generateRandomBase64", length);
     const randomBytes = crypto.getRandomValues(new Uint8Array(length));
     const base64String = btoa(String.fromCharCode(...randomBytes));
     return base64String;

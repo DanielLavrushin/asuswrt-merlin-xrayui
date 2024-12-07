@@ -136,10 +136,8 @@ class Engine {
   }
 
   async loadXrayConfig(): Promise<XrayObject> {
-    const response = await axios.get<XrayObject>(this.mode === "server" ? "/ext/xray-ui/xray-config.json" : "/ext/xray-ui/xray-config-client.json");
-    if (this.mode === "server") {
-      Object.assign(this.xrayConfig, response.data);
-    }
+    const response = await axios.get<XrayObject>(this.mode === "server" ? "/ext/xray-ui/xray-config.json" : "/ext/xray-ui/xray-config.json");
+    Object.assign(this.xrayConfig, response.data);
 
     return this.xrayConfig;
   }

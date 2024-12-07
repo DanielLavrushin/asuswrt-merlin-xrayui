@@ -128,7 +128,6 @@ export default defineComponent({
 
   setup() {
     const config = ref(engine.xrayConfig);
-    console.log(config.value);
     const availableProxies = ref<XrayProtocolOption[]>(xrayProtocols.filter((p) => p.modes & XrayProtocolMode.Outbound));
     const selectedProxyType = ref<string>();
     const selectedProxy = ref<any>();

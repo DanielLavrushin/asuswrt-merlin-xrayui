@@ -73,7 +73,7 @@ class XrayStreamTlsSettingsObject {
 
   public serverName?: string;
   public rejectUnknownSni: boolean = false;
-  public allowInsecure: boolean = true;
+  public allowInsecure: boolean = false;
   public disableSystemRoot: boolean = false;
   public enableSessionResumption: boolean = false;
   public alpn?: string[] = XrayStreamTlsSettingsObject.alpnOptions;
@@ -92,14 +92,14 @@ class XrayStreamTlsSettingsObject {
 class XrayStreamRealitySettingsObject {
   public show: boolean = false;
   public dest?: string;
-  public xver: number = 0;
+  public xver?: number;
   public serverName?: string;
   public serverNames?: string[];
   public privateKey?: string;
   public minClientVer?: number;
   public maxClientVer?: number;
-  public maxTimeDiff: number = 0;
-  public shortIds: string[] = [];
+  public maxTimeDiff?: number;
+  public shortIds?: string[] | undefined;
   public fingerprint?: string;
   public publicKey?: string;
   public shortId?: string;

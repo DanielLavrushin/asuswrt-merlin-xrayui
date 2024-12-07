@@ -19,7 +19,7 @@
                 </td>
             </tr>
             <slot v-for="(proxy, index) in config.inbounds">
-                <tr v-if="proxy.settings">
+                <tr>
                     <th>{{
                         proxy.protocol.toUpperCase() }}</th>
                     <td><a class="hint" href="#" @click.prevent="edit_inbound(proxy)"><i><strong>

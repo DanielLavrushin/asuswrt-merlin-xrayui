@@ -16,39 +16,55 @@
             <span class="hint-color">default: false</span>
           </td>
         </tr>
-        <tr>
+        <tr v-if="engine.mode === 'server'">
           <th>Dest</th>
           <td>
             <input v-model="transport.realitySettings.dest" type="text" class="input_20_table" />
             <span class="hint-color">same as dest in VLESS</span>
           </td>
         </tr>
-        <tr>
-          <th>Server Names</th>
+        <tr v-if="engine.mode === 'server'">
+          <th>Server names</th>
           <td>
             <div class="textarea-wrapper">
               <textarea v-model="serverNames"></textarea>
             </div>
           </td>
         </tr>
-        <tr>
+        <tr v-if="engine.mode === 'client'">
+          <th>Server name</th>
+          <td>
+            <input v-model="transport.realitySettings.serverName" type="text" class="input_20_table" />
+            <span class="hint-color">required</span>
+          </td>
+        </tr>
+        <tr v-if="engine.mode === 'client'">
+          <th>Short id</th>
+          <td>
+            <input v-model="transport.realitySettings.shortId" type="text" class="input_20_table" />
+            <span class="hint-color"></span>
+          </td>
+        </tr>
+        <tr v-if="engine.mode === 'server' && transport.realitySettings.shortIds">
           <th>Short Ids</th>
           <td>
             {{ transport.realitySettings.shortIds.length }} item(s)
-            <input class="button_gen button_gen_small" type="button" value="Manage"
+            <input class="button_gen button_gen_small" type="button" value="manage"
               @click.prevent="manage_short_ids()" />
             <modal ref="shortIdsModal" width="200" title="Short Id List">
               <div class="textarea-wrapper">
                 <textarea v-model="shortIds"></textarea>
               </div>
               <template v-slot:footer>
-                <input class="button_gen button_gen_small" type="button" value="Add new id"
+                <input class="button_gen button_gen_small" type="button" value="add new id"
                   @click.prevent="append_shortid()" />
+                <input class="button_gen button_gen_small" type="button" value="save"
+                  @click.prevent="shortIdsModal.close()" />
               </template>
             </modal>
           </td>
         </tr>
-        <tr>
+        <tr v-if="engine.mode === 'server'">
           <th>PROXY Version</th>
           <td>
             <select v-model="transport.realitySettings.xver" class="input_option">
@@ -59,10 +75,10 @@
             <span class="hint-color">default: 0</span>
           </td>
         </tr>
-        <tr>
+        <tr v-if="engine.mode === 'server'">
           <th>Private Key</th>
           <td>
-            <input v-model="transport.realitySettings.privateKey" type="text" class="input_30_table" readonly />
+            <input v-model="transport.realitySettings.privateKey" type="text" class="input_30_table" />
             <span class="row-buttons">
               <input class="button_gen button_gen_small" type="button" value="Regenerate"
                 @click.prevent="regenerate_keys()" />
@@ -72,13 +88,24 @@
         <tr>
           <th>Public Key</th>
           <td>
-            <input v-model="transport.realitySettings.publicKey" type="text" class="input_30_table" readonly />
+            <input v-model="transport.realitySettings.publicKey" type="text" class="input_30_table" />
           </td>
         </tr>
-        <tr v-if="transport.realitySettings">
+        <tr v-if="engine.mode === 'server' && transport.realitySettings">
           <th>Spider X</th>
           <td>
             <input v-model="transport.realitySettings.spiderX" type="text" class="input_30_table" />
+          </td>
+        </tr>
+        <tr v-if="engine.mode === 'client'">
+          <th>Fingerprint</th>
+          <td>
+            <select class="input_option" v-model="transport.realitySettings.fingerprint">
+              <option v-for="(opt, index) in fingerprints" :key="index" :value="opt">
+                {{ opt }}
+              </option>
+            </select>
+            <span class="hint-color">optional</span>
           </td>
         </tr>
       </tbody>
@@ -91,6 +118,7 @@ import Modal from "../Modal.vue";
 import engine, { SubmtActions } from "@/modules/Engine";
 import { defineComponent, ref, watch } from "vue";
 import { XrayStreamRealitySettingsObject, XrayStreamSettingsObject } from "@/modules/CommonObjects";
+import XrayOptions from "@/modules/Options";
 
 export default defineComponent({
   name: "Reality",
@@ -105,7 +133,7 @@ export default defineComponent({
       this.shortIdsModal.show();
     },
     append_shortid() {
-      this.shortIds += this.generateShortId() + "\n";
+      this.shortIds += "\n" + this.generateShortId();
     },
     generateShortId: (byteLength = 8) => {
       const array = new Uint8Array(byteLength);
@@ -131,26 +159,36 @@ export default defineComponent({
 
     const serverNames = ref(transport.value.realitySettings.serverNames?.join("\n") ?? "");
     const shortIds = ref(transport.value.realitySettings.shortIds?.join("\n") ?? "");
-    watch(
-      () => serverNames.value,
-      (newObj) => {
-        if (newObj && transport.value.realitySettings) {
-          transport.value.realitySettings.serverNames = newObj.split("\n").filter((x) => x);
-        }
-      },
-      { immediate: true }
-    );
-    watch(
-      () => shortIds.value,
-      (newObj) => {
-        if (newObj && transport.value.realitySettings) {
-          transport.value.realitySettings.shortIds = newObj.split("\n").filter((x) => x);
-        }
-      },
-      { immediate: true }
-    );
+
+    if (engine.mode === 'server') {
+      if (!transport.value.realitySettings.shortIds) {
+        transport.value.realitySettings.shortIds = [];
+      }
+
+      watch(
+        () => serverNames.value,
+        (newObj) => {
+          if (newObj && transport.value.realitySettings) {
+            transport.value.realitySettings.serverNames = newObj.split("\n").filter((x) => x);
+          }
+        },
+        { immediate: true }
+      );
+
+      watch(
+        () => shortIds.value,
+        (newObj) => {
+          if (newObj && transport.value.realitySettings) {
+            transport.value.realitySettings.shortIds = newObj.split("\n").filter((x) => x);
+          }
+        },
+        { immediate: true }
+      );
+    }
 
     return {
+      engine,
+      fingerprints: XrayOptions.fingerprintOptions,
       transport,
       shortIdsModal,
       serverNames,

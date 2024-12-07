@@ -43,8 +43,7 @@
                               <div id="formfontdesc" class="formfontdesc">This UI control page provides a simple
                                 interface to manage and monitor the X-ray Core's configuration and it's status.</div>
                               <div style="margin: 10px 0 10px 5px" class="splitLine"></div>
-                              <mode-client v-if="engine.mode == 'client'"></mode-client>
-                              <mode-server v-if="engine.mode == 'server'"></mode-server>
+                              <mode-server></mode-server>
                             </div>
                           </td>
                         </tr>
@@ -62,13 +61,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref, watch, onMounted } from "vue";
+import { defineComponent } from "vue";
 
 import MainMenu from "./asus/MainMenu.vue";
 import TabMenu from "./asus/TabMenu.vue";
 import SubMenu from "./asus/SubMenu.vue";
 
-import ModeClient from "./ModeClient.vue";
 import ModeServer from "./ModeServer.vue";
 
 
@@ -81,7 +79,6 @@ export default defineComponent({
     TabMenu,
     MainMenu,
     SubMenu,
-    ModeClient,
     ModeServer
   },
   methods: {

@@ -1,5 +1,6 @@
 <template>
-    <server-status></server-status>
+    <server-status v-if="engine.mode == 'server'"></server-status>
+    <client-status v-if="engine.mode == 'client'"></client-status>
     <inbounds @show-transport="show_transport" @show-sniffing="show_sniffing"></inbounds>
     <outbounds @show-transport="show_transport"></outbounds>
     <routing></routing>
@@ -22,6 +23,7 @@ import { XrayInboundObject } from "../modules/InboundObjects";
 import { XrayOutboundObject } from "../modules/OutboundObjects";
 
 import ServerStatus from "./ServerStatus.vue";
+import ClientStatus from "./ClientStatus.vue";
 import Inbounds from "./Inbounds.vue";
 import Outbounds from "./Outbounds.vue";
 import Routing from "./Routing.vue";
@@ -37,6 +39,7 @@ export default defineComponent({
         Inbounds,
         Outbounds,
         ServerStatus,
+        ClientStatus,
         SniffingModal,
         StreamSettingsModal
     },
@@ -68,6 +71,7 @@ export default defineComponent({
 
         return {
             config,
+            engine,
             transportModal,
             sniffingModal,
         };

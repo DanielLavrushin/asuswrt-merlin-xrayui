@@ -36,7 +36,7 @@ start() {
     if [ "$mode" = "server" ]; then
         ARGS="run -config $xray_config"
     elif [ "$mode" = "client" ]; then
-        ARGS="run -config $xray_config_client"
+        ARGS="run -config $xray_config"
     else
         mode="server"
         ARGS="run -config /opt/etc/xray/config.json"

@@ -9,14 +9,21 @@
         </tr>
       </thead>
       <tbody v-if="transport.tlsSettings">
-        <tr>
+        <tr v-if="engine.mode === 'client'">
           <th>Server Name</th>
           <td>
             <input v-model="transport.tlsSettings.serverName" type="text" class="input_20_table" />
             <span class="hint-color"></span>
           </td>
         </tr>
-        <tr>
+        <tr v-if="engine.mode === 'client'">
+          <th>Whether to allow insecure connections</th>
+          <td>
+            <input v-model="transport.tlsSettings.allowInsecure" type="checkbox" class="input" />
+            <span class="hint-color">default: false</span>
+          </td>
+        </tr>
+        <tr v-if="engine.mode === 'server'">
           <th>Reject unkown SNI</th>
           <td>
             <input v-model="transport.tlsSettings.rejectUnknownSni" type="checkbox" class="input" />
@@ -30,7 +37,7 @@
             <span class="hint-color">default: false</span>
           </td>
         </tr>
-        <tr>
+        <tr v-if="engine.mode === 'client'">
           <th>Session Resumption</th>
           <td>
             <input v-model="transport.tlsSettings.enableSessionResumption" type="checkbox" class="input" />
@@ -65,7 +72,18 @@
             <span class="hint-color">min and max version, default: 1.3</span>
           </td>
         </tr>
-        <tr>
+        <tr v-if="engine.mode === 'client'">
+          <th>Fingerprint</th>
+          <td>
+            <select class="input_option" v-model="transport.tlsSettings.fingerprint">
+              <option v-for="(opt, index) in fingerprints" :key="index" :value="opt">
+                {{ opt }}
+              </option>
+            </select>
+            <span class="hint-color">optional</span>
+          </td>
+        </tr>
+        <tr v-if="engine.mode === 'server'">
           <th>TLS Certificate</th>
           <td>
             <input class="button_gen button_gen_small" type="button" value="Manage"
@@ -136,6 +154,8 @@ export default defineComponent({
     return {
       transport,
       certificatesModal,
+      engine,
+      fingerprints: XrayOptions.fingerprintOptions,
       usageOptions: XrayStreamTlsCertificateObject.usageOptions,
       tlsVersions: XrayOptions.tlsVersionsOptions,
       alpnOptions: XrayOptions.alpnOptions,

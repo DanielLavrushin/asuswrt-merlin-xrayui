@@ -26,7 +26,6 @@ export default defineComponent({
   },
   setup() {
     engine.mode = window.xray.custom_settings.xray_mode;
-    console.log("custom_settings", window.xray.custom_settings);
     window.scrollTo = () => { };
     const xrayConfig = engine.xrayConfig;
     provide("xrayConfig", xrayConfig);

@@ -5,7 +5,7 @@ import { XrayVlessClientObject, XrayVmessClientObject, XrayHttpClientObject, Xra
 
 class XrayInboundObject<IProtocolType> {
   public protocol!: XrayProtocol;
-  public listen: string = "0.0.0.0";
+  public listen?: string;
   public port!: number | string;
   public tag?: string;
   public settings!: IProtocolType;
@@ -23,11 +23,11 @@ class XrayInboundObject<IProtocolType> {
 }
 
 class XrayDokodemoDoorInboundObject implements IProtocolType {
-  public address!: string;
+  public address?: string;
   public port?: number;
-  public network: string = "tcp";
-  public followRedirect: boolean = false;
-  public userLevel: number = 0;
+  public network?: string;
+  public followRedirect?: boolean;
+  public userLevel?: number;
 }
 class XrayVlessInboundObject implements IProtocolType {
   public decryption: string = "none";

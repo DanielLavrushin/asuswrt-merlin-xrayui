@@ -115,6 +115,37 @@ class XrayLogObject {
   public maskAddress: string = "";
 }
 
+class XrayDnsObject {
+  static strategyOptions: string[] = ["UseIP", "UseIPv4", "UseIPv6"];
+  public tag?: string;
+  public hosts?: { [key: string]: string | string[] } | undefined = {};
+  public servers: (string | XrayDnsServerObject)[] | undefined = [];
+  public clientIp?: string;
+  public queryStrategy?: string;
+  public disableCache?: boolean;
+  public disableFallback?: boolean;
+  public disableFallbackIfMatch?: boolean;
+
+  public normalize() {
+    this.clientIp = this.clientIp == "" ? undefined : this.clientIp;
+    this.queryStrategy = this.queryStrategy == "" ? undefined : this.queryStrategy;
+    this.disableCache = !this.disableCache ? undefined : this.disableCache;
+    this.disableFallback = !this.disableFallback ? undefined : this.disableFallback;
+    this.disableFallbackIfMatch = !this.disableFallbackIfMatch ? undefined : this.disableFallbackIfMatch;
+    this.servers = this.servers?.length == 0 ? undefined : this.servers;
+    this.hosts = !this.hosts || Object.keys(this.hosts).length == 0 ? undefined : this.hosts;
+  }
+}
+
+class XrayDnsServerObject {
+  public address!: string;
+  public port?: number;
+  public domains?: string[];
+  public expectIPs?: string[];
+  public skipFallback?: boolean;
+  public clientIP?: string;
+}
+
 class XrayRoutingObject {
   static domainStrategyOptions: string[] = ["AsIs", "IPIfNonMatch", "IPOnDemand"];
   static domainMatcherOptions: string[] = ["hybrid", "linear"];
@@ -143,7 +174,7 @@ class XrayRoutingRuleObject {
 
 class XrayStreamSettingsObject {
   public network?: string = "tcp";
-  public security?: string = "tls";
+  public security?: string = "none";
   public tlsSettings?: XrayStreamTlsSettingsObject;
   public realitySettings?: XrayStreamRealitySettingsObject;
   public tcpSettings?: XrayStreamTcpSettingsObject;
@@ -222,4 +253,4 @@ class XrayPeerObject {
   public keepAlive?: number;
 }
 
-export { XrayTrojanServerObject, XrayPeerObject, XrayNoiseObject, XrayShadowsocksServerObject, XrayHttpServerObject, XraySocksServerObject, XrayProtocolOption, XrayProtocol, XrayVlessServerObject, XrayVmessServerObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsCertificateObject, XrayStreamSettingsObject, XrayRoutingRuleObject, XrayRoutingObject, XrayLogObject, XrayAllocateObject, XraySniffingObject, XrayHeaderObject, XrayHeaderRequestObject, XrayHeaderResponseObject, XrayXmuxObject };
+export { XrayDnsObject, XrayDnsServerObject, XrayTrojanServerObject, XrayPeerObject, XrayNoiseObject, XrayShadowsocksServerObject, XrayHttpServerObject, XraySocksServerObject, XrayProtocolOption, XrayProtocol, XrayVlessServerObject, XrayVmessServerObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsCertificateObject, XrayStreamSettingsObject, XrayRoutingRuleObject, XrayRoutingObject, XrayLogObject, XrayAllocateObject, XraySniffingObject, XrayHeaderObject, XrayHeaderRequestObject, XrayHeaderResponseObject, XrayXmuxObject };

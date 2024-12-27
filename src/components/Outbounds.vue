@@ -23,7 +23,7 @@
           <th>{{ proxy.protocol.toUpperCase() }}</th>
           <td>
             <a class="hint" href="#" @click.prevent="edit_proxy(proxy)"><i><strong>
-                  {{ proxy.tag ?? "no tag" }}
+                  {{ proxy.tag == "" ? "no tag" : proxy.tag }}
                 </strong></i>
             </a>
             <span class="row-buttons">

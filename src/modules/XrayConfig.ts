@@ -1,12 +1,13 @@
 import { reactive } from "vue";
 import { IProtocolType } from "./Interfaces";
-import { XrayRoutingObject, XrayLogObject, XrayProtocolOption } from "./CommonObjects";
+import { XrayDnsObject, XrayRoutingObject, XrayLogObject, XrayProtocolOption } from "./CommonObjects";
 import { XrayInboundObject } from "./InboundObjects";
 import { XrayOutboundObject } from "./OutboundObjects";
 import { XrayProtocol, XrayProtocolMode } from "./Options";
 
 class XrayObject {
   public log?: XrayLogObject;
+  public dns?: XrayDnsObject = new XrayDnsObject();
   public inbounds: XrayInboundObject<IProtocolType>[] = [];
   public outbounds: XrayOutboundObject<IProtocolType>[] = [];
   public routing?: XrayRoutingObject;

@@ -71,7 +71,6 @@ import ModeServer from "./ModeServer.vue";
 
 
 import engine, { SubmtActions } from "../modules/Engine";
-import xrayConfig from "../modules/XrayConfig";
 
 export default defineComponent({
   name: "MainForm",
@@ -97,7 +96,7 @@ export default defineComponent({
 
     return {
       engine,
-      xrayConfig,
+      xrayConfig: engine.xrayConfig,
       xray_ui_page: window.xray.custom_settings.xray_ui_page,
     };
   },

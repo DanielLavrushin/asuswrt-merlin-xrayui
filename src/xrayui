@@ -61,6 +61,52 @@ restart() {
     start
 }
 
+configure_firewall_server() {
+
+    iptables -I INPUT -p tcp --dport 4433 -j ACCEPT
+    iptables -I FORWARD -p tcp --dport 4433 -j ACCEPT
+
+    logger "xrayui" "Xray firewall rules applied successfully."
+
+}
+
+configure_firewall_client() {
+    logger "xrayui" "Configuring Xray firewall rules..."
+
+    # Remove leftover fwmark rules pointing to wan0/wan1
+    RULES="$(ip rule show | grep -E 'fwmark .* lookup wan')"
+    if [ -n "$RULES" ]; then
+        echo "$RULES" | while read LINE; do
+            PRIO=$(echo "$LINE" | cut -d':' -f1 | awk '{print $1}')
+            MARK=$(echo "$LINE" | awk '{print $5}')
+            WANX=$(echo "$LINE" | awk '{print $7}')
+            ip rule del fwmark "$MARK" lookup "$WANX" priority "$PRIO" 2>/dev/null
+            logger "xrayui" "Removed conflicting rule: fwmark $MARK lookup $WANX priority $PRIO"
+        done
+    fi
+
+    # Clear old XRAY rules
+    iptables -t nat -D PREROUTING -j XRAY 2>/dev/null
+    iptables -t nat -F XRAY 2>/dev/null
+    iptables -t nat -X XRAY 2>/dev/null
+
+    # Create XRAY chain in NAT
+    iptables -t nat -N XRAY 2>/dev/null
+
+    # Exclude local & LAN
+    iptables -t nat -A XRAY -d 127.0.0.1/32 -j RETURN
+    iptables -t nat -A XRAY -d 192.168.0.0/16 -j RETURN
+
+    # Redirect TCP to port 58549 (Xray must have dokodemo-door inbound at 58549, "network": "tcp")
+    #iptables -t nat -A XRAY -p tcp -j REDIRECT --to-port 58549
+    #iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 5454
+
+    # Hook XRAY chain to PREROUTING
+    iptables -t nat -A PREROUTING -j XRAY
+
+    logger "xrayui" "Xray NAT rules for TCP applied successfully"
+}
+
 mount_ui() {
     nvram get rc_support | grep -q am_addons
     if [ $? != 0 ]; then
@@ -142,13 +188,17 @@ refresh_xray_config() {
         mkdir -p "$dir_xrayui"
     fi
 
+    # Process the xray_config file
     if [ -f "$xray_config" ]; then
-        sed 's/\/\/.*//' "$xray_config" >"$xray_ui_config"
+        sed -E '/^\s*\/\/.*$/d; /^\s*\/\*/,/\*\//d' "$xray_config" | jq '.' >"$xray_ui_config"
+        if [ $? -ne 0 ]; then
+            echo "Error processing $xray_config"
+            return 1
+        fi
+    else
+        echo "Error: $xray_config not found."
     fi
 
-    if [ -f "$xray_config_client" ]; then
-        sed 's/\/\/.*//' "$xray_config_client" >"$xray_ui_config_client"
-    fi
 }
 
 make_clean_config() {
@@ -553,6 +603,18 @@ service_event)
             ;;
         "delete")
             client_delete
+            exit 0
+            ;;
+        esac
+        exit 0
+    elif [ "$2" = "firewall" ]; then
+        case "$3" in
+        "client")
+            configure_firewall_client
+            exit 0
+            ;;
+        "server")
+            configure_firewall_server
             exit 0
             ;;
         esac

@@ -3,6 +3,7 @@
     <client-status v-if="engine.mode == 'client'"></client-status>
     <inbounds @show-transport="show_transport" @show-sniffing="show_sniffing"></inbounds>
     <outbounds @show-transport="show_transport"></outbounds>
+    <dns></dns>
     <routing></routing>
     <sniffing-modal ref="sniffingModal" />
     <stream-settings-modal ref="transportModal" />
@@ -27,6 +28,7 @@ import ClientStatus from "./ClientStatus.vue";
 import Inbounds from "./Inbounds.vue";
 import Outbounds from "./Outbounds.vue";
 import Routing from "./Routing.vue";
+import Dns from "./Dns.vue";
 
 import SniffingModal from "./modals/SniffingModal.vue";
 import StreamSettingsModal from "./modals/StreamSettingsModal.vue";
@@ -37,6 +39,7 @@ export default defineComponent({
         Modal,
         Routing,
         Inbounds,
+        Dns,
         Outbounds,
         ServerStatus,
         ClientStatus,

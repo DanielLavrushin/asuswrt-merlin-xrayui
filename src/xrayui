@@ -98,8 +98,8 @@ configure_firewall_client() {
     iptables -t nat -A XRAY -d 192.168.0.0/16 -j RETURN
 
     # Redirect TCP to port 58549 (Xray must have dokodemo-door inbound at 58549, "network": "tcp")
-    #iptables -t nat -A XRAY -p tcp -j REDIRECT --to-port 58549
-    #iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 5454
+    iptables -t nat -A XRAY -p tcp -j REDIRECT --to-port 58549
+    iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 5454
 
     # Hook XRAY chain to PREROUTING
     iptables -t nat -A PREROUTING -j XRAY

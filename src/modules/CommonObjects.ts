@@ -185,6 +185,8 @@ class XrayStreamSettingsObject {
   public httpupgradeSettings?: XrayStreamHttpUpgradeSettingsObject;
   public splithttpSettings?: XrayStreamSplitHttpSettingsObject;
 
+  public sockopt?: XraySockoptObject;
+
   public normalizeProtocol() {
     const networkOptions = XrayOptions.transportOptions.map((opt) => `${opt}Settings`);
     networkOptions.forEach((prop) => {
@@ -253,4 +255,21 @@ class XrayPeerObject {
   public keepAlive?: number;
 }
 
-export { XrayDnsObject, XrayDnsServerObject, XrayTrojanServerObject, XrayPeerObject, XrayNoiseObject, XrayShadowsocksServerObject, XrayHttpServerObject, XraySocksServerObject, XrayProtocolOption, XrayProtocol, XrayVlessServerObject, XrayVmessServerObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsCertificateObject, XrayStreamSettingsObject, XrayRoutingRuleObject, XrayRoutingObject, XrayLogObject, XrayAllocateObject, XraySniffingObject, XrayHeaderObject, XrayHeaderRequestObject, XrayHeaderResponseObject, XrayXmuxObject };
+class XraySockoptObject {
+  static tproxyOptions: string[] = ["off", "redirect", "tproxy"];
+  static domainStrategyOptions: string[] = ["AsIs", "UseIP", "UseIPv4", "UseIPv6"];
+
+  public mark?: number;
+  public tcpFastOpen?: boolean;
+  public tproxy?: string;
+  public domainStrategy?: string;
+  public dialerProxy?: string;
+  public acceptProxyProtocol?: boolean;
+  public tcpKeepAliveInterval?: number;
+  public tcpcongestion?: string;
+  public interface?: string;
+  public tcpMptcp?: boolean;
+  public tcpNoDelay?: boolean;
+}
+
+export { XraySockoptObject, XrayDnsObject, XrayDnsServerObject, XrayTrojanServerObject, XrayPeerObject, XrayNoiseObject, XrayShadowsocksServerObject, XrayHttpServerObject, XraySocksServerObject, XrayProtocolOption, XrayProtocol, XrayVlessServerObject, XrayVmessServerObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsCertificateObject, XrayStreamSettingsObject, XrayRoutingRuleObject, XrayRoutingObject, XrayLogObject, XrayAllocateObject, XraySniffingObject, XrayHeaderObject, XrayHeaderRequestObject, XrayHeaderResponseObject, XrayXmuxObject };

@@ -44,6 +44,7 @@ start() {
     fi
 
     test_xray_config
+    configure_firewall_client
 
     logger "xrayui" "Starting $DESC with $ARGS"
     xray $ARGS >/dev/null 2>&1 &
@@ -53,6 +54,7 @@ start() {
 stop() {
     logger "xrayui" "Stopping $DESC"
     killall xray
+    cleanup_firewall_client
 }
 
 restart() {
@@ -73,6 +75,8 @@ configure_firewall_server() {
 configure_firewall_client() {
     logger "xrayui" "Configuring Xray firewall rules..."
 
+    XRAY_PORT="$(jq -r '.inbounds[0].port' $xray_config)"
+
     cleanup_firewall_client
 
     # Create XRAY chain in NAT
@@ -82,9 +86,11 @@ configure_firewall_client() {
     iptables -t nat -A XRAY -d 127.0.0.1/32 -j RETURN
     iptables -t nat -A XRAY -d 192.168.0.0/16 -j RETURN
 
-    # Redirect TCP to port 58549 (Xray must have dokodemo-door inbound at 58549, "network": "tcp")
-    iptables -t nat -A XRAY -p tcp -j REDIRECT --to-port 58549
-    iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 5454
+    iptables -t nat -A XRAY -p tcp -j REDIRECT --to-port "$XRAY_PORT"
+    iptables -t nat -A XRAY -p udp -j REDIRECT --to-port "$XRAY_PORT"
+
+    ip rule add fwmark 0x8777 table 8777 priority 100
+    ip route add local 0.0.0.0/0 dev lo table 8777
 
     # Hook XRAY chain to PREROUTING
     iptables -t nat -A PREROUTING -j XRAY
@@ -122,8 +128,9 @@ cleanup_firewall_client() {
     iptables -t mangle -X XRAY 2>/dev/null
     logger "xrayui" "Removed XRAY MANGLE chain"
 
-    # Restore default DNS redirection (if modified)
-    iptables -t nat -D PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 5454 2>/dev/null
+    service firewall_restart
+    service wan_restart
+
     logger "xrayui" "Restored DNS redirection to system default"
 
     logger "xrayui" "Xray disabled and network configuration rolled back"

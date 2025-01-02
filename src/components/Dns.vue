@@ -110,7 +110,6 @@ export default defineComponent({
         watch(
             () => config.value.dns,
             (newObj) => {
-                console.log("dns changed", newObj);
                 dns.value = newObj ?? new XrayDnsObject();
                 if (!newObj) {
                     xrayConfig.dns = dns.value;

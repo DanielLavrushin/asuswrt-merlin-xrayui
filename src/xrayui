@@ -186,36 +186,34 @@ mount_ui() {
 unmount_ui() {
     nvram get rc_support | grep -q am_addons
     if [ $? != 0 ]; then
-        echo -e "This firmware does not support addons!${CRESET}"
+        echo -e "${CERR}This firmware does not support addons!${CRESET}"
         exit 5
     fi
 
     xray_ui_page=$(am_settings_get xray_page)
 
     if [ -z "$xray_ui_page" ]; then
-        echo -e "${CWARN}No XRAYUI page found to unmount.${CRESET}"
-        exit 0
+        echo -e "${CWARN}No XRAYUI page found to unmount. Continuing to clean up...${CRESET}"
+    else
+        echo -e "${CINFO}Unmounting XRAYUI $xray_ui_page${CRESET}"
+        rm -fr /www/user/$xray_ui_page
     fi
-
-    echo -e "${CINFO}Unmounting XRAYUI $xray_ui_page${CRESET}"
-    rm -fr /www/user/$xray_ui_page
 
     if [ ! -f /tmp/menuTree.js ]; then
         echo "${CINFO}menuTree.js not found, skipping unmount${CRESET}"
-        exit 5
+    else
+        echo -e "${CWARN}Removing XRAYUI entry from menuTree.js${CRESET}"
+        sed -i "\\~$xray_ui_page~d" /tmp/menuTree.js
+        umount /www/require/modules/menuTree.js && mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
     fi
-
-    echo -e "${CWARN}Removing XRAYUI entry from menuTree.js${CRESET}"
-    sed -i "\\~$xray_ui_page~d" /tmp/menuTree.js
-
-    umount /www/require/modules/menuTree.js && mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
 
     rm -rf $dir_xrayui
 
-    echo -e "${CSUC}XRAYUI $xray_ui_page unmounted successfully${CRESET}"
+    echo -e "${CSUC}Cleanup completed.${CRESET}"
 }
 
 remount_ui() {
+    echo -e "${CINFO}Remounting XRAYUI...${CRESET}"
     unmount_ui
     mount_ui
 }

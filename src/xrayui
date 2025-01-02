@@ -595,10 +595,11 @@ install() {
     fi
 
     # Check for iptables
-    if ! command -v iptables >/dev/null; then
+    if ! type iptables >/dev/null 2>&1; then
         echo -e "${CERR}iptables is not available on this system. It is required for firewall configuration.${CRESET}"
         exit 1
     fi
+
     echo -e "${CSUC}iptables is available.${CRESET}"
 
     # Install Xray via opkg

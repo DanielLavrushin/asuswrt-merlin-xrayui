@@ -194,7 +194,7 @@ unmount_ui() {
 
     if [ -z "$xray_ui_page" ]; then
         echo -e "${CWARN}No XRAYUI page found to unmount.${CRESET}"
-        exit 5
+        exit 0
     fi
 
     echo -e "${CINFO}Unmounting XRAYUI $xray_ui_page${CRESET}"
@@ -660,8 +660,6 @@ EOF
     else
         echo -e "${CINFO}/jffs/scripts/nat-start already contains the required entry.${CRESET}"
     fi
-
-    echo -e "${CSUC}Installation process completed successfully.${CRESET}"
 
     echo -e "${CSUC}Installation process completed successfully.${CRESET}"
 

@@ -41,7 +41,7 @@ start() {
     logger "xrayui" "Starting Xray in $mode mode"
     echo "$CINFO Starting Xray in $mode mode$CRESET"
 
-    ARGS="run -config $xray_config"
+    ARGS=" -c $xray_config"
     if [ "$mode" = "server" ]; then
         configure_firewall_server
     elif [ "$mode" = "client" ]; then
@@ -53,6 +53,10 @@ start() {
     fi
 
     test_xray_config
+
+    logger "xrayui" "Starting $DESC with $ARGS"
+    xray $ARGS >/dev/null 2>&1 &
+    echo $! >$PIDFILE
 }
 
 stop() {
@@ -571,10 +575,31 @@ install() {
     # Check for Entware
     if [ ! -x /opt/bin/opkg ]; then
         echo -e "${CERR}Entware is not installed or opkg binary is not accessible.${CRESET}"
+        echo -e "${CERR}Please install Entware first: https://github.com/Entware/Entware/wiki/Install-on-ASUSWRT${CRESET}"
         exit 1
     fi
-
     echo -e "${CSUC}Entware is installed.${CRESET}"
+
+    # Check for jq
+    if ! opkg list-installed | grep -q '^jq$'; then
+        echo -e "${CWARN}jq is not installed. Installing jq...${CRESET}"
+        opkg update
+        if opkg install jq; then
+            echo -e "${CSUC}jq installed successfully.${CRESET}"
+        else
+            echo -e "${CERR}Failed to install jq.${CRESET}"
+            exit 1
+        fi
+    else
+        echo -e "${CINFO}jq is already installed.${CRESET}"
+    fi
+
+    # Check for iptables
+    if ! command -v iptables >/dev/null; then
+        echo -e "${CERR}iptables is not available on this system. It is required for firewall configuration.${CRESET}"
+        exit 1
+    fi
+    echo -e "${CSUC}iptables is available.${CRESET}"
 
     # Install Xray via opkg
     if ! opkg list-installed | grep -q '^xray$'; then
@@ -621,10 +646,29 @@ EOF
         echo -e "${CINFO}Base configuration file already exists.${CRESET}"
     fi
 
+    # Add or update nat-start
+    echo -e "${CINFO}Ensuring /jffs/scripts/nat-start contains required entry.${CRESET}"
+    mkdir -p /jffs/scripts
+    if [ ! -f /jffs/scripts/nat-start ]; then
+        echo "#!/bin/sh" >/jffs/scripts/nat-start
+        chmod +x /jffs/scripts/nat-start
+    fi
+    if ! grep -q "/jffs/scripts/xrayui service_event firewall client #xrayui" /jffs/scripts/nat-start; then
+        echo "/jffs/scripts/xrayui service_event firewall client #xrayui" >>/jffs/scripts/nat-start
+        echo -e "${CSUC}Updated /jffs/scripts/nat-start with XrayUI entry.${CRESET}"
+    else
+        echo -e "${CINFO}/jffs/scripts/nat-start already contains the required entry.${CRESET}"
+    fi
+
     echo -e "${CSUC}Installation process completed successfully.${CRESET}"
 
-    remount_ui
+    echo -e "${CSUC}Installation process completed successfully.${CRESET}"
+
     am_settings_set xray_version $XRAYUI_VERSION
+    am_settings_set xray_mode "server"
+
+    remount_ui
+
 }
 
 uninstall() {
@@ -663,9 +707,11 @@ uninstall() {
 
     # Remove XRAY custom settings
     echo -e "${CWARN}Removing XRAY custom settings...${CRESET}"
+
     am_settings_del xray_version
     am_settings_del xray_mode
-    am_settings_del xray_ui_page
+    am_settings_del xray_page
+
     echo -e "${CSUC}Custom settings removed successfully.${CRESET}"
 
     echo -e "${CINFO}XRAY UI uninstallation completed.${CRESET}"

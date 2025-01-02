@@ -25,7 +25,7 @@ jobs:
         run: npm run build
 
       - name: Archive dist
-        run: tar -czf dist-${{ github.event.inputs.version }}.tar.gz dist
+        run: tar -czf asuswrt-merlin-xrayui.tar.gz -C dist .
 
       - name: Create GitHub Release
         id: create_release
@@ -44,6 +44,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist-${{ github.event.inputs.version }}.tar.gz
-          asset_name: dist-${{ github.event.inputs.version }}.tar.gz
+          asset_path: asuswrt-merlin-xrayui.tar.gz
+          asset_name: asuswrt-merlin-xrayui.tar.gz
           asset_content_type: application/gzip

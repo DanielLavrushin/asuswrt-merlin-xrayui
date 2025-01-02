@@ -202,10 +202,11 @@ unmount_ui() {
     if [ ! -f /tmp/menuTree.js ]; then
         echo -e "${CINFO}menuTree.js not found, skipping unmount.${CRESET}"
     else
-        echo -e "${CWARN}Removing XRAYUI entry from menuTree.js.${CRESET}"
-        # Safely remove only the matching XrayUI entry without corrupting the file
-        grep -v "\"url\": \"$xray_ui_page\"" /tmp/menuTree.js >/tmp/menuTree_temp.js
+        echo -e "${CWARN}Removing any X-RAY menu entry from menuTree.js.${CRESET}"
+        # Safely remove entries with tabName: "X-RAY"
+        grep -v "tabName: \"X-RAY\"" /tmp/menuTree.js >/tmp/menuTree_temp.js
         mv /tmp/menuTree_temp.js /tmp/menuTree.js
+
         umount /www/require/modules/menuTree.js
         mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
     fi

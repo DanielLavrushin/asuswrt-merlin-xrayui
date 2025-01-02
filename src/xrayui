@@ -1,5 +1,6 @@
 #!/bin/sh
 
+export PATH=/opt/bin:/opt/sbin:/sbin:/bin:/usr/sbin:/usr/bin
 source /usr/sbin/helper.sh
 
 readonly SCRIPT_NAME="xrayui"
@@ -13,15 +14,21 @@ PATH=/opt/bin:/opt/sbin:/sbin:/bin:/usr/sbin:/usr/bin
 
 PIDFILE=/var/run/xray.pid
 
-xray_addons_asp_page=/jffs/addons/xray-ui/xray-ui.asp
+xray_addons_asp_page=/jffs/addons/xrayui/index.asp
 
 xray_config="/opt/etc/xray/config.json"
 xray_config_client="/opt/etc/xray/config-client.json"
-dir_xrayui="/www/user/xray-ui"
+dir_xrayui="/www/user/xrayui"
 xray_ui_config="$dir_xrayui/xray-config.json"
-xray_ui_config_client="$dir_xrayui/xray-config-client.json"
 
 XRAY="xray"
+XRAYUI_VERSION="1.0"
+# Color Codes
+CERR='\033[0;31m'
+CSUC='\033[0;32m'
+CWARN='\033[0;33m'
+CINFO='\033[0;36m'
+CRESET='\033[0m'
 
 start() {
     mode=$(am_settings_get xray_mode)
@@ -32,23 +39,20 @@ start() {
     fi
 
     logger "xrayui" "Starting Xray in $mode mode"
+    echo "$CINFO Starting Xray in $mode mode$CRESET"
 
+    ARGS="run -config $xray_config"
     if [ "$mode" = "server" ]; then
-        ARGS="run -config $xray_config"
+        configure_firewall_server
     elif [ "$mode" = "client" ]; then
-        ARGS="run -config $xray_config"
+        configure_firewall_client
     else
         mode="server"
-        ARGS="run -config /opt/etc/xray/config.json"
         am_settings_set xray_mode $mode
+        configure_firewall_server
     fi
 
     test_xray_config
-    configure_firewall_client
-
-    logger "xrayui" "Starting $DESC with $ARGS"
-    xray $ARGS >/dev/null 2>&1 &
-    echo $! >$PIDFILE
 }
 
 stop() {
@@ -65,8 +69,10 @@ restart() {
 
 configure_firewall_server() {
 
-    iptables -I INPUT -p tcp --dport 4433 -j ACCEPT
-    iptables -I FORWARD -p tcp --dport 4433 -j ACCEPT
+    XRAY_PORT="$(jq -r '.inbounds[0].port' $xray_config)"
+
+    iptables -I INPUT -p tcp --dport "$XRAY_PORT" -j ACCEPT
+    iptables -I FORWARD -p tcp --dport "$XRAY_PORT" -j ACCEPT
 
     logger "xrayui" "Xray firewall rules applied successfully."
 
@@ -139,18 +145,18 @@ cleanup_firewall_client() {
 mount_ui() {
     nvram get rc_support | grep -q am_addons
     if [ $? != 0 ]; then
-        echo "This firmware does not support addons!"
+        echo -e "${CERR}This firmware does not support addons!${CRESET}"
         exit 5
     fi
 
     am_get_webui_page $xray_addons_asp_page
 
     if [ "$am_webui_page" = "none" ]; then
-        echo "Unable to install XRAYUI"
+        echo "${CERR}Unable to install XRAYUI${CRESET}"
         exit 5
     fi
 
-    echo "Mounting XRAYUI as $am_webui_page"
+    echo -e "${CINFO}Mounting XRAYUI as $am_webui_page${CRESET}"
 
     cp $xray_addons_asp_page /www/user/$am_webui_page
 
@@ -163,46 +169,46 @@ mount_ui() {
 
     umount /www/require/modules/menuTree.js && mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
 
-    am_settings_set xray_ui_page $am_webui_page
-    xray_ui_page=$(am_settings_get xray_ui_page)
+    am_settings_set xray_page $am_webui_page
+    xray_ui_page=$(am_settings_get xray_page)
 
     refresh_xray_config
 
-    cp /jffs/addons/xray-ui/app.js /www/user/xray-ui/app.js
+    cp /jffs/addons/xrayui/app.js /www/user/xrayui/app.js
 
-    echo "XRAYUI mounted successfully as $xray_ui_page"
+    echo -e "${CSUC}XRAYUI mounted successfully as $xray_ui_page${CRESET}"
 }
 
 unmount_ui() {
     nvram get rc_support | grep -q am_addons
     if [ $? != 0 ]; then
-        echo "This firmware does not support addons!"
+        echo -e "This firmware does not support addons!${CRESET}"
         exit 5
     fi
 
-    xray_ui_page=$(am_settings_get xray_ui_page)
+    xray_ui_page=$(am_settings_get xray_page)
 
     if [ -z "$xray_ui_page" ]; then
-        echo "No XRAYUI page found to unmount."
+        echo -e "${CWARN}No XRAYUI page found to unmount.${CRESET}"
         exit 5
     fi
 
-    echo "Unmounting XRAYUI $xray_ui_page"
+    echo -e "${CINFO}Unmounting XRAYUI $xray_ui_page${CRESET}"
     rm -fr /www/user/$xray_ui_page
 
     if [ ! -f /tmp/menuTree.js ]; then
-        echo "menuTree.js not found, skipping unmount"
+        echo "${CINFO}menuTree.js not found, skipping unmount${CRESET}"
         exit 5
     fi
 
-    echo "Removing XRAYUI entry from menuTree.js"
+    echo -e "${CWARN}Removing XRAYUI entry from menuTree.js${CRESET}"
     sed -i "\\~$xray_ui_page~d" /tmp/menuTree.js
 
     umount /www/require/modules/menuTree.js && mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
 
-    rm -rf /www/user/xray-ui
+    rm -rf $dir_xrayui
 
-    echo "XRAYUI $xray_ui_page unmounted successfully"
+    echo -e "${CSUC}XRAYUI $xray_ui_page unmounted successfully${CRESET}"
 }
 
 remount_ui() {
@@ -211,7 +217,7 @@ remount_ui() {
 }
 
 refresh_xray_config() {
-    xray_ui_page=$(am_settings_get xray_ui_page)
+    xray_ui_page=$(am_settings_get xray_page)
 
     if [ ! -d $dir_xrayui ]; then
         mkdir -p "$dir_xrayui"
@@ -385,13 +391,13 @@ regenerate_reality_keys() {
     logger "xrayui" "Generated Reality Private Key: $private_key"
     logger "xrayui" "Generated Reality Public Key: $public_key"
 
-    reality_json="/www/user/xray-ui/reality.json"
+    reality_json="$dir_xrayui/reality.json"
 
-    if [ ! -d "/www/user/xray-ui" ]; then
-        logger "xrayui" "Directory /www/user/xray-ui does not exist. Creating it."
-        mkdir -p "/www/user/xray-ui"
+    if [ ! -d $dir_xrayui ]; then
+        logger "xrayui" "Directory $dir_xrayui does not exist. Creating it."
+        mkdir -p $dir_xrayui
         if [ $? -ne 0 ]; then
-            logger "xrayui" "Failed to create directory /www/user/xray-ui."
+            logger "xrayui" "Failed to create directory $dir_xrayui."
             return 1
         fi
     fi
@@ -416,7 +422,7 @@ regenerate_reality_keys() {
 regenerate_wireguard_keys() {
     local private_key=$(reconstruct_payload)
     local public_key
-    local json_file="/www/user/xray-ui/xray-ui-response.json"
+    local json_file="$dir_xrayui/xray-ui-response.json"
 
     if [ -z "$private_key" ]; then
         private_key=$(wg genkey)
@@ -550,7 +556,7 @@ test_xray_config() {
         message="success"
     fi
 
-    local json_file="/www/user/xray-ui/xray-ui-response.json"
+    local json_file="$dir_xrayui/xray-ui-response.json"
     if [ ! -f "$json_file" ]; then
         echo '{"xray":{}}' >"$json_file"
     fi
@@ -559,7 +565,152 @@ test_xray_config() {
     echo "$updated_json" >"$json_file"
 }
 
+install() {
+    echo -e "${CINFO}Starting XRAY UI installation process.${CRESET}"
+
+    # Check for Entware
+    if [ ! -x /opt/bin/opkg ]; then
+        echo -e "${CERR}Entware is not installed or opkg binary is not accessible.${CRESET}"
+        exit 1
+    fi
+
+    echo -e "${CSUC}Entware is installed.${CRESET}"
+
+    # Install Xray via opkg
+    if ! opkg list-installed | grep -q '^xray$'; then
+        echo -e "${CWARN}Installing Xray from the Entware repository...${CRESET}"
+        opkg update
+        if opkg install xray; then
+            echo -e "${CSUC}Xray installed successfully.${CRESET}"
+        else
+            echo -e "${CERR}Failed to install Xray.${CRESET}"
+            exit 1
+        fi
+    else
+        echo -e "${CINFO}Xray is already installed.${CRESET}"
+    fi
+
+    # Validate base configuration
+    if [ ! -f /opt/etc/xray/config.json ]; then
+        echo -e "${CWARN}Base configuration file not found. Creating a default config...${CRESET}"
+        mkdir -p /opt/etc/xray
+        cat >/opt/etc/xray/config.json <<EOF
+{
+    "log": {
+        "loglevel": "warning",
+        "access": "/tmp/xray_access.log",
+        "error": "/tmp/xray_error.log"
+    },
+    "inbounds":[],
+    "outbounds":[],
+    "routing": {
+        "rules": []
+    },
+    "dns": {
+        "servers": []
+    }
+}
+EOF
+        if [ $? -eq 0 ]; then
+            echo -e "${CSUC}Default configuration created successfully.${CRESET}"
+        else
+            echo -e "${CERR}Failed to create default configuration.${CRESET}"
+            exit 1
+        fi
+    else
+        echo -e "${CINFO}Base configuration file already exists.${CRESET}"
+    fi
+
+    echo -e "${CSUC}Installation process completed successfully.${CRESET}"
+
+    remount_ui
+    am_settings_set xray_version $XRAYUI_VERSION
+}
+
+uninstall() {
+    echo -e "${CINFO}Starting XRAY UI uninstallation process.${CRESET}"
+
+    # Stop XRAY service if running
+    if [ -f $PIDFILE ]; then
+        echo -e "${CWARN}Stopping XRAY service...${CRESET}"
+        stop
+        rm -f $PIDFILE
+        echo -e "${CSUC}XRAY service stopped.${CRESET}"
+    else
+        echo -e "${CINFO}XRAY service is not running.${CRESET}"
+    fi
+
+    # Remove XRAY UI files
+    echo -e "${CWARN}Removing XRAY UI files...${CRESET}"
+    rm -rf /www/user/xrayui /jffs/addons/xrayui /tmp/xray_clients_online.json
+
+    if [ $? -eq 0 ]; then
+        echo -e "${CSUC}XRAY UI files removed successfully.${CRESET}"
+    else
+        echo -e "${CERR}Failed to remove XRAY UI files.${CRESET}"
+        exit 1
+    fi
+
+    # Unmount UI
+    echo -e "${CWARN}Unmounting XRAY UI...${CRESET}"
+    unmount_ui
+    if [ $? -eq 0 ]; then
+        echo -e "${CSUC}XRAY UI unmounted successfully.${CRESET}"
+    else
+        echo -e "${CERR}Failed to unmount XRAY UI.${CRESET}"
+        exit 1
+    fi
+
+    # Remove XRAY custom settings
+    echo -e "${CWARN}Removing XRAY custom settings...${CRESET}"
+    am_settings_del xray_version
+    am_settings_del xray_mode
+    am_settings_del xray_ui_page
+    echo -e "${CSUC}Custom settings removed successfully.${CRESET}"
+
+    echo -e "${CINFO}XRAY UI uninstallation completed.${CRESET}"
+
+    # Ask user if they want to remove XRAY (opkg) and its configs
+    echo -e "${CWARN}Do you want to remove XRAY (installed via opkg) and its configurations? (yes/no)${CRESET}"
+    read -r user_input
+
+    if [ "$user_input" = "yes" ]; then
+        # Remove XRAY from Entware if installed
+        if opkg list-installed | grep -q '^xray$'; then
+            echo -e "${CWARN}Removing XRAY from Entware...${CRESET}"
+            if opkg remove xray; then
+                echo -e "${CSUC}XRAY removed successfully.${CRESET}"
+            else
+                echo -e "${CERR}Failed to remove XRAY.${CRESET}"
+                exit 1
+            fi
+        else
+            echo -e "${CINFO}XRAY is not installed.${CRESET}"
+        fi
+
+        # Remove XRAY configuration files
+        echo -e "${CWARN}Removing XRAY configuration files...${CRESET}"
+        rm -rf /opt/etc/xray
+        if [ $? -eq 0 ]; then
+            echo -e "${CSUC}XRAY configuration files removed successfully.${CRESET}"
+        else
+            echo -e "${CERR}Failed to remove XRAY configuration files.${CRESET}"
+            exit 1
+        fi
+    else
+        echo -e "${CINFO}Keeping XRAY and its configuration files.${CRESET}"
+    fi
+
+    echo -e "${CSUC}Uninstallation process completed successfully.${CRESET}"
+}
+
 case "$1" in
+install)
+    install
+    ;;
+uninstall)
+    uninstall
+    ;;
 start)
     start
     ;;
@@ -674,7 +825,7 @@ service_event)
     exit 0
     ;;
 *)
-    echo "Usage: $0 {start|stop|restart|mount_ui|unmount_ui|remount_ui}"
+    echo "Usage: $0 {install|uninstall|start|stop|restart|mount_ui|unmount_ui|remount_ui}"
     exit 1
     ;;
 esac

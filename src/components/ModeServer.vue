@@ -10,7 +10,7 @@
     <div id=" divApply" class="apply_gen">
         <input class="button_gen" @click.prevent="applyClientSettings()" type="button" value="Apply" />
     </div>
-
+    <version></version>
 </template>
 
 <script lang="ts">
@@ -29,6 +29,7 @@ import Inbounds from "./Inbounds.vue";
 import Outbounds from "./Outbounds.vue";
 import Routing from "./Routing.vue";
 import Dns from "./Dns.vue";
+import Version from "./Version.vue";
 
 import SniffingModal from "./modals/SniffingModal.vue";
 import StreamSettingsModal from "./modals/StreamSettingsModal.vue";
@@ -40,6 +41,7 @@ export default defineComponent({
         Routing,
         Inbounds,
         Dns,
+        Version,
         Outbounds,
         ServerStatus,
         ClientStatus,

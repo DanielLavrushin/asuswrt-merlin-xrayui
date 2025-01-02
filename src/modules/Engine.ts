@@ -129,19 +129,19 @@ class Engine {
   }
 
   async getRealityKeys(): Promise<any> {
-    const response = await axios.get<XrayObject>("/ext/xray-ui/reality.json");
+    const response = await axios.get<XrayObject>("/ext/xrayui/reality.json");
     let realityKeys = response.data;
     return realityKeys;
   }
 
   async getEngineConfig(): Promise<EngineResponseConfig> {
-    const response = await axios.get<EngineResponseConfig>("/ext/xray-ui/xray-ui-response.json");
+    const response = await axios.get<EngineResponseConfig>("/ext/xrayui/xray-ui-response.json");
     let responseConfig = response.data;
     return responseConfig;
   }
 
   async loadXrayConfig(): Promise<XrayObject> {
-    const response = await axios.get<XrayObject>("/ext/xray-ui/xray-config.json");
+    const response = await axios.get<XrayObject>("/ext/xrayui/xray-config.json");
     this.xrayConfig = plainToInstance(XrayObject, response.data);
 
     if (response.data.dns) {

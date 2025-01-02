@@ -2,7 +2,6 @@ const path = require("path");
 const { VueLoaderPlugin } = require("vue-loader");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const { exec } = require("child_process");
-const webpack = require("webpack");
 
 const isProduction = process.env.NODE_ENV === "production";
 console.log(`Building for ${isProduction ? "production" : "development"}...`);
@@ -43,14 +42,9 @@ module.exports = {
     new VueLoaderPlugin(),
     new CopyWebpackPlugin({
       patterns: [
-        { from: "src/app.html", to: "xray-ui.asp" },
+        { from: "src/app.html", to: "index.asp" },
         { from: "src/xrayui", to: "[name]" },
       ],
-    }),
-    new webpack.DefinePlugin({
-      "process.env.NODE_ENV": JSON.stringify("production"),
-      __VUE_OPTIONS_API__: "true",
-      __VUE_PROD_DEVTOOLS__: "false",
     }),
     {
       apply: (compiler) => {

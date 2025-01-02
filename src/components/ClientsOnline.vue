@@ -41,7 +41,7 @@ export default defineComponent({
 
     const fetchClients = async () => {
       try {
-        const response = await axios.get("/ext/xray-ui/clients-online.json");
+        const response = await axios.get("/ext/xrayui/clients-online.json");
         clients.value = response.data;
       } catch (error) {
         console.warn("Error fetching clients:", error);

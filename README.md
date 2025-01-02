@@ -26,3 +26,11 @@ wget -O /tmp/asuswrt-merlin-xrayui.tar.gz https://github.com/DanielLavrushin/asu
 ### Post-Installation Steps
 - Log Out and Back In: After installing, log out from the router's browser UI and then log back in.
 - Access the X-RAY Tab: Navigate to the VPN section in the router's web UI and look for the new tab labeled X-RAY.
+
+## FAQ
+#### Q: What if I already have an Xray configuration?
+#### A: If you already have an Xray configuration file that you want to use, you need to place it in the following location:
+```
+/opt/etc/xray/config.json
+```
+Once the file is placed here, the ASUSWRT Merlin XrayUI interface will automatically reflect the changes.

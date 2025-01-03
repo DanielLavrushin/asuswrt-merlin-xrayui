@@ -35,3 +35,6 @@ wget -O /tmp/asuswrt-merlin-xrayui.tar.gz https://github.com/DanielLavrushin/asu
 /opt/etc/xray/config.json
 ```
 Once the file is placed here, the ASUSWRT Merlin XrayUI interface will automatically reflect the changes.
+
+#### Q: How can I configure a simple client on my ASUS router?
+#### A: you can refference this [wiki guide](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/wiki/Xray-Client-Configuration-Guide)

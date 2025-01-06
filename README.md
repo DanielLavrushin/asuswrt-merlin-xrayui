@@ -15,13 +15,11 @@ To install the latest version of asuswrt-merlin-xrayui, simply run the following
 ```shell
 wget -O /tmp/asuswrt-merlin-xrayui.tar.gz https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/releases/latest/download/asuswrt-merlin-xrayui.tar.gz && rm -rf /jffs/addons/xrayui && tar -xzf /tmp/asuswrt-merlin-xrayui.tar.gz -C /jffs/addons && mv /jffs/addons/xrayui/xrayui /jffs/scripts/xrayui && chmod 0777 /jffs/scripts/xrayui && sh /jffs/scripts/xrayui install
 ```
-
-### What this command does:
-- `Downloads`: Fetches the latest version of XrayUI from GitHub.
-- `Cleans Up`: Removes any existing XrayUI installation to avoid conflicts.
-- `Extracts`: Unpacks the downloaded archive into /jffs/addons.
-- `Moves`: Places the xrayui script in the /jffs/scripts directory for execution.
-- `Installs`: Runs the install script to set up XrayUI
+### How to uninstall
+To uninstall and clean up run the command
+```shell
+/jffs/scripts/xrayui uninstall
+```
 
 ## Usage
 ### Post-Installation Steps

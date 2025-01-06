@@ -272,9 +272,11 @@ get_connected_clients() {
 
     ips=$(netstat -an | grep ':4433' | grep 'ESTABLISHED' | awk -F'[: ]+' '{print $8}' | sed 's/::ffff://' | sort | uniq)
 
+    access_log="$(jq -r '.log.access' $xray_config)"
+
     for ip in $ips; do
         if [ -n "$ip" ]; then
-            emails=$(grep "$ip" /tmp/xray_access.log | awk -F'email: ' '{print $2}' | sort | uniq | sed 's/^/"/; s/$/"/' | tr '\n' ',' | sed 's/,$//')
+            emails=$(grep "$ip" $access_log | awk -F'email: ' '{print $2}' | sort | uniq | sed 's/^/"/; s/$/"/' | tr '\n' ',' | sed 's/,$//')
 
             if [ -n "$emails" ]; then
                 echo "{\"ip\": \"$ip\", \"email\": [$emails]}," >>$temp_file

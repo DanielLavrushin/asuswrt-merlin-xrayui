@@ -27,12 +27,21 @@ To uninstall and clean up run the command
 - Access the X-RAY Tab: Navigate to the VPN section in the router's web UI and look for the new tab labeled X-RAY.
 
 ## FAQ
-#### Q: What if I already have an Xray configuration?
-#### A: If you already have an Xray configuration file that you want to use, you need to place it in the following location:
+**Q: What if I already have an Xray configuration?**
+
+A: If you already have an Xray configuration file that you want to use, you need to place it in the following location:
 ```
 /opt/etc/xray/config.json
 ```
 Once the file is placed here, the ASUSWRT Merlin XrayUI interface will automatically reflect the changes.
 
-#### Q: How can I configure a simple client on my ASUS router?
-#### A: you can refference this [wiki guide](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/wiki/Xray-Client-Configuration-Guide)
+
+
+**Q: How can I configure a simple client on my ASUS router?**
+
+A: you can refference this [wiki guide](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/wiki/Xray-Client-Configuration-Guide)
+
+
+**Q: How can I configure a simple xray server on my ASUS router?**
+
+A: you can refference this [wiki guide](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/wiki/Xray-Server-Configuration-Guide)

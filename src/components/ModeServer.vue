@@ -10,6 +10,7 @@
     <div id=" divApply" class="apply_gen">
         <input class="button_gen" @click.prevent="applyClientSettings()" type="button" value="Apply" />
     </div>
+    <clients-online v-if="engine.mode == 'server'"></clients-online>
     <version></version>
 </template>
 
@@ -30,6 +31,7 @@ import Outbounds from "./Outbounds.vue";
 import Routing from "./Routing.vue";
 import Dns from "./Dns.vue";
 import Version from "./Version.vue";
+import ClientsOnline from "./ClientsOnline.vue";
 
 import SniffingModal from "./modals/SniffingModal.vue";
 import StreamSettingsModal from "./modals/StreamSettingsModal.vue";
@@ -46,6 +48,7 @@ export default defineComponent({
         ServerStatus,
         ClientStatus,
         SniffingModal,
+        ClientsOnline,
         StreamSettingsModal
     },
     methods: {

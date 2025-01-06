@@ -782,6 +782,48 @@ uninstall() {
     echo -e "${CSUC}Uninstallation process completed successfully.${CRESET}"
 }
 
+enable_config_logs() {
+
+    local temp_file="/tmp/xray_config.json"
+
+    echo -e "${CINFO}Checking for the 'log' section in the Xray configuration.${CRESET}"
+
+    # Check if the config file exists
+    if [ ! -f "$xray_config" ]; then
+        echo -e "${CERR}Configuration file not found: $xray_config${CRESET}"
+        return 1
+    fi
+
+    # Check if the 'log' section is missing
+    if ! jq -e '.log' "$xray_config" >/dev/null 2>&1; then
+        echo -e "${CWARN}'log' section is missing. Adding it to the configuration.${CRESET}"
+
+        # Add the 'log' section
+        jq '. + {
+            "log": {
+                "loglevel": "warning",
+                "error": "/tmp/xray_error.log",
+                "access": "/tmp/xray_access.log"
+            }
+        }' "$xray_config" >"$temp_file"
+
+        if [ $? -eq 0 ]; then
+            mv "$temp_file" "$xray_config"
+            echo -e "${CSUC}'log' section added successfully.${CRESET}"
+        else
+            echo -e "${CERR}Failed to update the configuration with 'log' section.${CRESET}"
+            rm -f "$temp_file"
+            return 1
+        fi
+    else
+        echo -e "${CINFO}'log' section already exists in the configuration.${CRESET}"
+    fi
+
+    restart
+
+    return 0
+}
+
 case "$1" in
 install)
     install
@@ -829,6 +871,10 @@ service_event)
             ;;
         "mode")
             switch_mode
+            exit 0
+            ;;
+        "logs")
+            enable_config_logs
             exit 0
             ;;
         esac

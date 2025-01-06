@@ -6,7 +6,7 @@
           <td colspan="3">Clients Online</td>
         </tr>
       </thead>
-      <tbody>
+      <tbody v-if="logsEnabled">
         <tr class="row_title">
           <th>Ip</th>
           <th>Client</th>
@@ -19,14 +19,25 @@
           <td colspan="3" style="color: #ffcc00">No one is online</td>
         </tr>
       </tbody>
+      <tbody v-if="!logsEnabled">
+        <tr class="data_tr">
+          <td colspan="3" style="color: #ffcc00">To check online users, xray logging must be enabled. Would you like to
+            enable it?
+            <br />
+            <input class="button_gen button_gen_small" type="button" value="enable logs"
+              @click.prevent="enable_logs()" />
+          </td>
+        </tr>
+      </tbody>
     </table>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, onBeforeUnmount } from "vue";
+import { defineComponent, ref, onMounted, onBeforeUnmount, watch } from "vue";
 import axios from "axios";
 import engine, { SubmtActions } from "../modules/Engine";
+import xrayConfig from "@/modules/XrayConfig";
 
 interface Client {
   ip: string;
@@ -35,6 +46,14 @@ interface Client {
 
 export default defineComponent({
   name: "ClientsOnline",
+  methods: {
+    async enable_logs() {
+      let delay = 5000;
+      window.showLoading(delay / 1000);
+      await engine.submit(SubmtActions.enableLogs, null, delay);
+      window.location.reload();
+    },
+  },
   setup() {
     const clients = ref<Client[]>([]);
     let intervalId: number | undefined;
@@ -48,6 +67,7 @@ export default defineComponent({
       }
     };
 
+    const logsEnabled = ref(false);
     if (engine.mode == "server") {
       onMounted(async () => {
         await engine.submit(SubmtActions.clientsOnline);
@@ -57,6 +77,10 @@ export default defineComponent({
           await fetchClients();
         }, 3000);
       });
+      watch(() => xrayConfig.log, async (logs) => {
+        logsEnabled.value = logs !== undefined;
+      }, { immediate: true });
+
     }
 
     onBeforeUnmount(() => {
@@ -66,6 +90,7 @@ export default defineComponent({
     });
 
     return {
+      logsEnabled,
       clients,
     };
   },

@@ -25,6 +25,7 @@ class SubmtActions {
   public static clientAdd: string = "xrayui_client_add";
   public static regenerateRealityKeys: string = "xrayui_regenerate_realitykeys";
   public static regenerateWireguardyKeys: string = "xrayui_regenerate_wgkeys";
+  public static enableLogs: string = "xrayui_configuration_logs";
 }
 
 class Engine {

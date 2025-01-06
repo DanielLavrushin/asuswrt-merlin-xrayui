@@ -575,6 +575,7 @@ install() {
     echo -e "${CINFO}Starting XRAY UI installation process.${CRESET}"
 
     # Check for Entware
+    echo
     if [ ! -x /opt/bin/opkg ]; then
         echo -e "${CERR}Entware is not installed or opkg binary is not accessible.${CRESET}"
         echo -e "${CERR}Please install Entware first: https://github.com/Entware/Entware/wiki/Install-on-ASUSWRT${CRESET}"
@@ -583,6 +584,7 @@ install() {
     echo -e "${CSUC}Entware is installed.${CRESET}"
 
     # Check for jq
+    echo
     if ! opkg list-installed | grep -q '^jq$'; then
         echo -e "${CWARN}jq is not installed. Installing jq...${CRESET}"
         opkg update
@@ -597,6 +599,7 @@ install() {
     fi
 
     # Check for iptables
+    echo
     if ! type iptables >/dev/null 2>&1; then
         echo -e "${CERR}iptables is not available on this system. It is required for firewall configuration.${CRESET}"
         exit 1
@@ -605,6 +608,7 @@ install() {
     echo -e "${CSUC}iptables is available.${CRESET}"
 
     # Install Xray via opkg
+    echo
     if ! opkg list-installed | grep -q '^xray$'; then
         echo -e "${CWARN}Installing Xray from the Entware repository...${CRESET}"
         opkg update
@@ -619,6 +623,7 @@ install() {
     fi
 
     # Validate base configuration
+    echo
     if [ ! -f /opt/etc/xray/config.json ]; then
         echo -e "${CWARN}Base configuration file not found. Creating a default config...${CRESET}"
         mkdir -p /opt/etc/xray
@@ -650,25 +655,41 @@ EOF
     fi
 
     # Add or update nat-start
+    echo
     echo -e "${CINFO}Ensuring /jffs/scripts/nat-start contains required entry.${CRESET}"
     mkdir -p /jffs/scripts
     if [ ! -f /jffs/scripts/nat-start ]; then
         echo "#!/bin/sh" >/jffs/scripts/nat-start
         chmod +x /jffs/scripts/nat-start
-    fi
-    if ! grep -q "/jffs/scripts/xrayui service_event firewall client #xrayui" /jffs/scripts/nat-start; then
-        echo "/jffs/scripts/xrayui service_event firewall client #xrayui" >>/jffs/scripts/nat-start
-        echo -e "${CSUC}Updated /jffs/scripts/nat-start with XrayUI entry.${CRESET}"
     else
-        echo -e "${CINFO}/jffs/scripts/nat-start already contains the required entry.${CRESET}"
+        echo -e "${CWARN}Removing existing #xrayui entries from /jffs/scripts/nat-start.${CRESET}"
+        sed -i '/#xrayui/d' /jffs/scripts/nat-start
     fi
+    echo "/jffs/scripts/xrayui service_event firewall server #xrayui" >>/jffs/scripts/nat-start
+    echo "/jffs/scripts/xrayui service_event firewall client #xrayui" >>/jffs/scripts/nat-start
+    echo -e "${CSUC}Updated /jffs/scripts/nat-start with XrayUI entry.${CRESET}"
 
+    # Add or update service-event
+    echo
+    echo -e "${CINFO}Ensuring /jffs/scripts/service-event contains required entry.${CRESET}"
+    if [ ! -f /jffs/scripts/service-event ]; then
+        echo "#!/bin/sh" >/jffs/scripts/service-event
+        chmod +x /jffs/scripts/service-event
+    else
+        echo -e "${CWARN}Removing existing #xrayui entries from /jffs/scripts/service-event.${CRESET}"
+        sed -i '/#xrayui/d' /jffs/scripts/service-event
+    fi
+    echo "echo \"\$2\" | grep -q \"^xrayui\" && /jffs/scripts/xrayui service_event \$(echo \"\$2\" | cut -d'_' -f2- | tr '_' ' ') & #xrayui" >>/jffs/scripts/service-event
+    echo -e "${CSUC}Updated /jffs/scripts/service-event with XrayUI entry.${CRESET}"
+
+    echo
+    remount_ui
+
+    echo
     echo -e "${CSUC}Installation process completed successfully.${CRESET}"
 
     am_settings_set xray_version $XRAYUI_VERSION
     am_settings_set xray_mode "server"
-
-    remount_ui
 
 }
 
@@ -696,7 +717,17 @@ uninstall() {
         exit 1
     fi
 
+    # clean up nat-start
+    echo
+    echo -e "${CWARN}Removing existing #xrayui entries from /jffs/scripts/nat-start.${CRESET}"
+    sed -i '/#xrayui/d' /jffs/scripts/nat-start
+
+    # clean up service-event
+    echo -e "${CWARN}Removing existing #xrayui entries from /jffs/scripts/service-event.${CRESET}"
+    sed -i '/#xrayui/d' /jffs/scripts/service-event
+
     # Unmount UI
+    echo
     echo -e "${CWARN}Unmounting XRAY UI...${CRESET}"
     unmount_ui
     if [ $? -eq 0 ]; then

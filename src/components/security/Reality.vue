@@ -1,7 +1,7 @@
 <template>
   <div class="formfontdesc">
-    <p>Configures vanilla TLS. The TLS encryption suite is provided by Golang, which often uses TLS 1.3, and has no
-      support for DTLS.</p>
+    <p>Configures REALITY. REALITY is a piece of advanced encryption technology developed in-house, with higher security
+      than vanilla TLS, but configs of both are largely the same.</p>
     <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
       <thead>
         <tr>

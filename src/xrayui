@@ -243,6 +243,9 @@ mount_ui() {
 }
 
 unmount_ui() {
+    LOCKFILE=/tmp/addonwebui.lock
+    FD=386
+    eval exec "$FD>$LOCKFILE"
     nvram get rc_support | grep -q am_addons
     if [ $? != 0 ]; then
         echo -e "${CERR}This firmware does not support addons!${CRESET}"
@@ -273,6 +276,7 @@ unmount_ui() {
 
     rm -rf $dir_xrayui
     am_settings_del xray_page
+    flock -u "$FD"
     echo -e "${CSUC}Cleanup completed.${CRESET}"
 }
 

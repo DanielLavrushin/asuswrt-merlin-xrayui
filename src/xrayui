@@ -75,7 +75,12 @@ restart() {
 configure_firewall_server() {
     mode=$(am_settings_get xray_mode)
     if [ "$mode" = "server" ]; then
-        XRAY_PORT="$(jq -r '.inbounds[0].port' $xray_config)"
+
+        XRAY_PORT="$(jq -r '.inbounds[0].port // empty' $xray_config)"
+        if [ -z "$XRAY_PORT" ] || ! [[ "$XRAY_PORT" =~ ^[0-9]+$ ]]; then
+            logger "xrayui" "Invalid or missing port in Xray configuration. Cannot configure firewall rules."
+            return 1
+        fi
 
         cleanup_firewall_server
         iptables -I INPUT -p tcp --dport "$XRAY_PORT" -j ACCEPT
@@ -93,7 +98,11 @@ configure_firewall_client() {
 
         logger "xrayui" "Configuring Xray firewall rules..."
 
-        XRAY_PORT="$(jq -r '.inbounds[0].port' $xray_config)"
+        XRAY_PORT="$(jq -r '.inbounds[0].port // empty' $xray_config)"
+        if [ -z "$XRAY_PORT" ] || ! [[ "$XRAY_PORT" =~ ^[0-9]+$ ]]; then
+            logger "xrayui" "Invalid or missing port in Xray configuration. Cannot configure firewall rules."
+            return 1
+        fi
 
         cleanup_firewall_client
 

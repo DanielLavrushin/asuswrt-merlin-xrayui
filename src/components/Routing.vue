@@ -35,7 +35,7 @@
                     <input class="button_gen button_gen_small" type="button" value="Manage"
                         @click.prevent="manage_rules()" />
                     <span class="hint-color"></span>
-                    <rules-modal ref="modal" :rules="routing.rules"></rules-modal>
+                    <rules-modal ref="modal" v-model:rules="routing.rules"></rules-modal>
                 </td>
             </tr>
             <!-- <tr>

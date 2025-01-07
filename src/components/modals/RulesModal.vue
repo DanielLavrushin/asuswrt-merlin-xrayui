@@ -1,33 +1,31 @@
 <template>
-  <modal width="755" ref="modalList" title="Manage TLS Certificate">
+  <modal width="755" ref="modalList" title="Routing Rules">
     <table class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="3">Rule</td>
+          <td colspan="2">Available rules</td>
         </tr>
       </thead>
       <tbody v-if="rules.length">
-        <tr v-for="(r, index) in rules">
-          <td>rule #{{ index }}</td>
-          <td>
-          </td>
+        <tr v-for="(r, index) in rules" :key="index">
+          <td>rule #{{ index + 1 }}</td>
           <td>
             <span class="row-buttons">
-              <input class="button_gen button_gen_small" type="button" value="Edit" @click.prevent="edit_rule(index)" />
+              <input class="button_gen button_gen_small" type="button" value="Edit" @click.prevent="editRule(index)" />
               <input class="button_gen button_gen_small" type="button" value="Delete"
-                @click.prevent="delete_rule(index)" />
+                @click.prevent="deleteRule(index)" />
             </span>
           </td>
         </tr>
       </tbody>
-      <tbody v-if="!rules.length">
+      <tbody v-else>
         <tr>
-          <td colspan="3" style="color: #ffcc00">no rules defined</td>
+          <td colspan="2" style="color: #ffcc00">no rules defined</td>
         </tr>
       </tbody>
     </table>
     <template v-slot:footer>
-      <input class="button_gen button_gen_small" type="button" value="Add" @click.prevent="add_rule" />
+      <input class="button_gen button_gen_small" type="button" value="Add" @click.prevent="addRule" />
     </template>
   </modal>
   <modal width="755" ref="modalAdd" title="Rule">
@@ -36,8 +34,8 @@
         <tr>
           <th>Outbound Connection</th>
           <td>
-            <select class="input_option" v-model="rule.outboundTag">
-              <option></option>
+            <select class="input_option" v-model="currentRule.outboundTag">
+              <option value="" disabled>Select Outbound</option>
               <option v-for="opt in outbounds" :key="opt" :value="opt">
                 {{ opt }}
               </option>
@@ -48,16 +46,19 @@
         <tr>
           <th>Inbound Connection</th>
           <td>
-            <template v-for="(opt, index) in inbounds" :key="index">
-              <input v-model="rule.inboundTag" type="checkbox" class="input" :value="opt" :id="'inbound-' + index" />
-              <label :for="'inbound-' + index" class="settingvalue">{{ opt.toUpperCase() }}</label>
-            </template>
+            <div v-for="(opt, index) in inbounds" :key="index">
+              <input v-model="currentRule.inboundTag" type="checkbox" class="input" :value="opt"
+                :id="'inbound-' + index" />
+              <label :for="'inbound-' + index" class="settingvalue">
+                {{ opt.toUpperCase() }}
+              </label>
+            </div>
           </td>
         </tr>
         <tr>
           <th>Domain Matcher</th>
           <td>
-            <select class="input_option" v-model="rule.domainMatcher">
+            <select class="input_option" v-model="currentRule.domainMatcher">
               <option v-for="opt in domainMatcherOptions" :key="opt" :value="opt">
                 {{ opt }}
               </option>
@@ -68,7 +69,7 @@
         <tr>
           <th>Network</th>
           <td>
-            <select class="input_option" v-model="rule.network">
+            <select class="input_option" v-model="currentRule.network">
               <option v-for="opt in networkOptions" :key="opt" :value="opt">
                 {{ opt }}
               </option>
@@ -79,10 +80,13 @@
         <tr>
           <th>Protocols</th>
           <td>
-            <slot v-for="(opt, index) in protocolOptions" :key="index">
-              <input type="checkbox" v-model="rule.protocol" class="input" :value="opt" :id="'protoopt-' + index" />
-              <label :for="'protoopt-' + index" class="settingvalue">{{ opt }}</label>
-            </slot>
+            <div v-for="(opt, index) in protocolOptions" :key="index">
+              <input type="checkbox" v-model="currentRule.protocol" class="input" :value="opt"
+                :id="'protoopt-' + index" />
+              <label :for="'protoopt-' + index" class="settingvalue">
+                {{ opt }}
+              </label>
+            </div>
           </td>
         </tr>
         <tr>
@@ -94,7 +98,7 @@
           </td>
         </tr>
         <tr>
-          <th>Target Ip List</th>
+          <th>Target IP List</th>
           <td>
             <div class="textarea-wrapper">
               <textarea v-model="ips" rows="10"></textarea>
@@ -104,128 +108,200 @@
         <tr>
           <th>Target Port</th>
           <td>
-            <input v-model="rule.port" type="text" class="input_25_table" />
+            <input v-model="currentRule.port" type="text" class="input_25_table" />
             <span class="hint-color"></span>
           </td>
         </tr>
         <tr>
-          <th>Source Ip List</th>
+          <th>Source IP List</th>
           <td>
-            <input v-model="rule.source" type="text" class="input_25_table" />
+            <div class="textarea-wrapper">
+              <textarea v-model="source" rows="3"></textarea>
+            </div>
             <span class="hint-color"></span>
           </td>
         </tr>
         <tr>
           <th>Source Port</th>
           <td>
-            <input v-model="rule.sourcePort" type="text" class="input_25_table" />
+            <input v-model="currentRule.sourcePort" type="text" class="input_25_table" />
             <span class="hint-color"></span>
           </td>
         </tr>
-
-        <tr>
+        <!-- <tr>
           <th>Users</th>
           <td>
-            <slot v-for="(opt, index) in users" :key="index">
-              <input type="checkbox" v-model="rule.user" class="input" :value="opt" :id="'useropt-' + index" />
-              <label :for="'useropt-' + index" class="settingvalue">{{ opt }}</label>
-            </slot>
+            <div v-for="(opt, index) in users" :key="index">
+              <input type="checkbox" v-model="currentRule.user" class="input" :value="opt" :id="'useropt-' + index" />
+              <label :for="'useropt-' + index" class="settingvalue">
+                {{ opt }}
+              </label>
+            </div>
           </td>
         </tr>
+        -->
       </tbody>
     </table>
     <template v-slot:footer>
-      <input class="button_gen button_gen_small" type="button" value="Save" @click.prevent="save_rule" />
+      <input class="button_gen button_gen_small" type="button" value="Save" @click.prevent="saveRule" />
     </template>
   </modal>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, watch } from "vue";
+import { defineComponent, ref, watch, computed } from "vue";
 import Modal from "../Modal.vue";
 import xrayConfig from "../../modules/XrayConfig";
-import { XrayRoutingRuleObject, XrayRoutingObject } from "../../modules/CommonObjects";
+import {
+  XrayRoutingRuleObject,
+  XrayRoutingObject,
+} from "../../modules/CommonObjects";
 
 export default defineComponent({
   name: "RulesModal",
-  props: {
-    rules: Array as () => XrayRoutingRuleObject[],
-  },
-
   components: {
     Modal,
   },
-  methods: {
-    delete_rule(index: number) {
-      this.rules.splice(index, 1);
+  props: {
+    rules: {
+      type: Array as () => XrayRoutingRuleObject[],
+      default: () => [],
     },
-    save_rule() {
-      this.modalAdd.close();
-
-      this.rule.domain = this.domains?.split('\n').filter((x) => x.length > 0);
-      this.rule.ip = this.ips?.split('\n').filter((x) => x.length > 0);
-
-      if (this.rules.indexOf(this.rule) === -1) {
-        this.rules.push(this.rule);
-      }
-    },
-    edit_rule(index: number) {
-      this.rule = this.rules[index];
-      this.add_rule();
-    },
-    add_rule() {
-      this.rule = this.rule ?? new XrayRoutingRuleObject();
-      this.domains = this.rule.domain?.join('\n');
-      this.ips = this.rule.ip?.join('\n');
-      this.source = this.rule.source?.join('\n');
-      const users = new Array<any>();   // xrayConfig.inbounds[0]?.settings?.clients.map((c) => c.email!) ?? [];
-
-      this.modalAdd.show();
-
-    },
-    show() {
-      this.modalList.show();
-      this.rules = this.$props.rules ?? new Array<XrayRoutingRuleObject>();
-    },
-
   },
-  setup(props) {
-    const rules = ref(props.rules ?? new Array<XrayRoutingRuleObject>());
-    const rule = ref<XrayRoutingRuleObject>(new XrayRoutingRuleObject());
-    rule.value.outboundTag = "block";
-    const modalList = ref();
-    const modalAdd = ref();
+  setup(props, { emit }) {
+    // Reactive state
+    const rules = ref<XrayRoutingRuleObject[]>([...props.rules]);
 
-    const ips = ref<string | undefined>(rule.value.ip?.join('\n') ?? '');
-    const domains = ref<string | undefined>(rule.value.domain?.join('\n') ?? '');
-    const source = ref<string | undefined>(rule.value.source?.join('\n') ?? '');
+    const currentRule = ref<XrayRoutingRuleObject>(new XrayRoutingRuleObject());
+    const currentIndex = ref<number>(-1);
+    const modalList = ref<InstanceType<typeof Modal> | null>(null);
+    const modalAdd = ref<InstanceType<typeof Modal> | null>(null);
 
-    const outbounds = ref();
-    const inbounds = ref();
+    const ips = ref<string>("");
+    const domains = ref<string>("");
+    const source = ref<string>("");
 
+    const outbounds = ref<string[]>([]);
+    const inbounds = ref<string[]>([]);
+    const users = ref<string[]>([]);
 
-    watch(() => xrayConfig.inbounds.length, () => {
-      inbounds.value = xrayConfig.inbounds.map((o) => o.tag);
+    watch(
+      () => xrayConfig.inbounds.length,
+      () => {
+        if (xrayConfig.inbounds?.length > 0) {
+          inbounds.value = xrayConfig.inbounds.map((o) => o.tag).filter((tag): tag is string => tag !== undefined);
+        }
+      },
+      { immediate: true }
+    );
+
+    watch(
+      () => xrayConfig.outbounds.length,
+      () => {
+        outbounds.value = xrayConfig.outbounds.map((o) => o.tag).filter((tag): tag is string => tag !== undefined);
+      },
+      { immediate: true }
+    );
+
+    watch(
+      () => xrayConfig.inbounds,
+      (newInbounds) => {
+        if (newInbounds.length > 0) {
+          //  users.value =  newInbounds[0]?.settings?.clients?.map((c: { email: string }) => c.email) ?? [];
+        }
+      },
+      { immediate: true }
+    );
+
+    watch(currentRule, (newRule) => {
+      domains.value = newRule.domain ? newRule.domain.join("\n") : "";
+      ips.value = newRule.ip ? newRule.ip.join("\n") : "";
+      source.value = newRule.source ? newRule.source.join("\n") : "";
     });
-    watch(() => xrayConfig.inbounds.length, () => {
-      outbounds.value = xrayConfig.outbounds.map((o) => o.tag);
-    });
+
+    // Methods
+    const deleteRule = (index: number) => {
+      rules.value.splice(index, 1);
+      emit("update:rules", rules.value);
+    };
+
+    const addRule = () => {
+      currentIndex.value = -1;
+      currentRule.value = new XrayRoutingRuleObject();
+      currentRule.value.outboundTag = "block";
+      domains.value = "";
+      ips.value = "";
+      source.value = "";
+      currentRule.value.inboundTag = [];
+      currentRule.value.protocol = [];
+      currentRule.value.user = [];
+      modalAdd.value?.show(() => { });
+    };
+
+    const editRule = (index: number) => {
+      currentIndex.value = index;
+      const ruleToEdit = { ...rules.value[index] };
+      ruleToEdit.inboundTag = [...(ruleToEdit.inboundTag || [])];
+      ruleToEdit.protocol = [...(ruleToEdit.protocol || [])];
+      ruleToEdit.user = [...(ruleToEdit.user || [])];
+      currentRule.value = ruleToEdit;
+      domains.value = ruleToEdit.domain ? ruleToEdit.domain.join("\n") : "";
+      ips.value = ruleToEdit.ip ? ruleToEdit.ip.join("\n") : "";
+      source.value = ruleToEdit.source ? ruleToEdit.source.join("\n") : "";
+      modalAdd.value?.show(() => { });
+    };
+
+    const saveRule = () => {
+      currentRule.value.domain = domains.value
+        ? domains.value.split("\n").map((d) => d.trim()).filter((d) => d)
+        : [];
+      currentRule.value.ip = ips.value
+        ? ips.value.split("\n").map((ip) => ip.trim()).filter((ip) => ip)
+        : [];
+      currentRule.value.source = source.value
+        ? source.value.split("\n").map((s) => s.trim()).filter((s) => s)
+        : [];
+
+      if (currentIndex.value > -1) {
+        rules.value[currentIndex.value] = { ...currentRule.value };
+      } else {
+        rules.value.push({ ...currentRule.value });
+      }
+
+      modalAdd.value?.close();
+      emit("update:rules", rules.value);
+    };
+    const show = () => {
+      rules.value = [...props.rules];
+      modalList.value?.show(() => { });
+    };
 
 
-    const users = new Array<any>();   // xrayConfig.inbounds[0]?.settings?.clients.map((c) => c.email!) ?? [];
-
+    // Expose to template
     return {
-      domainMatcherOptions: XrayRoutingObject.domainMatcherOptions,
-      networkOptions: XrayRoutingRuleObject.networkOptions,
-      protocolOptions: XrayRoutingRuleObject.protocolOptions,
-      domains, ips, rule, rules, source,
+      rules,
+      currentRule,
       modalList,
       modalAdd,
-      xrayConfig,
+      ips,
+      domains,
+      source,
       outbounds,
       inbounds,
       users,
+      deleteRule,
+      addRule,
+      editRule,
+      saveRule,
+      show,
+      domainMatcherOptions: XrayRoutingObject.domainMatcherOptions,
+      networkOptions: XrayRoutingRuleObject.networkOptions,
+      protocolOptions: XrayRoutingRuleObject.protocolOptions,
     };
   },
 });
 </script>
+
+<style scoped>
+/* Add your styles here */
+</style>

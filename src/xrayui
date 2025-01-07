@@ -719,6 +719,20 @@ EOF
     echo "/jffs/scripts/xrayui service_event firewall client #xrayui" >>/jffs/scripts/nat-start
     echo -e "${CSUC}Updated /jffs/scripts/nat-start with XrayUI entry.${CRESET}"
 
+    # Add or update post-mount
+    echo
+    echo -e "${CINFO}Ensuring /jffs/scripts/post-mount contains required entry.${CRESET}"
+    mkdir -p /jffs/scripts
+    if [ ! -f /jffs/scripts/post-mount ]; then
+        echo "#!/bin/sh" >/jffs/scripts/post-mount
+        chmod +x /jffs/scripts/post-mount
+    else
+        echo -e "${CWARN}Removing existing #xrayui entries from /jffs/scripts/post-mount.${CRESET}"
+        sed -i '/#xrayui/d' /jffs/scripts/post-mount
+    fi
+    echo "/jffs/scripts/xrayui remount_ui #xrayui" >>/jffs/scripts/post-mount
+    echo -e "${CSUC}Updated /jffs/scripts/post-mount with XrayUI entry.${CRESET}"
+
     # Add or update service-event
     echo
     echo -e "${CINFO}Ensuring /jffs/scripts/service-event contains required entry.${CRESET}"

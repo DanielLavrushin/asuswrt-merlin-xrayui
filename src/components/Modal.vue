@@ -1,5 +1,5 @@
 <template>
-  <Teleport to="#app">
+  <Teleport to="#xrayui-modals">
     <div class="xray-modal-overlay" v-if="isVisible" @mousedown.self="close">
       <div class="xray-modal-content" @click.stop :style="{ width: width + 'px' }">
         <header class="xray-modal-header">

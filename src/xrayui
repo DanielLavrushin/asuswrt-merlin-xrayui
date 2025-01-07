@@ -72,48 +72,57 @@ restart() {
 }
 
 configure_firewall_server() {
+    mode=$(am_settings_get xray_mode)
+    if [ "$mode" = "server" ]; then
+        XRAY_PORT="$(jq -r '.inbounds[0].port' $xray_config)"
 
-    XRAY_PORT="$(jq -r '.inbounds[0].port' $xray_config)"
+        iptables -I INPUT -p tcp --dport "$XRAY_PORT" -j ACCEPT
+        iptables -I FORWARD -p tcp --dport "$XRAY_PORT" -j ACCEPT
 
-    iptables -I INPUT -p tcp --dport "$XRAY_PORT" -j ACCEPT
-    iptables -I FORWARD -p tcp --dport "$XRAY_PORT" -j ACCEPT
-
-    logger "xrayui" "Xray firewall rules applied successfully."
-
+        logger "xrayui" "Xray firewall rules applied successfully."
+    else
+        logger "xrayui" "Xray Server firewall rules not applied, mode is not server."
+    fi
 }
 
 configure_firewall_client() {
-    logger "xrayui" "Configuring Xray firewall rules..."
+    mode=$(am_settings_get xray_mode)
+    if [ "$mode" = "client" ]; then
 
-    XRAY_PORT="$(jq -r '.inbounds[0].port' $xray_config)"
+        logger "xrayui" "Configuring Xray firewall rules..."
 
-    cleanup_firewall_client
+        XRAY_PORT="$(jq -r '.inbounds[0].port' $xray_config)"
 
-    # Create XRAY chain in NAT
-    iptables -t nat -N XRAY 2>/dev/null
+        cleanup_firewall_client
 
-    # Detect local network ranges dynamically
-    local_networks=$(
-        ip -4 route show |
-            awk '/src/ && ($1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/) { print $1 }'
-    )
+        # Create XRAY chain in NAT
+        iptables -t nat -N XRAY 2>/dev/null
 
-    # Exclude local & loopback
-    iptables -t nat -A XRAY -d 127.0.0.1/32 -j RETURN
-    for net in $local_networks; do
-        iptables -t nat -A XRAY -d "$net" -j RETURN
-    done
+        # Detect local network ranges dynamically
+        local_networks=$(
+            ip -4 route show |
+                awk '/src/ && ($1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/) { print $1 }'
+        )
 
-    iptables -t nat -A XRAY -p tcp -j REDIRECT --to-port "$XRAY_PORT"
-    iptables -t nat -A XRAY -p udp -j REDIRECT --to-port "$XRAY_PORT"
+        # Exclude local & loopback
+        iptables -t nat -A XRAY -d 127.0.0.1/32 -j RETURN
+        for net in $local_networks; do
+            iptables -t nat -A XRAY -d "$net" -j RETURN
+        done
 
-    ip rule add fwmark 0x8777 table 8777 priority 100
-    ip route add local 0.0.0.0/0 dev lo table 8777
+        iptables -t nat -A XRAY -p tcp -j REDIRECT --to-port "$XRAY_PORT"
+        iptables -t nat -A XRAY -p udp -j REDIRECT --to-port "$XRAY_PORT"
 
-    # Hook XRAY chain to PREROUTING
-    iptables -t nat -A PREROUTING -j XRAY
+        ip rule add fwmark 0x8777 table 8777 priority 100
+        ip route add local 0.0.0.0/0 dev lo table 8777
 
-    logger "xrayui" "Xray NAT rules for TCP applied successfully"
+        # Hook XRAY chain to PREROUTING
+        iptables -t nat -A PREROUTING -j XRAY
+
+        logger "xrayui" "Xray NAT rules for TCP applied successfully"
+    else
+        logger "xrayui" "Xray Client firewall rules not applied, mode is not client."
+    fi
 }
 
 cleanup_firewall_client() {

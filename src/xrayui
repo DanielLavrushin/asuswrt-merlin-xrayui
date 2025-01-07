@@ -63,6 +63,7 @@ stop() {
     logger "xrayui" "Stopping $DESC"
     killall xray
     cleanup_firewall_client
+    cleanup_firewall_server
 }
 
 restart() {
@@ -76,6 +77,7 @@ configure_firewall_server() {
     if [ "$mode" = "server" ]; then
         XRAY_PORT="$(jq -r '.inbounds[0].port' $xray_config)"
 
+        cleanup_firewall_server
         iptables -I INPUT -p tcp --dport "$XRAY_PORT" -j ACCEPT
         iptables -I FORWARD -p tcp --dport "$XRAY_PORT" -j ACCEPT
 
@@ -125,6 +127,23 @@ configure_firewall_client() {
     fi
 }
 
+cleanup_firewall_server() {
+    logger "xrayui" "Cleaning up Xray Server firewall rules..."
+
+    XRAY_PORT="$(jq -r '.inbounds[0].port' $xray_config)"
+
+    # Remove INPUT rules for XRAY_PORT
+    iptables -D INPUT -p tcp --dport "$XRAY_PORT" -j ACCEPT 2>/dev/null
+    logger "xrayui" "Removed INPUT rule for TCP port $XRAY_PORT"
+
+    # Remove FORWARD rules for XRAY_PORT
+    iptables -D FORWARD -p tcp --dport "$XRAY_PORT" -j ACCEPT 2>/dev/null
+    logger "xrayui" "Removed FORWARD rule for TCP port $XRAY_PORT"
+
+    logger "xrayui" "Xray Server firewall rules cleaned up successfully."
+
+}
+
 cleanup_firewall_client() {
     logger "xrayui" "Cleaning up Xray firewall rules..."
 
@@ -172,7 +191,7 @@ mount_ui() {
 
     am_get_webui_page $xray_addons_asp_page
 
-    if [ "$am_webui_page" = "none" ]; then
+    if [ "$am_webui_page" = "" ]; then
         echo "${CERR}Unable to install XRAYUI${CRESET}"
         exit 5
     fi
@@ -747,6 +766,7 @@ uninstall() {
     echo -e "${CWARN}Removing existing #xrayui entries from /jffs/scripts/service-event.${CRESET}"
     sed -i '/#xrayui/d' /jffs/scripts/service-event
 
+    cleanup_firewall_server
     cleanup_firewall_client
 
     # Unmount UI
@@ -763,9 +783,9 @@ uninstall() {
     # Remove XRAY custom settings
     echo -e "${CWARN}Removing XRAY custom settings...${CRESET}"
 
-    am_settings_del xray_version
-    am_settings_del xray_mode
-    am_settings_del xray_page
+    grep '^xray_' /jffs/addons/custom_settings.txt | while IFS='=' read -r var_name _; do
+        [ -n "$var_name" ] && am_settings_del "$var_name"
+    done
 
     echo -e "${CSUC}Custom settings removed successfully.${CRESET}"
 
@@ -801,6 +821,8 @@ uninstall() {
     else
         echo -e "${CINFO}Keeping XRAY and its configuration files.${CRESET}"
     fi
+
+    rm /jffs/scripts/xrayui
 
     echo -e "${CSUC}Uninstallation process completed successfully.${CRESET}"
 }
@@ -888,10 +910,6 @@ service_event)
             save_server_config
             exit 0
             ;;
-        "client")
-            save_client_config
-            exit 0
-            ;;
         "mode")
             switch_mode
             exit 0
@@ -936,6 +954,10 @@ service_event)
         exit 0
     elif [ "$2" = "firewall" ]; then
         case "$3" in
+        "server")
+            configure_firewall_server
+            exit 0
+            ;;
         "client")
             configure_firewall_client
             exit 0
@@ -944,8 +966,13 @@ service_event)
             cleanup_firewall_client
             exit 0
             ;;
-        "server")
-            configure_firewall_server
+        "server_cleanup")
+            cleanup_firewall_server
+            exit 0
+            ;;
+        "cleanup")
+            cleanup_firewall_server
+            cleanup_firewall_client
             exit 0
             ;;
         esac

@@ -22,6 +22,8 @@ async function uploadFiles() {
     await client.uploadFrom("dist/app.js", "/addons/xrayui/app.js");
     await client.uploadFrom("dist/xrayui", "/scripts/xrayui");
 
+    await client.send("SITE CHMOD 755 /scripts/xrayui");
+
     console.log("Files uploaded successfully");
   } catch (err) {
     console.error("Error uploading files:", err);

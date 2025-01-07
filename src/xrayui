@@ -786,6 +786,11 @@ uninstall() {
     echo -e "${CWARN}Removing existing #xrayui entries from /jffs/scripts/nat-start.${CRESET}"
     sed -i '/#xrayui/d' /jffs/scripts/nat-start
 
+    # clean up post-mount
+    echo
+    echo -e "${CWARN}Removing existing #xrayui entries from /jffs/scripts/post-mount.${CRESET}"
+    sed -i '/#xrayui/d' /jffs/scripts/post-mount
+
     # clean up service-event
     echo -e "${CWARN}Removing existing #xrayui entries from /jffs/scripts/service-event.${CRESET}"
     sed -i '/#xrayui/d' /jffs/scripts/service-event

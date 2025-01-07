@@ -214,9 +214,10 @@ mount_ui() {
         mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
     fi
 
-    sed -i "/menuName: \"VPN\"/,/],/ {
-        /],/ i \          { url: \"$am_webui_page\", tabName: \"X-RAY\" },
-        }" /tmp/menuTree.js
+    sed -i '/menuName: "VPN"/,/menuName:/ {
+  /url:\s*"NULL",\s*tabName:\s*"__INHERIT__"/ i \
+    { url: "'"$am_webui_page"'", tabName: "X-RAY" },
+}' /tmp/menuTree.js
 
     umount /www/require/modules/menuTree.js && mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
 

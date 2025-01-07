@@ -39,7 +39,7 @@ start() {
     fi
 
     logger "xrayui" "Starting Xray in $mode mode"
-    echo "$CINFO Starting Xray in $mode mode$CRESET"
+    echo -e "$CINFO Starting Xray in $mode mode$CRESET"
 
     ARGS=" -c $xray_config"
     if [ "$mode" = "server" ]; then
@@ -77,7 +77,7 @@ configure_firewall_server() {
     if [ "$mode" = "server" ]; then
 
         XRAY_PORT="$(jq -r '.inbounds[0].port // empty' $xray_config)"
-        if [ -z "$XRAY_PORT" ] || ! [[ "$XRAY_PORT" =~ ^[0-9]+$ ]]; then
+        if [ -z "$XRAY_PORT" ]; then
             logger "xrayui" "Invalid or missing port in Xray configuration. Cannot configure firewall rules."
             return 1
         fi
@@ -85,8 +85,10 @@ configure_firewall_server() {
         cleanup_firewall_server
         iptables -I INPUT -p tcp --dport "$XRAY_PORT" -j ACCEPT
         iptables -I FORWARD -p tcp --dport "$XRAY_PORT" -j ACCEPT
+        iptables -I INPUT -p udp --dport "$XRAY_PORT" -j ACCEPT
+        iptables -I FORWARD -p udp --dport "$XRAY_PORT" -j ACCEPT
 
-        logger "xrayui" "Xray firewall rules applied successfully."
+        logger "xrayui" "Xray firewall rules ($XRAY_PORT) applied successfully."
     else
         logger "xrayui" "Xray Server firewall rules not applied, mode is not server."
     fi
@@ -99,7 +101,8 @@ configure_firewall_client() {
         logger "xrayui" "Configuring Xray firewall rules..."
 
         XRAY_PORT="$(jq -r '.inbounds[0].port // empty' $xray_config)"
-        if [ -z "$XRAY_PORT" ] || ! [[ "$XRAY_PORT" =~ ^[0-9]+$ ]]; then
+        logger "xrayui" "Configuring $XRAY_PORT Xray firewall rules..."
+        if [ -z "$XRAY_PORT" ]; then
             logger "xrayui" "Invalid or missing port in Xray configuration. Cannot configure firewall rules."
             return 1
         fi
@@ -143,10 +146,12 @@ cleanup_firewall_server() {
 
     # Remove INPUT rules for XRAY_PORT
     iptables -D INPUT -p tcp --dport "$XRAY_PORT" -j ACCEPT 2>/dev/null
+    iptables -D INPUT -p udp --dport "$XRAY_PORT" -j ACCEPT 2>/dev/null
     logger "xrayui" "Removed INPUT rule for TCP port $XRAY_PORT"
 
     # Remove FORWARD rules for XRAY_PORT
     iptables -D FORWARD -p tcp --dport "$XRAY_PORT" -j ACCEPT 2>/dev/null
+    iptables -D FORWARD -p udp --dport "$XRAY_PORT" -j ACCEPT 2>/dev/null
     logger "xrayui" "Removed FORWARD rule for TCP port $XRAY_PORT"
 
     logger "xrayui" "Xray Server firewall rules cleaned up successfully."
@@ -192,6 +197,10 @@ cleanup_firewall_client() {
 }
 
 mount_ui() {
+    LOCKFILE=/tmp/addonwebui.lock
+    FD=386
+    eval exec "$FD>$LOCKFILE"
+
     nvram get rc_support | grep -q am_addons
     if [ $? != 0 ]; then
         echo -e "${CERR}This firmware does not support addons!${CRESET}"
@@ -200,14 +209,15 @@ mount_ui() {
 
     am_get_webui_page $xray_addons_asp_page
 
-    if [ "$am_webui_page" = "" ]; then
+    if [ "$am_webui_page" = "none" ]; then
         echo "${CERR}Unable to install XRAYUI${CRESET}"
         exit 5
     fi
 
     echo -e "${CINFO}Mounting XRAYUI as $am_webui_page${CRESET}"
 
-    cp $xray_addons_asp_page /www/user/$am_webui_page
+    cp -f $xray_addons_asp_page /www/user/$am_webui_page
+    echo "xrayui" >"/www/user/$(echo $am_webui_page | cut -f1 -d'.').title"
 
     if [ ! -f /tmp/menuTree.js ]; then
         cp /www/require/modules/menuTree.js /tmp/
@@ -228,6 +238,7 @@ mount_ui() {
 
     cp /jffs/addons/xrayui/app.js /www/user/xrayui/app.js
 
+    flock -u "$FD"
     echo -e "${CSUC}XRAYUI mounted successfully as $xray_ui_page${CRESET}"
 }
 
@@ -237,14 +248,15 @@ unmount_ui() {
         echo -e "${CERR}This firmware does not support addons!${CRESET}"
         exit 5
     fi
-
     xray_ui_page=$(am_settings_get xray_page)
+    base_user_page="${xray_ui_page%.asp}"
 
     if [ -z "$xray_ui_page" ]; then
         echo -e "${CWARN}No XRAYUI page found to unmount. Continuing to clean up...${CRESET}"
     else
         echo -e "${CINFO}Unmounting XRAYUI $xray_ui_page${CRESET}"
         rm -fr /www/user/$xray_ui_page
+        rm -fr /www/user/$base_user_page.title
     fi
 
     if [ ! -f /tmp/menuTree.js ]; then
@@ -260,7 +272,7 @@ unmount_ui() {
     fi
 
     rm -rf $dir_xrayui
-
+    am_settings_del xray_page
     echo -e "${CSUC}Cleanup completed.${CRESET}"
 }
 

@@ -746,7 +746,7 @@ EOF
         echo -e "${CWARN}Removing existing #xrayui entries from /jffs/scripts/post-mount.${CRESET}"
         sed -i '/#xrayui/d' /jffs/scripts/post-mount
     fi
-    echo "/jffs/scripts/xrayui remount_ui #xrayui" >>/jffs/scripts/post-mount
+    echo "/jffs/scripts/xrayui remount_ui & #xrayui" >>/jffs/scripts/post-mount
     echo -e "${CSUC}Updated /jffs/scripts/post-mount with XrayUI entry.${CRESET}"
 
     # Add or update service-event

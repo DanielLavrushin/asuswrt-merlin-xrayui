@@ -75,20 +75,51 @@ restart() {
 configure_firewall_server() {
     mode=$(am_settings_get xray_mode)
     if [ "$mode" = "server" ]; then
+        cleanup_firewall_server
 
-        XRAY_PORT="$(jq -r '.inbounds[0].port // empty' $xray_config)"
-        if [ -z "$XRAY_PORT" ]; then
-            logger "xrayui" "Invalid or missing port in Xray configuration. Cannot configure firewall rules."
+        # Create a custom chain for Xray rules
+        iptables -N XRAYUI 2>/dev/null
+
+        inbounds_ports=$(jq -r '.inbounds[]?.port // empty' "$xray_config")
+        if [ -z "$inbounds_ports" ]; then
+            logger "xrayui" "No valid ports found in Xray configuration. Cannot configure firewall rules."
             return 1
         fi
 
-        cleanup_firewall_server
-        iptables -I INPUT -p tcp --dport "$XRAY_PORT" -j ACCEPT
-        iptables -I FORWARD -p tcp --dport "$XRAY_PORT" -j ACCEPT
-        iptables -I INPUT -p udp --dport "$XRAY_PORT" -j ACCEPT
-        iptables -I FORWARD -p udp --dport "$XRAY_PORT" -j ACCEPT
+        for XRAY_PORT in $inbounds_ports; do
+            # Determine PORT_START and PORT_END
+            if echo "$XRAY_PORT" | grep -q '-'; then
+                PORT_START=$(echo "$XRAY_PORT" | cut -d'-' -f1)
+                PORT_END=$(echo "$XRAY_PORT" | cut -d'-' -f2)
+            else
+                PORT_START="$XRAY_PORT"
+                PORT_END="$XRAY_PORT"
+            fi
 
-        logger "xrayui" "Xray firewall rules ($XRAY_PORT) applied successfully."
+            # Validate PORT_START and PORT_END
+            if ! echo "$PORT_START" | grep -qE '^[0-9]+$' || ! echo "$PORT_END" | grep -qE '^[0-9]+$'; then
+                logger "xrayui" "Invalid port or range: $XRAY_PORT. Skipping."
+                continue
+            fi
+
+            # Define PORT_RANGE
+            PORT_RANGE="$PORT_START"
+            if [ "$PORT_START" != "$PORT_END" ]; then
+                PORT_RANGE="$PORT_START:$PORT_END"
+            fi
+
+            # Add rules to the XRAYUI chain
+            iptables -A XRAYUI -p tcp --dport "$PORT_RANGE" -j ACCEPT
+            iptables -A XRAYUI -p udp --dport "$PORT_RANGE" -j ACCEPT
+
+            logger "xrayui" "Firewall rules applied for port(s) $PORT_RANGE."
+        done
+
+        # Hook the custom chain into INPUT and FORWARD chains
+        iptables -I INPUT -j XRAYUI
+        iptables -I FORWARD -j XRAYUI
+
+        logger "xrayui" "All Xray firewall rules applied successfully."
     else
         logger "xrayui" "Xray Server firewall rules not applied, mode is not server."
     fi
@@ -110,7 +141,7 @@ configure_firewall_client() {
         cleanup_firewall_client
 
         # Create XRAY chain in NAT
-        iptables -t nat -N XRAY 2>/dev/null
+        iptables -t nat -N XRAYUI 2>/dev/null
 
         # Detect local network ranges dynamically
         local_networks=$(
@@ -119,48 +150,44 @@ configure_firewall_client() {
         )
 
         # Exclude local & loopback
-        iptables -t nat -A XRAY -d 127.0.0.1/32 -j RETURN
+        iptables -t nat -A XRAYUI -d 127.0.0.1/32 -j RETURN
         for net in $local_networks; do
-            iptables -t nat -A XRAY -d "$net" -j RETURN
+            iptables -t nat -A XRAYUI -d "$net" -j RETURN
         done
 
-        iptables -t nat -A XRAY -p tcp -j REDIRECT --to-port "$XRAY_PORT"
-        iptables -t nat -A XRAY -p udp -j REDIRECT --to-port "$XRAY_PORT"
+        iptables -t nat -A XRAYUI -p tcp -j REDIRECT --to-port "$XRAY_PORT"
+        iptables -t nat -A XRAYUI -p udp -j REDIRECT --to-port "$XRAY_PORT"
 
         ip rule add fwmark 0x8777 table 8777 priority 100
         ip route add local 0.0.0.0/0 dev lo table 8777
 
         # Hook XRAY chain to PREROUTING
-        iptables -t nat -A PREROUTING -j XRAY
+        iptables -t nat -A PREROUTING -j XRAYUI
 
-        logger "xrayui" "Xray NAT rules for TCP applied successfully"
+        logger "xrayui" "XRAYUI NAT rules for TCP applied successfully"
     else
-        logger "xrayui" "Xray Client firewall rules not applied, mode is not client."
+        logger "xrayui" "XRAYUI Client firewall rules not applied, mode is not client."
     fi
 }
 
 cleanup_firewall_server() {
     logger "xrayui" "Cleaning up Xray Server firewall rules..."
 
-    XRAY_PORT="$(jq -r '.inbounds[0].port' $xray_config)"
+    # Remove XRAYUI chain from INPUT and FORWARD chains
+    iptables -D INPUT -j XRAYUI 2>/dev/null
+    iptables -D FORWARD -j XRAYUI 2>/dev/null
 
-    # Remove INPUT rules for XRAY_PORT
-    iptables -D INPUT -p tcp --dport "$XRAY_PORT" -j ACCEPT 2>/dev/null
-    iptables -D INPUT -p udp --dport "$XRAY_PORT" -j ACCEPT 2>/dev/null
-    logger "xrayui" "Removed INPUT rule for TCP port $XRAY_PORT"
-
-    # Remove FORWARD rules for XRAY_PORT
-    iptables -D FORWARD -p tcp --dport "$XRAY_PORT" -j ACCEPT 2>/dev/null
-    iptables -D FORWARD -p udp --dport "$XRAY_PORT" -j ACCEPT 2>/dev/null
-    logger "xrayui" "Removed FORWARD rule for TCP port $XRAY_PORT"
+    # Flush and delete the XRAYUI chain
+    iptables -F XRAYUI 2>/dev/null
+    iptables -X XRAYUI 2>/dev/null
 
     logger "xrayui" "Xray Server firewall rules cleaned up successfully."
-
 }
 
 cleanup_firewall_client() {
-    logger "xrayui" "Cleaning up Xray firewall rules..."
+    logger "xrayui" "Cleaning up Xray Client firewall rules..."
 
+    # Remove fwmark rules and routing table
     RULES="$(ip rule show | grep -E 'fwmark .* lookup 8777')"
     if [ -n "$RULES" ]; then
         echo "$RULES" | while read LINE; do
@@ -171,29 +198,28 @@ cleanup_firewall_client() {
         done
     fi
 
-    # Remove fwmark rules and routing table
     ip rule del fwmark 0x8777 table 8777 priority 100 2>/dev/null
     ip route flush table 8777 2>/dev/null
-    logger "xrayui" "Removed fwmark rule and flushed table 8777"
+    logger "xrayui" "Removed fwmark rule and flushed table 8777."
 
-    # Remove XRAY chain in NAT
-    iptables -t nat -D PREROUTING -j XRAY 2>/dev/null
-    iptables -t nat -F XRAY 2>/dev/null
-    iptables -t nat -X XRAY 2>/dev/null
-    logger "xrayui" "Removed XRAY NAT chain"
+    # Remove XRAYUI chain in NAT
+    iptables -t nat -D PREROUTING -j XRAYUI 2>/dev/null
+    iptables -t nat -F XRAYUI 2>/dev/null
+    iptables -t nat -X XRAYUI 2>/dev/null
+    logger "xrayui" "Removed XRAYUI NAT chain."
 
-    # Remove XRAY chain in MANGLE (if used)
-    iptables -t mangle -D PREROUTING -j XRAY 2>/dev/null
-    iptables -t mangle -F XRAY 2>/dev/null
-    iptables -t mangle -X XRAY 2>/dev/null
-    logger "xrayui" "Removed XRAY MANGLE chain"
+    # Remove XRAYUI chain in MANGLE (if applicable)
+    iptables -t mangle -D PREROUTING -j XRAYUI 2>/dev/null
+    iptables -t mangle -F XRAYUI 2>/dev/null
+    iptables -t mangle -X XRAYUI 2>/dev/null
+    logger "xrayui" "Removed XRAYUI MANGLE chain (if used)."
 
+    # Restart services to refresh firewall
     service firewall_restart
     service wan_restart
+    logger "xrayui" "Firewall and WAN services restarted."
 
-    logger "xrayui" "Restored DNS redirection to system default"
-
-    logger "xrayui" "Xray disabled and network configuration rolled back"
+    logger "xrayui" "Xray Client firewall rules cleaned up successfully."
 }
 
 mount_ui() {

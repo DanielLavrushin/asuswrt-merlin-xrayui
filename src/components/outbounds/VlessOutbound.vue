@@ -60,7 +60,6 @@
         () => users.value.length,
         (newVal) => {
           proxy.value.settings.vnext[0].users = users.value;
-          console.log(proxy.value.settings.vnext[0].users);
         }
       );
       return {

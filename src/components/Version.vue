@@ -41,7 +41,7 @@ export default defineComponent({
             const response = await axios.get(gh_releases_url);
 
             if (response.data.length > 0) {
-                latest_version.value = vClean("1.2.0");// vClean(response.data[0].tag_name)!;
+                latest_version.value = vClean(response.data[0].tag_name)!;
                 hasUpdate.value = vCompare(latest_version.value, current_version.value) === 1;
                 if (hasUpdate.value === true) {
 

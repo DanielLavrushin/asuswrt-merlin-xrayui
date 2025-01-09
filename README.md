@@ -13,7 +13,7 @@ Access your router via SSH to execute installation commands.
     - you can use built-in [amtm](https://diversion.ch/amtm.html) tool to install `Entware`
 
 ## Installation
-To install the latest version of asuswrt-merlin-xrayui, simply run the following command in your router’s SSH terminal:
+To install the latest version of `ASUSWRT Merlin XrayUI`, simply run the following command in your router’s SSH terminal:
 ```shell
 wget -O /tmp/asuswrt-merlin-xrayui.tar.gz https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/releases/latest/download/asuswrt-merlin-xrayui.tar.gz && rm -rf /jffs/addons/xrayui && tar -xzf /tmp/asuswrt-merlin-xrayui.tar.gz -C /jffs/addons && mv /jffs/addons/xrayui/xrayui /jffs/scripts/xrayui && chmod 0777 /jffs/scripts/xrayui && sh /jffs/scripts/xrayui install
 ```
@@ -26,7 +26,7 @@ To uninstall and clean up run the command
 ## Usage
 ### Post-Installation Steps
 - Log Out and Back In: After installing, log out from the router's browser UI and then log back in.
-- Access the X-RAY Tab: Navigate to the VPN section in the router's web UI and look for the new tab labeled X-RAY.
+- Access the X-RAY Tab: Navigate to the `VPN` menu item in the router's web UI and look for the new tab labeled `X-RAY`.
 
 ## FAQ
 **Q: What if I already have an Xray configuration?**

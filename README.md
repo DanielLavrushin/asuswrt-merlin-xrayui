@@ -7,8 +7,10 @@ This repository provides a lightweight and efficient UI to manage your Xray VPN 
 ### SSH Access 
 Access your router via SSH to execute installation commands.
 
-### Available Space
-Ensure sufficient space in the `/jffs` partition for installing XrayUI and its dependencies.
+### Prerequisites
+- [Merlin firmware](https://www.asuswrt-merlin.net/download) (`384.15` or later, `3006.102.1` or later)
+- [Entware](https://github.com/Entware/Entware/wiki/Install-on-Asus-stock-firmware) installed
+    - you can use built-in [amtm](https://diversion.ch/amtm.html) tool to install `Entware`
 
 ## Installation
 To install the latest version of asuswrt-merlin-xrayui, simply run the following command in your router’s SSH terminal:

@@ -151,7 +151,14 @@ class XrayRoutingObject {
   static domainMatcherOptions: string[] = ["hybrid", "linear"];
   public domainStrategy: string = "AsIs";
   public domainMatcher: string = "hybrid";
-  public rules: XrayRoutingRuleObject[] = [];
+  public rules?: XrayRoutingRuleObject[] = [];
+
+  public normalize() {
+    if (this.rules && this.rules.length > 0) {
+    } else {
+      this.rules = undefined;
+    }
+  }
 }
 
 class XrayRoutingRuleObject {
@@ -168,8 +175,22 @@ class XrayRoutingRuleObject {
   public protocol?: string[] = [];
   public inboundTag?: string[] = [];
   public outboundTag?: string;
-  public user: string[] = [];
+  public user?: string[] = [];
   public attrs?: any;
+
+  public normalize() {
+    this.domain = this.domain?.length == 0 ? undefined : this.domain;
+    this.ip = this.ip?.length == 0 ? undefined : this.ip;
+    this.protocol = this.protocol?.length == 0 ? undefined : this.protocol;
+    this.source = this.source?.length == 0 ? undefined : this.source;
+    this.inboundTag = this.inboundTag?.length == 0 ? undefined : this.inboundTag;
+    this.user = this.user?.length == 0 ? undefined : this.user;
+
+    this.port = this.port == "" ? undefined : this.port;
+    this.sourcePort = this.sourcePort == "" ? undefined : this.sourcePort;
+    this.outboundTag = this.outboundTag == "" ? undefined : this.outboundTag;
+    this.network = this.network == "" ? undefined : this.network;
+  }
 }
 
 class XrayStreamSettingsObject {
@@ -186,6 +207,10 @@ class XrayStreamSettingsObject {
   public splithttpSettings?: XrayStreamSplitHttpSettingsObject;
 
   public sockopt?: XraySockoptObject;
+  public normalize() {
+    this.normalizeProtocol();
+    this.normalizeSecurity();
+  }
 
   public normalizeProtocol() {
     const networkOptions = XrayOptions.transportOptions.map((opt) => `${opt}Settings`);
@@ -195,6 +220,7 @@ class XrayStreamSettingsObject {
       }
     });
   }
+
   public normalizeSecurity() {
     const securityOptions = XrayOptions.securityOptions.map((opt) => `${opt}Settings`);
     securityOptions.forEach((prop) => {

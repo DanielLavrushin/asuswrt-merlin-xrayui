@@ -1,6 +1,6 @@
 import axios from "axios";
 import { xrayConfig, XrayObject } from "./XrayConfig";
-import { XrayDnsObject, XrayStreamSettingsObject } from "./CommonObjects";
+import { XrayDnsObject, XrayStreamSettingsObject, XrayRoutingObject, XrayRoutingRuleObject } from "./CommonObjects";
 import { plainToInstance } from "class-transformer";
 
 class EngineWireguard {
@@ -116,13 +116,21 @@ class Engine {
     config.inbounds.forEach((inbound) => {
       let streamSettings = new XrayStreamSettingsObject();
       Object.assign(streamSettings, inbound.streamSettings);
-      streamSettings?.normalizeProtocol();
-      streamSettings?.normalizeSecurity();
+      streamSettings?.normalize();
       inbound.streamSettings = streamSettings;
     });
 
     if (config.dns) {
       config.dns.normalize();
+    }
+
+    if (config.routing) {
+      config.routing.normalize();
+      if (config.routing.rules) {
+        config.routing.rules.forEach((rule) => {
+          rule.normalize();
+        });
+      }
     }
 
     return config;
@@ -146,6 +154,15 @@ class Engine {
 
     if (response.data.dns) {
       this.xrayConfig.dns = plainToInstance(XrayDnsObject, response.data.dns);
+
+      this.xrayConfig.routing = plainToInstance(XrayRoutingObject, response.data.routing);
+      if (this.xrayConfig.routing && this.xrayConfig?.routing?.rules) {
+        this.xrayConfig.routing.rules.forEach((rule, index) => {
+          if (this.xrayConfig.routing?.rules) {
+            this.xrayConfig.routing.rules[index] = plainToInstance(XrayRoutingRuleObject, rule);
+          }
+        });
+      }
     }
     Object.assign(xrayConfig, this.xrayConfig);
     return this.xrayConfig;

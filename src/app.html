@@ -27,7 +27,13 @@
     var xray = {
       custom_settings: JSON.parse(`<% get_custom_settings(); %>`),
       router: {
+        name: '<% nvram_get("productid"); %>',
         cpu: JSON.parse('<%cpu_core_num();%>'),
+        firmware: '<% nvram_get("firmver"); %>',
+        language: '<% nvram_get("preferred_lang"); %>',
+        ip: '<% nvram_get("lan_ipaddr"); %>',
+        territory: '<% nvram_get("territory_code"); %>',
+        features: JSON.parse(`<% get_ui_support(); %>`)
       },
       server: {
         isRunning: parseInt('<% sysinfo("pid.xray"); %>') > 0,
@@ -48,7 +54,7 @@
 
 <body>
   <div id="xrayui-app"></div>
-  <div id="xrayui-modals"></div> 
+  <div id="xrayui-modals"></div>
   <script src="/ext/xrayui/app.js"></script>
   <script>
     window.xray_hints = {};

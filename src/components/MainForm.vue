@@ -29,7 +29,8 @@
                           <td valign="top">
                             <div class="formfontdesc">
                               <div>&nbsp;</div>
-                              <div class="formfonttitle" id="scripttitle" style="text-align: center">X-RAY Core</div>
+                              <div class="formfonttitle" style="text-align: center">X-RAY UI Core v{{
+                                version }}</div>
                               <div class="xray_type_switches">
                                 <div class="xray_type_switch left" :class="{ selected: engine.mode === 'server' }"
                                   @click.prevent="switch_type('server')">
@@ -92,9 +93,9 @@ export default defineComponent({
   },
 
   setup() {
-
     return {
       engine,
+      version: window.xray.custom_settings.xray_version,
       xrayConfig: engine.xrayConfig,
       xray_page: window.xray.custom_settings.xray_page,
     };

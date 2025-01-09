@@ -72,6 +72,58 @@ restart() {
     start
 }
 
+update() {
+
+    local url="https://github.com/daniellavrushin/asuswrt-merlin-xrayui/releases/latest/download/asuswrt-merlin-xrayui.tar.gz"
+    local temp_file="/tmp/asuswrt-merlin-xrayui.tar.gz"
+    local addon_dir="/jffs/addons"
+    local script_path="/jffs/scripts/xrayui"
+
+    echo "Downloading the latest version..."
+    if wget -O "$temp_file" "$url"; then
+        echo "Download completed successfully."
+    else
+        echo "Failed to download the latest version. Exiting."
+        return 1
+    fi
+
+    echo "Cleaning up existing installation..."
+    if rm -rf "$addon_dir/xrayui"; then
+        echo "Old installation removed."
+    else
+        echo "Failed to remove the old installation. Exiting."
+        return 1
+    fi
+
+    echo "Extracting the package..."
+    if tar -xzf "$temp_file" -C "$addon_dir"; then
+        echo "Extraction completed."
+    else
+        echo "Failed to extract the package. Exiting."
+        return 1
+    fi
+
+    echo "Setting up the script..."
+    if mv "$addon_dir/xrayui/xrayui" "$script_path" && chmod 0777 "$script_path"; then
+        echo "Script set up successfully."
+    else
+        echo "Failed to set up the script. Exiting."
+        return 1
+    fi
+
+    echo "Running the installation..."
+    if sh "$script_path" install; then
+        echo "Installation completed successfully."
+    else
+        echo "Installation failed. Exiting."
+        return 1
+    fi
+
+    restart
+
+    echo "Update process completed!"
+}
+
 configure_firewall_server() {
     mode=$(am_settings_get xray_mode)
     if [ "$mode" = "server" ]; then
@@ -947,6 +999,9 @@ install)
 uninstall)
     uninstall
     ;;
+update)
+    update
+    ;;
 start)
     start
     ;;
@@ -971,6 +1026,9 @@ service_event)
         exit 0
     elif [ "$2" = "testconfig" ]; then
         test_xray_config
+        exit 0
+    elif [ "$2" = "update" ]; then
+        update
         exit 0
     elif [ "$2" = "connectedclients" ]; then
         get_connected_clients
@@ -1070,7 +1128,7 @@ service_event)
     exit 0
     ;;
 *)
-    echo "Usage: $0 {install|uninstall|start|stop|restart|mount_ui|unmount_ui|remount_ui}"
+    echo "Usage: $0 {install|uninstall|start|stop|restart|update|mount_ui|unmount_ui|remount_ui}"
     exit 1
     ;;
 esac

@@ -401,7 +401,8 @@ unmount_ui() {
 }
 
 remount_ui() {
-    if [-z "$1"]; then
+    if [ "$1" != "skipwait" ]; then
+        logger "xrayui" "sleeping for 10 seconds..."
         sleep 10
     fi
 

@@ -14,24 +14,25 @@ window.LoadingTime = (seconds: number, flag: string | null) => {
     return;
   }
 
-  window.showtext(proceedingMainText, "<#389#>...");
+  const text = "<#610#>";
+  window.showtext(proceedingMainText, text);
   loading.style.visibility = "visible";
 
   let progressPercentage = 0;
-  const progressIncrement = 10; // Adjust as needed
+  const progressIncrement = 10;
 
   const updateLoading = () => {
     progressPercentage += progressIncrement;
 
     if (seconds > 0) {
-      window.showtext(proceedingMainText, "<#392#>");
-      window.showtext(proceedingText, `<span style="color:#FFFFCC;">${Math.round(progressPercentage)}% </span><#389#>`);
+      window.showtext(proceedingMainText, text);
+      window.showtext(proceedingText, `<span style="color:#FFFFCC;">${Math.round(progressPercentage)}% </span>`);
 
       seconds--;
 
       setTimeout(updateLoading, 1000);
     } else {
-      window.showtext(proceedingMainText, window.translate("<#391#>"));
+      window.showtext(proceedingMainText, text);
       window.showtext(proceedingText, "");
 
       progressPercentage = 0;

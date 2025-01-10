@@ -314,6 +314,7 @@ cleanup_firewall_client() {
 }
 
 mount_ui() {
+    sleep 10
     LOCKFILE=/tmp/addonwebui.lock
     FD=386
     eval exec "$FD>$LOCKFILE"
@@ -332,6 +333,7 @@ mount_ui() {
     fi
 
     echo -e "${CINFO}Mounting XRAYUI as $am_webui_page${CRESET}"
+    logger "xrayui" "Mounting XRAYUI as $am_webui_page"
 
     cp -f $xray_addons_asp_page /www/user/$am_webui_page
     echo "xrayui" >"/www/user/$(echo $am_webui_page | cut -f1 -d'.').title"
@@ -348,15 +350,16 @@ mount_ui() {
 
     umount /www/require/modules/menuTree.js && mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
 
+    am_settings_del xray_page
     am_settings_set xray_page $am_webui_page
-    xray_ui_page=$(am_settings_get xray_page)
 
     refresh_xray_config
 
     cp /jffs/addons/xrayui/app.js /www/user/xrayui/app.js
 
     flock -u "$FD"
-    echo -e "${CSUC}XRAYUI mounted successfully as $xray_ui_page${CRESET}"
+    echo -e "${CSUC}XRAYUI mounted successfully as $am_webui_page${CRESET}"
+    logger "xrayui" "XRAYUI mounted successfully as $am_webui_page"
 }
 
 unmount_ui() {
@@ -863,7 +866,7 @@ EOF
         echo -e "${CWARN}Removing existing #xrayui entries from /jffs/scripts/post-mount.${CRESET}"
         sed -i '/#xrayui/d' /jffs/scripts/post-mount
     fi
-    echo "/jffs/scripts/xrayui remount_ui #xrayui" >>/jffs/scripts/post-mount
+    echo "/jffs/scripts/xrayui remount_ui & #xrayui" >>/jffs/scripts/post-mount
     echo -e "${CSUC}Updated /jffs/scripts/post-mount with XrayUI entry.${CRESET}"
 
     # Add or update service-event

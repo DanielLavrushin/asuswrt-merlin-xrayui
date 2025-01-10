@@ -1,6 +1,7 @@
 <template>
   <div class="formfontdesc">
-    <p>Blackhole is an outbound data protocol that blocks all outbound data. When used in conjunction with routing configurations, it can be used to block access to certain websites. OutboundConfigurationObject</p>
+    <p>Blackhole is an outbound data protocol that blocks all outbound data. When used in conjunction with routing
+      configurations, it can be used to block access to certain websites. OutboundConfigurationObject</p>
     <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
       <thead>
         <tr>
@@ -9,7 +10,7 @@
       </thead>
       <tbody>
         <outbound-common :proxy="proxy"></outbound-common>
-        <tr>
+        <tr v-if="proxy.settings.response">
           <th>Response data</th>
           <td>
             <select class="input_option" v-model="proxy.settings.response.type">
@@ -25,26 +26,27 @@
   </div>
 </template>
 <script lang="ts">
-  import { defineComponent, ref } from "vue";
-  import OutboundCommon from "./OutboundCommon.vue";
-  import { XrayProtocol } from "../../modules/CommonObjects";
-  import { XrayBlackholeOutboundObject, XrayOutboundObject } from "../../modules/OutboundObjects";
+import { defineComponent, ref, watch } from "vue";
+import OutboundCommon from "./OutboundCommon.vue";
+import { XrayProtocol } from "../../modules/CommonObjects";
+import { XrayBlackholeOutboundObject, XrayOutboundObject } from "../../modules/OutboundObjects";
 
-  export default defineComponent({
-    name: "BlackholeOutbound",
-    components: {
-      OutboundCommon,
-    },
-    props: {
-      proxy: XrayOutboundObject<XrayBlackholeOutboundObject>,
-    },
-    setup(props) {
-      const proxy = ref<XrayOutboundObject<XrayBlackholeOutboundObject>>(props.proxy ?? new XrayOutboundObject<XrayBlackholeOutboundObject>(XrayProtocol.BLACKHOLE, new XrayBlackholeOutboundObject()));
-      const responses = ref(["none", "http"]);
-      return {
-        proxy,
-        responses,
-      };
-    },
-  });
+export default defineComponent({
+  name: "BlackholeOutbound",
+  components: {
+    OutboundCommon,
+  },
+  props: {
+    proxy: XrayOutboundObject<XrayBlackholeOutboundObject>,
+  },
+  setup(props) {
+    const proxy = ref<XrayOutboundObject<XrayBlackholeOutboundObject>>(props.proxy ?? new XrayOutboundObject<XrayBlackholeOutboundObject>(XrayProtocol.BLACKHOLE, new XrayBlackholeOutboundObject()));
+    const responses = ref(["none", "http"]);
+
+    return {
+      proxy,
+      responses,
+    };
+  },
+});
 </script>

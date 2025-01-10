@@ -12,7 +12,7 @@
             <input type="text" maxlength="15" class="input_20_table" v-model="proxy.sendThrough"
                 onkeypress="return validator.isIPAddr(this, event);" autocomplete="off" autocorrect="off"
                 autocapitalize="off" />
-            <span class="hint-color"></span>
+            <span class="hint-color">default: 0.0.0.0</span>
         </td>
     </tr>
 </template>

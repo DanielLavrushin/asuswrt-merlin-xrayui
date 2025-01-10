@@ -19,7 +19,7 @@
                                 {{ opt }}
                             </option>
                         </select>
-                        <span class="hint-color"></span>
+                        <span class="hint-color">default: AsIs</span>
                     </td>
                 </tr>
                 <tr>
@@ -62,7 +62,7 @@
                         <span class="hint-color"></span>
                     </td>
                 </tr>
-                <tr>
+                <tr v-if="proxy.settings.fragment.packets !== ''">
                     <th>Fragment length</th>
                     <td>
                         <input type="text" class="input_20_table" v-model="proxy.settings.fragment.length"
@@ -70,7 +70,7 @@
                         <span class="hint-color">length to make the cut</span>
                     </td>
                 </tr>
-                <tr>
+                <tr v-if="proxy.settings.fragment.packets !== ''">
                     <th>Fragment interval</th>
                     <td>
                         <input type="text" class="input_20_table" v-model="proxy.settings.fragment.interval"
@@ -154,7 +154,7 @@
     </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, ref } from "vue";
+import { computed, defineComponent, ref, watch } from "vue";
 import OutboundCommon from "./OutboundCommon.vue";
 import { XrayNoiseObject, XrayProtocol } from "../../modules/CommonObjects";
 import { XrayFreedomOutboundObject, XrayOutboundObject } from "../../modules/OutboundObjects";
@@ -170,7 +170,7 @@ export default defineComponent({
     },
     methods: {
         modal_save_noise() {
-            if (this.noiseItem) {
+            if (this.noiseItem && this.proxy.settings.noises) {
                 if (this.proxy.settings.noises.indexOf(this.noiseItem) === -1) {
                     this.proxy.settings.noises.push(this.noiseItem);
                 }
@@ -212,6 +212,7 @@ export default defineComponent({
                 }
             },
         });
+
 
         return {
             proxy,

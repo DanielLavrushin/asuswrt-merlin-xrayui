@@ -49,14 +49,14 @@ class XrayShadowsocksOutboundObject implements IProtocolType {
     if (this.servers.length === 0) this.servers.push(new XrayShadowsocksServerObject());
   }
 }
-class TrojanOutboundObject implements IProtocolType {
+class XrayTrojanOutboundObject implements IProtocolType {
   public servers: XrayTrojanServerObject[] = [];
   constructor() {
     if (this.servers.length === 0) this.servers.push(new XrayTrojanServerObject());
   }
 }
 
-class WireguardOutboundObject implements IProtocolType {
+class XrayWireguardOutboundObject implements IProtocolType {
   static strategyOptions: string[] = ["ForceIPv6v4", "ForceIPv6", "ForceIPv4v6", "ForceIPv4", "ForceIP"];
   public privateKey!: string;
   public address: string[] = [];
@@ -68,7 +68,7 @@ class WireguardOutboundObject implements IProtocolType {
   public domainStrategy: string = "ForceIP";
 }
 
-class LoopbackOutboundObject implements IProtocolType {
+class XrayLoopbackOutboundObject implements IProtocolType {
   public inboundTag!: string;
 }
 class XrayFreedomOutboundObject implements IProtocolType {
@@ -76,7 +76,7 @@ class XrayFreedomOutboundObject implements IProtocolType {
   static fragmentOptions: string[] = ["1-3", "tlshello"];
   public domainStrategy: string = "AsIs";
   public redirect: string = "";
-  public fragment?: { packets: string; length: string; interval: string } | null = { packets: "tlshello", length: "100-200", interval: "10-20" };
+  public fragment?: { packets: string; length: string; interval: string } | null = { packets: "", length: "100-200", interval: "10-20" };
   public noises: XrayNoiseObject[] = [];
   public proxyProtocol: number = 0; // 0: off, 1, 2
 }
@@ -95,4 +95,24 @@ class XraySocksOutboundObject implements IProtocolType {
   }
 }
 
-export { WireguardOutboundObject, TrojanOutboundObject, XraySocksOutboundObject, XrayShadowsocksOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, LoopbackOutboundObject, XrayBlackholeOutboundObject, XrayHttpOutboundObject, XrayVlessOutboundObject, XrayVmessOutboundObject, XrayOutboundObject };
+const NormalizeOutbound = (proxy: any) => {
+  proxy.sendThrough = proxy.sendThrough === "0.0.0.0" ? undefined : proxy.sendThrough;
+  proxy.tag = proxy.sendThrough === "" ? undefined : proxy.tag;
+
+  switch (proxy.protocol) {
+    case XrayProtocol.FREEDOM:
+      proxy.settings.domainStrategy = proxy.settings.domainStrategy === "AsIs" ? undefined : proxy.settings.domainStrategy;
+      proxy.settings.fragment = proxy.settings?.fragment?.packets === "" ? undefined : proxy.settings.fragment;
+      proxy.settings.redirect = proxy.settings.redirect === "" ? undefined : proxy.settings.redirect;
+      proxy.settings.noises = proxy.settings.noises.length === 0 ? undefined : proxy.settings.noises;
+      proxy.settings.proxyProtocol = proxy.settings.proxyProtocol === 0 ? undefined : proxy.settings.proxyProtocol;
+      break;
+    case XrayProtocol.BLACKHOLE:
+      proxy.settings.response = proxy.settings.response.type === "none" ? undefined : proxy.settings.response;
+      break;
+  }
+
+  return proxy;
+};
+
+export { NormalizeOutbound, XrayWireguardOutboundObject, XrayTrojanOutboundObject, XraySocksOutboundObject, XrayShadowsocksOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, XrayLoopbackOutboundObject, XrayBlackholeOutboundObject, XrayHttpOutboundObject, XrayVlessOutboundObject, XrayVmessOutboundObject, XrayOutboundObject };

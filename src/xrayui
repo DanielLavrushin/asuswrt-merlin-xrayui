@@ -125,26 +125,42 @@ update() {
 }
 
 update_geodat() {
-
     local geosite_url="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
     local geoip_url="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
 
-    ENTWARE_ROOT="$(mount | grep entware | awk '{print $3}' | head -n 1)"
-    local target_dir="$ENTWARE_ROOT/entware/sbin"
+    local target_dir=$(dirname "$(which xray)")
 
     mkdir -p "$target_dir"
 
-    logger "xrayui" "Downloading  geosite.dat..."
+    logger "xrayui" "Downloading geosite.dat..."
     curl -L "$geosite_url" -o "$target_dir/geosite.dat"
-    logger "xrayui" "Downloading  geoip.dat..."
+
+    logger "xrayui" "Downloading geoip.dat..."
     curl -L "$geoip_url" -o "$target_dir/geoip.dat"
 
     if [[ -f "$target_dir/geosite.dat" && -f "$target_dir/geoip.dat" ]]; then
-        logger "xrayui" "The intricate mosaic of files has been successfully orchestrated into $target_dir."
+        logger "xrayui" "Files successfully placed in $target_dir."
         restart
     else
-        logger "xrayui" "An enigmatic issue beckons! One or both files could not be placed in the labyrinth of $target_dir."
+        logger "xrayui" "Failed to place geosite.dat/geoip.dat in $target_dir."
     fi
+}
+
+detect_entware_path() {
+    # Common parent directories to check
+    search_dirs="/tmp/mnt /opt"
+
+    # Look for a known binary or file
+    for dir in $search_dirs; do
+        entware_path=$(find "$dir" -type f -name "entware_release" -exec dirname {} \; 2>/dev/null | head -n 1)
+        if [ -n "$entware_path" ]; then
+            echo "$entware_path"
+            return 0
+        fi
+    done
+
+    echo "Error: Entware path not found." >&2
+    return 1
 }
 
 configure_firewall_server() {
@@ -847,7 +863,7 @@ EOF
         echo -e "${CWARN}Removing existing #xrayui entries from /jffs/scripts/post-mount.${CRESET}"
         sed -i '/#xrayui/d' /jffs/scripts/post-mount
     fi
-    echo "/jffs/scripts/xrayui remount_ui & #xrayui" >>/jffs/scripts/post-mount
+    echo "/jffs/scripts/xrayui remount_ui #xrayui" >>/jffs/scripts/post-mount
     echo -e "${CSUC}Updated /jffs/scripts/post-mount with XrayUI entry.${CRESET}"
 
     # Add or update service-event

@@ -32,10 +32,13 @@ export default defineComponent({
 
     onMounted(async () => {
       window.show_menu();
-      window.showLoading();
+      window.showLoading(null, 'waiting');
       await engine.submit(window.xray.commands.refreshConfig);
-      await engine.loadXrayConfig();
-      window.hideLoading();
+
+      setTimeout(async () => {
+        await engine.loadXrayConfig();
+        window.hideLoading();
+      }, 2000);
     });
 
     return {

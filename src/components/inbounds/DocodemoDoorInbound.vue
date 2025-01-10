@@ -70,21 +70,6 @@ export default defineComponent({
     setup(props) {
         const inbound = ref<XrayInboundObject<XrayDokodemoDoorInboundObject>>(props.inbound ?? new XrayInboundObject<XrayDokodemoDoorInboundObject>(XrayProtocol.DOKODEMODOOR, new XrayDokodemoDoorInboundObject()));
 
-        watch(() => inbound.value,
-            (newObj) => {
-
-                if (newObj && props.inbound) {
-                    props.inbound.listen = newObj.listen == "" ? undefined : newObj.listen;
-                    props.inbound.settings.followRedirect = !newObj.settings.followRedirect ? undefined : newObj.settings.followRedirect;
-                    props.inbound.settings.address = newObj.settings.address == "" ? undefined : newObj.settings.address;
-                    props.inbound.settings.userLevel = newObj.settings.userLevel == 0 ? undefined : newObj.settings.userLevel;
-                    props.inbound.settings.network = newObj.listen == "tcp" ? undefined : newObj.settings.network;
-                    props.inbound.settings.port = newObj.settings.port == 0 ? undefined : newObj.settings.port;
-                }
-            },
-            { immediate: true, deep: true }
-
-        );
         return {
             inbound,
             networks: XrayOptions.networkOptions,

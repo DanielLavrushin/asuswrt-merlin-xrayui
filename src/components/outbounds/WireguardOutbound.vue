@@ -157,7 +157,7 @@
 import { defineComponent, ref, watch } from "vue";
 import OutboundCommon from "./OutboundCommon.vue";
 import { XrayOutboundObject } from "../../modules/OutboundObjects";
-import { WireguardOutboundObject } from "../../modules/OutboundObjects";
+import { XrayWireguardOutboundObject } from "../../modules/OutboundObjects";
 import { XrayPeerObject } from "../../modules/CommonObjects";
 import { XrayProtocol } from "../../modules/Options";
 import Modal from "../Modal.vue";
@@ -169,7 +169,7 @@ export default defineComponent({
         Modal
     },
     props: {
-        proxy: XrayOutboundObject<WireguardOutboundObject>,
+        proxy: XrayOutboundObject<XrayWireguardOutboundObject>,
     },
     methods: {
         modal_save_peer() {
@@ -197,7 +197,7 @@ export default defineComponent({
         },
     },
     setup(props) {
-        const proxy = ref<XrayOutboundObject<WireguardOutboundObject>>(props.proxy ?? new XrayOutboundObject<WireguardOutboundObject>(XrayProtocol.WIREGUARD, new WireguardOutboundObject()));
+        const proxy = ref<XrayOutboundObject<XrayWireguardOutboundObject>>(props.proxy ?? new XrayOutboundObject<XrayWireguardOutboundObject>(XrayProtocol.WIREGUARD, new XrayWireguardOutboundObject()));
         const peerItem = ref<XrayPeerObject>();
         const addresses = ref<string>(proxy.value.settings.address.join('\n') ?? '');
         const peerIps = ref<string>('');
@@ -244,7 +244,7 @@ export default defineComponent({
             modalPeer,
             modalPeers,
             peerIps,
-            strategyOptions: WireguardOutboundObject.strategyOptions
+            strategyOptions: XrayWireguardOutboundObject.strategyOptions
         };
     },
 });

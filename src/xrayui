@@ -124,6 +124,28 @@ update() {
     echo "Update process completed!"
 }
 
+update_geodat() {
+
+    local geosite_url="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+    local geoip_url="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
+
+    local target_dir="/tmp/mnt/entware/entware/sbin"
+
+    mkdir -p "$target_dir"
+
+    logger "xrayui" "Downloading  geosite.dat..."
+    curl -L "$geosite_url" -o "$target_dir/geosite.dat"
+    logger "xrayui" "Downloading  geoip.dat..."
+    curl -L "$geoip_url" -o "$target_dir/geoip.dat"
+
+    if [[ -f "$target_dir/geosite.dat" && -f "$target_dir/geoip.dat" ]]; then
+        logger "xrayui" "The intricate mosaic of files has been successfully orchestrated into $target_dir."
+        restart
+    else
+        logger "xrayui" "An enigmatic issue beckons! One or both files could not be placed in the labyrinth of $target_dir."
+    fi
+}
+
 configure_firewall_server() {
     mode=$(am_settings_get xray_mode)
     if [ "$mode" = "server" ]; then
@@ -1027,8 +1049,14 @@ service_event)
     elif [ "$2" = "testconfig" ]; then
         test_xray_config
         exit 0
+    elif [ "$2" = "testconfig" ]; then
+        test_xray_config
+        exit 0
     elif [ "$2" = "update" ]; then
         update
+        exit 0
+    elif [ "$2" = "update_geodat" ]; then
+        update_geodat
         exit 0
     elif [ "$2" = "connectedclients" ]; then
         get_connected_clients

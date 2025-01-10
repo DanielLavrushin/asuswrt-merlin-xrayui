@@ -129,7 +129,8 @@ update_geodat() {
     local geosite_url="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
     local geoip_url="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
 
-    local target_dir="/tmp/mnt/entware/entware/sbin"
+    ENTWARE_ROOT="$(mount | grep entware | awk '{print $3}' | head -n 1)"
+    local target_dir="$ENTWARE_ROOT/entware/sbin"
 
     mkdir -p "$target_dir"
 

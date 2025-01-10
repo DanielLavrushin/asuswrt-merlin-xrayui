@@ -14,7 +14,7 @@ window.LoadingTime = (seconds: number, flag: string | null) => {
     return;
   }
 
-  const text = "<#610#>";
+  const text = "Please wait...";
   window.showtext(proceedingMainText, text);
   loading.style.visibility = "visible";
 

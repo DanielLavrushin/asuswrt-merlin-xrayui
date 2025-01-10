@@ -313,6 +313,21 @@ cleanup_firewall_client() {
     logger "xrayui" "Xray Client firewall rules cleaned up successfully."
 }
 
+Get_WebUI_Page() {
+    xrayui_user_page="none"
+    for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+        local page="/www/user/user$i.asp"
+        if [ -f "$page" ] && [ "$(md5sum <"$1")" = "$(md5sum <"$page")" ]; then
+            xrayui_user_page="user$i.asp"
+            logger "xrayui" "Found existing XRAYUI page: $xrayui_user_page"
+            return
+        elif [ "$xrayui_user_page" = "none" ] && [ ! -f "$page" ]; then
+            xrayui_user_page="user$i.asp"
+            logger "xrayui" "Creating new XRAYUI page: $xrayui_user_page"
+        fi
+    done
+}
+
 mount_ui() {
 
     LOCKFILE=/tmp/addonwebui.lock
@@ -325,18 +340,18 @@ mount_ui() {
         exit 5
     fi
 
-    am_get_webui_page $xray_addons_asp_page
+    Get_WebUI_Page $xray_addons_asp_page
 
-    if [ "$am_webui_page" = "none" ]; then
+    if [ "$xrayui_user_page" = "none" ]; then
         echo "${CERR}Unable to install XRAYUI${CRESET}"
         exit 5
     fi
 
-    echo -e "${CINFO}Mounting XRAYUI as $am_webui_page${CRESET}"
-    logger "xrayui" "Mounting XRAYUI as $am_webui_page"
+    echo -e "${CINFO}Mounting XRAYUI as $xrayui_user_page${CRESET}"
+    logger "xrayui" "Mounting XRAYUI as $xrayui_user_page"
 
-    cp -f $xray_addons_asp_page /www/user/$am_webui_page
-    echo "xrayui" >"/www/user/$(echo $am_webui_page | cut -f1 -d'.').title"
+    cp -f $xray_addons_asp_page /www/user/$xrayui_user_page
+    echo "xrayui" >"/www/user/$(echo $xrayui_user_page | cut -f1 -d'.').title"
 
     if [ ! -f /tmp/menuTree.js ]; then
         cp /www/require/modules/menuTree.js /tmp/
@@ -345,21 +360,21 @@ mount_ui() {
 
     sed -i '/menuName: "VPN"/,/menuName:/ {
   /url:\s*"NULL",\s*tabName:\s*"__INHERIT__"/ i \
-    { url: "'"$am_webui_page"'", tabName: "X-RAY" },
+    { url: "'"$xrayui_user_page"'", tabName: "X-RAY" },
 }' /tmp/menuTree.js
 
     umount /www/require/modules/menuTree.js && mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
 
     am_settings_del xray_page
-    am_settings_set xray_page $am_webui_page
+    am_settings_set xray_page $xrayui_user_page
 
     refresh_xray_config
 
     cp /jffs/addons/xrayui/app.js /www/user/xrayui/app.js
 
     flock -u "$FD"
-    echo -e "${CSUC}XRAYUI mounted successfully as $am_webui_page${CRESET}"
-    logger "xrayui" "XRAYUI mounted successfully as $am_webui_page"
+    echo -e "${CSUC}XRAYUI mounted successfully as $xrayui_user_page${CRESET}"
+    logger "xrayui" "XRAYUI mounted successfully as $xrayui_user_page"
 }
 
 unmount_ui() {
@@ -371,7 +386,7 @@ unmount_ui() {
         echo -e "${CERR}This firmware does not support addons!${CRESET}"
         exit 5
     fi
-    xray_ui_page=$(am_settings_get xray_page)
+    xray_ui_page=$(Get_WebUI_Page $xray_addons_asp_page)
     base_user_page="${xray_ui_page%.asp}"
 
     if [ -z "$xray_ui_page" ]; then
@@ -412,7 +427,7 @@ remount_ui() {
 }
 
 refresh_xray_config() {
-    xray_ui_page=$(am_settings_get xray_page)
+    xray_ui_page=$(Get_WebUI_Page $xray_addons_asp_page)
 
     if [ ! -d $dir_xrayui ]; then
         mkdir -p "$dir_xrayui"

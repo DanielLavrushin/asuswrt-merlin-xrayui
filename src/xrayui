@@ -22,7 +22,7 @@ dir_xrayui="/www/user/xrayui"
 xray_ui_config="$dir_xrayui/xray-config.json"
 
 XRAY="xray"
-XRAYUI_VERSION="1.0"
+XRAYUI_VERSION="0.0"
 # Color Codes
 CERR='\033[0;31m'
 CSUC='\033[0;32m'
@@ -1055,7 +1055,7 @@ service_event)
     elif [ "$2" = "update" ]; then
         update
         exit 0
-    elif [ "$2" = "update_geodat" ]; then
+    elif [ "$2" = "updategeodat" ]; then
         update_geodat
         exit 0
     elif [ "$2" = "connectedclients" ]; then

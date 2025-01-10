@@ -27,6 +27,7 @@ class SubmtActions {
   public static regenerateWireguardyKeys: string = "xrayui_regenerate_wgkeys";
   public static enableLogs: string = "xrayui_configuration_logs";
   public static performUpdate: string = "xrayui_update";
+  public static performUpdateGeodat: string = "xrayui_updategeodat";
 }
 
 class Engine {

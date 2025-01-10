@@ -67,8 +67,14 @@ input[type="radio"] {
 }
 
 .hint-color {
+  color: #fc0;
   float: right;
   margin-right: 5px;
+}
+
+.hint-color a {
+  text-decoration: underline;
+  color: #fc0
 }
 
 .FormTable {

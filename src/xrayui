@@ -314,7 +314,7 @@ cleanup_firewall_client() {
 }
 
 mount_ui() {
-    sleep 10
+
     LOCKFILE=/tmp/addonwebui.lock
     FD=386
     eval exec "$FD>$LOCKFILE"
@@ -401,6 +401,10 @@ unmount_ui() {
 }
 
 remount_ui() {
+    if [-z "$1"]; then
+        sleep 10
+    fi
+
     echo -e "${CINFO}Remounting XRAYUI...${CRESET}"
     unmount_ui
     mount_ui
@@ -882,8 +886,8 @@ EOF
     echo "echo \"\$2\" | grep -q \"^xrayui\" && /jffs/scripts/xrayui service_event \$(echo \"\$2\" | cut -d'_' -f2- | tr '_' ' ') & #xrayui" >>/jffs/scripts/service-event
     echo -e "${CSUC}Updated /jffs/scripts/service-event with XrayUI entry.${CRESET}"
 
-    echo
-    remount_ui
+    echo -e "${CSUC}Mounting web page...${CRESET}"
+    remount_ui "skipwait"
 
     echo
     echo -e "${CSUC}Installation process completed successfully.${CRESET}"

@@ -121,7 +121,7 @@ export default defineComponent({
     },
     async certificate_renew() {
       const delay = 5000;
-      window.showLoading(delay / 1000);
+      window.showLoading(delay);
       await engine.submit(SubmtActions.CertificateRenew, null, delay);
       await engine.loadXrayConfig();
       window.hideLoading();

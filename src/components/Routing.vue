@@ -86,7 +86,7 @@ export default defineComponent({
 
     const update_geodat = async () => {
       let delay = 10000;
-      window.showLoading(delay / 1000, "waiting");
+      window.showLoading(delay, "waiting");
 
       await engine.submit(SubmtActions.performUpdateGeodat, null, delay);
       window.hideLoading();

@@ -84,7 +84,7 @@ export default defineComponent({
     async switch_type(type: string) {
       engine.mode = type;
       let delay = 1000;
-      window.showLoading(delay / 1000);
+      window.showLoading(delay);
       window.xray.custom_settings.xray_mode = type;
       await engine.submit(SubmtActions.ConfigurationSetMode, { mode: type }, delay);
       window.location.reload();

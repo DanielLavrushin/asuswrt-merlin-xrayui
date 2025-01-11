@@ -47,7 +47,7 @@ export default defineComponent({
   methods: {
     async testConfig() {
       let delay = 1000;
-      window.showLoading(delay / 1000);
+      window.showLoading(delay);
       await engine.submit(window.xray.commands.testConfig, null, delay);
       let usres = await engine.getEngineConfig();
       window.hideLoading();
@@ -55,8 +55,8 @@ export default defineComponent({
 
     },
     async handleStatus(action: string) {
-      let delay = 3000;
-      window.showLoading(delay / 1000);
+      let delay = 5000;
+      window.showLoading(delay, "waiting");
       await engine.submit(action, null, delay);
       window.location.reload();
     },

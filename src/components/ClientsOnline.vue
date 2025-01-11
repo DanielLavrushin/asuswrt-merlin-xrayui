@@ -49,7 +49,7 @@ export default defineComponent({
   methods: {
     async enable_logs() {
       let delay = 5000;
-      window.showLoading(delay / 1000);
+      window.showLoading(delay);
       await engine.submit(SubmtActions.enableLogs, null, delay);
       window.location.reload();
     },

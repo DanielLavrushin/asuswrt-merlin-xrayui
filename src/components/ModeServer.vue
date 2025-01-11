@@ -62,7 +62,7 @@ export default defineComponent({
 
         async applyClientSettings() {
             let delay = 5000;
-            window.showLoading(delay / 1000, "waiting");
+            window.showLoading(delay, "waiting");
             let config = await engine.prepareServerConfig();
 
             await engine.submit(SubmtActions.ConfigurationServerSave, config, delay);

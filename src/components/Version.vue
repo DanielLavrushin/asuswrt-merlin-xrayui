@@ -58,7 +58,7 @@ export default defineComponent({
 
         const update = async () => {
             let delay = 10000;
-            window.showLoading(delay / 1000, "waiting");
+            window.showLoading(delay, "waiting");
 
             await engine.submit(SubmtActions.performUpdate, null, delay);
             window.hideLoading();

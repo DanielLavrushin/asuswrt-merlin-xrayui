@@ -18,17 +18,18 @@ window.LoadingTime = (seconds: number, flag: string | null) => {
   window.showtext(proceedingMainText, text);
   loading.style.visibility = "visible";
 
+  let time = seconds / 1000;
   let progressPercentage = 0;
-  const progressIncrement = 10;
+  const progressIncrement = 100 / time;
 
   const updateLoading = () => {
     progressPercentage += progressIncrement;
 
-    if (seconds > 0) {
+    if (time > 0) {
       window.showtext(proceedingMainText, text);
       window.showtext(proceedingText, `<span style="color:#FFFFCC;">${Math.round(progressPercentage)}% </span>`);
 
-      seconds--;
+      time--;
 
       setTimeout(updateLoading, 1000);
     } else {

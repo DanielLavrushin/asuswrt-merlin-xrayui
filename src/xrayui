@@ -334,6 +334,7 @@ cleanup_firewall_server() {
     # Flush and delete the XRAYUI chain
     iptables -F XRAYUI 2>/dev/null
     iptables -X XRAYUI 2>/dev/null
+    service restart_dnsmasq
 
     printlog true "Xray Server firewall rules cleaned up successfully." $CSUC
 }
@@ -341,8 +342,9 @@ cleanup_firewall_server() {
 cleanup_firewall_client() {
     printlog true "Cleaning up Xray Client firewall rules..."
 
+    XRAY_PORT="$(jq -r '.inbounds[0].port // empty' "$xray_config")"
+
     # Remove any forced DNS rules we added for NAT/TPROXY DNS (udp:53)
-    # (Adjust --to-port if you store DNS_PORT or XRAY_PORT in a variable)
     iptables -t nat -D PREROUTING -p udp --dport 53 -j REDIRECT --to-port "$XRAY_PORT" 2>/dev/null
     iptables -t mangle -D PREROUTING -p udp --dport 53 -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777 2>/dev/null
 
@@ -374,7 +376,7 @@ cleanup_firewall_client() {
     printlog true "Removed XRAYUI MANGLE chain (if used)." $CSUC
 
     # Restart services to refresh firewall
-    # service restart_firewal
+    service restart_dnsmasq
     # printlog true "Firewall and WAN services restarted." $CSUC
 
     printlog true "Xray Client firewall rules cleaned up successfully." $CSUC

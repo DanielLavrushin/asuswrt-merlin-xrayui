@@ -349,8 +349,8 @@ get_webui_page() {
 
     if [ "$1" = "true" ]; then
         i=1
-        while [ "$i" -le $((max_user_page + 1)) ]; do
-            if ! echo "$used_pages" | grep -q " $i "; then
+        while true; do
+            if ! echo "$used_pages" | grep -qw "$i"; then
                 xrayui_user_page="user$i.asp"
                 printlog true "Assigning new XRAYUI page: $xrayui_user_page" $CSUC
                 return
@@ -472,9 +472,7 @@ make_clean_config() {
 }
 
 am_settings_del() {
-
     local key="$1"
-    printlog true "Deleting $key from custom settings."
     sed -i "/$key/d" /jffs/addons/custom_settings.txt
 }
 
@@ -704,7 +702,7 @@ switch_mode() {
 
 save_server_config() {
     local temp_config="/tmp/xray_server_config_new.json"
-    local backup_config="/opt/etc/xray/config.json.bak"
+    local backup_config="/opt/etc/xray/config.json-temp.bak"
 
     local incoming_config=$(reconstruct_payload)
 
@@ -871,6 +869,9 @@ EOF
     else
         printlog true "Base configuration file already exists." $CWARN
     fi
+
+    # backup config
+    cp "/opt/etc/xray/config.json" "/opt/etc/xray/config.json.bak"
 
     # Add or update nat-start
     printlog true "Ensuring /jffs/scripts/nat-start contains required entry."

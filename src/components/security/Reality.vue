@@ -133,7 +133,10 @@ export default defineComponent({
       this.shortIdsModal.show();
     },
     append_shortid() {
-      this.shortIds += "\n" + this.generateShortId();
+      this.shortIds = (this.shortIds + "\n" + this.generateShortId())
+        .split("\n")
+        .filter(line => line.trim() !== "")
+        .join("\n");
     },
     generateShortId: (byteLength = 8) => {
       const array = new Uint8Array(byteLength);

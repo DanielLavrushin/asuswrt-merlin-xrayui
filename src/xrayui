@@ -69,6 +69,7 @@ stop() {
     printlog true "Stopping $DESC" $CWARN
 
     killall xray
+    sleep 2
     cleanup_firewall_client
     cleanup_firewall_server
 }

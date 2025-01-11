@@ -56,7 +56,7 @@ export default defineComponent({
 
     },
     async handleStatus(action: string) {
-      let delay = 2000;
+      let delay = 3000;
       window.showLoading(delay / 1000);
       await engine.submit(action, null, delay);
       window.location.reload();

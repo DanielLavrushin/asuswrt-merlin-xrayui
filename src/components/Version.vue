@@ -31,7 +31,11 @@ export default defineComponent({
         Modal,
     },
     setup() {
-        const current_version = ref<string>(window.xray.custom_settings.xray_version);
+        let tempcurvers = window.xray.custom_settings.xray_version;
+        if (tempcurvers.split('.').length === 2) {
+            tempcurvers += ".0";
+        }
+        const current_version = ref<string>(tempcurvers);
         const latest_version = ref<string>();
         const updateModal = ref();
         const hasUpdate = ref(false);
@@ -45,7 +49,7 @@ export default defineComponent({
                 hasUpdate.value = vCompare(latest_version.value, current_version.value) === 1;
                 if (hasUpdate.value === true) {
 
-                    window.xray.server.xray_version_latest = parseFloat(latest_version.value);
+                    window.xray.server.xray_version_latest = latest_version.value;
                 }
 
             }

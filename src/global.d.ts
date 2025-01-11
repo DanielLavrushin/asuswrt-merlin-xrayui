@@ -9,7 +9,7 @@ interface XrayUiCustomSettings {
 
 interface XrayUiServer {
   isRunning: boolean;
-  xray_version_latest: number;
+  xray_version_latest: string;
 }
 
 interface XrayRouter {

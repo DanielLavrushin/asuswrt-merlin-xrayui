@@ -978,7 +978,14 @@ EOF
     remount_ui "skipwait"
 
     am_settings_set xray_version $XRAYUI_VERSION
-    am_settings_set xray_mode "server"
+
+    local current_mode=$(am_settings_get xray_mode)
+    if [ -z "$current_mode" ]; then
+        am_settings_set xray_mode "server"
+        printlog true "xray_mode was empty. Set to 'server'."
+    else
+        printlog true "xray_mode already set to '$current_mode'. Skipping."
+    fi
 
     printlog true "Installation process completed successfully." $CSUC
 }

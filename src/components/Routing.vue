@@ -43,7 +43,7 @@
           <input class="button_gen button_gen_small" type="button" value="update metadata"
             @click.prevent="update_geodat()" />
           <span class="hint-color">
-            <a href="https://github.com/loyalsoldier/v2ray-rules-dat/" target="_blank">source</a>
+            <a href="https://github.com/Loyalsoldier/v2ray-rules-dat/releases" target="_blank">source</a>
           </span>
         </td>
       </tr>

@@ -80,6 +80,7 @@ export default defineComponent({
 </script>
 <style scoped>
 .version a {
+    text-decoration: underline;
     font-size: 10px;
     color: #FFCC00;
     font-weight: bold;

@@ -30,16 +30,20 @@ CWARN='\033[0;33m'
 CINFO='\033[0;36m'
 CRESET='\033[0m'
 
+printlog() {
+    if [ "$1" = "true" ]; then
+        logger -t "XRAYUI" "$2"
+    fi
+    printf "${CINFO}${3}%s${CRESET}\\n" "$2"
+}
+
 start() {
     mode=$(am_settings_get xray_mode)
     if [ -z "$mode" ]; then
-        logger "xrayui" "No mode found in custom settings. Defaulting to server mode."
+        printlog true "No mode found in custom settings. Defaulting to server mode."
         mode="server"
         am_settings_set xray_mode $mode
     fi
-
-    logger "xrayui" "Starting Xray in $mode mode"
-    echo -e "$CINFO Starting Xray in $mode mode$CRESET"
 
     ARGS=" -c $xray_config"
     if [ "$mode" = "server" ]; then
@@ -54,20 +58,23 @@ start() {
 
     test_xray_config
 
-    logger "xrayui" "Starting $DESC with $ARGS"
+    printlog true "Xray operates in $mode mode"
+    printlog true "Starting $DESC with $ARGS"
+
     xray $ARGS >/dev/null 2>&1 &
     echo $! >$PIDFILE
 }
 
 stop() {
-    logger "xrayui" "Stopping $DESC"
+    printlog true "Stopping $DESC" $CWARN
+
     killall xray
     cleanup_firewall_client
     cleanup_firewall_server
 }
 
 restart() {
-    logger "xrayui" "Restarting $DESC"
+    printlog true "Restarting $DESC" $CWARN
     stop
     start
 }
@@ -79,49 +86,49 @@ update() {
     local addon_dir="/jffs/addons"
     local script_path="/jffs/scripts/xrayui"
 
-    echo "Downloading the latest version..."
+    printlog true "Downloading the latest version..."
     if wget -O "$temp_file" "$url"; then
-        echo "Download completed successfully."
+        printlog true "Download completed successfully."
     else
-        echo "Failed to download the latest version. Exiting."
+        printlog true "Failed to download the latest version. Exiting."
         return 1
     fi
 
-    echo "Cleaning up existing installation..."
+    printlog true "Cleaning up existing installation..."
     if rm -rf "$addon_dir/xrayui"; then
-        echo "Old installation removed."
+        printlog true "Old installation removed."
     else
-        echo "Failed to remove the old installation. Exiting."
+        printlog true "Failed to remove the old installation. Exiting."
         return 1
     fi
 
-    echo "Extracting the package..."
+    printlog true "Extracting the package..."
     if tar -xzf "$temp_file" -C "$addon_dir"; then
-        echo "Extraction completed."
+        printlog true "Extraction completed."
     else
-        echo "Failed to extract the package. Exiting."
+        printlog true "Failed to extract the package. Exiting."
         return 1
     fi
 
-    echo "Setting up the script..."
+    printlog true "Setting up the script..."
     if mv "$addon_dir/xrayui/xrayui" "$script_path" && chmod 0777 "$script_path"; then
-        echo "Script set up successfully."
+        printlog true "Script set up successfully." $CSUC
     else
-        echo "Failed to set up the script. Exiting."
+        printlog true "Failed to set up the script. Exiting." $CERR
         return 1
     fi
 
-    echo "Running the installation..."
+    printlog true "Running the installation..."
     if sh "$script_path" install; then
-        echo "Installation completed successfully."
+        printlog true "Installation completed successfully." $CSUC
     else
-        echo "Installation failed. Exiting."
+        printlog true "Installation failed. Exiting." $CERR
         return 1
     fi
 
     restart
 
-    echo "Update process completed!"
+    printlog true "Update process completed!" $CSUC
 }
 
 update_geodat() {
@@ -132,17 +139,17 @@ update_geodat() {
 
     mkdir -p "$target_dir"
 
-    logger "xrayui" "Downloading geosite.dat..."
+    printlog true "Downloading geosite.dat..."
     curl -L "$geosite_url" -o "$target_dir/geosite.dat"
 
-    logger "xrayui" "Downloading geoip.dat..."
+    printlog true "Downloading geoip.dat..."
     curl -L "$geoip_url" -o "$target_dir/geoip.dat"
 
     if [[ -f "$target_dir/geosite.dat" && -f "$target_dir/geoip.dat" ]]; then
-        logger "xrayui" "Files successfully placed in $target_dir."
+        printlog true "Files successfully placed in $target_dir." $CSUC
         restart
     else
-        logger "xrayui" "Failed to place geosite.dat/geoip.dat in $target_dir."
+        printlog true "Failed to place geosite.dat/geoip.dat in $target_dir." $CERR
     fi
 }
 
@@ -173,7 +180,7 @@ configure_firewall_server() {
 
         inbounds_ports=$(jq -r '.inbounds[]?.port // empty' "$xray_config")
         if [ -z "$inbounds_ports" ]; then
-            logger "xrayui" "No valid ports found in Xray configuration. Cannot configure firewall rules."
+            printlog true "No valid ports found in Xray configuration. Cannot configure firewall rules." $CERR
             return 1
         fi
 
@@ -189,7 +196,7 @@ configure_firewall_server() {
 
             # Validate PORT_START and PORT_END
             if ! echo "$PORT_START" | grep -qE '^[0-9]+$' || ! echo "$PORT_END" | grep -qE '^[0-9]+$'; then
-                logger "xrayui" "Invalid port or range: $XRAY_PORT. Skipping."
+                printlog true "Invalid port or range: $XRAY_PORT. Skipping." $CWARN
                 continue
             fi
 
@@ -203,16 +210,16 @@ configure_firewall_server() {
             iptables -A XRAYUI -p tcp --dport "$PORT_RANGE" -j ACCEPT
             iptables -A XRAYUI -p udp --dport "$PORT_RANGE" -j ACCEPT
 
-            logger "xrayui" "Firewall rules applied for port(s) $PORT_RANGE."
+            printlog true "Firewall rules applied for port(s) $PORT_RANGE." $CSUC
         done
 
         # Hook the custom chain into INPUT and FORWARD chains
         iptables -I INPUT -j XRAYUI
         iptables -I FORWARD -j XRAYUI
 
-        logger "xrayui" "All Xray firewall rules applied successfully."
+        printlog true "All Xray firewall rules applied successfully." $CSUC
     else
-        logger "xrayui" "Xray Server firewall rules not applied, mode is not server."
+        printlog true "Xray Server firewall rules not applied, mode is not server." $WARN
     fi
 }
 
@@ -220,12 +227,12 @@ configure_firewall_client() {
     mode=$(am_settings_get xray_mode)
     if [ "$mode" = "client" ]; then
 
-        logger "xrayui" "Configuring Xray firewall rules..."
+        printlog true "Configuring Xray firewall rules..."
 
         XRAY_PORT="$(jq -r '.inbounds[0].port // empty' $xray_config)"
-        logger "xrayui" "Configuring $XRAY_PORT Xray firewall rules..."
+        printlog true "Configuring $XRAY_PORT Xray firewall rules..."
         if [ -z "$XRAY_PORT" ]; then
-            logger "xrayui" "Invalid or missing port in Xray configuration. Cannot configure firewall rules."
+            printlog true "Invalid or missing port in Xray configuration. Cannot configure firewall rules." $CERR
             return 1
         fi
 
@@ -255,14 +262,14 @@ configure_firewall_client() {
         # Hook XRAY chain to PREROUTING
         iptables -t nat -A PREROUTING -j XRAYUI
 
-        logger "xrayui" "XRAYUI NAT rules for TCP applied successfully"
+        printlog true "XRAYUI NAT rules for TCP applied successfully" $CSUC
     else
-        logger "xrayui" "XRAYUI Client firewall rules not applied, mode is not client."
+        printlog true "XRAYUI Client firewall rules not applied, mode is not client." $CWARN
     fi
 }
 
 cleanup_firewall_server() {
-    logger "xrayui" "Cleaning up Xray Server firewall rules..."
+    printlog true "Cleaning up Xray Server firewall rules..."
 
     # Remove XRAYUI chain from INPUT and FORWARD chains
     iptables -D INPUT -j XRAYUI 2>/dev/null
@@ -272,11 +279,11 @@ cleanup_firewall_server() {
     iptables -F XRAYUI 2>/dev/null
     iptables -X XRAYUI 2>/dev/null
 
-    logger "xrayui" "Xray Server firewall rules cleaned up successfully."
+    printlog true "Xray Server firewall rules cleaned up successfully." $CSUC
 }
 
 cleanup_firewall_client() {
-    logger "xrayui" "Cleaning up Xray Client firewall rules..."
+    printlog true "Cleaning up Xray Client firewall rules..."
 
     # Remove fwmark rules and routing table
     RULES="$(ip rule show | grep -E 'fwmark .* lookup 8777')"
@@ -285,47 +292,72 @@ cleanup_firewall_client() {
             PRIO=$(echo "$LINE" | cut -d':' -f1 | awk '{print $1}')
             MARK=$(echo "$LINE" | awk '{print $5}')
             ip rule del fwmark "$MARK" table 8777 priority "$PRIO" 2>/dev/null
-            logger "xrayui" "Removed rule: fwmark $MARK lookup 8777 priority $PRIO"
+            printlog true "Removed rule: fwmark $MARK lookup 8777 priority $PRIO" $CSUC
         done
     fi
 
     ip rule del fwmark 0x8777 table 8777 priority 100 2>/dev/null
     ip route flush table 8777 2>/dev/null
-    logger "xrayui" "Removed fwmark rule and flushed table 8777."
+    printlog true "Removed fwmark rule and flushed table 8777." $CSUC
 
     # Remove XRAYUI chain in NAT
     iptables -t nat -D PREROUTING -j XRAYUI 2>/dev/null
     iptables -t nat -F XRAYUI 2>/dev/null
     iptables -t nat -X XRAYUI 2>/dev/null
-    logger "xrayui" "Removed XRAYUI NAT chain."
+    printlog true "Removed XRAYUI NAT chain." $CSUC
 
     # Remove XRAYUI chain in MANGLE (if applicable)
     iptables -t mangle -D PREROUTING -j XRAYUI 2>/dev/null
     iptables -t mangle -F XRAYUI 2>/dev/null
     iptables -t mangle -X XRAYUI 2>/dev/null
-    logger "xrayui" "Removed XRAYUI MANGLE chain (if used)."
+    printlog true "Removed XRAYUI MANGLE chain (if used)." $CSUC
 
     # Restart services to refresh firewall
     service firewall_restart
     service wan_restart
-    logger "xrayui" "Firewall and WAN services restarted."
+    printlog true "Firewall and WAN services restarted." $CSUC
 
-    logger "xrayui" "Xray Client firewall rules cleaned up successfully."
+    printlog true "Xray Client firewall rules cleaned up successfully." $CSUC
 }
 
-Get_WebUI_Page() {
+get_webui_page() {
     xrayui_user_page="none"
-    for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
-        local page="/www/user/user$i.asp"
-        if [ -f "$page" ] && [ "$(md5sum <"$1")" = "$(md5sum <"$page")" ]; then
-            xrayui_user_page="user$i.asp"
-            logger "xrayui" "Found existing XRAYUI page: $xrayui_user_page"
-            return
-        elif [ "$xrayui_user_page" = "none" ] && [ ! -f "$page" ]; then
-            xrayui_user_page="user$i.asp"
-            logger "xrayui" "Creating new XRAYUI page: $xrayui_user_page"
+    max_user_page=0
+    used_pages=""
+
+    for page in /www/user/user*.asp; do
+        if [ -f "$page" ]; then
+            if grep -q "page:xrayui" "$page"; then
+                xrayui_user_page=$(basename "$page")
+                printlog true "Found existing XRAYUI page: $xrayui_user_page" $CSUC
+                return
+            fi
+
+            user_number=$(echo "$page" | sed -E 's/.*user([0-9]+)\.asp$/\1/')
+            used_pages="$used_pages $user_number"
+
+            if [ "$user_number" -gt "$max_user_page" ]; then
+                max_user_page="$user_number"
+            fi
         fi
     done
+
+    if [ "$xrayui_user_page" != "none" ]; then
+        printlog true "Found existing XRAYUI page: $xrayui_user_page" $CSUC
+        return
+    fi
+
+    if [ "$1" = "true" ]; then
+        i=1
+        while [ "$i" -le $((max_user_page + 1)) ]; do
+            if ! echo "$used_pages" | grep -q " $i "; then
+                xrayui_user_page="user$i.asp"
+                printlog true "Assigning new XRAYUI page: $xrayui_user_page" $CSUC
+                return
+            fi
+            i=$((i + 1))
+        done
+    fi
 }
 
 mount_ui() {
@@ -333,24 +365,24 @@ mount_ui() {
     LOCKFILE=/tmp/addonwebui.lock
     FD=386
     eval exec "$FD>$LOCKFILE"
+    flock -x "$FD"
 
     nvram get rc_support | grep -q am_addons
     if [ $? != 0 ]; then
-        echo -e "${CERR}This firmware does not support addons!${CRESET}"
+        printlog true "This firmware does not support addons!" $CERR
         exit 5
     fi
 
-    Get_WebUI_Page $xray_addons_asp_page
+    get_webui_page true
 
     if [ "$xrayui_user_page" = "none" ]; then
-        echo "${CERR}Unable to install XRAYUI${CRESET}"
+        printlog true "Unable to install XRAYUI" $CERR
         exit 5
     fi
 
-    echo -e "${CINFO}Mounting XRAYUI as $xrayui_user_page${CRESET}"
-    logger "xrayui" "Mounting XRAYUI as $xrayui_user_page"
+    printlog true "Mounting XRAYUI as $xrayui_user_page"
 
-    cp -f $xray_addons_asp_page /www/user/$xrayui_user_page
+    ln -s -f $xray_addons_asp_page /www/user/$xrayui_user_page
     echo "xrayui" >"/www/user/$(echo $xrayui_user_page | cut -f1 -d'.').title"
 
     if [ ! -f /tmp/menuTree.js ]; then
@@ -368,39 +400,45 @@ mount_ui() {
     am_settings_del xray_page
     am_settings_set xray_page $xrayui_user_page
 
-    refresh_xray_config
+    if [ ! -d $dir_xrayui ]; then
+        mkdir -p "$dir_xrayui"
+    fi
 
-    cp /jffs/addons/xrayui/app.js /www/user/xrayui/app.js
+    ln -s -f /jffs/addons/xrayui/app.js $dir_xrayui/app.js
+    ln -s -f /opt/etc/xray/config.json $dir_xrayui/xray-config.json
 
     flock -u "$FD"
-    echo -e "${CSUC}XRAYUI mounted successfully as $xrayui_user_page${CRESET}"
-    logger "xrayui" "XRAYUI mounted successfully as $xrayui_user_page"
+    printlog true "XRAYUI mounted successfully as $xrayui_user_page" $CSUC
 }
 
 unmount_ui() {
     LOCKFILE=/tmp/addonwebui.lock
     FD=386
     eval exec "$FD>$LOCKFILE"
+    flock -x "$FD"
+
     nvram get rc_support | grep -q am_addons
     if [ $? != 0 ]; then
-        echo -e "${CERR}This firmware does not support addons!${CRESET}"
+        printlog true "This firmware does not support addons!" $CERR
         exit 5
     fi
-    xray_ui_page=$(Get_WebUI_Page $xray_addons_asp_page)
-    base_user_page="${xray_ui_page%.asp}"
 
-    if [ -z "$xray_ui_page" ]; then
-        echo -e "${CWARN}No XRAYUI page found to unmount. Continuing to clean up...${CRESET}"
+    get_webui_page
+
+    base_user_page="${xrayui_user_page%.asp}"
+
+    if [ -z "$xrayui_user_page" ] || [ "$xrayui_user_page" = "none" ]; then
+        printlog true "No XRAYUI page found to unmount. Continuing to clean up..." $CWARN
     else
-        echo -e "${CINFO}Unmounting XRAYUI $xray_ui_page${CRESET}"
-        rm -fr /www/user/$xray_ui_page
+        printlog true "Unmounting XRAYUI $xrayui_user_page"
+        rm -fr /www/user/$xrayui_user_page
         rm -fr /www/user/$base_user_page.title
     fi
 
     if [ ! -f /tmp/menuTree.js ]; then
-        echo -e "${CINFO}menuTree.js not found, skipping unmount.${CRESET}"
+        printlog true "menuTree.js not found, skipping unmount." $CWARN
     else
-        echo -e "${CWARN}Removing any X-RAY menu entry from menuTree.js.${CRESET}"
+        printlog true "Removing any X-RAY menu entry from menuTree.js."
         # Safely remove entries with tabName: "X-RAY"
         grep -v "tabName: \"X-RAY\"" /tmp/menuTree.js >/tmp/menuTree_temp.js
         mv /tmp/menuTree_temp.js /tmp/menuTree.js
@@ -411,39 +449,20 @@ unmount_ui() {
 
     rm -rf $dir_xrayui
     am_settings_del xray_page
+
     flock -u "$FD"
-    echo -e "${CSUC}Cleanup completed.${CRESET}"
+
+    printlog true "Unmount completed." $CSUC
 }
 
 remount_ui() {
     if [ "$1" != "skipwait" ]; then
-        logger "xrayui" "sleeping for 10 seconds..."
-        sleep 10
+        printlog true "sleeping for 10 seconds..." $CWARN
+        # sleep 10
     fi
 
-    echo -e "${CINFO}Remounting XRAYUI...${CRESET}"
     unmount_ui
     mount_ui
-}
-
-refresh_xray_config() {
-    xray_ui_page=$(Get_WebUI_Page $xray_addons_asp_page)
-
-    if [ ! -d $dir_xrayui ]; then
-        mkdir -p "$dir_xrayui"
-    fi
-
-    # Process the xray_config file
-    if [ -f "$xray_config" ]; then
-        sed -E '/^\s*\/\/.*$/d; /^\s*\/\*/,/\*\//d' "$xray_config" | jq '.' >"$xray_ui_config"
-        if [ $? -ne 0 ]; then
-            echo "Error processing $xray_config"
-            return 1
-        fi
-    else
-        echo "Error: $xray_config not found."
-    fi
-
 }
 
 make_clean_config() {
@@ -455,7 +474,7 @@ make_clean_config() {
 am_settings_del() {
 
     local key="$1"
-    logger "xrayui" "Deleting $key from custom settings."
+    printlog true "Deleting $key from custom settings."
     sed -i "/$key/d" /jffs/addons/custom_settings.txt
 }
 
@@ -498,15 +517,15 @@ cert_renew() {
     local tempconfig=$(make_clean_config)
 
     if [ ! -d "$cert_dir" ]; then
-        logger "xrayui" "Directory $cert_dir does not exist. Creating it."
+        printlog true "Directory $cert_dir does not exist. Creating it."
         mkdir -p "$cert_dir"
         if [ $? -ne 0 ]; then
-            logger "xrayui" "Failed to create directory $cert_dir."
+            printlog true "Failed to create directory $cert_dir."
             return 1
         fi
     fi
 
-    logger "xrayui" "Generating self-signed certificate for Xray in $cert_dir..."
+    printlog true "Generating self-signed certificate for Xray in $cert_dir..."
 
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
         -keyout "$key_file" \
@@ -514,11 +533,11 @@ cert_renew() {
         -subj "/CN=xray/O=Local Xray/C=US"
 
     if [ $? -eq 0 ]; then
-        logger "xrayui" "Certificate and key successfully generated:"
-        logger "xrayui" "Certificate: $cert_file"
-        logger "xrayui" "Private Key: $key_file"
+        printlog true "Certificate and key successfully generated:"
+        printlog true "Certificate: $cert_file"
+        printlog true "Private Key: $key_file"
     else
-        logger "xrayui" "Failed to generate certificate."
+        printlog true "Failed to generate certificate."
         return 1
     fi
 
@@ -559,36 +578,35 @@ cert_renew() {
 
     if [ $? -eq 0 ]; then
         mv "/tmp/xray-config.json" "$xray_config"
-        logger "xrayui" "TLS certificates updated in Xray config successfully."
+        printlog true "TLS certificates updated in Xray config successfully." $CSUC
     else
-        logger "xrayui" "Failed to update TLS certificates in Xray config."
+        printlog true "Failed to update TLS certificates in Xray config." $CERR
         rm -f "/tmp/xray-config.json"
         return 1
     fi
 
     restart
     if [ $? -eq 0 ]; then
-        logger "xrayui" "Xray service restarted successfully."
+        printlog true "Xray service restarted successfully." $CSUC
     else
-        logger "xrayui" "Failed to restart Xray service."
+        printlog true "Failed to restart Xray service." $CERR
         return 1
     fi
 
-    refresh_xray_config
     if [ $? -eq 0 ]; then
-        logger "xrayui" "Xray UI configuration refreshed successfully."
+        printlog true "Xray UI configuration refreshed successfully." $CSUC
     else
-        logger "xrayui" "Failed to refresh Xray UI configuration."
+        printlog true "Failed to refresh Xray UI configuration." $CERR
         return 1
     fi
 }
 
 regenerate_reality_keys() {
-    logger "xrayui" "Regenerating Reality private and public keys..."
+    printlog true "Regenerating Reality private and public keys..."
 
     xray_output=$($XRAY x25519)
     if [ $? -ne 0 ]; then
-        logger "xrayui" "Failed to run xray x25519."
+        printlog true "Failed to run xray x25519." $CERR
         return 1
     fi
 
@@ -596,20 +614,20 @@ regenerate_reality_keys() {
     public_key=$(echo "$xray_output" | grep 'Public key:' | awk -F'Public key: ' '{print $2}')
 
     if [ -z "$private_key" ] || [ -z "$public_key" ]; then
-        logger "xrayui" "Failed to extract Reality keys from xray x25519 output."
+        printlog true "Failed to extract Reality keys from xray x25519 output." $CERR
         return 1
     fi
 
-    logger "xrayui" "Generated Reality Private Key: $private_key"
-    logger "xrayui" "Generated Reality Public Key: $public_key"
+    printlog true "Generated Reality Private Key: $private_key" $CSUC
+    printlog true "Generated Reality Public Key: $public_key" $CSUC
 
     reality_json="$dir_xrayui/reality.json"
 
     if [ ! -d $dir_xrayui ]; then
-        logger "xrayui" "Directory $dir_xrayui does not exist. Creating it."
+        printlog true "Directory $dir_xrayui does not exist. Creating it." $CWARN
         mkdir -p $dir_xrayui
         if [ $? -ne 0 ]; then
-            logger "xrayui" "Failed to create directory $dir_xrayui."
+            printlog true "Failed to create directory $dir_xrayui."
             return 1
         fi
     fi
@@ -620,9 +638,9 @@ regenerate_reality_keys() {
 }" >"$reality_json"
 
     if [ $? -eq 0 ]; then
-        logger "xrayui" "Saved Reality keys to $reality_json successfully."
+        printlog true "Saved Reality keys to $reality_json successfully." $CSUC
     else
-        logger "xrayui" "Failed to save Reality keys to $reality_json."
+        printlog true "Failed to save Reality keys to $reality_json." $CERR
         return 1
     fi
 
@@ -639,14 +657,14 @@ regenerate_wireguard_keys() {
     if [ -z "$private_key" ]; then
         private_key=$(wg genkey)
         if [ $? -ne 0 ]; then
-            logger "xrayui" "Error: Failed to generate private key."
+            printlog true "Error: Failed to generate private key." $CERR
             return 1
         fi
     fi
 
     public_key=$(echo "$private_key" | wg pubkey)
     if [ $? -ne 0 ]; then
-        logger "xrayui" "Error: Failed to generate public key from private key."
+        printlog true "Error: Failed to generate public key from private key." $CERR
         return 1
     fi
 
@@ -661,14 +679,14 @@ regenerate_wireguard_keys() {
         '.wireguard.privatekey = $pk | .wireguard.publickey = $pub')
 
     if [ $? -ne 0 ]; then
-        logger "xrayui" "Error: Failed to update JSON content."
+        printlog true "Error: Failed to update JSON content." $CERR
         return 1
     fi
 
     echo "$json_content" >"$json_file"
 
     if [ $? -ne 0 ]; then
-        logger "xrayui" "Error: Failed to write to JSON file."
+        printlog true "Error: Failed to write to JSON file." $CERR
         return 1
     fi
 
@@ -679,7 +697,7 @@ switch_mode() {
     mode=$(reconstruct_payload)
 
     mode_type=$(echo "$mode" | jq -r '.mode')
-    logger "xrayui" "Switching Xray mode to $mode_type"
+    printlog true "Switching Xray mode to $mode_type"
 
     am_settings_set xray_mode $mode_type
 }
@@ -691,55 +709,54 @@ save_server_config() {
     local incoming_config=$(reconstruct_payload)
 
     if [ -z "$incoming_config" ]; then
-        logger "xrayui" "No new server configuration provided."
+        printlog true "No new server configuration provided."
         exit 1
     fi
 
     echo "$incoming_config" >"$temp_config"
     if [ $? -ne 0 ]; then
-        logger "xrayui" "Failed to write incoming configuration to $temp_config."
+        printlog true "Failed to write incoming configuration to $temp_config." $CERR
         exit 1
     fi
 
     jq empty "$temp_config" >/dev/null 2>&1
     if [ $? -ne 0 ]; then
-        logger "xrayui" "Invalid JSON format in incoming server configuration."
+        printlog true "Invalid JSON format in incoming server configuration." $CERR
         rm -f "$temp_config"
         exit 1
     fi
 
     cp "$xray_config" "$backup_config"
     if [ $? -ne 0 ]; then
-        logger "xrayui" "Failed to backup existing configuration to $backup_config."
+        printlog true "Failed to backup existing configuration to $backup_config." $CERR
         rm -f "$temp_config"
         exit 1
     fi
-    logger "xrayui" "Existing configuration backed up to $backup_config."
+    printlog true "Existing configuration backed up to $backup_config."
 
     cp "$temp_config" "$xray_config"
     if [ $? -ne 0 ]; then
-        logger "xrayui" "Failed to apply new configuration to $xray_config."
+        printlog true "Failed to apply new configuration to $xray_config." $CERR
         cp "$backup_config" "$xray_config"
         if [ $? -ne 0 ]; then
-            logger "xrayui" "Critical: Failed to restore configuration from backup."
+            printlog true "Critical: Failed to restore configuration from backup." $CERR
         fi
         rm -f "$temp_config"
         exit 1
     fi
-    logger "xrayui" "New server configuration applied successfully."
+    printlog true "New server configuration applied successfully." $CSUC
 
     rm -f "$temp_config"
 
     restart
     if [ $? -ne 0 ]; then
-        logger "xrayui" "Failed to restart Xray service after applying new configuration."
+        printlog true "Failed to restart Xray service after applying new configuration." $CERR
         cp "$backup_config" "$xray_config"
         restart
         exit 1
     fi
-    logger "xrayui" "Xray service restarted successfully with the new configuration."
+    printlog true "Xray service restarted successfully with the new configuration." $CSUC
 
-    refresh_xray_config
     rm -f "$backup_config"
     exit 0
 }
@@ -765,7 +782,7 @@ test_xray_config() {
     if ! output=$(xray -c /opt/etc/xray/config.json -test 2>&1); then
         message=$(echo "$output" | sed 's/"/\\"/g')
     else
-        message="success"
+        message="All seem to be fine. XRAY Service is just not started."
     fi
 
     local json_file="$dir_xrayui/xray-ui-response.json"
@@ -778,60 +795,55 @@ test_xray_config() {
 }
 
 install() {
-    echo -e "${CINFO}Starting XRAY UI installation process.${CRESET}"
+    printlog true "Starting XRAY UI installation process."
 
     # Check for Entware
-    echo
     if [ ! -x /opt/bin/opkg ]; then
-        echo -e "${CERR}Entware is not installed or opkg binary is not accessible.${CRESET}"
-        echo -e "${CERR}Please install Entware first: https://github.com/Entware/Entware/wiki/Install-on-ASUSWRT${CRESET}"
+        printlog true "Entware is not installed or opkg binary is not accessible." $CERR
+        printlog true "Please install Entware first: https://github.com/Entware/Entware/wiki/Install-on-ASUSWRT" $CERR
         exit 1
     fi
-    echo -e "${CSUC}Entware is installed.${CRESET}"
+    printlog true "Entware is installed." $CSUC
 
     # Check for jq
-    echo
-    if ! opkg list-installed | grep -q '^jq$'; then
-        echo -e "${CWARN}jq is not installed. Installing jq...${CRESET}"
+    if ! opkg list-installed | grep 'jq -'; then
+        printlog true "jq is not installed. Installing jq..."
         opkg update
         if opkg install jq; then
-            echo -e "${CSUC}jq installed successfully.${CRESET}"
+            printlog true "jq installed successfully." $CWARN
         else
-            echo -e "${CERR}Failed to install jq.${CRESET}"
+            printlog true "Failed to install jq." $CERR
             exit 1
         fi
     else
-        echo -e "${CINFO}jq is already installed.${CRESET}"
+        printlog true "jq is already installed." $CWARN
     fi
 
     # Check for iptables
-    echo
     if ! type iptables >/dev/null 2>&1; then
-        echo -e "${CERR}iptables is not available on this system. It is required for firewall configuration.${CRESET}"
+        printlog true "iptables is not available on this system. It is required for firewall configuration." $CERR
         exit 1
     fi
 
-    echo -e "${CSUC}iptables is available.${CRESET}"
+    printlog true "iptables is available."
 
     # Install Xray via opkg
-    echo
-    if ! opkg list-installed | grep -q '^xray$'; then
-        echo -e "${CWARN}Installing Xray from the Entware repository...${CRESET}"
+    if ! opkg list-installed | grep 'xray -'; then
+        printlog true "Installing Xray from the Entware repository..."
         opkg update
         if opkg install xray; then
-            echo -e "${CSUC}Xray installed successfully.${CRESET}"
+            printlog true "Xray installed successfully." $CSUC
         else
-            echo -e "${CERR}Failed to install Xray.${CRESET}"
+            printlog true "Failed to install Xray." $CERR
             exit 1
         fi
     else
-        echo -e "${CINFO}Xray is already installed.${CRESET}"
+        printlog true "Xray is already installed." $CWARN
     fi
 
     # Validate base configuration
-    echo
     if [ ! -f /opt/etc/xray/config.json ]; then
-        echo -e "${CWARN}Base configuration file not found. Creating a default config...${CRESET}"
+        printlog true "Base configuration file not found. Creating a default config..." $CWARN
         mkdir -p /opt/etc/xray
         cat >/opt/etc/xray/config.json <<EOF
 {
@@ -851,182 +863,177 @@ install() {
 }
 EOF
         if [ $? -eq 0 ]; then
-            echo -e "${CSUC}Default configuration created successfully.${CRESET}"
+            printlog true "Default configuration created successfully." $CSUC
         else
-            echo -e "${CERR}Failed to create default configuration.${CRESET}"
+            printlog true "Failed to create default configuration." $CERR
             exit 1
         fi
     else
-        echo -e "${CINFO}Base configuration file already exists.${CRESET}"
+        printlog true "Base configuration file already exists." $CWARN
     fi
 
     # Add or update nat-start
-    echo
-    echo -e "${CINFO}Ensuring /jffs/scripts/nat-start contains required entry.${CRESET}"
+    printlog true "Ensuring /jffs/scripts/nat-start contains required entry."
     mkdir -p /jffs/scripts
     if [ ! -f /jffs/scripts/nat-start ]; then
         echo "#!/bin/sh" >/jffs/scripts/nat-start
         chmod +x /jffs/scripts/nat-start
     else
-        echo -e "${CWARN}Removing existing #xrayui entries from /jffs/scripts/nat-start.${CRESET}"
+        printlog true "Removing existing #xrayui entries from /jffs/scripts/nat-start."
         sed -i '/#xrayui/d' /jffs/scripts/nat-start
     fi
     echo "/jffs/scripts/xrayui service_event firewall server #xrayui" >>/jffs/scripts/nat-start
     echo "/jffs/scripts/xrayui service_event firewall client #xrayui" >>/jffs/scripts/nat-start
-    echo -e "${CSUC}Updated /jffs/scripts/nat-start with XrayUI entry.${CRESET}"
+    printlog true "Updated /jffs/scripts/nat-start with XrayUI entry." $CSUC
 
     # Add or update post-mount
-    echo
-    echo -e "${CINFO}Ensuring /jffs/scripts/post-mount contains required entry.${CRESET}"
+    printlog true "Ensuring /jffs/scripts/post-mount contains required entry."
     mkdir -p /jffs/scripts
     if [ ! -f /jffs/scripts/post-mount ]; then
         echo "#!/bin/sh" >/jffs/scripts/post-mount
         chmod +x /jffs/scripts/post-mount
     else
-        echo -e "${CWARN}Removing existing #xrayui entries from /jffs/scripts/post-mount.${CRESET}"
+        printlog true "Removing existing #xrayui entries from /jffs/scripts/post-mount."
         sed -i '/#xrayui/d' /jffs/scripts/post-mount
     fi
-    echo "/jffs/scripts/xrayui remount_ui & #xrayui" >>/jffs/scripts/post-mount
-    echo -e "${CSUC}Updated /jffs/scripts/post-mount with XrayUI entry.${CRESET}"
+    echo "/jffs/scripts/xrayui remount_ui"' "$@" & #'"xrayui" >>/jffs/scripts/post-mount
+    printlog true "Updated /jffs/scripts/post-mount with XrayUI entry." $CSUC
 
     # Add or update service-event
-    echo
-    echo -e "${CINFO}Ensuring /jffs/scripts/service-event contains required entry.${CRESET}"
+    printlog true "Ensuring /jffs/scripts/service-event contains required entry."
     if [ ! -f /jffs/scripts/service-event ]; then
         echo "#!/bin/sh" >/jffs/scripts/service-event
         chmod +x /jffs/scripts/service-event
     else
-        echo -e "${CWARN}Removing existing #xrayui entries from /jffs/scripts/service-event.${CRESET}"
+        printlog true "Removing existing #xrayui entries from /jffs/scripts/service-event."
         sed -i '/#xrayui/d' /jffs/scripts/service-event
     fi
     echo "echo \"\$2\" | grep -q \"^xrayui\" && /jffs/scripts/xrayui service_event \$(echo \"\$2\" | cut -d'_' -f2- | tr '_' ' ') & #xrayui" >>/jffs/scripts/service-event
-    echo -e "${CSUC}Updated /jffs/scripts/service-event with XrayUI entry.${CRESET}"
+    printlog true "Updated /jffs/scripts/service-event with XrayUI entry." $CSUC
 
-    echo -e "${CSUC}Mounting web page...${CRESET}"
+    printlog true "Mounting web page..."
     remount_ui "skipwait"
-
-    echo
-    echo -e "${CSUC}Installation process completed successfully.${CRESET}"
 
     am_settings_set xray_version $XRAYUI_VERSION
     am_settings_set xray_mode "server"
 
+    printlog true "Installation process completed successfully." $CSUC
 }
 
 uninstall() {
-    echo -e "${CINFO}Starting XRAY UI uninstallation process.${CRESET}"
+    printlog true "Starting XRAY UI uninstallation process."
 
     # Stop XRAY service if running
     if [ -f $PIDFILE ]; then
-        echo -e "${CWARN}Stopping XRAY service...${CRESET}"
+        printlog true "Stopping XRAY service..."
         stop
         rm -f $PIDFILE
-        echo -e "${CSUC}XRAY service stopped.${CRESET}"
+        printlog true "XRAY service stopped." $CSUC
     else
-        echo -e "${CINFO}XRAY service is not running.${CRESET}"
+        printlog true "XRAY service is not running." $CWARN
     fi
 
     # Remove XRAY UI files
-    echo -e "${CWARN}Removing XRAY UI files...${CRESET}"
+    printlog true "Removing XRAY UI files..."
     rm -rf /www/user/xrayui /jffs/addons/xrayui /tmp/xray_clients_online.json
 
     if [ $? -eq 0 ]; then
-        echo -e "${CSUC}XRAY UI files removed successfully.${CRESET}"
+        printlog true "XRAY UI files removed successfully." $CSUC
     else
-        echo -e "${CERR}Failed to remove XRAY UI files.${CRESET}"
+        printlog true "Failed to remove XRAY UI files." $CERR
         exit 1
     fi
 
     # clean up nat-start
-    echo
-    echo -e "${CWARN}Removing existing #xrayui entries from /jffs/scripts/nat-start.${CRESET}"
+    printlog true "Removing existing #xrayui entries from /jffs/scripts/nat-start."
     sed -i '/#xrayui/d' /jffs/scripts/nat-start
 
     # clean up post-mount
-    echo
-    echo -e "${CWARN}Removing existing #xrayui entries from /jffs/scripts/post-mount.${CRESET}"
+    printlog true "Removing existing #xrayui entries from /jffs/scripts/post-mount."
     sed -i '/#xrayui/d' /jffs/scripts/post-mount
 
     # clean up service-event
-    echo -e "${CWARN}Removing existing #xrayui entries from /jffs/scripts/service-event.${CRESET}"
+    printlog true "Removing existing #xrayui entries from /jffs/scripts/service-event."
     sed -i '/#xrayui/d' /jffs/scripts/service-event
 
     cleanup_firewall_server
     cleanup_firewall_client
 
     # Unmount UI
-    echo
-    echo -e "${CWARN}Unmounting XRAY UI...${CRESET}"
+    printlog true "Unmounting XRAY UI..."
     unmount_ui
+
     if [ $? -eq 0 ]; then
-        echo -e "${CSUC}XRAY UI unmounted successfully.${CRESET}"
+        printlog true "XRAY UI unmounted successfully." $CSUC
     else
-        echo -e "${CERR}Failed to unmount XRAY UI.${CRESET}"
+        printlog true "Failed to unmount XRAY UI." $CERR
         exit 1
     fi
 
     # Remove XRAY custom settings
-    echo -e "${CWARN}Removing XRAY custom settings...${CRESET}"
+    printlog true "Removing XRAY custom settings..."
 
     grep '^xray_' /jffs/addons/custom_settings.txt | while IFS='=' read -r var_name _; do
         [ -n "$var_name" ] && am_settings_del "$var_name"
     done
 
-    echo -e "${CSUC}Custom settings removed successfully.${CRESET}"
-
-    echo -e "${CINFO}XRAY UI uninstallation completed.${CRESET}"
+    printlog true "Custom settings removed successfully." $CSUC
 
     # Ask user if they want to remove XRAY (opkg) and its configs
-    echo -e "${CWARN}Do you want to remove XRAY (installed via opkg) and its configurations? (yes/no)${CRESET}"
+    echo
+    printlog true "Do you want to remove XRAY (installed via opkg) and its configurations? (yes/no)" $CWARN
+    echo
+
     read -r user_input
 
-    if [ "$user_input" = "yes" ]; then
+    if [ "$user_input" = "yes" ] || [ "$user_input" = "y" ]; then
         # Remove XRAY from Entware if installed
         if opkg list-installed | grep -q '^xray$'; then
-            echo -e "${CWARN}Removing XRAY from Entware...${CRESET}"
+            printlog true "Removing XRAY from Entware..."
             if opkg remove xray; then
-                echo -e "${CSUC}XRAY removed successfully.${CRESET}"
+                printlog true "XRAY removed successfully." $CSUC
             else
-                echo -e "${CERR}Failed to remove XRAY.${CRESET}"
+                printlog true "Failed to remove XRAY." $CERR
                 exit 1
             fi
         else
-            echo -e "${CINFO}XRAY is not installed.${CRESET}"
+            printlog true "XRAY is not installed."
         fi
 
         # Remove XRAY configuration files
-        echo -e "${CWARN}Removing XRAY configuration files...${CRESET}"
+        printlog true "Removing XRAY configuration files..."
         rm -rf /opt/etc/xray
         if [ $? -eq 0 ]; then
-            echo -e "${CSUC}XRAY configuration files removed successfully.${CRESET}"
+            printlog true "XRAY configuration files removed successfully." $CSUC
         else
-            echo -e "${CERR}Failed to remove XRAY configuration files.${CRESET}"
+            printlog true "Failed to remove XRAY configuration files." $CERR
             exit 1
         fi
     else
-        echo -e "${CINFO}Keeping XRAY and its configuration files.${CRESET}"
+        printlog true "Keeping XRAY and its configuration files."
     fi
 
     rm /jffs/scripts/xrayui
 
-    echo -e "${CSUC}Uninstallation process completed successfully.${CRESET}"
+    echo
+    printlog true "Uninstallation process completed successfully." $CSUC
 }
 
 enable_config_logs() {
 
     local temp_file="/tmp/xray_config.json"
 
-    echo -e "${CINFO}Checking for the 'log' section in the Xray configuration.${CRESET}"
+    printlog true "Checking for the 'log' section in the Xray configuration."
 
     # Check if the config file exists
     if [ ! -f "$xray_config" ]; then
-        echo -e "${CERR}Configuration file not found: $xray_config${CRESET}"
+        printlog true "Configuration file not found: $xray_config"
         return 1
     fi
 
     # Check if the 'log' section is missing
     if ! jq -e '.log' "$xray_config" >/dev/null 2>&1; then
-        echo -e "${CWARN}'log' section is missing. Adding it to the configuration.${CRESET}"
+        printlog true "'log' section is missing. Adding it to the configuration."
 
         # Add the 'log' section
         jq '. + {
@@ -1039,14 +1046,14 @@ enable_config_logs() {
 
         if [ $? -eq 0 ]; then
             mv "$temp_file" "$xray_config"
-            echo -e "${CSUC}'log' section added successfully.${CRESET}"
+            printlog true "'log' section added successfully."
         else
-            echo -e "${CERR}Failed to update the configuration with 'log' section.${CRESET}"
+            printlog true "Failed to update the configuration with 'log' section."
             rm -f "$temp_file"
             return 1
         fi
     else
-        echo -e "${CINFO}'log' section already exists in the configuration.${CRESET}"
+        printlog true "'log' section already exists in the configuration."
     fi
 
     restart
@@ -1080,13 +1087,10 @@ unmount_ui)
     unmount_ui
     ;;
 remount_ui)
-    remount_ui
+    remount_ui $2
     ;;
 service_event)
-    if [ "$2" = "refreshconfig" ]; then
-        refresh_xray_config
-        exit 0
-    elif [ "$2" = "testconfig" ]; then
+    if [ "$2" = "testconfig" ]; then
         test_xray_config
         exit 0
     elif [ "$2" = "testconfig" ]; then
@@ -1159,11 +1163,11 @@ service_event)
             configure_firewall_client
             exit 0
             ;;
-        "client_cleanup")
+        "clientcleanup")
             cleanup_firewall_client
             exit 0
             ;;
-        "server_cleanup")
+        "servercleanup")
             cleanup_firewall_server
             exit 0
             ;;

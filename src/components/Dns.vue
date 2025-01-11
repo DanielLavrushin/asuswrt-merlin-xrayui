@@ -6,7 +6,7 @@
             </tr>
         </thead>
         <tbody>
-            <tr v-if="engine.mode == 'server'">
+            <tr>
                 <th>Tag</th>
                 <td>
                     <input type="text" class="input_20_table" v-model="dns.tag" />

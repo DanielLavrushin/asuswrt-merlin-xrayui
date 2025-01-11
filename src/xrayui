@@ -45,6 +45,14 @@ start() {
         am_settings_set xray_mode $mode
     fi
 
+    test_xray_config
+
+    printlog true "Xray operates in $mode mode"
+    printlog true "Starting $DESC with $ARGS"
+
+    xray $ARGS >/dev/null 2>&1 &
+    echo $! >$PIDFILE
+
     ARGS=" -c $xray_config"
     if [ "$mode" = "server" ]; then
         configure_firewall_server
@@ -55,14 +63,6 @@ start() {
         am_settings_set xray_mode $mode
         configure_firewall_server
     fi
-
-    test_xray_config
-
-    printlog true "Xray operates in $mode mode"
-    printlog true "Starting $DESC with $ARGS"
-
-    xray $ARGS >/dev/null 2>&1 &
-    echo $! >$PIDFILE
 }
 
 stop() {
@@ -170,10 +170,21 @@ detect_entware_path() {
     return 1
 }
 
+get_xray_proc() {
+    xray_pid=$(/bin/pidof xray 2>/dev/null)
+}
+
 configure_firewall_server() {
     mode=$(am_settings_get xray_mode)
     if [ "$mode" = "server" ]; then
         cleanup_firewall_server
+
+        # Check if 'xray' process is running
+        get_xray_proc
+        if [ -z "$xray_pid" ]; then
+            printlog true "Xray process not found. Skipping client firewall configuration." $CWARN
+            return
+        fi
 
         # Create a custom chain for Xray rules
         iptables -N XRAYUI 2>/dev/null
@@ -244,6 +255,13 @@ configure_firewall_client() {
     fi
 
     cleanup_firewall_client
+
+    # Check if 'xray' process is running
+    get_xray_proc
+    if [ -z "$xray_pid" ]; then
+        printlog true "Xray process not found. Skipping client firewall configuration." $CWARN
+        return
+    fi
 
     # Create custom chains in NAT and MANGLE
     iptables -t nat -N XRAYUI 2>/dev/null || printlog true "Failed to create NAT chain XRAYUI" $CERR
@@ -355,10 +373,8 @@ cleanup_firewall_client() {
     printlog true "Removed XRAYUI MANGLE chain (if used)." $CSUC
 
     # Restart services to refresh firewall
-    service firewall_restart
-    service wan_restart
-
-    printlog true "Firewall and WAN services restarted." $CSUC
+    # service restart_firewal
+    # printlog true "Firewall and WAN services restarted." $CSUC
 
     printlog true "Xray Client firewall rules cleaned up successfully." $CSUC
 }

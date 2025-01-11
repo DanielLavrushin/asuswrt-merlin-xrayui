@@ -11,6 +11,10 @@
         <td>
           <span class="label" :class="{ 'label-success': isRunning, 'label-error': !isRunning }"
             v-text="statusLabel"></span>
+          <span v-if="!isRunning">
+            <a class="button_gen button_gen_small button_info" href="#" @click.prevent="testConfig()"
+              title="try to retrieve a server-side error">!</a>
+          </span>
           <span class="row-buttons">
             <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(reconnect)">Reconnect</a>
             <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(stop)">Stop</a>
@@ -42,6 +46,15 @@ export default defineComponent({
     },
   },
   methods: {
+    async testConfig() {
+      let delay = 1000;
+      window.showLoading(delay / 1000);
+      await engine.submit(window.xray.commands.testConfig, null, delay);
+      let usres = await engine.getEngineConfig();
+      window.hideLoading();
+      alert(usres.xray?.test);
+
+    },
     async handleStatus(action: string) {
       let delay = 2000;
       window.showLoading(delay / 1000);

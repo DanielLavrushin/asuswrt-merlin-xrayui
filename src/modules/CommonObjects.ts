@@ -117,7 +117,7 @@ class XrayLogObject {
 
 class XrayDnsObject {
   static strategyOptions: string[] = ["UseIP", "UseIPv4", "UseIPv6"];
-  public tag?: string;
+  public tag?: string = "dnsQuery";
   public hosts?: { [key: string]: string | string[] } | undefined = {};
   public servers: (string | XrayDnsServerObject)[] | undefined = [];
   public clientIp?: string;

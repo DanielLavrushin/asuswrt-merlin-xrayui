@@ -23,7 +23,7 @@ xray_ui_config="$dir_xrayui/xray-config.json"
 
 XRAY="xray"
 XRAYUI_VERSION="0.0"
-XRAYUI_USER_SCRIPTS="/etc/xrayui_custom"
+XRAYUI_USER_SCRIPTS="/jffs/xrayui_custom"
 # Color Codes
 CERR='\033[0;31m'
 CSUC='\033[0;32m'

@@ -127,7 +127,9 @@ update() {
         return 1
     fi
 
-    restart
+    if [ -f $PIDFILE ]; then
+        restart
+    fi
 
     printlog true "Update process completed!" $CSUC
 }
@@ -148,7 +150,9 @@ update_geodat() {
 
     if [[ -f "$target_dir/geosite.dat" && -f "$target_dir/geoip.dat" ]]; then
         printlog true "Files successfully placed in $target_dir." $CSUC
-        restart
+        if [ -f $PIDFILE ]; then
+            restart
+        fi
     else
         printlog true "Failed to place geosite.dat/geoip.dat in $target_dir." $CERR
     fi
@@ -715,7 +719,10 @@ cert_renew() {
         return 1
     fi
 
-    restart
+    if [ -f $PIDFILE ]; then
+        restart
+    fi
+
     if [ $? -eq 0 ]; then
         printlog true "Xray service restarted successfully." $CSUC
     else
@@ -878,7 +885,10 @@ save_server_config() {
 
     rm -f "$temp_config"
 
-    restart
+    if [ -f $PIDFILE ]; then
+        restart
+    fi
+
     if [ $? -ne 0 ]; then
         printlog true "Failed to restart Xray service after applying new configuration." $CERR
         cp "$backup_config" "$xray_config"
@@ -1198,7 +1208,9 @@ enable_config_logs() {
         printlog true "'log' section already exists in the configuration."
     fi
 
-    restart
+    if [ -f $PIDFILE ]; then
+        restart
+    fi
 
     return 0
 }

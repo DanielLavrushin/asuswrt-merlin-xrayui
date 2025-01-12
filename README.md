@@ -28,6 +28,15 @@ To uninstall and clean up run the command
 - Log Out and Back In: After installing, log out from the router's browser UI and then log back in.
 - Access the X-RAY Tab: Navigate to the `VPN` menu item in the router's web UI and look for the new tab labeled `X-RAY`.
 
+## Custom Scripts for Firewall Rules/IPTABLES
+You can enhance the flexibility of your `Xray` configuration by adding custom scripts to handle specific firewall rules during Xray startup and shutdown. 
+These scripts should be placed in the `/etc/xrayui_custom` directory and named according to their purpose:
+- `firewall_server` - Executed when Xray starts in server mode.
+- `firewall_server_cleanup` - Executed when Xray stops in server mode.
+- `firewall_client` - Executed when Xray starts in client mode.
+- `firewall_client_cleanup` - Executed when Xray stops in client mode.
+Ensure the scripts are executable (`chmod +x <script>`).
+
 ## FAQ
 **Q: What if I already have an Xray configuration?**
 
@@ -36,8 +45,6 @@ A: If you already have an Xray configuration file that you want to use, you need
 /opt/etc/xray/config.json
 ```
 Once the file is placed here, the ASUSWRT Merlin XrayUI interface will automatically reflect the changes.
-
-
 
 **Q: How can I configure a simple client on my ASUS router?**
 

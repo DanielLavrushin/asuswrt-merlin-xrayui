@@ -1,5 +1,9 @@
 # XRAYUI Changelog
 
+## [0.21.1] - 2025-01-13
+
+- REMOVED: Comment out redundant iptables rules for TCP DNS redirection (persistent android issue)
+
 ## [0.21.0] - 2025-01-13
 
 - ADDED: Support for dynamic changelog display.

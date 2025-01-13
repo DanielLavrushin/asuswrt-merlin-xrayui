@@ -3,7 +3,7 @@
             <span class="button_gen button_gen_small button_info" title="a more recent update is available"
                 v-if="hasUpdate">!</span>
             XRAYUI v{{ current_version }}</a></div>
-    <modal ref="updateModal" width="400" title="XRAYUI Version Information">
+    <modal ref="updateModal" width="500" title="XRAYUI Version Information">
         <div class="modal-content">
             <p class="current-version">Current version: <strong>{{ current_version }}</strong></p>
             <div v-if="hasUpdate" class="update-details">

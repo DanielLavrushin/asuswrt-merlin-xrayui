@@ -313,8 +313,8 @@ configure_firewall_client() {
     iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-port "$DNS_PORT"
     iptables -t nat -A PREROUTING -p udp --dport 853 -j REDIRECT --to-port "$DNS_PORT"
 
-    iptables -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT --to-port "$DNS_PORT"
-    iptables -t nat -A PREROUTING -p tcp --dport 853 -j REDIRECT --to-port "$DNS_PORT"
+    # iptables -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT --to-port "$DNS_PORT"
+    # iptables -t nat -A PREROUTING -p tcp --dport 853 -j REDIRECT --to-port "$DNS_PORT"
 
     if [ -n "$SERVER_IP" ]; then
         iptables -t mangle -A XRAYUI -d "$SERVER_IP" -j RETURN

@@ -24,7 +24,7 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Update XRAYUI_VERSION
+      - name: Update XRAYUI Version
         run: |
           echo "Updating XRAYUI_VERSION to ${{ github.event.inputs.version }} in /dist/xrayui"
           sed -i "s/^XRAYUI_VERSION=.*/XRAYUI_VERSION=\"${{ github.event.inputs.version }}\"/" dist/xrayui
@@ -36,7 +36,7 @@ jobs:
         id: read_changelog
         run: |
           echo "Extracting latest changelog entry..."
-          CHANGELOG=$(awk '/^## \[/{if (NR > 1) exit} {print}' CHANGELOG.md)
+          CHANGELOG=$(awk '/^## \[/{if (found++) exit} found {print}' CHANGELOG.md)
           echo "changelog<<EOF" >> $GITHUB_ENV
           echo "$CHANGELOG" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV

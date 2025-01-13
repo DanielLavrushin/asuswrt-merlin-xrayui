@@ -445,6 +445,8 @@ cleanup_firewall_client() {
     iptables -t nat -D PREROUTING -p tcp --dport 853 -j REDIRECT --to-port "$XRAY_PORT" 2>/dev/null
     iptables -t mangle -D PREROUTING -p tcp --dport 853 -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777 2>/dev/null
 
+    iptables -t nat -D OUTPUT -p udp --dport 53 -j REDIRECT --to-port "$XRAY_PORT" 2>/dev/null
+
     # Remove fwmark rules and routing table
     RULES="$(ip rule show | grep -E 'fwmark .* lookup 8777')"
     if [ -n "$RULES" ]; then

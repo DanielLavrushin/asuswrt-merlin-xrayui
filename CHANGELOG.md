@@ -1,5 +1,9 @@
 # XRAYUI Changelog
 
+## [0.xx.x] - xxxx-xx-xx
+
+- ADDED: DNS redirection for router-originated traffic: Implemented an iptables rule to redirect UDP DNS queries (dport 53) originating from the router itself to the configured Xray DNS port. This ensures that all DNS traffic, including system-level queries from the router, is routed through Xray, preventing DNS leaks and maintaining consistent DNS behavior across the network.
+
 ## [0.21.1] - 2025-01-13
 
 - REMOVED: Comment out redundant iptables rules for TCP DNS redirection (persistent android issue)

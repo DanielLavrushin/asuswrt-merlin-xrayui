@@ -256,7 +256,10 @@ configure_firewall_client() {
 
     iptables -t mangle -F XRAYUI 2>/dev/null
     iptables -t mangle -X XRAYUI 2>/dev/null
+    iptables -t nat -F XRAYUI 2>/dev/null
+    iptables -t nat -X XRAYUI 2>/dev/null
     iptables -t mangle -N XRAYUI
+    iptables -t nat -N XRAYUI
 
     XRAY_PORT="$(jq -r '.inbounds[0].port // empty' "$xray_config")"
     TPROXY_MODE="$(jq -r '.inbounds[0].streamSettings.sockopt.tproxy // "off"' "$xray_config")"
@@ -278,10 +281,6 @@ configure_firewall_client() {
         printlog true "Xray process not found. Skipping client firewall configuration." $CWARN
         return
     fi
-
-    # Create custom chains in NAT and MANGLE
-    iptables -t nat -N XRAYUI 2>/dev/null || printlog true "Failed to create NAT chain XRAYUI" $CERR
-    iptables -t mangle -N XRAYUI 2>/dev/null || printlog true "Failed to create MANGLE chain XRAYUI" $CERR
 
     iptables -t nat -A XRAYUI -d "$SERVER_IP" -j RETURN # Skip traffic to Xray server
     iptables -t nat -A OUTPUT -p tcp -j XRAYUI
@@ -312,6 +311,7 @@ configure_firewall_client() {
     #  Force all DNS (udp:53) to Xray:
     iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-port "$DNS_PORT"
     iptables -t nat -A PREROUTING -p udp --dport 853 -j REDIRECT --to-port "$DNS_PORT"
+    iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-port "$DNS_PORT"
 
     # iptables -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT --to-port "$DNS_PORT"
     # iptables -t nat -A PREROUTING -p tcp --dport 853 -j REDIRECT --to-port "$DNS_PORT"

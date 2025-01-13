@@ -32,6 +32,15 @@ jobs:
       - name: Archive dist
         run: tar --transform 's|^|xrayui/|' -czf asuswrt-merlin-xrayui.tar.gz -C dist .
 
+      - name: Read Changelog (Latest Version Only)
+        id: read_changelog
+        run: |
+          echo "Extracting latest changelog entry..."
+          CHANGELOG=$(awk '/^## \[/{if (NR > 1) exit} {print}' changelog.md)
+          echo "changelog<<EOF" >> $GITHUB_ENV
+          echo "$CHANGELOG" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
@@ -42,6 +51,7 @@ jobs:
           release_name: "Release ${{ github.event.inputs.version }}"
           draft: false
           prerelease: false
+          body: ${{ env.changelog }}
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1

@@ -12,6 +12,12 @@
                     @click.prevent="update" />
             </div>
             <p v-else class="no-updates">Your version is up-to-date!</p>
+
+            <div class="textarea-wrapper">
+                <textarea v-model="changelog" rows="25" cols="50"></textarea>
+                open full <a target="_blank"
+                    href="https://raw.githubusercontent.com/daniellavrushin/asuswrt-merlin-xrayui/main/CHANGELOG.md">changelog</a>
+            </div>
         </div>
         <template v-slot:footer></template>
     </modal>
@@ -39,6 +45,7 @@ export default defineComponent({
         const latest_version = ref<string>();
         const updateModal = ref();
         const hasUpdate = ref(false);
+        const changelog = ref<string>("");
         setTimeout(async () => {
             const gh_releases_url = "https://api.github.com/repos/daniellavrushin/asuswrt-merlin-xrayui/releases";
 
@@ -51,7 +58,7 @@ export default defineComponent({
 
                     window.xray.server.xray_version_latest = latest_version.value;
                 }
-
+                changelog.value = response.data[0].body;
             }
 
         }, 2000);
@@ -75,7 +82,7 @@ export default defineComponent({
             current_version,
             latest_version,
             hasUpdate,
-
+            changelog,
             open_update,
             update
         };
@@ -91,5 +98,10 @@ export default defineComponent({
     position: absolute;
     bottom: 0;
     right: 5px;
+}
+
+.textarea-wrapper a {
+    color: #FFCC00;
+    text-decoration: underline;
 }
 </style>

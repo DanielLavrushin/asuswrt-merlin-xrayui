@@ -1,0 +1,17 @@
+# XRAYUI Changelog
+
+## [0.21.0] - 2025-01-13
+
+- ADDED: Support for dynamic changelog display.
+- FIXED: Routing issues for Wi-Fi-connected devices by adding OUTPUT chain rules to process locally generated traffic.
+- FIXED: DNS redirection inconsistencies by applying rules for both UDP and TCP DNS traffic (dport 53, 853).
+- ADDED: Exclusion of traffic destined for the Xray server (SERVER_IP) to prevent routing loops.
+- ADDED: Explicit exemption for NTP traffic (dports 123, 323) to ensure reliable time synchronization.
+- ADDED: Logging for dropped packets in the XRAYUI chain to facilitate debugging.
+- ADDED: PID file check before restarting XRAY server so XRAY is restarted only when it runs
+- IMPROVED: Consistent marking of intercepted traffic with 0x8777 for proper routing via table 8777.
+
+## [0.20.1] - 2025-01-12
+
+- ADDED: Custom Scripts for Firewall Rules/IPTABLES (see readme)
+- FIXED: wireless devices are not able to connect when enabling xray in a client mode

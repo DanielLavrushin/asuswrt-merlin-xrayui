@@ -254,8 +254,13 @@ configure_firewall_client() {
 
     printlog true "Configuring Xray firewall rules..."
 
+    iptables -t mangle -F XRAYUI 2>/dev/null
+    iptables -t mangle -X XRAYUI 2>/dev/null
+    iptables -t mangle -N XRAYUI
+
     XRAY_PORT="$(jq -r '.inbounds[0].port // empty' "$xray_config")"
     TPROXY_MODE="$(jq -r '.inbounds[0].streamSettings.sockopt.tproxy // "off"' "$xray_config")"
+    SERVER_IP=$(jq -r '.outbounds[0].settings.vnext[0].address' "$xray_config")
 
     DNS_PORT="$XRAY_PORT"
 
@@ -278,6 +283,9 @@ configure_firewall_client() {
     iptables -t nat -N XRAYUI 2>/dev/null || printlog true "Failed to create NAT chain XRAYUI" $CERR
     iptables -t mangle -N XRAYUI 2>/dev/null || printlog true "Failed to create MANGLE chain XRAYUI" $CERR
 
+    iptables -t nat -A XRAYUI -d "$SERVER_IP" -j RETURN # Skip traffic to Xray server
+    iptables -t nat -A OUTPUT -p tcp -j XRAYUI
+
     # Dynamically detect local (RFC1918) subnets to exclude from redirection
     local_networks=$(
         ip -4 route show |
@@ -298,6 +306,19 @@ configure_firewall_client() {
     iptables -t nat -A XRAYUI -d 239.0.0.0/8 -j RETURN
     iptables -t mangle -A XRAYUI -d 224.0.0.0/4 -j RETURN
     iptables -t mangle -A XRAYUI -d 239.0.0.0/8 -j RETURN
+
+    iptables -t mangle -A XRAYUI -p udp -j TPROXY --on-ip 127.0.0.1 --on-port "$XRAY_PORT" --tproxy-mark 0x8777
+
+    #  Force all DNS (udp:53) to Xray:
+    iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-port "$DNS_PORT"
+    iptables -t nat -A PREROUTING -p udp --dport 853 -j REDIRECT --to-port "$DNS_PORT"
+
+    iptables -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT --to-port "$DNS_PORT"
+    iptables -t nat -A PREROUTING -p tcp --dport 853 -j REDIRECT --to-port "$DNS_PORT"
+
+    if [ -n "$SERVER_IP" ]; then
+        iptables -t mangle -A XRAYUI -d "$SERVER_IP" -j RETURN
+    fi
 
     # Exclude each local subnet from Xray
     for net in $local_networks; do
@@ -356,21 +377,30 @@ configure_firewall_client() {
         # Hook XRAYUI chain in NAT PREROUTING
         iptables -t nat -A PREROUTING -j XRAYUI
 
-        #  Force all DNS (udp:53) to Xray:
-        iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-port "$DNS_PORT"
-        iptables -t nat -A PREROUTING -p udp --dport 853 -j REDIRECT --to-port "$DNS_PORT"
-
-        #  iptables -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT --to-port "$DNS_PORT"
-        #  iptables -t nat -A PREROUTING -p tcp --dport 853 -j REDIRECT --to-port "$DNS_PORT"
-
         ;;
     esac
+
+    #MARK for Traffic Processing
+
+    iptables -t mangle -C XRAYUI -p tcp -j MARK --set-mark 0x8777 2>/dev/null || iptables -t mangle -A XRAYUI -p tcp -j MARK --set-mark 0x8777
+    iptables -t mangle -N DIVERT || true
+    iptables -t mangle -A DIVERT -j MARK --set-mark 0x8777
+    iptables -t mangle -A DIVERT -j ACCEPT
+    iptables -t mangle -I PREROUTING -p tcp -m socket -j DIVERT
+
+    iptables -t mangle -A XRAYUI -p tcp -j MARK --set-mark 0x8777
+    iptables -t mangle -A XRAYUI -p udp -j MARK --set-mark 0x8777
+
+    # NTP traffic
+    iptables -t mangle -A XRAYUI -p udp -m multiport --dports 123,323 -j RETURN
 
     local script="$XRAYUI_USER_SCRIPTS/firewall_client"
     if [ -x "$script" ]; then
         printlog true "Executing user firewall script: $script"
         "$script" "$xray_config" $XRAY_PORT $TPROXY_MODE || printlog true "Error executing $script." $CERR
     fi
+
+    iptables -t mangle -A XRAYUI -j LOG --log-prefix "XRAYUI_DROP: " --log-level 4 -m limit --limit 10/min --limit-burst 5
 
     printlog true "XRAYUI firewall rules applied successfully." $CSUC
 }
@@ -441,6 +471,15 @@ cleanup_firewall_client() {
     iptables -t mangle -F XRAYUI 2>/dev/null
     iptables -t mangle -X XRAYUI 2>/dev/null
     printlog true "Removed XRAYUI MANGLE chain (if used)." $CSUC
+
+    # Remove DIVERT chain (if created)
+    iptables -t mangle -F DIVERT 2>/dev/null
+    iptables -t mangle -X DIVERT 2>/dev/null
+    printlog true "Removed DIVERT chain (if used)." $CSUC
+
+    # Remove NTP traffic bypass rules
+    iptables -t mangle -D XRAYUI -p udp -m multiport --dports 123,323 -j RETURN 2>/dev/null
+    printlog true "Removed NTP traffic bypass rules." $CSUC
 
     # Restart services to refresh firewall
     # printlog true "Firewall and WAN services restarted." $CSUC

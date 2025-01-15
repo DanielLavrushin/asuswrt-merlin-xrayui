@@ -19,6 +19,24 @@
                         <span class="hint-color">default: off</span>
                     </td>
                 </tr>
+                <tr>
+                    <th>
+                        Outbound network interface
+                    </th>
+                    <td>
+                        <input type="number" maxlength="15" class="input_20_table" v-model="sockopt.interface" />
+                        <span class="hint-color"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                        Mark
+                    </th>
+                    <td>
+                        <input type="number" maxlength="15" class="input_20_table" v-model="sockopt.mark" />
+                        <span class="hint-color"></span>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>

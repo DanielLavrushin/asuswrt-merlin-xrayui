@@ -207,9 +207,11 @@ class XrayStreamSettingsObject {
   public splithttpSettings?: XrayStreamSplitHttpSettingsObject;
 
   public sockopt?: XraySockoptObject;
+
   public normalize() {
     this.normalizeProtocol();
     this.normalizeSecurity();
+    this.normalizeSockopt();
   }
 
   public normalizeProtocol() {
@@ -228,6 +230,13 @@ class XrayStreamSettingsObject {
         delete this[prop as keyof XrayStreamSettingsObject];
       }
     });
+  }
+  public normalizeSockopt() {
+    if (this.sockopt) {
+      this.sockopt.mark = this.sockopt.mark == 0 ? undefined : this.sockopt.mark;
+      this.sockopt.interface = this.sockopt.interface == "" ? undefined : this.sockopt.interface;
+      this.sockopt.tproxy = this.sockopt.tproxy == "off" || this.sockopt.tproxy == "" ? undefined : this.sockopt.tproxy;
+    }
   }
 }
 

@@ -1,9 +1,16 @@
 # XRAYUI Changelog
 
-## [0.xx.x] - xxxx-xx-xx
+## [0.22.0] - 2025-01-15
 
-- ADDED: DNS redirection for router-originated traffic: Implemented an iptables rule to redirect UDP DNS queries (dport 53) originating from the router itself to the configured Xray DNS port. This ensures that all DNS traffic, including system-level queries from the router, is routed through Xray, preventing DNS leaks and maintaining consistent DNS behavior across the network.
-- UPDATED: Added logic to remove the new OUTPUT chain DNS redirection rule during cleanup, ensuring proper cleanup of all firewall rules when Xray is stopped or reconfigured.
+- ADDED: An option to toggle Xray startup on router reboot (enable/disable) (available under `Connection Status`).
+- ADDED: Introduced a Transparent Proxy `Mark` field in the `sockopt` configuration.
+- ADDED: Added an `Outbound network interface` field in the `sockopt` configuration.
+- ADDED: Implemented `sockopt object` normalization.
+- IMPROVED: Redesigned outbound proxy server lookup to exclude entries from the NAT and MANGLE tables (issue #3).
+- IMPROVED: Refactored client firewall rules configuration by separating DIRECT and TPROXY rules (issue #3).
+- IMPROVED: Simplified and optimized the firewall rules cleanup process.
+- UPDATED: Increased `configuration apply` time from 5 seconds to 10 seconds to ensure the Xray service fully restarts.
+- REMOVED: Deprecated shell functions `client add` and `client delete` .
 
 ## [0.21.1] - 2025-01-13
 

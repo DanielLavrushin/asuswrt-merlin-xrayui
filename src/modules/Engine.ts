@@ -15,21 +15,19 @@ class EngineResponseConfig {
 }
 class SubmtActions {
   public static ConfigurationSetMode: string = "xrayui_configuration_mode";
-  public static ConfigurationServerSave: string = "xrayui_configuration_server";
-  public static ConfigurationClientSave: string = "xrayui_configuration_client";
+  public static ConfigurationApply: string = "xrayui_configuration_apply";
   public static CertificateRenew: string = "xrayui_certificate_renew";
   public static clientsOnline: string = "xrayui_connectedclients";
   public static refreshConfig: string = "xrayui_refreshconfig";
   public static serverStart: string = "xrayui_serverstatus_start";
   public static serverRestart: string = "xrayui_serverstatus_restart";
   public static serverStop: string = "xrayui_serverstatus_stop";
-  public static clientDelete: string = "xrayui_client_delete";
-  public static clientAdd: string = "xrayui_client_add";
   public static regenerateRealityKeys: string = "xrayui_regenerate_realitykeys";
   public static regenerateWireguardyKeys: string = "xrayui_regenerate_wgkeys";
   public static enableLogs: string = "xrayui_configuration_logs";
   public static performUpdate: string = "xrayui_update";
   public static performUpdateGeodat: string = "xrayui_updategeodat";
+  public static ToggleStartupOption: string = "xrayui_configuration_togglestartup";
 }
 
 class Engine {

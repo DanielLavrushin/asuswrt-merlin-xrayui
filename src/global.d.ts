@@ -5,6 +5,7 @@ interface XrayUiCustomSettings {
   xray_version: string;
   xray_payload: string | undefined;
   xray_mode: string;
+  xray_startup: string;
 }
 
 interface XrayUiServer {

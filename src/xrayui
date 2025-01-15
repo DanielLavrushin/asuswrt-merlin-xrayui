@@ -30,6 +30,7 @@ CSUC='\033[0;32m'
 CWARN='\033[0;33m'
 CINFO='\033[0;36m'
 CRESET='\033[0m'
+
 printlog() {
     if [ "$1" = "true" ]; then
         logger -t "XRAYUI" "$2"
@@ -69,11 +70,15 @@ stop() {
     printlog true "Stopping $DESC" $CWARN
 
     killall xray
+    # Remove the PID file if it exists
+    if [ -f "$PIDFILE" ]; then
+        rm -f "$PIDFILE"
+        printlog true "PID file $PIDFILE removed successfully."
+    fi
     sleep 2
-    cleanup_firewall_client
-    cleanup_firewall_server
-}
+    cleanup_firewall
 
+}
 restart() {
     printlog true "Restarting $DESC" $CWARN
     stop
@@ -182,7 +187,6 @@ get_xray_proc() {
 configure_firewall_server() {
     mode=$(am_settings_get xray_mode)
     if [ "$mode" = "server" ]; then
-        cleanup_firewall_server
 
         # Check if 'xray' process is running
         get_xray_proc
@@ -246,34 +250,7 @@ configure_firewall_server() {
 }
 
 configure_firewall_client() {
-    mode=$(am_settings_get xray_mode)
-    if [ "$mode" != "client" ]; then
-        printlog true "XRAYUI Client firewall rules not applied; mode is not client." $CWARN
-        return
-    fi
-
     printlog true "Configuring Xray firewall rules..."
-    cleanup_firewall_client
-
-    # Create custom chains in NAT and MANGLE
-    iptables -t mangle -F XRAYUI 2>/dev/null
-    iptables -t mangle -X XRAYUI 2>/dev/null
-    iptables -t nat -F XRAYUI 2>/dev/null
-    iptables -t nat -X XRAYUI 2>/dev/null
-    iptables -t mangle -N XRAYUI
-    iptables -t nat -N XRAYUI
-
-    XRAY_PORT="$(jq -r '.inbounds[0].port // empty' "$xray_config")"
-    TPROXY_MODE="$(jq -r '.inbounds[0].streamSettings.sockopt.tproxy // "off"' "$xray_config")"
-    SERVER_IP=$(jq -r '.outbounds[0].settings.vnext[0].address' "$xray_config")
-
-    DNS_PORT="$XRAY_PORT"
-
-    printlog true "Configuring Xray on port $XRAY_PORT ..."
-    if [ -z "$XRAY_PORT" ]; then
-        printlog true "Invalid or missing port in Xray configuration. Cannot configure firewall rules." $CERR
-        return 1
-    fi
 
     # Check if 'xray' process is running
     get_xray_proc
@@ -282,217 +259,169 @@ configure_firewall_client() {
         return
     fi
 
-    iptables -t nat -A XRAYUI -d "$SERVER_IP" -j RETURN # Skip traffic to Xray server
-    iptables -t nat -A OUTPUT -p tcp -j XRAYUI
-
-    # Dynamically detect local (RFC1918) subnets to exclude from redirection
-    local_networks=$(
-        ip -4 route show |
-            awk '/src/ && ($1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/) { print $1 }'
-    )
-
-    # Always exclude loopback
-    iptables -t nat -A XRAYUI -d 127.0.0.1/32 -j RETURN
-    iptables -t mangle -A XRAYUI -d 127.0.0.1/32 -j RETURN
-
-    #Return if local net or DHCP
-    iptables -t nat -A XRAYUI -p udp --dport 67 -j RETURN
-    iptables -t nat -A XRAYUI -p udp --dport 68 -j RETURN
-    iptables -t mangle -A XRAYUI -p udp --dport 67 -j RETURN
-    iptables -t mangle -A XRAYUI -p udp --dport 68 -j RETURN
-
-    iptables -t nat -A XRAYUI -d 224.0.0.0/4 -j RETURN
-    iptables -t nat -A XRAYUI -d 239.0.0.0/8 -j RETURN
-    iptables -t mangle -A XRAYUI -d 224.0.0.0/4 -j RETURN
-    iptables -t mangle -A XRAYUI -d 239.0.0.0/8 -j RETURN
-
-    iptables -t mangle -A XRAYUI -p udp -j TPROXY --on-ip 127.0.0.1 --on-port "$XRAY_PORT" --tproxy-mark 0x8777
-
-    #  Force all DNS (udp:53) to Xray:
-    iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-port "$DNS_PORT"
-    iptables -t nat -A PREROUTING -p udp --dport 853 -j REDIRECT --to-port "$DNS_PORT"
-    iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-port "$DNS_PORT"
-
-    # iptables -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT --to-port "$DNS_PORT"
-    # iptables -t nat -A PREROUTING -p tcp --dport 853 -j REDIRECT --to-port "$DNS_PORT"
-
-    if [ -n "$SERVER_IP" ]; then
-        iptables -t mangle -A XRAYUI -d "$SERVER_IP" -j RETURN
+    mode=$(am_settings_get xray_mode)
+    if [ "$mode" != "client" ]; then
+        printlog true "XRAYUI Client firewall rules not applied; mode is not client." $CWARN
+        return
     fi
 
-    # Exclude each local subnet from Xray
-    for net in $local_networks; do
-        iptables -t nat -A XRAYUI -d "$net" -j RETURN
-        iptables -t mangle -A XRAYUI -d "$net" -j RETURN
-    done
+    XRAY_PORT="$(jq -r '.inbounds[0].port // empty' "$xray_config")"
+    TPROXY_MODE="$(jq -r '.inbounds[0].streamSettings.sockopt.tproxy // "off"' "$xray_config")"
+    SERVER_IPS=$(jq -r '[.outbounds[] | select(.settings.vnext != null) | .settings.vnext[].address] | unique | join(" ")' "$xray_config")
 
-    case "$TPROXY_MODE" in
-    "tproxy")
-        printlog true "Configuring TPROXY rules for XRAYUI..."
-
-        # Ensure TPROXY module is loaded
-        if ! lsmod | grep -q "xt_TPROXY"; then
-            printlog true "xt_TPROXY kernel module not loaded. Attempting to load..."
-            modprobe xt_TPROXY || {
-                printlog true "Failed to load xt_TPROXY kernel module. TPROXY might not work." $CERR
-                return 1
-            }
-            sleep 1 # Allow some time for the module to load
-        fi
-
-        # Verify if the module is successfully loaded
-        if ! lsmod | grep -q "xt_TPROXY"; then
-            printlog true "xt_TPROXY kernel module is still not loaded after attempt. Aborting." $CERR
-            return 1
-        else
-            printlog true "xt_TPROXY kernel module successfully loaded."
-        fi
-
-        # TPROXY for TCP + UDP
-        iptables -t mangle -A XRAYUI -p tcp -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777 ||
-            printlog true "Failed to add TPROXY rule for TCP" $CERR
-        iptables -t mangle -A XRAYUI -p udp -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777 ||
-            printlog true "Failed to add TPROXY rule for UDP" $CERR
-
-        # Marked packets route to table 8777
-        ip rule add fwmark 0x8777 table 8777 priority 100 ||
-            printlog true "Failed to add fwmark rule for XRAYUI" $CERR
-        ip route add local 0.0.0.0/0 dev lo table 8777 ||
-            printlog true "Failed to add route for XRAYUI" $CERR
-
-        # Hook XRAYUI chain in MANGLE PREROUTING
-        iptables -t mangle -A PREROUTING -j XRAYUI
-
-        # Force all DNS (udp:53) to TPROXY:
-        iptables -t mangle -A PREROUTING -p udp --dport 53 -j TPROXY --on-port "$DNS_PORT" --tproxy-mark 0x8777
-        ;;
-    *)
-        printlog true "Configuring REDIRECT rules for XRAYUI..."
-        # NAT REDIRECT for TCP + UDP
-        iptables -t nat -A XRAYUI -p tcp -j REDIRECT --to-port "$XRAY_PORT" ||
-            printlog true "Failed to add REDIRECT rule for TCP" $CERR
-        iptables -t nat -A XRAYUI -p udp -j REDIRECT --to-port "$XRAY_PORT" ||
-            printlog true "Failed to add REDIRECT rule for UDP" $CERR
-
-        # Hook XRAYUI chain in NAT PREROUTING
-        iptables -t nat -A PREROUTING -j XRAYUI
-
-        ;;
-    esac
-
-    #MARK for Traffic Processing
-
-    iptables -t mangle -C XRAYUI -p tcp -j MARK --set-mark 0x8777 2>/dev/null || iptables -t mangle -A XRAYUI -p tcp -j MARK --set-mark 0x8777
-    iptables -t mangle -N DIVERT || true
-    iptables -t mangle -A DIVERT -j MARK --set-mark 0x8777
-    iptables -t mangle -A DIVERT -j ACCEPT
-    iptables -t mangle -I PREROUTING -p tcp -m socket -j DIVERT
-
-    iptables -t mangle -A XRAYUI -p tcp -j MARK --set-mark 0x8777
-    iptables -t mangle -A XRAYUI -p udp -j MARK --set-mark 0x8777
-
-    # NTP traffic
-    iptables -t mangle -A XRAYUI -p udp -m multiport --dports 123,323 -j RETURN
-
-    local script="$XRAYUI_USER_SCRIPTS/firewall_client"
-    if [ -x "$script" ]; then
-        printlog true "Executing user firewall script: $script"
-        "$script" "$xray_config" $XRAY_PORT $TPROXY_MODE || printlog true "Error executing $script." $CERR
+    printlog true "Configuring Xray on port $XRAY_PORT ..."
+    if [ -z "$XRAY_PORT" ]; then
+        printlog true "Invalid or missing port in Xray configuration. Cannot configure firewall rules." $CERR
+        return 1
     fi
 
-    iptables -t mangle -A XRAYUI -j LOG --log-prefix "XRAYUI_DROP: " --log-level 4 -m limit --limit 10/min --limit-burst 5
+    if [ "$TPROXY_MODE" = "tproxy" ]; then
+        configure_firewall_client_tproxy
+    else
+        configure_firewall_client_direct
+    fi
 
     printlog true "XRAYUI firewall rules applied successfully." $CSUC
 }
 
-cleanup_firewall_server() {
-    printlog true "Cleaning up Xray Server firewall rules..."
-
-    # Remove XRAYUI chain from INPUT and FORWARD chains
-    iptables -D INPUT -j XRAYUI 2>/dev/null
-    iptables -D FORWARD -j XRAYUI 2>/dev/null
-
-    # Flush and delete the XRAYUI chain
-    iptables -F XRAYUI 2>/dev/null
-    iptables -X XRAYUI 2>/dev/null
-
-    local script="$XRAYUI_USER_SCRIPTS/firewall_server_cleanup"
-    if [ -x "$script" ]; then
-        printlog true "Executing user firewall script: $script"
-        "$script" "$xray_config" || printlog true "Error executing $script." $CERR
-    fi
-
-    service restart_dnsmasq
-
-    printlog true "Xray Server firewall rules cleaned up successfully." $CSUC
-}
-
-cleanup_firewall_client() {
-    printlog true "Cleaning up Xray Client firewall rules..."
-
-    XRAY_PORT="$(jq -r '.inbounds[0].port // empty' "$xray_config")"
-
-    # Remove any forced DNS rules we added for NAT/TPROXY DNS (udp:53)
-    iptables -t nat -D PREROUTING -p udp --dport 53 -j REDIRECT --to-port "$XRAY_PORT" 2>/dev/null
-    iptables -t mangle -D PREROUTING -p udp --dport 53 -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777 2>/dev/null
-
-    iptables -t nat -D PREROUTING -p udp --dport 853 -j REDIRECT --to-port "$XRAY_PORT" 2>/dev/null
-    iptables -t mangle -D PREROUTING -p udp --dport 853 -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777 2>/dev/null
-
-    iptables -t nat -D PREROUTING -p tcp --dport 53 -j REDIRECT --to-port "$XRAY_PORT" 2>/dev/null
-    iptables -t mangle -D PREROUTING -p tcp --dport 53 -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777 2>/dev/null
-
-    iptables -t nat -D PREROUTING -p tcp --dport 853 -j REDIRECT --to-port "$XRAY_PORT" 2>/dev/null
-    iptables -t mangle -D PREROUTING -p tcp --dport 853 -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777 2>/dev/null
-
-    iptables -t nat -D OUTPUT -p udp --dport 53 -j REDIRECT --to-port "$XRAY_PORT" 2>/dev/null
-
-    # Remove fwmark rules and routing table
-    RULES="$(ip rule show | grep -E 'fwmark .* lookup 8777')"
-    if [ -n "$RULES" ]; then
-        echo "$RULES" | while read LINE; do
-            PRIO=$(echo "$LINE" | cut -d':' -f1 | awk '{print $1}')
-            MARK=$(echo "$LINE" | awk '{print $5}')
-            ip rule del fwmark "$MARK" table 8777 priority "$PRIO" 2>/dev/null
-            printlog true "Removed rule: fwmark $MARK lookup 8777 priority $PRIO" $CSUC
-        done
-    fi
-
-    ip rule del fwmark 0x8777 table 8777 priority 100 2>/dev/null
-    ip route flush table 8777 2>/dev/null
-    printlog true "Removed fwmark rule and flushed table 8777." $CSUC
-
-    # Remove XRAYUI chain in NAT
-    iptables -t nat -D PREROUTING -j XRAYUI 2>/dev/null
+configure_firewall_client_direct() {
+    # Set up NAT-only rules for REDIRECT mode.
     iptables -t nat -F XRAYUI 2>/dev/null
     iptables -t nat -X XRAYUI 2>/dev/null
-    printlog true "Removed XRAYUI NAT chain." $CSUC
+    iptables -t nat -N XRAYUI || printlog true "Failed to create NAT chain." $CERR
 
-    # Remove XRAYUI chain in MANGLE
-    iptables -t mangle -D PREROUTING -j XRAYUI 2>/dev/null
-    iptables -t mangle -F XRAYUI 2>/dev/null
-    iptables -t mangle -X XRAYUI 2>/dev/null
-    printlog true "Removed XRAYUI MANGLE chain (if used)." $CSUC
+    # --- Begin Exclusion Rules (NAT) ---
+    # Exclude local (RFC1918) subnets dynamically:
+    local local_networks=$(
+        ip -4 route show |
+            awk '/src/ && ($1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/) { print $1 }'
+    )
+    for net in $local_networks; do
+        iptables -t nat -A XRAYUI -d "$net" -j RETURN || printlog true "Failed to add local subnet $net rule in NAT." $CERR
+    done
 
-    # Remove DIVERT chain (if created)
-    iptables -t mangle -F DIVERT 2>/dev/null
-    iptables -t mangle -X DIVERT 2>/dev/null
-    printlog true "Removed DIVERT chain (if used)." $CSUC
+    # Always exclude loopback:
+    iptables -t nat -A XRAYUI -d 127.0.0.1/32 -j RETURN || printlog true "Failed to add loopback rule in NAT." $CERR
 
-    # Remove NTP traffic bypass rules
-    iptables -t mangle -D XRAYUI -p udp -m multiport --dports 123,323 -j RETURN 2>/dev/null
-    printlog true "Removed NTP traffic bypass rules." $CSUC
+    # Exclude DHCP (UDP ports 67 and 68):
+    iptables -t nat -A XRAYUI -p udp --dport 67 -j RETURN || printlog true "Failed to add DHCP rule for UDP 67 in NAT." $CERR
+    iptables -t nat -A XRAYUI -p udp --dport 68 -j RETURN || printlog true "Failed to add DHCP rule for UDP 68 in NAT." $CERR
 
-    # Restart services to refresh firewall
-    # printlog true "Firewall and WAN services restarted." $CSUC
+    # Exclude multicast addresses:
+    iptables -t nat -A XRAYUI -d 224.0.0.0/4 -j RETURN || printlog true "Failed to add multicast rule (224.0.0.0/4) in NAT." $CERR
+    iptables -t nat -A XRAYUI -d 239.0.0.0/8 -j RETURN || printlog true "Failed to add multicast rule (239.0.0.0/8) in NAT." $CERR
 
-    local script="$XRAYUI_USER_SCRIPTS/firewall_client_cleanup"
-    if [ -x "$script" ]; then
-        printlog true "Executing user firewall script: $script"
-        "$script" "$xray_config" $XRAY_PORT || printlog true "Error executing $script." $CERR
+    # Exclude traffic destined to the Xray server:
+    for serverip in $SERVER_IPS; do
+        printlog true "Excluding Xray server IP $serverip from NAT."
+        iptables -t nat -A XRAYUI -d "$serverip" -j RETURN || printlog true "Failed to add rule to exclude Xray server IP $serverip in NAT." $CERR
+    done
+    # --- End Exclusion Rules ---
+
+    # Add NAT REDIRECT rules:
+    iptables -t nat -A XRAYUI -p tcp -j REDIRECT --to-port "$XRAY_PORT" || printlog true "Failed to add TCP REDIRECT." $CERR
+    iptables -t nat -A XRAYUI -p udp -j REDIRECT --to-port "$XRAY_PORT" || printlog true "Failed to add UDP REDIRECT." $CERR
+
+    # Hook chain into NAT PREROUTING:
+    iptables -t nat -A PREROUTING -j XRAYUI || printlog true "Failed to hook NAT chain." $CERR
+
+    printlog true "Direct (REDIRECT) rules applied." $CSUC
+}
+
+configure_firewall_client_tproxy() {
+
+    # Ensure TPROXY module is loaded
+    if ! lsmod | grep -q "xt_TPROXY"; then
+        printlog true "xt_TPROXY kernel module not loaded. Attempting to load..."
+        modprobe xt_TPROXY || {
+            printlog true "Failed to load xt_TPROXY kernel module. TPROXY might not work." $CERR
+            return 1
+        }
+        sleep 1 # Allow some time for the module to load
     fi
 
-    service restart_dnsmasq
+    # Verify if the module is successfully loaded
+    if ! lsmod | grep -q "xt_TPROXY"; then
+        printlog true "xt_TPROXY kernel module is still not loaded after attempt. Aborting." $CERR
+        return 1
+    else
+        printlog true "xt_TPROXY kernel module successfully loaded."
+    fi
+
+    # Set up NAT chain as in direct mode.
+    iptables -t nat -F XRAYUI 2>/dev/null
+    iptables -t nat -X XRAYUI 2>/dev/null
+    iptables -t nat -N XRAYUI || printlog true "Failed to create NAT chain." $CERR
+
+    # Set up MANGLE chain:
+    iptables -t mangle -F XRAYUI 2>/dev/null
+    iptables -t mangle -X XRAYUI 2>/dev/null
+    iptables -t mangle -N XRAYUI || printlog true "Failed to create mangle chain." $CERR
+
+    # --- Begin Exclusion Rules (both NAT and MANGLE) ---
+    # Exclude local (RFC1918) subnets dynamically:
+    local local_networks=$(
+        ip -4 route show |
+            awk '/src/ && ($1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/) { print $1 }'
+    )
+    for net in $local_networks; do
+        iptables -t nat -A XRAYUI -d "$net" -j RETURN || printlog true "Failed to add local subnet $net rule in NAT." $CERR
+        iptables -t mangle -A XRAYUI -d "$net" -j RETURN || printlog true "Failed to add local subnet $net rule in MANGLE." $CERR
+    done
+
+    # Always exclude loopback:
+    iptables -t nat -A XRAYUI -d 127.0.0.1/32 -j RETURN || printlog true "Failed to add loopback rule in NAT." $CERR
+    iptables -t mangle -A XRAYUI -d 127.0.0.1/32 -j RETURN || printlog true "Failed to add loopback rule in MANGLE." $CERR
+
+    # Exclude DHCP (UDP ports 67 and 68):
+    iptables -t nat -A XRAYUI -p udp --dport 67 -j RETURN || printlog true "Failed to add DHCP rule for UDP 67 in NAT." $CERR
+    iptables -t nat -A XRAYUI -p udp --dport 68 -j RETURN || printlog true "Failed to add DHCP rule for UDP 68 in NAT." $CERR
+    iptables -t mangle -A XRAYUI -p udp --dport 67 -j RETURN || printlog true "Failed to add DHCP rule for UDP 67 in MANGLE." $CERR
+    iptables -t mangle -A XRAYUI -p udp --dport 68 -j RETURN || printlog true "Failed to add DHCP rule for UDP 68 in MANGLE." $CERR
+
+    # Exclude multicast addresses:
+    iptables -t nat -A XRAYUI -d 224.0.0.0/4 -j RETURN || printlog true "Failed to add multicast rule (224.0.0.0/4) in NAT." $CERR
+    iptables -t nat -A XRAYUI -d 239.0.0.0/8 -j RETURN || printlog true "Failed to add multicast rule (239.0.0.0/8) in NAT." $CERR
+    iptables -t mangle -A XRAYUI -d 224.0.0.0/4 -j RETURN || printlog true "Failed to add multicast rule (224.0.0.0/4) in MANGLE." $CERR
+    iptables -t mangle -A XRAYUI -d 239.0.0.0/8 -j RETURN || printlog true "Failed to add multicast rule (239.0.0.0/8) in MANGLE." $CERR
+
+    # Exclude traffic destined to the Xray server:
+    for serverip in $SERVER_IPS; do
+        printlog true "Excluding Xray server $serverip from NAT and MANGLE."
+        iptables -t nat -A XRAYUI -d "$serverip" -j RETURN || printlog true "Failed to add rule to exclude Xray server $serverip in NAT." $CERR
+        iptables -t mangle -A XRAYUI -d "$serverip" -j RETURN || printlog true "Failed to add rule to exclude Xray server  $serverip  in MANGLE." $CERR
+    done
+    # --- End Exclusion Rules ---
+
+    # Add TPROXY rules in mangle:
+    iptables -t mangle -A XRAYUI -p tcp -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777 || printlog true "Failed to add TPROXY rule for TCP." $CERR
+    iptables -t mangle -A XRAYUI -p udp -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777 || printlog true "Failed to add TPROXY rule for UDP." $CERR
+
+    # Add routing rules for marked packets:
+    ip rule add fwmark 0x8777 table 8777 priority 100 || printlog true "Failed to add fwmark rule." $CERR
+    ip route add local 0.0.0.0/0 dev lo table 8777 || printlog true "Failed to add local route for fwmark." $CERR
+
+    # Hook the mangle chain into PREROUTING:
+    iptables -t mangle -A PREROUTING -j XRAYUI || printlog true "Failed to hook mangle chain." $CERR
+
+    printlog true "TPROXY rules applied." $CSUC
+}
+
+cleanup_firewall() {
+
+    printlog true "Cleaning up Xray Client firewall rules..."
+
+    iptables -t nat -F XRAYUI 2>/dev/null || printlog true "Failed to flush NAT chain. Was it already empty?" $CWARN
+    iptables -t nat -X XRAYUI 2>/dev/null || printlog true "Failed to remove NAT chain. Was it already empty?" $CWARN
+    iptables -t mangle -F XRAYUI 2>/dev/null || printlog true "Failed to flush mangle chain. Was it already empty?" $CWARN
+    iptables -t mangle -X XRAYUI 2>/dev/null || printlog true "Failed to remove mangle chain. Was it already empty?" $CWARN
+
+    ip rule del fwmark 0x8777 table 8777 priority 100 2>/dev/null || printlog true "Failed to delete fwmark rule. Was it already empty?" $CWARN
+    ip route flush table 8777 2>/dev/null || printlog true "Failed to flush table 8777. Was it already empty?" $CWARN
+
+    printlog true "Restarting firewall and DNS services..."
+    service restart_firewall >/dev/null 2>&1 && printlog true "Firewall service restarted successfully." $CSUC
+    service restart_dnsmasq >/dev/null 2>&1 && printlog true "DNS service restarted successfully." $CSUC
 
     printlog true "Xray Client firewall rules cleaned up successfully." $CSUC
 }
@@ -880,7 +809,7 @@ switch_mode() {
     am_settings_set xray_mode $mode_type
 }
 
-save_server_config() {
+apply_config() {
     local temp_config="/tmp/xray_server_config_new.json"
     local backup_config="/opt/etc/xray/config.json-temp.bak"
 
@@ -936,6 +865,7 @@ save_server_config() {
         restart
         exit 1
     fi
+
     printlog true "Xray service restarted successfully with the new configuration." $CSUC
 
     rm -f "$backup_config"
@@ -963,7 +893,7 @@ test_xray_config() {
     if ! output=$(xray -c /opt/etc/xray/config.json -test 2>&1); then
         message=$(echo "$output" | sed 's/"/\\"/g')
     else
-        message="All seem to be fine. XRAY Service is just not started."
+        message="Config file appears to be fine, but the XRAY service has not started. Try to restart/reconnect it."
     fi
 
     local json_file="$dir_xrayui/xray-ui-response.json"
@@ -1066,8 +996,8 @@ EOF
         printlog true "Removing existing #xrayui entries from /jffs/scripts/nat-start."
         sed -i '/#xrayui/d' /jffs/scripts/nat-start
     fi
-    echo "/jffs/scripts/xrayui service_event firewall server #xrayui" >>/jffs/scripts/nat-start
-    echo "/jffs/scripts/xrayui service_event firewall client #xrayui" >>/jffs/scripts/nat-start
+    echo '/jffs/scripts/xrayui service_event firewall server #xrayui' >>/jffs/scripts/nat-start
+    echo '/jffs/scripts/xrayui service_event firewall client #xrayui' >>/jffs/scripts/nat-start
     printlog true "Updated /jffs/scripts/nat-start with XrayUI entry." $CSUC
 
     # Add or update post-mount
@@ -1082,6 +1012,18 @@ EOF
     fi
     echo "/jffs/scripts/xrayui remount_ui"' "$@" & #'"xrayui" >>/jffs/scripts/post-mount
     printlog true "Updated /jffs/scripts/post-mount with XrayUI entry." $CSUC
+
+    # Add or update services-start
+    printlog true "Ensuring /jffs/scripts/services-start contains required entry."
+    if [ ! -f /jffs/scripts/services-start ]; then
+        echo "#!/bin/sh" >/jffs/scripts/services-start
+        chmod +x /jffs/scripts/services-start
+    else
+        printlog true "Removing existing #xrayui entries from /jffs/scripts/services-start."
+        sed -i '/#xrayui/d' /jffs/scripts/services-start
+    fi
+    echo "/jffs/scripts/xrayui service_event startup & #xrayui" >>/jffs/scripts/services-start
+    printlog true "Updated /jffs/scripts/services-start with XrayUI entry." $CSUC
 
     # Add or update service-event
     printlog true "Ensuring /jffs/scripts/service-event contains required entry."
@@ -1099,6 +1041,14 @@ EOF
     remount_ui "skipwait"
 
     am_settings_set xray_version $XRAYUI_VERSION
+
+    xray_startup=$(am_settings_get xray_startup)
+    if [ -z "$xray_startup" ]; then
+        am_settings_set xray_startup "y"
+        printlog true "xray_startup was empty. Set to 'enabled'." $CWARN
+    else
+        printlog true "xray_startup already set. Skipping."
+    fi
 
     local current_mode=$(am_settings_get xray_mode)
     if [ -z "$current_mode" ]; then
@@ -1137,6 +1087,10 @@ uninstall() {
         exit 1
     fi
 
+    # clean up services-start
+    printlog true "Removing existing #xrayui entries from /jffs/scripts/services-start."
+    sed -i '/#xrayui/d' /jffs/scripts/services-start
+
     # clean up nat-start
     printlog true "Removing existing #xrayui entries from /jffs/scripts/nat-start."
     sed -i '/#xrayui/d' /jffs/scripts/nat-start
@@ -1148,9 +1102,6 @@ uninstall() {
     # clean up service-event
     printlog true "Removing existing #xrayui entries from /jffs/scripts/service-event."
     sed -i '/#xrayui/d' /jffs/scripts/service-event
-
-    cleanup_firewall_server
-    cleanup_firewall_client
 
     # Unmount UI
     printlog true "Unmounting XRAY UI..."
@@ -1256,6 +1207,22 @@ enable_config_logs() {
     return 0
 }
 
+toggle_startup() {
+    local xray_startup=$(am_settings_get xray_startup)
+    if [ -z "$xray_startup" ]; then
+        am_settings_set xray_startup "y"
+        printlog true "xray_startup was empty. Set to 'enabled'." $CWARN
+    else
+        if [ "$xray_startup" = "y" ]; then
+            am_settings_set xray_startup "n"
+            printlog true "xray_startup was 'enabled'. Set to 'disabled'." $CSUC
+        else
+            am_settings_set xray_startup "y"
+            printlog true "xray_startup was 'disabled'. Set to 'enabled'." $CSUC
+        fi
+    fi
+}
+
 case "$1" in
 install)
     install
@@ -1288,6 +1255,17 @@ service_event)
     if [ "$2" = "testconfig" ]; then
         test_xray_config
         exit 0
+    elif [ "$2" = "startup" ]; then
+        get_xray_proc
+        if [ "$(am_settings_get xray_startup)" = "y" ]; then
+            restart
+        elif [ -n "$xray_pid" ]; then
+            printlog true "Xray service is disabled by XRAYUI. Stoping Xray service..."
+            stop
+        else
+            printlog true "Xray service is disabled by XRAYUI. Xray service is not running."
+        fi
+        exit 0
     elif [ "$2" = "testconfig" ]; then
         test_xray_config
         exit 0
@@ -1302,8 +1280,8 @@ service_event)
         exit 0
     elif [ "$2" = "configuration" ]; then
         case "$3" in
-        "server")
-            save_server_config
+        "apply")
+            apply_config
             exit 0
             ;;
         "mode")
@@ -1312,6 +1290,10 @@ service_event)
             ;;
         "logs")
             enable_config_logs
+            exit 0
+            ;;
+        "togglestartup")
+            toggle_startup
             exit 0
             ;;
         esac
@@ -1336,18 +1318,6 @@ service_event)
             ;;
         esac
         exit 0
-    elif [ "$2" = "client" ]; then
-        case "$3" in
-        "add")
-            client_add
-            exit 0
-            ;;
-        "delete")
-            client_delete
-            exit 0
-            ;;
-        esac
-        exit 0
     elif [ "$2" = "firewall" ]; then
         case "$3" in
         "server")
@@ -1358,17 +1328,8 @@ service_event)
             configure_firewall_client
             exit 0
             ;;
-        "clientcleanup")
-            cleanup_firewall_client
-            exit 0
-            ;;
-        "servercleanup")
-            cleanup_firewall_server
-            exit 0
-            ;;
         "cleanup")
-            cleanup_firewall_server
-            cleanup_firewall_client
+            cleanup_firewall
             exit 0
             ;;
         esac

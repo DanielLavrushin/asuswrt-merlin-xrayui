@@ -22,6 +22,7 @@
           </span>
         </td>
       </tr>
+      <startup-control></startup-control>
     </tbody>
   </table>
 </template>
@@ -29,9 +30,13 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import engine from "../modules/Engine";
+import StartupControl from "./StartupControl.vue";
 
 export default defineComponent({
   name: "ServerStatus",
+  components: {
+    StartupControl,
+  },
   data() {
     return {
       isRunning: window.xray.server.isRunning,

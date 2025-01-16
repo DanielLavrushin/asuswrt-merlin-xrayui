@@ -1,5 +1,9 @@
 # XRAYUI Changelog
 
+## [0.2x.x] - 2025-01-xx
+
+- FIXED: The `Toggle Xray startup on reboot` checkbox occasionally reverted to its previous state.
+
 ## [0.22.0] - 2025-01-15
 
 - ADDED: An option to toggle Xray startup on router reboot (enable/disable) (available under `Connection Status`).

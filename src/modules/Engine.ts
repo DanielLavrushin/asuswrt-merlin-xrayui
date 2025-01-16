@@ -66,6 +66,7 @@ class Engine {
         <input type="hidden" name="action_wait" value="" />
       `;
 
+      const amngCustomInput = document.createElement("input");
       if (payload) {
         const chunkSize = 2048;
         const payloadString = JSON.stringify(payload);
@@ -80,7 +81,6 @@ class Engine {
           return;
         }
 
-        const amngCustomInput = document.createElement("input");
         amngCustomInput.type = "hidden";
         amngCustomInput.name = "amng_custom";
         amngCustomInput.value = customSettings;
@@ -98,6 +98,9 @@ class Engine {
         }, delay);
       };
       form.submit();
+      if (form.contains(amngCustomInput)) {
+        form.removeChild(amngCustomInput);
+      }
     });
   }
 

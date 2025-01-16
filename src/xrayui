@@ -132,7 +132,7 @@ update() {
         return 1
     fi
 
-    if [ -f $PIDFILE ]; then
+    if [ -f "$PIDFILE" ]; then
         restart
     fi
 
@@ -149,13 +149,21 @@ update_geodat() {
 
     printlog true "Downloading geosite.dat..."
     curl -L "$geosite_url" -o "$target_dir/geosite.dat"
+    if [ $? -ne 0 ]; then
+        printlog true "Failed to download geosite.dat." $CERR
+        return 1
+    fi
 
     printlog true "Downloading geoip.dat..."
     curl -L "$geoip_url" -o "$target_dir/geoip.dat"
+    if [ $? -ne 0 ]; then
+        printlog true "Failed to download geoip.dat." $CERR
+        return 1
+    fi
 
     if [[ -f "$target_dir/geosite.dat" && -f "$target_dir/geoip.dat" ]]; then
         printlog true "Files successfully placed in $target_dir." $CSUC
-        if [ -f $PIDFILE ]; then
+        if [ -f "$PIDFILE" ]; then
             restart
         fi
     else
@@ -245,7 +253,7 @@ configure_firewall_server() {
 
         printlog true "All Xray firewall rules applied successfully." $CSUC
     else
-        printlog true "Xray Server firewall rules not applied, mode is not server." $WARN
+        printlog true "Xray Server firewall rules not applied, mode is not server." $CWARN
     fi
 }
 
@@ -398,7 +406,7 @@ configure_firewall_client_tproxy() {
     iptables -t mangle -A XRAYUI -p udp -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777 || printlog true "Failed to add TPROXY rule for UDP." $CERR
 
     # Add routing rules for marked packets:
-    ip rule add fwmark 0x8777 table 8777 priority 100 || printlog true "Failed to add fwmark rule." $CERR
+    ip rule list | grep -q "fwmark 0x8777" || ip rule add fwmark 0x8777 table 8777 priority 100 || printlog true "Failed to add fwmark rule." $CERR
     ip route add local 0.0.0.0/0 dev lo table 8777 || printlog true "Failed to add local route for fwmark." $CERR
 
     # Hook the mangle chain into PREROUTING:
@@ -689,7 +697,7 @@ cert_renew() {
         return 1
     fi
 
-    if [ -f $PIDFILE ]; then
+    if [ -f "$PIDFILE" ]; then
         restart
     fi
 
@@ -855,7 +863,7 @@ apply_config() {
 
     rm -f "$temp_config"
 
-    if [ -f $PIDFILE ]; then
+    if [ -f "$PIDFILE" ]; then
         restart
     fi
 
@@ -1067,7 +1075,7 @@ uninstall() {
     printlog true "Starting XRAY UI uninstallation process."
 
     # Stop XRAY service if running
-    if [ -f $PIDFILE ]; then
+    if [ -f "$PIDFILE" ]; then
         printlog true "Stopping XRAY service..."
         stop
         rm -f $PIDFILE
@@ -1200,7 +1208,7 @@ enable_config_logs() {
         printlog true "'log' section already exists in the configuration."
     fi
 
-    if [ -f $PIDFILE ]; then
+    if [ -f "$PIDFILE" ]; then
         restart
     fi
 
@@ -1265,9 +1273,6 @@ service_event)
         else
             printlog true "Xray service is disabled by XRAYUI. Xray service is not running."
         fi
-        exit 0
-    elif [ "$2" = "testconfig" ]; then
-        test_xray_config
         exit 0
     elif [ "$2" = "update" ]; then
         update

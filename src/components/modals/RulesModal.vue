@@ -295,12 +295,17 @@ export default defineComponent({
     };
 
     const getRuleName = (rule: XrayRoutingRuleObject): string => {
-      const outbound = rule.outboundTag || "No Outbound";
-      const inbound = rule.inboundTag && rule.inboundTag.length > 0 ? `Inbound: ${rule.inboundTag.join(", ")}` : "No Inbound";
-      const domains = rule.domain && rule.domain.length > 0 ? `Domains: ${rule.domain.slice(0, 2).join(", ")}${rule.domain.length > 2 ? "..." : ""}` : "No Domains";
-      const ip = rule.ip && rule.ip.length > 0 ? `IPs: ${rule.ip.slice(0, 2).join(", ")}${rule.ip.length > 2 ? "..." : ""}` : "No IPs";
+      const summarize = (arr?: string[]): string => {
+        if (!arr || arr.length === 0) return "n/a";
+        return arr.length > 3 ? arr.slice(0, 3).join(", ") + " …" : arr.join(", ");
+      };
 
-      return `${outbound} : ${inbound} | ${domains} | ${ip}`;
+      const outbound = rule.outboundTag || "n/a";
+      const inbound = rule.inboundTag && rule.inboundTag.length > 0 ? rule.inboundTag.join(", ") : "n/a";
+      const domains = summarize(rule.domain);
+      const ips = summarize(rule.ip);
+
+      return `in: ${inbound} | out: ${outbound} | dmns: ${domains} | ips: ${ips}`;
     };
 
     const reorderRule = (rule: XrayRoutingRuleObject, index: number) => {

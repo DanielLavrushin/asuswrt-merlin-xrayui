@@ -32,9 +32,8 @@ To uninstall and clean up run the command
 You can enhance the flexibility of your `Xray` configuration by adding custom scripts to handle specific firewall rules during Xray startup and shutdown. 
 These scripts should be placed in the `/jffs/xrayui_custom` directory and named according to their purpose:
 - `firewall_server` - Executed when Xray starts in server mode.
-- `firewall_server_cleanup` - Executed when Xray stops in server mode.
 - `firewall_client` - Executed when Xray starts in client mode.
-- `firewall_client_cleanup` - Executed when Xray stops in client mode.
+- `firewall_cleanup` - Executed when Xray stops.
 Ensure the scripts are executable (`chmod +x <script>`).
 
 ## FAQ

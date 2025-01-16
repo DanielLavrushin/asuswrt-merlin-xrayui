@@ -1,6 +1,6 @@
 # XRAYUI Changelog
 
-## [0.2x.x] - 2025-01-xx
+## [0.22.1] - 2025-01-16
 
 - FIXED: The `Toggle Xray startup on reboot` checkbox occasionally reverted to its previous state.
 

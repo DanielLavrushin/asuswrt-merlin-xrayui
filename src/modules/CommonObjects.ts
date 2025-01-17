@@ -149,12 +149,18 @@ class XrayDnsServerObject {
 class XrayRoutingObject {
   static domainStrategyOptions: string[] = ["AsIs", "IPIfNonMatch", "IPOnDemand"];
   static domainMatcherOptions: string[] = ["hybrid", "linear"];
-  public domainStrategy: string = "AsIs";
-  public domainMatcher: string = "hybrid";
+  public domainStrategy?: string = "AsIs";
+  public domainMatcher?: string = "hybrid";
   public rules?: XrayRoutingRuleObject[] = [];
 
   public normalize() {
+    this.domainStrategy = this.domainStrategy == "AsIs" ? undefined : this.domainStrategy;
+    this.domainMatcher = this.domainMatcher == "hybrid" ? undefined : this.domainMatcher;
+
     if (this.rules && this.rules.length > 0) {
+      this.rules.forEach((rule) => {
+        rule.normalize();
+      });
     } else {
       this.rules = undefined;
     }
@@ -164,7 +170,7 @@ class XrayRoutingObject {
 class XrayRoutingRuleObject {
   static networkOptions: string[] = ["", "tcp", "udp", "tcp,udp"];
   static protocolOptions: string[] = ["http", "tls", "bittorrent"];
-  public domainMatcher: string = "hybrid";
+  public domainMatcher?: string = "hybrid";
   public domain?: string[];
   public ip?: string[];
   public port?: string;
@@ -179,6 +185,7 @@ class XrayRoutingRuleObject {
   public attrs?: any;
 
   public normalize() {
+    this.domainMatcher = this.domainMatcher == "hybrid" ? undefined : this.domainMatcher;
     this.domain = this.domain?.length == 0 ? undefined : this.domain;
     this.ip = this.ip?.length == 0 ? undefined : this.ip;
     this.protocol = this.protocol?.length == 0 ? undefined : this.protocol;

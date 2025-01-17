@@ -212,7 +212,9 @@ class Engine {
 
     if (response.data.dns) {
       this.xrayConfig.dns = plainToInstance(XrayDnsObject, response.data.dns);
+    }
 
+    if (response.data.routing) {
       this.xrayConfig.routing = plainToInstance(XrayRoutingObject, response.data.routing);
       if (this.xrayConfig.routing && this.xrayConfig?.routing?.rules) {
         this.xrayConfig.routing.rules.forEach((rule, index) => {
@@ -222,6 +224,7 @@ class Engine {
         });
       }
     }
+
     Object.assign(xrayConfig, this.xrayConfig);
     return this.xrayConfig;
   }

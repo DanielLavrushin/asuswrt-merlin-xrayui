@@ -1,11 +1,12 @@
 # XRAYUI Changelog
 
-## [x.xx.x] - 2025-01-xx
+## [0.2x.x] - 2025-01-xx
 
 - REMOVED: doublicate `testconfig` invokation form the `xrayui` script
 - ADDED: Log an error when curl failed to download/update `geosite` files.
 - IMPROVED: minor cosmetic `xrayui` script fixes.
-- IMPROVED: routing rules display names and enhance summarization logic.
+- IMPROVED: routing rules display names and enhance summary.
+- IMPROVED: Refactor routing object sotring in json to be optional and update normalization logic.
 
 ## [0.22.1] - 2025-01-16
 

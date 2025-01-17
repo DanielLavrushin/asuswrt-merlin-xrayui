@@ -3,6 +3,7 @@
 ## [0.2x.x] - 2025-01-xx
 
 - REMOVED: doublicate `testconfig` invokation form the `xrayui` script
+- ADDED: give custom friendly names to the routing rules (added `name` field).
 - ADDED: Log an error when curl failed to download/update `geosite` files.
 - IMPROVED: minor cosmetic `xrayui` script fixes.
 - IMPROVED: routing rules display names and enhance summary.

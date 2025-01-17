@@ -170,6 +170,7 @@ class XrayRoutingObject {
 class XrayRoutingRuleObject {
   static networkOptions: string[] = ["", "tcp", "udp", "tcp,udp"];
   static protocolOptions: string[] = ["http", "tls", "bittorrent"];
+  public name?: string;
   public domainMatcher?: string = "hybrid";
   public domain?: string[];
   public ip?: string[];

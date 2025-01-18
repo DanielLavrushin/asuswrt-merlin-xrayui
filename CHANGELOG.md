@@ -2,10 +2,10 @@
 
 ## [0.24.1] - 20225-01-19
 
-ADDED: `wan_ip` property to `app.html` in the front-end.
-ADDED: QR code generation for `VLESS` and `VMESS` connections.
-IMPROVED: Error handling for missing config.json; added `generate_default_config` functionality.
-IMPROVED: Backend with minor cosmetic changes.
+- ADDED: `wan_ip` property to `app.html` in the front-end.
+- ADDED: QR code generation for `VLESS` and `VMESS` connections.
+- IMPROVED: Error handling for missing config.json; added `generate_default_config` functionality.
+- IMPROVED: Backend with minor cosmetic changes.
 
 ## [0.23.1] - 2025-01-18
 

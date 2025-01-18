@@ -88,9 +88,7 @@ export default defineComponent({
     proxyType: String,
   },
   setup(props) {
-
     const transport = ref<XrayStreamSettingsObject>(props.transport ?? new XrayStreamSettingsObject());
-    console.log(props);
     return {
       transport, proxyType: props.proxyType,
       isOutbound: props.proxyType == "outbound"

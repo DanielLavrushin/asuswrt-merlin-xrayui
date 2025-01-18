@@ -105,7 +105,6 @@ export default defineComponent({
     );
 
     watch([port1, port2], ([newPort1, newPort2], [oldPort1, oldPort2]) => {
-      console.log(port1.value, port2.value, "newPort1", newPort1, "newPort2", newPort2);
       if (engine.mode === "server") {
         if (newPort1 !== newPort2 && newPort2 != oldPort1) {
           inbound.value.port = `${newPort1}-${newPort2}`;

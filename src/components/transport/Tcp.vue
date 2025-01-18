@@ -1,6 +1,6 @@
 <template>
   <tbody v-if="transport.tcpSettings">
-    <tr>
+    <tr v-if="isInbound">
       <th>
         Accept the PROXY protocol
       </th>
@@ -20,12 +20,17 @@ import { XrayStreamSettingsObject } from "../../modules/CommonObjects";
 export default defineComponent({
   name: "Tcp",
   props: {
-    transport: XrayStreamSettingsObject
+    transport: XrayStreamSettingsObject,
+    proxyType: String,
   },
   setup(props) {
 
     const transport = ref<XrayStreamSettingsObject>(props.transport ?? new XrayStreamSettingsObject());
-    return { transport };
+    return {
+      transport,
+      isInbound: props.proxyType == "inbound"
+
+    };
   },
 });
 </script>

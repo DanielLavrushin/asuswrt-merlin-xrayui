@@ -95,6 +95,7 @@ export default defineComponent({
         },
 
         removeClient(client: XrayWireguardClientObject) {
+            if (!confirm("Are you sure you want to remove this client?")) return;
             this.clients.splice(this.clients.indexOf(client), 1);
         },
         addClient() {

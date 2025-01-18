@@ -11,14 +11,26 @@
             <tbody>
                 <inbound-common :inbound="inbound"></inbound-common>
                 <tr>
-                    <th>The address to forward</th>
+                    <th>The address to forward
+                        <hint>
+                            The address to forward the traffic to. It can be an IP address like `1.2.3.4` or a domain
+                            name like `xray.com`.
+
+                            When `followRedirect` is set to `true`, address can be empty.
+                        </hint>
+                    </th>
                     <td>
                         <input type="text" class="input_20_table" v-model="inbound.settings.address" />
                         <span class="hint-color"></span>
                     </td>
                 </tr>
                 <tr>
-                    <th>Destination Port</th>
+                    <th>Destination Port
+                        <hint>
+                            The specified port on the destination address to forward the traffic to. It is a numeric
+                            value and is a **required** parameter.
+                        </hint>
+                    </th>
                     <td>
                         <input type="number" maxlength="5" class="input_6_table" v-model="inbound.settings.port"
                             autocorrect="off" autocapitalize="off"
@@ -27,7 +39,12 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>Network</th>
+                    <th>Network
+                        <hint>
+                            The supported network protocol type. For example, when specified as `tcp`, it will only
+                            receive TCP traffic. The default value is `tcp`.
+                        </hint>
+                    </th>
                     <td>
                         <select class="input_option" v-model="inbound.settings.network">
                             <option v-for="opt in networks" :key="opt" :value="opt">
@@ -38,7 +55,15 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>Follow Redirect</th>
+                    <th>Follow Redirect
+                        <hint>
+                            When set to `true`, dokodemo-door will recognize data forwarded by `iptables` and forward it
+                            to
+                            the corresponding destination address.
+
+                            Refer to the `tproxy` setting in the `Transport Configuration`
+                        </hint>
+                    </th>
                     <td>
                         <input type="checkbox" v-model="inbound.settings.followRedirect" />
                         <span class="hint-color"></span>
@@ -55,11 +80,13 @@ import InboundCommon from "./InboundCommon.vue";
 import { XrayProtocol } from "./../../modules/CommonObjects";
 import { XrayDokodemoDoorInboundObject, XrayInboundObject } from "./../../modules/InboundObjects";
 import { XrayOptions } from "../../modules/Options";
+import Hint from "./../Hint.vue";
 
 export default defineComponent({
     name: "DocodemoDoorInbound",
     components: {
         InboundCommon,
+        Hint
     },
     props: {
         inbound: XrayInboundObject<XrayDokodemoDoorInboundObject>,

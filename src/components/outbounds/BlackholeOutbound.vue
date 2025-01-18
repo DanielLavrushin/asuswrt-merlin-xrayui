@@ -11,7 +11,20 @@
       <tbody>
         <outbound-common :proxy="proxy"></outbound-common>
         <tr v-if="proxy.settings.response">
-          <th>Response data</th>
+          <th>Response data
+            <hint>
+              Configures the response data for the blackhole.
+              <br>
+              After receiving the data to be forwarded, the blackhole will send the specified response data and then
+              close the connection. The data to be forwarded will be discarded. If this field is not specified, the
+              blackhole will simply close the connection
+              <ul>
+                <li>`none`: The `blackhole` will simply close the connection.</li>
+                <li>`http`: The `blackhole` will send a simple `HTTP 403` packet as the response and then close the
+                  connection.</li>
+              </ul>
+            </hint>
+          </th>
           <td>
             <select class="input_option" v-model="proxy.settings.response.type">
               <option v-for="opt in responses" :key="opt" :value="opt">
@@ -30,11 +43,13 @@ import { defineComponent, ref, watch } from "vue";
 import OutboundCommon from "./OutboundCommon.vue";
 import { XrayProtocol } from "../../modules/CommonObjects";
 import { XrayBlackholeOutboundObject, XrayOutboundObject } from "../../modules/OutboundObjects";
+import Hint from "./../Hint.vue";
 
 export default defineComponent({
   name: "BlackholeOutbound",
   components: {
     OutboundCommon,
+    Hint
   },
   props: {
     proxy: XrayOutboundObject<XrayBlackholeOutboundObject>,

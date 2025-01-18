@@ -9,7 +9,16 @@
         </thead>
         <tbody>
           <tr>
-            <th>Strategy</th>
+            <th>Strategy
+              <hint>
+                The port allocation strategy.
+                <ul>
+                  <li>`always`: all specified ports in port will be allocated, and Xray will listen on these ports.</li>
+                  <li>`random`: ports will be randomly selected from the port range every refresh minutes, and
+                    concurrency ports will be listened on.</li>
+                </ul>
+              </hint>
+            </th>
             <td>
               <select v-model="allocate.strategy" class="input_option">
                 <option value="always">always</option>
@@ -18,9 +27,11 @@
             </td>
           </tr>
           <tr v-if="allocate.strategy == 'random'">
-            <th>
-              <a class="hintstyle" href="javascript:void(0);"
-                onmouseover="hint(this,'The interval for refreshing randomly allocated ports in minutes.');">Refresh</a>
+            <th>Refresh
+              <hint>
+                The interval for refreshing randomly allocated ports in minutes. The minimum value is `2`, and it is
+                recommended to set to `5`. This property is only effective when `strategy` is set to `random`.
+              </hint>
             </th>
             <td>
               <input type="text" maxlength="2" class="input_6_table" v-model="allocate.refresh"
@@ -29,9 +40,12 @@
             </td>
           </tr>
           <tr v-if="allocate.strategy == 'random'">
-            <th>
-              <a class="hintstyle" href="javascript:void(0);"
-                onmouseover="hint(this,'The number of randomly allocated ports.');">Concurrency</a>
+            <th>Concurrency
+              <hint>
+                The number of randomly allocated ports. The `minimum` value is `1`, and the `maximum` value is one-third
+                of
+                the port range. It is recommended to set to `3`.
+              </hint>
             </th>
             <td>
               <input type="text" maxlength="2" class="input_6_table" v-model="allocate.concurrency"
@@ -53,11 +67,12 @@ import Modal from "../Modal.vue";
 import { XrayAllocateObject } from "../../modules/CommonObjects";
 import { XrayInboundObject } from "../../modules/InboundObjects";
 import { IProtocolType } from "../../modules/Interfaces";
-
+import Hint from "../Hint.vue";
 
 export default defineComponent({
   name: "AllocateModal",
   components: {
+    Hint,
     Modal,
   },
   props: {

@@ -78,7 +78,7 @@ export default defineComponent({
   },
   methods: {
     async show_transport(proxy: XrayOutboundObject<IProtocolType>) {
-      this.$emit("show-transport", proxy);
+      this.$emit("show-transport", proxy, "outbound");
     },
     reorder_proxy(proxy: XrayOutboundObject<IProtocolType>, index: number) {
       this.config.outbounds.splice(index, 1);
@@ -104,6 +104,7 @@ export default defineComponent({
     },
 
     async remove_proxy(proxy: XrayOutboundObject<IProtocolType>) {
+      if (!confirm("Are you sure you want to delete this outbound?")) return;
       let index = this.config.outbounds.indexOf(proxy);
       this.config.outbounds.splice(index, 1);
     },

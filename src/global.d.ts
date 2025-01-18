@@ -27,6 +27,7 @@ interface XrayUiGlobal {
 declare global {
   interface Window {
     xray: XrayUiGlobal;
+    confirm: (message?: string | undefined) => boolean;
     hint: (message: string) => void;
     overlib: (message: string) => void;
     show_menu: () => void;

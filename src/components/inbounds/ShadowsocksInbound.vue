@@ -13,7 +13,12 @@
             <tbody>
                 <inbound-common :inbound="inbound"></inbound-common>
                 <tr>
-                    <th>Network</th>
+                    <th>Network
+                        <hint>
+                            The supported network protocol type. For example, when specified as `tcp`, it will only
+                            handle TCP traffic. The default value is `tcp`.
+                        </hint>
+                    </th>
                     <td>
                         <select v-model="inbound.settings.network" class="input_option">
                             <option v-for="flow in networks" :value="flow" :key="flow">{{ flow }}</option>
@@ -34,12 +39,14 @@ import { XrayProtocol } from "../../modules/CommonObjects";
 import { XrayInboundObject } from "../../modules/InboundObjects";
 import { XrayOptions } from "../../modules/Options";
 import { XrayShadowsocksInboundObject } from "../../modules/InboundObjects";
+import Hint from "../Hint.vue";
 
 export default defineComponent({
     name: "ShadowsocksInbound",
     components: {
         Clients,
         InboundCommon,
+        Hint
     },
     props: {
         inbound: XrayInboundObject<XrayShadowsocksInboundObject>,

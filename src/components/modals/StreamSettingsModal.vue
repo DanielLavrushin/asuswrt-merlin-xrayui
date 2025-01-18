@@ -12,7 +12,11 @@
         </thead>
         <tbody>
           <tr>
-            <th>Security</th>
+            <th>Security
+              <hint>
+                Specifies the security settings for the transport layer. The default value is `none`.
+              </hint>
+            </th>
             <td>
               <select class="input_option" v-model="transport.security">
                 <option v-for="(opt, index) in securityOptions" :key="index" :value="opt">{{ opt }}</option>
@@ -26,7 +30,11 @@
             </td>
           </tr>
           <tr>
-            <th>Network</th>
+            <th>Network
+              <hint>
+                Specifies the network protocol. The default value is `tcp`.
+              </hint>
+            </th>
             <td>
               <select class="input_option" v-model="transport.network">
                 <option v-for="(opt, index) in transportOptions" :key="index" :value="opt">{{ opt }}</option>
@@ -35,7 +43,11 @@
             </td>
           </tr>
           <tr>
-            <th>Socket options (tproxy)</th>
+            <th>Socket options (tproxy)
+              <hint>
+                Specifies the socket options for the transport layer. The default value is `off`.
+              </hint>
+            </th>
             <td>
               <span class="row-buttons">
                 <input class="button_gen button_gen_small" type="button" value="manage" @click="manage_sockopt" />
@@ -46,7 +58,7 @@
             </td>
           </tr>
         </tbody>
-        <component :is="networkComponent" :transport="transport" />
+        <component :is="networkComponent" :transport="transport" :proxyType="proxyType" />
       </table>
     </div>
     <template v-slot:footer>
@@ -60,10 +72,12 @@ import { defineComponent, ref, computed } from "vue";
 
 import { ITransportNetwork, IProtocolType } from "../../modules/Interfaces";
 import { XrayInboundObject } from "../../modules/InboundObjects";
+import { XrayOutboundObject } from "../../modules/OutboundObjects";
 import { XrayOptions } from "../../modules/Options";
 import { XrayStreamGrpcSettingsObject, XrayStreamTcpSettingsObject, XrayStreamKcpSettingsObject, XrayStreamHttpSettingsObject, XrayStreamWsSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamSplitHttpSettingsObject } from "../../modules/TransportObjects";
-import { XrayStreamSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject, XraySockoptObject } from "../../modules/CommonObjects";
+import { XrayStreamSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject } from "../../modules/CommonObjects";
 
+import Hint from "../Hint.vue";
 import Modal from "../Modal.vue";
 
 import NetworkTcp from "../transport/Tcp.vue";
@@ -82,10 +96,11 @@ export default defineComponent({
   name: "StreamSettingsModal",
   components: {
     Modal,
-    Sockopt
+    Sockopt,
+    Hint
   },
   props: {
-    transport: XrayStreamSettingsObject,
+    transport: XrayStreamSettingsObject
   },
   methods: {
     manage_security() {
@@ -95,9 +110,9 @@ export default defineComponent({
       this.sockoptModal.show();
     },
 
-    show(inbound: XrayInboundObject<IProtocolType>) {
-      inbound.streamSettings = this.transport = inbound.streamSettings ?? new XrayStreamSettingsObject();
-
+    show(proxy: XrayInboundObject<IProtocolType> | XrayOutboundObject<IProtocolType>, proxyType: string) {
+      proxy.streamSettings = this.transport = proxy.streamSettings ?? new XrayStreamSettingsObject();
+      this.proxyType = proxyType;
       this.modal.show();
     },
     save() {
@@ -111,6 +126,7 @@ export default defineComponent({
     const sockoptModal = ref();
     const transport = ref<XrayStreamSettingsObject>(props.transport ?? new XrayStreamSettingsObject());
     const network = ref<ITransportNetwork>();
+    const proxyType = ref<string>();
 
     const networkComponent = computed(() => {
       switch (transport.value.network) {
@@ -161,6 +177,7 @@ export default defineComponent({
       securityModal, sockoptModal,
       networkComponent,
       securityComponent,
+      proxyType,
       securityOptions: XrayOptions.securityOptions,
       transportOptions: XrayOptions.transportOptions,
     };

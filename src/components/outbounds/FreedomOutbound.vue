@@ -11,7 +11,31 @@
             <tbody>
                 <outbound-common :proxy="proxy"></outbound-common>
                 <tr>
-                    <th>Domain Strategy</th>
+                    <th>Domain Strategy
+                        <hint>
+                            When the destination address is a domain name, configure the corresponding value for
+                            Freedom's behavior:
+                            <ul>
+                                <li>`AsIs`: Freedom resolves the domain name using the system DNS server and connects to
+                                    it.</li>
+                                <li>`UseIP, UseIPv4, and UseIPv6`: Xray resolves the domain name using the built-in DNS
+                                    server and connects to it.</li>
+                            </ul>
+                            <blockquote>
+                                **Note**:
+                                When using the `UseIP` mode and the `sendThrough` field is specified in the outbound
+                                connection configuration, `Freedom` will automatically determine the required IP type,
+                                `IPv4` or `IPv6`, based on the value of `sendThrough`.
+                            </blockquote>
+                            <blockquote>
+                                **Note**:
+                                When using the `UseIPv4` or `UseIPv6` mode, `Freedom` will only use the corresponding
+                                `IPv4`
+                                or `IPv6` address. If `sendThrough` specifies a mismatched local address, the connection
+                                will fail.
+                            </blockquote>
+                        </hint>
+                    </th>
                     <td>
                         <select class="input_option" v-model="proxy.settings.domainStrategy">
                             <option></option>
@@ -23,7 +47,19 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>Redirect address</th>
+                    <th>Redirect address
+                        <hint>
+                            Freedom will force all data to be sent to the specified address (instead of the address
+                            specified in the inbound).
+
+                            It is a string value, for example: `127.0.0.1:80`, `:1234`.
+
+                            When the address is not specified, such as `:443`, `Freedom` will not modify the original
+                            destination address. When the port is `0`, such as `xray.com:0`, `Freedom` will not modify
+                            the
+                            original port.
+                        </hint>
+                    </th>
                     <td>
                         <input type="text" class="input_20_table" v-model="proxy.settings.redirect" autocomplete="off"
                             autocorrect="off" autocapitalize="off" />
@@ -42,7 +78,19 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>TCP Fragmentation</th>
+                    <th>TCP Fragmentation
+                        <hint>
+                            A key-value map used to control TCP fragmentation, under some circumstances it can cheat the
+                            censor system, like bypass a SNI blacklist.
+                            <ul>
+                                <li>`packets`: support two different methods. "1-3" is for segmentation at TCP layer,
+                                    applying to the beginning 1 to 3 data writes by the client. "tlshello" is for TLS
+                                    client hello packet fragmentation.</li>
+                                <li>`length`: length to make the cut</li>
+                                <li>`interval`: time between fragments (ms)</li>
+                            </ul>
+                        </hint>
+                    </th>
                     <td>
                         <input type="checkbox" v-model="enableFragmentation" />
                         <span class="hint-color"></span>
@@ -51,7 +99,17 @@
             </tbody>
             <tbody v-if="enableFragmentation && proxy.settings.fragment">
                 <tr>
-                    <th>Fragment packet method</th>
+                    <th>Fragment packet method
+                        <hint>
+                            Two different methods are supported.
+                            <ul>
+                                <li>`1-3` - segmentation at the TCP layer, applying to the beginning 1 to 3 data writes
+                                    by
+                                    the client.</li>
+                                <li>`tlshello` - TLS client hello packet fragmentation.</li>
+                            </ul>
+                        </hint>
+                    </th>
                     <td>
                         <select class="input_option" v-model="proxy.settings.fragment.packets">
                             <option></option>
@@ -63,7 +121,11 @@
                     </td>
                 </tr>
                 <tr v-if="proxy.settings.fragment.packets !== ''">
-                    <th>Fragment length</th>
+                    <th>Fragment length
+                        <hint>
+                            length to make the cut
+                        </hint>
+                    </th>
                     <td>
                         <input type="text" class="input_20_table" v-model="proxy.settings.fragment.length"
                             autocomplete="off" autocorrect="off" autocapitalize="off" />
@@ -71,7 +133,11 @@
                     </td>
                 </tr>
                 <tr v-if="proxy.settings.fragment.packets !== ''">
-                    <th>Fragment interval</th>
+                    <th>Fragment interval
+                        <hint>
+                            time between fragments (ms)
+                        </hint>
+                    </th>
                     <td>
                         <input type="text" class="input_20_table" v-model="proxy.settings.fragment.interval"
                             autocomplete="off" autocorrect="off" autocapitalize="off" />
@@ -81,7 +147,14 @@
             </tbody>
             <tbody>
                 <tr>
-                    <th>UDP noise</th>
+                    <th>UDP noise
+
+                        <hint>
+                            An array used to control UDP noise, under some circumstances it can bypass some udp based
+                            protocol restrictions. xray will loop through this array and send each noise packet one by
+                            one
+                        </hint>
+                    </th>
                     <td>
                         {{ proxy.settings.noises.length }} item(s)
                         <input class="button_gen button_gen_small" type="button" value="manage"
@@ -114,7 +187,16 @@
                             <table class="FormTable modal-form-table" v-if="noiseItem">
                                 <tbody>
                                     <tr>
-                                        <th>Type</th>
+                                        <th>Type
+                                            <hint>
+                                                Three types are supported.
+                                                <ul>
+                                                    <li>`rand` - generates a random byte</li>
+                                                    <li>`str` - uses a user input string</li>
+                                                    <li>`base64` - uses a user input base64 encoded string</li>
+                                                </ul>
+                                            </hint>
+                                        </th>
                                         <td>
                                             <select class="input_option" v-model="noiseItem.type">
                                                 <option v-for="opt in noiseTypeOptions" :key="opt" :value="opt">
@@ -125,7 +207,16 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th>Packet</th>
+                                        <th>Packet
+                                            <hint>
+                                                If type is set to
+                                                <ul>
+                                                    <li>`rand` - takes a range `50-100` or a single value `50`</li>
+                                                    <li>`str` - takes a string</li>
+                                                    <li>`base64` - takes a `base64` encoded string</li>
+                                                </ul>
+                                            </hint>
+                                        </th>
                                         <td>
                                             <input type="text" class="input_20_table" v-model="noiseItem.packet"
                                                 autocomplete="off" autocorrect="off" autocapitalize="off" />
@@ -133,7 +224,14 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th>Delay</th>
+                                        <th>Delay
+                                            <hint>
+                                                The delay before sending real data (ms). can be a string range like
+                                                `10-20` or a single integer
+
+                                                If not specified, the default value is `0`.
+                                            </hint>
+                                        </th>
                                         <td>
                                             <input type="text" class="input_20_table" v-model="noiseItem.delay"
                                                 autocomplete="off" autocorrect="off" autocapitalize="off" />
@@ -159,11 +257,14 @@ import OutboundCommon from "./OutboundCommon.vue";
 import { XrayNoiseObject, XrayProtocol } from "../../modules/CommonObjects";
 import { XrayFreedomOutboundObject, XrayOutboundObject } from "../../modules/OutboundObjects";
 import Modal from "../Modal.vue";
+import Hint from "./../Hint.vue";
+
 export default defineComponent({
     name: "FreedomOutbound",
     components: {
         OutboundCommon,
-        Modal
+        Modal,
+        Hint
     },
     props: {
         proxy: XrayOutboundObject<XrayFreedomOutboundObject>,

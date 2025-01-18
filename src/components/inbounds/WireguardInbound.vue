@@ -1,19 +1,24 @@
 <template>
     <div class="formfontdesc">
         <p>
-            The Trojan protocol.
-            Trojan is designed to work with correctly configured encrypted TLS tunnels.
+            User-space implementation of the Wireguard protocol. The Wireguard protocol is not specifically designed for
+            circumvention purposes. If used as the outer layer for circumvention, its characteristics may lead to server
+            blocking.
         </p>
         <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
             <thead>
                 <tr>
-                    <td colspan="2">Trojan</td>
+                    <td colspan="2">Wireguard</td>
                 </tr>
             </thead>
             <tbody>
                 <inbound-common :inbound="inbound"></inbound-common>
                 <tr>
-                    <th>Private Key</th>
+                    <th>Private Key
+                        <hint>
+                            The private key for the Wireguard protocol. **Required**.
+                        </hint>
+                    </th>
                     <td>
                         <input type="text" class="input_25_table" v-model="inbound.settings.secretKey" />
                         <span class="hint-color"></span>
@@ -24,14 +29,23 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>KERNEL Mode</th>
+                    <th>KERNEL Mode
+                        <hint>
+                            Enable kernel mode for the Wireguard protocol. The default value is `true` if it's supported
+                            and permission is sufficient.
+                        </hint>
+                    </th>
                     <td>
                         <input type="checkbox" v-model="inbound.settings.kernelMode" />
                         <span class="hint-color">default: true</span>
                     </td>
                 </tr>
                 <tr>
-                    <th>MTU</th>
+                    <th>MTU
+                        <hint>
+                            Fragmentation size of the underlying Wireguard tun. The default value is `1420`.
+                        </hint>
+                    </th>
                     <td>
                         <input v-model="inbound.settings.mtu" type="number" maxlength="4" class="input_6_table"
                             onkeypress="return validator.isNumber(this,event);" />
@@ -52,6 +66,7 @@ import InboundCommon from "./InboundCommon.vue";
 import { XrayInboundObject } from "../../modules/InboundObjects";
 import { XrayWireguardInboundObject } from "../../modules/InboundObjects";
 import { XrayProtocol } from "../../modules/CommonObjects";
+import Hint from "../Hint.vue";
 
 export default defineComponent({
     name: "WireguardInbound",
@@ -59,6 +74,7 @@ export default defineComponent({
     components: {
         Clients,
         InboundCommon,
+        Hint,
     },
 
     props: {

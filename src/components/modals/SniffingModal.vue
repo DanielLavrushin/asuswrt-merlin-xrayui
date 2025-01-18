@@ -12,6 +12,9 @@
           <tr>
             <th>
               Sniffing
+              <hint>
+                Whether to enable traffic sniffing.
+              </hint>
             </th>
             <td>
               <input type="radio" v-model="sniffing.enabled" class="input" :value="true" :id="'snifon'" />
@@ -23,6 +26,15 @@
           <tr v-if="sniffing.enabled">
             <th>
               Metadata only
+              <hint>
+                When enabled, only use the connection's metadata to sniff the target address. In this case, sniffer
+                other than `fakedns` (including `fakedns+others`) cannot be activated.
+                <p>
+                  If metadata-only is `disabled`, the client must send data before the proxy server actually establishes
+                  the connection. This behavior is incompatible with protocols that require the server to initiate the
+                  first message, such as the SMTP protocol.
+                </p>
+              </hint>
             </th>
             <td>
               <input type="radio" v-model="sniffing.metadataOnly" class="input" :value="true" :id="'metaon'" />
@@ -34,6 +46,14 @@
           <tr v-if="sniffing.enabled && !sniffing.metadataOnly">
             <th>
               Destination Override
+              <hint>
+                When the traffic is of a specified type, reset the destination of the current connection to the target
+                address included in the list.
+
+                ["fakedns+others"] is equivalent to ["http", "tls", "quic", "fakedns"], and when the IP address is in
+                the FakeIP range but no domain records are hit, http, tls, and quic will be used for matching. This
+                option is only effective when metadataOnly is set to false.
+              </hint>
             </th>
             <td>
               <slot v-for="(opt, index) in destOptions" :key="index">
@@ -46,6 +66,20 @@
           <tr v-if="sniffing.enabled && sniffing.destOverride.length > 0">
             <th>
               Route only
+              <hint>
+                Use the sniffed domain name for routing only, and keep the target address as the IP address. The default
+                value is `false`.
+
+                This option requires `destOverride` to be enabled.
+
+                <blockquote>
+                  When it is possible to ensure that the proxied connection can obtain correct DNS resolution, by using
+                  `routeOnly` and enabling `destOverride`, and setting the routing matching strategy `domainStrategy` to
+                  `AsIs`,
+                  it is possible to achieve domain and IP separation without DNS resolution throughout the process. The
+                  IP used when encountering an IP rule match is the original IP of the domain.
+                </blockquote>
+              </hint>
             </th>
             <td>
               <input type="checkbox" v-model="sniffing.routeOnly" class="input" :id="'snifrouteonly'" />
@@ -53,7 +87,18 @@
             </td>
           </tr>
           <tr v-if="sniffing.enabled">
-            <th>Domains Excluded </th>
+            <th>Domains Excluded
+              <hint>
+                A list of domain names. If the traffic sniffing result matches a domain name in this list, the target
+                address will not be reset.
+                <blockquote>
+                  **Warning**
+                  Currently, `domainsExcluded` does not support domain name matching in the routing sense. This option
+                  may
+                  change in the future and cross-version compatibility is not guaranteed.
+                </blockquote>
+              </hint>
+            </th>
             <td>
               <a>{{ sniffing.domainsExcluded.length }} domain(s)</a>
               <input class="button_gen button_gen_small" type="button" value="Manage"
@@ -84,11 +129,13 @@ import Modal from "../Modal.vue";
 import { XraySniffingObject } from "../../modules/CommonObjects";
 import { XrayInboundObject } from "../../modules/InboundObjects";
 import { IProtocolType } from "../../modules/Interfaces";
+import Hint from "../Hint.vue";
 
 export default defineComponent({
   name: "SniffingModal",
   components: {
     Modal,
+    Hint
   },
   props: {
     sniffing: XraySniffingObject,

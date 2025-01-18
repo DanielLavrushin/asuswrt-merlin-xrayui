@@ -65,6 +65,7 @@ export default defineComponent({
       }
     },
     remove(host: any) {
+      if (!confirm("Are you sure you want to remove this host?")) return;
       this.hostsList.splice(this.hostsList.indexOf(host), 1);
       this.syncHosts();
     },

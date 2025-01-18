@@ -1,13 +1,24 @@
 <template>
   <tr>
-    <th>Tag</th>
+    <th>Tag
+      <hint>
+        The identifier of this inbound connection, used to locate this connection in other configurations.
+      </hint>
+    </th>
     <td>
       <input type="text" class="input_20_table" v-model="inbound.tag" />
       <span class="hint-color"></span>
     </td>
   </tr>
   <tr>
-    <th>The listening address</th>
+    <th>The listening address
+      <hint>
+        The listening address, either an IP address or a Unix domain socket. The default value is "0.0.0.0", which means
+        accepting connections on all network interfaces.
+
+        An available system IP address can be specified.
+      </hint>
+    </th>
     <td>
       <input type="text" maxlength="15" class="input_20_table" v-model="inbound.listen"
         onkeypress="return validator.isIPAddr(this, event);" autocomplete="off" autocorrect="off"
@@ -43,10 +54,12 @@ import AllocateModal from "../modals/AllocateModal.vue";
 import { XrayInboundObject } from "../../modules/InboundObjects";
 import { IProtocolType } from "../../modules/Interfaces";
 import engine from "../../modules/Engine";
+import Hint from "../Hint.vue";
 
 export default defineComponent({
   name: "InboundCommon",
   components: {
+    Hint,
     AllocateModal,
   },
   props: {

@@ -164,7 +164,7 @@ export default defineComponent({
       this.modalAdvanced.show();
     },
     remove(server: string | XrayDnsServerObject) {
-
+      if (!confirm("Are you sure you want to remove this server?")) return;
       this.servers.splice(this.servers.indexOf(server), 1);
     },
     show() {

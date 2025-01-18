@@ -11,7 +11,14 @@
       <tbody>
         <outbound-common :proxy="proxy"></outbound-common>
         <tr>
-          <th>Inbound Rule</th>
+          <th>Inbound Rule
+            <hint>
+              Use as an inbound tag for routing.
+              <br />
+              This tag can be used as `inboundTag` in routing rules, all traffics going through this outbound can be
+              rerouted with routing rules with corresponding inbound tag.
+            </hint>
+          </th>
           <td>
             <select class="input_option" v-model="proxy.settings.inboundTag" v-if="inbounds.length">
               <option></option>
@@ -19,9 +26,7 @@
                 {{ opt }}
               </option>
             </select>
-            <span class="hint-color" v-if="!inbounds.length">This tag can be used as inboundTag in routing rules, all
-              traffics going through this outbound can be rerouted with routing rules with corresponding inbound
-              tag</span>
+            <span class="hint-color" v-if="!inbounds.length">no inbound tags defined.</span>
             <span class="hint-color" v-if="inbounds.length">Use as an inbound tag for routing.</span>
           </td>
         </tr>
@@ -30,16 +35,18 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, watch } from "vue";
+import { defineComponent, ref } from "vue";
 import xrayConfig from "../../modules/XrayConfig";
 import { XrayProtocol } from "../../modules/CommonObjects";
 import { XrayLoopbackOutboundObject, XrayOutboundObject } from "../../modules/OutboundObjects";
 import OutboundCommon from "./OutboundCommon.vue";
+import Hint from "../Hint.vue";
 
 export default defineComponent({
   name: "LoopbackOutbound",
   components: {
     OutboundCommon,
+    Hint,
   },
   props: {
     proxy: XrayOutboundObject<XrayLoopbackOutboundObject>,

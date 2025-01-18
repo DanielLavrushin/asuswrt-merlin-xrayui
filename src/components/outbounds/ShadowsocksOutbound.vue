@@ -10,7 +10,11 @@
             <tbody>
                 <outbound-common :proxy="proxy"></outbound-common>
                 <tr>
-                    <th>Shadowsocks server</th>
+                    <th>Shadowsocks server
+                        <hint>
+                            The address of the Shadowsocks server. **Required**.
+                        </hint>
+                    </th>
                     <td>
                         <input type="text" class="input_20_table" v-model="proxy.settings.servers[0].address"
                             autocomplete="off" autocorrect="off" autocapitalize="off" />
@@ -18,7 +22,11 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>Proxy port</th>
+                    <th>Proxy port
+                        <hint>
+                            The port of the Shadowsocks server. **Required**.
+                        </hint>
+                    </th>
                     <td>
                         <input type="number" maxlength="5" class="input_6_table"
                             v-model="proxy.settings.servers[0].port" autocorrect="off" autocapitalize="off"
@@ -27,7 +35,11 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>Email address</th>
+                    <th>Email address
+                        <hint>
+                            The email address, optional, used to identify the user.
+                        </hint>
+                    </th>
                     <td>
                         <input type="text" class="input_20_table" v-model="proxy.settings.servers[0].email"
                             autocomplete="off" autocorrect="off" autocapitalize="off" />
@@ -35,7 +47,11 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>Encryption method</th>
+                    <th>Encryption method
+                        <hint>
+                            The encryption method used by the Shadowsocks server. **Required**.
+                        </hint>
+                    </th>
                     <td>
                         <select class="input_option" v-model="proxy.settings.servers[0].method">
                             <option v-for="(opt, index) in encryptions" :key="index" :value="opt.e">
@@ -46,7 +62,11 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>Password</th>
+                    <th>Password
+                        <hint>
+                            The password for authentication. **Required**.
+                        </hint>
+                    </th>
                     <td>
                         <input type="text" class="input_20_table" v-model="proxy.settings.servers[0].password"
                             autocomplete="off" autocorrect="off" autocapitalize="off" />
@@ -56,7 +76,11 @@
                     </td>
                 </tr>
                 <tr>
-                    <th> UDP over TCP</th>
+                    <th> UDP over TCP
+                        <hint>
+                            When enabled, UDP over TCP (UOT) will be used.
+                        </hint>
+                    </th>
                     <td>
                         <input type="checkbox" v-model="proxy.settings.servers[0].uot" />
                     </td>
@@ -71,11 +95,14 @@ import { defineComponent, ref } from "vue";
 import OutboundCommon from "./OutboundCommon.vue";
 import { XrayOutboundObject } from "../../modules/OutboundObjects";
 import { XrayShadowsocksOutboundObject } from "../../modules/OutboundObjects";
-import { XrayProtocol, XrayOptions } from "../../modules/Options";
+import { XrayProtocol } from "../../modules/Options";
+import Hint from "../Hint.vue";
+
 export default defineComponent({
     name: "HttpOutbound",
     components: {
         OutboundCommon,
+        Hint,
     },
     props: {
         proxy: XrayOutboundObject<XrayShadowsocksOutboundObject>,

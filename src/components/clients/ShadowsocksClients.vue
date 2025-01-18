@@ -83,6 +83,7 @@ export default defineComponent({
     },
 
     removeClient(client: XrayShadowsocksClientObject) {
+      if (!confirm("Are you sure you want to remove this client?")) return;
       this.clients.splice(this.clients.indexOf(client), 1);
     },
 

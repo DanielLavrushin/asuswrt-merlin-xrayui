@@ -53,8 +53,8 @@ export default defineComponent({
     },
     methods: {
 
-        async show_transport(proxy: XrayInboundObject<IProtocolType> | XrayOutboundObject<IProtocolType>) {
-            this.transportModal.show(proxy);
+        async show_transport(proxy: XrayInboundObject<IProtocolType> | XrayOutboundObject<IProtocolType>, type: string) {
+            this.transportModal.show(proxy, type);
         },
         async show_sniffing(proxy: XrayInboundObject<IProtocolType>) {
             this.sniffingModal.show(proxy);

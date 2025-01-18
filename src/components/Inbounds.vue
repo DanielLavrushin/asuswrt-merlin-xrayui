@@ -84,7 +84,7 @@ export default defineComponent({
             this.config.inbounds.splice(index - 1, 0, proxy);
         },
         async show_transport(inbound: XrayInboundObject<IProtocolType>) {
-            this.$emit('show-transport', inbound);
+            this.$emit('show-transport', inbound, 'inbound');
         },
         async show_sniffing(inbound: XrayInboundObject<IProtocolType>) {
             this.$emit('show-sniffing', inbound);
@@ -109,6 +109,7 @@ export default defineComponent({
         },
 
         async remove_inbound(inbound: XrayInboundObject<IProtocolType>) {
+            if (!window.confirm('Are you sure you want to delete this inbound?')) return;
             let index = this.config.inbounds.indexOf(inbound);
             this.config.inbounds.splice(index, 1);
         },

@@ -10,21 +10,33 @@
       </thead>
       <tbody v-if="transport.realitySettings">
         <tr>
-          <th>Enable Logs</th>
+          <th>Enable Logs
+            <hint>
+              Emits verbose logs when `true`.
+            </hint>
+          </th>
           <td>
             <input v-model="transport.realitySettings.show" type="checkbox" class="input" />
             <span class="hint-color">default: false</span>
           </td>
         </tr>
         <tr v-if="engine.mode === 'server'">
-          <th>Dest</th>
+          <th>Dest
+            <hint>
+              The destination address of the server. Same schema as `dest` in `VLESS`. **Required**.
+            </hint>
+          </th>
           <td>
             <input v-model="transport.realitySettings.dest" type="text" class="input_20_table" />
             <span class="hint-color">same as dest in VLESS</span>
           </td>
         </tr>
         <tr v-if="engine.mode === 'server'">
-          <th>Server names</th>
+          <th>Server names
+            <hint>
+              A list of accepted server names. No support for `*` wildcards yet. **Required**.
+            </hint>
+          </th>
           <td>
             <div class="textarea-wrapper">
               <textarea v-model="serverNames"></textarea>
@@ -32,21 +44,39 @@
           </td>
         </tr>
         <tr v-if="engine.mode === 'client'">
-          <th>Server name</th>
+          <th>Server name
+            <hint>
+              One of the server names accepted by the server.. **Required**.
+            </hint>
+          </th>
           <td>
             <input v-model="transport.realitySettings.serverName" type="text" class="input_20_table" />
             <span class="hint-color">required</span>
           </td>
         </tr>
         <tr v-if="engine.mode === 'client'">
-          <th>Short id</th>
+          <th>Short id
+            <hint>
+              One of the short IDs accepted by the server.
+
+              `shortId` on clients can be left blank if a blank value exists on the server.
+            </hint>
+          </th>
           <td>
             <input v-model="transport.realitySettings.shortId" type="text" class="input_20_table" />
             <span class="hint-color"></span>
           </td>
         </tr>
         <tr v-if="engine.mode === 'server' && transport.realitySettings.shortIds">
-          <th>Short Ids</th>
+          <th>Short Ids
+            <hint>
+              **Required**. A list of `shortIds` accepted. Can be used to distinguish different clients.
+
+              Specified in hex strings, with the length as multiples of `2`. Cannot be longer than `16` characters.
+              <br />
+              `shortId` on clients can be left blank if a blank value exists on the server.
+            </hint>
+          </th>
           <td>
             {{ transport.realitySettings.shortIds.length }} item(s)
             <input class="button_gen button_gen_small" type="button" value="manage"
@@ -65,7 +95,11 @@
           </td>
         </tr>
         <tr v-if="engine.mode === 'server'">
-          <th>PROXY Version</th>
+          <th>PROXY Version
+            <hint>
+              The version of the PROXY protocol to use. Same schema as `xver` in `VLESS`. **Optional**.
+            </hint>
+          </th>
           <td>
             <select v-model="transport.realitySettings.xver" class="input_option">
               <option v-for="opt in [0, 1, 2]" :key="opt" :value="opt">
@@ -76,7 +110,11 @@
           </td>
         </tr>
         <tr v-if="engine.mode === 'server'">
-          <th>Private Key</th>
+          <th>Private Key
+            <hint>
+              Generate with `xray x25519`. **Required**.
+            </hint>
+          </th>
           <td>
             <input v-model="transport.realitySettings.privateKey" type="text" class="input_30_table" />
             <span class="row-buttons">
@@ -86,19 +124,42 @@
           </td>
         </tr>
         <tr>
-          <th>Public Key</th>
+          <th>Public Key
+            <hint>
+              The public key that corresponds to the private key on the server. Can be obtained by `xray x25519 -i
+              -privateKey-`. **Required**.
+            </hint>
+          </th>
           <td>
             <input v-model="transport.realitySettings.publicKey" type="text" class="input_30_table" />
           </td>
         </tr>
         <tr v-if="engine.mode === 'server' && transport.realitySettings">
-          <th>Spider X</th>
+          <th>Spider X
+            <hint>
+              The bootstrapping path and query params of the spider. It's recommended to have this varied per client.
+            </hint>
+          </th>
           <td>
             <input v-model="transport.realitySettings.spiderX" type="text" class="input_30_table" />
           </td>
         </tr>
         <tr v-if="engine.mode === 'client'">
-          <th>Fingerprint</th>
+          <th>Fingerprint
+            <hint>
+              Specifies the fingerprint of the TLS Client Hello message. When empty, fingerprint simulation will not be
+              enabled.
+              When enabled, Xray will simulate the TLS fingerprint through the uTLS library or have it generated
+              randomly.
+              <ul>
+                <li>`random`: randomly select one of the up-to-date browsers</li>
+                <li>`randomized`: generate a completely random and unique fingerprint (100% compatible with TLS 1.3
+                  using
+                  `X25519`)
+                </li>
+              </ul>
+            </hint>
+          </th>
           <td>
             <select class="input_option" v-model="transport.realitySettings.fingerprint">
               <option v-for="(opt, index) in fingerprints" :key="index" :value="opt">
@@ -119,11 +180,13 @@ import engine, { SubmtActions } from "@/modules/Engine";
 import { defineComponent, ref, watch } from "vue";
 import { XrayStreamRealitySettingsObject, XrayStreamSettingsObject } from "@/modules/CommonObjects";
 import XrayOptions from "@/modules/Options";
+import Hint from "@/components/Hint.vue";
 
 export default defineComponent({
   name: "Reality",
   components: {
     Modal,
+    Hint
   },
   props: {
     transport: XrayStreamSettingsObject,

@@ -37,7 +37,7 @@
         <td>{{ client.email }}</td>
         <td style="min-width:120px">{{ client.flow }}</td>
         <td>
-          <qr ref="modalQr" :client="client" :proxy="proxy"></qr>
+          <qr v-if="isServerMode" ref="modalQr" :client="client" :proxy="proxy"></qr>
           <button @click.prevent="removeClient(client)" class="button_gen button_gen_small">remove</button>
         </td>
       </tr>
@@ -102,7 +102,6 @@ export default defineComponent({
   },
 
   setup(props) {
-
     const clients = ref<XrayVlessClientObject[]>(props.clients ?? []);
     const newClient = ref<XrayVlessClientObject>(new XrayVlessClientObject());
     const mode = ref(props.mode);
@@ -119,12 +118,13 @@ export default defineComponent({
         break;
     }
 
+
     return {
-      proxy: props.proxy,
       flows,
       clients,
       newClient,
       modalQr,
+      isServerMode: engine.mode == "server",
     };
   },
 });

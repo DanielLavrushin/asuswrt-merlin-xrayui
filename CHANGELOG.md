@@ -1,6 +1,6 @@
 # XRAYUI Changelog
 
-## [0.23.2] - 20225-01-19
+## [0.24.1] - 20225-01-19
 
 ADDED: `wan_ip` property to `app.html` in the front-end.
 ADDED: QR code generation for `VLESS` and `VMESS` connections.

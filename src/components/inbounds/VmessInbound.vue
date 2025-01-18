@@ -12,7 +12,7 @@
                 <inbound-common :inbound="inbound"></inbound-common>
             </tbody>
         </table>
-        <clients :clients="inbound.settings.clients"></clients>
+        <clients :clients="inbound.settings.clients" :proxy="inbound"></clients>
     </div>
 </template>
 <script lang="ts">

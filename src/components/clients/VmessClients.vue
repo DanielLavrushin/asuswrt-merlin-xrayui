@@ -36,15 +36,12 @@
         <td>{{ client.email }}</td>
         <td v-if="securities.length">{{ client.security }}</td>
         <td>
-          <button @click.prevent="showQrCode(client)" class="button_gen button_gen_small">manage</button>
+          <qr ref="modalQr" :client="client" :proxy="proxy"></qr>
           <button @click.prevent="removeClient(client)" class="button_gen button_gen_small">remove</button>
         </td>
       </tr>
     </tbody>
   </table>
-  <modal ref="modalQr" title="QR Code Modal">
-    <qrcode-vue :value="qr_content" :size="qr_size" level="H" render-as="svg" />
-  </modal>
 </template>
 
 <script lang="ts">
@@ -52,14 +49,15 @@ import { defineComponent, ref } from "vue";
 import engine from "../../modules/Engine";
 import xrayConfig from "../../modules/XrayConfig";
 import { XrayVmessClientObject } from "../../modules/ClientsObjects";
-import QrcodeVue from "qrcode.vue";
+import Qr from "./QrCodeClient.vue";
+
 
 import modal from "../Modal.vue";
 
 export default defineComponent({
   name: "VlessClients",
   components: {
-    QrcodeVue,
+    Qr,
     modal,
   },
   methods: {
@@ -67,11 +65,6 @@ export default defineComponent({
       this.newClient.id = engine.uuid();
       this.newClient.email = "";
       this.newClient.security = "auto";
-    },
-
-    showQrCode(client: XrayVmessClientObject) {
-      this.qr_content = JSON.stringify(xrayConfig);
-      this.modalQr.value?.show();
     },
 
     removeClient(client: XrayVmessClientObject) {
@@ -97,6 +90,7 @@ export default defineComponent({
     },
   },
   props: {
+    proxy: Object,
     clients: Array<XrayVmessClientObject>,
     mode: String,
   },
@@ -106,7 +100,6 @@ export default defineComponent({
     const newClient = ref<XrayVmessClientObject>(new XrayVmessClientObject());
     newClient.value.id = engine.uuid();
     const modalQr = ref();
-    let qr_content = ref("");
 
     const mode = ref(props.mode);
     switch (mode.value) {
@@ -119,11 +112,10 @@ export default defineComponent({
     const span = mode.value == "outbound" ? 4 : 3;
 
     return {
+      proxy: props.proxy,
       securities: mode.value == "outbound" ? ["aes-128-gcm", "chacha20-poly1305", "auto", "none", "zero"] : [],
       span,
       clients,
-      qr_content,
-      qr_size: 500,
       newClient,
       modalQr,
     };

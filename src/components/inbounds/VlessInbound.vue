@@ -15,7 +15,7 @@
                 <inbound-common :inbound="inbound"></inbound-common>
             </tbody>
         </table>
-        <vless-clients :clients="inbound.settings.clients"></vless-clients>
+        <vless-clients :clients="inbound.settings.clients" :proxy="inbound"></vless-clients>
     </div>
 </template>
 <script lang="ts">

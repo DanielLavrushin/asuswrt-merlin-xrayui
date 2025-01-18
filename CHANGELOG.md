@@ -1,5 +1,12 @@
 # XRAYUI Changelog
 
+## [0.23.2] - 20225-01-19
+
+- IMPROVED: backend with cosmetic changes.
+- ADDED: wan_ip property to app.html front-end.
+- ADDED: QR code generation for VLESS and VMESS connections.
+- IMPROVED: error handling for missing config.json, added generate_default_config.
+
 ## [0.23.1] - 2025-01-18
 
 - ADDED: Excluded `STUN` (WebRTC) traffic from Xray routing to resolve compatibility issues with video conferencing applications (e.g., Zoom, Microsoft Teams).

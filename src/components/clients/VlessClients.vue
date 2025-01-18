@@ -37,32 +37,28 @@
         <td>{{ client.email }}</td>
         <td style="min-width:120px">{{ client.flow }}</td>
         <td>
-          <button @click.prevent="showQrCode(client)" class="button_gen button_gen_small">manage</button>
+          <qr ref="modalQr" :client="client" :proxy="proxy"></qr>
           <button @click.prevent="removeClient(client)" class="button_gen button_gen_small">remove</button>
         </td>
       </tr>
     </tbody>
   </table>
-  <modal ref="modalQr" title="QR Code Modal">
-    <qrcode-vue :value="qr_content" :size="qr_size" level="H" render-as="svg" />
-  </modal>
+
 </template>
 
 <script lang="ts">
 import { engine } from "../../modules/Engine";
-import xrayConfig from "../../modules/XrayConfig";
 import { XrayVlessClientObject } from "../../modules/ClientsObjects";
 import { XrayOptions } from "../../modules/Options";
 import { defineComponent, ref } from "vue";
-import QrcodeVue from "qrcode.vue";
-
 import modal from "../Modal.vue";
+import Qr from "./QrCodeClient.vue";
 
 export default defineComponent({
   name: "VlessClients",
   components: {
-    QrcodeVue,
     modal,
+    Qr
   },
   methods: {
 
@@ -70,11 +66,6 @@ export default defineComponent({
       this.newClient.id = engine.uuid();
       this.newClient.email = "";
       this.newClient.flow = XrayOptions.clientFlowOptions[0];
-    },
-
-    showQrCode(client: XrayVlessClientObject) {
-      this.qr_content = JSON.stringify(xrayConfig);
-      this.modalQr.value?.show();
     },
 
     removeClient(client: XrayVlessClientObject) {
@@ -105,6 +96,7 @@ export default defineComponent({
     },
   },
   props: {
+    proxy: Object,
     clients: Array<XrayVlessClientObject>,
     mode: String,
   },
@@ -116,7 +108,6 @@ export default defineComponent({
     const mode = ref(props.mode);
     newClient.value.id = engine.uuid();
     const modalQr = ref();
-    let qr_content = ref("");
     const flows = ref();
 
     switch (mode.value) {
@@ -129,10 +120,9 @@ export default defineComponent({
     }
 
     return {
+      proxy: props.proxy,
       flows,
       clients,
-      qr_content,
-      qr_size: 500,
       newClient,
       modalQr,
     };

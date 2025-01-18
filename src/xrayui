@@ -954,36 +954,7 @@ install() {
         printlog true "Xray is already installed." $CWARN
     fi
 
-    # Validate base configuration
-    if [ ! -f /opt/etc/xray/config.json ]; then
-        printlog true "Base configuration file not found. Creating a default config..." $CWARN
-        mkdir -p /opt/etc/xray
-        cat >/opt/etc/xray/config.json <<EOF
-{
-    "log": {
-        "loglevel": "warning",
-        "access": "/tmp/xray_access.log",
-        "error": "/tmp/xray_error.log"
-    },
-    "inbounds":[],
-    "outbounds":[],
-    "routing": {
-        "rules": []
-    },
-    "dns": {
-        "servers": []
-    }
-}
-EOF
-        if [ $? -eq 0 ]; then
-            printlog true "Default configuration created successfully." $CSUC
-        else
-            printlog true "Failed to create default configuration." $CERR
-            exit 1
-        fi
-    else
-        printlog true "Base configuration file already exists." $CWARN
-    fi
+    generate_default_config
 
     # backup config
     cp "/opt/etc/xray/config.json" "/opt/etc/xray/config.json.bak"
@@ -1225,6 +1196,39 @@ toggle_startup() {
     fi
 }
 
+generate_default_config() {
+    # Validate base configuration
+    if [ ! -f "$xray_config" ]; then
+        printlog true "Base configuration file not found. Creating a default config..." $CWARN
+        mkdir -p /opt/etc/xray
+        cat >$xray_config <<EOF
+{
+    "log": {
+        "loglevel": "warning",
+        "access": "/tmp/xray_access.log",
+        "error": "/tmp/xray_error.log"
+    },
+    "inbounds":[],
+    "outbounds":[],
+    "routing": {
+        "rules": []
+    },
+    "dns": {
+        "servers": []
+    }
+}
+EOF
+        if [ $? -eq 0 ]; then
+            printlog true "Default configuration created successfully." $CSUC
+        else
+            printlog true "Failed to create default configuration." $CERR
+            exit 1
+        fi
+    else
+        printlog true "Base configuration file already exists." $CWARN
+    fi
+}
+
 case "$1" in
 install)
     install
@@ -1293,6 +1297,10 @@ service_event)
             ;;
         "togglestartup")
             toggle_startup
+            exit 0
+            ;;
+        "generatedefaultconfig")
+            generate_default_config
             exit 0
             ;;
         esac

@@ -15,6 +15,12 @@ interface XrayUiServer {
 
 interface XrayRouter {
   cpu: number;
+  name: string;
+  ip: string;
+  language: string;
+  firmware: string;
+  features: any;
+  wan_ip: string;
 }
 
 interface XrayUiGlobal {

@@ -359,11 +359,6 @@ configure_firewall_client_tproxy() {
         printlog true "xt_TPROXY kernel module successfully loaded."
     fi
 
-    # Set up NAT chain as in direct mode.
-    iptables -t nat -F XRAYUI 2>/dev/null
-    iptables -t nat -X XRAYUI 2>/dev/null
-    iptables -t nat -N XRAYUI || printlog true "Failed to create NAT chain." $CERR
-
     # Set up MANGLE chain:
     iptables -t mangle -F XRAYUI 2>/dev/null
     iptables -t mangle -X XRAYUI 2>/dev/null
@@ -376,23 +371,17 @@ configure_firewall_client_tproxy() {
             awk '/src/ && ($1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/) { print $1 }'
     )
     for net in $local_networks; do
-        iptables -t nat -A XRAYUI -d "$net" -j RETURN || printlog true "Failed to add local subnet $net rule in NAT." $CERR
         iptables -t mangle -A XRAYUI -d "$net" -j RETURN || printlog true "Failed to add local subnet $net rule in MANGLE." $CERR
     done
 
     # Always exclude loopback:
-    iptables -t nat -A XRAYUI -d 127.0.0.1/32 -j RETURN || printlog true "Failed to add loopback rule in NAT." $CERR
     iptables -t mangle -A XRAYUI -d 127.0.0.1/32 -j RETURN || printlog true "Failed to add loopback rule in MANGLE." $CERR
 
     # Exclude DHCP (UDP ports 67 and 68):
-    iptables -t nat -A XRAYUI -p udp --dport 67 -j RETURN || printlog true "Failed to add DHCP rule for UDP 67 in NAT." $CERR
-    iptables -t nat -A XRAYUI -p udp --dport 68 -j RETURN || printlog true "Failed to add DHCP rule for UDP 68 in NAT." $CERR
     iptables -t mangle -A XRAYUI -p udp --dport 67 -j RETURN || printlog true "Failed to add DHCP rule for UDP 67 in MANGLE." $CERR
     iptables -t mangle -A XRAYUI -p udp --dport 68 -j RETURN || printlog true "Failed to add DHCP rule for UDP 68 in MANGLE." $CERR
 
     # Exclude multicast addresses:
-    iptables -t nat -A XRAYUI -d 224.0.0.0/4 -j RETURN || printlog true "Failed to add multicast rule (224.0.0.0/4) in NAT." $CERR
-    iptables -t nat -A XRAYUI -d 239.0.0.0/8 -j RETURN || printlog true "Failed to add multicast rule (239.0.0.0/8) in NAT." $CERR
     iptables -t mangle -A XRAYUI -d 224.0.0.0/4 -j RETURN || printlog true "Failed to add multicast rule (224.0.0.0/4) in MANGLE." $CERR
     iptables -t mangle -A XRAYUI -d 239.0.0.0/8 -j RETURN || printlog true "Failed to add multicast rule (239.0.0.0/8) in MANGLE." $CERR
 
@@ -402,7 +391,6 @@ configure_firewall_client_tproxy() {
     # Exclude traffic destined to the Xray server:
     for serverip in $SERVER_IPS; do
         printlog true "Excluding Xray server $serverip from NAT and MANGLE."
-        iptables -t nat -A XRAYUI -d "$serverip" -j RETURN || printlog true "Failed to add rule to exclude Xray server in NAT." $CERR
         iptables -t mangle -A XRAYUI -d "$serverip" -j RETURN || printlog true "Failed to add rule to exclude Xray server in MANGLE." $CERR
     done
     # --- End Exclusion Rules ---

@@ -4,6 +4,7 @@
 
 - ADDED: Excluded `STUN` (WebRTC) traffic from Xray routing to resolve compatibility issues with video conferencing applications (e.g., Zoom, Microsoft Teams).
 - UPDATED: Improved confidentiality by removing Xray server IPs from being exposed in the logs.
+- REMOVED: unused iptables `nat` rules for a `client tproxy` operation mode
 
 ## [0.23.0] - 2025-01-18
 

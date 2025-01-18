@@ -319,10 +319,13 @@ configure_firewall_client_direct() {
     iptables -t nat -A XRAYUI -d 224.0.0.0/4 -j RETURN || printlog true "Failed to add multicast rule (224.0.0.0/4) in NAT." $CERR
     iptables -t nat -A XRAYUI -d 239.0.0.0/8 -j RETURN || printlog true "Failed to add multicast rule (239.0.0.0/8) in NAT." $CERR
 
+    # Exclude STUN (WebRTC)
+    iptables -t nat -A XRAYUI -p udp -m u32 --u32 "32=0x2112A442" -j RETURN || printlog true "Failed to add STUN in NAT." $CERR
+
     # Exclude traffic destined to the Xray server:
     for serverip in $SERVER_IPS; do
         printlog true "Excluding Xray server IP $serverip from NAT."
-        iptables -t nat -A XRAYUI -d "$serverip" -j RETURN || printlog true "Failed to add rule to exclude Xray server IP $serverip in NAT." $CERR
+        iptables -t nat -A XRAYUI -d "$serverip" -j RETURN || printlog true "Failed to add rule to exclude Xray server IP in NAT." $CERR
     done
     # --- End Exclusion Rules ---
 
@@ -393,11 +396,14 @@ configure_firewall_client_tproxy() {
     iptables -t mangle -A XRAYUI -d 224.0.0.0/4 -j RETURN || printlog true "Failed to add multicast rule (224.0.0.0/4) in MANGLE." $CERR
     iptables -t mangle -A XRAYUI -d 239.0.0.0/8 -j RETURN || printlog true "Failed to add multicast rule (239.0.0.0/8) in MANGLE." $CERR
 
+    # Exclude STUN (WebRTC)
+    iptables -t mangle -A XRAYUI -p udp -m u32 --u32 "32=0x2112A442" -j RETURN || printlog true "Failed to add STUN in mangle." $CERR
+
     # Exclude traffic destined to the Xray server:
     for serverip in $SERVER_IPS; do
         printlog true "Excluding Xray server $serverip from NAT and MANGLE."
-        iptables -t nat -A XRAYUI -d "$serverip" -j RETURN || printlog true "Failed to add rule to exclude Xray server $serverip in NAT." $CERR
-        iptables -t mangle -A XRAYUI -d "$serverip" -j RETURN || printlog true "Failed to add rule to exclude Xray server  $serverip  in MANGLE." $CERR
+        iptables -t nat -A XRAYUI -d "$serverip" -j RETURN || printlog true "Failed to add rule to exclude Xray server in NAT." $CERR
+        iptables -t mangle -A XRAYUI -d "$serverip" -j RETURN || printlog true "Failed to add rule to exclude Xray server in MANGLE." $CERR
     done
     # --- End Exclusion Rules ---
 

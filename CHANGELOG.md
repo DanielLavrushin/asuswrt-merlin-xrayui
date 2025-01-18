@@ -1,5 +1,10 @@
 # XRAYUI Changelog
 
+## [0.23.1] - 2025-01-18
+
+- ADDED: Excluded `STUN` (WebRTC) traffic from Xray routing to resolve compatibility issues with video conferencing applications (e.g., Zoom, Microsoft Teams).
+- UPDATED: Improved confidentiality by removing Xray server IPs from being exposed in the logs.
+
 ## [0.23.0] - 2025-01-18
 
 - ADDED: Numerous hints and detailed help texts for fields; almost all fields now have detailed descriptions.

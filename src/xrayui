@@ -289,6 +289,12 @@ configure_firewall_client() {
         configure_firewall_client_direct
     fi
 
+    local script="$XRAYUI_USER_SCRIPTS/firewall_client"
+    if [ -x "$script" ]; then
+        printlog true "Executing user firewall script: $script"
+        "$script" || printlog true "Error executing $script." $CERR
+    fi
+
     printlog true "XRAYUI firewall rules applied successfully." $CSUC
 }
 
@@ -322,9 +328,27 @@ configure_firewall_client_direct() {
     # Exclude STUN (WebRTC)
     iptables -t nat -A XRAYUI -p udp -m u32 --u32 "32=0x2112A442" -j RETURN || printlog true "Failed to add STUN in NAT." $CERR
 
+    # Exclude the WireGuard subnet 10.122.0.0/24
+    if [ "$(nvram get wgs_enable)" == "1" ]; then
+        printlog true "WireGuard enabled. Adding exclusion rules for WireGuard."
+        WGS_ADDR=$(nvram get "wgs_addr")
+        WGS_IP="$(echo "$WGS_ADDR" | cut -d'/' -f1)"
+        OCT1="$(echo "$WGS_IP" | cut -d'.' -f1)"
+        OCT2="$(echo "$WGS_IP" | cut -d'.' -f2)"
+        OCT3="$(echo "$WGS_IP" | cut -d'.' -f3)"
+
+        WGS_SUBNET="$OCT1.$OCT2.$OCT3.0/24"
+        WGS_PORT=$(nvram get "wgs_port")
+
+        iptables -t nat -A XRAYUI -p udp --dport "$WGS_PORT" -j RETURN || printlog true "Failed to add WireGuard port rule in NAT." $CERR
+        iptables -t nat -A XRAYUI -d "$WGS_SUBNET" -j RETURN || printlog true "Failed to add WireGuard subnet rule in NAT." $CERR
+    else
+        printlog true "WireGuard not enabled. Skipping WireGuard exclusion rules."
+    fi
+
     # Exclude traffic destined to the Xray server:
     for serverip in $SERVER_IPS; do
-        printlog true "Excluding Xray server IP $serverip from NAT."
+        printlog true "Excluding Xray server IP from NAT."
         iptables -t nat -A XRAYUI -d "$serverip" -j RETURN || printlog true "Failed to add rule to exclude Xray server IP in NAT." $CERR
     done
     # --- End Exclusion Rules ---
@@ -388,6 +412,24 @@ configure_firewall_client_tproxy() {
     # Exclude STUN (WebRTC)
     iptables -t mangle -A XRAYUI -p udp -m u32 --u32 "32=0x2112A442" -j RETURN || printlog true "Failed to add STUN in mangle." $CERR
 
+    # Exclude the WireGuard subnet 10.122.0.0/24
+    if [ "$(nvram get wgs_enable)" == "1" ]; then
+        printlog true "WireGuard enabled. Adding exclusion rules for WireGuard."
+        WGS_ADDR=$(nvram get "wgs_addr")
+        WGS_IP="$(echo "$WGS_ADDR" | cut -d'/' -f1)"
+        OCT1="$(echo "$WGS_IP" | cut -d'.' -f1)"
+        OCT2="$(echo "$WGS_IP" | cut -d'.' -f2)"
+        OCT3="$(echo "$WGS_IP" | cut -d'.' -f3)"
+
+        WGS_SUBNET="$OCT1.$OCT2.$OCT3.0/24"
+        WGS_PORT=$(nvram get "wgs_port")
+
+        iptables -t mangle -A XRAYUI -p udp --dport "$WGS_PORT" -j RETURN || printlog true "Failed to add WireGuard port rule in MANGLE." $CERR
+        iptables -t mangle -A XRAYUI -d "$WGS_SUBNET" -j RETURN || printlog true "Failed to add WireGuard subnet rule in MANGLE." $CERR
+    else
+        printlog true "WireGuard not enabled. Skipping WireGuard exclusion rules."
+    fi
+
     # Exclude traffic destined to the Xray server:
     for serverip in $SERVER_IPS; do
         printlog true "Excluding Xray server $serverip from NAT and MANGLE."
@@ -420,6 +462,12 @@ cleanup_firewall() {
 
     ip rule del fwmark 0x8777 table 8777 priority 100 2>/dev/null || printlog true "Failed to delete fwmark rule. Was it already empty?" $CWARN
     ip route flush table 8777 2>/dev/null || printlog true "Failed to flush table 8777. Was it already empty?" $CWARN
+
+    local script="$XRAYUI_USER_SCRIPTS/firewall_cleanup"
+    if [ -x "$script" ]; then
+        printlog true "Executing user firewall script: $script"
+        "$script" "$xray_config" || printlog true "Error executing $script." $CERR
+    fi
 
     printlog true "Restarting firewall and DNS services..."
     service restart_firewall >/dev/null 2>&1 && printlog true "Firewall service restarted successfully." $CSUC

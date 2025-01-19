@@ -1,6 +1,12 @@
 # XRAYUI Changelog
 
-## [0.24.2] - 20225-01-19
+## [0.25.0] - 2025-01-19
+
+- ADDED: Exclude `WireGuard` subnet and port from XRAYUI `iptables` rules.
+- FIXED: Restored custom `iptables` user scripts logic on xray `start` and `stop`.
+- IMPROVED: XRAYUI Change log window redesigned
+
+## [0.24.2] - 2025-01-19
 
 - ADDED: `wan_ip` property to `app.html` in the front-end.
 - ADDED: QR code generation for `VLESS` and `VMESS` connections.

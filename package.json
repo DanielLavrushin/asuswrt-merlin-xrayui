@@ -21,6 +21,7 @@
     "vue": "^3.5.12"
   },
   "devDependencies": {
+    "@types/markdown-it": "^14.1.2",
     "@types/vue": "^1.0.31",
     "@types/webpack-env": "^1.18.5",
     "@vue/compiler-sfc": "^3.5.12",

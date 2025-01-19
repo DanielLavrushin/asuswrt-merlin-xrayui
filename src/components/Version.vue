@@ -3,7 +3,7 @@
             <span class="button_gen button_gen_small button_info" title="a more recent update is available"
                 v-if="hasUpdate">!</span>
             XRAYUI v{{ current_version }}</a></div>
-    <modal ref="updateModal" width="500" title="XRAYUI Version Information">
+    <modal ref="updateModal" width="600" title="XRAYUI Version Log">
         <div class="modal-content">
             <p class="current-version">Current version: <strong>{{ current_version }}</strong></p>
             <div v-if="hasUpdate" class="update-details">
@@ -14,9 +14,9 @@
             <p v-else class="no-updates">Your version is up-to-date!</p>
 
             <div class="textarea-wrapper">
-                <textarea v-model="changelog" rows="25" cols="50"></textarea>
+                <div class="changelog" v-html="changelog"></div>
                 open full <a target="_blank"
-                    href="https://raw.githubusercontent.com/daniellavrushin/asuswrt-merlin-xrayui/main/CHANGELOG.md">changelog</a>
+                    href="https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/blob/main/CHANGELOG.md">changelog</a>
             </div>
         </div>
         <template v-slot:footer></template>
@@ -30,6 +30,7 @@ import axios from "axios";
 import vClean from 'version-clean'
 import vCompare from 'version-compare'
 import engine, { SubmtActions } from '../modules/Engine'
+import markdownit from "markdown-it";
 
 export default defineComponent({
     name: "Version",
@@ -37,6 +38,7 @@ export default defineComponent({
         Modal,
     },
     setup() {
+        const md = markdownit({ html: true, breaks: true });
         let tempcurvers = window.xray.custom_settings.xray_version;
         if (tempcurvers.split('.').length === 2) {
             tempcurvers += ".0";
@@ -58,7 +60,8 @@ export default defineComponent({
 
                     window.xray.server.xray_version_latest = latest_version.value;
                 }
-                changelog.value = response.data[0].body;
+
+                changelog.value = md.render(response.data[0].body);
             }
 
         }, 2000);
@@ -98,6 +101,33 @@ export default defineComponent({
     position: absolute;
     bottom: 0;
     right: 5px;
+}
+
+.textarea-wrapper .changelog {
+    text-align: left;
+    background-color: #2F3A3E;
+    border: 1px solid #222;
+    padding: 0 10px;
+    min-height: 150px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.textarea-wrapper .changelog>>>h2 {
+    margin: 5px;
+}
+
+.textarea-wrapper .changelog>>>ul {
+    margin: 5px;
+    padding: 0 10px;
+
+}
+
+.textarea-wrapper .changelog>>>ul li {
+    margin: 5px;
+}
+
+.textarea-wrapper .changelog>>>code {
+    font-weight: bold;
 }
 
 .textarea-wrapper a {

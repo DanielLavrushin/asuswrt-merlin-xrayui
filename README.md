@@ -56,7 +56,7 @@ A: you can refference this [wiki guide](https://github.com/DanielLavrushin/asusw
 
 # Contributing
 
-If you have any problems with any of the XRAYUI, feel free to share them by opening an issue.
+If you have any problems with the XRAYUI, feel free to share them by opening an issue.
 You can also suggest/request a new feature to be created or added. Contributions are welcome and encouraged.
 
 # License

@@ -53,3 +53,12 @@ A: you can refference this [wiki guide](https://github.com/DanielLavrushin/asusw
 **Q: How can I configure a simple xray server on my ASUS router?**
 
 A: you can refference this [wiki guide](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/wiki/Xray-Server-Configuration-Guide)
+
+# Contributing
+
+If you have any problems with any of the XRAYUI, feel free to share them by opening an issue.
+You can also suggest/request a new feature to be created or added. Contributions are welcome and encouraged.
+
+# License
+
+XRAYUI is licensed under [(CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/)

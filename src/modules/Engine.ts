@@ -9,20 +9,25 @@ class EngineWireguard {
   public privateKey!: string;
   public publicKey!: string;
 }
+
 class EngineReality {
   public privateKey!: string;
   public publicKey!: string;
 }
+
 class EngineSsl {
   public certificateFile!: string;
   public keyFile!: string;
 }
+
 class EngineResponseConfig {
   public wireguard?: EngineWireguard;
   public reality?: EngineReality;
   public certificates?: EngineSsl;
   public xray?: { test: string };
+  public files?: Record<string, string>;
 }
+
 class SubmtActions {
   public static ConfigurationSetMode: string = "xrayui_configuration_mode";
   public static ConfigurationApply: string = "xrayui_configuration_apply";
@@ -39,6 +44,7 @@ class SubmtActions {
   public static performUpdateGeodat: string = "xrayui_updategeodat";
   public static ToggleStartupOption: string = "xrayui_configuration_togglestartup";
   public static ConfigurationGenerateDefaultConfig: string = "xrayui_configuration_generatedefaultconfig";
+  public static loadGeodatDates: string = "xrayui_getgeodatdates";
 }
 
 class Engine {

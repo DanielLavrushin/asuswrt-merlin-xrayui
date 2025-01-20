@@ -71,6 +71,10 @@ input[type="radio"] {
   margin-right: 5px;
 }
 
+.hint-small {
+  font-size: 8pt;
+}
+
 .hint-color a {
   text-decoration: underline;
   color: #fc0;

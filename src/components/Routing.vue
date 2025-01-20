@@ -92,6 +92,7 @@
         <td>
           <input class="button_gen button_gen_small" type="button" value="update metadata"
             @click.prevent="update_geodat()" />
+          <span class="hint-small" v-if="daysPassed > 1"> updated {{ daysPassed }} days ago</span>
           <span class="hint-color">
             [<a href="https://github.com/Loyalsoldier/v2ray-rules-dat/releases" target="_blank">source</a>,
             <a href="https://github.com/v2fly/domain-list-community/tree/master/data" target="_blank">geosite</a>]
@@ -127,14 +128,10 @@ export default defineComponent({
     Hint,
     RulesModal
   },
-  methods: {
-    async manage_balancers() { },
-    async manage_rules() {
-      this.modal.show();
-    }
-  },
+
   setup() {
     const modal = ref();
+    const daysPassed = ref(0);
     const routing = ref<XrayRoutingObject>(xrayConfig.routing || new XrayRoutingObject());
 
     const update_geodat = async () => {
@@ -157,10 +154,29 @@ export default defineComponent({
       },
       { immediate: true }
     );
+
+    const manage_rules = async () => {
+      modal.value.show();
+    };
+    const load_geodat_dates = async () => {
+      await engine.submit(SubmtActions.loadGeodatDates, null, 1000);
+      const result = await engine.getEngineConfig();
+      if (result.files) {
+        const date = new Date(result.files["geosite.dat"]);
+        const df = Date.now() - date.getTime();
+        daysPassed.value = Math.floor(df / (1000 * 60 * 60 * 24));
+
+      }
+    };
+
+    load_geodat_dates();
+
     return {
       routing,
+      daysPassed,
       modal,
       update_geodat,
+      manage_rules,
       domainStrategyOptions: XrayRoutingObject.domainStrategyOptions,
       domainMatcherOptions: XrayRoutingObject.domainMatcherOptions
     };

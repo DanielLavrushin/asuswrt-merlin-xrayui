@@ -172,6 +172,38 @@ update_geodat() {
     fi
 }
 
+set_geodat_createdates() {
+    local geoip_file="/opt/sbin/geoip.dat"
+    local geosite_file="/opt/sbin/geosite.dat"
+
+    local geoip_date geosite_date
+    geoip_date=$(date -r "$geoip_file" "+%Y-%m-%d %H:%M:%S")
+    geosite_date=$(date -r "$geosite_file" "+%Y-%m-%d %H:%M:%S")
+
+    ensure_ui_response_file
+    local json_content
+    if [ -f "$XRAY_UI_RESPONSE_FILE" ]; then
+        json_content=$(cat "$XRAY_UI_RESPONSE_FILE")
+    else
+        json_content="{}"
+    fi
+
+    json_content=$(echo "$json_content" | jq --arg geoip "$geoip_date" --arg geosite "$geosite_date" \
+        '.files["geoip.dat"] = $geoip | .files["geosite.dat"] = $geosite')
+    if [ $? -ne 0 ]; then
+        printlog true "Error: Failed to update JSON content with file dates." $CERR
+        return 1
+    fi
+
+    echo "$json_content" >"$XRAY_UI_RESPONSE_FILE"
+    if [ $? -eq 0 ]; then
+        printlog true "Saved file dates to $XRAY_UI_RESPONSE_FILE successfully." $CSUC
+    else
+        printlog true "Failed to save file dates to $XRAY_UI_RESPONSE_FILE." $CERR
+        return 1
+    fi
+}
+
 detect_entware_path() {
     # Common parent directories to check
     search_dirs="/tmp/mnt /opt"
@@ -1295,6 +1327,9 @@ service_event)
         exit 0
     elif [ "$2" = "updategeodat" ]; then
         update_geodat
+        exit 0
+    elif [ "$2" = "getgeodatdates" ]; then
+        set_geodat_createdates
         exit 0
     elif [ "$2" = "connectedclients" ]; then
         get_connected_clients

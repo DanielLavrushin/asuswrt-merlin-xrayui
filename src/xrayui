@@ -445,6 +445,9 @@ configure_firewall_client_tproxy() {
     # Exclude STUN (WebRTC)
     iptables -t mangle -A XRAYUI -p udp -m u32 --u32 "32=0x2112A442" -j RETURN || printlog true "Failed to add STUN in mangle." $CERR
 
+    # Exclude traffic in DNAT state (covers inbound port-forwards):
+    iptables -t mangle -A XRAYUI -m conntrack --ctstate DNAT -j RETURN
+
     # Exclude the WireGuard subnet 10.122.0.0/24
     if [ "$(nvram get wgs_enable)" == "1" ]; then
         printlog true "WireGuard enabled. Adding exclusion rules for WireGuard."

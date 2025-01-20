@@ -1,12 +1,13 @@
 # XRAYUI Changelog
 
-## [0.25.1] - 2025-01-20
+## [0.26.0] - 2025-01-20
 
+- ADDED: Display a hint next to the geodata files update button indicating when the files were last updated.
+- ADDED: DNAT-based exclusion in `TPROXY` rules to bypass inbound port-forwards (#4).
 - IMPROVED: Refactored `SSL certificates` generation and updated output file to cert.crt.
 - IMPROVED: Refactored `REALITY` keys generation.
 - IMPROVED: Refactored `Wireguard` private/public keys generation.
 - UPDATED: Show `regenerate` public key button for a `Wireguard` client only when a private key is generated; hidden otherwise.
-- ADDED: Display a hint next to the geodata files update button indicating when the files were last updated.
 
 ## [0.25.0] - 2025-01-19
 

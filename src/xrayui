@@ -322,12 +322,6 @@ configure_firewall_client() {
         configure_firewall_client_direct
     fi
 
-    local script="$XRAYUI_USER_SCRIPTS/firewall_client"
-    if [ -x "$script" ]; then
-        printlog true "Executing user firewall script: $script"
-        "$script" || printlog true "Error executing $script." $CERR
-    fi
-
     printlog true "XRAYUI firewall rules applied successfully." $CSUC
 }
 
@@ -385,6 +379,13 @@ configure_firewall_client_direct() {
         iptables -t nat -A XRAYUI -d "$serverip" -j RETURN || printlog true "Failed to add rule to exclude Xray server IP in NAT." $CERR
     done
     # --- End Exclusion Rules ---
+
+    # Execute custom rules for TPROXY (if any)
+    local script="$XRAYUI_USER_SCRIPTS/firewall_client"
+    if [ -x "$script" ]; then
+        printlog true "Executing custom TPROXY firewall script: $script"
+        "$script" || printlog true "Error executing $script." $CERR
+    fi
 
     # Add NAT REDIRECT rules:
     iptables -t nat -A XRAYUI -p tcp -j REDIRECT --to-port "$XRAY_PORT" || printlog true "Failed to add TCP REDIRECT." $CERR
@@ -472,6 +473,13 @@ configure_firewall_client_tproxy() {
         iptables -t mangle -A XRAYUI -d "$serverip" -j RETURN || printlog true "Failed to add rule to exclude Xray server in MANGLE." $CERR
     done
     # --- End Exclusion Rules ---
+
+    # Execute custom rules for TPROXY (if any)
+    local script="$XRAYUI_USER_SCRIPTS/firewall_client"
+    if [ -x "$script" ]; then
+        printlog true "Executing custom TPROXY firewall script: $script"
+        "$script" || printlog true "Error executing $script." $CERR
+    fi
 
     # Add TPROXY rules in mangle:
     iptables -t mangle -A XRAYUI -p tcp -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777 || printlog true "Failed to add TPROXY rule for TCP." $CERR

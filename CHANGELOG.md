@@ -1,5 +1,9 @@
 # XRAYUI Changelog
 
+## [0.26.1] - 2025-01-20
+
+- UPDATED: Added custom firewall script hooks for both `TPROXY` and `DIRECT` modes, executed before final interception rules are applied. This ensures user-defined rules (e.g., WAN interface exclusions) are processed in time.
+
 ## [0.26.0] - 2025-01-20
 
 - ADDED: Display a hint next to the geodata files update button indicating when the files were last updated.

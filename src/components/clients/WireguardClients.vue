@@ -34,7 +34,7 @@
                     <th>Public Key</th>
                     <td>
                         <input v-model="newClient.publicKey" type="text" class="input_25_table" />
-                        <span class="row-buttons">
+                        <span class="row-buttons" v-if="privateKey">
                             <input class="button_gen button_gen_small" type="button" value="regenerate"
                                 @click.prevent="regen()" />
                         </span>
@@ -74,11 +74,12 @@ export default defineComponent({
     },
     methods: {
         async regen() {
-            window.showLoading();
-            await engine.submit(SubmtActions.regenerateWireguardyKeys, this.privateKey, 1000);
+            const delay = 2000;
+            window.showLoading(delay);
+            await engine.submit(SubmtActions.regenerateWireguardyKeys, this.privateKey, delay);
             let result = await engine.getEngineConfig();
             if (result.wireguard) {
-                this.newClient.publicKey = result.wireguard.publickey;
+                this.newClient.publicKey = result.wireguard.publicKey;
             }
             window.hideLoading();
         },

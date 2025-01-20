@@ -83,12 +83,13 @@ export default defineComponent({
 
     methods: {
         async regen(privatekey: string | undefined = undefined) {
-            window.showLoading();
-            await engine.submit(SubmtActions.regenerateWireguardyKeys, privatekey, 1000);
+            const delay = 2000;
+            window.showLoading(delay);
+            await engine.submit(SubmtActions.regenerateWireguardyKeys, privatekey, delay);
             let result = await engine.getEngineConfig();
             if (this.inbound.settings) {
-                this.privatekey = result.wireguard?.privatekey!;
-                this.inbound.settings.secretKey = result.wireguard?.privatekey!;
+                this.privatekey = result.wireguard?.privateKey!;
+                this.inbound.settings.secretKey = result.wireguard?.privateKey!;
             }
             window.hideLoading();
         },

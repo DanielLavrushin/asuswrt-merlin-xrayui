@@ -1,5 +1,12 @@
 # XRAYUI Changelog
 
+## [0.25.1] - 2025-01-20
+
+- IMPROVED: Refactored `SSL certificates` generation and updated output file to cert.crt
+- IMPROVED: Refactored `REALITY` keys generation
+- IMPROVED: Refactored `Wireguard` private/public keys generation
+- UPDATED: Show `regenerate` public key button for a `Wireguard` client only when a private key is generated; hidden otherwise
+
 ## [0.25.0] - 2025-01-19
 
 - ADDED: Exclude `WireGuard` subnet and port from XRAYUI `iptables` rules.

@@ -178,11 +178,16 @@ export default defineComponent({
     async certificate_renew() {
       const delay = 5000;
       window.showLoading(delay);
-      await engine.submit(SubmtActions.CertificateRenew, null, delay);
-      await engine.loadXrayConfig();
+      await engine.submit(SubmtActions.regenerateSslCertificates, null, delay);
+      const result = await engine.getSslCertificates();
+      if (result && this.transport.tlsSettings) {
+        this.transport.tlsSettings.certificates = [];
+        let cert = new XrayStreamTlsCertificateObject();
+        cert.certificateFile = result.certificateFile;
+        cert.keyFile = result.keyFile;
+        this.transport.tlsSettings.certificates.push(cert);
+      }
       window.hideLoading();
-
-
     },
   },
   setup(props) {

@@ -20,6 +20,7 @@ xray_config="/opt/etc/xray/config.json"
 xray_config_client="/opt/etc/xray/config-client.json"
 dir_xrayui="/www/user/xrayui"
 xray_ui_config="$dir_xrayui/xray-config.json"
+XRAY_UI_RESPONSE_FILE="$dir_xrayui/xray-ui-response.json"
 
 XRAY="xray"
 XRAYUI_VERSION="0.0"
@@ -664,9 +665,9 @@ get_connected_clients() {
     echo "$json_array"
 }
 
-cert_renew() {
+regenerate_ssl_certificates() {
     local cert_dir="/opt/etc/xray/cert"
-    local cert_file="$cert_dir/xray-cert.pem"
+    local cert_file="$cert_dir/xray-cert.crt"
     local key_file="$cert_dir/xray-key.pem"
     local tempconfig=$(make_clean_config)
 
@@ -695,65 +696,27 @@ cert_renew() {
         return 1
     fi
 
-    jq --arg cert_file "$cert_file" --arg key_file "$key_file" '
-            .inbounds[]?.streamSettings?.tlsSettings.certificates |=
-                if . != null then
-                if any(.[]?; .usage == "encipherment") then
-                    map(
-                    if .usage == "encipherment" then
-                        .certificateFile = $cert_file |
-                        .keyFile = $key_file
-                    else
-                        .
-                    end
-                    )
-                elif length == 0 then
-                    [
-                    {
-                        certificateFile: $cert_file,
-                        keyFile: $key_file
-                    }
-                    ]
-                else
-                    . + [{
-                    certificateFile: $cert_file,
-                    keyFile: $key_file
-                    }]
-                end
-                else
-                [
-                    {
-                    certificateFile: $cert_file,
-                    keyFile: $key_file
-                    }
-                ]
-                end
-' "$xray_config" >"/tmp/xray-config.json"
-
-    if [ $? -eq 0 ]; then
-        mv "/tmp/xray-config.json" "$xray_config"
-        printlog true "TLS certificates updated in Xray config successfully." $CSUC
+    ensure_ui_response_file
+    local json_content
+    if [ -f "$XRAY_UI_RESPONSE_FILE" ]; then
+        json_content=$(cat "$XRAY_UI_RESPONSE_FILE")
     else
-        printlog true "Failed to update TLS certificates in Xray config." $CERR
-        rm -f "/tmp/xray-config.json"
+        json_content="{}"
+    fi
+
+    json_content=$(echo "$json_content" | jq --arg cert "$cert_file" --arg key "$key_file" \
+        '.certificates.certificateFile = $cert | .certificates.keyFile = $key')
+    if [ $? -ne 0 ]; then
+        printlog true "Error: Failed to update JSON content." $CERR
         return 1
     fi
 
-    if [ -f "$PIDFILE" ]; then
-        restart
-    fi
+    echo "$json_content" >"$XRAY_UI_RESPONSE_FILE"
 
     if [ $? -eq 0 ]; then
-        printlog true "Xray service restarted successfully." $CSUC
+        printlog true "Saved TLS certificates to $XRAY_UI_RESPONSE_FILE successfully." $CSUC
     else
-        printlog true "Failed to restart Xray service." $CERR
-        return 1
-    fi
-
-    if [ $? -eq 0 ]; then
-        printlog true "Xray UI configuration refreshed successfully." $CSUC
-    else
-        printlog true "Failed to refresh Xray UI configuration." $CERR
+        printlog true "Failed to save TLS certificates to $XRAY_UI_RESPONSE_FILE." $CERR
         return 1
     fi
 }
@@ -775,41 +738,35 @@ regenerate_reality_keys() {
         return 1
     fi
 
-    printlog true "Generated Reality Private Key: $private_key" $CSUC
-    printlog true "Generated Reality Public Key: $public_key" $CSUC
-
-    reality_json="$dir_xrayui/reality.json"
-
-    if [ ! -d $dir_xrayui ]; then
-        printlog true "Directory $dir_xrayui does not exist. Creating it." $CWARN
-        mkdir -p $dir_xrayui
-        if [ $? -ne 0 ]; then
-            printlog true "Failed to create directory $dir_xrayui."
-            return 1
-        fi
+    ensure_ui_response_file
+    local json_content
+    if [ -f "$XRAY_UI_RESPONSE_FILE" ]; then
+        json_content=$(cat "$XRAY_UI_RESPONSE_FILE")
+    else
+        json_content="{}"
     fi
 
-    echo "{
-  \"privateKey\": \"$private_key\",
-  \"publicKey\": \"$public_key\"
-}" >"$reality_json"
+    json_content=$(echo "$json_content" | jq --arg pk "$private_key" --arg pub "$public_key" \
+        '.reality.privateKey = $pk | .reality.publicKey = $pub')
 
-    if [ $? -eq 0 ]; then
-        printlog true "Saved Reality keys to $reality_json successfully." $CSUC
-    else
-        printlog true "Failed to save Reality keys to $reality_json." $CERR
+    if [ $? -ne 0 ]; then
+        printlog true "Error: Failed to update JSON content." $CERR
         return 1
     fi
 
-    chmod 600 "$reality_json"
-
-    return 0
+    echo "$json_content" >"$XRAY_UI_RESPONSE_FILE"
+    if [ $? -eq 0 ]; then
+        printlog true "Saved TLS certificates to $XRAY_UI_RESPONSE_FILE successfully." $CSUC
+    else
+        printlog true "Failed to save TLS certificates to $XRAY_UI_RESPONSE_FILE." $CERR
+        return 1
+    fi
 }
 
 regenerate_wireguard_keys() {
+    printlog true "Regenerating WireGuard private and public keys..."
     local private_key=$(reconstruct_payload)
     local public_key
-    local json_file="$dir_xrayui/xray-ui-response.json"
 
     if [ -z "$private_key" ]; then
         private_key=$(wg genkey)
@@ -825,25 +782,33 @@ regenerate_wireguard_keys() {
         return 1
     fi
 
+    ensure_ui_response_file
     local json_content
-    if [ -f "$json_file" ]; then
-        json_content=$(cat "$json_file")
+    if [ -f "$XRAY_UI_RESPONSE_FILE" ]; then
+        json_content=$(cat "$XRAY_UI_RESPONSE_FILE")
     else
         json_content="{}"
     fi
 
     json_content=$(echo "$json_content" | jq --arg pk "$private_key" --arg pub "$public_key" \
-        '.wireguard.privatekey = $pk | .wireguard.publickey = $pub')
+        '.wireguard.privateKey = $pk | .wireguard.publicKey = $pub')
 
     if [ $? -ne 0 ]; then
         printlog true "Error: Failed to update JSON content." $CERR
         return 1
     fi
 
-    echo "$json_content" >"$json_file"
+    echo "$json_content" >"$XRAY_UI_RESPONSE_FILE"
 
     if [ $? -ne 0 ]; then
         printlog true "Error: Failed to write to JSON file." $CERR
+        return 1
+    fi
+
+    if [ $? -eq 0 ]; then
+        printlog true "Saved WireGuard keys to $XRAY_UI_RESPONSE_FILE successfully." $CSUC
+    else
+        printlog true "Failed to save WireGuard keys to $XRAY_UI_RESPONSE_FILE." $CERR
         return 1
     fi
 
@@ -938,6 +903,14 @@ reconstruct_payload() {
     echo "$payload"
 }
 
+ensure_ui_response_file() {
+    if [ ! -f "$XRAY_UI_RESPONSE_FILE" ]; then
+        printlog true "Creating XRAY UI response file: $XRAY_UI_RESPONSE_FILE"
+        echo '{"xray":{}}' >"$XRAY_UI_RESPONSE_FILE"
+        chmod 600 "$XRAY_UI_RESPONSE_FILE"
+    fi
+}
+
 test_xray_config() {
     local output
     if ! output=$(xray -c /opt/etc/xray/config.json -test 2>&1); then
@@ -946,12 +919,9 @@ test_xray_config() {
         message="Config file appears to be fine, but the XRAY service has not started. Try to restart/reconnect it."
     fi
 
-    local json_file="$dir_xrayui/xray-ui-response.json"
-    if [ ! -f "$json_file" ]; then
-        echo '{"xray":{}}' >"$json_file"
-    fi
+    ensure_ui_response_file
 
-    local updated_json=$(jq --arg msg "$message" '.xray.test = $msg' "$json_file")
+    local updated_json=$(jq --arg msg "$message" '.xray.test = $msg' "$XRAY_UI_RESPONSE_FILE")
     echo "$updated_json" >"$json_file"
 }
 
@@ -1353,14 +1323,6 @@ service_event)
             ;;
         esac
         exit 0
-    elif [ "$2" = "certificate" ]; then
-        case "$3" in
-        "renew")
-            cert_renew
-            exit 0
-            ;;
-        esac
-        exit 0
     elif [ "$2" = "regenerate" ]; then
         case "$3" in
         "realitykeys")
@@ -1369,6 +1331,10 @@ service_event)
             ;;
         "wgkeys")
             regenerate_wireguard_keys
+            exit 0
+            ;;
+        "sslcertificates")
+            regenerate_ssl_certificates
             exit 0
             ;;
         esac

@@ -212,8 +212,10 @@ export default defineComponent({
 
         await engine.submit(SubmtActions.regenerateRealityKeys, null, 1000);
         let result = await engine.getRealityKeys();
-        this.transport.realitySettings.privateKey = result.privateKey;
-        this.transport.realitySettings.publicKey = result.publicKey;
+        if (result) {
+          this.transport.realitySettings.privateKey = result.privateKey;
+          this.transport.realitySettings.publicKey = result.publicKey;
+        }
         window.hideLoading();
       }
     },

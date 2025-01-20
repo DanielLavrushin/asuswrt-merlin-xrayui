@@ -6,17 +6,26 @@ import { plainToInstance } from "class-transformer";
 import { XrayInboundObject, XraySocksInboundObject, XrayWireguardInboundObject } from "./InboundObjects";
 
 class EngineWireguard {
-  public privatekey!: string;
-  public publickey!: string;
+  public privateKey!: string;
+  public publicKey!: string;
+}
+class EngineReality {
+  public privateKey!: string;
+  public publicKey!: string;
+}
+class EngineSsl {
+  public certificateFile!: string;
+  public keyFile!: string;
 }
 class EngineResponseConfig {
   public wireguard?: EngineWireguard;
+  public reality?: EngineReality;
+  public certificates?: EngineSsl;
   public xray?: { test: string };
 }
 class SubmtActions {
   public static ConfigurationSetMode: string = "xrayui_configuration_mode";
   public static ConfigurationApply: string = "xrayui_configuration_apply";
-  public static CertificateRenew: string = "xrayui_certificate_renew";
   public static clientsOnline: string = "xrayui_connectedclients";
   public static refreshConfig: string = "xrayui_refreshconfig";
   public static serverStart: string = "xrayui_serverstatus_start";
@@ -24,6 +33,7 @@ class SubmtActions {
   public static serverStop: string = "xrayui_serverstatus_stop";
   public static regenerateRealityKeys: string = "xrayui_regenerate_realitykeys";
   public static regenerateWireguardyKeys: string = "xrayui_regenerate_wgkeys";
+  public static regenerateSslCertificates: string = "xrayui_regenerate_sslcertificates";
   public static enableLogs: string = "xrayui_configuration_logs";
   public static performUpdate: string = "xrayui_update";
   public static performUpdateGeodat: string = "xrayui_updategeodat";
@@ -146,16 +156,20 @@ class Engine {
     return config;
   }
 
-  async getRealityKeys(): Promise<any> {
-    const response = await axios.get<XrayObject>("/ext/xrayui/reality.json");
-    let realityKeys = response.data;
-    return realityKeys;
+  async getRealityKeys(): Promise<EngineReality | undefined> {
+    const result = await this.getEngineConfig();
+    return result?.reality;
   }
 
   async getEngineConfig(): Promise<EngineResponseConfig> {
     const response = await axios.get<EngineResponseConfig>("/ext/xrayui/xray-ui-response.json");
     let responseConfig = response.data;
     return responseConfig;
+  }
+  async getSslCertificates(): Promise<EngineSsl | undefined> {
+    const response = await axios.get<EngineResponseConfig>("/ext/xrayui/xray-ui-response.json");
+    let result = response.data;
+    return result?.certificates;
   }
 
   async loadXrayConfig(): Promise<XrayObject> {

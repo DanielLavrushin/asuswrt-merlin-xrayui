@@ -1,5 +1,23 @@
 # XRAYUI Changelog
 
+## [0.27.0] - 2025-01-xx
+
+- ADDED: Import support for outbound configurations in client mode. You can now upload a QR code or provide an xray URL. A new import button was added to the `outbounds` section.
+- ADDED: Internal mechanism to parse xray proxy URLs (currently only supports `VLESS`; more protocols coming).
+- ADDED: Emergency function `/jffs/scripts/xrayui` fixme to automatically address unexpected `xrayui` issues.
+- UPDATED: Refactored stream settings handling and normalization for various proxy types.
+- UPDATED: Made the `spiderX` field visible in `REALITY` while in client mode.
+- IMPROVED: Enhanced error message output on the Xray-Core router side when xray fails to start. Now a friendly `yellow exclamation` mark indicates what went wrong.
+- IMPROVED: Updated default configuration handling to avoid saving default xray parameters, thus reducing noise and file size.
+- IMPROVED: Fixed a residual payload issue in `custom_settings` (#2, #7).
+- IMPROVED: Normalized the `Sniffing` object when saving settings.
+- IMPROVED: Removed the entire `sockopt` entity when it is turned `off`.
+- IMPROVED: Added more user-friendly messages and improved validation during `QR` generation.
+- FIXED: Removed the hardcoded server port in the connected clients list for server mode (#6).
+- FIXED: The security object now correctly retains its default setting visually (`REALITY`, `TLS` - cosmetic fix).
+- FIXED: Corrected mapping for inbound types during configuration load.
+- FIXED: When the `sockopt.mark` field is empty, it is removed rather than being set as a string.
+
 ## [0.26.1] - 2025-01-20
 
 - UPDATED: Added custom firewall script hooks for both `TPROXY` and `DIRECT` modes, executed before final interception rules are applied. This ensures user-defined rules (e.g., WAN interface exclusions) are processed in time.

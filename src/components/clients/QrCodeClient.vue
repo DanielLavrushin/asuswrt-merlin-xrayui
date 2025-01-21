@@ -29,7 +29,10 @@ export default defineComponent({
             if (props.proxy) {
 
                 var p = props.proxy;
-
+                if (!p.streamSettings.security || p.streamSettings.security == 'none') {
+                    alert("Please set security to tls or reality before generating QR code");
+                    return;
+                }
                 let wanip = window.xray.router.wan_ip + ":" + p.port;
                 let security = p.streamSettings.realitySettings ? 'reality' : p.streamSettings.tlsSettings ? 'tls' : 'none';
                 let sni = "";

@@ -134,7 +134,7 @@
             <input v-model="transport.realitySettings.publicKey" type="text" class="input_30_table" />
           </td>
         </tr>
-        <tr v-if="engine.mode === 'server' && transport.realitySettings">
+        <tr>
           <th>Spider X
             <hint>
               The bootstrapping path and query params of the spider. It's recommended to have this varied per client.

@@ -13,6 +13,7 @@
   "dependencies": {
     "axios": "^1.7.7",
     "class-transformer": "^0.5.1",
+    "jsqr": "^1.4.0",
     "markdown-it": "^14.1.0",
     "qrcode.vue": "^3.6.0",
     "tslib": "^2.8.0",

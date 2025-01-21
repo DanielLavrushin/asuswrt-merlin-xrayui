@@ -25,6 +25,8 @@ XRAY_UI_RESPONSE_FILE="$dir_xrayui/xray-ui-response.json"
 XRAY="xray"
 XRAYUI_VERSION="0.0"
 XRAYUI_USER_SCRIPTS="/jffs/xrayui_custom"
+
+XRAYUI_LOCKFILE="/tmp/xrayui.lock"
 # Color Codes
 CERR='\033[0;31m'
 CSUC='\033[0;32m'
@@ -676,35 +678,51 @@ am_settings_del() {
     sed -i "/$key/d" /jffs/addons/custom_settings.txt
 }
 
+# function to get connected clients in the server mode
 get_connected_clients() {
-
     temp_file="/tmp/xray_clients_online.json"
-    >$temp_file
+    >"$temp_file"
 
-    ips=$(netstat -an | grep ':4433' | grep 'ESTABLISHED' | awk -F'[: ]+' '{print $8}' | sed 's/::ffff://' | sort | uniq)
+    ports_list=""
+    inbounds_ports=$(jq -r '.inbounds[]?.port // empty' "$xray_config")
+    printlog true "Checking for connected clients on ports: $inbounds_ports"
+    for XRAY_PORT in $inbounds_ports; do
+        if echo "$XRAY_PORT" | grep -q '-'; then
+            PORT_START=$(echo "$XRAY_PORT" | cut -d'-' -f1)
+            PORT_END=$(echo "$XRAY_PORT" | cut -d'-' -f2)
+            for port in $(seq "$PORT_START" "$PORT_END"); do
+                ports_list="$ports_list $port"
+            done
+        else
+            ports_list="$ports_list $XRAY_PORT"
+        fi
+    done
 
-    access_log="$(jq -r '.log.access' $xray_config)"
+    pattern=$(echo "$ports_list" | tr ' ' '\n' | grep -E '^[0-9]+$' | sort -n -u | awk '{printf "%s|", $0}' | sed 's/|$//')
+
+    ips=$(netstat -an | grep 'ESTABLISHED' | grep -E ":(${pattern})\$" | awk -F'[: ]+' '{print $8}' | sed 's/::ffff://' | sort | uniq)
+
+    access_log=$(jq -r '.log.access' "$xray_config")
 
     for ip in $ips; do
         if [ -n "$ip" ]; then
-            emails=$(grep "$ip" $access_log | awk -F'email: ' '{print $2}' | sort | uniq | sed 's/^/"/; s/$/"/' | tr '\n' ',' | sed 's/,$//')
-
+            emails=$(grep "$ip" "$access_log" | awk -F'email: ' '{print $2}' | sort | uniq | sed 's/^/"/; s/$/"/' | tr '\n' ',' | sed 's/,$//')
             if [ -n "$emails" ]; then
-                echo "{\"ip\": \"$ip\", \"email\": [$emails]}," >>$temp_file
+                echo "{\"ip\": \"$ip\", \"email\": [$emails]}," >>"$temp_file"
             else
-                echo "{\"ip\": \"$ip\", \"email\": []}," >>$temp_file
+                echo "{\"ip\": \"$ip\", \"email\": []}," >>"$temp_file"
             fi
         fi
     done
 
     if [ -s "$temp_file" ]; then
-        json_array="[$(sed '$ s/,$//' $temp_file)]"
+        json_array="[$(sed '$ s/,$//' "$temp_file")]"
     else
         json_array="[]"
     fi
 
-    echo "$json_array" >$dir_xrayui/clients-online.json
-    rm -f $temp_file
+    echo "$json_array" >"$dir_xrayui/clients-online.json"
+    rm -f "$temp_file"
     echo "$json_array"
 }
 
@@ -931,6 +949,13 @@ apply_config() {
 }
 
 reconstruct_payload() {
+    FD=386
+    eval exec "$FD>$XRAYUI_LOCKFILE"
+
+    if ! flock -x "$FD"; then
+        return 1
+    fi
+
     local idx=0
     local chunk
     local payload=""
@@ -944,6 +969,9 @@ reconstruct_payload() {
         idx=$((idx + 1))
     done
     echo "$payload"
+
+    # Release the lock
+    flock -u "$FD"
 }
 
 ensure_ui_response_file() {
@@ -956,8 +984,13 @@ ensure_ui_response_file() {
 
 test_xray_config() {
     local output
+
     if ! output=$(xray -c /opt/etc/xray/config.json -test 2>&1); then
-        message=$(echo "$output" | sed 's/"/\\"/g')
+        message=$(echo "$output" | sed -n '/> infra\/conf:/ {s/.*> infra\/conf: //p}')
+        if [ -z "$message" ]; then
+            message="$output"
+        fi
+        message=$(echo "$message" | sed 's/"/\\"/g')
     else
         message="Config file appears to be fine, but the XRAY service has not started. Try to restart/reconnect it."
     fi
@@ -965,7 +998,7 @@ test_xray_config() {
     ensure_ui_response_file
 
     local updated_json=$(jq --arg msg "$message" '.xray.test = $msg' "$XRAY_UI_RESPONSE_FILE")
-    echo "$updated_json" >"$json_file"
+    echo "$updated_json" >"$XRAY_UI_RESPONSE_FILE"
 }
 
 install() {
@@ -1290,6 +1323,19 @@ EOF
     fi
 }
 
+fixme() {
+    printlog true "Fixme function called."
+
+    printlog true "Removing XRAY broken payload settings..."
+
+    grep '^xray_payload' /jffs/addons/custom_settings.txt | while IFS='=' read -r var_name _; do
+        [ -n "$var_name" ] && am_settings_del "$var_name"
+    done
+
+    printlog true "Done with fixme function." $CSUC
+
+}
+
 case "$1" in
 install)
     install
@@ -1317,6 +1363,9 @@ unmount_ui)
     ;;
 remount_ui)
     remount_ui $2
+    ;;
+fixme)
+    fixme
     ;;
 service_event)
     if [ "$2" = "testconfig" ]; then

@@ -63,7 +63,7 @@
               </slot>
             </td>
           </tr>
-          <tr v-if="sniffing.enabled && sniffing.destOverride.length > 0">
+          <tr v-if="sniffing.enabled && sniffing.destOverride && sniffing.destOverride.length > 0">
             <th>
               Route only
               <hint>
@@ -100,7 +100,7 @@
               </hint>
             </th>
             <td>
-              <a>{{ sniffing.domainsExcluded.length }} domain(s)</a>
+              <a v-if="sniffing.domainsExcluded">{{ sniffing.domainsExcluded.length }} domain(s)</a>
               <input class="button_gen button_gen_small" type="button" value="Manage"
                 @click.prevent="manage_domains_exclude" />
               <modal width="400" ref="modalDomains" title="A list of domain names">
@@ -168,7 +168,7 @@ export default defineComponent({
     );
 
     watch(
-      () => sniffing.value.destOverride.length,
+      () => sniffing.value.destOverride?.length,
       (val: number | undefined) => {
         val = val ?? 0;
         if (sniffing) {
@@ -179,7 +179,7 @@ export default defineComponent({
     );
 
     const manage_domains_exclude = () => {
-      domainsExludedContent.value = sniffing.value.domainsExcluded.join("\n");
+      domainsExludedContent.value = sniffing.value.domainsExcluded?.join("\n") ?? "";
       modalDomains.value.show(() => {
         sniffing.value.domainsExcluded = domainsExludedContent.value.split("\n").filter((x) => x.trim() !== "");
       });

@@ -1,4 +1,4 @@
-import { XrayHeaderObject, XrayXmuxObject } from "./CommonObjects";
+import { XrayHeaderObject, XrayParsedUrlObject, XrayXmuxObject } from "./CommonObjects";
 import { ITransportNetwork } from "./Interfaces";
 
 class XrayStreamTcpSettingsObject implements ITransportNetwork {
@@ -22,6 +22,13 @@ class XrayStreamWsSettingsObject implements ITransportNetwork {
   public path: string = "/";
   public host?: string;
   public headers: any = {};
+
+  constructor(parsedObject?: XrayParsedUrlObject | undefined) {
+    if (parsedObject) {
+      this.path = parsedObject.parsedParams.path ?? "/";
+      this.host = parsedObject.parsedParams.host;
+    }
+  }
 }
 
 class XrayStreamHttpSettingsObject implements ITransportNetwork {

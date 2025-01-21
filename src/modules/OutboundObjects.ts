@@ -2,13 +2,14 @@ import { IProtocolType } from "./Interfaces";
 import { XrayProtocol } from "./Options";
 import { XrayTrojanServerObject, XrayHttpServerObject, XrayStreamSettingsObject, XraySocksServerObject, XrayVmessServerObject, XrayNoiseObject, XrayShadowsocksServerObject, XrayPeerObject } from "./CommonObjects";
 import { XrayVlessServerObject } from "./CommonObjects";
+import { plainToInstance } from "class-transformer";
 
 class XrayOutboundObject<IProtocolType> {
   public protocol!: XrayProtocol;
   public sendThrough: string = "0.0.0.0";
   public tag?: string;
   public settings!: IProtocolType;
-  public streamSettings?: XrayStreamSettingsObject;
+  public streamSettings?: XrayStreamSettingsObject = new XrayStreamSettingsObject();
 
   constructor(protocol: XrayProtocol | undefined = undefined, settings: IProtocolType | undefined = undefined) {
     if (protocol && settings) {
@@ -98,6 +99,9 @@ class XraySocksOutboundObject implements IProtocolType {
 const NormalizeOutbound = (proxy: any) => {
   proxy.sendThrough = proxy.sendThrough === "0.0.0.0" ? undefined : proxy.sendThrough;
   proxy.tag = proxy.sendThrough === "" ? undefined : proxy.tag;
+
+  proxy.streamSettings = plainToInstance(XrayStreamSettingsObject, proxy.streamSettings);
+  proxy.streamSettings?.normalize();
 
   switch (proxy.protocol) {
     case XrayProtocol.FREEDOM:

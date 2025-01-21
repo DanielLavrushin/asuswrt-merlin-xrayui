@@ -15,7 +15,10 @@
               {{ opt.protocol }}
             </option>
           </select>
-          <span class="hint-color"> </span>
+          <span class="row-buttons">
+            <a class="button_gen button_gen_small" href="#" @click.prevent="showImportModal">import</a>
+          </span>
+          <outbound-parser-modal ref="parserModal" v-model:outbounds="config.outbounds"></outbound-parser-modal>
         </td>
       </tr>
       <slot v-for="(proxy, index) in config.outbounds">
@@ -51,6 +54,7 @@ import { defineComponent, ref, computed, nextTick } from "vue";
 import engine from "../modules/Engine";
 import Modal from "./Modal.vue";
 import { xrayProtocols } from "../modules/XrayConfig";
+import OutboundParserModal from "./modals/OutboundParserModal.vue";
 
 import { IProtocolType } from "../modules/Interfaces";
 import { XrayProtocol } from "../modules/CommonObjects";
@@ -74,7 +78,8 @@ export default defineComponent({
   name: "Outbounds",
   emits: ["show-transport", "show-sniffing"],
   components: {
-    Modal
+    Modal,
+    OutboundParserModal
   },
   methods: {
     async show_transport(proxy: XrayOutboundObject<IProtocolType>) {
@@ -134,6 +139,11 @@ export default defineComponent({
     const selectedProxy = ref<any>();
     const proxyModal = ref();
     const proxyRef = ref();
+    const parserModal = ref();
+
+    const showImportModal = () => {
+      parserModal.value.show();
+    };
 
     const proxyComponent = computed(() => {
       switch (selectedProxyType.value) {
@@ -171,7 +181,10 @@ export default defineComponent({
       proxyModal,
       selectedProxy,
       availableProxies,
-      selectedProxyType
+      selectedProxyType,
+      showImportModal,
+      parserModal
+
     };
   }
 });

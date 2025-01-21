@@ -1,17 +1,24 @@
 import { XrayHttpClientObject, XraySocksClientObject, XrayVlessClientObject, XrayVmessClientObject } from "./ClientsObjects";
-import { IXrayServer, IClient } from "./Interfaces";
+import { IXrayServer } from "./Interfaces";
 import { XrayOptions, XrayProtocol, XrayProtocolMode } from "./Options";
 import { XrayStreamHttpSettingsObject, XrayStreamKcpSettingsObject, XrayStreamTcpSettingsObject, XrayStreamWsSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamSplitHttpSettingsObject } from "./TransportObjects";
 
 class XraySniffingObject {
   static destOverrideOptions: string[] = ["http", "tls", "quic", "fakedns"];
-  public enabled: boolean = false;
-  public metadataOnly: boolean = false;
-  public routeOnly: boolean = false;
-  public destOverride: string[] = [];
-  public domainsExcluded: string[] = [];
+  public enabled?: boolean = false;
+  public metadataOnly?: boolean = false;
+  public routeOnly?: boolean = false;
+  public destOverride?: string[] = [];
+  public domainsExcluded?: string[] = [];
 
   constructor() {}
+  normalize() {
+    this.destOverride = !this.destOverride || this.destOverride.length == 0 ? undefined : this.destOverride;
+    this.domainsExcluded = !this.domainsExcluded || this.domainsExcluded.length == 0 ? undefined : this.domainsExcluded;
+    this.enabled = !this.enabled ? undefined : this.enabled;
+    this.metadataOnly = !this.metadataOnly ? undefined : this.metadataOnly;
+    this.routeOnly = !this.routeOnly ? undefined : this.routeOnly;
+  }
 }
 
 class XrayHeaderObject {
@@ -84,8 +91,11 @@ class XrayStreamTlsSettingsObject {
   public pinnedPeerCertificateChainSha256?: string;
   public masterKeyLog?: string;
 
-  constructor() {
+  constructor(parsedObject?: XrayParsedUrlObject | undefined) {
     this.certificates.push(new XrayStreamTlsCertificateObject());
+    if (parsedObject) {
+      this.serverName = parsedObject.parsedParams["sni"];
+    }
   }
 }
 
@@ -104,6 +114,17 @@ class XrayStreamRealitySettingsObject {
   public publicKey?: string;
   public shortId?: string;
   public spiderX?: string;
+
+  constructor(parsedObject?: XrayParsedUrlObject | undefined) {
+    if (parsedObject) {
+      this.serverName = parsedObject.server;
+      this.shortId = parsedObject.parsedParams["sid"];
+      this.fingerprint = parsedObject.parsedParams["fp"];
+      this.publicKey = parsedObject.parsedParams["pbk"];
+      this.spiderX = parsedObject.parsedParams["spx"];
+      this.serverName = parsedObject.parsedParams["sni"];
+    }
+  }
 }
 
 class XrayLogObject {
@@ -217,6 +238,9 @@ class XrayStreamSettingsObject {
   public sockopt?: XraySockoptObject;
 
   public normalize() {
+    this.network = this.network == "" || this.network == "tcp" ? undefined : this.network;
+    this.security = this.security == "" || this.security == "none" ? undefined : this.security;
+
     this.normalizeProtocol();
     this.normalizeSecurity();
     this.normalizeSockopt();
@@ -241,7 +265,11 @@ class XrayStreamSettingsObject {
   }
   public normalizeSockopt() {
     if (this.sockopt) {
-      this.sockopt.mark = this.sockopt.mark == 0 ? undefined : this.sockopt.mark;
+      if (!this.sockopt.tproxy || this.sockopt.tproxy == "off") {
+        this.sockopt = undefined;
+        return;
+      }
+      this.sockopt.mark = !this.sockopt.mark && this.sockopt.mark == 0 ? undefined : this.sockopt.mark;
       this.sockopt.interface = this.sockopt.interface == "" ? undefined : this.sockopt.interface;
       this.sockopt.tproxy = this.sockopt.tproxy == "off" || this.sockopt.tproxy == "" ? undefined : this.sockopt.tproxy;
     }
@@ -315,4 +343,36 @@ class XraySockoptObject {
   public tcpNoDelay?: boolean;
 }
 
-export { XraySockoptObject, XrayDnsObject, XrayDnsServerObject, XrayTrojanServerObject, XrayPeerObject, XrayNoiseObject, XrayShadowsocksServerObject, XrayHttpServerObject, XraySocksServerObject, XrayProtocolOption, XrayProtocol, XrayVlessServerObject, XrayVmessServerObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsCertificateObject, XrayStreamSettingsObject, XrayRoutingRuleObject, XrayRoutingObject, XrayLogObject, XrayAllocateObject, XraySniffingObject, XrayHeaderObject, XrayHeaderRequestObject, XrayHeaderResponseObject, XrayXmuxObject };
+class XrayParsedUrlObject {
+  public server!: string;
+  public port!: number;
+  public protocol!: string;
+  public tag!: string;
+  public uuid!: string;
+  public network!: string;
+  public security!: string;
+  public parsedParams: Record<string, string> = {};
+
+  public constructor(url: string) {
+    const [protocol, rest] = url.split("://");
+    const [authHost, queryFragment] = rest.split("?");
+    const [uuid, serverPort] = authHost.split("@");
+    const [server, port] = serverPort.split(":");
+    const [query, tag] = queryFragment.split("#");
+
+    const params = new URLSearchParams(query);
+
+    params.forEach((value, key) => {
+      this.parsedParams[key] = value;
+    });
+
+    this.tag = tag;
+    this.server = server;
+    this.port = parseInt(port);
+    this.protocol = protocol;
+    this.uuid = uuid;
+    this.network = this.parsedParams["type"];
+    this.security = this.parsedParams["security"];
+  }
+}
+export { XrayParsedUrlObject, XraySockoptObject, XrayDnsObject, XrayDnsServerObject, XrayTrojanServerObject, XrayPeerObject, XrayNoiseObject, XrayShadowsocksServerObject, XrayHttpServerObject, XraySocksServerObject, XrayProtocolOption, XrayProtocol, XrayVlessServerObject, XrayVmessServerObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsCertificateObject, XrayStreamSettingsObject, XrayRoutingRuleObject, XrayRoutingObject, XrayLogObject, XrayAllocateObject, XraySniffingObject, XrayHeaderObject, XrayHeaderRequestObject, XrayHeaderResponseObject, XrayXmuxObject };

@@ -23,7 +23,6 @@
     <script language="JavaScript" type="text/javascript" src="/validator.js"></script>
     <script>
       var xray = {
-        custom_settings: JSON.parse(`<% get_custom_settings(); %>`),
         router: {
           name: '<% nvram_get("productid"); %>',
           cpu: JSON.parse("<%cpu_core_num();%>"),
@@ -48,6 +47,15 @@
           clientAdd: "xrayui_client_add"
         }
       };
+      let custom_settings = `<% get_custom_settings(); %>`;
+
+      try {
+        xray.custom_settings = JSON.parse(custom_settings);
+      } catch (e) {
+        if (custom_settings.indexOf("xray_payload")) {
+          console.error("Invalid custom settings: xray_payload detected. Please  run '/jffs/scripts/xrayui fixme'. This is unexpected, please report.");
+        }
+      }
     </script>
   </head>
 

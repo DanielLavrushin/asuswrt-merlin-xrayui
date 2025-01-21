@@ -16,9 +16,9 @@
               title="try to retrieve a server-side error">!</a>
           </span>
           <span class="row-buttons">
-            <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(reconnect)">Reconnect</a>
-            <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(stop)">Stop</a>
-            <a class="button_gen button_gen_small" href="/ext/xrayui/xray-config.json" target="_blank">Show
+            <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(reconnect)">reconnect</a>
+            <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(stop)">stop</a>
+            <a class="button_gen button_gen_small" href="/ext/xrayui/xray-config.json" target="_blank">show
               config</a>
           </span>
         </td>
@@ -57,7 +57,7 @@ export default defineComponent({
       await engine.submit(window.xray.commands.testConfig, null, delay);
       let usres = await engine.getEngineConfig();
       window.hideLoading();
-      alert(usres.xray?.test);
+      alert(usres.xray?.test.replace(/\\"/g, '"'));
 
     },
     async handleStatus(action: string) {

@@ -1,6 +1,6 @@
 # ASUSWRT Merlin XrayUI
 This repository provides a lightweight and efficient UI to manage your Xray VPN services on routers running ASUSWRT-Merlin firmware.
-![image](https://github.com/user-attachments/assets/fd67c415-6fea-4634-8d18-5b2dede4c6d2)
+![image](https://github.com/user-attachments/assets/06790595-d0c9-4949-baf9-50fee90dffd3)
 
 ## Requirements
 
@@ -37,6 +37,12 @@ These scripts should be placed in the `/jffs/xrayui_custom` directory and named 
 Ensure the scripts are executable (`chmod +x <script>`).
 
 ## FAQ
+
+**Q: Telegram group?**
+
+A: [![image](https://github.com/user-attachments/assets/3128e51b-ecaf-4b1e-baf9-74876ba67589)](https://t.me/asusxray)
+
+
 **Q: What if I already have an Xray configuration?**
 
 A: If you already have an Xray configuration file that you want to use, you need to place it in the following location:

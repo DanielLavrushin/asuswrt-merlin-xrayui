@@ -2,8 +2,8 @@
 
 ## [0.27.1] - 2025-01-22
 
-- ADDED: Iptables rules to ignore Steam/Playstation/XBOX/EGS ports
-- FIXED: Correctly display `Clients Online` in the server mode
+- ADDED: `Iptables` rules to ignore Steam/Playstation/XBOX/EGS ports.
+- FIXED: Correctly display `Clients Online` in server mode.
 
 ## [0.27.0] - 2025-01-21
 

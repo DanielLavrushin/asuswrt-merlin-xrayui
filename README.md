@@ -1,3 +1,11 @@
+![GitHub Release](https://img.shields.io/github/v/release/daniellavrushin/asuswrt-merlin-xrayui?style=for-the-badge&logoColor=violet)
+![GitHub Release Date](https://img.shields.io/github/release-date/daniellavrushin/asuswrt-merlin-xrayui?style=for-the-badge)
+![GitHub commits since latest release](https://img.shields.io/github/commits-since/daniellavrushin/asuswrt-merlin-xrayui/latest?style=for-the-badge)
+![GitHub top language](https://img.shields.io/github/languages/top/daniellavrushin/asuswrt-merlin-xrayui?style=for-the-badge)
+
+![GitHub Downloads (specific asset, latest release)](https://img.shields.io/github/downloads/daniellavrushin/asuswrt-merlin-xrayui/latest/total?style=for-the-badge)
+![image](https://img.shields.io/github/downloads/DanielLavrushin/asuswrt-merlin-xrayui/total?style=for-the-badge&label=total%20downloads)
+
 # ASUSWRT Merlin XrayUI
 This repository provides a lightweight and efficient UI to manage your Xray VPN services on routers running ASUSWRT-Merlin firmware.
 ![image](https://github.com/user-attachments/assets/06790595-d0c9-4949-baf9-50fee90dffd3)

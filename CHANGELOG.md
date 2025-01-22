@@ -1,6 +1,11 @@
 # XRAYUI Changelog
 
-## [0.27.0] - 2025-01-xx
+## [0.27.1] - 2025-01-22
+
+- ADDED: Iptables rules to ignore Steam/Playstation/XBOX/EGS ports
+- FIXED: Correctly display `Clients Online` in the server mode
+
+## [0.27.0] - 2025-01-21
 
 - ADDED: Import support for outbound configurations in client mode. You can now upload a QR code or provide an xray URL. A new import button was added to the `outbounds` section.
 - ADDED: Internal mechanism to parse xray proxy URLs (currently only supports `VLESS`; more protocols coming).

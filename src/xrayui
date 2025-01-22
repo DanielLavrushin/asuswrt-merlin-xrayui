@@ -375,6 +375,25 @@ configure_firewall_client_direct() {
         printlog true "WireGuard not enabled. Skipping WireGuard exclusion rules."
     fi
 
+    # Exclude Steam/Playstation/XBOX/EGS ports:
+    iptables -t nat -A XRAYUI -p udp --dport 27000:27100 -j RETURN || printlog true "Failed to exclude Steam ports 27000:27100 in NAT." $CERR #steam
+    iptables -t nat -A XRAYUI -p tcp --dport 27000:27100 -j RETURN || printlog true "Failed to exclude Steam ports 27000:27100 in NAT." $CERR #steam
+    iptables -t nat -A XRAYUI -p udp --dport 3478:4380 -j RETURN || printlog true "Failed to exclude Steam port 3478 in NAT." $CERR           #steam
+    iptables -t nat -A XRAYUI -p tcp --dport 3478:4380 -j RETURN || printlog true "Failed to exclude Steam port 3478 in NAT." $CERR           #steam
+    iptables -t nat -A XRAYUI -p udp --dport 3074 -j RETURN || printlog true "Failed to exclude PS,XBOX port 3074 in NAT." $CERR              #playstation
+    iptables -t nat -A XRAYUI -p tcp --dport 3074 -j RETURN || printlog true "Failed to exclude PS,XBOX port 3074 in NAT." $CERR              #playstation,xbox
+    iptables -t nat -A XRAYUI -p udp --dport 3544 -j RETURN || printlog true "Failed to exclude XBOX port 3544 in NAT." $CERR                 #xbox
+    iptables -t nat -A XRAYUI -p udp --dport 4500 -j RETURN || printlog true "Failed to exclude XBOX port 4500 in NAT." $CERR                 #xbox
+    iptables -t nat -A XRAYUI -p udp --dport 500 -j RETURN || printlog true "Failed to exclude XBOX port 500 in NAT." $CERR                   #xbox
+    iptables -t nat -A XRAYUI -p udp --dport 5060 -j RETURN || printlog true "Failed to exclude EGS port 5060 in NAT." $CERR                  #egs
+    iptables -t nat -A XRAYUI -p udp --dport 5062 -j RETURN || printlog true "Failed to exclude EGS port 5062 in NAT." $CERR                  #egs
+    iptables -t nat -A XRAYUI -p udp --dport 5222 -j RETURN || printlog true "Failed to exclude EGS port 5222 in NAT." $CERR                  #egs
+    iptables -t nat -A XRAYUI -p udp --dport 6250 -j RETURN || printlog true "Failed to exclude EGS port 6250 in NAT." $CERR                  #egs
+    iptables -t nat -A XRAYUI -p tcp --dport 5060 -j RETURN || printlog true "Failed to exclude EGS port 5060 in NAT." $CERR                  #egs
+    iptables -t nat -A XRAYUI -p tcp --dport 5062 -j RETURN || printlog true "Failed to exclude EGS port 5062 in NAT." $CERR                  #egs
+    iptables -t nat -A XRAYUI -p tcp --dport 5222 -j RETURN || printlog true "Failed to exclude EGS port 5222 in NAT." $CERR                  #egs
+    iptables -t nat -A XRAYUI -p tcp --dport 6250 -j RETURN || printlog true "Failed to exclude EGS port 6250 in NAT." $CERR                  #egs
+
     # Exclude traffic destined to the Xray server:
     for serverip in $SERVER_IPS; do
         printlog true "Excluding Xray server IP from NAT."
@@ -685,7 +704,6 @@ get_connected_clients() {
 
     ports_list=""
     inbounds_ports=$(jq -r '.inbounds[]?.port // empty' "$xray_config")
-    printlog true "Checking for connected clients on ports: $inbounds_ports"
     for XRAY_PORT in $inbounds_ports; do
         if echo "$XRAY_PORT" | grep -q '-'; then
             PORT_START=$(echo "$XRAY_PORT" | cut -d'-' -f1)
@@ -700,7 +718,7 @@ get_connected_clients() {
 
     pattern=$(echo "$ports_list" | tr ' ' '\n' | grep -E '^[0-9]+$' | sort -n -u | awk '{printf "%s|", $0}' | sed 's/|$//')
 
-    ips=$(netstat -an | grep 'ESTABLISHED' | grep -E ":(${pattern})\$" | awk -F'[: ]+' '{print $8}' | sed 's/::ffff://' | sort | uniq)
+    ips=$(netstat -an | grep "$pattern" | awk '$6=="ESTABLISHED" { split($5,a,":"); if (length(a) >= 4) print a[4]; else print a[1] }' | sort -u)
 
     access_log=$(jq -r '.log.access' "$xray_config")
 
@@ -709,8 +727,8 @@ get_connected_clients() {
             emails=$(grep "$ip" "$access_log" | awk -F'email: ' '{print $2}' | sort | uniq | sed 's/^/"/; s/$/"/' | tr '\n' ',' | sed 's/,$//')
             if [ -n "$emails" ]; then
                 echo "{\"ip\": \"$ip\", \"email\": [$emails]}," >>"$temp_file"
-            else
-                echo "{\"ip\": \"$ip\", \"email\": []}," >>"$temp_file"
+                # else
+                #  echo "{\"ip\": \"$ip\", \"email\": []}," >>"$temp_file"
             fi
         fi
     done

@@ -113,7 +113,6 @@ export default defineComponent({
         if (proxy) {
 
           props.outbounds?.push(proxy);
-          console.log(proxy);
           emit("update:outbounds", props.outbounds);
           importModal.value.close();
           alert(`Configuration ${proxy.protocol}:${proxy.tag} imported successfully`);

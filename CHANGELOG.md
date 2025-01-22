@@ -1,5 +1,11 @@
 # XRAYUI Changelog
 
+## [0.28.0] - 2025-01-22
+
+- ADDED: **IMPORTANT!** For Xray in client mode, a new option called `Ports Bypass/Redirect Policy` has been added to the routing section. This controls how the router manages traffic to different ports. By default, it is set to `redirect` mode, meaning all traffic is redirected to the Xray inbound port. You can add ports to the exclusion list if certain ports should not be handled by Xray. When switching to `bypass` mode, all traffic bypasses Xray, and you can specify ports that should be redirected to Xray. This feature allows for fine-tuning traffic management to Xray directly from the web interface.
+- ADDED: A `60-second` waiting period on startup to ensure that Xray starts at the correct time, after applying `iptables` rules.
+- FIXED: The Xray server IP is no longer exposed in the logs.
+
 ## [0.27.1] - 2025-01-22
 
 - ADDED: `Iptables` rules to ignore Steam/Playstation/XBOX/EGS ports.

@@ -78,13 +78,13 @@ stop() {
         rm -f "$PIDFILE"
         printlog true "PID file $PIDFILE removed successfully."
     fi
-    sleep 2
     cleanup_firewall
 
 }
 restart() {
     printlog true "Restarting $DESC" $CWARN
     stop
+    sleep 4
     start
 }
 
@@ -334,6 +334,12 @@ configure_firewall_client_direct() {
     iptables -t nat -N XRAYUI || printlog true "Failed to create NAT chain." $CERR
 
     # --- Begin Exclusion Rules (NAT) ---
+
+    # Ports policy: bypass or redirect
+    XRAY_PP_MODE="$(jq -r '.routing.portsPolicy.mode // empty' "$xray_config")"
+    XRAY_PP_TCP="$(jq -r '.routing.portsPolicy.tcp // empty' "$xray_config")"
+    XRAY_PP_UDP="$(jq -r '.routing.portsPolicy.udp // empty' "$xray_config")"
+
     # Exclude local (RFC1918) subnets dynamically:
     local local_networks=$(
         ip -4 route show |
@@ -375,25 +381,6 @@ configure_firewall_client_direct() {
         printlog true "WireGuard not enabled. Skipping WireGuard exclusion rules."
     fi
 
-    # Exclude Steam/Playstation/XBOX/EGS ports:
-    iptables -t nat -A XRAYUI -p udp --dport 27000:27100 -j RETURN || printlog true "Failed to exclude Steam ports 27000:27100 in NAT." $CERR #steam
-    iptables -t nat -A XRAYUI -p tcp --dport 27000:27100 -j RETURN || printlog true "Failed to exclude Steam ports 27000:27100 in NAT." $CERR #steam
-    iptables -t nat -A XRAYUI -p udp --dport 3478:4380 -j RETURN || printlog true "Failed to exclude Steam port 3478 in NAT." $CERR           #steam
-    iptables -t nat -A XRAYUI -p tcp --dport 3478:4380 -j RETURN || printlog true "Failed to exclude Steam port 3478 in NAT." $CERR           #steam
-    iptables -t nat -A XRAYUI -p udp --dport 3074 -j RETURN || printlog true "Failed to exclude PS,XBOX port 3074 in NAT." $CERR              #playstation
-    iptables -t nat -A XRAYUI -p tcp --dport 3074 -j RETURN || printlog true "Failed to exclude PS,XBOX port 3074 in NAT." $CERR              #playstation,xbox
-    iptables -t nat -A XRAYUI -p udp --dport 3544 -j RETURN || printlog true "Failed to exclude XBOX port 3544 in NAT." $CERR                 #xbox
-    iptables -t nat -A XRAYUI -p udp --dport 4500 -j RETURN || printlog true "Failed to exclude XBOX port 4500 in NAT." $CERR                 #xbox
-    iptables -t nat -A XRAYUI -p udp --dport 500 -j RETURN || printlog true "Failed to exclude XBOX port 500 in NAT." $CERR                   #xbox
-    iptables -t nat -A XRAYUI -p udp --dport 5060 -j RETURN || printlog true "Failed to exclude EGS port 5060 in NAT." $CERR                  #egs
-    iptables -t nat -A XRAYUI -p udp --dport 5062 -j RETURN || printlog true "Failed to exclude EGS port 5062 in NAT." $CERR                  #egs
-    iptables -t nat -A XRAYUI -p udp --dport 5222 -j RETURN || printlog true "Failed to exclude EGS port 5222 in NAT." $CERR                  #egs
-    iptables -t nat -A XRAYUI -p udp --dport 6250 -j RETURN || printlog true "Failed to exclude EGS port 6250 in NAT." $CERR                  #egs
-    iptables -t nat -A XRAYUI -p tcp --dport 5060 -j RETURN || printlog true "Failed to exclude EGS port 5060 in NAT." $CERR                  #egs
-    iptables -t nat -A XRAYUI -p tcp --dport 5062 -j RETURN || printlog true "Failed to exclude EGS port 5062 in NAT." $CERR                  #egs
-    iptables -t nat -A XRAYUI -p tcp --dport 5222 -j RETURN || printlog true "Failed to exclude EGS port 5222 in NAT." $CERR                  #egs
-    iptables -t nat -A XRAYUI -p tcp --dport 6250 -j RETURN || printlog true "Failed to exclude EGS port 6250 in NAT." $CERR                  #egs
-
     # Exclude traffic destined to the Xray server:
     for serverip in $SERVER_IPS; do
         printlog true "Excluding Xray server IP from NAT."
@@ -408,9 +395,26 @@ configure_firewall_client_direct() {
         "$script" || printlog true "Error executing $script." $CERR
     fi
 
-    # Add NAT REDIRECT rules:
-    iptables -t nat -A XRAYUI -p tcp -j REDIRECT --to-port "$XRAY_PORT" || printlog true "Failed to add TCP REDIRECT." $CERR
-    iptables -t nat -A XRAYUI -p udp -j REDIRECT --to-port "$XRAY_PORT" || printlog true "Failed to add UDP REDIRECT." $CERR
+    if [ "$XRAY_PP_MODE" = "bypass" ]; then
+        printlog true "Ports policy mode is 'bypass': All ports bypass Xray by default. Redirecting only specified ports: TCP($XRAY_PP_TCP), UDP($XRAY_PP_UDP)" $CWARN
+        if [ -n "$XRAY_PP_TCP" ]; then
+            iptables -t nat -A XRAYUI -p tcp -m multiport --dports "$XRAY_PP_TCP" -j REDIRECT --to-port "$XRAY_PORT" || printlog true "No TCP ports specified for bypass mode redirect." $CERR
+        fi
+        if [ -n "$XRAY_PP_UDP" ]; then
+            iptables -t nat -A XRAYUI -p udp -m multiport --dports "$XRAY_PP_UDP" -j REDIRECT --to-port "$XRAY_PORT" || printlog true "No UDP ports specified for bypass mode redirect." $CERR
+        fi
+        iptables -t nat -A XRAYUI -j RETURN || printlog true "Failed to add default bypass rule in NAT." $CERR
+    else
+        printlog true "Ports policy mode is 'redirect': All ports are redirected to Xray by default, except excluded ports: TCP($XRAY_PP_TCP), UDP($XRAY_PP_UDP)" $CWARN
+        if [ -n "$XRAY_PP_TCP" ]; then
+            iptables -t nat -A XRAYUI -p tcp -m multiport --dports "$XRAY_PP_TCP" -j RETURN || printlog true "No TCP ports specified for exclusion in redirect mode." $CERR
+        fi
+        if [ -n "$XRAY_PP_UDP" ]; then
+            iptables -t nat -A XRAYUI -p udp -m multiport --dports "$XRAY_PP_UDP" -j RETURN || printlog true "No UDP ports specified for exclusion in redirect mode." $CERR
+        fi
+        iptables -t nat -A XRAYUI -p tcp -j REDIRECT --to-port "$XRAY_PORT" || printlog true "Failed to add default TCP REDIRECT." $CERR
+        iptables -t nat -A XRAYUI -p udp -j REDIRECT --to-port "$XRAY_PORT" || printlog true "Failed to add default UDP REDIRECT." $CERR
+    fi
 
     # Hook chain into NAT PREROUTING:
     iptables -t nat -A PREROUTING -j XRAYUI || printlog true "Failed to hook NAT chain." $CERR
@@ -490,7 +494,7 @@ configure_firewall_client_tproxy() {
 
     # Exclude traffic destined to the Xray server:
     for serverip in $SERVER_IPS; do
-        printlog true "Excluding Xray server $serverip from NAT and MANGLE."
+        printlog true "Excluding Xray server rom NAT and MANGLE."
         iptables -t mangle -A XRAYUI -d "$serverip" -j RETURN || printlog true "Failed to add rule to exclude Xray server in MANGLE." $CERR
     done
     # --- End Exclusion Rules ---
@@ -1392,6 +1396,7 @@ service_event)
     elif [ "$2" = "startup" ]; then
         get_xray_proc
         if [ "$(am_settings_get xray_startup)" = "y" ]; then
+            sleep 60 # wait for network and iptable rules to be ready
             restart
         elif [ -n "$xray_pid" ]; then
             printlog true "Xray service is disabled by XRAYUI. Stoping Xray service..."

@@ -9,7 +9,6 @@ export default class ProxyParser {
   constructor(proxyUrl: string) {
     const url = proxyUrl.trim();
     this.parsedObject = new XrayParsedUrlObject(url);
-    console.log(this.parsedObject);
   }
 
   getOutbound = (): XrayOutboundObject<IProtocolType> | null => {

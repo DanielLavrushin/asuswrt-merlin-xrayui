@@ -173,11 +173,15 @@ class XrayRoutingObject {
   public domainStrategy?: string = "AsIs";
   public domainMatcher?: string = "hybrid";
   public rules?: XrayRoutingRuleObject[] = [];
+  public portsPolicy?: XrayPortsPolicy = new XrayPortsPolicy();
 
   public normalize() {
     this.domainStrategy = this.domainStrategy == "AsIs" ? undefined : this.domainStrategy;
     this.domainMatcher = this.domainMatcher == "hybrid" ? undefined : this.domainMatcher;
 
+    if (this.portsPolicy) {
+      this.portsPolicy.normalize();
+    }
     if (this.rules && this.rules.length > 0) {
       this.rules.forEach((rule) => {
         rule.normalize();
@@ -188,6 +192,38 @@ class XrayRoutingObject {
   }
 }
 
+class XrayPortsPolicy {
+  static defaultPorts: string[] = ["443", "80", "22"];
+  static modes = ["redirect", "bypass"];
+  public mode?: string = "redirect";
+  public udp?: string = "";
+  public tcp?: string = "";
+
+  public static vendors: { name: string; tcp: string; udp: string }[] | null = [
+    { name: "Default ports", tcp: "443,80,22", udp: "443,80,22" },
+    { name: "Steam", tcp: "7777:7788,3478:4380,27000:27100", udp: "7777:7788,3478:4380,27000:27100" },
+    { name: "Microsoft Xbox", tcp: "", udp: "3544,4500,500" },
+    { name: "Epic Games Store", tcp: "5060,5062,5222,6250", udp: "5060,5062,5222,6250" },
+    { name: "Sony Playstation", tcp: "983,987,1935,3974,3658,5223,3478:3480,4658,9293:9297", udp: "983,987,1935,3974,3658,5223,3478:3480,4658,9293:9297" }
+  ];
+
+  public normalize = () => {
+    this.mode = this.mode && XrayPortsPolicy.modes.includes(this.mode) ? this.mode : undefined;
+    this.tcp = this.normalizePorts(this.tcp == "" ? undefined : this.tcp);
+    this.udp = this.normalizePorts(this.udp == "" ? undefined : this.udp);
+  };
+  public normalizePorts = (ports: string | undefined) => {
+    if (!ports) return ports;
+    return ports
+      .replace(/\n/g, ",")
+      .replace(/\-/g, ":")
+      .replace(/[^0-9,\:]/g, "")
+      .split(",")
+      .filter((x) => x)
+      .join(",")
+      .trim();
+  };
+}
 class XrayRoutingRuleObject {
   static networkOptions: string[] = ["", "tcp", "udp", "tcp,udp"];
   static protocolOptions: string[] = ["http", "tls", "bittorrent"];
@@ -375,4 +411,4 @@ class XrayParsedUrlObject {
     this.security = this.parsedParams["security"];
   }
 }
-export { XrayParsedUrlObject, XraySockoptObject, XrayDnsObject, XrayDnsServerObject, XrayTrojanServerObject, XrayPeerObject, XrayNoiseObject, XrayShadowsocksServerObject, XrayHttpServerObject, XraySocksServerObject, XrayProtocolOption, XrayProtocol, XrayVlessServerObject, XrayVmessServerObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsCertificateObject, XrayStreamSettingsObject, XrayRoutingRuleObject, XrayRoutingObject, XrayLogObject, XrayAllocateObject, XraySniffingObject, XrayHeaderObject, XrayHeaderRequestObject, XrayHeaderResponseObject, XrayXmuxObject };
+export { XrayPortsPolicy, XrayParsedUrlObject, XraySockoptObject, XrayDnsObject, XrayDnsServerObject, XrayTrojanServerObject, XrayPeerObject, XrayNoiseObject, XrayShadowsocksServerObject, XrayHttpServerObject, XraySocksServerObject, XrayProtocolOption, XrayProtocol, XrayVlessServerObject, XrayVmessServerObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsCertificateObject, XrayStreamSettingsObject, XrayRoutingRuleObject, XrayRoutingObject, XrayLogObject, XrayAllocateObject, XraySniffingObject, XrayHeaderObject, XrayHeaderRequestObject, XrayHeaderResponseObject, XrayXmuxObject };

@@ -99,6 +99,33 @@
           </span>
         </td>
       </tr>
+      <tr v-if="engine.mode == 'client' && routing.portsPolicy">
+        <th>
+          Ports Bypass/Redirect Policy
+          <hint>
+            By default, the mode `redirect` is used, meaning that traffic on all ports is
+            redirected to the inbound port of xray.
+            Specify any additional ports that should be routed through or bypass Xray.
+            <ul>
+              <li>
+                <strong>redirect</strong>: Traffic on all ports is redirected to the inbound port. You define
+                the ports that should NOT be redirected to Xray.
+              </li>
+              <li>
+                <strong>bypass</strong>: Traffic on all ports bypasses Xray. You define the ports that should be
+                explicitly redirected to Xray.
+              </li>
+            </ul>
+          </hint>
+        </th>
+        <td>
+          <span class="row-buttons">
+            <input class="button_gen button_gen_small" type="button" value="manage"
+              @click.prevent="manage_redirect_ports()" />
+          </span>
+          <redirect-ports-modal ref="modalRedirectPorts" v-model:ports="routing.portsPolicy"></redirect-ports-modal>
+        </td>
+      </tr>
       <!-- <tr>
                     <th>Balancers</th>
                     <td>
@@ -121,16 +148,18 @@ import xrayConfig from "../modules/XrayConfig";
 import engine, { SubmtActions } from "../modules/Engine";
 import RulesModal from "./modals/RulesModal.vue";
 import Hint from "./Hint.vue";
-
+import RedirectPortsModal from "./modals/RedirectPortsModal.vue";
 export default defineComponent({
   name: "Routing",
   components: {
     Hint,
-    RulesModal
+    RulesModal,
+    RedirectPortsModal
   },
 
   setup() {
     const modal = ref();
+    const modalRedirectPorts = ref();
     const daysPassed = ref(0);
     const routing = ref<XrayRoutingObject>(xrayConfig.routing || new XrayRoutingObject());
 
@@ -154,6 +183,9 @@ export default defineComponent({
       },
       { immediate: true }
     );
+    const manage_redirect_ports = async () => {
+      modalRedirectPorts.value.show();
+    };
 
     const manage_rules = async () => {
       modal.value.show();
@@ -172,11 +204,14 @@ export default defineComponent({
     load_geodat_dates();
 
     return {
+      engine,
       routing,
       daysPassed,
       modal,
+      modalRedirectPorts,
       update_geodat,
       manage_rules,
+      manage_redirect_ports,
       domainStrategyOptions: XrayRoutingObject.domainStrategyOptions,
       domainMatcherOptions: XrayRoutingObject.domainMatcherOptions
     };

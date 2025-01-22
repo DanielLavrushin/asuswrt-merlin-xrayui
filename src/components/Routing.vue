@@ -123,7 +123,7 @@
             <input class="button_gen button_gen_small" type="button" value="manage"
               @click.prevent="manage_redirect_ports()" />
           </span>
-          <redirect-ports-modal ref="modalRedirectPorts" v-model:ports="routing.portsPolicy"></redirect-ports-modal>
+          <ports-policy-modal ref="modalRedirectPorts" v-model:ports="routing.portsPolicy"></ports-policy-modal>
         </td>
       </tr>
       <!-- <tr>
@@ -148,13 +148,13 @@ import xrayConfig from "../modules/XrayConfig";
 import engine, { SubmtActions } from "../modules/Engine";
 import RulesModal from "./modals/RulesModal.vue";
 import Hint from "./Hint.vue";
-import RedirectPortsModal from "./modals/RedirectPortsModal.vue";
+import PortsPolicyModal from "./modals/PortsPolicyModal.vue";
 export default defineComponent({
   name: "Routing",
   components: {
     Hint,
     RulesModal,
-    RedirectPortsModal
+    PortsPolicyModal
   },
 
   setup() {

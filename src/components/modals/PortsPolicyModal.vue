@@ -105,7 +105,7 @@ import { XrayPortsPolicy } from "@/modules/CommonObjects";
 import Hint from "../Hint.vue";
 
 export default defineComponent({
-  name: "RedirectPortsModal",
+  name: "PortsPolicyModal",
   components: {
     Modal,
     Hint
@@ -119,7 +119,7 @@ export default defineComponent({
   },
 
   setup(props, { emit }) {
-
+    const ports = ref<XrayPortsPolicy>(props.ports ?? new XrayPortsPolicy());
     const modal = ref();
     const vendor = ref();
     const tcp = ref("");
@@ -141,7 +141,7 @@ export default defineComponent({
 
     const save = () => {
       if (props.ports) {
-
+        props.ports.mode = ports.value.mode;
         if (tcp.value) {
           props.ports.tcp = normalizePorts(tcp.value);
         }

@@ -296,7 +296,7 @@ class Engine {
       if (response.data.routing) {
         this.xrayConfig.routing = plainToInstance(XrayRoutingObject, response.data.routing);
         if (this.xrayConfig.routing && this.xrayConfig?.routing?.rules) {
-          this.xrayConfig.routing.portsPolicy = plainToInstance(XrayPortsPolicy, response.data.routing.portsPolicy);
+          this.xrayConfig.routing.portsPolicy = plainToInstance(XrayPortsPolicy, response.data.routing.portsPolicy ?? new XrayPortsPolicy());
           this.xrayConfig.routing.rules.forEach((rule, index) => {
             if (this.xrayConfig.routing?.rules) {
               this.xrayConfig.routing.rules[index] = plainToInstance(XrayRoutingRuleObject, rule);

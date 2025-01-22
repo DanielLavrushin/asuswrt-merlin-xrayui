@@ -180,7 +180,7 @@ class XrayRoutingObject {
     this.domainMatcher = this.domainMatcher == "hybrid" ? undefined : this.domainMatcher;
 
     if (this.portsPolicy) {
-      this.portsPolicy.normalize();
+      this.portsPolicy = this.portsPolicy.normalize();
     }
     if (this.rules && this.rules.length > 0) {
       this.rules.forEach((rule) => {
@@ -207,10 +207,15 @@ class XrayPortsPolicy {
     { name: "Sony Playstation", tcp: "983,987,1935,3974,3658,5223,3478:3480,4658,9293:9297", udp: "983,987,1935,3974,3658,5223,3478:3480,4658,9293:9297" }
   ];
 
-  public normalize = () => {
+  public normalize = (): XrayPortsPolicy | undefined => {
     this.mode = this.mode && XrayPortsPolicy.modes.includes(this.mode) ? this.mode : undefined;
     this.tcp = this.normalizePorts(this.tcp == "" ? undefined : this.tcp);
     this.udp = this.normalizePorts(this.udp == "" ? undefined : this.udp);
+
+    if (!this.tcp && !this.udp && this.mode == "redirect") {
+      return undefined;
+    }
+    return this;
   };
   public normalizePorts = (ports: string | undefined) => {
     if (!ports) return ports;

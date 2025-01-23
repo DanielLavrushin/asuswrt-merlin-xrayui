@@ -21,7 +21,7 @@ xray_config_client="/opt/etc/xray/config-client.json"
 dir_xrayui="/www/user/xrayui"
 xray_ui_config="$dir_xrayui/xray-config.json"
 XRAY_UI_RESPONSE_FILE="$dir_xrayui/xray-ui-response.json"
-
+XRAY_UI_CLIENTS_FILE="$dir_xrayui/clients-online.json"
 XRAY="xray"
 XRAYUI_VERSION="0.0"
 XRAYUI_USER_SCRIPTS="/jffs/xrayui_custom"
@@ -743,7 +743,7 @@ get_connected_clients() {
         json_array="[]"
     fi
 
-    echo "$json_array" >"$dir_xrayui/clients-online.json"
+    echo "$json_array" >$XRAY_UI_CLIENTS_FILE
     rm -f "$temp_file"
     echo "$json_array"
 }
@@ -1023,6 +1023,23 @@ test_xray_config() {
     echo "$updated_json" >"$XRAY_UI_RESPONSE_FILE"
 }
 
+install_opkg_package() {
+    local package="$1"
+    # Check for jq
+    if ! opkg list-installed | grep "$package -"; then
+        printlog true "$package is not installed. Installing $package..."
+        opkg update
+        if opkg install $package; then
+            printlog true "$package installed successfully." $CSUC
+        else
+            printlog true "Failed to install $package." $CERR
+            exit 1
+        fi
+    else
+        printlog true "$package is already installed."
+    fi
+}
+
 install() {
     printlog true "Starting XRAY UI installation process."
 
@@ -1034,41 +1051,13 @@ install() {
     fi
     printlog true "Entware is installed." $CSUC
 
-    # Check for jq
-    if ! opkg list-installed | grep 'jq -'; then
-        printlog true "jq is not installed. Installing jq..."
-        opkg update
-        if opkg install jq; then
-            printlog true "jq installed successfully." $CWARN
-        else
-            printlog true "Failed to install jq." $CERR
-            exit 1
-        fi
-    else
-        printlog true "jq is already installed." $CWARN
-    fi
-
-    # Check for iptables
-    if ! type iptables >/dev/null 2>&1; then
-        printlog true "iptables is not available on this system. It is required for firewall configuration." $CERR
-        exit 1
-    fi
-
-    printlog true "iptables is available."
-
-    # Install Xray via opkg
-    if ! opkg list-installed | grep 'xray -'; then
-        printlog true "Installing Xray from the Entware repository..."
-        opkg update
-        if opkg install xray; then
-            printlog true "Xray installed successfully." $CSUC
-        else
-            printlog true "Failed to install Xray." $CERR
-            exit 1
-        fi
-    else
-        printlog true "Xray is already installed." $CWARN
-    fi
+    install_opkg_package sed
+    install_opkg_package jq
+    install_opkg_package iptables
+    install_opkg_package xray
+    install_opkg_package netstat
+    install_opkg_package openssl
+    install_opkg_package flock
 
     generate_default_config
 
@@ -1346,16 +1335,19 @@ EOF
 }
 
 fixme() {
-    printlog true "Fixme function called."
+    printlog true "Attempting to fix XRAY UI issues..."
 
     printlog true "Removing XRAY broken payload settings..."
 
-    grep '^xray_payload' /jffs/addons/custom_settings.txt | while IFS='=' read -r var_name _; do
-        [ -n "$var_name" ] && am_settings_del "$var_name"
-    done
+    sed -i '/^xray_payload/d' /jffs/addons/custom_settings.txt
 
-    printlog true "Done with fixme function." $CSUC
+    printlog true "Removing file $XRAY_UI_RESPONSE_FILE..."
+    rm -f $XRAY_UI_RESPONSE_FILE
 
+    printlog true "Removing file $XRAY_UI_CLIENTS_FILE..."
+    rm -f $XRAY_UI_CLIENTS_FILE
+
+    printlog true "Done with fixme function." "$CSUC"
 }
 
 case "$1" in

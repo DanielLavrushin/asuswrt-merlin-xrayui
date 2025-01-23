@@ -1,5 +1,12 @@
 # XRAYUI Changelog
 
+## [0.xx.x] - 2025-01-xx
+
+- ADDED: `Cache-Control` meta tage with a `no-cache` value.
+- IMPROVED: check and install missing `Entware` required dependencies before installing xrayui (sed,jq,iptables,netstat, openssl, flock).
+- UPDATED: the `DOCTYPE` declaration and `HTML` structure to modern standards by replacing Asus `XHTML 1.0 Transitional` with `HTML5`.
+- FIXED: fixme command was... fixed :)
+
 ## [0.28.0] - 2025-01-22
 
 - ADDED: **IMPORTANT!** For Xray in client mode, a new option called `Ports Bypass/Redirect Policy` has been added to the routing section. This controls how the router manages traffic to different ports. By default, it is set to `redirect` mode, meaning all traffic is redirected to the Xray inbound port. You can add ports to the exclusion list if certain ports should not be handled by Xray. When switching to `bypass` mode, all traffic bypasses Xray, and you can specify ports that should be redirected to Xray. This feature allows for fine-tuning traffic management to Xray directly from the web interface.

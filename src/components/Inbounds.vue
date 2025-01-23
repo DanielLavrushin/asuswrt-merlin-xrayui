@@ -1,180 +1,178 @@
 <template>
-    <table width="100%" bordercolor="#6b8fa3" class="FormTable">
-        <thead>
-            <tr>
-                <td colspan="2">Inbounds</td>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <th>Create new</th>
-                <td>
-                    <select class="input_option" v-model="selectedInboundType" @change="edit_inbound()">
-                        <option></option>
-                        <option v-for="(opt, index) in availableProxies" :key="index" :value="opt.protocol">
-                            {{ opt.protocol }}
-                        </option>
-                    </select>
-                    <span class=" hint-color"> </span>
-                </td>
-            </tr>
-            <slot v-for="(proxy, index) in config.inbounds">
-                <tr>
-                    <th>{{
-                        proxy.protocol.toUpperCase() }}</th>
-                    <td><a class="hint" href="#" @click.prevent="edit_inbound(proxy)"><i><strong>
-                                    {{ proxy.tag == "" ? "no tag" : proxy.tag }}
-                                </strong></i>
-                        </a> <text v-show="proxy.streamSettings?.network">[{{ proxy.streamSettings?.network
-                            }}]</text>
-                        <text v-show="proxy.streamSettings?.security">[{{ proxy.streamSettings?.security }}]</text>
-                        <span class="row-buttons">
-                            <a class="button_gen button_gen_small" href="#" @click="show_transport(proxy)">transport</a>
-                            <a class="button_gen button_gen_small" href="#" @click="show_sniffing(proxy)">sniffing</a>
-                            <a class="button_gen button_gen_small" href="#" @click="remove_inbound(proxy)">&#10005;</a>
-                            <a class="button_gen button_gen_small" href="#" @click="reorder_proxy(proxy, index)"
-                                v-if="index > 0">&#8593;</a>
-                        </span>
-                    </td>
-                </tr>
-            </slot>
-        </tbody>
-    </table>
+  <table width="100%" bordercolor="#6b8fa3" class="FormTable">
+    <thead>
+      <tr>
+        <td colspan="2">Inbounds</td>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>Create new</th>
+        <td>
+          <select class="input_option" v-model="selectedInboundType" @change="edit_inbound()">
+            <option></option>
+            <option v-for="(opt, index) in availableProxies" :key="index" :value="opt.protocol">
+              {{ opt.protocol }}
+            </option>
+          </select>
+        </td>
+      </tr>
+      <slot v-for="(proxy, index) in config.inbounds" :key="index">
+        <tr>
+          <th>{{ proxy.protocol.toUpperCase() }}</th>
+          <td>
+            <a class="hint" href="#" @click.prevent="edit_inbound(proxy)">
+              <i>
+                <strong>
+                  {{ proxy.tag == "" ? "no tag" : proxy.tag }}
+                </strong>
+              </i>
+            </a>
+            <text v-show="proxy.streamSettings?.network">[{{ proxy.streamSettings?.network }}]</text>
+            <text v-show="proxy.streamSettings?.security">[{{ proxy.streamSettings?.security }}]</text>
+            <span class="row-buttons">
+              <a class="button_gen button_gen_small" href="#" @click="show_transport(proxy)">transport</a>
+              <a class="button_gen button_gen_small" href="#" @click="show_sniffing(proxy)">sniffing</a>
+              <a class="button_gen button_gen_small" href="#" @click="remove_inbound(proxy)">&#10005;</a>
+              <a class="button_gen button_gen_small" href="#" @click="reorder_proxy(proxy, index)" v-if="index > 0">&#8593;</a>
+            </span>
+          </td>
+        </tr>
+      </slot>
+    </tbody>
+  </table>
 
-    <modal ref="inboundModal" title="Inbound Settings">
-        <component ref="inboundComponentRef" :is="inboundComponent" :inbound="selectedInbound" />
-        <template v-slot:footer>
-            <input class="button_gen button_gen_small" type="button" value="Save" @click.prevent="save_inbound" />
-        </template>
-    </modal>
+  <modal ref="inboundModal" title="Inbound Settings">
+    <component ref="inboundComponentRef" :is="inboundComponent" :inbound="selectedInbound" />
+    <template v-slot:footer>
+      <input class="button_gen button_gen_small" type="button" value="Save" @click.prevent="save_inbound" />
+    </template>
+  </modal>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, nextTick } from "vue";
-import engine from "../modules/Engine";
-import Modal from "./Modal.vue";
+  import { defineComponent, ref, computed, nextTick } from "vue";
+  import engine from "../modules/Engine";
+  import Modal from "./Modal.vue";
 
+  import { IProtocolType } from "../modules/Interfaces";
+  import { XrayProtocol } from "../modules/CommonObjects";
+  import { XrayInboundObject } from "../modules/InboundObjects";
+  import { XrayProtocolOption } from "../modules/CommonObjects";
 
-import { IProtocolType } from "../modules/Interfaces";
-import { XrayProtocol } from "../modules/CommonObjects";
-import { XrayInboundObject } from "../modules/InboundObjects";
-import { XrayProtocolOption } from "../modules/CommonObjects";
+  import { xrayProtocols } from "../modules/XrayConfig";
+  import { XrayProtocolMode } from "../modules/Options";
 
-import { xrayProtocols } from "../modules/XrayConfig";
-import { XrayProtocolMode } from "../modules/Options";
+  import DocodemoDoorInbound from "./inbounds/DocodemoDoorInbound.vue";
+  import VmessInbound from "./inbounds/VmessInbound.vue";
+  import VlessInbound from "./inbounds/VlessInbound.vue";
+  import HttpInbound from "./inbounds/HttpInbound.vue";
+  import ShadowsocksInbound from "./inbounds/ShadowsocksInbound.vue";
+  import SocksInbound from "./inbounds/SocksInbound.vue";
+  import TrojanInbound from "./inbounds/TrojanInbound.vue";
+  import WireguardInbound from "./inbounds/WireguardInbound.vue";
 
-import DocodemoDoorInbound from "./inbounds/DocodemoDoorInbound.vue";
-import VmessInbound from "./inbounds/VmessInbound.vue";
-import VlessInbound from "./inbounds/VlessInbound.vue";
-import HttpInbound from "./inbounds/HttpInbound.vue";
-import ShadowsocksInbound from "./inbounds/ShadowsocksInbound.vue";
-import SocksInbound from "./inbounds/SocksInbound.vue";
-import TrojanInbound from "./inbounds/TrojanInbound.vue";
-import WireguardInbound from "./inbounds/WireguardInbound.vue";
-
-export default defineComponent({
+  export default defineComponent({
     name: "Inbounds",
-    emits: ['show-transport', 'show-sniffing'],
+    emits: ["show-transport", "show-sniffing"],
     components: {
-        Modal,
+      Modal
     },
     methods: {
-        reorder_proxy(proxy: XrayInboundObject<IProtocolType>, index: number) {
-            this.config.inbounds.splice(index, 1);
-            this.config.inbounds.splice(index - 1, 0, proxy);
-        },
-        async show_transport(inbound: XrayInboundObject<IProtocolType>) {
-            this.$emit('show-transport', inbound, 'inbound');
-        },
-        async show_sniffing(inbound: XrayInboundObject<IProtocolType>) {
-            this.$emit('show-sniffing', inbound);
-        },
-        save_protocol() {
-            this.inboundModal.close();
-        },
+      reorder_proxy(proxy: XrayInboundObject<IProtocolType>, index: number) {
+        this.config.inbounds.splice(index, 1);
+        this.config.inbounds.splice(index - 1, 0, proxy);
+      },
+      async show_transport(inbound: XrayInboundObject<IProtocolType>) {
+        this.$emit("show-transport", inbound, "inbound");
+      },
+      async show_sniffing(inbound: XrayInboundObject<IProtocolType>) {
+        this.$emit("show-sniffing", inbound);
+      },
+      save_protocol() {
+        this.inboundModal.close();
+      },
 
-        async edit_inbound(inbound: XrayInboundObject<IProtocolType> | undefined = undefined) {
+      async edit_inbound(inbound: XrayInboundObject<IProtocolType> | undefined = undefined) {
+        if (inbound) {
+          this.selectedInbound = inbound;
+          this.selectedInboundType = inbound.protocol;
+        }
 
-            if (inbound) {
-                this.selectedInbound = inbound;
-                this.selectedInboundType = inbound.protocol;
-            }
+        await nextTick();
 
-            await nextTick();
+        this.inboundModal.show(() => {
+          this.selectedInbound = undefined;
+          this.selectedInboundType = undefined;
+        });
+      },
 
-            this.inboundModal.show(() => {
-                this.selectedInbound = undefined;
-                this.selectedInboundType = undefined;
-            });
-        },
+      async remove_inbound(inbound: XrayInboundObject<IProtocolType>) {
+        if (!window.confirm("Are you sure you want to delete this inbound?")) return;
+        let index = this.config.inbounds.indexOf(inbound);
+        this.config.inbounds.splice(index, 1);
+      },
 
-        async remove_inbound(inbound: XrayInboundObject<IProtocolType>) {
-            if (!window.confirm('Are you sure you want to delete this inbound?')) return;
-            let index = this.config.inbounds.indexOf(inbound);
-            this.config.inbounds.splice(index, 1);
-        },
+      async save_inbound() {
+        let inbound = this.inboundComponentRef.inbound;
+        if (this.config.inbounds.filter((i) => i != inbound && i.tag == inbound.tag).length > 0) {
+          alert("Tag  already exists, please choose another one");
+          return;
+        }
 
-        async save_inbound() {
-            let inbound = this.inboundComponentRef.inbound;
-            if (this.config.inbounds.filter(i => i != inbound && i.tag == inbound.tag).length > 0) {
-                alert('Tag  already exists, please choose another one');
-                return;
-            }
+        let index = this.config.inbounds.indexOf(inbound);
+        if (index >= 0) {
+          this.config.inbounds[index] = inbound;
+        } else {
+          this.config.inbounds.push(inbound);
+        }
 
-            let index = this.config.inbounds.indexOf(inbound);
-            if (index >= 0) {
-                this.config.inbounds[index] = inbound;
-            } else {
-                this.config.inbounds.push(inbound);
-            }
-
-            this.inboundModal.close();
-        },
-
+        this.inboundModal.close();
+      }
     },
 
     setup() {
-        const config = ref(engine.xrayConfig);
-        const availableProxies = ref<XrayProtocolOption[]>(xrayProtocols.filter(p => (p.modes & XrayProtocolMode.Inbound)));
-        const selectedInboundType = ref<string>();
-        const selectedInbound = ref<any>();
-        const inboundModal = ref();
-        const inboundComponentRef = ref();
+      const config = ref(engine.xrayConfig);
+      const availableProxies = ref<XrayProtocolOption[]>(xrayProtocols.filter((p) => p.modes & XrayProtocolMode.Inbound));
+      const selectedInboundType = ref<string>();
+      const selectedInbound = ref<any>();
+      const inboundModal = ref();
+      const inboundComponentRef = ref();
 
-        const inboundComponent = computed(() => {
-            switch (selectedInboundType.value) {
-                case XrayProtocol.DOKODEMODOOR:
-                    return DocodemoDoorInbound;
-                case XrayProtocol.VMESS:
-                    return VmessInbound;
-                case XrayProtocol.VLESS:
-                    return VlessInbound;
-                case XrayProtocol.HTTP:
-                    return HttpInbound;
-                case XrayProtocol.SHADOWSOCKS:
-                    return ShadowsocksInbound;
-                case XrayProtocol.SOCKS:
-                    return SocksInbound;
-                case XrayProtocol.TROJAN:
-                    return TrojanInbound;
-                case XrayProtocol.WIREGUARD:
-                    return WireguardInbound;
-                default:
-                    return null;
-            }
-        });
+      const inboundComponent = computed(() => {
+        switch (selectedInboundType.value) {
+          case XrayProtocol.DOKODEMODOOR:
+            return DocodemoDoorInbound;
+          case XrayProtocol.VMESS:
+            return VmessInbound;
+          case XrayProtocol.VLESS:
+            return VlessInbound;
+          case XrayProtocol.HTTP:
+            return HttpInbound;
+          case XrayProtocol.SHADOWSOCKS:
+            return ShadowsocksInbound;
+          case XrayProtocol.SOCKS:
+            return SocksInbound;
+          case XrayProtocol.TROJAN:
+            return TrojanInbound;
+          case XrayProtocol.WIREGUARD:
+            return WireguardInbound;
+          default:
+            return null;
+        }
+      });
 
-        return {
-            config,
-            inboundComponent,
-            inboundComponentRef,
-            inboundModal,
-            selectedInbound,
-            availableProxies,
-            selectedInboundType,
-        };
-    },
-});
+      return {
+        config,
+        inboundComponent,
+        inboundComponentRef,
+        inboundModal,
+        selectedInbound,
+        availableProxies,
+        selectedInboundType
+      };
+    }
+  });
 </script>
 
 <style scoped></style>

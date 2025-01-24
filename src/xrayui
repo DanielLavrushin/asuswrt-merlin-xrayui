@@ -1009,6 +1009,7 @@ install() {
     install_opkg_package netstat false
     install_opkg_package libopenssl false
     install_opkg_package flock false
+    install_opkg_package logrotate false
     install_opkg_package xray true
 
     generate_default_config
@@ -1103,7 +1104,31 @@ install() {
         printlog true "Failed to download XRAYUI geodata files builder." $CERR
     fi
 
+    # setup logrotate
+    printlog true "Setting up logrotate for XRAY UI..."
+
+    cat >/opt/etc/logrotate.d/xrayui <<EOF
+/tmp/xray_*.log {
+    su nobody root
+    daily
+    missingok
+    rotate 7
+    compress
+    delaycompress
+    notifempty
+    create 640 nobody root
+    sharedscripts
+    postrotate
+        /jffs/scripts/xrayui restart
+    endscript
+}
+EOF
+    # chown root:root /etc/logrotate.d/xrayui || printlog true "Failed to make logrotate root-owned." $CERR
+    chmod 0644 /opt/etc/logrotate.d/xrayui || printlog true "Failed to make logrotate executable." $CERR
+
+    printlog true "============================================" $CSUC
     printlog true "Installation process completed successfully." $CSUC
+    printlog true "============================================" $CSUC
 }
 
 uninstall() {
@@ -1172,24 +1197,24 @@ uninstall() {
 
     echo
     printlog true "Do you want to remove custom GEODATA? (yes/no)" $CWARN
-    echo
     read -r user_input
 
     if [ "$user_input" = "yes" ] || [ "$user_input" = "y" ]; then
+        printlog true "Removing custom GEODATA..."
         rm -rf /opt/share/xrayui
 
         #Remove XRAY custom geodata
         rm -rf /opt/sbin/xrayui
         rm -rf /opt/sbin/geosite.dat
         rm -rf /opt/sbin/geoip.dat
+    else
+        printlog true "Keeping custom GEODATA."
     fi
     user_input=""
 
     # Ask user if they want to remove XRAY (opkg) and its configs
     echo
     printlog true "Do you want to remove XRAY (installed via opkg) and its configurations? (yes/no)" $CWARN
-    echo
-
     read -r user_input
 
     if [ "$user_input" = "yes" ] || [ "$user_input" = "y" ]; then
@@ -1219,10 +1244,12 @@ uninstall() {
         printlog true "Keeping XRAY and its configuration files."
     fi
 
-    rm /jffs/scripts/xrayui
+    rm -rf /opt/etc/logrotate.d/xrayui
+    rm -rf /jffs/scripts/xrayui
 
-    echo
+    printlog true "==============================================" $CSUC
     printlog true "Uninstallation process completed successfully." $CSUC
+    printlog true "==============================================" $CSUC
 }
 
 enable_config_logs() {

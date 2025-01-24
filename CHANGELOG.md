@@ -1,5 +1,9 @@
 # XRAYUI Changelog
 
+## [0.xx.x] - 2025-01-xx
+
+- ADDED: `logrotate` setup to manage the xray log files growth over time.
+
 ## [0.29.1] - 2025-01-24
 
 - ADDED: `Custom GEODATA Files Manager`. A new button labeled `Manage Local Files` has been added to the `Routing` section. This feature allows you to store rule-based domain and IP lists in standalone geodat files (similar to geosite.dat and geoip.dat). You can compile these files directly from the router's web interface. Assign a tag (e.g., `discord`), and after compiling, use it in the routing rules as `ext:xrayui:discord`.

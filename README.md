@@ -1,8 +1,7 @@
 ![GitHub Release](https://img.shields.io/github/v/release/daniellavrushin/asuswrt-merlin-xrayui?logoColor=violet)
 ![GitHub Release Date](https://img.shields.io/github/release-date/daniellavrushin/asuswrt-merlin-xrayui)
 ![GitHub commits since latest release](https://img.shields.io/github/commits-since/daniellavrushin/asuswrt-merlin-xrayui/latest)
-![GitHub top language](https://img.shields.io/github/languages/top/daniellavrushin/asuswrt-merlin-xrayui)
-
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/5afa683e2930418a9b13efac6537aad8)](https://app.codacy.com/gh/DanielLavrushin/asuswrt-merlin-xrayui/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 ![GitHub Downloads (specific asset, latest release)](https://img.shields.io/github/downloads/daniellavrushin/asuswrt-merlin-xrayui/latest/total)
 ![image](https://img.shields.io/github/downloads/DanielLavrushin/asuswrt-merlin-xrayui/total?label=total%20downloads)
 

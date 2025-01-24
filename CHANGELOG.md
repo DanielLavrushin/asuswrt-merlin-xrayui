@@ -1,11 +1,14 @@
 # XRAYUI Changelog
 
-## [0.xx.x] - 2025-01-xx
+## [0.29.0] - 2025-01-24
 
-- ADDED: `Cache-Control` meta tage with a `no-cache` value.
-- IMPROVED: check and install missing `Entware` required dependencies before installing xrayui (sed,jq,iptables,netstat, openssl, flock).
-- UPDATED: the `DOCTYPE` declaration and `HTML` structure to modern standards by replacing Asus `XHTML 1.0 Transitional` with `HTML5`.
-- FIXED: fixme command was... fixed :)
+- ADDED: `Custom GEODATA Files Manager`. A new button labeled `Manage Local Files` has been added to the `Routing` section. This feature allows you to store rule-based domain and IP lists in standalone geodat files (similar to geosite.dat and geoip.dat). You can compile these files directly from the router's web interface. Assign a tag (e.g., `discord`), and after compiling, use it in the routing rules as `ext:xrayui:discord`.
+- ADDED: `Cache-Control` meta tag with a `no-cache` value. This addition attempts to combat Asus web caching mechanisms.
+- IMPROVED: Enhanced the installation process by checking for and installing missing `Entware` dependencies before installing XrayUI. The required dependencies now include `sed`, `jq`, `iptables`, `netstat`, `openssl`, and `flock`.
+- UPDATED: Modernized the `DOCTYPE` declaration and HTML structure by replacing Asus's `XHTML 1.0 Transitional` with `HTML5` standards.
+- FIXED: Resolved a bug in the `Ports Bypass/Redirect Policy` that previously prevented saving empty ports fields.
+- FIXED: Corrected issues with the fixme command to ensure it functions as intended.
+- IMPROVED: Ensured that all necessary Merlin script files are executable, addressing issue #7.
 
 ## [0.28.0] - 2025-01-22
 

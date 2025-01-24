@@ -90,7 +90,10 @@
           </hint>
         </th>
         <td>
-          <input class="button_gen button_gen_small" type="button" value="update metadata"
+          <input class="button_gen button_gen_small" type="button" value="manage local files"
+            @click.prevent="manage_geodat()" />
+          <geodat-modal ref="geodatModal"></geodat-modal>
+          <input class="button_gen button_gen_small" type="button" value="update community files"
             @click.prevent="update_geodat()" />
           <span class="hint-small" v-if="daysPassed > 1"> updated {{ daysPassed }} days ago</span>
           <span class="hint-color">
@@ -149,25 +152,31 @@ import engine, { SubmtActions } from "../modules/Engine";
 import RulesModal from "./modals/RulesModal.vue";
 import Hint from "./Hint.vue";
 import PortsPolicyModal from "./modals/PortsPolicyModal.vue";
+import GeodatModal from "./modals/GeodatModal.vue";
 export default defineComponent({
   name: "Routing",
   components: {
     Hint,
     RulesModal,
-    PortsPolicyModal
+    PortsPolicyModal,
+    GeodatModal
   },
 
   setup() {
     const modal = ref();
+    const geodatModal = ref();
     const modalRedirectPorts = ref();
     const daysPassed = ref(0);
     const routing = ref<XrayRoutingObject>(xrayConfig.routing || new XrayRoutingObject());
 
+    const manage_geodat = async () => {
+      geodatModal.value.show();
+    };
     const update_geodat = async () => {
       let delay = 10000;
       window.showLoading(delay, "waiting");
 
-      await engine.submit(SubmtActions.performUpdateGeodat, null, delay);
+      await engine.submit(SubmtActions.geodataCommunityUpdate, null, delay);
       window.hideLoading();
 
       window.location.reload();
@@ -183,6 +192,7 @@ export default defineComponent({
       },
       { immediate: true }
     );
+
     const manage_redirect_ports = async () => {
       modalRedirectPorts.value.show();
     };
@@ -190,11 +200,12 @@ export default defineComponent({
     const manage_rules = async () => {
       modal.value.show();
     };
+
     const load_geodat_dates = async () => {
-      await engine.submit(SubmtActions.loadGeodatDates, null, 1000);
-      const result = await engine.getEngineConfig();
-      if (result.files) {
-        const date = new Date(result.files["geosite.dat"]);
+      await engine.submit(SubmtActions.geodataCommunityDates, null, 1000);
+      const result = await engine.getXrayResponse();
+      if (result.geodata?.community) {
+        const date = new Date(result.geodata.community["geosite.dat"]);
         const df = Date.now() - date.getTime();
         daysPassed.value = Math.floor(df / (1000 * 60 * 60 * 24));
 
@@ -205,11 +216,13 @@ export default defineComponent({
 
     return {
       engine,
+      geodatModal,
       routing,
       daysPassed,
       modal,
       modalRedirectPorts,
       update_geodat,
+      manage_geodat,
       manage_rules,
       manage_redirect_ports,
       domainStrategyOptions: XrayRoutingObject.domainStrategyOptions,

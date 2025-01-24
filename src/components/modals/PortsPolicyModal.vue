@@ -129,6 +129,8 @@ export default defineComponent({
       modal.value.show();
     };
     const normalizePorts = (ports: string) => {
+      if (!ports) return "";
+
       return ports
         .replace(/\n/g, ',')
         .replace(/\-/g, ':')
@@ -142,13 +144,8 @@ export default defineComponent({
     const save = () => {
       if (props.ports) {
         props.ports.mode = ports.value.mode;
-        if (tcp.value) {
-          props.ports.tcp = normalizePorts(tcp.value);
-        }
-        if (udp.value) {
-          props.ports.udp = normalizePorts(udp.value);
-
-        }
+        props.ports.tcp = normalizePorts(tcp.value);
+        props.ports.udp = normalizePorts(udp.value);
 
         emit("update:ports", props.ports);
       }

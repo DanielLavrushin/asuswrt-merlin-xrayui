@@ -54,9 +54,9 @@ export default defineComponent({
       let delay = 1000;
       window.showLoading(delay);
       await engine.submit(window.xray.commands.testConfig, null, delay);
-      let usres = await engine.getEngineConfig();
+      let users = await engine.getXrayResponse();
       window.hideLoading();
-      alert(usres.xray?.test);
+      alert(users.xray?.test);
 
     },
     async handleStatus(action: string) {

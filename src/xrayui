@@ -26,6 +26,8 @@ XRAY="xray"
 XRAYUI_VERSION="0.0"
 XRAYUI_USER_SCRIPTS="/jffs/xrayui_custom"
 
+XRAYUI_SHARED_DIR="/opt/share/xrayui"
+
 XRAYUI_LOCKFILE="/tmp/xrayui.lock"
 # Color Codes
 CERR='\033[0;31m'
@@ -140,70 +142,6 @@ update() {
     fi
 
     printlog true "Update process completed!" $CSUC
-}
-
-update_geodat() {
-    local geosite_url="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
-    local geoip_url="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
-
-    local target_dir=$(dirname "$(which xray)")
-
-    mkdir -p "$target_dir"
-
-    printlog true "Downloading geosite.dat..."
-    curl -L "$geosite_url" -o "$target_dir/geosite.dat"
-    if [ $? -ne 0 ]; then
-        printlog true "Failed to download geosite.dat." $CERR
-        return 1
-    fi
-
-    printlog true "Downloading geoip.dat..."
-    curl -L "$geoip_url" -o "$target_dir/geoip.dat"
-    if [ $? -ne 0 ]; then
-        printlog true "Failed to download geoip.dat." $CERR
-        return 1
-    fi
-
-    if [[ -f "$target_dir/geosite.dat" && -f "$target_dir/geoip.dat" ]]; then
-        printlog true "Files successfully placed in $target_dir." $CSUC
-        if [ -f "$PIDFILE" ]; then
-            restart
-        fi
-    else
-        printlog true "Failed to place geosite.dat/geoip.dat in $target_dir." $CERR
-    fi
-}
-
-set_geodat_createdates() {
-    local geoip_file="/opt/sbin/geoip.dat"
-    local geosite_file="/opt/sbin/geosite.dat"
-
-    local geoip_date geosite_date
-    geoip_date=$(date -r "$geoip_file" "+%Y-%m-%d %H:%M:%S")
-    geosite_date=$(date -r "$geosite_file" "+%Y-%m-%d %H:%M:%S")
-
-    ensure_ui_response_file
-    local json_content
-    if [ -f "$XRAY_UI_RESPONSE_FILE" ]; then
-        json_content=$(cat "$XRAY_UI_RESPONSE_FILE")
-    else
-        json_content="{}"
-    fi
-
-    json_content=$(echo "$json_content" | jq --arg geoip "$geoip_date" --arg geosite "$geosite_date" \
-        '.files["geoip.dat"] = $geoip | .files["geosite.dat"] = $geosite')
-    if [ $? -ne 0 ]; then
-        printlog true "Error: Failed to update JSON content with file dates." $CERR
-        return 1
-    fi
-
-    echo "$json_content" >"$XRAY_UI_RESPONSE_FILE"
-    if [ $? -eq 0 ]; then
-        printlog true "Saved file dates to $XRAY_UI_RESPONSE_FILE successfully." $CSUC
-    else
-        printlog true "Failed to save file dates to $XRAY_UI_RESPONSE_FILE." $CERR
-        return 1
-    fi
 }
 
 detect_entware_path() {
@@ -629,8 +567,14 @@ mount_ui() {
         mkdir -p "$dir_xrayui"
     fi
 
+    if [ ! -d "$XRAYUI_SHARED_DIR/data" ]; then
+        mkdir -p "$XRAYUI_SHARED_DIR/data"
+    fi
+
     ln -s -f /jffs/addons/xrayui/app.js $dir_xrayui/app.js
     ln -s -f /opt/etc/xray/config.json $dir_xrayui/xray-config.json
+
+    geodata_remount_to_web
 
     flock -u "$FD"
     printlog true "XRAYUI mounted successfully as $xrayui_user_page" $CSUC
@@ -987,9 +931,12 @@ reconstruct_payload() {
             break
         fi
         payload="$payload$chunk"
-        am_settings_del xray_payload$idx
         idx=$((idx + 1))
     done
+
+    # clean up all payload chunks from the custom settings
+    sed -i '/^xray_payload/d' /jffs/addons/custom_settings.txt
+
     echo "$payload"
 
     # Release the lock
@@ -1069,13 +1016,13 @@ install() {
     mkdir -p /jffs/scripts
     if [ ! -f /jffs/scripts/nat-start ]; then
         echo "#!/bin/sh" >/jffs/scripts/nat-start
-        chmod +x /jffs/scripts/nat-start
     else
         printlog true "Removing existing #xrayui entries from /jffs/scripts/nat-start."
         sed -i '/#xrayui/d' /jffs/scripts/nat-start
     fi
     echo '/jffs/scripts/xrayui service_event firewall server #xrayui' >>/jffs/scripts/nat-start
     echo '/jffs/scripts/xrayui service_event firewall client #xrayui' >>/jffs/scripts/nat-start
+    chmod +x /jffs/scripts/nat-start
     printlog true "Updated /jffs/scripts/nat-start with XrayUI entry." $CSUC
 
     # Add or update post-mount
@@ -1083,11 +1030,11 @@ install() {
     mkdir -p /jffs/scripts
     if [ ! -f /jffs/scripts/post-mount ]; then
         echo "#!/bin/sh" >/jffs/scripts/post-mount
-        chmod +x /jffs/scripts/post-mount
     else
         printlog true "Removing existing #xrayui entries from /jffs/scripts/post-mount."
         sed -i '/#xrayui/d' /jffs/scripts/post-mount
     fi
+    chmod +x /jffs/scripts/post-mount
     echo "/jffs/scripts/xrayui remount_ui"' "$@" & #'"xrayui" >>/jffs/scripts/post-mount
     printlog true "Updated /jffs/scripts/post-mount with XrayUI entry." $CSUC
 
@@ -1095,11 +1042,11 @@ install() {
     printlog true "Ensuring /jffs/scripts/services-start contains required entry."
     if [ ! -f /jffs/scripts/services-start ]; then
         echo "#!/bin/sh" >/jffs/scripts/services-start
-        chmod +x /jffs/scripts/services-start
     else
         printlog true "Removing existing #xrayui entries from /jffs/scripts/services-start."
         sed -i '/#xrayui/d' /jffs/scripts/services-start
     fi
+    chmod +x /jffs/scripts/services-start
     echo "/jffs/scripts/xrayui service_event startup & #xrayui" >>/jffs/scripts/services-start
     printlog true "Updated /jffs/scripts/services-start with XrayUI entry." $CSUC
 
@@ -1107,11 +1054,11 @@ install() {
     printlog true "Ensuring /jffs/scripts/service-event contains required entry."
     if [ ! -f /jffs/scripts/service-event ]; then
         echo "#!/bin/sh" >/jffs/scripts/service-event
-        chmod +x /jffs/scripts/service-event
     else
         printlog true "Removing existing #xrayui entries from /jffs/scripts/service-event."
         sed -i '/#xrayui/d' /jffs/scripts/service-event
     fi
+    chmod +x /jffs/scripts/service-event
     echo "echo \"\$2\" | grep -q \"^xrayui\" && /jffs/scripts/xrayui service_event \$(echo \"\$2\" | cut -d'_' -f2- | tr '_' ' ') & #xrayui" >>/jffs/scripts/service-event
     printlog true "Updated /jffs/scripts/service-event with XrayUI entry." $CSUC
 
@@ -1137,6 +1084,19 @@ install() {
     fi
 
     mkdir -p $XRAYUI_USER_SCRIPTS
+
+    # Install and setup geodata builder
+    printlog true "Installing XRAY UI geodata files builder..."
+
+    mkdir -p "$XRAYUI_SHARED_DIR" || printlog true "Failed to create $XRAYUI_SHARED_DIR." $CERR
+
+    if wget -O "/tmp/xraydatbuilder.tar.gz" "https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/releases/latest/download/xrayui-datbuilder.tar.gz"; then
+        tar -xzf /tmp/xraydatbuilder.tar.gz -C "$XRAYUI_SHARED_DIR" || printlog true "Failed to extract xraydatbuilder.tar.gz." $CERR
+        rm -f /tmp/xraydatbuilder.tar.gz || printlog true "Failed to remove xraydatbuilder.tar.gz." $CERR
+        chmod +x "$XRAYUI_SHARED_DIR/xraydatbuilder" || printlog true "Failed to make xraydatbuilder executable." $CERR
+    else
+        printlog true "Failed to download XRAYUI geodata files builder." $CERR
+    fi
 
     printlog true "Installation process completed successfully." $CSUC
 }
@@ -1200,6 +1160,25 @@ uninstall() {
     done
 
     printlog true "Custom settings removed successfully." $CSUC
+
+    # Remove XRAY UI shared files
+    printlog true "Removing XRAY UI geodata files builder..."
+    rm -rf /opt/share/xrayui/xraydatbuilder
+
+    echo
+    printlog true "Do you want to remove custom GEODATA? (yes/no)" $CWARN
+    echo
+    read -r user_input
+
+    if [ "$user_input" = "yes" ] || [ "$user_input" = "y" ]; then
+        rm -rf /opt/share/xrayui
+
+        #Remove XRAY custom geodata
+        rm -rf /opt/sbin/xrayui
+        rm -rf /opt/sbin/geosite.dat
+        rm -rf /opt/sbin/geoip.dat
+    fi
+    user_input=""
 
     # Ask user if they want to remove XRAY (opkg) and its configs
     echo
@@ -1350,6 +1329,299 @@ fixme() {
     printlog true "Done with fixme function." "$CSUC"
 }
 
+update_community_geodata() {
+    local geosite_url="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+    local geoip_url="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
+
+    local target_dir=$(dirname "$(which xray)")
+
+    mkdir -p "$target_dir"
+
+    printlog true "Downloading geosite.dat..."
+    curl -L "$geosite_url" -o "$target_dir/geosite.dat"
+    if [ $? -ne 0 ]; then
+        printlog true "Failed to download geosite.dat." $CERR
+        return 1
+    fi
+
+    printlog true "Downloading geoip.dat..."
+    curl -L "$geoip_url" -o "$target_dir/geoip.dat"
+    if [ $? -ne 0 ]; then
+        printlog true "Failed to download geoip.dat." $CERR
+        return 1
+    fi
+
+    if [[ -f "$target_dir/geosite.dat" && -f "$target_dir/geoip.dat" ]]; then
+        printlog true "Files successfully placed in $target_dir." $CSUC
+        if [ -f "$PIDFILE" ]; then
+            restart
+        fi
+    else
+        printlog true "Failed to place geosite.dat/geoip.dat in $target_dir." $CERR
+    fi
+}
+
+set_community_geodata_dates() {
+    local geoip_file="/opt/sbin/geoip.dat"
+    local geosite_file="/opt/sbin/geosite.dat"
+
+    local geoip_date geosite_date
+    geoip_date=$(date -r "$geoip_file" "+%Y-%m-%d %H:%M:%S")
+    geosite_date=$(date -r "$geosite_file" "+%Y-%m-%d %H:%M:%S")
+
+    ensure_ui_response_file
+    local json_content
+    if [ -f "$XRAY_UI_RESPONSE_FILE" ]; then
+        json_content=$(cat "$XRAY_UI_RESPONSE_FILE")
+    else
+        json_content="{}"
+    fi
+
+    json_content=$(echo "$json_content" | jq --arg geoip "$geoip_date" --arg geosite "$geosite_date" \
+        '.geodata.community["geoip.dat"] = $geoip | .geodata.community["geosite.dat"] = $geosite')
+    if [ $? -ne 0 ]; then
+        printlog true "Error: Failed to update JSON content with file dates." $CERR
+        return 1
+    fi
+
+    echo "$json_content" >"$XRAY_UI_RESPONSE_FILE"
+    if [ $? -eq 0 ]; then
+        printlog true "Saved file dates to $XRAY_UI_RESPONSE_FILE successfully." $CSUC
+    else
+        printlog true "Failed to save file dates to $XRAY_UI_RESPONSE_FILE." $CERR
+        return 1
+    fi
+}
+
+get_custom_geodata_tagfiles() {
+
+    printlog true "Starting geodata tagfiles retrieval process..."
+
+    local json_content
+
+    ensure_ui_response_file
+    if [ -f "$XRAY_UI_RESPONSE_FILE" ]; then
+        json_content=$(cat "$XRAY_UI_RESPONSE_FILE")
+    else
+        json_content="{}"
+    fi
+
+    local xray_bin_dir
+    xray_bin_dir=$(dirname "$(which xray)")
+
+    local data_dir="$XRAYUI_SHARED_DIR/data"
+
+    local tagfiles_json
+    tagfiles_json=$(find "$data_dir" -type f -exec basename {} \; | sed 's/\.[^.]*$//' | sort | jq -R -s -c 'split("\n")[:-1]')
+
+    json_content=$(echo "$json_content" | jq --argjson tags "$tagfiles_json" \
+        '.geodata["tags"] = $tags')
+
+    echo "$json_content" >"$XRAY_UI_RESPONSE_FILE"
+
+    if [ $? -ne 0 ]; then
+        printlog true "Error: Failed to update JSON content with tags." "$CERR"
+        return 1
+    fi
+
+    printlog true "Saved tagfiles to $XRAY_UI_RESPONSE_FILE successfully." "$CSUC"
+    return 0
+}
+
+geodata_remount_to_web() {
+    local datadir="$XRAYUI_SHARED_DIR/data"
+    local geodata_dir="$dir_xrayui/geodata"
+
+    rm -f "$geodata_dir"
+
+    if [ ! -d "$dir_xrayui/geodata" ]; then
+        mkdir -p "$dir_xrayui/geodata"
+        if [ $? -ne 0 ]; then
+            printlog true "Error: Failed to create directory '$dir_xrayui/geodata'." "$CERR"
+            exit 1
+        fi
+    fi
+
+    find "$geodata_dir" -type l -name "*.asp" -exec rm {} \;
+
+    # Create new .asp symlinks for each file in data_dir
+    for tagfile in "$datadir"/*; do
+        if [ -f "$tagfile" ]; then
+            tagbasename=$(basename "$tagfile")
+            tagname="${tagbasename%.*}" # Remove extension if any
+
+            # Define symlink name with .asp extension
+            symlink="$geodata_dir/$tagname.asp"
+
+            # Create the symlink (using absolute paths)
+            ln -s -f "$tagfile" "$symlink"
+            if [ $? -ne 0 ]; then
+                printlog true "Error: Failed to create symlink '$symlink' -> '$tagfile'." "$CERR"
+                return 1
+            fi
+
+            printlog true "Created symlink '$symlink' -> '$tagfile'." "$CSUC"
+        fi
+    done
+
+    get_custom_geodata_tagfiles
+
+    printlog true "All symlinks created successfully in '$geodata_dir'." "$CSUC"
+    return 0
+}
+
+geodata_recompile_all() {
+    printlog true "Recompiling ALL custom geodata files..."
+
+    local builder="$XRAYUI_SHARED_DIR/xraydatbuilder"
+
+    if [ ! -f "$builder" ] || [ ! -x "$builder" ]; then
+        printlog true "Error: Builder not found or not executable at $builder" $CERR
+        return 1
+    fi
+
+    local outdir=$(dirname "$(which xray)")
+    local datadir="$XRAYUI_SHARED_DIR/data"
+
+    rm -f "$outdir/xrayui"
+
+    "$builder" --datapath "$datadir" --outputdir "$outdir" --outputname "xrayui" || {
+        printlog true "Failed to recompile geodata files." $CERR
+        return 1
+    }
+
+    chmod -x "$datadir/xrayui"
+
+    geodata_remount_to_web
+
+    printlog true "Recompiled all custom geodata files successfully." $CSUC
+    return 0
+}
+
+geodata_recompile() {
+    printlog true "Starting geodata recompilation process..." "$CSUC"
+
+    local datadir="$XRAYUI_SHARED_DIR/data"
+
+    if [ ! -d "$datadir" ]; then
+        printlog true "Error: Data directory '$datadir' does not exist." "$CERR"
+        return 1
+    fi
+
+    # Reconstruct the payload
+    local datfile
+    datfile=$(reconstruct_payload)
+    if [ $? -ne 0 ] || [ -z "$datfile" ]; then
+        printlog true "Error: Failed to reconstruct payload." "$CERR"
+        return 1
+    fi
+
+    # Extract 'tag' and 'content' from the payload using jq
+    local filename
+    filename=$(echo "$datfile" | jq -r '.tag')
+    if [ $? -ne 0 ] || [ -z "$filename" ] || [ "$filename" == "null" ]; then
+        printlog true "Error: Invalid or missing 'tag' in payload." "$CERR"
+        return 1
+    fi
+
+    local filecontent
+    filecontent=$(echo "$datfile" | jq -r '.content')
+    if [ $? -ne 0 ] || [ -z "$filecontent" ] || [ "$filecontent" == "null" ]; then
+        printlog true "Error: Invalid or missing 'content' in payload." "$CERR"
+        return 1
+    fi
+
+    local filepath="$datadir/$filename"
+
+    echo "$filecontent" >"$filepath"
+    if [ $? -ne 0 ]; then
+        printlog true "Error: Failed to write content to '$filepath'." "$CERR"
+        return 1
+    fi
+
+    printlog true "Successfully wrote content to '$filepath'." "$CSUC"
+
+    geodata_recompile_all
+
+    if [ $? -ne 0 ]; then
+        printlog true "Error: Recompiling geodata files failed." "$CERR"
+        return 1
+    fi
+
+    printlog true "Geodata recompilation process completed successfully." "$CSUC"
+
+    return 0
+}
+
+geodata_delete_tag() {
+    printlog true "Starting geodata tag deletion process..." "$CSUC"
+
+    local datadir="$XRAYUI_SHARED_DIR/data"
+    local geodata_dir="$XRAYUI_SHARED_DIR/geodata"
+
+    # Check if the data directory exists
+    if [ ! -d "$datadir" ]; then
+        printlog true "Error: Data directory '$datadir' does not exist." "$CERR"
+        return 1
+    fi
+
+    # Reconstruct the payload
+    local datfile
+    datfile=$(reconstruct_payload)
+    if [ $? -ne 0 ] || [ -z "$datfile" ]; then
+        printlog true "Error: Failed to reconstruct payload." "$CERR"
+        return 1
+    fi
+
+    # Extract 'tag' from the payload using jq
+    local filename
+    filename=$(echo "$datfile" | jq -r '.tag')
+    if [ $? -ne 0 ] || [ -z "$filename" ] || [ "$filename" == "null" ]; then
+        printlog true "Error: Invalid or missing 'tag' in payload." "$CERR"
+        return 1
+    fi
+
+    # Define the file and symlink paths
+    local filepath="$datadir/$filename"
+    local symlinkpath="$geodata_dir/$filename.asp"
+
+    # Remove the file from the data directory
+    if [ -f "$filepath" ]; then
+        rm "$filepath"
+        if [ $? -ne 0 ]; then
+            printlog true "Error: Failed to delete file '$filepath'." "$CERR"
+            return 1
+        fi
+        printlog true "Successfully deleted file '$filepath'." "$CSUC"
+    else
+        printlog true "Warning: File '$filepath' does not exist. Skipping deletion." "$CSUC"
+    fi
+
+    # Remove the symlink from the geodata directory
+    if [ -L "$symlinkpath" ]; then
+        rm "$symlinkpath"
+        if [ $? -ne 0 ]; then
+            printlog true "Error: Failed to delete symlink '$symlinkpath'." "$CERR"
+            return 1
+        fi
+        printlog true "Successfully deleted symlink '$symlinkpath'." "$CSUC"
+    else
+        printlog true "Warning: Symlink '$symlinkpath' does not exist. Skipping deletion." "$CSUC"
+    fi
+
+    geodata_recompile_all
+
+    if [ $? -ne 0 ]; then
+        printlog true "Error: Recompiling geodata files failed." "$CERR"
+        return 1
+    fi
+
+    # Log the successful deletion process
+    printlog true "Geodata tag deletion process completed successfully." "$CSUC"
+
+    return 0
+}
+
 case "$1" in
 install)
     install
@@ -1400,11 +1672,20 @@ service_event)
     elif [ "$2" = "update" ]; then
         update
         exit 0
-    elif [ "$2" = "updategeodat" ]; then
-        update_geodat
-        exit 0
-    elif [ "$2" = "getgeodatdates" ]; then
-        set_geodat_createdates
+    elif [ "$2" = "geodata" ]; then
+        if [ "$3" = "communityupdate" ]; then
+            update_community_geodata
+        elif [ "$3" = "communitydatecheck" ]; then
+            set_community_geodata_dates
+        elif [ "$3" = "customtagfiles" ]; then
+            get_custom_geodata_tagfiles
+        elif [ "$3" = "customrecompileall" ]; then
+            geodata_recompile_all
+        elif [ "$3" = "customrecompile" ]; then
+            geodata_recompile
+        elif [ "$3" = "customdeletetag" ]; then
+            geodata_delete_tag
+        fi
         exit 0
     elif [ "$2" = "connectedclients" ]; then
         get_connected_clients
@@ -1413,23 +1694,18 @@ service_event)
         case "$3" in
         "apply")
             apply_config
-            exit 0
             ;;
         "mode")
             switch_mode
-            exit 0
             ;;
         "logs")
             enable_config_logs
-            exit 0
             ;;
         "togglestartup")
             toggle_startup
-            exit 0
             ;;
         "generatedefaultconfig")
             generate_default_config
-            exit 0
             ;;
         esac
         exit 0

@@ -25,7 +25,17 @@ class EngineResponseConfig {
   public reality?: EngineReality;
   public certificates?: EngineSsl;
   public xray?: { test: string };
-  public files?: Record<string, string>;
+  public geodata?: EngineGeodatConfig = new EngineGeodatConfig();
+}
+class EngineGeodatConfig {
+  public community?: Record<string, string>;
+  public tags?: string[] = [];
+}
+
+class GeodatTagRequest {
+  public tag?: string;
+  public isNew!: boolean;
+  public content?: string;
 }
 
 class SubmtActions {
@@ -41,10 +51,14 @@ class SubmtActions {
   public static regenerateSslCertificates: string = "xrayui_regenerate_sslcertificates";
   public static enableLogs: string = "xrayui_configuration_logs";
   public static performUpdate: string = "xrayui_update";
-  public static performUpdateGeodat: string = "xrayui_updategeodat";
   public static ToggleStartupOption: string = "xrayui_configuration_togglestartup";
   public static ConfigurationGenerateDefaultConfig: string = "xrayui_configuration_generatedefaultconfig";
-  public static loadGeodatDates: string = "xrayui_getgeodatdates";
+  public static geodataCommunityUpdate: string = "xrayui_geodata_communityupdate";
+  public static geodataCommunityDates: string = "xrayui_geodata_communitydatecheck";
+  public static geoDataCustomGetTags: string = "xrayui_geodata_customtagfiles";
+  public static geoDataRecompile: string = "xrayui_geodata_customrecompile";
+  public static geoDataRecompileAll: string = "xrayui_geodata_customrecompileall";
+  public static geoDataCustomDeleteTag: string = "xrayui_geodata_customdeletetag";
 }
 
 class Engine {
@@ -176,20 +190,25 @@ class Engine {
     return config;
   }
 
+  async getGeodata(): Promise<EngineGeodatConfig | undefined> {
+    const result = await this.getXrayResponse();
+    return result?.geodata;
+  }
+
   async getRealityKeys(): Promise<EngineReality | undefined> {
-    const result = await this.getEngineConfig();
+    const result = await this.getXrayResponse();
     return result?.reality;
   }
 
-  async getEngineConfig(): Promise<EngineResponseConfig> {
+  async getSslCertificates(): Promise<EngineSsl | undefined> {
+    const response = await this.getXrayResponse();
+    return response?.certificates;
+  }
+
+  async getXrayResponse(): Promise<EngineResponseConfig> {
     const response = await axios.get<EngineResponseConfig>("/ext/xrayui/xray-ui-response.json");
     let responseConfig = response.data;
     return responseConfig;
-  }
-  async getSslCertificates(): Promise<EngineSsl | undefined> {
-    const response = await axios.get<EngineResponseConfig>("/ext/xrayui/xray-ui-response.json");
-    let result = response.data;
-    return result?.certificates;
   }
 
   async loadXrayConfig(): Promise<XrayObject> {
@@ -322,4 +341,4 @@ class Engine {
 let engine = new Engine();
 export default engine;
 
-export { SubmtActions, Engine, engine };
+export { EngineGeodatConfig, GeodatTagRequest, SubmtActions, Engine, engine };

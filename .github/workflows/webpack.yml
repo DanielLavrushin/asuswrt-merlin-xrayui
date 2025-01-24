@@ -32,6 +32,17 @@ jobs:
       - name: Archive dist
         run: tar --transform 's|^|xrayui/|' -czf asuswrt-merlin-xrayui.tar.gz -C dist .
 
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: tools/xraydatbuilder/src/go.mod
+
+      - name: Build xraydatbuilder
+        run: |
+          cd tools/xraydatbuilder/src || exit 1
+          ./build.sh
+          tar -czf ./../../../xrayui-datbuilder.tar.gz -C ../dist .
+
       - name: Read Changelog (Latest Version Only)
         id: read_changelog
         run: |
@@ -61,4 +72,14 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: asuswrt-merlin-xrayui.tar.gz
           asset_name: asuswrt-merlin-xrayui.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Upload xrayui-datbuilder Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: xrayui-datbuilder.tar.gz
+          asset_name: xrayui-datbuilder.tar.gz
           asset_content_type: application/gzip

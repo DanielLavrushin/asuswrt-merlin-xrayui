@@ -77,7 +77,7 @@ export default defineComponent({
             const delay = 2000;
             window.showLoading(delay);
             await engine.submit(SubmtActions.regenerateWireguardyKeys, this.privateKey, delay);
-            let result = await engine.getEngineConfig();
+            let result = await engine.getXrayResponse();
             if (result.wireguard) {
                 this.newClient.publicKey = result.wireguard.publicKey;
             }

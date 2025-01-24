@@ -8,3 +8,4 @@ node_modules/
 addons/*
 scripts/*
 dist/
+*.tar.gz

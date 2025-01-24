@@ -1,6 +1,6 @@
 # XRAYUI Changelog
 
-## [0.29.0] - 2025-01-24
+## [0.29.1] - 2025-01-24
 
 - ADDED: `Custom GEODATA Files Manager`. A new button labeled `Manage Local Files` has been added to the `Routing` section. This feature allows you to store rule-based domain and IP lists in standalone geodat files (similar to geosite.dat and geoip.dat). You can compile these files directly from the router's web interface. Assign a tag (e.g., `discord`), and after compiling, use it in the routing rules as `ext:xrayui:discord`.
 - ADDED: `Cache-Control` meta tag with a `no-cache` value. This addition attempts to combat Asus web caching mechanisms.
@@ -8,6 +8,7 @@
 - UPDATED: Modernized the `DOCTYPE` declaration and HTML structure by replacing Asus's `XHTML 1.0 Transitional` with `HTML5` standards.
 - FIXED: Resolved a bug in the `Ports Bypass/Redirect Policy` that previously prevented saving empty ports fields.
 - FIXED: Corrected issues with the fixme command to ensure it functions as intended.
+- FIXED: wrong opkg package check during the installation (openssl should be libopenssl)
 - IMPROVED: Ensured that all necessary Merlin script files are executable, addressing issue #7.
 
 ## [0.28.0] - 2025-01-22

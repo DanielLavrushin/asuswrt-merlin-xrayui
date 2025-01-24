@@ -1003,7 +1003,7 @@ install() {
     install_opkg_package iptables
     install_opkg_package xray
     install_opkg_package netstat
-    install_opkg_package openssl
+    install_opkg_package libopenssl
     install_opkg_package flock
 
     generate_default_config

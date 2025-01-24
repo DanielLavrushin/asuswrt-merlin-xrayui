@@ -972,6 +972,7 @@ test_xray_config() {
 
 install_opkg_package() {
     local package="$1"
+    local critical=$2
     # Check for jq
     if ! opkg list-installed | grep "$package -"; then
         printlog true "$package is not installed. Installing $package..."
@@ -979,8 +980,12 @@ install_opkg_package() {
         if opkg install $package; then
             printlog true "$package installed successfully." $CSUC
         else
-            printlog true "Failed to install $package." $CERR
-            exit 1
+            if [ "$critical" = true ]; then
+                printlog true "Critical package $package failed to install. Exiting." $CERR
+                exit 1
+            else
+                printlog true "Non-critical package $package failed to install. Continuing." $CERR
+            fi
         fi
     else
         printlog true "$package is already installed."
@@ -998,13 +1003,13 @@ install() {
     fi
     printlog true "Entware is installed." $CSUC
 
-    install_opkg_package sed
-    install_opkg_package jq
-    install_opkg_package iptables
-    install_opkg_package xray
-    install_opkg_package netstat
-    install_opkg_package libopenssl
-    install_opkg_package flock
+    install_opkg_package sed true
+    install_opkg_package jq true
+    install_opkg_package iptables true
+    install_opkg_package netstat false
+    install_opkg_package libopenssl false
+    install_opkg_package flock false
+    install_opkg_package xray true
 
     generate_default_config
 

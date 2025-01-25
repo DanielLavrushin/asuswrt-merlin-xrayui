@@ -11,7 +11,6 @@ class XraySniffingObject {
   public destOverride?: string[] = [];
   public domainsExcluded?: string[] = [];
 
-  constructor() {}
   normalize() {
     this.destOverride = !this.destOverride || this.destOverride.length == 0 ? undefined : this.destOverride;
     this.domainsExcluded = !this.domainsExcluded || this.domainsExcluded.length == 0 ? undefined : this.domainsExcluded;

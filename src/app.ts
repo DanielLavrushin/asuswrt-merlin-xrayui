@@ -39,7 +39,9 @@ window.LoadingTime = (seconds: number, flag: string | null) => {
       progressPercentage = 0;
 
       if (flag !== "waiting") {
-        setTimeout(() => window.hideLoading(), 1000);
+        setTimeout(() => {
+          window.hideLoading();
+        }, 1000);
       }
     }
   };

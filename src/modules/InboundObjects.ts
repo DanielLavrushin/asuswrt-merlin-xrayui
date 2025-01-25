@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { IProtocolType } from "./Interfaces";
 import { XrayProtocol } from "./Options";
 import { XrayAllocateObject, XraySniffingObject, XrayStreamSettingsObject } from "./CommonObjects";
@@ -24,7 +25,7 @@ class XrayInboundObject<TProxy extends IProtocolType> {
 
   normalize = () => {
     if (this.streamSettings) {
-      this.streamSettings = plainToInstance(XrayStreamSettingsObject, this.streamSettings);
+      this.streamSettings = plainToInstance(XrayStreamSettingsObject, this.streamSettings) as XrayStreamSettingsObject;
       this.streamSettings.normalize();
       const isEmpty = JSON.stringify(this.streamSettings) === "{}";
       if (isEmpty) {

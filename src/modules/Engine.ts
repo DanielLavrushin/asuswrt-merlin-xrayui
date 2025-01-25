@@ -39,26 +39,26 @@ class GeodatTagRequest {
 }
 
 class SubmtActions {
-  public static ConfigurationSetMode: string = "xrayui_configuration_mode";
-  public static ConfigurationApply: string = "xrayui_configuration_apply";
-  public static clientsOnline: string = "xrayui_connectedclients";
-  public static refreshConfig: string = "xrayui_refreshconfig";
-  public static serverStart: string = "xrayui_serverstatus_start";
-  public static serverRestart: string = "xrayui_serverstatus_restart";
-  public static serverStop: string = "xrayui_serverstatus_stop";
-  public static regenerateRealityKeys: string = "xrayui_regenerate_realitykeys";
-  public static regenerateWireguardyKeys: string = "xrayui_regenerate_wgkeys";
-  public static regenerateSslCertificates: string = "xrayui_regenerate_sslcertificates";
-  public static enableLogs: string = "xrayui_configuration_logs";
-  public static performUpdate: string = "xrayui_update";
-  public static ToggleStartupOption: string = "xrayui_configuration_togglestartup";
-  public static ConfigurationGenerateDefaultConfig: string = "xrayui_configuration_generatedefaultconfig";
-  public static geodataCommunityUpdate: string = "xrayui_geodata_communityupdate";
-  public static geodataCommunityDates: string = "xrayui_geodata_communitydatecheck";
-  public static geoDataCustomGetTags: string = "xrayui_geodata_customtagfiles";
-  public static geoDataRecompile: string = "xrayui_geodata_customrecompile";
-  public static geoDataRecompileAll: string = "xrayui_geodata_customrecompileall";
-  public static geoDataCustomDeleteTag: string = "xrayui_geodata_customdeletetag";
+  public static ConfigurationSetMode = "xrayui_configuration_mode";
+  public static ConfigurationApply = "xrayui_configuration_apply";
+  public static clientsOnline = "xrayui_connectedclients";
+  public static refreshConfig = "xrayui_refreshconfig";
+  public static serverStart = "xrayui_serverstatus_start";
+  public static serverRestart = "xrayui_serverstatus_restart";
+  public static serverStop = "xrayui_serverstatus_stop";
+  public static regenerateRealityKeys = "xrayui_regenerate_realitykeys";
+  public static regenerateWireguardyKeys = "xrayui_regenerate_wgkeys";
+  public static regenerateSslCertificates = "xrayui_regenerate_sslcertificates";
+  public static enableLogs = "xrayui_configuration_logs";
+  public static performUpdate = "xrayui_update";
+  public static ToggleStartupOption = "xrayui_configuration_togglestartup";
+  public static ConfigurationGenerateDefaultConfig = "xrayui_configuration_generatedefaultconfig";
+  public static geodataCommunityUpdate = "xrayui_geodata_communityupdate";
+  public static geodataCommunityDates = "xrayui_geodata_communitydatecheck";
+  public static geoDataCustomGetTags = "xrayui_geodata_customtagfiles";
+  public static geoDataRecompile = "xrayui_geodata_customrecompile";
+  public static geoDataRecompileAll = "xrayui_geodata_customrecompileall";
+  public static geoDataCustomDeleteTag = "xrayui_geodata_customdeletetag";
 }
 
 class Engine {

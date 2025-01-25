@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable no-console */
 const path = require("path");
 const { VueLoaderPlugin } = require("vue-loader");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
@@ -9,14 +11,14 @@ module.exports = {
   entry: "./src/app.ts",
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "app.js",
+    filename: "app.js"
   },
   resolve: {
     extensions: [".ts", ".js", ".vue"],
     alias: {
       vue$: isProduction ? "vue/dist/vue.esm-browser.prod.js" : "vue/dist/vue.esm-browser.js",
-      "@": path.resolve("src"),
-    },
+      "@": path.resolve("src")
+    }
   },
   module: {
     rules: [
@@ -25,30 +27,30 @@ module.exports = {
         loader: "ts-loader",
         exclude: /node_modules/,
         options: {
-          appendTsSuffixTo: [/\.vue$/],
-        },
+          appendTsSuffixTo: [/\.vue$/]
+        }
       },
       {
         test: /\.vue$/,
-        loader: "vue-loader",
+        loader: "vue-loader"
       },
       {
         test: /\.css$/,
-        use: ["vue-style-loader", "css-loader"],
-      },
-    ],
+        use: ["vue-style-loader", "css-loader"]
+      }
+    ]
   },
   plugins: [
     new VueLoaderPlugin(),
     new CopyWebpackPlugin({
       patterns: [
         { from: "src/app.html", to: "index.asp" },
-        { from: "src/xrayui", to: "[name]" },
-      ],
+        { from: "src/xrayui.sh", to: "[name]" }
+      ]
     }),
     {
       apply: (compiler) => {
-        compiler.hooks.afterEmit.tap("AfterEmitPlugin", (compilation) => {
+        compiler.hooks.afterEmit.tap("AfterEmitPlugin", () => {
           console.log("Webpack finished building, running upload script...");
 
           exec("node sync.js", (err, stdout, stderr) => {
@@ -62,8 +64,8 @@ module.exports = {
             }
           });
         });
-      },
-    },
+      }
+    }
   ],
-  mode: "production",
+  mode: "production"
 };

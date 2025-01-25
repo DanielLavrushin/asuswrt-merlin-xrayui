@@ -103,6 +103,7 @@ export default defineComponent({
 
     const show = async () => {
       let delay = 1000;
+      file.value = new GeodatTagRequest();
       window.showLoading(delay);
       isLoading.value = true;
       isNewFile.value = true;

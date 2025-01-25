@@ -28,7 +28,7 @@ enum XrayProtocol {
   DOKODEMODOOR = "dokodemo-door",
   FREEDOM = "freedom",
   BLACKHOLE = "blackhole",
-  LOOPBACK = "loopback",
+  LOOPBACK = "loopback"
 }
 enum XrayProtocolMode {
   Inbound = 1 << 0,
@@ -37,7 +37,7 @@ enum XrayProtocolMode {
   ClientMode = 1 << 3,
   TwoWays = Inbound | Outbound,
   BothModes = ServerMode | ClientMode,
-  All = TwoWays | BothModes,
+  All = TwoWays | BothModes
 }
 
 export default XrayOptions;

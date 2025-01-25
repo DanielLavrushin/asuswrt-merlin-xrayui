@@ -41,7 +41,6 @@ declare global {
     hideLoading: () => void;
     LoadingTime: (seconds: number, flag: any) => void;
     showtext: (element: HTMLElement | null, text: string) => void;
-    translate: (key: string) => string;
     y: number;
     progress: number;
   }

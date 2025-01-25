@@ -57,6 +57,14 @@ class XrayAllocateObject {
   public concurrency?: number = this.strategy == "random" ? XrayAllocateObject.defaultConcurrency : undefined;
 
   constructor() {}
+
+  normalize = (): XrayAllocateObject | undefined => {
+    if (this.strategy == "always") return undefined;
+    this.refresh = this.refresh == 0 ? undefined : this.refresh;
+    this.concurrency = this.concurrency == 0 ? undefined : this.concurrency;
+
+    return this;
+  };
 }
 
 class XrayStreamTlsCertificateObject {
@@ -70,7 +78,6 @@ class XrayStreamTlsCertificateObject {
   public keyFile?: string;
   public key?: string;
   public certificate?: string;
-  constructor() {}
 }
 
 class XrayStreamTlsSettingsObject {
@@ -117,12 +124,12 @@ class XrayStreamRealitySettingsObject {
 
   constructor(parsedObject?: XrayParsedUrlObject | undefined) {
     if (parsedObject) {
-      this.serverName = parsedObject.server;
-      this.shortId = parsedObject.parsedParams["sid"];
-      this.fingerprint = parsedObject.parsedParams["fp"];
-      this.publicKey = parsedObject.parsedParams["pbk"];
-      this.spiderX = parsedObject.parsedParams["spx"];
-      this.serverName = parsedObject.parsedParams["sni"];
+      this.serverName = parsedObject.parsedParams?.server;
+      this.shortId = parsedObject.parsedParams?.sid;
+      this.fingerprint = parsedObject.parsedParams?.fp;
+      this.publicKey = parsedObject.parsedParams?.pbk;
+      this.spiderX = parsedObject.parsedParams?.spx;
+      this.serverName = parsedObject.parsedParams?.sni;
     }
   }
 }
@@ -221,8 +228,8 @@ class XrayPortsPolicy {
     if (!ports) return ports;
     return ports
       .replace(/\n/g, ",")
-      .replace(/\-/g, ":")
-      .replace(/[^0-9,\:]/g, "")
+      .replace(/-/g, ":")
+      .replace(/[^0-9,:]/g, "")
       .split(",")
       .filter((x) => x)
       .join(",")
@@ -290,7 +297,7 @@ class XrayStreamSettingsObject {
   public normalizeProtocol() {
     const networkOptions = XrayOptions.transportOptions.map((opt) => `${opt}Settings`);
     networkOptions.forEach((prop) => {
-      if (this[prop as keyof XrayStreamSettingsObject] && !prop.startsWith(this.network!)) {
+      if (this[prop as keyof XrayStreamSettingsObject] && this.network && !prop.startsWith(this.network)) {
         delete this[prop as keyof XrayStreamSettingsObject];
       }
     });
@@ -299,7 +306,7 @@ class XrayStreamSettingsObject {
   public normalizeSecurity() {
     const securityOptions = XrayOptions.securityOptions.map((opt) => `${opt}Settings`);
     securityOptions.forEach((prop) => {
-      if (this[prop as keyof XrayStreamSettingsObject] && !prop.startsWith(this.security!)) {
+      if (this[prop as keyof XrayStreamSettingsObject] && this.security && !prop.startsWith(this.security)) {
         delete this[prop as keyof XrayStreamSettingsObject];
       }
     });
@@ -412,8 +419,8 @@ class XrayParsedUrlObject {
     this.port = parseInt(port);
     this.protocol = protocol;
     this.uuid = uuid;
-    this.network = this.parsedParams["type"];
-    this.security = this.parsedParams["security"];
+    this.network = this.parsedParams?.type;
+    this.security = this.parsedParams?.security;
   }
 }
 export { XrayPortsPolicy, XrayParsedUrlObject, XraySockoptObject, XrayDnsObject, XrayDnsServerObject, XrayTrojanServerObject, XrayPeerObject, XrayNoiseObject, XrayShadowsocksServerObject, XrayHttpServerObject, XraySocksServerObject, XrayProtocolOption, XrayProtocol, XrayVlessServerObject, XrayVmessServerObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsCertificateObject, XrayStreamSettingsObject, XrayRoutingRuleObject, XrayRoutingObject, XrayLogObject, XrayAllocateObject, XraySniffingObject, XrayHeaderObject, XrayHeaderRequestObject, XrayHeaderResponseObject, XrayXmuxObject };

@@ -21,7 +21,7 @@ class XrayStreamWsSettingsObject implements ITransportNetwork {
   public acceptProxyProtocol: boolean = false;
   public path: string = "/";
   public host?: string;
-  public headers: any = {};
+  public headers: unknown = {};
 
   constructor(parsedObject?: XrayParsedUrlObject | undefined) {
     if (parsedObject) {

@@ -11,8 +11,6 @@ class XrayObject {
   public inbounds: XrayInboundObject<IProtocolType>[] = [];
   public outbounds: XrayOutboundObject<IProtocolType>[] = [];
   public routing?: XrayRoutingObject = new XrayRoutingObject();
-
-  constructor() {}
 }
 
 const xrayProtocols: XrayProtocolOption[] = [

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable no-console */
 const ftp = require("basic-ftp");
 
 require("dotenv").config();
@@ -12,7 +14,7 @@ async function uploadFiles() {
       user: process.env.FTP_USERNAME,
       password: process.env.FTP_PASSWORD,
       port: 21,
-      secure: false,
+      secure: false
     });
     console.log("Ensuring directories exist...");
     await client.ensureDir("/addons/xrayui");

@@ -25,9 +25,11 @@ jobs:
         run: npm run build
 
       - name: Update XRAYUI Version
+        env:
+          XRAYUI_VERSION: ${{ github.event.inputs.version }}
         run: |
-          echo "Updating XRAYUI_VERSION to ${{ github.event.inputs.version }} in /dist/xrayui"
-          sed -i "s/^XRAYUI_VERSION=.*/XRAYUI_VERSION=\"${{ github.event.inputs.version }}\"/" dist/xrayui
+          echo "Updating XRAYUI_VERSION to $XRAYUI_VERSION in /dist/xrayui"
+          sed -i "s/^XRAYUI_VERSION=.*/XRAYUI_VERSION=\"$XRAYUI_VERSION\"/" dist/xrayui
 
       - name: Archive dist
         run: tar --transform 's|^|xrayui/|' -czf asuswrt-merlin-xrayui.tar.gz -C dist .

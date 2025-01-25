@@ -1,7 +1,7 @@
 import axios from "axios";
 import { xrayConfig, XrayObject } from "./XrayConfig";
 import { NormalizeOutbound, XrayBlackholeOutboundObject, XrayLoopbackOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, XrayTrojanOutboundObject, XrayOutboundObject, XraySocksOutboundObject, XrayVmessOutboundObject, XrayVlessOutboundObject, XrayHttpOutboundObject, XrayShadowsocksOutboundObject } from "./OutboundObjects";
-import { XrayProtocol, XrayDnsObject, XrayStreamSettingsObject, XrayRoutingObject, XrayRoutingRuleObject, XraySniffingObject, XrayPortsPolicy } from "./CommonObjects";
+import { XrayProtocol, XrayDnsObject, XrayStreamSettingsObject, XrayRoutingObject, XrayRoutingRuleObject, XraySniffingObject, XrayPortsPolicy, XrayAllocateObject } from "./CommonObjects";
 import { plainToInstance } from "class-transformer";
 import { XrayDokodemoDoorInboundObject, XrayHttpInboundObject, XrayInboundObject, XrayShadowsocksInboundObject, XraySocksInboundObject, XrayTrojanInboundObject, XrayVlessInboundObject, XrayVmessInboundObject, XrayWireguardInboundObject } from "./InboundObjects";
 
@@ -77,7 +77,7 @@ class Engine {
   }
 
   public submit(action: string, payload: any | undefined = undefined, delay: number = 0): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const iframeName = "hidden_frame_" + Math.random().toString(36).substring(2, 9);
       const iframe = document.createElement("iframe");
       iframe.name = iframeName;
@@ -162,6 +162,10 @@ class Engine {
       if (proxy.sniffing) {
         proxy.sniffing.normalize();
       }
+
+      if (proxy.allocate) {
+        proxy.allocate = proxy.allocate.normalize();
+      }
     });
 
     config.outbounds.forEach((proxy) => {
@@ -192,17 +196,17 @@ class Engine {
 
   async getGeodata(): Promise<EngineGeodatConfig | undefined> {
     const result = await this.getXrayResponse();
-    return result?.geodata;
+    return result.geodata;
   }
 
   async getRealityKeys(): Promise<EngineReality | undefined> {
     const result = await this.getXrayResponse();
-    return result?.reality;
+    return result.reality;
   }
 
   async getSslCertificates(): Promise<EngineSsl | undefined> {
     const response = await this.getXrayResponse();
-    return response?.certificates;
+    return response.certificates;
   }
 
   async getXrayResponse(): Promise<EngineResponseConfig> {
@@ -218,6 +222,10 @@ class Engine {
 
       this.xrayConfig.inbounds.forEach((proxy, index) => {
         proxy.streamSettings = plainToInstance(XrayStreamSettingsObject, proxy.streamSettings);
+        if (proxy.allocate) {
+          proxy.allocate = plainToInstance(XrayAllocateObject, proxy.allocate);
+        }
+
         if (proxy.sniffing) {
           proxy.sniffing = plainToInstance(XraySniffingObject, proxy.sniffing);
         }

@@ -6,7 +6,7 @@ import { plainToInstance } from "class-transformer";
 
 class XrayOutboundObject<IProtocolType> {
   public protocol!: XrayProtocol;
-  public sendThrough: string = "0.0.0.0";
+  public sendThrough?: string = "0.0.0.0";
   public tag?: string;
   public settings!: IProtocolType;
   public streamSettings?: XrayStreamSettingsObject = new XrayStreamSettingsObject();
@@ -35,7 +35,7 @@ class XrayVmessOutboundObject implements IProtocolType {
 }
 
 class XrayBlackholeOutboundObject implements IProtocolType {
-  public response: { type: string } = { type: "none" }; // none, http
+  public response?: { type: string } = { type: "none" }; // none, http
 }
 
 class XrayHttpOutboundObject implements IProtocolType {
@@ -75,11 +75,11 @@ class XrayLoopbackOutboundObject implements IProtocolType {
 class XrayFreedomOutboundObject implements IProtocolType {
   static strategyOptions: string[] = ["AsIs", "UseIP", "UseIPv4", "UseIPv6"];
   static fragmentOptions: string[] = ["1-3", "tlshello"];
-  public domainStrategy: string = "AsIs";
-  public redirect: string = "";
+  public domainStrategy?: string = "AsIs";
+  public redirect?: string = "";
   public fragment?: { packets: string; length: string; interval: string } | null = { packets: "", length: "100-200", interval: "10-20" };
-  public noises: XrayNoiseObject[] = [];
-  public proxyProtocol: number = 0; // 0: off, 1, 2
+  public noises?: XrayNoiseObject[] = [];
+  public proxyProtocol?: number = 0; // 0: off, 1, 2
 }
 
 class XrayDnsOutboundObject implements IProtocolType {
@@ -96,23 +96,27 @@ class XraySocksOutboundObject implements IProtocolType {
   }
 }
 
-const NormalizeOutbound = (proxy: any) => {
+const NormalizeOutbound = <T extends IProtocolType>(proxy: XrayOutboundObject<T>) => {
   proxy.sendThrough = proxy.sendThrough === "0.0.0.0" ? undefined : proxy.sendThrough;
-  proxy.tag = proxy.sendThrough === "" ? undefined : proxy.tag;
+  proxy.tag = proxy.tag === "" ? undefined : proxy.tag;
 
   proxy.streamSettings = plainToInstance(XrayStreamSettingsObject, proxy.streamSettings);
   proxy.streamSettings?.normalize();
 
   switch (proxy.protocol) {
     case XrayProtocol.FREEDOM:
-      proxy.settings.domainStrategy = proxy.settings.domainStrategy === "AsIs" ? undefined : proxy.settings.domainStrategy;
-      proxy.settings.fragment = proxy.settings?.fragment?.packets === "" ? undefined : proxy.settings.fragment;
-      proxy.settings.redirect = proxy.settings.redirect === "" ? undefined : proxy.settings.redirect;
-      proxy.settings.noises = proxy.settings.noises.length === 0 ? undefined : proxy.settings.noises;
-      proxy.settings.proxyProtocol = proxy.settings.proxyProtocol === 0 ? undefined : proxy.settings.proxyProtocol;
+      let freedom = proxy.settings as unknown as XrayFreedomOutboundObject;
+
+      freedom.domainStrategy = freedom.domainStrategy === "AsIs" ? undefined : freedom.domainStrategy;
+      freedom.fragment = freedom.fragment?.packets === "" ? undefined : freedom.fragment;
+      freedom.redirect = freedom.redirect === "" ? undefined : freedom.redirect;
+      freedom.noises = !freedom.noises || freedom.noises.length === 0 ? undefined : freedom.noises;
+      freedom.proxyProtocol = freedom.proxyProtocol === 0 ? undefined : freedom.proxyProtocol;
+
       break;
     case XrayProtocol.BLACKHOLE:
-      proxy.settings.response = proxy.settings.response.type === "none" ? undefined : proxy.settings.response;
+      let blackhole = proxy.settings as unknown as XrayBlackholeOutboundObject;
+      blackhole.response = blackhole.response?.type === "none" ? undefined : blackhole.response;
       break;
   }
 

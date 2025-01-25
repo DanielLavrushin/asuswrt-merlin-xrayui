@@ -1006,7 +1006,7 @@ install() {
     install_opkg_package sed true
     install_opkg_package jq true
     install_opkg_package iptables true
-    install_opkg_package netstat false
+    install_opkg_package net-tools-netstat false
     install_opkg_package libopenssl false
     install_opkg_package flock false
     install_opkg_package logrotate false

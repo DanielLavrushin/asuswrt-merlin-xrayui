@@ -20,7 +20,7 @@ const VlessParser = (parsedObj: XrayParsedUrlObject): XrayOutboundObject<XrayVle
   const user = new XrayVlessClientObject();
   user.id = parsedObj.uuid;
   user.flow = parsedObj.parsedParams.flow;
-  //user.encryption = parsedObj.parsedParams["encryption"];
+  user.encryption = parsedObj.parsedParams.encryption;
   user.email = parsedObj.parsedParams.email ?? "user-" + parsedObj.protocol;
   if (proxy.settings.vnext[0].users) proxy.settings.vnext[0].users.push(user);
 

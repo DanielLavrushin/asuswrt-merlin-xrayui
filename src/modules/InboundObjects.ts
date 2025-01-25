@@ -46,7 +46,7 @@ class XrayInboundObject<TProxy extends IProtocolType> {
 
 class XrayDokodemoDoorInboundObject implements IProtocolType {
   public address?: string;
-  public port!: number;
+  public port?: number;
   public network?: string = "tcp";
   public followRedirect?: boolean;
   public userLevel?: number;
@@ -54,6 +54,7 @@ class XrayDokodemoDoorInboundObject implements IProtocolType {
   normalize = () => {
     this.network = this.network && this.network !== "tcp" ? this.network : undefined;
     this.userLevel = this.userLevel && this.userLevel > 0 ? this.userLevel : undefined;
+    this.port = this.port && this.port > 0 ? this.port : undefined;
   };
 }
 class XrayVlessInboundObject implements IProtocolType {

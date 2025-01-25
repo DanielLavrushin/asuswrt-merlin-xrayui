@@ -145,7 +145,7 @@
                     </td>
                 </tr>
             </tbody>
-            <tbody>
+            <tbody v-if="proxy.settings.noises">
                 <tr>
                     <th>UDP noise
 

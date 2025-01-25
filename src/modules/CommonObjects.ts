@@ -249,7 +249,7 @@ class XrayRoutingRuleObject {
   public inboundTag?: string[] = [];
   public outboundTag?: string;
   public user?: string[] = [];
-  public attrs?: any;
+  public attrs?: unknown;
 
   public normalize() {
     this.domainMatcher = this.domainMatcher == "hybrid" ? undefined : this.domainMatcher;

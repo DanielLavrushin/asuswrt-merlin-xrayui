@@ -2,7 +2,7 @@
 
 ## [0.xx.x] - 2025-01-xx
 
-- IMPROVED: xrayui code got a [![Codacy Badge](https://app.codacy.com/project/badge/Grade/5afa683e2930418a9b13efac6537aad8)](https://app.codacy.com/gh/DanielLavrushin/asuswrt-merlin-xrayui/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+- IMPROVED: Averall refactoring, `xrayui` code got a [![Codacy Badge](https://app.codacy.com/project/badge/Grade/5afa683e2930418a9b13efac6537aad8)](https://app.codacy.com/gh/DanielLavrushin/asuswrt-merlin-xrayui/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
   on codacy code-followup, this required lot of fixes and changes. See [pull request](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/pull/8).
 - ADDED: `logrotate` setup to manage the xray log files growth over time.
 - FIXED: wrong `netstat` package name, replaced with `net-tools-netstat`.

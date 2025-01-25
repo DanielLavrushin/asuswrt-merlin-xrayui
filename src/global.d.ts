@@ -42,7 +42,7 @@ declare global {
     show_menu: () => void;
     showLoading: (delay?: number | null, flag?: string | undefined) => void;
     hideLoading: () => void;
-    LoadingTime: (seconds: number, flag: unknown) => void;
+    LoadingTime: (seconds: number, flag: string | undefined) => void;
     showtext: (element: HTMLElement | null, text: string) => void;
     y: number;
     progress: number;

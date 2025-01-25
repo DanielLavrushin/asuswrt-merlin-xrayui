@@ -134,4 +134,10 @@ export default defineComponent({
     color: #FFCC00;
     text-decoration: underline;
 }
+
+.modal-content :deep(strong),
+.modal-content :deep(code) {
+
+    text-shadow: 1px 1px 2px #ffcc00;
+}
 </style>

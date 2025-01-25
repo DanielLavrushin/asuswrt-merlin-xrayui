@@ -30,8 +30,8 @@ class XrayDokodemoDoorInboundObject implements IProtocolType {
   public userLevel?: number;
 }
 class XrayVlessInboundObject implements IProtocolType {
-  public decryption: string = "none";
-  public flow: string = "none";
+  public decryption = "none";
+  public flow = "none";
   public clients: XrayVlessClientObject[] = [];
 }
 
@@ -40,28 +40,28 @@ class XrayVmessInboundObject implements IProtocolType {
 }
 
 class XrayHttpInboundObject implements IProtocolType {
-  public allowTransparent: boolean = false;
+  public allowTransparen = false;
   public clients: XrayHttpClientObject[] = [];
 }
 
 class XrayShadowsocksInboundObject implements IProtocolType {
-  public network: string = "tcp";
+  public network = "tcp";
   public clients: XrayShadowsocksClientObject[] = [];
 }
 class XrayTrojanInboundObject implements IProtocolType {
   public clients: XrayTrojanClientObject[] = [];
 }
 class XraySocksInboundObject implements IProtocolType {
-  public ip: string = "127.0.0.1";
-  public auth: string = "noauth";
+  public ip = "127.0.0.1";
+  public auth = "noauth";
   public accounts: XraySocksClientObject[] = [];
-  public udp: boolean = false;
+  public udp = false;
 }
 
 class XrayWireguardInboundObject implements IProtocolType {
   public secretKey!: string;
-  public kernelMode: boolean = true;
-  public mtu: number = 1420;
+  public kernelMode = true;
+  public mtu = 1420;
   public peers: XrayWireguardClientObject[] = [];
 }
 export { XrayInboundObject, XrayWireguardInboundObject, XraySocksInboundObject, XrayTrojanInboundObject, XrayShadowsocksInboundObject, XrayHttpInboundObject, XrayVmessInboundObject, XrayVlessInboundObject, XrayDokodemoDoorInboundObject };

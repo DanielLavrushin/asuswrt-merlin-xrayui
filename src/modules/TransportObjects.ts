@@ -6,20 +6,20 @@ class XrayStreamTcpSettingsObject implements ITransportNetwork {
 }
 
 class XrayStreamKcpSettingsObject implements ITransportNetwork {
-  public mtu: number = 1350;
-  public tti: number = 50;
-  public uplinkCapacity: number = 5;
-  public downlinkCapacity: number = 20;
-  public congestion: boolean = false;
-  public readBufferSize: number = 2;
-  public writeBufferSize: number = 2;
+  public mtu = 1350;
+  public tti = 50;
+  public uplinkCapacity = 5;
+  public downlinkCapacity = 20;
+  public congestion = false;
+  public readBufferSize = 2;
+  public writeBufferSize = 2;
   public seed?: string;
   public header: XrayHeaderObject = new XrayHeaderObject();
 }
 
 class XrayStreamWsSettingsObject implements ITransportNetwork {
-  public acceptProxyProtocol: boolean = false;
-  public path: string = "/";
+  public acceptProxyProtocol = false;
+  public path = "/";
   public host?: string;
   public headers: unknown = {};
 
@@ -33,37 +33,37 @@ class XrayStreamWsSettingsObject implements ITransportNetwork {
 
 class XrayStreamHttpSettingsObject implements ITransportNetwork {
   public host?: string[];
-  public path: string = "/";
-  public headers: any = {};
+  public path = "/";
+  public headers = {};
   public read_idle_timeout?: number;
   public health_check_timeout?: number;
-  public method: string = "PUT";
+  public method = "PUT";
 }
 
 class XrayStreamGrpcSettingsObject implements ITransportNetwork {
-  public serviceName: string = "";
-  public multiMode: boolean = false;
-  public idle_timeout: number = 60;
-  public health_check_timeout: number = 20;
-  public initial_windows_size: number = 0;
-  public permit_without_stream: boolean = false;
+  public serviceName = "";
+  public multiMode = false;
+  public idle_timeout = 60;
+  public health_check_timeout = 20;
+  public initial_windows_size = 0;
+  public permit_without_stream = false;
 }
 
 class XrayStreamHttpUpgradeSettingsObject implements ITransportNetwork {
-  public acceptProxyProtocol: boolean = false;
-  public path: string = "/";
+  public acceptProxyProtocol = false;
+  public path = "/";
   public host?: string;
-  public headers: any = {};
+  public headers = {};
 }
 
 class XrayStreamSplitHttpSettingsObject implements ITransportNetwork {
-  public path: string = "/";
+  public path = "/";
   public host?: string;
-  public headers: any = {};
-  public scMaxEachPostBytes: number = 1 * 1024 * 1024;
+  public headers = {};
+  public scMaxEachPostBytes = 1 * 1024 * 1024;
   public scMaxConcurrentPosts?: number;
   public scMinPostsIntervalMs?: number;
-  public noSSEHeader: boolean = false;
+  public noSSEHeader = false;
   public xmux: XrayXmuxObject = new XrayXmuxObject();
 }
 

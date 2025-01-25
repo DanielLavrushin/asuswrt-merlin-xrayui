@@ -4,10 +4,10 @@ import { XrayOptions, XrayProtocol, XrayProtocolMode } from "./Options";
 import { XrayStreamHttpSettingsObject, XrayStreamKcpSettingsObject, XrayStreamTcpSettingsObject, XrayStreamWsSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamSplitHttpSettingsObject } from "./TransportObjects";
 
 class XraySniffingObject {
-  static destOverrideOptions: string[] = ["http", "tls", "quic", "fakedns"];
-  public enabled?: boolean = false;
-  public metadataOnly?: boolean = false;
-  public routeOnly?: boolean = false;
+  static destOverrideOptions = ["http", "tls", "quic", "fakedns"];
+  public enabled? = false;
+  public metadataOnly? = false;
+  public routeOnly? = false;
   public destOverride?: string[] = [];
   public domainsExcluded?: string[] = [];
 
@@ -22,39 +22,39 @@ class XraySniffingObject {
 }
 
 class XrayHeaderObject {
-  public type: string = "none";
+  public type = "none";
   public request?: XrayHeaderRequestObject;
   public response?: XrayHeaderResponseObject;
 }
 
 class XrayHeaderRequestObject {
-  public version: string = "1.1";
-  public method: string = "GET";
-  public path: string = "/";
+  public version = "1.1";
+  public method = "GET";
+  public path = "/";
   public headers: any = {};
 }
 
 class XrayHeaderResponseObject {
-  public version: string = "1.1";
-  public status: string = "200";
-  public reason: string = "OK";
+  public version = "1.1";
+  public status = "200";
+  public reason = "OK";
   public headers: any = {};
 }
 
 class XrayXmuxObject {
-  public maxConcurrency: number = 0;
-  public maxConnections: number = 0;
-  public cMaxReuseTimes: number = 0;
-  public cMaxLifetimeMs: number = 0;
+  public maxConcurrency = 0;
+  public maxConnections = 0;
+  public cMaxReuseTimes = 0;
+  public cMaxLifetimeMs = 0;
 }
 
 class XrayAllocateObject {
-  static defaultRefresh: number = 5;
-  static defaultConcurrency: number = 3;
+  static defaultRefresh = 5;
+  static defaultConcurrency = 3;
 
-  public strategy: string = "always";
-  public refresh?: number = this.strategy == "random" ? XrayAllocateObject.defaultRefresh : undefined;
-  public concurrency?: number = this.strategy == "random" ? XrayAllocateObject.defaultConcurrency : undefined;
+  public strategy = "always";
+  public refresh? = this.strategy == "random" ? XrayAllocateObject.defaultRefresh : undefined;
+  public concurrency? = this.strategy == "random" ? XrayAllocateObject.defaultConcurrency : undefined;
 
   constructor() {}
 
@@ -68,12 +68,12 @@ class XrayAllocateObject {
 }
 
 class XrayStreamTlsCertificateObject {
-  static usageOptions: string[] = ["encipherment", "verify", "issue"];
+  static usageOptions = ["encipherment", "verify", "issue"];
 
-  public ocspStapling: number = 3600;
-  public oneTimeLoading: boolean = false;
-  public buildChain: boolean = false;
-  public usage: string = "encipherment";
+  public ocspStapling = 3600;
+  public oneTimeLoading = false;
+  public buildChain = false;
+  public usage = "encipherment";
   public certificateFile?: string;
   public keyFile?: string;
   public key?: string;
@@ -81,16 +81,16 @@ class XrayStreamTlsCertificateObject {
 }
 
 class XrayStreamTlsSettingsObject {
-  static alpnOptions: string[] = ["h2", "http/1.1"];
-  static fingerprintOptions: string[] = ["", "randomized", "random", "chrome", "firefox", "ios", "android", "safari", "edge", "360", "qq"];
-  static tlsVersionsOptions: string[] = ["1.0", "1.1", "1.2", "1.3"];
+  static alpnOptions = ["h2", "http/1.1"];
+  static fingerprintOptions = ["", "randomized", "random", "chrome", "firefox", "ios", "android", "safari", "edge", "360", "qq"];
+  static tlsVersionsOptions = ["1.0", "1.1", "1.2", "1.3"];
 
   public serverName?: string;
-  public rejectUnknownSni: boolean = false;
-  public allowInsecure: boolean = false;
-  public disableSystemRoot: boolean = false;
-  public enableSessionResumption: boolean = false;
-  public alpn?: string[] = XrayStreamTlsSettingsObject.alpnOptions;
+  public rejectUnknownSni = false;
+  public allowInsecure = false;
+  public disableSystemRoot = false;
+  public enableSessionResumption = false;
+  public alpn? = XrayStreamTlsSettingsObject.alpnOptions;
   public minVersion?: string;
   public maxVersion?: string;
   public certificates: XrayStreamTlsCertificateObject[] = [];
@@ -107,7 +107,7 @@ class XrayStreamTlsSettingsObject {
 }
 
 class XrayStreamRealitySettingsObject {
-  public show: boolean = false;
+  public show = false;
   public dest?: string;
   public xver?: number;
   public serverName?: string;
@@ -135,17 +135,17 @@ class XrayStreamRealitySettingsObject {
 }
 
 class XrayLogObject {
-  static levelOptions: string[] = ["debug", "info", "warning", "error", "none"];
-  public access: string = "";
-  public error: string = "";
-  public loglevel: string = "warning";
-  public dnsLog: boolean = false;
-  public maskAddress: string = "";
+  static levelOptions = ["debug", "info", "warning", "error", "none"];
+  public access = "";
+  public error = "";
+  public loglevel = "warning";
+  public dnsLog = false;
+  public maskAddress = "";
 }
 
 class XrayDnsObject {
-  static strategyOptions: string[] = ["UseIP", "UseIPv4", "UseIPv6"];
-  public tag?: string = "dnsQuery";
+  static strategyOptions = ["UseIP", "UseIPv4", "UseIPv6"];
+  public tag? = "dnsQuery";
   public hosts?: { [key: string]: string | string[] } | undefined = {};
   public servers: (string | XrayDnsServerObject)[] | undefined = [];
   public clientIp?: string;
@@ -175,10 +175,10 @@ class XrayDnsServerObject {
 }
 
 class XrayRoutingObject {
-  static domainStrategyOptions: string[] = ["AsIs", "IPIfNonMatch", "IPOnDemand"];
-  static domainMatcherOptions: string[] = ["hybrid", "linear"];
-  public domainStrategy?: string = "AsIs";
-  public domainMatcher?: string = "hybrid";
+  static domainStrategyOptions = ["AsIs", "IPIfNonMatch", "IPOnDemand"];
+  static domainMatcherOptions = ["hybrid", "linear"];
+  public domainStrategy? = "AsIs";
+  public domainMatcher? = "hybrid";
   public rules?: XrayRoutingRuleObject[] = [];
   public portsPolicy?: XrayPortsPolicy = new XrayPortsPolicy();
 
@@ -200,11 +200,11 @@ class XrayRoutingObject {
 }
 
 class XrayPortsPolicy {
-  static defaultPorts: string[] = ["443", "80", "22"];
+  static defaultPorts = ["443", "80", "22"];
   static modes = ["redirect", "bypass"];
-  public mode?: string = "redirect";
-  public udp?: string = "";
-  public tcp?: string = "";
+  public mode? = "redirect";
+  public udp? = "";
+  public tcp? = "";
 
   public static vendors: { name: string; tcp: string; udp: string }[] | null = [
     { name: "Default ports", tcp: "443,80,22", udp: "443,80,22" },
@@ -237,15 +237,15 @@ class XrayPortsPolicy {
   };
 }
 class XrayRoutingRuleObject {
-  static networkOptions: string[] = ["", "tcp", "udp", "tcp,udp"];
-  static protocolOptions: string[] = ["http", "tls", "bittorrent"];
+  static networkOptions = ["", "tcp", "udp", "tcp,udp"];
+  static protocolOptions = ["http", "tls", "bittorrent"];
   public name?: string;
-  public domainMatcher?: string = "hybrid";
+  public domainMatcher? = "hybrid";
   public domain?: string[];
   public ip?: string[];
   public port?: string;
   public sourcePort?: string;
-  public type: string = "field";
+  public type = "field";
   public network?: string;
   public source?: string[];
   public protocol?: string[] = [];
@@ -271,8 +271,8 @@ class XrayRoutingRuleObject {
 }
 
 class XrayStreamSettingsObject {
-  public network?: string = "tcp";
-  public security?: string = "none";
+  public network? = "tcp";
+  public security? = "none";
   public tlsSettings?: XrayStreamTlsSettingsObject;
   public realitySettings?: XrayStreamRealitySettingsObject;
   public tcpSettings?: XrayStreamTcpSettingsObject;
@@ -332,7 +332,7 @@ class XrayServerObject<IClient> implements IXrayServer<IClient> {
 class XrayTrojanServerObject extends XrayServerObject<XrayHttpClientObject> {
   public email?: string;
   public password!: string;
-  public level?: number = 0;
+  public level? = 0;
   constructor() {
     super();
     delete this.users;
@@ -344,10 +344,10 @@ class XrayVlessServerObject extends XrayServerObject<XrayVlessClientObject> {}
 class XrayVmessServerObject extends XrayServerObject<XrayVmessClientObject> {}
 class XrayShadowsocksServerObject extends XrayServerObject<XrayVmessClientObject> {
   public email?: string;
-  public method: string = "2022-blake3-aes-256-gcm";
+  public method = "2022-blake3-aes-256-gcm";
   public password!: string;
   public uot?: boolean;
-  public level?: number = 0;
+  public level? = 0;
   constructor() {
     super();
     delete this.users;
@@ -360,8 +360,8 @@ class XrayProtocolOption {
 }
 
 class XrayNoiseObject {
-  static typeOptions: string[] = ["rand", "str", "base64"];
-  public type: string = "rand";
+  static typeOptions = ["rand", "str", "base64"];
+  public type = "rand";
   public packet!: string;
   public delay: string | number = 0;
 }
@@ -375,8 +375,8 @@ class XrayPeerObject {
 }
 
 class XraySockoptObject {
-  static tproxyOptions: string[] = ["off", "redirect", "tproxy"];
-  static domainStrategyOptions: string[] = ["AsIs", "UseIP", "UseIPv4", "UseIPv6"];
+  static tproxyOptions = ["off", "redirect", "tproxy"];
+  static domainStrategyOptions = ["AsIs", "UseIP", "UseIPv4", "UseIPv6"];
 
   public mark?: number;
   public tcpFastOpen?: boolean;

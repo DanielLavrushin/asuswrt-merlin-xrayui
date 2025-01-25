@@ -6,10 +6,10 @@ import { plainToInstance } from "class-transformer";
 
 class XrayOutboundObject<IProtocolType> {
   public protocol!: XrayProtocol;
-  public sendThrough?: string = "0.0.0.0";
+  public sendThrough? = "0.0.0.0";
   public tag?: string;
   public settings!: IProtocolType;
-  public streamSettings?: XrayStreamSettingsObject = new XrayStreamSettingsObject();
+  public streamSettings? = new XrayStreamSettingsObject();
 
   constructor(protocol: XrayProtocol | undefined = undefined, settings: IProtocolType | undefined = undefined) {
     if (protocol && settings) {
@@ -58,13 +58,13 @@ class XrayTrojanOutboundObject implements IProtocolType {
 }
 
 class XrayWireguardOutboundObject implements IProtocolType {
-  static strategyOptions: string[] = ["ForceIPv6v4", "ForceIPv6", "ForceIPv4v6", "ForceIPv4", "ForceIP"];
+  static strategyOptions = ["ForceIPv6v4", "ForceIPv6", "ForceIPv4v6", "ForceIPv4", "ForceIP"];
   public privateKey!: string;
   public address: string[] = [];
   public peers: XrayPeerObject[] = [];
-  public mtu: number = 1420;
+  public mtu = 1420;
   public reserved?: number[];
-  public workers?: number = window.xray.router.cpu;
+  public workers? = window.xray.router.cpu;
 
   public domainStrategy: string = "ForceIP";
 }
@@ -73,20 +73,20 @@ class XrayLoopbackOutboundObject implements IProtocolType {
   public inboundTag!: string;
 }
 class XrayFreedomOutboundObject implements IProtocolType {
-  static strategyOptions: string[] = ["AsIs", "UseIP", "UseIPv4", "UseIPv6"];
-  static fragmentOptions: string[] = ["1-3", "tlshello"];
-  public domainStrategy?: string = "AsIs";
-  public redirect?: string = "";
+  static strategyOptions = ["AsIs", "UseIP", "UseIPv4", "UseIPv6"];
+  static fragmentOptions = ["1-3", "tlshello"];
+  public domainStrategy? = "AsIs";
+  public redirect? = "";
   public fragment?: { packets: string; length: string; interval: string } | null = { packets: "", length: "100-200", interval: "10-20" };
   public noises?: XrayNoiseObject[] = [];
-  public proxyProtocol?: number = 0; // 0: off, 1, 2
+  public proxyProtocol? = 0; // 0: off, 1, 2
 }
 
 class XrayDnsOutboundObject implements IProtocolType {
   public address!: string;
-  public port: number = 53;
-  public network: string = "tcp";
-  public nonIPQuery: string = "drop";
+  public port = 53;
+  public network = "tcp";
+  public nonIPQuery = "drop";
 }
 
 class XraySocksOutboundObject implements IProtocolType {

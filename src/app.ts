@@ -47,6 +47,6 @@ window.LoadingTime = (seconds: number, flag: string | null) => {
   updateLoading();
 };
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
   createApp(App).mount("#xrayui-app");
 });

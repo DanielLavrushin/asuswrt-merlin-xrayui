@@ -63,8 +63,8 @@ class SubmtActions {
 
 class Engine {
   public xrayConfig: XrayObject = xrayConfig;
-  public mode: string = "server";
-  private zero_uuid: string = "10000000-1000-4000-8000-100000000000";
+  public mode = "server";
+  private zero_uuid = "10000000-1000-4000-8000-100000000000";
 
   private splitPayload(payload: any, chunkSize: number): any[] {
     let chunks = [];
@@ -145,7 +145,7 @@ class Engine {
     return base64String;
   };
 
-  async prepareServerConfig(): Promise<any> {
+  prepareServerConfig(): XrayObject {
     let config = new XrayObject();
     Object.assign(config, this.xrayConfig);
 

@@ -1,6 +1,6 @@
 module xraydatbuilder
 
-go 1.23.5
+go 1.22.11
 
 require (
 	github.com/v2fly/v2ray-core/v5 v5.16.0

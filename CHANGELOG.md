@@ -3,6 +3,7 @@
 ## [0.xx.x] - 2025-01-xx
 
 - ADDED: `logrotate` setup to manage the xray log files growth over time.
+- FIXED: wrong `netstat` package name, replaced with `net-tools-netstat`.
 
 ## [0.29.1] - 2025-01-24
 

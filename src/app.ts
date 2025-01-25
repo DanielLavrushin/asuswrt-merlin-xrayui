@@ -4,7 +4,7 @@ import App from "./App.vue";
 window.hint = (message: string) => {
   window.overlib(message);
 };
-window.LoadingTime = (seconds: number, flag: string | null) => {
+window.LoadingTime = (seconds: number, flag: string | unknown) => {
   const proceedingMainText = document.getElementById("proceeding_main_txt");
   const proceedingText = document.getElementById("proceeding_txt");
   const loading = document.getElementById("Loading");

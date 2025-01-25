@@ -28,7 +28,7 @@ class XrayOutboundObject<TProxy extends IProtocolType> {
     this.tag = this.tag === "" ? undefined : this.tag;
 
     this.streamSettings = plainToInstance(XrayStreamSettingsObject, this.streamSettings) as XrayStreamSettingsObject;
-    this.streamSettings?.normalize();
+    this.streamSettings.normalize();
     this.settings.normalize && this.settings.normalize();
   };
 }

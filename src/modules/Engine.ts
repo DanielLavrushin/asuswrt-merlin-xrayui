@@ -49,6 +49,7 @@ class SubmtActions {
   public static serverStart = "xrayui_serverstatus_start";
   public static serverRestart = "xrayui_serverstatus_restart";
   public static serverStop = "xrayui_serverstatus_stop";
+  public static serverTestConfig = "xrayui_testconfig";
   public static regenerateRealityKeys = "xrayui_regenerate_realitykeys";
   public static regenerateWireguardyKeys = "xrayui_regenerate_wgkeys";
   public static regenerateSslCertificates = "xrayui_regenerate_sslcertificates";
@@ -79,7 +80,7 @@ class Engine {
     return chunks;
   }
 
-  public submit(action: string, payload: any | undefined = undefined, delay = 0): Promise<void> {
+  public submit(action: string, payload: unknown | undefined = undefined, delay = 0): Promise<void> {
     return new Promise((resolve) => {
       const iframeName = "hidden_frame_" + Math.random().toString(36).substring(2, 9);
       const iframe = document.createElement("iframe");

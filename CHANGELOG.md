@@ -2,8 +2,11 @@
 
 ## [0.xx.x] - 2025-01-xx
 
+- IMPROVED: xrayui code got a rating A on codacy code-followup, this required lot of fixes and changes. See [pull request](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/pull/8).
 - ADDED: `logrotate` setup to manage the xray log files growth over time.
 - FIXED: wrong `netstat` package name, replaced with `net-tools-netstat`.
+- UPDATE: gituhb action follows build standards.
+- UPDATE: bumped `golang` version to `1.22.2` following security recomendations.
 
 ## [0.29.1] - 2025-01-24
 

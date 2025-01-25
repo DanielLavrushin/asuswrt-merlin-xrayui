@@ -121,12 +121,12 @@ class XrayStreamRealitySettingsObject {
 
   constructor(parsedObject?: XrayParsedUrlObject | undefined) {
     if (parsedObject) {
-      this.serverName = parsedObject.parsedParams?.server;
-      this.shortId = parsedObject.parsedParams?.sid;
-      this.fingerprint = parsedObject.parsedParams?.fp;
-      this.publicKey = parsedObject.parsedParams?.pbk;
-      this.spiderX = parsedObject.parsedParams?.spx;
-      this.serverName = parsedObject.parsedParams?.sni;
+      this.serverName = parsedObject.parsedParams.server;
+      this.shortId = parsedObject.parsedParams.sid;
+      this.fingerprint = parsedObject.parsedParams.fp;
+      this.publicKey = parsedObject.parsedParams.pbk;
+      this.spiderX = parsedObject.parsedParams.spx;
+      this.serverName = parsedObject.parsedParams.sni;
     }
   }
 }
@@ -416,8 +416,8 @@ class XrayParsedUrlObject {
     this.port = parseInt(port);
     this.protocol = protocol;
     this.uuid = uuid;
-    this.network = this.parsedParams?.type;
-    this.security = this.parsedParams?.security;
+    this.network = this.parsedParams.type;
+    this.security = this.parsedParams.security;
   }
 }
 

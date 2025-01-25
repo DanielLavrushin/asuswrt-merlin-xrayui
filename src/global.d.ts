@@ -1,3 +1,5 @@
+import { SubmtActions } from "./modules/Engine";
+
 /* eslint-disable no-unused-vars */
 export {};
 
@@ -20,14 +22,14 @@ interface XrayRouter {
   ip: string;
   language: string;
   firmware: string;
-  features: any;
+  features: unknown;
   wan_ip: string;
 }
 
 interface XrayUiGlobal {
   server: XrayUiServer;
   router: XrayRouter;
-  commands: any;
+  commands: SubmtActions;
   custom_settings: XrayUiCustomSettings;
 }
 
@@ -40,7 +42,7 @@ declare global {
     show_menu: () => void;
     showLoading: (delay?: number | null, flag?: string | undefined) => void;
     hideLoading: () => void;
-    LoadingTime: (seconds: number, flag: any) => void;
+    LoadingTime: (seconds: number, flag: unknown) => void;
     showtext: (element: HTMLElement | null, text: string) => void;
     y: number;
     progress: number;

@@ -1,6 +1,6 @@
 import axios from "axios";
 import { xrayConfig, XrayObject } from "./XrayConfig";
-import { NormalizeOutbound, XrayBlackholeOutboundObject, XrayLoopbackOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, XrayTrojanOutboundObject, XrayOutboundObject, XraySocksOutboundObject, XrayVmessOutboundObject, XrayVlessOutboundObject, XrayHttpOutboundObject, XrayShadowsocksOutboundObject } from "./OutboundObjects";
+import { XrayBlackholeOutboundObject, XrayLoopbackOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, XrayTrojanOutboundObject, XrayOutboundObject, XraySocksOutboundObject, XrayVmessOutboundObject, XrayVlessOutboundObject, XrayHttpOutboundObject, XrayShadowsocksOutboundObject } from "./OutboundObjects";
 import { XrayProtocol, XrayDnsObject, XrayStreamSettingsObject, XrayRoutingObject, XrayRoutingRuleObject, XraySniffingObject, XrayPortsPolicy, XrayAllocateObject } from "./CommonObjects";
 import { plainToInstance } from "class-transformer";
 import { XrayDokodemoDoorInboundObject, XrayHttpInboundObject, XrayInboundObject, XrayShadowsocksInboundObject, XraySocksInboundObject, XrayTrojanInboundObject, XrayVlessInboundObject, XrayVmessInboundObject, XrayWireguardInboundObject } from "./InboundObjects";
@@ -90,12 +90,10 @@ class Engine {
       form.action = "/start_apply.htm";
       form.target = iframeName;
 
-      form.innerHTML = `
-        <input type="hidden" name="action_mode" value="apply" />
-        <input type="hidden" name="action_script" value="${action}" />
-        <input type="hidden" name="modified" value="0" />
-        <input type="hidden" name="action_wait" value="" />
-      `;
+      this.create_form_element(form, "hidden", "action_mode", "apply");
+      this.create_form_element(form, "hidden", "action_script", action);
+      this.create_form_element(form, "hidden", "modified", "0");
+      this.create_form_element(form, "hidden", "action_wait", "");
 
       const amngCustomInput = document.createElement("input");
       if (payload) {
@@ -135,6 +133,15 @@ class Engine {
     });
   }
 
+  create_form_element = (form: HTMLFormElement, type: string, name: string, value: string): HTMLInputElement => {
+    const input = document.createElement("input");
+    input.type = type;
+    input.name = name;
+    input.value = value;
+    form.appendChild(input);
+    return input;
+  };
+
   uuid = () => {
     return this.zero_uuid.replace(/[018]/g, (c) => (+c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (+c / 4)))).toString(16));
   };
@@ -150,32 +157,11 @@ class Engine {
     Object.assign(config, this.xrayConfig);
 
     config.inbounds.forEach((proxy) => {
-      if (proxy.streamSettings) {
-        proxy.streamSettings = plainToInstance(XrayStreamSettingsObject, proxy.streamSettings);
-        proxy.streamSettings.normalize();
-        const isEmpty = JSON.stringify(proxy.streamSettings) === "{}";
-        if (isEmpty) {
-          proxy.streamSettings = undefined;
-          return;
-        }
-      }
-      if (proxy.sniffing) {
-        proxy.sniffing.normalize();
-      }
-
-      if (proxy.allocate) {
-        proxy.allocate = proxy.allocate.normalize();
-      }
+      proxy.normalize();
     });
 
     config.outbounds.forEach((proxy) => {
-      NormalizeOutbound(proxy);
-
-      const isEmpty = JSON.stringify(proxy.streamSettings) === "{}";
-      if (isEmpty) {
-        proxy.streamSettings = undefined;
-        return;
-      }
+      proxy.normalize();
     });
 
     if (config.dns) {

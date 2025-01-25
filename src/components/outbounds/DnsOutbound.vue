@@ -20,6 +20,7 @@
           </th>
           <td>
             <select class="input_option" v-model="proxy.settings.network">
+              <option></option>
               <option value="tcp">tcp</option>
               <option value="udp">udp</option>
             </select>

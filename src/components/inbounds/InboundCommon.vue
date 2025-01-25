@@ -27,7 +27,10 @@
     </td>
   </tr>
   <tr>
-    <th>Port</th>
+    <th>Listening Port
+      <hint> Listening port for inbound connections. Xray listens for inbound connections on that port.
+      </hint>
+    </th>
     <td>
       <span style="float: left" v-if="engine.mode == 'server'">
         <input type="text" id="po1" maxlength="5" class="input_6_table" v-model="port1" autocorrect="off"

@@ -125,11 +125,11 @@ export default defineComponent({
   text-align: center;
 }
 
-.xray-modal-body>>>.modal-form-table {
+.xray-modal-body :deep(.modal-form-table) {
   width: 100%;
 }
 
-.xray-modal-body>>>.modal-form-table td {
+.xray-modal-body :deep(.modal-form-table td) {
   text-align: left;
   line-height: 23px;
 }

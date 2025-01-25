@@ -7,7 +7,7 @@ window.hint = (message: string) => {
 window.LoadingTime = (seconds: number, flag: string | null) => {
   const proceedingMainText = document.getElementById("proceeding_main_txt");
   const proceedingText = document.getElementById("proceeding_txt");
-  const loading = document.getElementById("Loading") as HTMLElement;
+  const loading = document.getElementById("Loading");
 
   if (!proceedingMainText || !proceedingText || !loading) {
     console.error("Required DOM elements not found.");

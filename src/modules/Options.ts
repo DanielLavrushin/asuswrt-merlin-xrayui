@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+
 class XrayOptions {
   static transportOptions = ["tcp", "kcp", "ws", "http", "grpc", "httpupgrade", "splithttp"];
   static securityOptions = ["none", "tls", "reality"];

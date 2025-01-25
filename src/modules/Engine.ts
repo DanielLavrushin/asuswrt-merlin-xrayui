@@ -66,11 +66,11 @@ class Engine {
   public mode = "server";
   private zero_uuid = "10000000-1000-4000-8000-100000000000";
 
-  private splitPayload(payload: any, chunkSize: number): any[] {
-    let chunks = [];
+  private splitPayload(payload: string, chunkSize: number): string[] {
+    const chunks: string[] = [];
     let index = 0;
     while (index < payload.length) {
-      chunks.push(payload.substr(index, chunkSize));
+      chunks.push(payload.slice(index, index + chunkSize));
       index += chunkSize;
     }
     return chunks;
@@ -102,10 +102,10 @@ class Engine {
         const chunkSize = 2048;
         const payloadString = JSON.stringify(payload);
         const chunks = this.splitPayload(payloadString, chunkSize);
-
-        chunks.forEach((chunk: any, idx) => {
-          (window.xray.custom_settings as any)[`xray_payload${idx}`] = chunk;
+        chunks.forEach((chunk: string, idx) => {
+          window.xray.custom_settings[`xray_payload${idx}`] = chunk;
         });
+
         const customSettings = JSON.stringify(window.xray.custom_settings);
         if (customSettings.length > 8 * 1024) {
           alert("Configuration is too large to submit via custom settings.");

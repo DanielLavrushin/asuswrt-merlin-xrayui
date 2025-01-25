@@ -1,9 +1,10 @@
+/* eslint-disable no-unused-vars */
 export {};
 
 interface XrayUiCustomSettings {
+  [key: string]: string;
   xray_page: string;
   xray_version: string;
-  xray_payload: string | undefined;
   xray_mode: string;
   xray_startup: string;
 }

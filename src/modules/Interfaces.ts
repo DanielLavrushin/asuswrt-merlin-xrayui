@@ -1,5 +1,5 @@
 interface IProtocolType {
-  normalize: () => void;
+  normalize?: () => void;
 }
 
 interface ITransportNetwork {}

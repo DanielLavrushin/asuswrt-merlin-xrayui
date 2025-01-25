@@ -19,8 +19,6 @@ class XrayOutboundObject<TProxy extends IProtocolType> {
     }
   }
   normalize = () => {
-    this.settings.normalize();
-
     const isEmpty = JSON.stringify(this.streamSettings) === "{}";
     if (isEmpty) {
       this.streamSettings = undefined;
@@ -29,9 +27,9 @@ class XrayOutboundObject<TProxy extends IProtocolType> {
     this.sendThrough = this.sendThrough === "0.0.0.0" ? undefined : this.sendThrough;
     this.tag = this.tag === "" ? undefined : this.tag;
 
-    this.streamSettings = plainToInstance(XrayStreamSettingsObject, this.streamSettings);
+    this.streamSettings = plainToInstance(XrayStreamSettingsObject, this.streamSettings) as XrayStreamSettingsObject;
     this.streamSettings?.normalize();
-    this.settings?.normalize();
+    this.settings.normalize && this.settings.normalize();
   };
 }
 
@@ -40,7 +38,8 @@ class XrayVlessOutboundObject implements IProtocolType {
   constructor() {
     if (this.vnext.length === 0) this.vnext.push(new XrayVlessServerObject());
   }
-  normalize = () => {};
+
+  normalize = () => void 0;
 }
 
 class XrayVmessOutboundObject implements IProtocolType {
@@ -49,7 +48,7 @@ class XrayVmessOutboundObject implements IProtocolType {
     if (this.vnext.length === 0) this.vnext.push(new XrayVmessServerObject());
   }
 
-  normalize = () => {};
+  normalize = () => void 0;
 }
 
 class XrayBlackholeOutboundObject implements IProtocolType {
@@ -65,7 +64,7 @@ class XrayHttpOutboundObject implements IProtocolType {
     if (this.servers.length === 0) this.servers.push(new XrayHttpServerObject());
   }
 
-  normalize = () => {};
+  normalize = () => void 0;
 }
 class XrayShadowsocksOutboundObject implements IProtocolType {
   public servers: XrayShadowsocksServerObject[] = [];
@@ -82,7 +81,7 @@ class XrayTrojanOutboundObject implements IProtocolType {
     if (this.servers.length === 0) this.servers.push(new XrayTrojanServerObject());
   }
 
-  normalize = () => {};
+  normalize = () => void 0;
 }
 
 class XrayWireguardOutboundObject implements IProtocolType {
@@ -96,13 +95,13 @@ class XrayWireguardOutboundObject implements IProtocolType {
 
   public domainStrategy = "ForceIP";
 
-  normalize = () => {};
+  normalize = () => void 0;
 }
 
 class XrayLoopbackOutboundObject implements IProtocolType {
   public inboundTag!: string;
 
-  normalize = () => {};
+  normalize = () => void 0;
 }
 class XrayFreedomOutboundObject implements IProtocolType {
   static strategyOptions = ["AsIs", "UseIP", "UseIPv4", "UseIPv6"];
@@ -142,7 +141,7 @@ class XraySocksOutboundObject implements IProtocolType {
     if (this.servers.length === 0) this.servers.push(new XraySocksServerObject());
   }
 
-  normalize = () => {};
+  normalize = () => void 0;
 }
 
 export { XrayWireguardOutboundObject, XrayTrojanOutboundObject, XraySocksOutboundObject, XrayShadowsocksOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, XrayLoopbackOutboundObject, XrayBlackholeOutboundObject, XrayHttpOutboundObject, XrayVlessOutboundObject, XrayVmessOutboundObject, XrayOutboundObject };

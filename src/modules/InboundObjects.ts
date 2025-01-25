@@ -40,7 +40,7 @@ class XrayInboundObject<TProxy extends IProtocolType> {
       this.allocate = this.allocate.normalize();
     }
 
-    this.settings.normalize();
+    this.settings.normalize && this.settings.normalize();
   };
 }
 
@@ -59,12 +59,12 @@ class XrayDokodemoDoorInboundObject implements IProtocolType {
 class XrayVlessInboundObject implements IProtocolType {
   public decryption = "none";
   public clients: XrayVlessClientObject[] = [];
-  normalize = () => {};
+  normalize = () => void 0;
 }
 
 class XrayVmessInboundObject implements IProtocolType {
   public clients: XrayVmessClientObject[] = [];
-  normalize = () => {};
+  normalize = () => void 0;
 }
 
 class XrayHttpInboundObject implements IProtocolType {
@@ -85,7 +85,7 @@ class XrayShadowsocksInboundObject implements IProtocolType {
 
 class XrayTrojanInboundObject implements IProtocolType {
   public clients: XrayTrojanClientObject[] = [];
-  normalize = () => {};
+  normalize = () => void 0;
 }
 
 class XraySocksInboundObject implements IProtocolType {
@@ -105,7 +105,7 @@ class XrayWireguardInboundObject implements IProtocolType {
   public kernelMode = true;
   public mtu = 1420;
   public peers: XrayWireguardClientObject[] = [];
-  normalize = () => {};
+  normalize = () => void 0;
 }
 
 export { XrayInboundObject, XrayWireguardInboundObject, XraySocksInboundObject, XrayTrojanInboundObject, XrayShadowsocksInboundObject, XrayHttpInboundObject, XrayVmessInboundObject, XrayVlessInboundObject, XrayDokodemoDoorInboundObject };

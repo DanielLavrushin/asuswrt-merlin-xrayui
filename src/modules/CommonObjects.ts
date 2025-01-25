@@ -55,9 +55,7 @@ class XrayAllocateObject {
   public refresh? = this.strategy == "random" ? XrayAllocateObject.defaultRefresh : undefined;
   public concurrency? = this.strategy == "random" ? XrayAllocateObject.defaultConcurrency : undefined;
 
-  constructor() {}
-
-  normalize = (): XrayAllocateObject | undefined => {
+  normalize = (): this | undefined => {
     if (this.strategy == "always") return undefined;
     this.refresh = this.refresh == 0 ? undefined : this.refresh;
     this.concurrency = this.concurrency == 0 ? undefined : this.concurrency;
@@ -213,7 +211,7 @@ class XrayPortsPolicy {
     { name: "Sony Playstation", tcp: "983,987,1935,3974,3658,5223,3478:3480,4658,9293:9297", udp: "983,987,1935,3974,3658,5223,3478:3480,4658,9293:9297" }
   ];
 
-  public normalize = (): XrayPortsPolicy | undefined => {
+  public normalize = (): this | undefined => {
     this.mode = this.mode && XrayPortsPolicy.modes.includes(this.mode) ? this.mode : undefined;
     this.tcp = this.normalizePorts(this.tcp == "" ? undefined : this.tcp);
     this.udp = this.normalizePorts(this.udp == "" ? undefined : this.udp);

@@ -79,7 +79,7 @@ class Engine {
     return chunks;
   }
 
-  public submit(action: string, payload: any | undefined = undefined, delay: number = 0): Promise<void> {
+  public submit(action: string, payload: any | undefined = undefined, delay = 0): Promise<void> {
     return new Promise((resolve) => {
       const iframeName = "hidden_frame_" + Math.random().toString(36).substring(2, 9);
       const iframe = document.createElement("iframe");

@@ -72,7 +72,7 @@ class XrayShadowsocksOutboundObject implements IProtocolType {
     if (this.servers.length === 0) this.servers.push(new XrayShadowsocksServerObject());
   }
 
-  normalize = () => {};
+  normalize = () => void 0;
 }
 
 class XrayTrojanOutboundObject implements IProtocolType {

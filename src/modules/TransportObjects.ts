@@ -2,7 +2,7 @@ import { XrayHeaderObject, XrayParsedUrlObject, XrayXmuxObject } from "./CommonO
 import { ITransportNetwork } from "./Interfaces";
 
 class XrayStreamTcpSettingsObject implements ITransportNetwork {
-  public acceptProxyProtocol: boolean = false;
+  public acceptProxyProtocol = false;
 }
 
 class XrayStreamKcpSettingsObject implements ITransportNetwork {

@@ -1,4 +1,4 @@
-/* codacy-disable GenericObjectInjectionSink */
+/* eslint-disable security/detect-object-injection */
 import { IProtocolType } from "./Interfaces";
 import { XrayProtocol } from "./Options";
 import { XrayTrojanServerObject, XrayHttpServerObject, XrayStreamSettingsObject, XraySocksServerObject, XrayVmessServerObject, XrayNoiseObject, XrayShadowsocksServerObject, XrayPeerObject } from "./CommonObjects";

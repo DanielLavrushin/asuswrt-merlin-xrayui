@@ -205,7 +205,7 @@ class Engine {
     return responseConfig;
   }
 
-  async loadXrayConfig(): Promise<XrayObject> {
+  async loadXrayConfig(): Promise<XrayObject | null> {
     try {
       const response = await axios.get<XrayObject>("/ext/xrayui/xray-config.json");
       this.xrayConfig = plainToInstance(XrayObject, response.data) as XrayObject;
@@ -312,7 +312,7 @@ class Engine {
 
       if (response.data.routing) {
         this.xrayConfig.routing = plainToInstance(XrayRoutingObject, response.data.routing) as XrayRoutingObject;
-        if (this.xrayConfig.routing?.rules) {
+        if (this.xrayConfig.routing.rules) {
           this.xrayConfig.routing.portsPolicy = plainToInstance(XrayPortsPolicy, response.data.routing.portsPolicy ?? new XrayPortsPolicy()) as XrayPortsPolicy;
           this.xrayConfig.routing.rules.forEach((rule, index) => {
             if (this.xrayConfig.routing?.rules) {
@@ -328,12 +328,11 @@ class Engine {
       var axiosError = e as AxiosError;
       if (axiosError.status === 404) {
         if (confirm("XRAY Configuration file not found in the /opt/etc/xray directory. Please check your configuration file. If you want to generate an empty configuration file, press OK.")) {
-          this.submit(SubmtActions.ConfigurationGenerateDefaultConfig);
+          await this.submit(SubmtActions.ConfigurationGenerateDefaultConfig);
         }
       }
-    } finally {
-      return this.xrayConfig;
     }
+    return null;
   }
 }
 

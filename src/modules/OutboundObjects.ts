@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable security/detect-object-injection */
 import { IProtocolType } from "./Interfaces";
 import { XrayProtocol } from "./Options";
@@ -10,7 +12,7 @@ class XrayOutboundObject<TProxy extends IProtocolType> {
   public sendThrough? = "0.0.0.0";
   public tag?: string;
   public settings!: TProxy;
-  public streamSettings? = new XrayStreamSettingsObject();
+  public streamSettings: XrayStreamSettingsObject = new XrayStreamSettingsObject();
 
   constructor(protocol: XrayProtocol | undefined = undefined, settings: TProxy | undefined = undefined) {
     if (protocol && settings) {
@@ -26,7 +28,7 @@ class XrayOutboundObject<TProxy extends IProtocolType> {
     this.streamSettings = plainToInstance(XrayStreamSettingsObject, this.streamSettings) as XrayStreamSettingsObject;
     const streamSettingsEmpty = this.streamSettings === undefined || JSON.stringify(this.streamSettings) === "{}";
     if (streamSettingsEmpty) {
-      this.streamSettings = undefined;
+      this.streamSettings = undefined as unknown as XrayStreamSettingsObject;
     } else {
       this.streamSettings.normalize();
     }

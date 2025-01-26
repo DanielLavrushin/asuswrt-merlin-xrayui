@@ -86,7 +86,7 @@ export default defineComponent({
       let delay = 1000;
       window.showLoading(delay);
       window.xray.custom_settings.xray_mode = type;
-      await engine.submit(SubmtActions.ConfigurationSetMode, { mode: type }, delay);
+      await engine.submit(SubmtActions.configurationSetMode, { mode: type }, delay);
       window.location.reload();
 
     },

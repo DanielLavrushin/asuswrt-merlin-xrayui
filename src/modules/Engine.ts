@@ -42,28 +42,28 @@ class GeodatTagRequest {
   public content?: string;
 }
 
-class SubmtActions {
-  public static ConfigurationSetMode = "xrayui_configuration_mode";
-  public static ConfigurationApply = "xrayui_configuration_apply";
-  public static clientsOnline = "xrayui_connectedclients";
-  public static refreshConfig = "xrayui_refreshconfig";
-  public static serverStart = "xrayui_serverstatus_start";
-  public static serverRestart = "xrayui_serverstatus_restart";
-  public static serverStop = "xrayui_serverstatus_stop";
-  public static serverTestConfig = "xrayui_testconfig";
-  public static regenerateRealityKeys = "xrayui_regenerate_realitykeys";
-  public static regenerateWireguardyKeys = "xrayui_regenerate_wgkeys";
-  public static regenerateSslCertificates = "xrayui_regenerate_sslcertificates";
-  public static enableLogs = "xrayui_configuration_logs";
-  public static performUpdate = "xrayui_update";
-  public static ToggleStartupOption = "xrayui_configuration_togglestartup";
-  public static ConfigurationGenerateDefaultConfig = "xrayui_configuration_generatedefaultconfig";
-  public static geodataCommunityUpdate = "xrayui_geodata_communityupdate";
-  public static geodataCommunityDates = "xrayui_geodata_communitydatecheck";
-  public static geoDataCustomGetTags = "xrayui_geodata_customtagfiles";
-  public static geoDataRecompile = "xrayui_geodata_customrecompile";
-  public static geoDataRecompileAll = "xrayui_geodata_customrecompileall";
-  public static geoDataCustomDeleteTag = "xrayui_geodata_customdeletetag";
+enum SubmtActions {
+  configurationSetMode = "xrayui_configuration_mode",
+  configurationApply = "xrayui_configuration_apply",
+  clientsOnline = "xrayui_connectedclients",
+  refreshConfig = "xrayui_refreshconfig",
+  serverStart = "xrayui_serverstatus_start",
+  serverRestart = "xrayui_serverstatus_restart",
+  serverStop = "xrayui_serverstatus_stop",
+  serverTestConfig = "xrayui_testconfig",
+  regenerateRealityKeys = "xrayui_regenerate_realitykeys",
+  regenerateWireguardyKeys = "xrayui_regenerate_wgkeys",
+  regenerateSslCertificates = "xrayui_regenerate_sslcertificates",
+  enableLogs = "xrayui_configuration_logs",
+  performUpdate = "xrayui_update",
+  toggleStartupOption = "xrayui_configuration_togglestartup",
+  configurationGenerateDefaultConfig = "xrayui_configuration_generatedefaultconfig",
+  geodataCommunityUpdate = "xrayui_geodata_communityupdate",
+  geodataCommunityDates = "xrayui_geodata_communitydatecheck",
+  geoDataCustomGetTags = "xrayui_geodata_customtagfiles",
+  geoDataRecompile = "xrayui_geodata_customrecompile",
+  geoDataRecompileAll = "xrayui_geodata_customrecompileall",
+  geoDataCustomDeleteTag = "xrayui_geodata_customdeletetag"
 }
 
 class Engine {
@@ -387,7 +387,7 @@ class Engine {
       var axiosError = e as AxiosError;
       if (axiosError.status === 404) {
         if (confirm("XRAY Configuration file not found in the /opt/etc/xray directory. Please check your configuration file. If you want to generate an empty configuration file, press OK.")) {
-          await this.submit(SubmtActions.ConfigurationGenerateDefaultConfig);
+          await this.submit(SubmtActions.configurationGenerateDefaultConfig);
         }
       }
     }

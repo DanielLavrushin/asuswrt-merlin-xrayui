@@ -9,22 +9,22 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent } from "vue";
-  import engine, { SubmtActions } from "../modules/Engine";
+import { defineComponent } from "vue";
+import engine, { SubmtActions } from "../modules/Engine";
 
-  export default defineComponent({
-    name: "ServerStatus",
-    data() {
-      return {
-        startup: window.xray.custom_settings.xray_startup === "y"
-      };
-    },
+export default defineComponent({
+  name: "ServerStatus",
+  data() {
+    return {
+      startup: window.xray.custom_settings.xray_startup === "y"
+    };
+  },
 
-    methods: {
-      async updatestartup() {
-        await engine.submit(SubmtActions.ToggleStartupOption);
-        window.xray.custom_settings.xray_startup = window.xray.custom_settings.xray_startup === "y" ? "n" : "y";
-      }
+  methods: {
+    async updatestartup() {
+      await engine.submit(SubmtActions.toggleStartupOption);
+      window.xray.custom_settings.xray_startup = window.xray.custom_settings.xray_startup === "y" ? "n" : "y";
     }
-  });
+  }
+});
 </script>

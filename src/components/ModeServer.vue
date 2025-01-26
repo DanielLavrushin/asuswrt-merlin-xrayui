@@ -65,7 +65,7 @@ export default defineComponent({
             window.showLoading(delay, "waiting");
             let config = engine.prepareServerConfig();
 
-            await engine.submit(SubmtActions.ConfigurationApply, config, delay);
+            await engine.submit(SubmtActions.configurationApply, config, delay);
             await engine.loadXrayConfig();
             window.hideLoading();
             window.location.reload();

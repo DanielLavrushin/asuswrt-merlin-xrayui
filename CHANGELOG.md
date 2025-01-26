@@ -4,6 +4,7 @@
 
 - ADDED: disaply selected mode in the `Ports Bypass/Redirect Policy`.
 - IMPROVED: Enhance visual loading waiting display.
+- IMPROVED: remove TCP `fragmentation option` from the `FREEDOM` proxy and simplify fragment packet method handling.
 
 ## [0.30.0] - 2025-01-26
 

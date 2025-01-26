@@ -1,23 +1,40 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable security/detect-object-injection */
 import { IProtocolType } from "./Interfaces";
 import { XrayProtocol } from "./Options";
 import { XrayTrojanServerObject, XrayHttpServerObject, XrayStreamSettingsObject, XraySocksServerObject, XrayVmessServerObject, XrayNoiseObject, XrayShadowsocksServerObject, XrayPeerObject } from "./CommonObjects";
 import { XrayVlessServerObject } from "./CommonObjects";
 import { plainToInstance } from "class-transformer";
 
-class XrayOutboundObject<IProtocolType> {
+class XrayOutboundObject<TProxy extends IProtocolType> {
   public protocol!: XrayProtocol;
-  public sendThrough: string = "0.0.0.0";
+  public sendThrough? = "0.0.0.0";
   public tag?: string;
-  public settings!: IProtocolType;
-  public streamSettings?: XrayStreamSettingsObject = new XrayStreamSettingsObject();
+  public settings!: TProxy;
+  public streamSettings: XrayStreamSettingsObject = new XrayStreamSettingsObject();
 
-  constructor(protocol: XrayProtocol | undefined = undefined, settings: IProtocolType | undefined = undefined) {
+  constructor(protocol: XrayProtocol | undefined = undefined, settings: TProxy | undefined = undefined) {
     if (protocol && settings) {
       this.settings = settings;
       this.protocol = protocol;
       this.tag = "obd-" + this.protocol;
     }
   }
+  normalize = () => {
+    this.sendThrough = this.sendThrough === "0.0.0.0" ? undefined : this.sendThrough;
+    this.tag = this.tag === "" ? undefined : this.tag;
+
+    this.streamSettings = plainToInstance(XrayStreamSettingsObject, this.streamSettings) as XrayStreamSettingsObject;
+    const streamSettingsEmpty = this.streamSettings === undefined || JSON.stringify(this.streamSettings) === "{}";
+    if (streamSettingsEmpty) {
+      this.streamSettings = undefined as unknown as XrayStreamSettingsObject;
+    } else {
+      this.streamSettings.normalize();
+    }
+
+    this.settings.normalize && this.settings.normalize();
+  };
 }
 
 class XrayVlessOutboundObject implements IProtocolType {
@@ -25,6 +42,8 @@ class XrayVlessOutboundObject implements IProtocolType {
   constructor() {
     if (this.vnext.length === 0) this.vnext.push(new XrayVlessServerObject());
   }
+
+  normalize = () => void 0;
 }
 
 class XrayVmessOutboundObject implements IProtocolType {
@@ -32,10 +51,15 @@ class XrayVmessOutboundObject implements IProtocolType {
   constructor() {
     if (this.vnext.length === 0) this.vnext.push(new XrayVmessServerObject());
   }
+
+  normalize = () => void 0;
 }
 
 class XrayBlackholeOutboundObject implements IProtocolType {
-  public response: { type: string } = { type: "none" }; // none, http
+  public response?: { type: string } = { type: "none" }; // none, http
+  normalize = () => {
+    this.response = this.response?.type === "none" ? undefined : this.response;
+  };
 }
 
 class XrayHttpOutboundObject implements IProtocolType {
@@ -43,50 +67,76 @@ class XrayHttpOutboundObject implements IProtocolType {
   constructor() {
     if (this.servers.length === 0) this.servers.push(new XrayHttpServerObject());
   }
+
+  normalize = () => void 0;
 }
 class XrayShadowsocksOutboundObject implements IProtocolType {
   public servers: XrayShadowsocksServerObject[] = [];
   constructor() {
     if (this.servers.length === 0) this.servers.push(new XrayShadowsocksServerObject());
   }
+
+  normalize = () => void 0;
 }
+
 class XrayTrojanOutboundObject implements IProtocolType {
   public servers: XrayTrojanServerObject[] = [];
   constructor() {
     if (this.servers.length === 0) this.servers.push(new XrayTrojanServerObject());
   }
+
+  normalize = () => void 0;
 }
 
 class XrayWireguardOutboundObject implements IProtocolType {
-  static strategyOptions: string[] = ["ForceIPv6v4", "ForceIPv6", "ForceIPv4v6", "ForceIPv4", "ForceIP"];
+  static strategyOptions = ["ForceIPv6v4", "ForceIPv6", "ForceIPv4v6", "ForceIPv4", "ForceIP"];
   public privateKey!: string;
   public address: string[] = [];
   public peers: XrayPeerObject[] = [];
-  public mtu: number = 1420;
+  public mtu = 1420;
   public reserved?: number[];
-  public workers?: number = window.xray.router.cpu;
+  public workers? = window.xray.router.cpu;
 
-  public domainStrategy: string = "ForceIP";
+  public domainStrategy = "ForceIP";
+
+  normalize = () => void 0;
 }
 
 class XrayLoopbackOutboundObject implements IProtocolType {
   public inboundTag!: string;
+
+  normalize = () => void 0;
 }
 class XrayFreedomOutboundObject implements IProtocolType {
-  static strategyOptions: string[] = ["AsIs", "UseIP", "UseIPv4", "UseIPv6"];
-  static fragmentOptions: string[] = ["1-3", "tlshello"];
-  public domainStrategy: string = "AsIs";
-  public redirect: string = "";
+  static strategyOptions = ["AsIs", "UseIP", "UseIPv4", "UseIPv6"];
+  static fragmentOptions = ["1-3", "tlshello"];
+  public domainStrategy? = "AsIs";
+  public redirect? = "";
   public fragment?: { packets: string; length: string; interval: string } | null = { packets: "", length: "100-200", interval: "10-20" };
-  public noises: XrayNoiseObject[] = [];
-  public proxyProtocol: number = 0; // 0: off, 1, 2
+  public noises?: XrayNoiseObject[] = [];
+  public proxyProtocol? = 0; // 0: off, 1, 2
+
+  normalize = () => {
+    this.domainStrategy = this.domainStrategy === "AsIs" ? undefined : this.domainStrategy;
+    this.fragment = this.fragment?.packets === "" ? undefined : this.fragment;
+    this.redirect = this.redirect === "" ? undefined : this.redirect;
+    this.noises = !this.noises || this.noises.length === 0 ? undefined : this.noises;
+    this.proxyProtocol = this.proxyProtocol === 0 ? undefined : this.proxyProtocol;
+  };
 }
 
 class XrayDnsOutboundObject implements IProtocolType {
-  public address!: string;
-  public port: number = 53;
-  public network: string = "tcp";
-  public nonIPQuery: string = "drop";
+  public address?: string;
+  public port?: number;
+  public network?: string = "tcp";
+  public nonIPQuery? = "drop";
+
+  normalize = () => {
+    this.address = !this.address || this.address === "" ? undefined : this.address;
+    this.network = this.network && this.network !== "tcp" ? this.network : undefined;
+    this.port = !this.port || this.port === 0 ? undefined : this.port;
+    this.nonIPQuery = this.nonIPQuery === "drop" ? undefined : this.nonIPQuery;
+  };
 }
 
 class XraySocksOutboundObject implements IProtocolType {
@@ -94,29 +144,8 @@ class XraySocksOutboundObject implements IProtocolType {
   constructor() {
     if (this.servers.length === 0) this.servers.push(new XraySocksServerObject());
   }
+
+  normalize = () => void 0;
 }
 
-const NormalizeOutbound = (proxy: any) => {
-  proxy.sendThrough = proxy.sendThrough === "0.0.0.0" ? undefined : proxy.sendThrough;
-  proxy.tag = proxy.sendThrough === "" ? undefined : proxy.tag;
-
-  proxy.streamSettings = plainToInstance(XrayStreamSettingsObject, proxy.streamSettings);
-  proxy.streamSettings?.normalize();
-
-  switch (proxy.protocol) {
-    case XrayProtocol.FREEDOM:
-      proxy.settings.domainStrategy = proxy.settings.domainStrategy === "AsIs" ? undefined : proxy.settings.domainStrategy;
-      proxy.settings.fragment = proxy.settings?.fragment?.packets === "" ? undefined : proxy.settings.fragment;
-      proxy.settings.redirect = proxy.settings.redirect === "" ? undefined : proxy.settings.redirect;
-      proxy.settings.noises = proxy.settings.noises.length === 0 ? undefined : proxy.settings.noises;
-      proxy.settings.proxyProtocol = proxy.settings.proxyProtocol === 0 ? undefined : proxy.settings.proxyProtocol;
-      break;
-    case XrayProtocol.BLACKHOLE:
-      proxy.settings.response = proxy.settings.response.type === "none" ? undefined : proxy.settings.response;
-      break;
-  }
-
-  return proxy;
-};
-
-export { NormalizeOutbound, XrayWireguardOutboundObject, XrayTrojanOutboundObject, XraySocksOutboundObject, XrayShadowsocksOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, XrayLoopbackOutboundObject, XrayBlackholeOutboundObject, XrayHttpOutboundObject, XrayVlessOutboundObject, XrayVmessOutboundObject, XrayOutboundObject };
+export { XrayWireguardOutboundObject, XrayTrojanOutboundObject, XraySocksOutboundObject, XrayShadowsocksOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, XrayLoopbackOutboundObject, XrayBlackholeOutboundObject, XrayHttpOutboundObject, XrayVlessOutboundObject, XrayVmessOutboundObject, XrayOutboundObject };

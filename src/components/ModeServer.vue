@@ -63,7 +63,7 @@ export default defineComponent({
         async applyClientSettings() {
             let delay = 10000;
             window.showLoading(delay, "waiting");
-            let config = await engine.prepareServerConfig();
+            let config = engine.prepareServerConfig();
 
             await engine.submit(SubmtActions.ConfigurationApply, config, delay);
             await engine.loadXrayConfig();

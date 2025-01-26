@@ -112,26 +112,32 @@ export default defineComponent({
     font-family: 'Courier New', Courier, monospace;
 }
 
-.textarea-wrapper .changelog>>>h2 {
+.textarea-wrapper .changelog :deep(h2) {
     margin: 5px;
 }
 
-.textarea-wrapper .changelog>>>ul {
+.textarea-wrapper .changelog :deep(ul) {
     margin: 5px;
     padding: 0 10px;
 
 }
 
-.textarea-wrapper .changelog>>>ul li {
+.textarea-wrapper .changelog :deep(ul li) {
     margin: 5px;
 }
 
-.textarea-wrapper .changelog>>>code {
+.textarea-wrapper .changelog :deep(code) {
     font-weight: bold;
 }
 
 .textarea-wrapper a {
     color: #FFCC00;
     text-decoration: underline;
+}
+
+.modal-content :deep(strong),
+.modal-content :deep(code) {
+
+    text-shadow: 1px 1px 2px #ffcc00;
 }
 </style>

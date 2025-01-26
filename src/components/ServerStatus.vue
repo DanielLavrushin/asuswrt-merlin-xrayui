@@ -29,7 +29,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import engine from "../modules/Engine";
+import engine, { SubmtActions } from "../modules/Engine";
 import StartupControl from "./StartupControl.vue";
 
 export default defineComponent({
@@ -40,8 +40,8 @@ export default defineComponent({
   data() {
     return {
       isRunning: window.xray.server.isRunning,
-      restart: window.xray.commands.serverRestart,
-      stop: window.xray.commands.serverStop,
+      restart: SubmtActions.serverRestart,
+      stop: SubmtActions.serverStop,
     };
   },
   computed: {
@@ -53,7 +53,7 @@ export default defineComponent({
     async testConfig() {
       let delay = 1000;
       window.showLoading(delay);
-      await engine.submit(window.xray.commands.testConfig, null, delay);
+      await engine.submit(SubmtActions.serverTestConfig, null, delay);
       let users = await engine.getXrayResponse();
       window.hideLoading();
       alert(users.xray?.test);

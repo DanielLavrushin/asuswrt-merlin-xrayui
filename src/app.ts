@@ -4,10 +4,10 @@ import App from "./App.vue";
 window.hint = (message: string) => {
   window.overlib(message);
 };
-window.LoadingTime = (seconds: number, flag: string | null) => {
+window.LoadingTime = (seconds: number, flag: string | undefined) => {
   const proceedingMainText = document.getElementById("proceeding_main_txt");
   const proceedingText = document.getElementById("proceeding_txt");
-  const loading = document.getElementById("Loading") as HTMLElement;
+  const loading = document.getElementById("Loading");
 
   if (!proceedingMainText || !proceedingText || !loading) {
     console.error("Required DOM elements not found.");
@@ -39,7 +39,9 @@ window.LoadingTime = (seconds: number, flag: string | null) => {
       progressPercentage = 0;
 
       if (flag !== "waiting") {
-        setTimeout(() => window.hideLoading(), 1000);
+        setTimeout(() => {
+          window.hideLoading();
+        }, 1000);
       }
     }
   };
@@ -47,6 +49,6 @@ window.LoadingTime = (seconds: number, flag: string | null) => {
   updateLoading();
 };
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
   createApp(App).mount("#xrayui-app");
 });

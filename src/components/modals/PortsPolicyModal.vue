@@ -195,7 +195,7 @@ export default defineComponent({
 });
 </script>
 <style scoped>
-th>>>.hint-color {
+th :deep(.hint-color) {
   width: 100%;
 }
 </style>

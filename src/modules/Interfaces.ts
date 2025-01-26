@@ -1,5 +1,9 @@
-interface IProtocolType {}
+interface IProtocolType {
+  normalize?: () => void;
+}
+
 interface ITransportNetwork {}
+
 interface IClient {}
 
 interface IXrayServer<TClient> {

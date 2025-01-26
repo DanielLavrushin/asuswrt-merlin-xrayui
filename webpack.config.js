@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable no-console */
 const path = require("path");
 const { VueLoaderPlugin } = require("vue-loader");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
@@ -48,7 +50,7 @@ module.exports = {
     }),
     {
       apply: (compiler) => {
-        compiler.hooks.afterEmit.tap("AfterEmitPlugin", (compilation) => {
+        compiler.hooks.afterEmit.tap("AfterEmitPlugin", () => {
           console.log("Webpack finished building, running upload script...");
 
           exec("node sync.js", (err, stdout, stderr) => {

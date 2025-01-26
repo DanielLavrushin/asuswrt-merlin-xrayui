@@ -14,7 +14,7 @@ class XrayShadowsocksClientObject implements IClient {
   public email!: string;
   public password!: string;
   public level?: number;
-  public method?: string = "aes-256-gcm";
+  public method? = "aes-256-gcm";
 }
 
 class XrayVmessClientObject implements IClient {
@@ -36,7 +36,7 @@ class XrayVlessClientObject implements IClient {
   public email!: string;
   public level?: number;
   public encryption?: string;
-  public flow: string = "none";
+  public flow? = "none";
 }
 
 export { XrayWireguardClientObject, XraySocksClientObject, XrayShadowsocksClientObject, XrayVmessClientObject, XrayHttpClientObject, XrayTrojanClientObject, XrayVlessClientObject };

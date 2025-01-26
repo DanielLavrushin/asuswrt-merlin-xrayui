@@ -2,24 +2,14 @@
 
 export PATH=/opt/bin:/opt/sbin:/sbin:/bin:/usr/sbin:/usr/bin
 source /usr/sbin/helper.sh
-
-readonly SCRIPT_NAME="xrayui"
-
-ENABLED=yes
-PROCS=xray
 ARGS="run -config /opt/etc/xray/config.json"
-PREARGS=""
 DESC="Xray Core UI"
-PATH=/opt/bin:/opt/sbin:/sbin:/bin:/usr/sbin:/usr/bin
-
 PIDFILE=/var/run/xray.pid
 
 xray_addons_asp_page=/jffs/addons/xrayui/index.asp
 
 xray_config="/opt/etc/xray/config.json"
-xray_config_client="/opt/etc/xray/config-client.json"
 dir_xrayui="/www/user/xrayui"
-xray_ui_config="$dir_xrayui/xray-config.json"
 XRAY_UI_RESPONSE_FILE="$dir_xrayui/xray-ui-response.json"
 XRAY_UI_CLIENTS_FILE="$dir_xrayui/clients-online.json"
 XRAY="xray"
@@ -934,13 +924,17 @@ reconstruct_payload() {
         idx=$((idx + 1))
     done
 
-    # clean up all payload chunks from the custom settings
-    sed -i '/^xray_payload/d' /jffs/addons/custom_settings.txt
+    cleanup_payloads
 
     echo "$payload"
 
     # Release the lock
     flock -u "$FD"
+}
+
+cleanup_payloads() {
+    # clean up all payload chunks from the custom settings
+    sed -i '/^xray_payload/d' /jffs/addons/custom_settings.txt
 }
 
 ensure_ui_response_file() {
@@ -1438,9 +1432,6 @@ get_custom_geodata_tagfiles() {
         json_content="{}"
     fi
 
-    local xray_bin_dir
-    xray_bin_dir=$(dirname "$(which xray)")
-
     local data_dir="$XRAYUI_SHARED_DIR/data"
 
     local tagfiles_json
@@ -1524,6 +1515,7 @@ geodata_recompile_all() {
 
     chmod -x "$datadir/xrayui"
 
+    cleanup_payloads
     geodata_remount_to_web
 
     printlog true "Recompiled all custom geodata files successfully." $CSUC

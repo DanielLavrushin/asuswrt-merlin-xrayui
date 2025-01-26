@@ -36,16 +36,6 @@
         },
         server: {
           isRunning: parseInt('<% sysinfo("pid.xray"); %>') > 0
-        },
-        commands: {
-          testConfig: "xrayui_testconfig",
-          clientsOnline: "xrayui_connectedclients",
-          refreshConfig: "xrayui_refreshconfig",
-          serverStart: "xrayui_serverstatus_start",
-          serverRestart: "xrayui_serverstatus_restart",
-          serverStop: "xrayui_serverstatus_stop",
-          clientDelete: "xrayui_client_delete",
-          clientAdd: "xrayui_client_add"
         }
       };
       let custom_settings = `<% get_custom_settings(); %>`;

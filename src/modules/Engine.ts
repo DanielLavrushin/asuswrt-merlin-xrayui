@@ -65,7 +65,9 @@ enum SubmtActions {
   geoDataCustomGetTags = "xrayui_geodata_customtagfiles",
   geoDataRecompile = "xrayui_geodata_customrecompile",
   geoDataRecompileAll = "xrayui_geodata_customrecompileall",
-  geoDataCustomDeleteTag = "xrayui_geodata_customdeletetag"
+  geoDataCustomDeleteTag = "xrayui_geodata_customdeletetag",
+  fetchXrayLogs = "xrayui_configuration_logs_fetch",
+  updateLogsLevel = "xrayui_configuration_logs_changeloglevel"
 }
 
 class Engine {

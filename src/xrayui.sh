@@ -1646,6 +1646,38 @@ geodata_delete_tag() {
     return 0
 }
 
+logs_fetch() {
+    local log_access="/tmp/xray_access.log"
+    local log_error="/tmp/xray_error.log"
+    tail -n 200 "$log_access" >/www/user/xrayui/xray_access_partial.asp
+    tail -n 200 "$log_error" >/www/user/xrayui/xray_error_partial.asp
+}
+
+change_log_level() {
+    local payload=$(reconstruct_payload)
+    local log_level=$(echo "$payload" | jq -r '.log_level')
+
+    printlog true "Changing log level to $log_level..."
+
+    local updated_json=$(jq --arg log_level "$log_level" '
+        if .log.loglevel then del(.log.loglevel) else . end |
+        .log.logLevel = $log_level
+    ' "$xray_config")
+
+    if [ $? -ne 0 ]; then
+        printlog true "Error: Failed to update JSON content with log level." "$CERR"
+        return 1
+    fi
+
+    echo "$updated_json" >"$xray_config"
+
+    if [ -f "$PIDFILE" ]; then
+        restart
+    fi
+
+    return 0
+}
+
 case "$1" in
 install)
     install
@@ -1723,7 +1755,18 @@ service_event)
             switch_mode
             ;;
         "logs")
-            enable_config_logs
+            case "$4" in
+            "fetch")
+                logs_fetch
+                ;;
+            "changeloglevel")
+                change_log_level
+                ;;
+            *)
+                enable_config_logs
+                ;;
+            esac
+            exit 0
             ;;
         "togglestartup")
             toggle_startup

@@ -394,9 +394,9 @@ class XrayParsedUrlObject {
   public protocol!: string;
   public tag!: string;
   public uuid!: string;
-  public network!: string;
-  public security!: string;
-  public parsedParams: Record<string, string> = {};
+  public network?: string;
+  public security?: string;
+  public parsedParams: Record<string, string | undefined> = {};
 
   public constructor(url: string) {
     const [protocol, rest] = url.split("://");

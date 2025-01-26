@@ -36,7 +36,7 @@ class XrayVlessClientObject implements IClient {
   public email!: string;
   public level?: number;
   public encryption?: string;
-  public flow = "none";
+  public flow? = "none";
 }
 
 export { XrayWireguardClientObject, XraySocksClientObject, XrayShadowsocksClientObject, XrayVmessClientObject, XrayHttpClientObject, XrayTrojanClientObject, XrayVlessClientObject };

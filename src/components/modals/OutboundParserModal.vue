@@ -32,14 +32,11 @@
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
-import engine, { SubmtActions } from "../../modules/Engine";
 import Modal from "../Modal.vue";
 import jsQR from "jsqr";
-import { XrayProtocol } from "@/modules/Options";
-import { XrayOutboundObject, XrayVlessOutboundObject } from "@/modules/OutboundObjects";
+import { XrayOutboundObject } from "@/modules/OutboundObjects";
 import { IProtocolType } from "@/modules/Interfaces";
-import { XrayVlessClientObject } from "@/modules/ClientsObjects";
-import { XrayStreamRealitySettingsObject, XrayStreamSettingsObject, XrayParsedUrlObject } from "@/modules/CommonObjects";
+import { XrayStreamRealitySettingsObject } from "@/modules/CommonObjects";
 import ProxyParser from "@/modules/parsers/ProxyParser";
 
 export default defineComponent({

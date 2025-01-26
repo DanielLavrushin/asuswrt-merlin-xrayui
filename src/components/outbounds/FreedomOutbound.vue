@@ -77,31 +77,13 @@
                         <span class="hint-color"></span>
                     </td>
                 </tr>
-                <tr>
-                    <th>TCP Fragmentation
-                        <hint>
-                            A key-value map used to control TCP fragmentation, under some circumstances it can cheat the
-                            censor system, like bypass a SNI blacklist.
-                            <ul>
-                                <li>`packets`: support two different methods. "1-3" is for segmentation at TCP layer,
-                                    applying to the beginning 1 to 3 data writes by the client. "tlshello" is for TLS
-                                    client hello packet fragmentation.</li>
-                                <li>`length`: length to make the cut</li>
-                                <li>`interval`: time between fragments (ms)</li>
-                            </ul>
-                        </hint>
-                    </th>
-                    <td>
-                        <input type="checkbox" v-model="enableFragmentation" />
-                        <span class="hint-color"></span>
-                    </td>
-                </tr>
             </tbody>
-            <tbody v-if="enableFragmentation && proxy.settings.fragment">
+            <tbody v-if="proxy.settings.fragment">
                 <tr>
                     <th>Fragment packet method
                         <hint>
-                            Two different methods are supported.
+                            A key-value map used to control TCP fragmentation, under some circumstances it can cheat the
+                            censor system, like bypass a SNI blacklist.
                             <ul>
                                 <li>`1-3` - segmentation at the TCP layer, applying to the beginning 1 to 3 data writes
                                     by
@@ -303,16 +285,7 @@ export default defineComponent({
         const noiseItem = ref<XrayNoiseObject>();
         const modalNoise = ref();
         const modalNoises = ref();
-        const enableFragmentation = computed({
-            get: () => proxy.value.settings.fragment != null,
-            set: (value: boolean) => {
-                if (value) {
-                    proxy.value.settings.fragment = new XrayFreedomOutboundObject().fragment;
-                } else {
-                    proxy.value.settings.fragment = undefined;
-                }
-            },
-        });
+
 
 
         return {
@@ -320,7 +293,6 @@ export default defineComponent({
             modalNoise,
             modalNoises,
             noiseItem,
-            enableFragmentation,
             strategyOptions: XrayFreedomOutboundObject.strategyOptions,
             fragmentOptions: XrayFreedomOutboundObject.fragmentOptions,
             noiseTypeOptions: XrayNoiseObject.typeOptions,

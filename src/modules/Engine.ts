@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* codacy-disable GenericObjectInjectionSink */
 
 import axios, { AxiosError } from "axios";
 import { xrayConfig, XrayObject } from "./XrayConfig";

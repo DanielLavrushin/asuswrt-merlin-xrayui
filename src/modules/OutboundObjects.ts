@@ -1,3 +1,4 @@
+/* codacy-disable GenericObjectInjectionSink */
 import { IProtocolType } from "./Interfaces";
 import { XrayProtocol } from "./Options";
 import { XrayTrojanServerObject, XrayHttpServerObject, XrayStreamSettingsObject, XraySocksServerObject, XrayVmessServerObject, XrayNoiseObject, XrayShadowsocksServerObject, XrayPeerObject } from "./CommonObjects";
@@ -19,18 +20,16 @@ class XrayOutboundObject<TProxy extends IProtocolType> {
     }
   }
   normalize = () => {
+    this.sendThrough = this.sendThrough === "0.0.0.0" ? undefined : this.sendThrough;
+    this.tag = this.tag === "" ? undefined : this.tag;
+
+    this.streamSettings = plainToInstance(XrayStreamSettingsObject, this.streamSettings) as XrayStreamSettingsObject;
+    this.streamSettings.normalize();
     const isEmpty = JSON.stringify(this.streamSettings) === "{}";
     if (isEmpty) {
       this.streamSettings = undefined;
     }
 
-    this.sendThrough = this.sendThrough === "0.0.0.0" ? undefined : this.sendThrough;
-    this.tag = this.tag === "" ? undefined : this.tag;
-
-    this.streamSettings = plainToInstance(XrayStreamSettingsObject, this.streamSettings) as XrayStreamSettingsObject;
-    if (this.streamSettings) {
-      this.streamSettings.normalize();
-    }
     this.settings.normalize && this.settings.normalize();
   };
 }

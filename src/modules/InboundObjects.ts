@@ -11,7 +11,7 @@ class XrayInboundObject<TProxy extends IProtocolType> {
   public port!: number | string;
   public tag?: string;
   public settings!: TProxy;
-  public streamSettings?: XrayStreamSettingsObject;
+  public streamSettings?: XrayStreamSettingsObject = new XrayStreamSettingsObject();
   public allocate?: XrayAllocateObject;
   public sniffing?: XraySniffingObject;
 
@@ -26,14 +26,9 @@ class XrayInboundObject<TProxy extends IProtocolType> {
   normalize = () => {
     if (this.streamSettings) {
       this.streamSettings = plainToInstance(XrayStreamSettingsObject, this.streamSettings) as XrayStreamSettingsObject;
-      this.streamSettings.normalize();
-      const isEmpty = JSON.stringify(this.streamSettings) === "{}";
-      if (!this.streamSettings || isEmpty) {
-        this.streamSettings = undefined;
-      } else {
-        this.streamSettings = this.streamSettings.normalize();
-      }
+      this.streamSettings = this.streamSettings.normalize();
     }
+
     if (this.sniffing) {
       this.sniffing.normalize();
     }

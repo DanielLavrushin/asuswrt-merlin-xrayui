@@ -282,14 +282,15 @@ class XrayStreamSettingsObject {
 
   public sockopt?: XraySockoptObject;
 
-  public normalize(): XrayStreamSettingsObject {
+  public normalize(): this | undefined {
     this.network = this.network == "" || this.network == "tcp" ? undefined : this.network;
     this.security = this.security == "" || this.security == "none" ? undefined : this.security;
 
     this.normalizeProtocol();
     this.normalizeSecurity();
-    this.normalizeSockopt();
+    this.sockopt = this.sockopt?.normalize();
 
+    if (JSON.stringify(this) === JSON.stringify({})) return undefined;
     return this;
   }
 
@@ -297,10 +298,10 @@ class XrayStreamSettingsObject {
     const networkOptions = XrayOptions.transportOptions.map((opt) => `${opt}Settings`);
     networkOptions.forEach((prop) => {
       if (!this.network || (this[prop as keyof XrayStreamSettingsObject] && this.network && !prop.startsWith(this.network))) {
-        delete this[prop as keyof XrayStreamSettingsObject];
+        (this[prop as keyof XrayStreamSettingsObject] as object | undefined) = undefined;
       } else {
         const itransport = this[prop as keyof XrayStreamSettingsObject] as ITransportNetwork;
-        if (itransport?.normalize) itransport.normalize();
+        if (itransport.normalize) itransport.normalize();
       }
     });
   }
@@ -309,20 +310,9 @@ class XrayStreamSettingsObject {
     const securityOptions = XrayOptions.securityOptions.map((opt) => `${opt}Settings`);
     securityOptions.forEach((prop) => {
       if (this[prop as keyof XrayStreamSettingsObject] && this.security && !prop.startsWith(this.security)) {
-        delete this[prop as keyof XrayStreamSettingsObject];
+        (this[prop as keyof XrayStreamSettingsObject] as object | undefined) = undefined;
       }
     });
-  }
-  public normalizeSockopt() {
-    if (this.sockopt) {
-      if (!this.sockopt.tproxy || this.sockopt.tproxy == "off") {
-        this.sockopt = undefined;
-        return;
-      }
-      this.sockopt.mark = !this.sockopt.mark && this.sockopt.mark == 0 ? undefined : this.sockopt.mark;
-      this.sockopt.interface = this.sockopt.interface == "" ? undefined : this.sockopt.interface;
-      this.sockopt.tproxy = this.sockopt.tproxy == "off" || this.sockopt.tproxy == "" ? undefined : this.sockopt.tproxy;
-    }
   }
 }
 
@@ -383,7 +373,7 @@ class XraySockoptObject {
   public mark?: number;
   public tcpFastOpen?: boolean;
   public tproxy?: string;
-  public domainStrategy?: string;
+  public domainStrategy?: string = "AsIs";
   public dialerProxy?: string;
   public acceptProxyProtocol?: boolean;
   public tcpKeepAliveInterval?: number;
@@ -391,6 +381,18 @@ class XraySockoptObject {
   public interface?: string;
   public tcpMptcp?: boolean;
   public tcpNoDelay?: boolean;
+
+  normalize = (): this | undefined => {
+    if (this.tproxy == "off") return undefined;
+
+    this.mark = !this.mark && this.mark == 0 ? undefined : this.mark;
+    this.interface = this.interface == "" ? undefined : this.interface;
+    this.tproxy = this.tproxy == "off" || this.tproxy == "" ? undefined : this.tproxy;
+    this.tcpMptcp = !this.tcpMptcp ? undefined : this.tcpMptcp;
+    this.tcpNoDelay = !this.tcpNoDelay ? undefined : this.tcpNoDelay;
+    this.domainStrategy = this.domainStrategy == "AsIs" ? undefined : this.domainStrategy;
+    return this;
+  };
 }
 
 class XrayParsedUrlObject {

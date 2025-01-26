@@ -4,7 +4,9 @@ interface IProtocolType {
 
 interface ITransportNetwork {}
 
-interface IClient {}
+interface IClient {
+  normalize?: () => void;
+}
 
 interface IXrayServer<TClient> {
   users?: TClient[] | undefined;

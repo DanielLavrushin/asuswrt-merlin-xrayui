@@ -24,7 +24,6 @@
             </th>
             <td>
               <select v-model="ports.mode" class="input_option" @change="modeChange">
-                <option></option>
                 <option v-for="opt in modes" :key="opt" :value="opt">
                   {{ opt }}
                 </option>

@@ -122,10 +122,9 @@
           </hint>
         </th>
         <td>
-          <span class="row-buttons">
-            <input class="button_gen button_gen_small" type="button" value="manage"
-              @click.prevent="manage_redirect_ports()" />
-          </span>
+          mode: {{ routing.portsPolicy.mode }}
+          <input class="button_gen button_gen_small" type="button" value="manage"
+            @click.prevent="manage_redirect_ports()" />
           <ports-policy-modal ref="modalRedirectPorts" v-model:ports="routing.portsPolicy"></ports-policy-modal>
         </td>
       </tr>

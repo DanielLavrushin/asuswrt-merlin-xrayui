@@ -98,7 +98,7 @@ class XrayStreamTlsSettingsObject {
   constructor(parsedObject?: XrayParsedUrlObject | undefined) {
     this.certificates.push(new XrayStreamTlsCertificateObject());
     if (parsedObject) {
-      this.serverName = parsedObject.parsedParams["sni"];
+      this.serverName = parsedObject.parsedParams.sni;
     }
   }
 }
@@ -143,7 +143,7 @@ class XrayLogObject {
 class XrayDnsObject {
   static strategyOptions = ["UseIP", "UseIPv4", "UseIPv6"];
   public tag? = "dnsQuery";
-  public hosts?: { [key: string]: string | string[] } | undefined = {};
+  public hosts?: Record<string, string | string[]> | undefined = {};
   public servers: (string | XrayDnsServerObject)[] | undefined = [];
   public clientIp?: string;
   public queryStrategy?: string;

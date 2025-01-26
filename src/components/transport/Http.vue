@@ -1,11 +1,11 @@
 <template>
-  <tbody v-if="transport.httpSettings">
+  <tbody v-if="transport.xhttpSettings">
     <tr>
       <th>
         HTTP request method
       </th>
       <td>
-        <select class="input_option" v-model="transport.httpSettings.method">
+        <select class="input_option" v-model="transport.xhttpSettings.method">
           <option v-for="opt in methods" :key="opt" :value="opt">
             {{ opt }}
           </option>
@@ -26,14 +26,14 @@
     <tr>
       <th>The HTTP path</th>
       <td>
-        <input type="text" maxlength="15" class="input_20_table" v-model="transport.httpSettings.path" />
+        <input type="text" maxlength="15" class="input_20_table" v-model="transport.xhttpSettings.path" />
         <span class="hint-color"></span>
       </td>
     </tr>
     <tr>
       <th>The connection health check</th>
       <td>
-        <input type="number" maxlength="4" class="input_6_table" v-model="transport.httpSettings.read_idle_timeout"
+        <input type="number" maxlength="4" class="input_6_table" v-model="transport.xhttpSettings.read_idle_timeout"
           onkeypress="return validator.isNumber(this,event);" />
         <span class="hint-color">default: unset</span>
       </td>
@@ -41,12 +41,12 @@
     <tr>
       <th>The timeout for the health check</th>
       <td>
-        <input type="number" maxlength="4" class="input_6_table" v-model="transport.httpSettings.health_check_timeout"
+        <input type="number" maxlength="4" class="input_6_table" v-model="transport.xhttpSettings.health_check_timeout"
           onkeypress="return validator.isNumber(this,event);" />
         <span class="hint-color">default: 15</span>
       </td>
     </tr>
-    <headers-mapping :headersMap="transport.httpSettings.headers" @on:header:update="onheaderapupdate" />
+    <headers-mapping :headersMap="transport.xhttpSettings.headers" @on:header:update="onheaderapupdate" />
   </tbody>
 </template>
 
@@ -66,20 +66,20 @@ export default defineComponent({
   },
   methods: {
     onheaderapupdate(headers: any) {
-      if (this.transport.httpSettings)
-        this.transport.httpSettings.headers = headers;
+      if (this.transport.xhttpSettings)
+        this.transport.xhttpSettings.headers = headers;
     },
   },
   setup(props) {
 
     const transport = ref<XrayStreamSettingsObject>(props.transport ?? new XrayStreamSettingsObject());
-    const hosts = ref<string>(transport.value.httpSettings?.host?.join('\n') ?? '');
+    const hosts = ref<string>(transport.value.xhttpSettings?.host?.join('\n') ?? '');
 
     watch(
       () => hosts.value,
       (newObj) => {
-        if (newObj && transport.value.httpSettings) {
-          transport.value.httpSettings.host = newObj.split("\n").filter((x) => x);
+        if (newObj && transport.value.xhttpSettings) {
+          transport.value.xhttpSettings.host = newObj.split("\n").filter((x) => x);
         }
       },
       { immediate: true }

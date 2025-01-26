@@ -1,5 +1,5 @@
 import { XrayHttpClientObject, XraySocksClientObject, XrayVlessClientObject, XrayVmessClientObject } from "./ClientsObjects";
-import { IXrayServer } from "./Interfaces";
+import { ITransportNetwork, IXrayServer } from "./Interfaces";
 import { XrayOptions, XrayProtocol, XrayProtocolMode } from "./Options";
 import { XrayStreamHttpSettingsObject, XrayStreamKcpSettingsObject, XrayStreamTcpSettingsObject, XrayStreamWsSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamSplitHttpSettingsObject } from "./TransportObjects";
 
@@ -275,27 +275,32 @@ class XrayStreamSettingsObject {
   public tcpSettings?: XrayStreamTcpSettingsObject;
   public kcpSettings?: XrayStreamKcpSettingsObject;
   public wsSettings?: XrayStreamWsSettingsObject;
-  public httpSettings?: XrayStreamHttpSettingsObject;
+  public xhttpSettings?: XrayStreamHttpSettingsObject;
   public grpcSettings?: XrayStreamGrpcSettingsObject;
   public httpupgradeSettings?: XrayStreamHttpUpgradeSettingsObject;
   public splithttpSettings?: XrayStreamSplitHttpSettingsObject;
 
   public sockopt?: XraySockoptObject;
 
-  public normalize() {
+  public normalize(): XrayStreamSettingsObject {
     this.network = this.network == "" || this.network == "tcp" ? undefined : this.network;
     this.security = this.security == "" || this.security == "none" ? undefined : this.security;
 
     this.normalizeProtocol();
     this.normalizeSecurity();
     this.normalizeSockopt();
+
+    return this;
   }
 
   public normalizeProtocol() {
     const networkOptions = XrayOptions.transportOptions.map((opt) => `${opt}Settings`);
     networkOptions.forEach((prop) => {
-      if (this[prop as keyof XrayStreamSettingsObject] && this.network && !prop.startsWith(this.network)) {
+      if (!this.network || (this[prop as keyof XrayStreamSettingsObject] && this.network && !prop.startsWith(this.network))) {
         delete this[prop as keyof XrayStreamSettingsObject];
+      } else {
+        const itransport = this[prop as keyof XrayStreamSettingsObject] as ITransportNetwork;
+        if (itransport?.normalize) itransport.normalize();
       }
     });
   }

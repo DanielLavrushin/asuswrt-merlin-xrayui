@@ -2,19 +2,33 @@ import { XrayHeaderObject, XrayParsedUrlObject, XrayXmuxObject } from "./CommonO
 import { ITransportNetwork } from "./Interfaces";
 
 class XrayStreamTcpSettingsObject implements ITransportNetwork {
-  public acceptProxyProtocol = false;
+  public acceptProxyProtocol? = false;
+  normalize = () => {
+    this.acceptProxyProtocol = !this.acceptProxyProtocol ? undefined : this.acceptProxyProtocol;
+  };
 }
 
 class XrayStreamKcpSettingsObject implements ITransportNetwork {
-  public mtu = 1350;
-  public tti = 50;
-  public uplinkCapacity = 5;
-  public downlinkCapacity = 20;
-  public congestion = false;
-  public readBufferSize = 2;
-  public writeBufferSize = 2;
+  public mtu? = 1350;
+  public tti? = 50;
+  public uplinkCapacity? = 5;
+  public downlinkCapacity? = 20;
+  public congestion? = false;
+  public readBufferSize? = 2;
+  public writeBufferSize? = 2;
   public seed?: string;
-  public header: XrayHeaderObject = new XrayHeaderObject();
+  public header?: XrayHeaderObject = new XrayHeaderObject();
+  normalize = () => {
+    this.mtu = this.mtu === 1350 ? undefined : this.mtu;
+    this.tti = this.tti === 50 ? undefined : this.tti;
+    this.uplinkCapacity = this.uplinkCapacity === 5 ? undefined : this.uplinkCapacity;
+    this.downlinkCapacity = this.downlinkCapacity === 20 ? undefined : this.downlinkCapacity;
+    this.congestion = !this.congestion ? undefined : this.congestion;
+    this.readBufferSize = this.readBufferSize === 2 ? undefined : this.readBufferSize;
+    this.writeBufferSize = this.writeBufferSize === 2 ? undefined : this.writeBufferSize;
+    this.seed = !this.seed || this.seed == "" ? undefined : this.seed;
+    this.header = this.header?.type === "none" ? undefined : this.header;
+  };
 }
 
 class XrayStreamWsSettingsObject implements ITransportNetwork {
@@ -29,6 +43,7 @@ class XrayStreamWsSettingsObject implements ITransportNetwork {
       this.host = parsedObject.parsedParams.host;
     }
   }
+  normalize = () => void 0;
 }
 
 class XrayStreamHttpSettingsObject implements ITransportNetwork {
@@ -38,6 +53,7 @@ class XrayStreamHttpSettingsObject implements ITransportNetwork {
   public read_idle_timeout?: number;
   public health_check_timeout?: number;
   public method = "PUT";
+  normalize = () => void 0;
 }
 
 class XrayStreamGrpcSettingsObject implements ITransportNetwork {
@@ -47,6 +63,7 @@ class XrayStreamGrpcSettingsObject implements ITransportNetwork {
   public health_check_timeout = 20;
   public initial_windows_size = 0;
   public permit_without_stream = false;
+  normalize = () => void 0;
 }
 
 class XrayStreamHttpUpgradeSettingsObject implements ITransportNetwork {
@@ -54,6 +71,7 @@ class XrayStreamHttpUpgradeSettingsObject implements ITransportNetwork {
   public path = "/";
   public host?: string;
   public headers = {};
+  normalize = () => void 0;
 }
 
 class XrayStreamSplitHttpSettingsObject implements ITransportNetwork {
@@ -65,6 +83,7 @@ class XrayStreamSplitHttpSettingsObject implements ITransportNetwork {
   public scMinPostsIntervalMs?: number;
   public noSSEHeader = false;
   public xmux: XrayXmuxObject = new XrayXmuxObject();
+  normalize = () => void 0;
 }
 
 export { XrayStreamTcpSettingsObject, XrayStreamKcpSettingsObject, XrayStreamWsSettingsObject, XrayStreamHttpSettingsObject, XrayStreamSplitHttpSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject };

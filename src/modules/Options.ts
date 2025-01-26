@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/prefer-literal-enum-member */
 class XrayOptions {
-  static transportOptions = ["tcp", "kcp", "ws", "http", "grpc", "httpupgrade", "splithttp"];
+  static transportOptions = ["tcp", "kcp", "ws", "xhttp", "grpc", "httpupgrade", "splithttp"];
   static securityOptions = ["none", "tls", "reality"];
   static logOptions = ["debug", "info", "warning", "error", "none"];
   static networkOptions = ["tcp", "udp", "tcp,udp"];

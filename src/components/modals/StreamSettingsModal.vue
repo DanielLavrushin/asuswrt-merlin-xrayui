@@ -139,8 +139,8 @@ export default defineComponent({
         case "ws":
           transport.value.wsSettings = transport.value.wsSettings ?? new XrayStreamWsSettingsObject();
           return NetworkWs;
-        case "http":
-          transport.value.httpSettings = transport.value.httpSettings ?? new XrayStreamHttpSettingsObject();
+        case "xhttp":
+          transport.value.xhttpSettings = transport.value.xhttpSettings ?? new XrayStreamHttpSettingsObject();
           return NetworkHttp;
         case "httpupgrade":
           transport.value.httpupgradeSettings = transport.value.httpupgradeSettings ?? new XrayStreamHttpUpgradeSettingsObject();

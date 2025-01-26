@@ -4,9 +4,10 @@
 import axios, { AxiosError } from "axios";
 import { xrayConfig, XrayObject } from "./XrayConfig";
 import { XrayBlackholeOutboundObject, XrayLoopbackOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, XrayTrojanOutboundObject, XrayOutboundObject, XraySocksOutboundObject, XrayVmessOutboundObject, XrayVlessOutboundObject, XrayHttpOutboundObject, XrayShadowsocksOutboundObject } from "./OutboundObjects";
-import { XrayProtocol, XrayDnsObject, XrayStreamSettingsObject, XrayRoutingObject, XrayRoutingRuleObject, XraySniffingObject, XrayPortsPolicy, XrayAllocateObject } from "./CommonObjects";
+import { XrayProtocol, XrayDnsObject, XrayStreamSettingsObject, XrayRoutingObject, XrayRoutingRuleObject, XraySniffingObject, XrayPortsPolicy, XrayAllocateObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject, XraySockoptObject } from "./CommonObjects";
 import { plainToInstance } from "class-transformer";
 import { XrayDokodemoDoorInboundObject, XrayHttpInboundObject, XrayInboundObject, XrayShadowsocksInboundObject, XraySocksInboundObject, XrayTrojanInboundObject, XrayVlessInboundObject, XrayVmessInboundObject, XrayWireguardInboundObject } from "./InboundObjects";
+import { XrayStreamHttpSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamKcpSettingsObject, XrayStreamTcpSettingsObject, XrayStreamWsSettingsObject } from "./TransportObjects";
 
 class EngineWireguard {
   public privateKey!: string;
@@ -218,6 +219,35 @@ class Engine {
 
         if (proxy.sniffing) {
           proxy.sniffing = plainToInstance(XraySniffingObject, proxy.sniffing) as XraySniffingObject;
+        }
+
+        if (proxy.streamSettings?.sockopt) {
+          proxy.streamSettings.sockopt = plainToInstance(XraySockoptObject, proxy.streamSettings.sockopt) as XraySockoptObject;
+        }
+
+        if (proxy.streamSettings?.realitySettings) {
+          proxy.streamSettings.realitySettings = plainToInstance(XrayStreamRealitySettingsObject, proxy.streamSettings.realitySettings) as XrayStreamRealitySettingsObject;
+        }
+        if (proxy.streamSettings?.tlsSettings) {
+          proxy.streamSettings.tlsSettings = plainToInstance(XrayStreamTlsSettingsObject, proxy.streamSettings.tlsSettings) as XrayStreamTlsSettingsObject;
+        }
+        if (proxy.streamSettings?.tcpSettings) {
+          proxy.streamSettings.tcpSettings = plainToInstance(XrayStreamTcpSettingsObject, proxy.streamSettings.tcpSettings) as XrayStreamTcpSettingsObject;
+        }
+        if (proxy.streamSettings?.kcpSettings) {
+          proxy.streamSettings.kcpSettings = plainToInstance(XrayStreamKcpSettingsObject, proxy.streamSettings.kcpSettings) as XrayStreamKcpSettingsObject;
+        }
+        if (proxy.streamSettings?.wsSettings) {
+          proxy.streamSettings.wsSettings = plainToInstance(XrayStreamWsSettingsObject, proxy.streamSettings.wsSettings) as XrayStreamWsSettingsObject;
+        }
+        if (proxy.streamSettings?.httpupgradeSettings) {
+          proxy.streamSettings.httpupgradeSettings = plainToInstance(XrayStreamHttpUpgradeSettingsObject, proxy.streamSettings.httpupgradeSettings) as XrayStreamHttpUpgradeSettingsObject;
+        }
+        if (proxy.streamSettings?.grpcSettings) {
+          proxy.streamSettings.grpcSettings = plainToInstance(XrayStreamGrpcSettingsObject, proxy.streamSettings.grpcSettings) as XrayStreamGrpcSettingsObject;
+        }
+        if (proxy.streamSettings?.xhttpSettings) {
+          proxy.streamSettings.xhttpSettings = plainToInstance(XrayStreamHttpSettingsObject, proxy.streamSettings.xhttpSettings) as XrayStreamHttpSettingsObject;
         }
 
         switch (proxy.protocol) {

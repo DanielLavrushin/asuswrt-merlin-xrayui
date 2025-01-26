@@ -26,11 +26,11 @@ class XrayOutboundObject<TProxy extends IProtocolType> {
     this.tag = this.tag === "" ? undefined : this.tag;
 
     this.streamSettings = plainToInstance(XrayStreamSettingsObject, this.streamSettings) as XrayStreamSettingsObject;
-    const streamSettingsEmpty = this.streamSettings === undefined || JSON.stringify(this.streamSettings) === "{}";
-    if (streamSettingsEmpty) {
+    const streamSettingsEmpty = JSON.stringify(this.streamSettings) === "{}";
+    if (!this.streamSettings || streamSettingsEmpty) {
       this.streamSettings = undefined as unknown as XrayStreamSettingsObject;
     } else {
-      this.streamSettings.normalize();
+      this.streamSettings = this.streamSettings.normalize();
     }
 
     this.settings.normalize && this.settings.normalize();

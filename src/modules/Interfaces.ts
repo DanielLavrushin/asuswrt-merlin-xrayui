@@ -2,7 +2,9 @@ interface IProtocolType {
   normalize?: () => void;
 }
 
-interface ITransportNetwork {}
+interface ITransportNetwork {
+  normalize?: () => void;
+}
 
 interface IClient {
   normalize?: () => void;

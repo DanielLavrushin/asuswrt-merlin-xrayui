@@ -93,6 +93,10 @@ export default defineComponent({
 });
 </script>
 <style scoped>
+.version {
+    padding-top: 10px;
+}
+
 .version a {
     text-decoration: underline;
     font-size: 10px;

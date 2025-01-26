@@ -7,10 +7,11 @@
     <routing></routing>
     <sniffing-modal ref="sniffingModal" />
     <stream-settings-modal ref="transportModal" />
-    <div id=" divApply" class="apply_gen">
+    <div class="apply_gen">
         <input class="button_gen" @click.prevent="applyClientSettings()" type="button" value="Apply" />
     </div>
     <clients-online v-if="engine.mode == 'server'"></clients-online>
+    <logs-manager v-if="config.log"></logs-manager>
     <version></version>
 </template>
 
@@ -35,6 +36,7 @@ import ClientsOnline from "./ClientsOnline.vue";
 
 import SniffingModal from "./modals/SniffingModal.vue";
 import StreamSettingsModal from "./modals/StreamSettingsModal.vue";
+import LogsManager from "./Logs.vue";
 
 export default defineComponent({
     name: "ModeServer",
@@ -49,7 +51,8 @@ export default defineComponent({
         ClientStatus,
         SniffingModal,
         ClientsOnline,
-        StreamSettingsModal
+        StreamSettingsModal,
+        LogsManager
     },
     methods: {
 
@@ -87,4 +90,8 @@ export default defineComponent({
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+.apply_gen {
+    margin-bottom: 10px;
+}
+</style>

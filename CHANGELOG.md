@@ -2,7 +2,8 @@
 
 ## [0.xx.x] - 2025-xx-xx
 
-- ADDED: disaply selected mode in the `Ports Bypass/Redirect Policy`.
+- ADDED: Disaply selected mode in the `Ports Bypass/Redirect Policy`.
+- ADDED: A new `Logs` window to monitor the xray logs from the web ui.
 - IMPROVED: Enhance visual loading waiting display.
 - IMPROVED: remove TCP `fragmentation option` from the `FREEDOM` proxy and simplify fragment packet method handling.
 

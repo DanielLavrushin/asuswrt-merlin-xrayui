@@ -4,7 +4,12 @@ import App from "./App.vue";
 window.hint = (message: string) => {
   window.overlib(message);
 };
+let loadingProgressStarted = false;
 window.LoadingTime = (seconds: number, flag: string | undefined) => {
+  if (loadingProgressStarted) {
+    return;
+  }
+  loadingProgressStarted = true;
   const proceedingMainText = document.getElementById("proceeding_main_txt");
   const proceedingText = document.getElementById("proceeding_txt");
   const loading = document.getElementById("Loading");
@@ -18,34 +23,36 @@ window.LoadingTime = (seconds: number, flag: string | undefined) => {
   window.showtext(proceedingMainText, text);
   loading.style.visibility = "visible";
 
-  let time = seconds / 1000;
   let progressPercentage = 0;
-  const progressIncrement = 100 / time;
+  let currentStep = 0;
+  const totalSteps = 100;
+  const stepDuration = seconds / totalSteps;
 
   const updateLoading = () => {
-    progressPercentage += progressIncrement;
+    currentStep++;
+    progressPercentage = currentStep;
 
-    if (time > 0) {
-      window.showtext(proceedingMainText, text);
-      window.showtext(proceedingText, `<span style="color:#FFFFCC;">${Math.round(progressPercentage)}% </span>`);
+    window.showtext(proceedingMainText, text);
+    window.showtext(proceedingText, `<span style="color:#FFFFCC;">${progressPercentage}% </span>`);
 
-      time--;
-
-      setTimeout(updateLoading, 1000);
+    if (currentStep < totalSteps) {
+      setTimeout(updateLoading, stepDuration);
     } else {
+      // Once we reach 100%
+      progressPercentage = 0;
       window.showtext(proceedingMainText, text);
       window.showtext(proceedingText, "");
 
-      progressPercentage = 0;
-
       if (flag !== "waiting") {
         setTimeout(() => {
+          loadingProgressStarted = false;
           window.hideLoading();
         }, 1000);
+      } else {
+        loadingProgressStarted = false;
       }
     }
   };
-
   updateLoading();
 };
 

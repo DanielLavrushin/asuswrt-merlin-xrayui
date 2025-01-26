@@ -25,7 +25,7 @@ class XrayStreamWsSettingsObject implements ITransportNetwork {
 
   constructor(parsedObject?: XrayParsedUrlObject | undefined) {
     if (parsedObject) {
-      this.path = parsedObject.parsedParams.path || "/";
+      this.path = parsedObject.parsedParams.path ?? "/";
       this.host = parsedObject.parsedParams.host;
     }
   }

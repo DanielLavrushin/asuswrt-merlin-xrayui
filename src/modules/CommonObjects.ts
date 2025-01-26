@@ -37,7 +37,7 @@ class XrayHeaderResponseObject {
   public version = "1.1";
   public status = "200";
   public reason = "OK";
-  public headers: any = {};
+  public headers: unknown = {};
 }
 
 class XrayXmuxObject {
@@ -407,7 +407,7 @@ class XrayParsedUrlObject {
 
     const params = new URLSearchParams(query);
 
-    params.forEach((value, key) => {
+    params.forEach((value: string, key: string) => {
       this.parsedParams[key] = value;
     });
 

@@ -1,5 +1,9 @@
 # XRAYUI Changelog
 
+## [0.xx.x] - 2025-xx-xx
+
+- ADDED: disaply selected mode in the `Ports Bypass/Redirect Policy`.
+
 ## [0.30.0] - 2025-01-26
 
 - IMPROVED: Averall refactoring, `xrayui` code got a [![Codacy Badge](https://app.codacy.com/project/badge/Grade/5afa683e2930418a9b13efac6537aad8)](https://app.codacy.com/gh/DanielLavrushin/asuswrt-merlin-xrayui/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)

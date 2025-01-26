@@ -30,7 +30,7 @@ class XrayHeaderRequestObject {
   public version = "1.1";
   public method = "GET";
   public path = "/";
-  public headers: any = {};
+  public headers: unknown = {};
 }
 
 class XrayHeaderResponseObject {

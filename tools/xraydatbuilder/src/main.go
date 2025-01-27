@@ -392,7 +392,19 @@ func main() {
 		fmt.Println("Failed:", err)
 		os.Exit(1)
 	}
-	if err := os.WriteFile(filepath.Join(*outputDir, *outputName), protoBytes, 0644); err != nil {
+
+	cleanOutputDir := filepath.Clean(*outputDir)
+	absOutputDir, err := filepath.Abs(cleanOutputDir)
+	
+	if err != nil {
+		fmt.Println("Failed:", err)
+		os.Exit(1)
+	}
+
+    finalFilePath := filepath.Join(absOutputDir, *outputName)
+
+
+	if err := os.WriteFile(finalFilePath, protoBytes, 0644); err != nil {
 		fmt.Println("Failed: ", err)
 		os.Exit(1)
 	} else {

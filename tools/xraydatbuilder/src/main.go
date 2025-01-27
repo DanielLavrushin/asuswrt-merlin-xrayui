@@ -40,6 +40,15 @@ type ParsedList struct {
 }
 
 func (l *ParsedList) toPlainText(listName string) error {
+	
+	cleanOutputDir := filepath.Clean(*outputDir)
+	absOutputDir, err := filepath.Abs(cleanOutputDir)
+	if err != nil {
+        return fmt.Errorf("invalid output directory: %v", err)
+    }
+
+    finalFilePath := filepath.Join(absOutputDir, listName+".txt")
+
 	var entryBytes []byte
 	for _, entry := range l.Entry {
 		var attrString string
@@ -52,8 +61,9 @@ func (l *ParsedList) toPlainText(listName string) error {
 		// Entry output format is: type:domain.tld:@attr1,@attr2
 		entryBytes = append(entryBytes, []byte(entry.Type+":"+entry.Value+attrString+"\n")...)
 	}
-	if err := os.WriteFile(filepath.Join(*outputDir, listName+".txt"), entryBytes, 0644); err != nil {
-		return fmt.Errorf(err.Error())
+	
+	 if err := os.WriteFile(finalFilePath, entryBytes, 0644); err != nil {
+		return fmt.Errorf("%v", err)
 	}
 	return nil
 }

@@ -47,7 +47,8 @@ module.exports = {
         { from: "src/app.html", to: "index.html" },
         { from: "src/server.conf", to: "server.conf" },
         { from: "src/manifest.json", to: "assets/manifest.json" },
-        { from: "src/server/", to: "cgi-bin/" }
+        { from: "src/server/", to: "cgi-bin/" },
+        { from: "src/assets/", to: "assets/" }
       ]
     }),
     {

@@ -1,6 +1,6 @@
 <template>
-    <server-status v-if="engine.mode == 'server'"></server-status>
-    <client-status v-if="engine.mode == 'client'"></client-status>
+    <server-status v-if="engine.mode == 'server'" v-model:config="config"></server-status>
+    <client-status v-if="engine.mode == 'client'" v-model:config="config"></client-status>
     <inbounds @show-transport="show_transport" @show-sniffing="show_sniffing"></inbounds>
     <outbounds @show-transport="show_transport"></outbounds>
     <dns></dns>
@@ -37,6 +37,7 @@ import ClientsOnline from "./ClientsOnline.vue";
 import SniffingModal from "./modals/SniffingModal.vue";
 import StreamSettingsModal from "./modals/StreamSettingsModal.vue";
 import LogsManager from "./Logs.vue";
+import { XrayObject } from "@/modules/XrayConfig";
 
 export default defineComponent({
     name: "ModeServer",
@@ -54,37 +55,45 @@ export default defineComponent({
         StreamSettingsModal,
         LogsManager
     },
-    methods: {
+    props: {
+        config: {
+            type: XrayObject,
+            required: true
+        }
+    },
 
-        async show_transport(proxy: XrayInboundObject<IProtocolType> | XrayOutboundObject<IProtocolType>, type: string) {
-            this.transportModal.show(proxy, type);
-        },
-        async show_sniffing(proxy: XrayInboundObject<IProtocolType>) {
-            this.sniffingModal.show(proxy);
-        },
+    setup(props) {
+        const config = ref(props.config);
+        const transportModal = ref();
+        const sniffingModal = ref();
 
-        async applyClientSettings() {
+        const show_transport = (proxy: XrayInboundObject<IProtocolType> | XrayOutboundObject<IProtocolType>, type: string) => {
+            transportModal.value.show(proxy, type);
+        }
+
+        const show_sniffing = (proxy: XrayInboundObject<IProtocolType>) => {
+            sniffingModal.value.show(proxy);
+        }
+
+        const applyClientSettings = async () => {
             let delay = 10000;
             window.showLoading(delay, "waiting");
-            let config = engine.prepareServerConfig();
+            let cfg = engine.prepareServerConfig(config.value);
 
-            await engine.submit(SubmtActions.configurationApply, config, delay);
+            await engine.submit(SubmtActions.configurationApply, cfg, delay);
             await engine.loadXrayConfig();
             window.hideLoading();
             window.location.reload();
-        },
-    },
-
-    setup() {
-        const config = ref(engine.xrayConfig);
-        const transportModal = ref();
-        const sniffingModal = ref();
+        }
 
         return {
             config,
             engine,
             transportModal,
             sniffingModal,
+            applyClientSettings,
+            show_transport,
+            show_sniffing
         };
     },
 });

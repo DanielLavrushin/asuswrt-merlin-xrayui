@@ -34,6 +34,7 @@ import { defineComponent, ref } from "vue";
 import engine, { SubmtActions } from "../modules/Engine";
 import StartupControl from "./StartupControl.vue";
 import ImportConfig from "./ImportConfig.vue";
+import { XrayObject } from "@/modules/XrayConfig";
 
 export default defineComponent({
   name: "ClientStatus",
@@ -47,6 +48,12 @@ export default defineComponent({
       reconnect: SubmtActions.serverRestart,
       stop: SubmtActions.serverStop,
     };
+  },
+  props: {
+    config: {
+      type: XrayObject,
+      required: true,
+    }
   },
   computed: {
     statusLabel(): string {
@@ -70,8 +77,8 @@ export default defineComponent({
       window.location.reload();
     },
   },
-  setup() {
-    const config = ref(engine.xrayConfig);
+  setup(props) {
+    const config = ref(props.config);
 
     return { config };
   },

@@ -135,7 +135,7 @@ class XrayLogObject {
   static levelOptions = ["debug", "info", "warning", "error", "none"];
   public access = "";
   public error = "";
-  public loglevel = "warning";
+  public loglevel? = "warning";
   public dnsLog = false;
   public maskAddress = "";
 }

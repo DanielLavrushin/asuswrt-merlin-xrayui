@@ -6,7 +6,7 @@
 import axios, { AxiosError } from "axios";
 import { xrayConfig, XrayObject } from "./XrayConfig";
 import { XrayBlackholeOutboundObject, XrayLoopbackOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, XrayTrojanOutboundObject, XrayOutboundObject, XraySocksOutboundObject, XrayVmessOutboundObject, XrayVlessOutboundObject, XrayHttpOutboundObject, XrayShadowsocksOutboundObject } from "./OutboundObjects";
-import { XrayProtocol, XrayDnsObject, XrayStreamSettingsObject, XrayRoutingObject, XrayRoutingRuleObject, XraySniffingObject, XrayPortsPolicy, XrayAllocateObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject, XraySockoptObject } from "./CommonObjects";
+import { XrayProtocol, XrayDnsObject, XrayStreamSettingsObject, XrayRoutingObject, XrayRoutingRuleObject, XraySniffingObject, XrayPortsPolicy, XrayAllocateObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject, XraySockoptObject, XrayLogObject } from "./CommonObjects";
 import { plainToInstance } from "class-transformer";
 import { XrayDokodemoDoorInboundObject, XrayHttpInboundObject, XrayInboundObject, XrayShadowsocksInboundObject, XraySocksInboundObject, XrayTrojanInboundObject, XrayVlessInboundObject, XrayVmessInboundObject, XrayWireguardInboundObject } from "./InboundObjects";
 import { XrayStreamHttpSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamKcpSettingsObject, XrayStreamTcpSettingsObject, XrayStreamWsSettingsObject } from "./TransportObjects";
@@ -240,8 +240,10 @@ class Engine {
 
           if (loadingProgress.progress === 100) {
             clearInterval(checkProgressInterval);
-            window.hideLoading();
-            resolve(loadingProgress);
+            setTimeout(() => {
+              window.hideLoading();
+              resolve(loadingProgress);
+            }, 1000);
           }
         } catch (error) {
           clearInterval(checkProgressInterval);
@@ -256,7 +258,9 @@ class Engine {
     try {
       const response = await axios.get<XrayObject>("/ext/xrayui/xray-config.json");
       this.xrayConfig = plainToInstance(XrayObject, response.data) as XrayObject;
-
+      if (this.xrayConfig.log) {
+        this.xrayConfig.log = plainToInstance(XrayLogObject, response.data.log);
+      }
       this.xrayConfig.inbounds.forEach((proxy, index) => {
         switch (proxy.protocol) {
           case XrayProtocol.DOKODEMODOOR:

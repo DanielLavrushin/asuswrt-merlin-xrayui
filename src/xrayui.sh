@@ -1541,6 +1541,7 @@ geodata_recompile_all() {
 
     rm -f "$outdir/xrayui"
 
+    update_loading_progress "Recompiling geodata files..." 50
     "$builder" --datapath "$datadir" --outputdir "$outdir" --outputname "xrayui" || {
         printlog true "Failed to recompile geodata files." $CERR
         return 1
@@ -1680,13 +1681,16 @@ geodata_delete_tag() {
 }
 
 logs_fetch() {
+    update_loading_progress "Fetching logs..." 0
     local log_access="/tmp/xray_access.log"
     local log_error="/tmp/xray_error.log"
     tail -n 200 "$log_access" >/www/user/xrayui/xray_access_partial.asp
     tail -n 200 "$log_error" >/www/user/xrayui/xray_error_partial.asp
+    update_loading_progress "Logs fetched successfully." 100
 }
 
 change_log_level() {
+    update_loading_progress "Changing log level..." 0
     local payload=$(reconstruct_payload)
     local log_level=$(echo "$payload" | jq -r '.log_level')
 
@@ -1694,7 +1698,7 @@ change_log_level() {
 
     local updated_json=$(jq --arg log_level "$log_level" '
         if .log.loglevel then del(.log.loglevel) else . end |
-        .log.logLevel = $log_level
+        .log.loglevel = $log_level
     ' "$xray_config")
 
     if [ $? -ne 0 ]; then
@@ -1708,6 +1712,7 @@ change_log_level() {
         restart
     fi
 
+    update_loading_progress "Log level changed successfully." 100
     return 0
 }
 
@@ -1790,18 +1795,25 @@ service_event)
         update
         exit 0
     elif [ "$2" = "geodata" ]; then
+        update_loading_progress "Updating geodata files..." 0
         if [ "$3" = "communityupdate" ]; then
             update_community_geodata
+            update_loading_progress "Community geodata files updated successfully." 100
         elif [ "$3" = "communitydatecheck" ]; then
             set_community_geodata_dates
+            update_loading_progress "Community geodata files updated successfully." 100
         elif [ "$3" = "customtagfiles" ]; then
             get_custom_geodata_tagfiles
+            update_loading_progress "Custom tagfiles retrieved successfully." 100
         elif [ "$3" = "customrecompileall" ]; then
             geodata_recompile_all
+            update_loading_progress "Geodata recompiled successfully." 100
         elif [ "$3" = "customrecompile" ]; then
             geodata_recompile
+            update_loading_progress "Geodata recompiled successfully." 100
         elif [ "$3" = "customdeletetag" ]; then
             geodata_delete_tag
+            update_loading_progress "Geodata tag deleted successfully." 100
         fi
         exit 0
     elif [ "$2" = "connectedclients" ]; then
@@ -1872,15 +1884,21 @@ service_event)
     elif [ "$2" = "serverstatus" ]; then
         case "$3" in
         "start")
+            update_loading_progress "Starting Xray service..." 0
             start
+            update_loading_progress "Xray service started successfully." 100
             exit 0
             ;;
         "restart")
+            update_loading_progress "Restarting Xray service..." 0
             restart
+            update_loading_progress "Xray service restarted successfully." 100
             exit 0
             ;;
         "stop")
+            update_loading_progress "Stopping Xray service..." 0
             stop
+            update_loading_progress "Xray service stopped successfully." 100
             exit 0
             ;;
         *)

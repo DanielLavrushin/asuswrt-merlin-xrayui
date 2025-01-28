@@ -63,9 +63,14 @@ window.LoadingTime = (seconds: number, flag: string | EngineLoadingProgress | un
 };
 
 window.updateLoadingProgress = (progress?: EngineLoadingProgress) => {
-  const proceedingMainText = document.getElementById("proceeding_main_txt")!;
-  const proceedingText = document.getElementById("proceeding_txt")!;
-  const loading = document.getElementById("Loading")!;
+  const proceedingMainText = document.getElementById("proceeding_main_txt");
+  const proceedingText = document.getElementById("proceeding_txt");
+  const loading = document.getElementById("Loading");
+
+  if (!proceedingMainText || !proceedingText || !loading) {
+    console.error("Required DOM elements not found.");
+    return;
+  }
 
   loading.style.visibility = "visible";
 
@@ -73,7 +78,7 @@ window.updateLoadingProgress = (progress?: EngineLoadingProgress) => {
     window.showtext(proceedingMainText, progress.message + "<br />");
   }
   if (progress?.progress) {
-    window.showtext(proceedingText, `<span style="color:#FFFFCC;">Progress: ${progress?.progress}%</span>`);
+    window.showtext(proceedingText, `Progress: ${progress.progress}%`);
   }
 };
 

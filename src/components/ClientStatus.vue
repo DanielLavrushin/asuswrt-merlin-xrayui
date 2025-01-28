@@ -23,20 +23,23 @@
           </span>
         </td>
       </tr>
+      <import-config v-model:config="config"></import-config>
       <startup-control></startup-control>
     </tbody>
   </table>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, ref } from "vue";
 import engine, { SubmtActions } from "../modules/Engine";
 import StartupControl from "./StartupControl.vue";
+import ImportConfig from "./ImportConfig.vue";
 
 export default defineComponent({
   name: "ClientStatus",
   components: {
     StartupControl,
+    ImportConfig,
   },
   data() {
     return {
@@ -67,6 +70,10 @@ export default defineComponent({
       window.location.reload();
     },
   },
-  mounted() { },
+  setup() {
+    const config = ref(engine.xrayConfig);
+
+    return { config };
+  },
 });
 </script>

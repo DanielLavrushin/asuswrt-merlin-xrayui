@@ -7,20 +7,29 @@
       <table class="FormTable modal-form-table">
         <tbody>
           <tr>
-            <td>QR Code</td>
+            <th>QR Code
+              <hint>
+                Try to print screen your QR code and xrayui will try to read it.
+              </hint>
+            </th>
             <td>
               <input type="file" accept="image/*" v-on:change="selectFile" />
             </td>
           </tr>
           <tr>
-            <td>Porotocol Url</td>
+            <th>Porotocol Url</th>
             <td>
               <div class="textarea-wrapper">
                 <textarea v-model="protocolUrl" rows="25"></textarea>
               </div>
             </td>
           </tr>
-
+          <tr>
+            <th>I'd like to have a comple import</th>
+            <td>
+              <input type="file" accept="image/*" v-on:change="selectFile" />
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -34,22 +43,22 @@
 import { defineComponent, ref } from "vue";
 import Modal from "../Modal.vue";
 import jsQR from "jsqr";
-import { XrayOutboundObject } from "@/modules/OutboundObjects";
-import { IProtocolType } from "@/modules/Interfaces";
-import { XrayStreamRealitySettingsObject } from "@/modules/CommonObjects";
+import { XrayObject } from "@/modules/XrayConfig";
 import ProxyParser from "@/modules/parsers/ProxyParser";
+import Hint from "../Hint.vue";
 
 export default defineComponent({
-  name: "OutboundParserModal",
+  name: "ImportConfigModal",
   components: {
     Modal,
+    Hint
   },
   data() {
     return {
     };
   },
   props: {
-    outbounds: Array as () => XrayOutboundObject<IProtocolType>[],
+    config: XrayObject
   },
 
   setup(props, { emit }) {
@@ -101,7 +110,6 @@ export default defineComponent({
 
     const parse = () => {
       if (protocolUrl.value) {
-
         const parser = new ProxyParser(protocolUrl.value);
         const proxy = parser.getOutbound();
         protocolUrl.value = "";
@@ -109,25 +117,12 @@ export default defineComponent({
 
         if (proxy) {
 
-          props.outbounds?.push(proxy);
-          emit("update:outbounds", props.outbounds);
+          props.config?.outbounds?.push(proxy);
+          emit("update:config", props.config);
           importModal.value.close();
           alert(`Configuration ${proxy.protocol}:${proxy.tag} imported successfully`);
         } else {
           alert(`Parse of this protocol is not supported yet`);
-        }
-      }
-    }
-
-    const parseSecurity = (proxy: XrayOutboundObject<IProtocolType>, parsedParams: Record<string, string>) => {
-      if (proxy.streamSettings) {
-        if (parsedParams.security === "reality") {
-          const reality = new XrayStreamRealitySettingsObject();
-          reality.fingerprint = parsedParams.fp;
-          reality.publicKey = parsedParams.pbk;
-          reality.shortId = parsedParams.sid;
-          reality.serverName = parsedParams.sni;
-          proxy.streamSettings.realitySettings = reality;
         }
       }
     }

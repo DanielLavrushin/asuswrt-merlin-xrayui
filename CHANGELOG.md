@@ -1,9 +1,11 @@
 # XRAYUI Changelog
 
-## [0.xx.x] - 2025-xx-xx
+## [x.xx.x] - 2025-xx-xx
 
 - ADDED: Disaply selected mode in the `Ports Bypass/Redirect Policy`.
 - ADDED: A new `Logs` window to monitor the xray logs from the web ui.
+- UPDATED: move outbounds import button to the Configuration section.
+- IMPROVED: Enhance import experience by optionally adding nessessary default congiguration items (adding default outbounds, dns, rules).
 - IMPROVED: Enhance visual loading waiting display.
 - IMPROVED: remove TCP `fragmentation option` from the `FREEDOM` proxy and simplify fragment packet method handling.
 

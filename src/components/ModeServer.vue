@@ -76,9 +76,8 @@ export default defineComponent({
     }
 
     const applySettings = async () => {
-      let config = engine.prepareServerConfig();
-
-      await engine.submit(SubmtActions.configurationApply, config);
+      let cfg = engine.prepareServerConfig(config.value);
+      await engine.submit(SubmtActions.configurationApply, cfg);
       await engine.checkLoadingProgress();
       await engine.loadXrayConfig();
 

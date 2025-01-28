@@ -26,6 +26,9 @@ CWARN='\033[0;33m'
 CINFO='\033[0;36m'
 CRESET='\033[0m'
 
+#error_handler() {}
+#trap 'error_handler' EXIT
+
 printlog() {
     if [ "$1" = "true" ]; then
         logger -t "XRAYUI" "$2"
@@ -34,6 +37,7 @@ printlog() {
 }
 
 start() {
+
     mode=$(am_settings_get xray_mode)
     if [ -z "$mode" ]; then
         printlog true "No mode found in custom settings. Defaulting to server mode."
@@ -41,11 +45,14 @@ start() {
         am_settings_set xray_mode $mode
     fi
 
+    update_loading_progress "Testing xray configuration $DESC..."
+
     test_xray_config
 
     printlog true "Xray operates in $mode mode"
     printlog true "Starting $DESC with $ARGS"
 
+    update_loading_progress "Starting $DESC..."
     xray $ARGS >/dev/null 2>&1 &
     echo $! >$PIDFILE
 
@@ -63,6 +70,8 @@ start() {
 
 stop() {
     printlog true "Stopping $DESC" $CWARN
+
+    update_loading_progress "Stopping $DESC"
 
     killall xray
     # Remove the PID file if it exists
@@ -222,6 +231,7 @@ configure_firewall_server() {
 
 configure_firewall_client() {
     printlog true "Configuring Xray firewall rules..."
+    update_loading_progress "Configuring Xray firewall rules..."
 
     # Check if 'xray' process is running
     get_xray_proc
@@ -256,6 +266,9 @@ configure_firewall_client() {
 }
 
 configure_firewall_client_direct() {
+
+    update_loading_progress "Configuring firewall DIRECT rules..."
+
     # Set up NAT-only rules for REDIRECT mode.
     iptables -t nat -F XRAYUI 2>/dev/null
     iptables -t nat -X XRAYUI 2>/dev/null
@@ -351,6 +364,8 @@ configure_firewall_client_direct() {
 }
 
 configure_firewall_client_tproxy() {
+
+    update_loading_progress "Configuring firewall TPROXY rules..."
 
     # Ensure TPROXY module is loaded
     if ! lsmod | grep -q "xt_TPROXY"; then
@@ -451,6 +466,7 @@ configure_firewall_client_tproxy() {
 cleanup_firewall() {
 
     printlog true "Cleaning up Xray Client firewall rules..."
+    update_loading_progress "Cleaning up Xray Client firewall rules..."
 
     iptables -t nat -F XRAYUI 2>/dev/null || printlog true "Failed to flush NAT chain. Was it already empty?" $CWARN
     iptables -t nat -X XRAYUI 2>/dev/null || printlog true "Failed to remove NAT chain. Was it already empty?" $CWARN
@@ -467,6 +483,8 @@ cleanup_firewall() {
     fi
 
     printlog true "Restarting firewall and DNS services..."
+    update_loading_progress "Restarting firewall and DNS services..."
+
     service restart_firewall >/dev/null 2>&1 && printlog true "Firewall service restarted successfully." $CSUC
     service restart_dnsmasq >/dev/null 2>&1 && printlog true "DNS service restarted successfully." $CSUC
 
@@ -842,10 +860,13 @@ switch_mode() {
 }
 
 apply_config() {
+    update_loading_progress "Applying new server configuration..." 0
     local temp_config="/tmp/xray_server_config_new.json"
     local backup_config="/opt/etc/xray/config.json-temp.bak"
 
     local incoming_config=$(reconstruct_payload)
+
+    update_loading_progress "Checking incoming configuration..." 5
 
     if [ -z "$incoming_config" ]; then
         printlog true "No new server configuration provided."
@@ -888,7 +909,9 @@ apply_config() {
     rm -f "$temp_config"
 
     if [ -f "$PIDFILE" ]; then
+        update_loading_progress "Restarting Xray service..." 35
         restart
+        update_loading_progress "Xray service restarted successfully."
     fi
 
     if [ $? -ne 0 ]; then
@@ -901,6 +924,9 @@ apply_config() {
     printlog true "Xray service restarted successfully with the new configuration." $CSUC
 
     rm -f "$backup_config"
+
+    update_loading_progress "Configuration applied successfully." 100
+
     exit 0
 }
 
@@ -1356,6 +1382,8 @@ fixme() {
 }
 
 update_community_geodata() {
+    update_loading_progress "Updating community geodata files..." 0
+
     local geosite_url="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
     local geoip_url="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
 
@@ -1364,6 +1392,7 @@ update_community_geodata() {
     mkdir -p "$target_dir"
 
     printlog true "Downloading geosite.dat..."
+    update_loading_progress "Downloading geosite.dat..."
     curl -L "$geosite_url" -o "$target_dir/geosite.dat"
     if [ $? -ne 0 ]; then
         printlog true "Failed to download geosite.dat." $CERR
@@ -1371,6 +1400,7 @@ update_community_geodata() {
     fi
 
     printlog true "Downloading geoip.dat..."
+    update_loading_progress "Downloading geoip.dat..."
     curl -L "$geoip_url" -o "$target_dir/geoip.dat"
     if [ $? -ne 0 ]; then
         printlog true "Failed to download geoip.dat." $CERR
@@ -1380,11 +1410,14 @@ update_community_geodata() {
     if [[ -f "$target_dir/geosite.dat" && -f "$target_dir/geoip.dat" ]]; then
         printlog true "Files successfully placed in $target_dir." $CSUC
         if [ -f "$PIDFILE" ]; then
+            update_loading_progress "Restarting Xray service..." 60
             restart
         fi
     else
         printlog true "Failed to place geosite.dat/geoip.dat in $target_dir." $CERR
     fi
+    update_loading_progress "Community geodata files updated successfully." 100
+
 }
 
 set_community_geodata_dates() {
@@ -1676,6 +1709,34 @@ change_log_level() {
     fi
 
     return 0
+}
+
+update_loading_progress() {
+    local message=$1
+    local progress=$2
+
+    ensure_ui_response_file
+
+    local json_content
+    if [ -f "$XRAY_UI_RESPONSE_FILE" ]; then
+        json_content=$(cat "$XRAY_UI_RESPONSE_FILE")
+    else
+        json_content="{}"
+    fi
+
+    if [ -n "$progress" ]; then
+
+        json_content=$(echo "$json_content" | jq --argjson progress "$progress" --arg message "$message" '
+            .loading.message = $message |
+            .loading.progress = $progress
+        ')
+    else
+        json_content=$(echo "$json_content" | jq --arg message "$message" '
+            .loading.message = $message
+        ')
+    fi
+
+    echo "$json_content" >"$XRAY_UI_RESPONSE_FILE"
 }
 
 case "$1" in

@@ -1,97 +1,96 @@
 <template>
-    <server-status v-if="engine.mode == 'server'"></server-status>
-    <client-status v-if="engine.mode == 'client'"></client-status>
-    <inbounds @show-transport="show_transport" @show-sniffing="show_sniffing"></inbounds>
-    <outbounds @show-transport="show_transport"></outbounds>
-    <dns></dns>
-    <routing></routing>
-    <sniffing-modal ref="sniffingModal" />
-    <stream-settings-modal ref="transportModal" />
-    <div class="apply_gen">
-        <input class="button_gen" @click.prevent="applyClientSettings()" type="button" value="Apply" />
-    </div>
-    <clients-online v-if="engine.mode == 'server'"></clients-online>
-    <logs-manager v-if="config.log"></logs-manager>
-    <version></version>
+  <server-status v-if="engine.mode == 'server'"></server-status>
+  <client-status v-if="engine.mode == 'client'"></client-status>
+  <inbounds @show-transport="show_transport" @show-sniffing="show_sniffing"></inbounds>
+  <outbounds @show-transport="show_transport"></outbounds>
+  <dns></dns>
+  <routing></routing>
+  <sniffing-modal ref="sniffingModal" />
+  <stream-settings-modal ref="transportModal" />
+  <div class="apply_gen">
+    <input class="button_gen" @click.prevent="applySettings" type="button" value="Apply" />
+  </div>
+  <clients-online v-if="engine.mode == 'server'"></clients-online>
+  <logs-manager v-if="config.log"></logs-manager>
+  <version></version>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "vue";
-import engine, { SubmtActions } from "../modules/Engine";
+  import { defineComponent, ref } from "vue";
+  import engine, { SubmtActions } from "../modules/Engine";
 
-import Modal from "./Modal.vue";
+  import Modal from "./Modal.vue";
 
-import { IProtocolType } from "../modules/Interfaces";
-import { XrayInboundObject } from "../modules/InboundObjects";
-import { XrayOutboundObject } from "../modules/OutboundObjects";
+  import { IProtocolType } from "../modules/Interfaces";
+  import { XrayInboundObject } from "../modules/InboundObjects";
+  import { XrayOutboundObject } from "../modules/OutboundObjects";
 
-import ServerStatus from "./ServerStatus.vue";
-import ClientStatus from "./ClientStatus.vue";
-import Inbounds from "./Inbounds.vue";
-import Outbounds from "./Outbounds.vue";
-import Routing from "./Routing.vue";
-import Dns from "./Dns.vue";
-import Version from "./Version.vue";
-import ClientsOnline from "./ClientsOnline.vue";
+  import ServerStatus from "./ServerStatus.vue";
+  import ClientStatus from "./ClientStatus.vue";
+  import Inbounds from "./Inbounds.vue";
+  import Outbounds from "./Outbounds.vue";
+  import Routing from "./Routing.vue";
+  import Dns from "./Dns.vue";
+  import Version from "./Version.vue";
+  import ClientsOnline from "./ClientsOnline.vue";
 
-import SniffingModal from "./modals/SniffingModal.vue";
-import StreamSettingsModal from "./modals/StreamSettingsModal.vue";
-import LogsManager from "./Logs.vue";
+  import SniffingModal from "./modals/SniffingModal.vue";
+  import StreamSettingsModal from "./modals/StreamSettingsModal.vue";
+  import LogsManager from "./Logs.vue";
 
-export default defineComponent({
+  export default defineComponent({
     name: "ModeServer",
     components: {
-        Modal,
-        Routing,
-        Inbounds,
-        Dns,
-        Version,
-        Outbounds,
-        ServerStatus,
-        ClientStatus,
-        SniffingModal,
-        ClientsOnline,
-        StreamSettingsModal,
-        LogsManager
+      Modal,
+      Routing,
+      Inbounds,
+      Dns,
+      Version,
+      Outbounds,
+      ServerStatus,
+      ClientStatus,
+      SniffingModal,
+      ClientsOnline,
+      StreamSettingsModal,
+      LogsManager
     },
     methods: {
-
-        async show_transport(proxy: XrayInboundObject<IProtocolType> | XrayOutboundObject<IProtocolType>, type: string) {
-            this.transportModal.show(proxy, type);
-        },
-        async show_sniffing(proxy: XrayInboundObject<IProtocolType>) {
-            this.sniffingModal.show(proxy);
-        },
-
-        async applyClientSettings() {
-            let delay = 10000;
-            window.showLoading(delay, "waiting");
-            let config = engine.prepareServerConfig();
-
-            await engine.submit(SubmtActions.configurationApply, config, delay);
-            await engine.loadXrayConfig();
-            window.hideLoading();
-            window.location.reload();
-        },
+      async show_transport(proxy: XrayInboundObject<IProtocolType> | XrayOutboundObject<IProtocolType>, type: string) {
+        this.transportModal.show(proxy, type);
+      },
+      async show_sniffing(proxy: XrayInboundObject<IProtocolType>) {
+        this.sniffingModal.show(proxy);
+      }
     },
 
     setup() {
-        const config = ref(engine.xrayConfig);
-        const transportModal = ref();
-        const sniffingModal = ref();
+      const config = ref(engine.xrayConfig);
+      const transportModal = ref();
+      const sniffingModal = ref();
 
-        return {
-            config,
-            engine,
-            transportModal,
-            sniffingModal,
-        };
-    },
-});
+      const applySettings = async () => {
+        let config = engine.prepareServerConfig();
+
+        await engine.submit(SubmtActions.configurationApply, config);
+        await engine.checkLoadingProgress();
+        await engine.loadXrayConfig();
+
+        window.location.reload();
+      };
+
+      return {
+        config,
+        engine,
+        transportModal,
+        sniffingModal,
+        applySettings
+      };
+    }
+  });
 </script>
 
 <style scoped>
-.apply_gen {
+  .apply_gen {
     margin-bottom: 10px;
-}
+  }
 </style>

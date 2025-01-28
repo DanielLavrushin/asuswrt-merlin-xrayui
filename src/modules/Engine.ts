@@ -26,12 +26,27 @@ class EngineSsl {
   public keyFile!: string;
 }
 
+class EngineLoadingProgress {
+  public progress = 0;
+  public message = "";
+
+  constructor(progress?: number, message?: string) {
+    if (progress) {
+      this.progress = progress;
+    }
+    if (message) {
+      this.message = message;
+    }
+  }
+}
+
 class EngineResponseConfig {
   public wireguard?: EngineWireguard;
   public reality?: EngineReality;
   public certificates?: EngineSsl;
   public xray?: { test: string };
   public geodata?: EngineGeodatConfig = new EngineGeodatConfig();
+  public loading?: EngineLoadingProgress;
 }
 class EngineGeodatConfig {
   public community?: Record<string, string>;
@@ -208,6 +223,33 @@ class Engine {
     const response = await axios.get<EngineResponseConfig>("/ext/xrayui/xray-ui-response.json");
     let responseConfig = response.data;
     return responseConfig;
+  }
+
+  async checkLoadingProgress(): Promise<EngineLoadingProgress> {
+    return new Promise((resolve, reject) => {
+      let loadingProgress = new EngineLoadingProgress(0, "Please, wait");
+      window.showLoading(null, loadingProgress);
+
+      const checkProgressInterval = setInterval(async () => {
+        try {
+          const response = await this.getXrayResponse();
+          if (response.loading) {
+            loadingProgress = response.loading;
+            window.updateLoadingProgress(loadingProgress);
+          }
+
+          if (loadingProgress.progress === 100) {
+            clearInterval(checkProgressInterval);
+            window.hideLoading();
+            resolve(loadingProgress);
+          }
+        } catch (error) {
+          clearInterval(checkProgressInterval);
+          window.hideLoading();
+          reject(error);
+        }
+      }, 1000);
+    });
   }
 
   async loadXrayConfig(): Promise<XrayObject | null> {
@@ -402,4 +444,4 @@ class Engine {
 let engine = new Engine();
 export default engine;
 
-export { EngineGeodatConfig, GeodatTagRequest, SubmtActions, Engine, engine };
+export { EngineLoadingProgress, EngineGeodatConfig, GeodatTagRequest, SubmtActions, Engine, engine };

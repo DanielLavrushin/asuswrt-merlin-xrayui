@@ -176,10 +176,7 @@ class Engine {
     return base64String;
   };
 
-  prepareServerConfig(): XrayObject {
-    let config = new XrayObject();
-    Object.assign(config, this.xrayConfig);
-
+  prepareServerConfig(config: XrayObject): XrayObject {
     config.inbounds.forEach((proxy) => {
       proxy.normalize();
     });

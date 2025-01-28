@@ -1,6 +1,6 @@
 <template>
-  <server-status v-if="engine.mode == 'server'"></server-status>
-  <client-status v-if="engine.mode == 'client'"></client-status>
+  <server-status v-if="engine.mode == 'server'" v-model:config="config"></server-status>
+  <client-status v-if="engine.mode == 'client'" v-model:config="config"></client-status>
   <inbounds @show-transport="show_transport" @show-sniffing="show_sniffing"></inbounds>
   <outbounds @show-transport="show_transport"></outbounds>
   <dns></dns>
@@ -8,7 +8,7 @@
   <sniffing-modal ref="sniffingModal" />
   <stream-settings-modal ref="transportModal" />
   <div class="apply_gen">
-    <input class="button_gen" @click.prevent="applySettings" type="button" value="Apply" />
+    <input class="button_gen" @click.prevent="applySettings()" type="button" value="Apply" />
   </div>
   <clients-online v-if="engine.mode == 'server'"></clients-online>
   <logs-manager v-if="config.log" v-model:logs="config.log"></logs-manager>
@@ -37,6 +37,7 @@ import ClientsOnline from "./ClientsOnline.vue";
 import SniffingModal from "./modals/SniffingModal.vue";
 import StreamSettingsModal from "./modals/StreamSettingsModal.vue";
 import LogsManager from "./Logs.vue";
+import { XrayObject } from "@/modules/XrayConfig";
 
 export default defineComponent({
   name: "ModeServer",
@@ -54,19 +55,25 @@ export default defineComponent({
     StreamSettingsModal,
     LogsManager
   },
-  methods: {
-    async show_transport(proxy: XrayInboundObject<IProtocolType> | XrayOutboundObject<IProtocolType>, type: string) {
-      this.transportModal.show(proxy, type);
-    },
-    async show_sniffing(proxy: XrayInboundObject<IProtocolType>) {
-      this.sniffingModal.show(proxy);
+  props: {
+    config: {
+      type: XrayObject,
+      required: true
     }
   },
 
-  setup() {
-    const config = ref(engine.xrayConfig);
+  setup(props) {
+    const config = ref(props.config);
     const transportModal = ref();
     const sniffingModal = ref();
+
+    const show_transport = (proxy: XrayInboundObject<IProtocolType> | XrayOutboundObject<IProtocolType>, type: string) => {
+      transportModal.value.show(proxy, type);
+    }
+
+    const show_sniffing = (proxy: XrayInboundObject<IProtocolType>) => {
+      sniffingModal.value.show(proxy);
+    }
 
     const applySettings = async () => {
       let config = engine.prepareServerConfig();
@@ -83,9 +90,11 @@ export default defineComponent({
       engine,
       transportModal,
       sniffingModal,
-      applySettings
+      applySettings,
+      show_transport,
+      show_sniffing
     };
-  }
+  },
 });
 </script>
 

@@ -7,7 +7,7 @@ import { plainToInstance } from "class-transformer";
 
 class XrayInboundObject<TProxy extends IProtocolType> {
   public protocol!: XrayProtocol;
-  public listen?: string;
+  public listen? = "0.0.0.0";
   public port!: number | string;
   public tag?: string;
   public settings!: TProxy;
@@ -24,6 +24,8 @@ class XrayInboundObject<TProxy extends IProtocolType> {
   }
 
   normalize = () => {
+    this.tag = this.tag === "" ? undefined : this.tag;
+
     if (this.streamSettings) {
       this.streamSettings = plainToInstance(XrayStreamSettingsObject, this.streamSettings) as XrayStreamSettingsObject;
       this.streamSettings = this.streamSettings.normalize();

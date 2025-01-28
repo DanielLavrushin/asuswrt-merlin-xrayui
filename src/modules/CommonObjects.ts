@@ -133,11 +133,21 @@ class XrayStreamRealitySettingsObject {
 
 class XrayLogObject {
   static levelOptions = ["debug", "info", "warning", "error", "none"];
-  public access = "";
-  public error = "";
-  public loglevel = "warning";
-  public dnsLog = false;
-  public maskAddress = "";
+  public access? = "/tmp/xray_access.log";
+  public error? = "/tmp/xray_error.log";
+  public loglevel? = "warning";
+  public dnsLog? = false;
+  public maskAddress? = "";
+
+  normalize(): this {
+    this.access = this.access == "" ? undefined : this.access;
+    this.error = this.error == "" ? undefined : this.error;
+    this.loglevel = this.loglevel == "none" ? undefined : this.loglevel;
+    this.dnsLog = !this.dnsLog ? undefined : this.dnsLog;
+    this.maskAddress = this.maskAddress == "" ? undefined : this.maskAddress;
+
+    return this;
+  }
 }
 
 class XrayDnsObject {
@@ -146,12 +156,12 @@ class XrayDnsObject {
   public hosts?: Record<string, string | string[]> | undefined = {};
   public servers: (string | XrayDnsServerObject)[] | undefined = [];
   public clientIp?: string;
-  public queryStrategy?: string;
+  public queryStrategy?: string = "UseIP";
   public disableCache?: boolean;
   public disableFallback?: boolean;
   public disableFallbackIfMatch?: boolean;
 
-  public normalize() {
+  public normalize(): this {
     this.clientIp = this.clientIp == "" ? undefined : this.clientIp;
     this.queryStrategy = this.queryStrategy == "" ? undefined : this.queryStrategy;
     this.disableCache = !this.disableCache ? undefined : this.disableCache;
@@ -159,7 +169,17 @@ class XrayDnsObject {
     this.disableFallbackIfMatch = !this.disableFallbackIfMatch ? undefined : this.disableFallbackIfMatch;
     this.servers = this.servers?.length == 0 ? undefined : this.servers;
     this.hosts = !this.hosts || Object.keys(this.hosts).length == 0 ? undefined : this.hosts;
+
+    return this;
   }
+
+  public default = (): this => {
+    this.queryStrategy = "UseIP";
+    this.servers = [];
+    this.servers.push("https+local://dns.google/dns-query");
+
+    return this;
+  };
 }
 
 class XrayDnsServerObject {
@@ -179,7 +199,7 @@ class XrayRoutingObject {
   public rules?: XrayRoutingRuleObject[] = [];
   public portsPolicy?: XrayPortsPolicy = new XrayPortsPolicy();
 
-  public normalize() {
+  public normalize(): this {
     this.domainStrategy = this.domainStrategy == "AsIs" ? undefined : this.domainStrategy;
     this.domainMatcher = this.domainMatcher == "hybrid" ? undefined : this.domainMatcher;
 
@@ -193,7 +213,23 @@ class XrayRoutingObject {
     } else {
       this.rules = undefined;
     }
+
+    return this;
   }
+
+  public default = (): this => {
+    this.domainStrategy = "IPIfNonMatch";
+    this.rules = [];
+
+    const rule = new XrayRoutingRuleObject();
+    rule.name = "myip.com to proxy";
+    rule.domain = ["domain:myip.com"];
+    rule.outboundTag = "proxy";
+
+    this.rules.push(rule);
+
+    return this;
+  };
 }
 
 class XrayPortsPolicy {

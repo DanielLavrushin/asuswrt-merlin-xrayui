@@ -44,7 +44,7 @@
                               <div id="formfontdesc" class="formfontdesc">This UI control page provides a simple
                                 interface to manage and monitor the X-ray Core's configuration and it's status.</div>
                               <div style="margin: 10px 0 10px 5px" class="splitLine"></div>
-                              <mode-server></mode-server>
+                              <mode-server v-model:config="xrayConfig"></mode-server>
                             </div>
                           </td>
                         </tr>

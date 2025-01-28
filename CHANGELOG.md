@@ -5,6 +5,7 @@
 - ADDED: Disaply selected mode in the `Ports Bypass/Redirect Policy`.
 - ADDED: A new `Logs` window to monitor the xray logs from the web ui.
 - UPDATED: move outbounds import button to the Configuration section.
+- IMPROVED: Total refactoring of importing new server connection in a server mode. `import` row was migrated to the `Configuration` Section and located under `Import config file`. In an import modal a new checkbox was introduced: `I'd like to have a complete setup!` - enabling this will create all required and missed config options when importing a server connection url. This will allow to create a complete xray client config within a single button-click, however be aware all previous configuration will be wiped.
 - IMPROVED: Enhance import experience by optionally adding nessessary default congiguration items (adding default outbounds, dns, rules).
 - IMPROVED: Enhance visual loading waiting display.
 - IMPROVED: remove TCP `fragmentation option` from the `FREEDOM` proxy and simplify fragment packet method handling.

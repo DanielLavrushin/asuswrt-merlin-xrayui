@@ -7,7 +7,7 @@ window.hint = (message: string) => {
 };
 let loadingProgressStarted = false;
 window.LoadingTime = (seconds: number, flag: string | EngineLoadingProgress | undefined) => {
-  if (flag as EngineLoadingProgress) {
+  if (flag instanceof EngineLoadingProgress) {
     window.updateLoadingProgress(flag as EngineLoadingProgress);
     return;
   }

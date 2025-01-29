@@ -2,6 +2,8 @@
 
 ## [0.31.0] - 2025-01-29
 
+> _Important: Please clear your browser cache to ensure that outdated files are not loaded._
+
 - ADDED: Display selected mode in the `Ports Bypass/Redirect Policy`.
 - ADDED: A new `Logs` section to monitor the Xray logs from the web UI.
 - UPDATED: Moved the outbounds `import` button to the `Configuration` section.

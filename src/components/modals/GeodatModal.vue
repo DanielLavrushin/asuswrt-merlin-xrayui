@@ -141,11 +141,8 @@ export default defineComponent({
         return;
       }
 
-      const delay = 5000;
-      window.showLoading(delay, "waiting");
-
-      await engine.submit(SubmtActions.geoDataRecompile, file.value, delay);
-
+      await engine.submit(SubmtActions.geoDataRecompile, file.value);
+      await engine.checkLoadingProgress();
       window.location.reload();
     };
 

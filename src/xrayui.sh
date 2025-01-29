@@ -91,12 +91,14 @@ restart() {
 
 update() {
 
+    update_loading_progress "Updating $DESC..." 0
     local url="https://github.com/daniellavrushin/asuswrt-merlin-xrayui/releases/latest/download/asuswrt-merlin-xrayui.tar.gz"
     local temp_file="/tmp/asuswrt-merlin-xrayui.tar.gz"
     local addon_dir="/jffs/addons"
     local script_path="/jffs/scripts/xrayui"
 
     printlog true "Downloading the latest version..."
+    update_loading_progress "Downloading the latest version..."
     if wget -O "$temp_file" "$url"; then
         printlog true "Download completed successfully."
     else
@@ -113,6 +115,7 @@ update() {
     fi
 
     printlog true "Extracting the package..."
+    update_loading_progress "Extracting the package..."
     if tar -xzf "$temp_file" -C "$addon_dir"; then
         printlog true "Extraction completed."
     else
@@ -121,6 +124,7 @@ update() {
     fi
 
     printlog true "Setting up the script..."
+    update_loading_progress "Setting up the script..."
     if mv "$addon_dir/xrayui/xrayui" "$script_path" && chmod 0777 "$script_path"; then
         printlog true "Script set up successfully." $CSUC
     else
@@ -129,6 +133,7 @@ update() {
     fi
 
     printlog true "Running the installation..."
+    update_loading_progress "Running the installation..."
     if sh "$script_path" install; then
         printlog true "Installation completed successfully." $CSUC
     else
@@ -141,6 +146,7 @@ update() {
     fi
 
     printlog true "Update process completed!" $CSUC
+    update_loading_progress "Update process completed!" 100
 }
 
 detect_entware_path() {
@@ -1013,6 +1019,7 @@ install_opkg_package() {
 }
 
 install() {
+    update_loading_progress "Installing XRAY UI..."
     printlog true "Starting XRAY UI installation process."
 
     # Check for Entware
@@ -1023,6 +1030,7 @@ install() {
     fi
     printlog true "Entware is installed." $CSUC
 
+    update_loading_progress "Installing dependencies..."
     install_opkg_package sed true
     install_opkg_package jq true
     install_opkg_package iptables true
@@ -1037,6 +1045,7 @@ install() {
     # backup config
     cp "/opt/etc/xray/config.json" "/opt/etc/xray/config.json.bak"
 
+    update_loading_progress "Configuring XRAY UI..."
     # Add or update nat-start
     printlog true "Ensuring /jffs/scripts/nat-start contains required entry."
     mkdir -p /jffs/scripts
@@ -1116,6 +1125,7 @@ install() {
 
     mkdir -p "$XRAYUI_SHARED_DIR" || printlog true "Failed to create $XRAYUI_SHARED_DIR." $CERR
 
+    update_loading_progress "Downloading XRAYUI geodata files builder..."
     if wget --no-hsts -O "/tmp/xraydatbuilder.tar.gz" "https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/releases/latest/download/xrayui-datbuilder.tar.gz"; then
         tar -xzf /tmp/xraydatbuilder.tar.gz -C "$XRAYUI_SHARED_DIR" || printlog true "Failed to extract xraydatbuilder.tar.gz." $CERR
         rm -f /tmp/xraydatbuilder.tar.gz || printlog true "Failed to remove xraydatbuilder.tar.gz." $CERR
@@ -1149,6 +1159,8 @@ EOF
     printlog true "============================================" $CSUC
     printlog true "Installation process completed successfully." $CSUC
     printlog true "============================================" $CSUC
+
+    update_loading_progress "Installation completed successfully."
 }
 
 uninstall() {
@@ -1273,7 +1285,7 @@ uninstall() {
 }
 
 enable_config_logs() {
-
+    update_loading_progress "Enabling Xray configuration logs..." 0
     local temp_file="/tmp/xray_config.json"
 
     printlog true "Checking for the 'log' section in the Xray configuration."
@@ -1313,6 +1325,7 @@ enable_config_logs() {
         restart
     fi
 
+    update_loading_progress "Configuration logs enabled successfully." 100
     return 0
 }
 

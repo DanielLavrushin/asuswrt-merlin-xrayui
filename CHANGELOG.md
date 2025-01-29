@@ -1,14 +1,13 @@
 # XRAYUI Changelog
 
-## [x.xx.x] - 2025-xx-xx
+## [0.31.0] - 2025-01-29
 
-- ADDED: Disaply selected mode in the `Ports Bypass/Redirect Policy`.
-- ADDED: A new `Logs` window to monitor the xray logs from the web ui.
-- UPDATED: move outbounds import button to the Configuration section.
-- IMPROVED: Total refactoring of importing new server connection in a server mode. `import` row was migrated to the `Configuration` Section and located under `Import config file`. In an import modal a new checkbox was introduced: `I'd like to have a complete setup!` - enabling this will create all required and missed config options when importing a server connection url. This will allow to create a complete xray client config within a single button-click, however be aware all previous configuration will be wiped.
-- IMPROVED: Enhance import experience by optionally adding nessessary default congiguration items (adding default outbounds, dns, rules).
-- IMPROVED: Enhance visual loading waiting display.
-- IMPROVED: remove TCP `fragmentation option` from the `FREEDOM` proxy and simplify fragment packet method handling.
+- ADDED: Display selected mode in the `Ports Bypass/Redirect Policy`.
+- ADDED: A new `Logs` section to monitor the Xray logs from the web UI.
+- UPDATED: Moved the outbounds `import` button to the `Configuration` section.
+- IMPROVED: Completely refactored the process of importing a new configuration connection in a `client` mode. The Import row has been migrated to the `Configuration` section and is now located under `Import Config File`. In the import modal, a new checkbox titled `I'd like to have a complete setup!` has been introduced. Enabling this option will create all required and missing configuration options (Inbounds, Outbounds, DNS settings etc.) when importing a server connection URL, allowing to set up a complete Xray client configuration with a single click. **Note: Enabling this will overwrite all previous configurations**.
+- IMPROVED: Enhanced the visual loading and waiting display for a smoother user experience.
+- IMPROVED: Removed the `TCP fragmentation` checkbox from the FREEDOM proxy and simplified the fragment packet method handling.
 
 ## [0.30.0] - 2025-01-26
 

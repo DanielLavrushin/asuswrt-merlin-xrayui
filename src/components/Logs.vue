@@ -29,7 +29,7 @@
                         Errors Level
                     </th>
                     <td>
-                        <select class="input_option" v-model="loglevel" @change="updateLogsLevel">
+                        <select class="input_option" v-model="logs.loglevel" @change="updateLogsLevel">
                             <option v-for="level in levels" :value="level">{{ level }}</option>
                         </select>
                         <span class="hint-color">`none` also turn-off access logs</span>
@@ -37,7 +37,7 @@
                 </tr>
                 <tr>
                     <td class="logs-area-row" colspan="2">
-                        <pre class="logs-area-content">{{ logs }}</pre>
+                        <pre class="logs-area-content">{{ logsContent }}</pre>
                     </td>
                 </tr>
             </tbody>
@@ -46,25 +46,26 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, onBeforeUnmount, watch, onUnmounted, computed } from "vue";
+import { defineComponent, ref } from "vue";
 import axios from "axios";
 import engine, { SubmtActions } from "../modules/Engine";
-import xrayConfig from "@/modules/XrayConfig";
-
-interface Client {
-    ip: string;
-    email: string[];
-}
+import { XrayLogObject } from "@/modules/CommonObjects";
 
 export default defineComponent({
     name: "Logs",
+    props: {
+        logs: {
+            type: XrayLogObject,
+            required: true
+        }
+    },
+    setup(props) {
 
-    setup() {
-
-        const logs = ref<string>("");
         const follow = ref<boolean>(false);
         const file = ref<string>("/ext/xrayui/xray_access_partial.asp");
-        const loglevel = ref<string>(xrayConfig.log?.loglevel ?? "warning");
+        const logs = ref<XrayLogObject>(props.logs);
+        const logsContent = ref<string>("");
+
         const fetchLogs = async () => {
             if (!follow.value) {
                 return;
@@ -73,37 +74,26 @@ export default defineComponent({
             await engine.submit(SubmtActions.fetchXrayLogs);
             await setTimeout(async () => {
                 const response = await axios.get(file.value);
-                logs.value = response.data;
+                logsContent.value = response.data;
             }, 1000);
         };
 
-        const fetchLogsInterval = setInterval(async () => {
+        setInterval(async () => {
             await fetchLogs();
         }, 2000);
 
         const updateLogsLevel = async () => {
-            let delay = 5000;
-            window.showLoading(delay, 'waiting');
-            await engine.submit(SubmtActions.updateLogsLevel, { log_level: loglevel.value }, delay);
-            window.hideLoading();
+
+            await engine.submit(SubmtActions.updateLogsLevel, { log_level: logs.value.loglevel });
+            await engine.checkLoadingProgress();
         };
-
-        watch(
-            () => xrayConfig.log?.loglevel,
-            async (newVal) => {
-                if (newVal) {
-                    loglevel.value = newVal;
-                }
-            },
-            { immediate: true }
-        );
-
 
         return {
             follow,
             file,
             logs,
-            loglevel,
+            logsContent,
+            engine,
             updateLogsLevel,
             levels: ["none", "debug", "info", "warning", "error"],
         };

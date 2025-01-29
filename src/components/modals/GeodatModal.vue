@@ -102,16 +102,16 @@ export default defineComponent({
     const geodata = ref<EngineGeodatConfig | undefined>();
 
     const show = async () => {
-      let delay = 1000;
       file.value = new GeodatTagRequest();
-      window.showLoading(delay);
       isLoading.value = true;
       isNewFile.value = true;
       isSelected.value = false;
-      modal.value.show();
       await engine.submit(SubmtActions.geoDataCustomGetTags);
+
       geodata.value = await engine.getGeodata();
+      await engine.checkLoadingProgress();
       isLoading.value = false;
+      modal.value.show();
 
     };
 
@@ -141,31 +141,25 @@ export default defineComponent({
         return;
       }
 
-      const delay = 5000;
-      window.showLoading(delay, "waiting");
-
-      await engine.submit(SubmtActions.geoDataRecompile, file.value, delay);
-
+      await engine.submit(SubmtActions.geoDataRecompile, file.value);
+      await engine.checkLoadingProgress();
       window.location.reload();
     };
 
     const deletdat = async () => {
       if (!confirm("Are you sure you want to delete this tag file?")) return;
-      const delay = 5000;
-      window.showLoading(delay, "waiting");
 
-      await engine.submit(SubmtActions.geoDataCustomDeleteTag, file.value, delay);
+      await engine.submit(SubmtActions.geoDataCustomDeleteTag, file.value);
       file.value = new GeodatTagRequest();
+      await engine.checkLoadingProgress();
       window.location.reload();
 
     };
 
     const complile_all = async () => {
-      const delay = 5000;
-      window.showLoading(delay, "waiting");
 
-      await engine.submit(SubmtActions.geoDataRecompileAll, file.value, delay);
-
+      await engine.submit(SubmtActions.geoDataRecompileAll, file.value);
+      await engine.checkLoadingProgress();
       window.location.reload();
     };
 

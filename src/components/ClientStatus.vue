@@ -18,8 +18,7 @@
           <span class="row-buttons">
             <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(reconnect)">reconnect</a>
             <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(stop)">stop</a>
-            <a class="button_gen button_gen_small" href="/ext/xrayui/xray-config.json" target="_blank">show
-              config</a>
+            <a class="button_gen button_gen_small" href="/ext/xrayui/xray-config.json" target="_blank">show config</a>
           </span>
         </td>
       </tr>
@@ -71,9 +70,8 @@ export default defineComponent({
 
     },
     async handleStatus(action: string) {
-      let delay = 7000;
-      window.showLoading(delay, "waiting");
-      await engine.submit(action, null, delay);
+      await engine.submit(action);
+      await engine.checkLoadingProgress();
       window.location.reload();
     },
   },

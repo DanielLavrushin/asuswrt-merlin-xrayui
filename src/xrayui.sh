@@ -26,6 +26,9 @@ CWARN='\033[0;33m'
 CINFO='\033[0;36m'
 CRESET='\033[0m'
 
+#error_handler() {}
+#trap 'error_handler' EXIT
+
 printlog() {
     if [ "$1" = "true" ]; then
         logger -t "XRAYUI" "$2"
@@ -34,6 +37,7 @@ printlog() {
 }
 
 start() {
+
     mode=$(am_settings_get xray_mode)
     if [ -z "$mode" ]; then
         printlog true "No mode found in custom settings. Defaulting to server mode."
@@ -41,11 +45,14 @@ start() {
         am_settings_set xray_mode $mode
     fi
 
+    update_loading_progress "Testing xray configuration $DESC..."
+
     test_xray_config
 
     printlog true "Xray operates in $mode mode"
     printlog true "Starting $DESC with $ARGS"
 
+    update_loading_progress "Starting $DESC..."
     xray $ARGS >/dev/null 2>&1 &
     echo $! >$PIDFILE
 
@@ -63,6 +70,8 @@ start() {
 
 stop() {
     printlog true "Stopping $DESC" $CWARN
+
+    update_loading_progress "Stopping $DESC"
 
     killall xray
     # Remove the PID file if it exists
@@ -82,12 +91,14 @@ restart() {
 
 update() {
 
+    update_loading_progress "Updating $DESC..." 0
     local url="https://github.com/daniellavrushin/asuswrt-merlin-xrayui/releases/latest/download/asuswrt-merlin-xrayui.tar.gz"
     local temp_file="/tmp/asuswrt-merlin-xrayui.tar.gz"
     local addon_dir="/jffs/addons"
     local script_path="/jffs/scripts/xrayui"
 
     printlog true "Downloading the latest version..."
+    update_loading_progress "Downloading the latest version..."
     if wget -O "$temp_file" "$url"; then
         printlog true "Download completed successfully."
     else
@@ -104,6 +115,7 @@ update() {
     fi
 
     printlog true "Extracting the package..."
+    update_loading_progress "Extracting the package..."
     if tar -xzf "$temp_file" -C "$addon_dir"; then
         printlog true "Extraction completed."
     else
@@ -112,6 +124,7 @@ update() {
     fi
 
     printlog true "Setting up the script..."
+    update_loading_progress "Setting up the script..."
     if mv "$addon_dir/xrayui/xrayui" "$script_path" && chmod 0777 "$script_path"; then
         printlog true "Script set up successfully." $CSUC
     else
@@ -120,6 +133,7 @@ update() {
     fi
 
     printlog true "Running the installation..."
+    update_loading_progress "Running the installation..."
     if sh "$script_path" install; then
         printlog true "Installation completed successfully." $CSUC
     else
@@ -132,6 +146,7 @@ update() {
     fi
 
     printlog true "Update process completed!" $CSUC
+    update_loading_progress "Update process completed!" 100
 }
 
 detect_entware_path() {
@@ -222,6 +237,7 @@ configure_firewall_server() {
 
 configure_firewall_client() {
     printlog true "Configuring Xray firewall rules..."
+    update_loading_progress "Configuring Xray firewall rules..."
 
     # Check if 'xray' process is running
     get_xray_proc
@@ -256,6 +272,9 @@ configure_firewall_client() {
 }
 
 configure_firewall_client_direct() {
+
+    update_loading_progress "Configuring firewall DIRECT rules..."
+
     # Set up NAT-only rules for REDIRECT mode.
     iptables -t nat -F XRAYUI 2>/dev/null
     iptables -t nat -X XRAYUI 2>/dev/null
@@ -351,6 +370,8 @@ configure_firewall_client_direct() {
 }
 
 configure_firewall_client_tproxy() {
+
+    update_loading_progress "Configuring firewall TPROXY rules..."
 
     # Ensure TPROXY module is loaded
     if ! lsmod | grep -q "xt_TPROXY"; then
@@ -451,6 +472,7 @@ configure_firewall_client_tproxy() {
 cleanup_firewall() {
 
     printlog true "Cleaning up Xray Client firewall rules..."
+    update_loading_progress "Cleaning up Xray Client firewall rules..."
 
     iptables -t nat -F XRAYUI 2>/dev/null || printlog true "Failed to flush NAT chain. Was it already empty?" $CWARN
     iptables -t nat -X XRAYUI 2>/dev/null || printlog true "Failed to remove NAT chain. Was it already empty?" $CWARN
@@ -467,6 +489,8 @@ cleanup_firewall() {
     fi
 
     printlog true "Restarting firewall and DNS services..."
+    update_loading_progress "Restarting firewall and DNS services..."
+
     service restart_firewall >/dev/null 2>&1 && printlog true "Firewall service restarted successfully." $CSUC
     service restart_dnsmasq >/dev/null 2>&1 && printlog true "DNS service restarted successfully." $CSUC
 
@@ -842,10 +866,13 @@ switch_mode() {
 }
 
 apply_config() {
+    update_loading_progress "Applying new server configuration..." 0
     local temp_config="/tmp/xray_server_config_new.json"
     local backup_config="/opt/etc/xray/config.json-temp.bak"
 
     local incoming_config=$(reconstruct_payload)
+
+    update_loading_progress "Checking incoming configuration..." 5
 
     if [ -z "$incoming_config" ]; then
         printlog true "No new server configuration provided."
@@ -888,7 +915,9 @@ apply_config() {
     rm -f "$temp_config"
 
     if [ -f "$PIDFILE" ]; then
+        update_loading_progress "Restarting Xray service..." 35
         restart
+        update_loading_progress "Xray service restarted successfully."
     fi
 
     if [ $? -ne 0 ]; then
@@ -901,6 +930,9 @@ apply_config() {
     printlog true "Xray service restarted successfully with the new configuration." $CSUC
 
     rm -f "$backup_config"
+
+    update_loading_progress "Configuration applied successfully." 100
+
     exit 0
 }
 
@@ -987,6 +1019,7 @@ install_opkg_package() {
 }
 
 install() {
+    update_loading_progress "Installing XRAY UI..."
     printlog true "Starting XRAY UI installation process."
 
     # Check for Entware
@@ -997,6 +1030,7 @@ install() {
     fi
     printlog true "Entware is installed." $CSUC
 
+    update_loading_progress "Installing dependencies..."
     install_opkg_package sed true
     install_opkg_package jq true
     install_opkg_package iptables true
@@ -1011,6 +1045,7 @@ install() {
     # backup config
     cp "/opt/etc/xray/config.json" "/opt/etc/xray/config.json.bak"
 
+    update_loading_progress "Configuring XRAY UI..."
     # Add or update nat-start
     printlog true "Ensuring /jffs/scripts/nat-start contains required entry."
     mkdir -p /jffs/scripts
@@ -1090,6 +1125,7 @@ install() {
 
     mkdir -p "$XRAYUI_SHARED_DIR" || printlog true "Failed to create $XRAYUI_SHARED_DIR." $CERR
 
+    update_loading_progress "Downloading XRAYUI geodata files builder..."
     if wget --no-hsts -O "/tmp/xraydatbuilder.tar.gz" "https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/releases/latest/download/xrayui-datbuilder.tar.gz"; then
         tar -xzf /tmp/xraydatbuilder.tar.gz -C "$XRAYUI_SHARED_DIR" || printlog true "Failed to extract xraydatbuilder.tar.gz." $CERR
         rm -f /tmp/xraydatbuilder.tar.gz || printlog true "Failed to remove xraydatbuilder.tar.gz." $CERR
@@ -1123,6 +1159,8 @@ EOF
     printlog true "============================================" $CSUC
     printlog true "Installation process completed successfully." $CSUC
     printlog true "============================================" $CSUC
+
+    update_loading_progress "Installation completed successfully."
 }
 
 uninstall() {
@@ -1247,7 +1285,7 @@ uninstall() {
 }
 
 enable_config_logs() {
-
+    update_loading_progress "Enabling Xray configuration logs..." 0
     local temp_file="/tmp/xray_config.json"
 
     printlog true "Checking for the 'log' section in the Xray configuration."
@@ -1287,6 +1325,7 @@ enable_config_logs() {
         restart
     fi
 
+    update_loading_progress "Configuration logs enabled successfully." 100
     return 0
 }
 
@@ -1356,6 +1395,8 @@ fixme() {
 }
 
 update_community_geodata() {
+    update_loading_progress "Updating community geodata files..." 0
+
     local geosite_url="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
     local geoip_url="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
 
@@ -1364,6 +1405,7 @@ update_community_geodata() {
     mkdir -p "$target_dir"
 
     printlog true "Downloading geosite.dat..."
+    update_loading_progress "Downloading geosite.dat..."
     curl -L "$geosite_url" -o "$target_dir/geosite.dat"
     if [ $? -ne 0 ]; then
         printlog true "Failed to download geosite.dat." $CERR
@@ -1371,6 +1413,7 @@ update_community_geodata() {
     fi
 
     printlog true "Downloading geoip.dat..."
+    update_loading_progress "Downloading geoip.dat..."
     curl -L "$geoip_url" -o "$target_dir/geoip.dat"
     if [ $? -ne 0 ]; then
         printlog true "Failed to download geoip.dat." $CERR
@@ -1380,11 +1423,14 @@ update_community_geodata() {
     if [[ -f "$target_dir/geosite.dat" && -f "$target_dir/geoip.dat" ]]; then
         printlog true "Files successfully placed in $target_dir." $CSUC
         if [ -f "$PIDFILE" ]; then
+            update_loading_progress "Restarting Xray service..." 60
             restart
         fi
     else
         printlog true "Failed to place geosite.dat/geoip.dat in $target_dir." $CERR
     fi
+    update_loading_progress "Community geodata files updated successfully." 100
+
 }
 
 set_community_geodata_dates() {
@@ -1508,6 +1554,7 @@ geodata_recompile_all() {
 
     rm -f "$outdir/xrayui"
 
+    update_loading_progress "Recompiling geodata files..." 50
     "$builder" --datapath "$datadir" --outputdir "$outdir" --outputname "xrayui" || {
         printlog true "Failed to recompile geodata files." $CERR
         return 1
@@ -1647,13 +1694,16 @@ geodata_delete_tag() {
 }
 
 logs_fetch() {
+    update_loading_progress "Fetching logs..." 0
     local log_access="/tmp/xray_access.log"
     local log_error="/tmp/xray_error.log"
     tail -n 200 "$log_access" >/www/user/xrayui/xray_access_partial.asp
     tail -n 200 "$log_error" >/www/user/xrayui/xray_error_partial.asp
+    update_loading_progress "Logs fetched successfully." 100
 }
 
 change_log_level() {
+    update_loading_progress "Changing log level..." 0
     local payload=$(reconstruct_payload)
     local log_level=$(echo "$payload" | jq -r '.log_level')
 
@@ -1661,7 +1711,7 @@ change_log_level() {
 
     local updated_json=$(jq --arg log_level "$log_level" '
         if .log.loglevel then del(.log.loglevel) else . end |
-        .log.logLevel = $log_level
+        .log.loglevel = $log_level
     ' "$xray_config")
 
     if [ $? -ne 0 ]; then
@@ -1675,7 +1725,36 @@ change_log_level() {
         restart
     fi
 
+    update_loading_progress "Log level changed successfully." 100
     return 0
+}
+
+update_loading_progress() {
+    local message=$1
+    local progress=$2
+
+    ensure_ui_response_file
+
+    local json_content
+    if [ -f "$XRAY_UI_RESPONSE_FILE" ]; then
+        json_content=$(cat "$XRAY_UI_RESPONSE_FILE")
+    else
+        json_content="{}"
+    fi
+
+    if [ -n "$progress" ]; then
+
+        json_content=$(echo "$json_content" | jq --argjson progress "$progress" --arg message "$message" '
+            .loading.message = $message |
+            .loading.progress = $progress
+        ')
+    else
+        json_content=$(echo "$json_content" | jq --arg message "$message" '
+            .loading.message = $message
+        ')
+    fi
+
+    echo "$json_content" >"$XRAY_UI_RESPONSE_FILE"
 }
 
 case "$1" in
@@ -1729,18 +1808,25 @@ service_event)
         update
         exit 0
     elif [ "$2" = "geodata" ]; then
+        update_loading_progress "Updating geodata files..." 0
         if [ "$3" = "communityupdate" ]; then
             update_community_geodata
+            update_loading_progress "Community geodata files updated successfully." 100
         elif [ "$3" = "communitydatecheck" ]; then
             set_community_geodata_dates
+            update_loading_progress "Community geodata files updated successfully." 100
         elif [ "$3" = "customtagfiles" ]; then
             get_custom_geodata_tagfiles
+            update_loading_progress "Custom tagfiles retrieved successfully." 100
         elif [ "$3" = "customrecompileall" ]; then
             geodata_recompile_all
+            update_loading_progress "Geodata recompiled successfully." 100
         elif [ "$3" = "customrecompile" ]; then
             geodata_recompile
+            update_loading_progress "Geodata recompiled successfully." 100
         elif [ "$3" = "customdeletetag" ]; then
             geodata_delete_tag
+            update_loading_progress "Geodata tag deleted successfully." 100
         fi
         exit 0
     elif [ "$2" = "connectedclients" ]; then
@@ -1811,15 +1897,21 @@ service_event)
     elif [ "$2" = "serverstatus" ]; then
         case "$3" in
         "start")
+            update_loading_progress "Starting Xray service..." 0
             start
+            update_loading_progress "Xray service started successfully." 100
             exit 0
             ;;
         "restart")
+            update_loading_progress "Restarting Xray service..." 0
             restart
+            update_loading_progress "Xray service restarted successfully." 100
             exit 0
             ;;
         "stop")
+            update_loading_progress "Stopping Xray service..." 0
             stop
+            update_loading_progress "Xray service stopped successfully." 100
             exit 0
             ;;
         *)

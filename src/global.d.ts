@@ -1,4 +1,4 @@
-import { SubmtActions } from "./modules/Engine";
+import { SubmtActions, EngineLoadingProgress } from "./modules/Engine";
 
 /* eslint-disable no-unused-vars */
 export {};
@@ -36,13 +36,14 @@ interface XrayUiGlobal {
 declare global {
   interface Window {
     xray: XrayUiGlobal;
-    confirm: (message?: string | undefined) => boolean;
+    confirm: (message?: string) => boolean;
     hint: (message: string) => void;
     overlib: (message: string) => void;
     show_menu: () => void;
-    showLoading: (delay?: number | null, flag?: string | undefined) => void;
+    showLoading: (delay?: number | null, flag?: string | EngineLoadingProgress) => void;
+    updateLoadingProgress: (progress?: EngineLoadingProgress) => void;
     hideLoading: () => void;
-    LoadingTime: (seconds: number, flag: string | undefined) => void;
+    LoadingTime: (seconds: number, flag?: string) => void;
     showtext: (element: HTMLElement | null, text: string) => void;
     y: number;
     progress: number;

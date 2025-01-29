@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable security/detect-object-injection */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-unused-vars */
 
 import axios, { AxiosError } from "axios";
 import { xrayConfig, XrayObject } from "./XrayConfig";
@@ -59,6 +60,7 @@ class GeodatTagRequest {
   public content?: string;
 }
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
 enum SubmtActions {
   configurationSetMode = "xrayui_configuration_mode",
   configurationApply = "xrayui_configuration_apply",

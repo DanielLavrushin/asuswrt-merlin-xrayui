@@ -6,7 +6,7 @@
 import axios, { AxiosError } from "axios";
 import { xrayConfig, XrayObject } from "./XrayConfig";
 import { XrayBlackholeOutboundObject, XrayLoopbackOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, XrayTrojanOutboundObject, XrayOutboundObject, XraySocksOutboundObject, XrayVmessOutboundObject, XrayVlessOutboundObject, XrayHttpOutboundObject, XrayShadowsocksOutboundObject } from "./OutboundObjects";
-import { XrayProtocol, XrayDnsObject, XrayStreamSettingsObject, XrayRoutingObject, XrayRoutingRuleObject, XraySniffingObject, XrayPortsPolicy, XrayAllocateObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject, XraySockoptObject } from "./CommonObjects";
+import { XrayProtocol, XrayDnsObject, XrayStreamSettingsObject, XrayRoutingObject, XrayRoutingRuleObject, XraySniffingObject, XrayPortsPolicy, XrayAllocateObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject, XraySockoptObject, XrayLogObject } from "./CommonObjects";
 import { plainToInstance } from "class-transformer";
 import { XrayDokodemoDoorInboundObject, XrayHttpInboundObject, XrayInboundObject, XrayShadowsocksInboundObject, XraySocksInboundObject, XrayTrojanInboundObject, XrayVlessInboundObject, XrayVmessInboundObject, XrayWireguardInboundObject } from "./InboundObjects";
 import { XrayStreamHttpSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamKcpSettingsObject, XrayStreamTcpSettingsObject, XrayStreamWsSettingsObject } from "./TransportObjects";
@@ -26,12 +26,27 @@ class EngineSsl {
   public keyFile!: string;
 }
 
+class EngineLoadingProgress {
+  public progress = 0;
+  public message = "";
+
+  constructor(progress?: number, message?: string) {
+    if (progress) {
+      this.progress = progress;
+    }
+    if (message) {
+      this.message = message;
+    }
+  }
+}
+
 class EngineResponseConfig {
   public wireguard?: EngineWireguard;
   public reality?: EngineReality;
   public certificates?: EngineSsl;
   public xray?: { test: string };
   public geodata?: EngineGeodatConfig = new EngineGeodatConfig();
+  public loading?: EngineLoadingProgress;
 }
 class EngineGeodatConfig {
   public community?: Record<string, string>;
@@ -161,10 +176,7 @@ class Engine {
     return base64String;
   };
 
-  prepareServerConfig(): XrayObject {
-    let config = new XrayObject();
-    Object.assign(config, this.xrayConfig);
-
+  prepareServerConfig(config: XrayObject): XrayObject {
     config.inbounds.forEach((proxy) => {
       proxy.normalize();
     });
@@ -210,11 +222,42 @@ class Engine {
     return responseConfig;
   }
 
+  async checkLoadingProgress(): Promise<EngineLoadingProgress> {
+    return new Promise((resolve, reject) => {
+      let loadingProgress = new EngineLoadingProgress(0, "Please, wait");
+      window.showLoading(null, loadingProgress);
+
+      const checkProgressInterval = setInterval(async () => {
+        try {
+          const response = await this.getXrayResponse();
+          if (response.loading) {
+            loadingProgress = response.loading;
+            window.updateLoadingProgress(loadingProgress);
+          }
+
+          if (loadingProgress.progress === 100) {
+            clearInterval(checkProgressInterval);
+            setTimeout(() => {
+              window.hideLoading();
+              resolve(loadingProgress);
+            }, 1000);
+          }
+        } catch (error) {
+          clearInterval(checkProgressInterval);
+          window.hideLoading();
+          reject(error);
+        }
+      }, 1000);
+    });
+  }
+
   async loadXrayConfig(): Promise<XrayObject | null> {
     try {
       const response = await axios.get<XrayObject>("/ext/xrayui/xray-config.json");
       this.xrayConfig = plainToInstance(XrayObject, response.data) as XrayObject;
-
+      if (this.xrayConfig.log) {
+        this.xrayConfig.log = plainToInstance(XrayLogObject, response.data.log);
+      }
       this.xrayConfig.inbounds.forEach((proxy, index) => {
         switch (proxy.protocol) {
           case XrayProtocol.DOKODEMODOOR:
@@ -402,4 +445,4 @@ class Engine {
 let engine = new Engine();
 export default engine;
 
-export { EngineGeodatConfig, GeodatTagRequest, SubmtActions, Engine, engine };
+export { EngineLoadingProgress, EngineGeodatConfig, GeodatTagRequest, SubmtActions, Engine, engine };

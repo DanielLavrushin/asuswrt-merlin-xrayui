@@ -48,9 +48,8 @@ export default defineComponent({
   name: "ClientsOnline",
   methods: {
     async enable_logs() {
-      let delay = 5000;
-      window.showLoading(delay);
-      await engine.submit(SubmtActions.enableLogs, null, delay);
+      await engine.submit(SubmtActions.enableLogs);
+      await engine.checkLoadingProgress();
       window.location.reload();
     },
   },

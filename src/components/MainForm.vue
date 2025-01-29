@@ -29,22 +29,18 @@
                           <td valign="top">
                             <div class="formfontdesc">
                               <div>&nbsp;</div>
-                              <div class="formfonttitle" style="text-align: center">X-RAY UI Core v{{
-                                version }}</div>
+                              <div class="formfonttitle" style="text-align: center">X-RAY UI Core v{{ version }}</div>
                               <div class="xray_type_switches">
-                                <div class="xray_type_switch left" :class="{ selected: engine.mode === 'server' }"
-                                  @click.prevent="switch_type('server')">
+                                <div class="xray_type_switch left" :class="{ selected: engine.mode === 'server' }" @click.prevent="switch_type('server')">
                                   <div>Server</div>
                                 </div>
-                                <div class="xray_type_switch right" :class="{ selected: engine.mode === 'client' }"
-                                  @click.prevent="switch_type('client')">
+                                <div class="xray_type_switch right" :class="{ selected: engine.mode === 'client' }" @click.prevent="switch_type('client')">
                                   <div>Client</div>
                                 </div>
                               </div>
-                              <div id="formfontdesc" class="formfontdesc">This UI control page provides a simple
-                                interface to manage and monitor the X-ray Core's configuration and it's status.</div>
+                              <div id="formfontdesc" class="formfontdesc">This UI control page provides a simple interface to manage and monitor the X-ray Core's configuration and it's status.</div>
                               <div style="margin: 10px 0 10px 5px" class="splitLine"></div>
-                              <mode-server></mode-server>
+                              <mode-server v-model:config="xrayConfig"></mode-server>
                             </div>
                           </td>
                         </tr>
@@ -62,94 +58,91 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+  import { defineComponent } from "vue";
 
-import MainMenu from "./asus/MainMenu.vue";
-import TabMenu from "./asus/TabMenu.vue";
-import SubMenu from "./asus/SubMenu.vue";
+  import MainMenu from "./asus/MainMenu.vue";
+  import TabMenu from "./asus/TabMenu.vue";
+  import SubMenu from "./asus/SubMenu.vue";
 
-import ModeServer from "./ModeServer.vue";
+  import ModeServer from "./ModeServer.vue";
 
-
-import engine, { SubmtActions } from "../modules/Engine";
-export default defineComponent({
-  name: "MainForm",
-  components: {
-    TabMenu,
-    MainMenu,
-    SubMenu,
-    ModeServer
-  },
-  methods: {
-    async switch_type(type: string) {
-      engine.mode = type;
-      let delay = 1000;
-      window.showLoading(delay);
-      window.xray.custom_settings.xray_mode = type;
-      await engine.submit(SubmtActions.configurationSetMode, { mode: type }, delay);
-      window.location.reload();
-
+  import engine, { SubmtActions } from "../modules/Engine";
+  export default defineComponent({
+    name: "MainForm",
+    components: {
+      TabMenu,
+      MainMenu,
+      SubMenu,
+      ModeServer
     },
-  },
+    methods: {
+      async switch_type(type: string) {
+        engine.mode = type;
+        let delay = 1000;
+        window.showLoading(delay);
+        window.xray.custom_settings.xray_mode = type;
+        await engine.submit(SubmtActions.configurationSetMode, { mode: type }, delay);
+        window.location.reload();
+      }
+    },
 
-  setup() {
-    return {
-      engine,
-      version: window.xray.custom_settings.xray_version,
-      xrayConfig: engine.xrayConfig,
-      xray_page: window.xray.custom_settings.xray_page,
-    };
-  },
-});
+    setup() {
+      return {
+        engine,
+        version: window.xray.custom_settings.xray_version,
+        xrayConfig: engine.xrayConfig,
+        xray_page: window.xray.custom_settings.xray_page
+      };
+    }
+  });
 </script>
 <style scoped>
-.xray_type_switches {
-  margin-top: -40px;
-  float: right;
-}
+  .xray_type_switches {
+    margin-top: -40px;
+    float: right;
+  }
 
-.xray_type_switch {
-  cursor: pointer;
-  width: 110px;
-  height: 30px;
-  float: left;
-  background: linear-gradient(to bottom, #758084 0%, #546166 36%, #394245 100%);
-  border-color: #222728;
-  border-width: 1px;
-  border-style: solid;
-}
+  .xray_type_switch {
+    cursor: pointer;
+    width: 110px;
+    height: 30px;
+    float: left;
+    background: linear-gradient(to bottom, #758084 0%, #546166 36%, #394245 100%);
+    border-color: #222728;
+    border-width: 1px;
+    border-style: solid;
+  }
 
-.xray_type_switch.left {
-  border-top-left-radius: 8px;
-  border-bottom-left-radius: 8px;
-}
+  .xray_type_switch.left {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+  }
 
-.xray_type_switch.right {
-  border-top-right-radius: 8px;
-  border-bottom-right-radius: 8px;
-}
+  .xray_type_switch.right {
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+  }
 
-.xray_type_switch.selected {
-  background: none;
-  background-color: #353D40;
-  border-color: #222728;
-  border-width: 1px;
-  border-style: inset;
+  .xray_type_switch.selected {
+    background: none;
+    background-color: #353d40;
+    border-color: #222728;
+    border-width: 1px;
+    border-style: inset;
+  }
 
-}
+  .xray_type_switch.selected div {
+    color: #ffffff;
+    font-weight: bold;
+  }
 
-.xray_type_switch.selected div {
-  color: #FFFFFF;
-  font-weight: bold;
-}
-
-.xray_type_switch div {
-  text-align: center;
-  color: #CCCCCC;
-  font-size: 14px;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+  .xray_type_switch div {
+    text-align: center;
+    color: #cccccc;
+    font-size: 14px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 </style>

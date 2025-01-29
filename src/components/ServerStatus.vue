@@ -60,9 +60,8 @@ export default defineComponent({
 
     },
     async handleStatus(action: string) {
-      let delay = 5000;
-      window.showLoading(delay, "waiting");
-      await engine.submit(action, null, delay);
+      await engine.submit(action);
+      await engine.checkLoadingProgress();
       window.location.reload();
     },
   },

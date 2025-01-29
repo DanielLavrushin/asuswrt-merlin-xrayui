@@ -1,18 +1,18 @@
 <template>
-    <server-status v-if="engine.mode == 'server'"></server-status>
-    <client-status v-if="engine.mode == 'client'"></client-status>
-    <inbounds @show-transport="show_transport" @show-sniffing="show_sniffing"></inbounds>
-    <outbounds @show-transport="show_transport"></outbounds>
-    <dns></dns>
-    <routing></routing>
-    <sniffing-modal ref="sniffingModal" />
-    <stream-settings-modal ref="transportModal" />
-    <div class="apply_gen">
-        <input class="button_gen" @click.prevent="applyClientSettings()" type="button" value="Apply" />
-    </div>
-    <clients-online v-if="engine.mode == 'server'"></clients-online>
-    <logs-manager v-if="config.log"></logs-manager>
-    <version></version>
+  <server-status v-if="engine.mode == 'server'" v-model:config="config"></server-status>
+  <client-status v-if="engine.mode == 'client'" v-model:config="config"></client-status>
+  <inbounds @show-transport="show_transport" @show-sniffing="show_sniffing"></inbounds>
+  <outbounds @show-transport="show_transport"></outbounds>
+  <dns></dns>
+  <routing></routing>
+  <sniffing-modal ref="sniffingModal" />
+  <stream-settings-modal ref="transportModal" />
+  <div class="apply_gen">
+    <input class="button_gen" @click.prevent="applySettings()" type="button" value="Apply" />
+  </div>
+  <clients-online v-if="engine.mode == 'server'"></clients-online>
+  <logs-manager v-if="config.log" v-model:logs="config.log"></logs-manager>
+  <version></version>
 </template>
 
 <script lang="ts">
@@ -37,61 +37,68 @@ import ClientsOnline from "./ClientsOnline.vue";
 import SniffingModal from "./modals/SniffingModal.vue";
 import StreamSettingsModal from "./modals/StreamSettingsModal.vue";
 import LogsManager from "./Logs.vue";
+import { XrayObject } from "@/modules/XrayConfig";
 
 export default defineComponent({
-    name: "ModeServer",
-    components: {
-        Modal,
-        Routing,
-        Inbounds,
-        Dns,
-        Version,
-        Outbounds,
-        ServerStatus,
-        ClientStatus,
-        SniffingModal,
-        ClientsOnline,
-        StreamSettingsModal,
-        LogsManager
-    },
-    methods: {
+  name: "ModeServer",
+  components: {
+    Modal,
+    Routing,
+    Inbounds,
+    Dns,
+    Version,
+    Outbounds,
+    ServerStatus,
+    ClientStatus,
+    SniffingModal,
+    ClientsOnline,
+    StreamSettingsModal,
+    LogsManager
+  },
+  props: {
+    config: {
+      type: XrayObject,
+      required: true
+    }
+  },
 
-        async show_transport(proxy: XrayInboundObject<IProtocolType> | XrayOutboundObject<IProtocolType>, type: string) {
-            this.transportModal.show(proxy, type);
-        },
-        async show_sniffing(proxy: XrayInboundObject<IProtocolType>) {
-            this.sniffingModal.show(proxy);
-        },
+  setup(props) {
+    const config = ref(props.config);
+    const transportModal = ref();
+    const sniffingModal = ref();
 
-        async applyClientSettings() {
-            let delay = 10000;
-            window.showLoading(delay, "waiting");
-            let config = engine.prepareServerConfig();
+    const show_transport = (proxy: XrayInboundObject<IProtocolType> | XrayOutboundObject<IProtocolType>, type: string) => {
+      transportModal.value.show(proxy, type);
+    }
 
-            await engine.submit(SubmtActions.configurationApply, config, delay);
-            await engine.loadXrayConfig();
-            window.hideLoading();
-            window.location.reload();
-        },
-    },
+    const show_sniffing = (proxy: XrayInboundObject<IProtocolType>) => {
+      sniffingModal.value.show(proxy);
+    }
 
-    setup() {
-        const config = ref(engine.xrayConfig);
-        const transportModal = ref();
-        const sniffingModal = ref();
+    const applySettings = async () => {
+      let cfg = engine.prepareServerConfig(config.value);
+      await engine.submit(SubmtActions.configurationApply, cfg);
+      await engine.checkLoadingProgress();
+      await engine.loadXrayConfig();
 
-        return {
-            config,
-            engine,
-            transportModal,
-            sniffingModal,
-        };
-    },
+      window.location.reload();
+    };
+
+    return {
+      config,
+      engine,
+      transportModal,
+      sniffingModal,
+      applySettings,
+      show_transport,
+      show_sniffing
+    };
+  },
 });
 </script>
 
 <style scoped>
 .apply_gen {
-    margin-bottom: 10px;
+  margin-bottom: 10px;
 }
 </style>

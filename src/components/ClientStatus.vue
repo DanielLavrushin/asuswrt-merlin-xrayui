@@ -18,25 +18,28 @@
           <span class="row-buttons">
             <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(reconnect)">reconnect</a>
             <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(stop)">stop</a>
-            <a class="button_gen button_gen_small" href="/ext/xrayui/xray-config.json" target="_blank">show
-              config</a>
+            <a class="button_gen button_gen_small" href="/ext/xrayui/xray-config.json" target="_blank">show config</a>
           </span>
         </td>
       </tr>
+      <import-config v-model:config="config"></import-config>
       <startup-control></startup-control>
     </tbody>
   </table>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, ref } from "vue";
 import engine, { SubmtActions } from "../modules/Engine";
 import StartupControl from "./StartupControl.vue";
+import ImportConfig from "./ImportConfig.vue";
+import { XrayObject } from "@/modules/XrayConfig";
 
 export default defineComponent({
   name: "ClientStatus",
   components: {
     StartupControl,
+    ImportConfig,
   },
   data() {
     return {
@@ -44,6 +47,12 @@ export default defineComponent({
       reconnect: SubmtActions.serverRestart,
       stop: SubmtActions.serverStop,
     };
+  },
+  props: {
+    config: {
+      type: XrayObject,
+      required: true,
+    }
   },
   computed: {
     statusLabel(): string {
@@ -61,12 +70,15 @@ export default defineComponent({
 
     },
     async handleStatus(action: string) {
-      let delay = 7000;
-      window.showLoading(delay, "waiting");
-      await engine.submit(action, null, delay);
+      await engine.submit(action);
+      await engine.checkLoadingProgress();
       window.location.reload();
     },
   },
-  mounted() { },
+  setup(props) {
+    const config = ref(props.config);
+
+    return { config };
+  },
 });
 </script>

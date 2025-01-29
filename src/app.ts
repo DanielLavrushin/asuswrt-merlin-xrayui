@@ -1,11 +1,17 @@
 import { createApp } from "vue";
 import App from "./App.vue";
+import { EngineLoadingProgress } from "./modules/Engine";
 
 window.hint = (message: string) => {
   window.overlib(message);
 };
 let loadingProgressStarted = false;
-window.LoadingTime = (seconds: number, flag: string | undefined) => {
+window.LoadingTime = (seconds: number, flag: string | EngineLoadingProgress | undefined) => {
+  if (flag instanceof EngineLoadingProgress) {
+    window.updateLoadingProgress(flag as EngineLoadingProgress);
+    return;
+  }
+
   if (loadingProgressStarted) {
     return;
   }
@@ -33,7 +39,7 @@ window.LoadingTime = (seconds: number, flag: string | undefined) => {
     progressPercentage = currentStep;
 
     window.showtext(proceedingMainText, text);
-    window.showtext(proceedingText, `<span style="color:#FFFFCC;">${progressPercentage}% </span>`);
+    window.showtext(proceedingText, `<span style="color:#FFFFCC;">${progressPercentage}%</span>`);
 
     if (currentStep < totalSteps) {
       setTimeout(updateLoading, stepDuration);
@@ -54,6 +60,26 @@ window.LoadingTime = (seconds: number, flag: string | undefined) => {
     }
   };
   updateLoading();
+};
+
+window.updateLoadingProgress = (progress?: EngineLoadingProgress) => {
+  const proceedingMainText = document.getElementById("proceeding_main_txt");
+  const proceedingText = document.getElementById("proceeding_txt");
+  const loading = document.getElementById("Loading");
+
+  if (!proceedingMainText || !proceedingText || !loading) {
+    console.error("Required DOM elements not found.");
+    return;
+  }
+
+  loading.style.visibility = "visible";
+
+  if (progress?.message) {
+    window.showtext(proceedingMainText, progress.message + "<br />");
+  }
+  if (progress?.progress) {
+    window.showtext(proceedingText, `Progress: ${progress.progress}%`);
+  }
 };
 
 document.addEventListener("DOMContentLoaded", () => {

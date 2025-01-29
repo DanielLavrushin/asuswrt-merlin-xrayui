@@ -1,21 +1,21 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/prefer-literal-enum-member */
-class XrayOptions {
-  static transportOptions = ["tcp", "kcp", "ws", "xhttp", "grpc", "httpupgrade", "splithttp"];
-  static securityOptions = ["none", "tls", "reality"];
-  static logOptions = ["debug", "info", "warning", "error", "none"];
-  static networkOptions = ["tcp", "udp", "tcp,udp"];
-  static protocolOptions = ["http", "tls", "bittorrent"];
-  static domainStrategyOptions = ["AsIs", "IPIfNonMatch", "IPOnDemand"];
-  static domainMatcherOptions = ["hybrid", "linear"];
-  static usageOptions = ["encipherment", "verify", "issue"];
-  static alpnOptions = ["h2", "http/1.1"];
-  static fingerprintOptions = ["randomized", "random", "chrome", "firefox", "ios", "android", "safari", "edge", "360", "qq"];
-  static tlsVersionsOptions = ["1.0", "1.1", "1.2", "1.3"];
-  static headerTypes = ["none", "http", "srtp", "utp", "wechat-video", "dtls", "wireguard"];
-  static httpMethods = ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "TRACE", "CONNECT", "PATCH"];
-  static clientFlowOptions = ["none", "xtls-rprx-vision"];
-  static encryptionOptions = ["none", "plain", "aes-128-gcm", "aes-256-gcm", "2022-blake3-aes-128-gcm", "2022-blake3-aes-256-gcm", "2022-blake3-chacha20-poly1305"];
+namespace XrayOptions {
+  export const transportOptions = ["tcp", "kcp", "ws", "xhttp", "grpc", "httpupgrade", "splithttp"];
+  export const securityOptions = ["none", "tls", "reality"];
+  export const logOptions = ["debug", "info", "warning", "error", "none"];
+  export const networkOptions = ["tcp", "udp", "tcp,udp"];
+  export const protocolOptions = ["http", "tls", "bittorrent"];
+  export const domainStrategyOptions = ["AsIs", "IPIfNonMatch", "IPOnDemand"];
+  export const domainMatcherOptions = ["hybrid", "linear"];
+  export const usageOptions = ["encipherment", "verify", "issue"];
+  export const alpnOptions = ["h2", "http/1.1"];
+  export const fingerprintOptions = ["randomized", "random", "chrome", "firefox", "ios", "android", "safari", "edge", "360", "qq"];
+  export const tlsVersionsOptions = ["1.0", "1.1", "1.2", "1.3"];
+  export const headerTypes = ["none", "http", "srtp", "utp", "wechat-video", "dtls", "wireguard"];
+  export const httpMethods = ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "TRACE", "CONNECT", "PATCH"];
+  export const clientFlowOptions = ["none", "xtls-rprx-vision"];
+  export const encryptionOptions = ["none", "plain", "aes-128-gcm", "aes-256-gcm", "2022-blake3-aes-128-gcm", "2022-blake3-aes-256-gcm", "2022-blake3-chacha20-poly1305"];
 }
 
 enum XrayProtocol {

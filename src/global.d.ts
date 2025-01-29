@@ -1,6 +1,6 @@
+/* eslint-disable no-unused-vars */
 import { SubmtActions, EngineLoadingProgress } from "./modules/Engine";
 
-/* eslint-disable no-unused-vars */
 export {};
 
 interface XrayUiCustomSettings {

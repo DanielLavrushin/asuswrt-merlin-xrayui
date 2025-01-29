@@ -126,13 +126,19 @@ export default defineComponent({
 
 .textarea-wrapper .changelog :deep(ul li) {
     margin: 5px;
+    padding-bottom: 5px;
+    border-bottom: 1px dashed #222;
+}
+
+.textarea-wrapper .changelog :deep(ul li):last-child {
+    border-bottom: none;
 }
 
 .textarea-wrapper .changelog :deep(code) {
     font-weight: bold;
 }
 
-.textarea-wrapper a {
+.textarea-wrapper :deep(a) {
     color: #FFCC00;
     text-decoration: underline;
 }

@@ -19,4 +19,8 @@ export default defineComponent({
   height: 100%;
   z-index: 1000;
 }
+
+:deep(.loadingBlock) {
+  font-size: 14px;
+}
 </style>

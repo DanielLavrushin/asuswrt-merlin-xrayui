@@ -1757,6 +1757,32 @@ update_loading_progress() {
     echo "$json_content" >"$XRAY_UI_RESPONSE_FILE"
 }
 
+webapp_start() {
+    printlog true "Starting XRAY UI webapp..."
+
+    local http_config="/opt/share/xrayui/webapp/server.conf"
+
+    lighttpd -f "$http_config" || printlog true "Failed to start XRAY UI webapp." $CERR
+
+    if [ $? -eq 0 ]; then
+        printlog true "XRAY UI webapp started successfully." $CSUC
+    fi
+}
+
+webapp_stop() {
+    printlog true "Stopping XRAY UI webapp..."
+    kill $(cat /var/run/xrayui_web.pid) || printlog true "Failed to stop XRAY UI webapp." $CERR
+
+    if [ $? -eq 0 ]; then
+        printlog true "XRAY UI webapp stopped successfully." $CSUC
+    fi
+}
+
+webapp_restart() {
+    webapp_stop
+    webapp_start
+}
+
 case "$1" in
 install)
     install
@@ -1789,7 +1815,21 @@ fixme)
     fixme
     ;;
 service_event)
-    if [ "$2" = "testconfig" ]; then
+    if [ "$2" = "webapp" ]; then
+        case "$3" in
+        start)
+            webapp_start
+            ;;
+        stop)
+            webapp_stop
+            ;;
+        restart)
+            webapp_restart
+            ;;
+        *) ;;
+        esac
+        exit 0
+    elif [ "$2" = "testconfig" ]; then
         test_xray_config
         exit 0
     elif [ "$2" = "startup" ]; then

@@ -229,26 +229,28 @@ class Engine {
       let loadingProgress = new EngineLoadingProgress(0, "Please, wait");
       window.showLoading(null, loadingProgress);
 
-      const checkProgressInterval = setInterval(async () => {
-        try {
-          const response = await this.getXrayResponse();
-          if (response.loading) {
-            loadingProgress = response.loading;
-            window.updateLoadingProgress(loadingProgress);
-          }
+      const checkProgressInterval = setInterval(() => {
+        (async () => {
+          try {
+            const response = await this.getXrayResponse();
+            if (response.loading) {
+              loadingProgress = response.loading;
+              window.updateLoadingProgress(loadingProgress);
+            }
 
-          if (loadingProgress.progress === 100) {
+            if (loadingProgress.progress === 100) {
+              clearInterval(checkProgressInterval);
+              setTimeout(() => {
+                window.hideLoading();
+                resolve(loadingProgress);
+              }, 1000);
+            }
+          } catch (error) {
             clearInterval(checkProgressInterval);
-            setTimeout(() => {
-              window.hideLoading();
-              resolve(loadingProgress);
-            }, 1000);
+            window.hideLoading();
+            reject(error);
           }
-        } catch (error) {
-          clearInterval(checkProgressInterval);
-          window.hideLoading();
-          reject(error);
-        }
+        })();
       }, 1000);
     });
   }

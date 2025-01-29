@@ -1759,7 +1759,10 @@ update_loading_progress() {
 
 webapp_start() {
     printlog true "Starting XRAY UI webapp..."
-    lighttpd -f /opt/share/xrayui/webapp/server.conf || printlog true "Failed to start XRAY UI webapp." $CERR
+
+    local http_config="/opt/share/xrayui/webapp/server.conf"
+
+    lighttpd -f "$http_config" || printlog true "Failed to start XRAY UI webapp." $CERR
 
     if [ $? -eq 0 ]; then
         printlog true "XRAY UI webapp started successfully." $CSUC

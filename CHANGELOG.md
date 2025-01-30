@@ -1,8 +1,16 @@
 # XRAYUI Changelog
 
+## [x.xx.x] - 2025-xx-xx
+
+> _Important: Please clear your browser cache (e.g.**ctrl+f5**) to ensure that outdated files are updated._
+
+- ADDED: `transport` and `secururity` labels for Outbounds proxies.
+- IMPROVED: visual `proxy`, `transport` and `security` labels.
+- IMPROVED: Enhanced the visual loading and waiting display for a smoother user experience.
+
 ## [0.31.0] - 2025-01-29
 
-> _Important: Please clear your browser cache to ensure that outdated files are not loaded._
+> _Important: Please clear your browser cache (e.g.**ctrl+f5**) to ensure that outdated files are updated._
 
 - ADDED: Display selected mode in the `Ports Bypass/Redirect Policy`.
 - ADDED: A new `Logs` section to monitor the Xray logs from the web UI.

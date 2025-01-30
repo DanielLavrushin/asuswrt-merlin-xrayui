@@ -22,17 +22,24 @@
           <th>{{ proxy.protocol.toUpperCase() }}</th>
           <td>
             <a class="hint" href="#" @click.prevent="edit_proxy(proxy)">
-              <i>
-                <strong>
-                  {{ proxy.tag == "" ? "no tag" : proxy.tag }}
-                </strong>
-              </i>
+              <span v-show="proxy.streamSettings?.network" :class="['proxy-label', 'tag']">
+                {{ proxy.tag == "" ? "no tag" : proxy.tag }}
+              </span>
             </a>
+            <span v-show="proxy.streamSettings?.network" :class="['proxy-label', proxy.streamSettings?.network]">
+              {{ proxy.streamSettings?.network }}
+            </span>
+            <span v-show="proxy.streamSettings?.security" :class="['proxy-label', proxy.streamSettings?.security]">
+              {{ proxy.streamSettings?.security }}
+            </span>
             <span class="row-buttons">
-              <a class="button_gen button_gen_small" href="#" @click="show_transport(proxy)">transport</a>
-              <a class="button_gen button_gen_small" href="#" @click="remove_proxy(proxy)">&#10005;</a>
-              <a class="button_gen button_gen_small" href="#" @click="reorder_proxy(proxy, index)"
+              <a class="button_gen button_gen_small" href="#" @click.prevent="show_transport(proxy)">transport</a>
+              <a class="button_gen button_gen_small" href="#" @click.prevent="reorder_proxy(proxy, index)"
                 v-if="index > 0">&#8593;</a>
+              <a class="button_gen button_gen_small" href="#" @click.prevent="edit_proxy(proxy)"
+                title="edit">&#8494;</a>
+              <a class="button_gen button_gen_small" href="#" @click.prevent="remove_proxy(proxy)"
+                title="delete">&#10005;</a>
             </span>
           </td>
         </tr>

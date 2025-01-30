@@ -83,9 +83,9 @@ export default defineComponent({
         }, 2000);
 
         const updateLogsLevel = async () => {
-
-            await engine.submit(SubmtActions.updateLogsLevel, { log_level: logs.value.loglevel });
-            await engine.checkLoadingProgress();
+            await engine.executeWithLoadingProgress(async () => {
+                await engine.submit(SubmtActions.updateLogsLevel, { log_level: logs.value.loglevel });
+            }, false);
         };
 
         return {

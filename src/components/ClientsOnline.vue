@@ -48,9 +48,9 @@ export default defineComponent({
   name: "ClientsOnline",
   methods: {
     async enable_logs() {
-      await engine.submit(SubmtActions.enableLogs);
-      await engine.checkLoadingProgress();
-      window.location.reload();
+      await engine.executeWithLoadingProgress(async () => {
+        await engine.submit(SubmtActions.enableLogs);
+      });
     },
   },
   setup() {

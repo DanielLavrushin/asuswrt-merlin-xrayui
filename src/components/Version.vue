@@ -71,11 +71,9 @@ export default defineComponent({
         }
 
         const update = async () => {
-
-            await engine.submit(SubmtActions.performUpdate);
-            await engine.checkLoadingProgress();
-
-            window.location.reload();
+            await engine.executeWithLoadingProgress(async () => {
+                await engine.submit(SubmtActions.performUpdate);
+            });
         }
 
         return {

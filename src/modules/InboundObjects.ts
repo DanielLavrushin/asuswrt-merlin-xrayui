@@ -1,12 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { IProtocolType } from "./Interfaces";
-import { XrayProtocol } from "./Options";
 import { XrayAllocateObject, XraySniffingObject, XrayStreamSettingsObject } from "./CommonObjects";
 import { XrayVlessClientObject, XrayVmessClientObject, XrayHttpClientObject, XrayShadowsocksClientObject, XrayTrojanClientObject, XraySocksClientObject, XrayWireguardClientObject } from "./ClientsObjects";
 import { plainToInstance } from "class-transformer";
 
 class XrayInboundObject<TProxy extends IProtocolType> {
-  public protocol!: XrayProtocol;
+  public protocol!: string;
   public listen? = "0.0.0.0";
   public port!: number | string;
   public tag?: string;
@@ -15,7 +14,7 @@ class XrayInboundObject<TProxy extends IProtocolType> {
   public allocate?: XrayAllocateObject;
   public sniffing?: XraySniffingObject;
 
-  constructor(protocol: XrayProtocol | undefined = undefined, settings: TProxy | undefined = undefined) {
+  constructor(protocol: string | undefined = undefined, settings: TProxy | undefined = undefined) {
     if (protocol && settings) {
       this.settings = settings;
       this.protocol = protocol;

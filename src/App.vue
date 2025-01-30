@@ -87,7 +87,7 @@ input[type="radio"] {
 .FormTable td span.label {
   color: white;
   padding: 0 5px;
-  border-radius: 5px;
+  border-radius: 4px;
   margin: 4px 0 0 0;
   font-weight: bold;
 }
@@ -168,5 +168,61 @@ select>option[disabled] {
   margin: 10px;
   padding: 0 0 0 1em;
   border-left: 3px solid #ffcc00;
+}
+
+.FormTable td .proxy-label {
+  color: white;
+  padding: 2px 10px;
+  border-radius: 4px;
+  margin: 0 0 0 4px;
+  font-weight: bold;
+  background-color: #929ea1;
+  box-shadow: 0 0 2px #000;
+}
+
+.FormTable td .proxy-label.tag:hover {
+  box-shadow: 0 0 5px #ffcc00;
+}
+
+.FormTable td .proxy-label.tag {
+  background-color: #ffcc00;
+  color: #596e74;
+}
+
+.FormTable td .proxy-label.reality {
+  background-color: rgb(95, 1, 95);
+}
+
+.FormTable td .proxy-label.tls {
+  background-color: rgb(136, 5, 5);
+}
+
+.FormTable td .proxy-label.tcp {
+  background-color: rgb(35, 46, 46);
+}
+
+
+.FormTable td .proxy-label.kcp {
+  background-color: rgb(0, 114, 0);
+}
+
+.FormTable td .proxy-label.ws {
+  background-color: rgb(2, 0, 150);
+}
+
+.FormTable td .proxy-label.xhttp {
+  background-color: rgb(153, 130, 0);
+}
+
+.FormTable td .proxy-label.grpc {
+  background-color: rgb(207, 78, 2);
+}
+
+.FormTable td .proxy-label.httpupgrade {
+  background-color: rgb(2, 82, 119);
+}
+
+.FormTable td .proxy-label.splithttp {
+  background-color: rgb(94, 10, 59);
 }
 </style>

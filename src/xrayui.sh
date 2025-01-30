@@ -296,6 +296,7 @@ configure_firewall_client_direct() {
         iptables -t nat -A XRAYUI -d "$net" -j RETURN || printlog true "Failed to add local subnet $net rule in NAT." $CERR
     done
 
+    update_loading_progress "Configuring firewall Exclusion rules..."
     # Always exclude loopback:
     iptables -t nat -A XRAYUI -d 127.0.0.1/32 -j RETURN || printlog true "Failed to add loopback rule in NAT." $CERR
 
@@ -1468,6 +1469,7 @@ set_community_geodata_dates() {
 get_custom_geodata_tagfiles() {
 
     printlog true "Starting geodata tagfiles retrieval process..."
+    update_loading_progress "Retrieving geodata tagfiles..." 0
 
     local json_content
 
@@ -1540,7 +1542,7 @@ geodata_remount_to_web() {
 }
 
 geodata_recompile_all() {
-    printlog true "Recompiling ALL custom geodata files..."
+    printlog true "Recompiling ALL custom geodata files..." 0
 
     local builder="$XRAYUI_SHARED_DIR/xraydatbuilder"
 
@@ -1565,11 +1567,17 @@ geodata_recompile_all() {
     cleanup_payloads
     geodata_remount_to_web
 
+    if [ -f "$PIDFILE" ]; then
+        update_loading_progress "Restarting Xray service..." 60
+        restart
+    fi
+
     printlog true "Recompiled all custom geodata files successfully." $CSUC
     return 0
 }
 
 geodata_recompile() {
+    update_loading_progress "Recompiling geodata files..." 0
     printlog true "Starting geodata recompilation process..." "$CSUC"
 
     local datadir="$XRAYUI_SHARED_DIR/data"
@@ -1625,6 +1633,7 @@ geodata_recompile() {
 }
 
 geodata_delete_tag() {
+    update_loading_progress "Deleting geodata tag..." 0
     printlog true "Starting geodata tag deletion process..." "$CSUC"
 
     local datadir="$XRAYUI_SHARED_DIR/data"
@@ -1755,6 +1764,26 @@ update_loading_progress() {
     fi
 
     echo "$json_content" >"$XRAY_UI_RESPONSE_FILE"
+
+    if [ "$progress" = "100" ]; then
+        /jffs/scripts/xrayui service_event cleanloadingprogress &
+    fi
+
+}
+
+remove_loading_progress() {
+    printlog true "Removing loading progress..."
+    sleep 1
+    ensure_ui_response_file
+
+    local json_content=$(cat "$XRAY_UI_RESPONSE_FILE")
+
+    json_content=$(echo "$json_content" | jq '
+            del(.loading)
+        ')
+
+    echo "$json_content" >"$XRAY_UI_RESPONSE_FILE"
+
 }
 
 webapp_start() {
@@ -1829,6 +1858,9 @@ service_event)
         *) ;;
         esac
         exit 0
+    elif [ "$2" = "cleanloadingprogress" ]; then
+        remove_loading_progress
+        exit 0
     elif [ "$2" = "testconfig" ]; then
         test_xray_config
         exit 0
@@ -1848,13 +1880,11 @@ service_event)
         update
         exit 0
     elif [ "$2" = "geodata" ]; then
-        update_loading_progress "Updating geodata files..." 0
         if [ "$3" = "communityupdate" ]; then
             update_community_geodata
             update_loading_progress "Community geodata files updated successfully." 100
         elif [ "$3" = "communitydatecheck" ]; then
             set_community_geodata_dates
-            update_loading_progress "Community geodata files updated successfully." 100
         elif [ "$3" = "customtagfiles" ]; then
             get_custom_geodata_tagfiles
             update_loading_progress "Custom tagfiles retrieved successfully." 100

@@ -2,19 +2,18 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable security/detect-object-injection */
 import { IProtocolType } from "./Interfaces";
-import { XrayProtocol } from "./Options";
 import { XrayTrojanServerObject, XrayHttpServerObject, XrayStreamSettingsObject, XraySocksServerObject, XrayVmessServerObject, XrayNoiseObject, XrayShadowsocksServerObject, XrayPeerObject } from "./CommonObjects";
 import { XrayVlessServerObject } from "./CommonObjects";
 import { plainToInstance } from "class-transformer";
 
 class XrayOutboundObject<TProxy extends IProtocolType> {
-  public protocol!: XrayProtocol;
+  public protocol!: string;
   public sendThrough? = "0.0.0.0";
   public tag?: string;
   public settings!: TProxy;
   public streamSettings?: XrayStreamSettingsObject = new XrayStreamSettingsObject();
 
-  constructor(protocol: XrayProtocol | undefined = undefined, settings: TProxy | undefined = undefined) {
+  constructor(protocol: string | undefined = undefined, settings: TProxy | undefined = undefined) {
     if (protocol && settings) {
       this.settings = settings;
       this.protocol = protocol;

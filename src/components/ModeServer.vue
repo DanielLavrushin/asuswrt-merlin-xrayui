@@ -76,12 +76,11 @@ export default defineComponent({
     }
 
     const applySettings = async () => {
-      let cfg = engine.prepareServerConfig(config.value);
-      await engine.submit(SubmtActions.configurationApply, cfg);
-      await engine.checkLoadingProgress();
-      await engine.loadXrayConfig();
-
-      window.location.reload();
+      await engine.executeWithLoadingProgress(async () => {
+        let cfg = engine.prepareServerConfig(config.value);
+        await engine.submit(SubmtActions.configurationApply, cfg);
+        await engine.loadXrayConfig();
+      });
     };
 
     return {

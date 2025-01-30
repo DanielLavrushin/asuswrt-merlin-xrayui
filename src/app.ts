@@ -75,10 +75,8 @@ window.updateLoadingProgress = (progress?: EngineLoadingProgress) => {
   loading.style.visibility = "visible";
 
   if (progress?.message) {
+    // eslint-disable-next-line xss/no-mixed-html
     window.showtext(proceedingMainText, progress.message + "<br />");
-  }
-  if (progress?.progress) {
-    window.showtext(proceedingText, `Progress: ${progress.progress}%`);
   }
 };
 

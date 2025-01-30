@@ -106,13 +106,12 @@ export default defineComponent({
       isLoading.value = true;
       isNewFile.value = true;
       isSelected.value = false;
-      await engine.submit(SubmtActions.geoDataCustomGetTags);
-
-      geodata.value = await engine.getGeodata();
-      await engine.checkLoadingProgress();
-      isLoading.value = false;
-      modal.value.show();
-
+      await engine.executeWithLoadingProgress(async () => {
+        await engine.submit(SubmtActions.geoDataCustomGetTags);
+        geodata.value = await engine.getGeodata();
+        isLoading.value = false;
+        modal.value.show();
+      }, false);
     };
 
 
@@ -136,31 +135,29 @@ export default defineComponent({
       }
     };
     const compile = async () => {
-      if (!file.value.content?.length) {
-        alert("Well... Nice try, but you need to write something into the content field.");
-        return;
-      }
+      await engine.executeWithLoadingProgress(async () => {
+        if (!file.value.content?.length) {
+          alert("Well... Nice try, but you need to write something into the content field.");
+          return;
+        }
 
-      await engine.submit(SubmtActions.geoDataRecompile, file.value);
-      await engine.checkLoadingProgress();
-      window.location.reload();
+        await engine.submit(SubmtActions.geoDataRecompile, file.value);
+      });
     };
 
     const deletdat = async () => {
       if (!confirm("Are you sure you want to delete this tag file?")) return;
 
-      await engine.submit(SubmtActions.geoDataCustomDeleteTag, file.value);
-      file.value = new GeodatTagRequest();
-      await engine.checkLoadingProgress();
-      window.location.reload();
-
+      await engine.executeWithLoadingProgress(async () => {
+        await engine.submit(SubmtActions.geoDataCustomDeleteTag, file.value);
+        file.value = new GeodatTagRequest();
+      });
     };
 
     const complile_all = async () => {
-
-      await engine.submit(SubmtActions.geoDataRecompileAll, file.value);
-      await engine.checkLoadingProgress();
-      window.location.reload();
+      await engine.executeWithLoadingProgress(async () => {
+        await engine.submit(SubmtActions.geoDataRecompileAll, file.value);
+      });
     };
 
     return {

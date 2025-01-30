@@ -200,6 +200,10 @@ class Engine {
       }
     }
 
+    if (config.log) {
+      config.log.normalize();
+    }
+
     return config;
   }
 
@@ -224,33 +228,36 @@ class Engine {
     return responseConfig;
   }
 
-  async checkLoadingProgress(): Promise<EngineLoadingProgress> {
+  async executeWithLoadingProgress(action: Function, windowReload = true): Promise<void> {
+    let loadingProgress = new EngineLoadingProgress(0, "Please, wait");
+    window.showLoading(null, loadingProgress);
+
+    const progressPromise = this.checkLoadingProgress(loadingProgress, windowReload);
+
+    const actionPromise = action();
+    await Promise.all([actionPromise, progressPromise]);
+  }
+
+  async checkLoadingProgress(loadingProgress: EngineLoadingProgress, windowReload = true): Promise<void> {
     return new Promise((resolve, reject) => {
-      let loadingProgress = new EngineLoadingProgress(0, "Please, wait");
-      window.showLoading(null, loadingProgress);
-
-      const checkProgressInterval = setInterval(() => {
-        (async () => {
-          try {
-            const response = await this.getXrayResponse();
-            if (response.loading) {
-              loadingProgress = response.loading;
-              window.updateLoadingProgress(loadingProgress);
-            }
-
-            if (loadingProgress.progress === 100) {
-              clearInterval(checkProgressInterval);
-              setTimeout(() => {
-                window.hideLoading();
-                resolve(loadingProgress);
-              }, 1000);
-            }
-          } catch (error) {
+      const checkProgressInterval = setInterval(async () => {
+        try {
+          const response = await this.getXrayResponse();
+          if (response.loading) {
+            loadingProgress = response.loading;
+            window.updateLoadingProgress(loadingProgress);
+          } else {
             clearInterval(checkProgressInterval);
             window.hideLoading();
-            reject(error);
+            if (windowReload === true) {
+              window.location.reload();
+            }
           }
-        })();
+        } catch (error) {
+          clearInterval(checkProgressInterval);
+          window.hideLoading();
+          reject(new Error("Error while checking loading progress"));
+        }
       }, 1000);
     });
   }

@@ -60,9 +60,9 @@ export default defineComponent({
 
     },
     async handleStatus(action: string) {
-      await engine.submit(action);
-      await engine.checkLoadingProgress();
-      window.location.reload();
+      await engine.executeWithLoadingProgress(async () => {
+        await engine.submit(action);
+      });
     },
   },
   mounted() { },

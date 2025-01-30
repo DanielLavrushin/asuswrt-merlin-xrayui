@@ -383,7 +383,7 @@ class XrayShadowsocksServerObject extends XrayServerObject<XrayVmessClientObject
 }
 
 class XrayProtocolOption {
-  public protocol!: XrayProtocol;
+  public protocol!: string;
   public modes!: XrayProtocolMode;
 }
 
@@ -451,6 +451,7 @@ class XrayParsedUrlObject {
     const params = new URLSearchParams(query);
 
     params.forEach((value: string, key: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       this.parsedParams[key] = value;
     });
 

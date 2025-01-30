@@ -451,7 +451,7 @@ class XrayParsedUrlObject {
     const params = new URLSearchParams(query);
 
     params.forEach((value: string, key: string) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      // eslint-disable-next-line no-unsafe-assignment
       this.parsedParams[key] = value;
     });
 

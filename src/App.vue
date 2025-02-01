@@ -9,7 +9,6 @@
 import { defineComponent, ref, onMounted, provide, getCurrentInstance, reactive } from "vue";
 import TopBanner from "./components/asus/TopBanner.vue";
 import Loading from "./components/asus/Loading.vue";
-import HiddenFrame from "./components/asus/HiddenFrame.vue";
 import AsusFooter from "./components/asus/Footer.vue";
 
 import engine from "./modules/Engine";
@@ -20,7 +19,6 @@ export default defineComponent({
   components: {
     TopBanner,
     Loading,
-    HiddenFrame,
     MainForm,
     AsusFooter
   },

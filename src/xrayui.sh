@@ -568,7 +568,7 @@ mount_ui() {
         mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
     fi
 
-    sed -i '/menuName: "VPN"/,/menuName:/ {
+    sed -i '/index: "menu_VPN"/,/index:/ {
   /url:\s*"NULL",\s*tabName:\s*"__INHERIT__"/ i \
     { url: "'"$xrayui_user_page"'", tabName: "X-RAY" },
 }' /tmp/menuTree.js
@@ -1783,7 +1783,7 @@ remove_loading_progress() {
         ')
 
     echo "$json_content" >"$XRAY_UI_RESPONSE_FILE"
-
+    exit 0
 }
 
 webapp_start() {

@@ -50,6 +50,9 @@ Ensure the scripts are executable (`chmod +x <script>`).
 
 A: [![image](https://github.com/user-attachments/assets/3128e51b-ecaf-4b1e-baf9-74876ba67589)](https://t.me/asusxray)
 
+**Q: Can I import my VPS x-ray connection string?**
+
+A: Yes, you can, and this is even preferable method to start x-ray in a client mode on your router. [Read this guide](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/wiki/Xray-Client-Importing-the-Configuration) for more details.
 
 **Q: What if I already have an Xray configuration?**
 

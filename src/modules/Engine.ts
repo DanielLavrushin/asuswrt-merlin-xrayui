@@ -249,6 +249,7 @@ class Engine {
           } else {
             clearInterval(checkProgressInterval);
             window.hideLoading();
+            resolve();
             if (windowReload) {
               window.location.reload();
             }

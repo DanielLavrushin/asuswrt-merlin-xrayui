@@ -27,7 +27,7 @@
             <td colspan="2" style="color: #ffcc00">No hosts defined</td>
           </tr>
           <tr v-for="(server, index) in servers" :key="index" class="data_tr">
-            <td>{{ server }}</td>
+            <td>{{ getServer(server) }}</td>
             <td>
               <button v-if="typeof server === 'string' == false" @click.prevent="manage(server, index)"
                 class="button_gen button_gen_small">manage</button>
@@ -180,6 +180,12 @@ export default defineComponent({
     const ips = ref<string>(server.value.expectIPs?.join('\n') ?? '');
     const editIndex = ref<number | null>(null);
 
+    const getServer = (server: string | XrayDnsServerObject) => {
+      if (typeof server === "string") {
+        return server;
+      }
+      return server.address;
+    };
     return {
       modal,
       modalAdvanced,
@@ -187,6 +193,7 @@ export default defineComponent({
       domains,
       ips,
       editIndex,
+      getServer,
       XrayDnsServerObject
     };
   },

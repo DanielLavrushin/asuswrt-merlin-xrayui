@@ -217,16 +217,50 @@ class XrayRoutingObject {
     return this;
   }
 
-  public default = (): this => {
+  public default = (unblockItems: string[] | undefined): this => {
     this.domainStrategy = "IPIfNonMatch";
     this.rules = [];
+    if (!unblockItems || unblockItems.length == 0) {
+      const rule = new XrayRoutingRuleObject();
+      rule.name = "myip.com to proxy";
+      rule.domain = ["domain:myip.com"];
+      rule.outboundTag = "proxy";
 
-    const rule = new XrayRoutingRuleObject();
-    rule.name = "myip.com to proxy";
-    rule.domain = ["domain:myip.com"];
-    rule.outboundTag = "proxy";
+      this.rules.push(rule);
+    } else if (unblockItems.length > 0) {
+      unblockItems.forEach((item) => {
+        const gs = item.toLowerCase();
+        const rule = new XrayRoutingRuleObject();
+        rule.name = `${item} to proxy`;
+        rule.outboundTag = "proxy";
 
-    this.rules.push(rule);
+        switch (gs) {
+          case "kinopub":
+            rule.ip = [`89.34.0.0/16`, `31.40.0.0/16`, `93.189.57.0/24`, `93.189.61.0/24`, `194.59.142.0/24`];
+            break;
+          case "envato":
+            rule.domain = [`domain:envato.com`, `domain:envato.net`, `domain:envatoelements.com`, `domain:envatousercontent.com`];
+            break;
+          case "facebook":
+            rule.domain = [`geosite:${gs}`, `geosite:facebook-dev`];
+            break;
+          case "metacritic":
+            rule.domain = [`domain:metacritic.com`];
+            break;
+          case "wikipedia":
+            rule.domain = [`geosite:wikimedia`];
+            break;
+          default: {
+            rule.domain = [`geosite:${gs}`];
+            break;
+          }
+        }
+
+        if (this.rules) {
+          this.rules.push(rule);
+        }
+      });
+    }
 
     return this;
   };
@@ -267,6 +301,13 @@ class XrayPortsPolicy {
       .filter((x) => x)
       .join(",")
       .trim();
+  };
+
+  public default = (): this => {
+    this.mode = "bypass";
+    this.tcp = `443,80,22`;
+    this.udp = `443,80,22`;
+    return this;
   };
 }
 class XrayRoutingRuleObject {

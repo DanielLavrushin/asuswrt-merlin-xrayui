@@ -114,11 +114,14 @@ export default defineComponent({
     };
   },
   props: {
-    ports: XrayPortsPolicy,
+    ports: {
+      type: XrayPortsPolicy,
+      required: true
+    }
   },
 
   setup(props, { emit }) {
-    const ports = ref<XrayPortsPolicy>(props.ports ?? new XrayPortsPolicy());
+    const ports = ref<XrayPortsPolicy>(props.ports);
     const modal = ref();
     const vendor = ref();
     const tcp = ref("");
@@ -168,6 +171,9 @@ export default defineComponent({
       () => props.ports,
       (obj) => {
         if (obj) {
+          if (ports.value) {
+            ports.value.mode = obj.mode;
+          }
           tcp.value = obj.tcp?.split(",").join("\n") ?? "";
           udp.value = obj.udp?.split(",").join("\n") ?? "";
         }

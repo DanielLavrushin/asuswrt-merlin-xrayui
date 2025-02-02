@@ -47,6 +47,42 @@
             </td>
           </tr>
         </tbody>
+        <tbody v-show="completeSetup">
+          <tr>
+            <th>Unblock
+              <hint>
+                Select the services you want to unblock. This will automatically create a `routing rule` that channels
+                their traffic through the proxy.
+                <hr />
+                It's recommended to only choose services that are blocked in your
+                region. You'll be able to add, update, or delete these rules later in the `Routing` section.
+              </hint>
+            </th>
+            <td class="flex-checkbox">
+              <div v-for="(opt, index) in unblockItemsList" :key="index">
+                <input type="checkbox" v-model="unblockItems" class="input" :value="opt" :id="'destopt-' + index" />
+                <label :for="'destopt-' + index" class="settingvalue">{{ opt }}</label>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <th>Don't break my network devices
+              <hint>
+                Check this box if you have IoT devices on your router network, like `Smart TVs`, `Xbox`, `PlayStation`,
+                or
+                other devices you prefer not to affect with X-RAY.
+                <hr />
+                This option limits the rerouted traffic to X-RAY via your router, reducing the risk of disconnecting
+                these devices. Later You can adjust this option in the Routing section (`Ports Bypass/Redirect Policy`).
+                <hr />
+                If you don't have any IoT devices, it's best to leave this option unchecked.
+              </hint>
+            </th>
+            <td>
+              <input type="checkbox" v-model="bypassMode" />
+            </td>
+          </tr>
+        </tbody>
       </table>
     </div>
     <template v-slot:footer>
@@ -57,12 +93,13 @@
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
+import engine, { SubmtActions } from "@/modules/Engine";
 import Modal from "../Modal.vue";
 import jsQR from "jsqr";
 import { XrayObject } from "@/modules/XrayConfig";
 import ProxyParser from "@/modules/parsers/ProxyParser";
 import Hint from "../Hint.vue";
-import { XrayDnsObject, XrayLogObject, XrayProtocol, XrayRoutingObject, XraySniffingObject } from "@/modules/CommonObjects";
+import { XrayDnsObject, XrayLogObject, XrayPortsPolicy, XrayProtocol, XrayRoutingObject, XraySniffingObject } from "@/modules/CommonObjects";
 import { XrayDokodemoDoorInboundObject, XrayInboundObject } from "@/modules/InboundObjects";
 import { XrayBlackholeOutboundObject, XrayFreedomOutboundObject, XrayOutboundObject } from "@/modules/OutboundObjects";
 
@@ -85,6 +122,8 @@ export default defineComponent({
     const protocolUrl = ref<string>();
     const protocolQr = ref<string>();
     const completeSetup = ref<boolean>(true);
+    const bypassMode = ref<boolean>(true);
+    const unblockItems = ref<string[]>(["Youtube"]);
 
     const showModal = () => {
       importModal.value.show();
@@ -129,7 +168,7 @@ export default defineComponent({
       importModal.value.show();
     };
 
-    const parse = () => {
+    const parse = async () => {
 
       if (!confirm("You selected a complete setup. This will overwrite your current configuration. Are you sure?")) {
         return;
@@ -147,7 +186,6 @@ export default defineComponent({
               props.config.outbounds = [];
               props.config.inbounds = [];
 
-              //default inbounds
               const in_doko = new XrayInboundObject<XrayDokodemoDoorInboundObject>();
               in_doko.tag = "all-in";
               in_doko.settings = new XrayDokodemoDoorInboundObject();
@@ -161,7 +199,6 @@ export default defineComponent({
 
               props.config.inbounds.push(in_doko);
 
-              //3defualt outbounds
               const out_free = new XrayOutboundObject<XrayFreedomOutboundObject>();
               out_free.tag = "direct";
               out_free.settings = new XrayFreedomOutboundObject();
@@ -179,12 +216,21 @@ export default defineComponent({
               out_block.protocol = XrayProtocol.BLACKHOLE;
               props.config.outbounds.push(out_block);
 
-
               props.config.log = new XrayLogObject().normalize();
               props.config.dns = new XrayDnsObject().default().normalize();
 
+              props.config.routing = new XrayRoutingObject().default(unblockItems.value).normalize();
 
-              props.config.routing = new XrayRoutingObject().default().normalize();
+              if (bypassMode.value) {
+                props.config.routing.portsPolicy = new XrayPortsPolicy().default().normalize();
+
+              }
+
+              if (unblockItems.value?.length > 0) {
+                await engine.executeWithLoadingProgress(async () => {
+                  await engine.submit(SubmtActions.geodataCommunityUpdate);
+                }, false);
+              }
             }
 
             emit("update:config", props.config);
@@ -202,7 +248,10 @@ export default defineComponent({
       importModal,
       protocolUrl,
       protocolQr,
+      bypassMode,
       completeSetup,
+      unblockItemsList: ["Youtube", "Telegram", "TikTok", "Reddit", "LinkedIn", "DeviantArt", "Flibusta", "Wikipedia", "Twitch", "Disney", "Netflix", "Discord", "Instagram", "Twitter", "Patreon", "Metacritic", "Envato", "SoundCloud", "Kinopub", "Facebook"].sort(),
+      unblockItems,
       selectFile,
       showModal,
       parse,
@@ -211,3 +260,15 @@ export default defineComponent({
   }
 });
 </script>
+<style scoped>
+.flex-checkbox {
+  border: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.flex-checkbox>* {
+  flex: 0 1 calc(25%);
+}
+</style>

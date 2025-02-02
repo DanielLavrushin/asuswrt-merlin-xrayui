@@ -7,7 +7,7 @@
 import axios, { AxiosError } from "axios";
 import { xrayConfig, XrayObject } from "./XrayConfig";
 import { XrayBlackholeOutboundObject, XrayLoopbackOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, XrayTrojanOutboundObject, XrayOutboundObject, XraySocksOutboundObject, XrayVmessOutboundObject, XrayVlessOutboundObject, XrayHttpOutboundObject, XrayShadowsocksOutboundObject } from "./OutboundObjects";
-import { XrayProtocol, XrayDnsObject, XrayStreamSettingsObject, XrayRoutingObject, XrayRoutingRuleObject, XraySniffingObject, XrayPortsPolicy, XrayAllocateObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject, XraySockoptObject, XrayLogObject } from "./CommonObjects";
+import { XrayProtocol, XrayDnsObject, XrayStreamSettingsObject, XrayRoutingObject, XrayRoutingRuleObject, XraySniffingObject, XrayPortsPolicy, XrayAllocateObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject, XraySockoptObject, XrayLogObject, XrayStreamTlsCertificateObject } from "./CommonObjects";
 import { plainToInstance } from "class-transformer";
 import { XrayDokodemoDoorInboundObject, XrayHttpInboundObject, XrayInboundObject, XrayShadowsocksInboundObject, XraySocksInboundObject, XrayTrojanInboundObject, XrayVlessInboundObject, XrayVmessInboundObject, XrayWireguardInboundObject } from "./InboundObjects";
 import { XrayStreamHttpSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamKcpSettingsObject, XrayStreamTcpSettingsObject, XrayStreamWsSettingsObject } from "./TransportObjects";
@@ -440,6 +440,26 @@ class Engine {
         }
       }
 
+      this.xrayConfig.inbounds.forEach((proxy) => {
+        if (proxy.streamSettings?.tlsSettings?.certificates) {
+          proxy.streamSettings.tlsSettings.certificates = plainToInstance(XrayStreamTlsSettingsObject, proxy.streamSettings.tlsSettings.certificates);
+          proxy.streamSettings.tlsSettings.certificates.forEach((certificate, index) => {
+            if (proxy.streamSettings?.tlsSettings?.certificates) {
+              proxy.streamSettings.tlsSettings.certificates[index] = plainToInstance(XrayStreamTlsCertificateObject, certificate);
+            }
+          });
+        }
+      });
+      this.xrayConfig.outbounds.forEach((proxy) => {
+        if (proxy.streamSettings?.tlsSettings?.certificates) {
+          proxy.streamSettings.tlsSettings.certificates = plainToInstance(XrayStreamTlsSettingsObject, proxy.streamSettings.tlsSettings.certificates);
+          proxy.streamSettings.tlsSettings.certificates.forEach((certificate, index) => {
+            if (proxy.streamSettings?.tlsSettings?.certificates) {
+              proxy.streamSettings.tlsSettings.certificates[index] = plainToInstance(XrayStreamTlsCertificateObject, certificate);
+            }
+          });
+        }
+      });
       Object.assign(xrayConfig, this.xrayConfig);
       return this.xrayConfig;
     } catch (e) {

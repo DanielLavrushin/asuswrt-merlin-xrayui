@@ -1,6 +1,6 @@
 # XRAYUI Changelog
 
-## [0.32.0] - 2025-02-02
+## [0.32.1] - 2025-02-02
 
 > _Important: Please clear your browser cache (e.g.**ctrl+f5**) to ensure that outdated files are updated._
 
@@ -8,7 +8,8 @@
 - ADDED: A checkbox `Don't break my network devices` in the `import configuration` window. This will set the default mode to `bypass`, potentially preventing disruption to `IoT` devices on the network.
 - FIXED: Correctly display advanced `DNS` server name when defined.
 - FIXED: The `bypass`/`redirect` mode dropdown value sometimes remains unchanged.
-- FIXED: a bug with loading display function was not resolved.
+- FIXED: A bug with loading display function was not resolved.
+- FIXED: Implement normalization methods for TLS security protocol classes and update interfaces.
 - REMOVED: Unused/abandoned parts of the code.
 - IMPROVED: Mounting of the menu during installation.
 - IMPROVED: Minor cosmetic fixes and changes.

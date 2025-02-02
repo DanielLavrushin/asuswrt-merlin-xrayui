@@ -1,5 +1,5 @@
 import { XrayHttpClientObject, XraySocksClientObject, XrayVlessClientObject, XrayVmessClientObject } from "./ClientsObjects";
-import { ITransportNetwork, IXrayServer } from "./Interfaces";
+import { ISecurityProtocol, ITransportNetwork, IXrayServer } from "./Interfaces";
 import { XrayOptions, XrayProtocol, XrayProtocolMode } from "./Options";
 import { XrayStreamHttpSettingsObject, XrayStreamKcpSettingsObject, XrayStreamTcpSettingsObject, XrayStreamWsSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamSplitHttpSettingsObject } from "./TransportObjects";
 
@@ -67,43 +67,75 @@ class XrayAllocateObject {
 class XrayStreamTlsCertificateObject {
   static usageOptions = ["encipherment", "verify", "issue"];
 
-  public ocspStapling = 3600;
-  public oneTimeLoading = false;
-  public buildChain = false;
-  public usage = "encipherment";
+  public ocspStapling? = 3600;
+  public oneTimeLoading? = false;
+  public buildChain? = false;
+  public usage? = "encipherment";
   public certificateFile?: string;
   public keyFile?: string;
   public key?: string;
   public certificate?: string;
+
+  public normalize(): this | undefined {
+    this.ocspStapling = !this.ocspStapling || this.ocspStapling == 3600 ? undefined : this.ocspStapling;
+    this.usage = !this.usage || this.usage == "encipherment" ? undefined : this.usage;
+
+    if (!this.keyFile && !this.key && !this.certificateFile && !this.certificate) return undefined;
+    return this;
+  }
 }
 
-class XrayStreamTlsSettingsObject {
+class XrayStreamTlsSettingsObject implements ISecurityProtocol {
   static alpnOptions = ["h2", "http/1.1"];
   static fingerprintOptions = ["", "randomized", "random", "chrome", "firefox", "ios", "android", "safari", "edge", "360", "qq"];
   static tlsVersionsOptions = ["1.0", "1.1", "1.2", "1.3"];
 
   public serverName?: string;
-  public rejectUnknownSni = false;
-  public allowInsecure = false;
-  public disableSystemRoot = false;
-  public enableSessionResumption = false;
+  public rejectUnknownSni? = false;
+  public allowInsecure? = false;
+  public disableSystemRoot? = false;
+  public enableSessionResumption? = false;
   public alpn? = XrayStreamTlsSettingsObject.alpnOptions;
   public minVersion?: string;
   public maxVersion?: string;
-  public certificates: XrayStreamTlsCertificateObject[] = [];
+  public certificates?: XrayStreamTlsCertificateObject[] | undefined = [];
   public fingerprint?: string;
   public pinnedPeerCertificateChainSha256?: string;
   public masterKeyLog?: string;
 
   constructor(parsedObject?: XrayParsedUrlObject | undefined) {
+    this.certificates = [];
     this.certificates.push(new XrayStreamTlsCertificateObject());
     if (parsedObject) {
       this.serverName = parsedObject.parsedParams.sni;
     }
   }
+
+  normalize(): this {
+    this.rejectUnknownSni = !this.rejectUnknownSni ? undefined : this.rejectUnknownSni;
+    this.allowInsecure = !this.allowInsecure ? undefined : this.allowInsecure;
+    this.disableSystemRoot = !this.disableSystemRoot ? undefined : this.disableSystemRoot;
+    this.enableSessionResumption = !this.enableSessionResumption ? undefined : this.enableSessionResumption;
+
+    this.alpn = this.alpn?.length == 0 || this.alpn == XrayStreamTlsSettingsObject.alpnOptions ? undefined : this.alpn;
+    if (this.certificates && this.certificates.length > 0) {
+      this.certificates.forEach((cert) => {
+        const c = cert.normalize();
+        if (!c) {
+          if (this.certificates) {
+            this.certificates.splice(this.certificates.indexOf(cert), 1);
+          }
+        }
+      });
+    }
+    if (this.certificates?.length == 0) {
+      this.certificates = undefined;
+    }
+    return this;
+  }
 }
 
-class XrayStreamRealitySettingsObject {
+class XrayStreamRealitySettingsObject implements ISecurityProtocol {
   public show = false;
   public dest?: string;
   public xver?: number;
@@ -128,6 +160,10 @@ class XrayStreamRealitySettingsObject {
       this.spiderX = parsedObject.parsedParams.spx;
       this.serverName = parsedObject.parsedParams.sni;
     }
+  }
+
+  public normalize(): this {
+    return this;
   }
 }
 
@@ -388,6 +424,9 @@ class XrayStreamSettingsObject {
     securityOptions.forEach((prop) => {
       if (this[prop as keyof XrayStreamSettingsObject] && this.security && !prop.startsWith(this.security)) {
         (this[prop as keyof XrayStreamSettingsObject] as object | undefined) = undefined;
+      } else {
+        const isec = this[prop as keyof XrayStreamSettingsObject] as ISecurityProtocol;
+        if (isec?.normalize) isec.normalize();
       }
     });
   }

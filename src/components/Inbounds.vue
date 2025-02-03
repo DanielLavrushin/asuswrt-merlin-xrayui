@@ -18,10 +18,10 @@
         </td>
       </tr>
       <slot v-for="(proxy, index) in config.inbounds" :key="index">
-        <tr>
+        <tr v-show="!proxy.isSystem()">
           <th>{{ proxy.protocol.toUpperCase() }}</th>
           <td>
-            <a class="hint" href="#" @click.prevent="edit_proxy(proxy)">
+            <a class="hint tag" href="#" @click.prevent="edit_proxy(proxy)">
               <span v-show="proxy.streamSettings?.network" :class="['proxy-label', 'tag']">
                 {{ proxy.tag == "" ? "no tag" : proxy.tag }}
               </span>

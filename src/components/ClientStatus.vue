@@ -9,12 +9,12 @@
       <tr>
         <th>Connection Status</th>
         <td>
-          <span class="label" :class="{ 'label-success': isRunning, 'label-error': !isRunning }"
-            v-text="statusLabel"></span>
+          <span class="label" :class="connectionClasses" v-text="statusLabel"></span>
           <span v-if="!isRunning">
             <a class="button_gen button_gen_small button_info" href="#" @click.prevent="testConfig()"
               title="try to retrieve a server-side error">!</a>
           </span>
+          <span :class="[' label', 'flag', 'fi', contryCodeClass, 'fib']"></span>
           <span class="row-buttons">
             <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(reconnect)">reconnect</a>
             <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(stop)">stop</a>
@@ -23,30 +23,24 @@
         </td>
       </tr>
       <import-config v-model:config="config"></import-config>
-      <startup-control></startup-control>
+      <general-options v-model:config="config"></general-options>
     </tbody>
   </table>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "vue";
-import engine, { SubmtActions } from "../modules/Engine";
-import StartupControl from "./StartupControl.vue";
+import { defineComponent, ref, computed, watch } from "vue";
+import engine, { EngineClientConnectionStatus, SubmtActions } from "../modules/Engine";
+import GeneralOptions from "./GeneralOptions.vue";
 import ImportConfig from "./ImportConfig.vue";
 import { XrayObject } from "@/modules/XrayConfig";
+import { XrayRoutingRuleObject } from "@/modules/CommonObjects";
 
 export default defineComponent({
   name: "ClientStatus",
   components: {
-    StartupControl,
+    GeneralOptions,
     ImportConfig,
-  },
-  data() {
-    return {
-      isRunning: window.xray.server.isRunning,
-      reconnect: SubmtActions.serverRestart,
-      stop: SubmtActions.serverStop,
-    };
   },
   props: {
     config: {
@@ -56,7 +50,7 @@ export default defineComponent({
   },
   computed: {
     statusLabel(): string {
-      return this.isRunning ? "Connected" : "Disconnected";
+      return !this.checkConEnabled ? this.isRunning ? "XRAY is running " : "XRAY is stopped" : this.connectionStationLabel;
     },
   },
   methods: {
@@ -77,8 +71,72 @@ export default defineComponent({
   },
   setup(props) {
     const config = ref(props.config);
+    const contryCodeClass = ref<string>("flag-icon flag-icon-unknown");
+    const connectionStatus = ref<boolean>(false);
+    const connectionStationLabel = ref<string>("Checking connection...");
+    const connectionClasses = computed(() => ({
+      'label-success': isRunning.value,
+      'label-error': !isRunning.value,
+      'label-warning': checkConEnabled.value && !connectionStatus.value
+    }));
 
-    return { config };
+    const isRunning = ref<boolean>(window.xray.server.isRunning);
+    const checkConEnabled = ref(false);
+
+    const checkConnection = async (): Promise<EngineClientConnectionStatus | null> => {
+      await engine.submit(SubmtActions.checkConnection);
+      const rule = config.value.routing?.rules?.find((r) => r.name === XrayRoutingRuleObject.connectionCheckRuleName);
+      checkConEnabled.value = rule !== undefined;
+      if (checkConEnabled.value) {
+        const status = await engine.getClientConnectionStatus();
+        if (status) {
+          isRunning.value = window.xray.server.isRunning;
+          connectionStatus.value = status.connected ?? false;
+          connectionStationLabel.value = "XRAY is connected!";
+          contryCodeClass.value = `fi-${status.countryCode?.toLowerCase()}`;
+          return status;
+        }
+      }
+      return null;
+    };
+
+
+    watch(
+      () => config.value.routing?.rules?.length,
+      (newObj) => {
+        if (newObj && newObj > 0 && isRunning.value) {
+          const rule = config.value.routing?.rules?.find((r) => r.name === XrayRoutingRuleObject.connectionCheckRuleName);
+
+          if (rule) {
+            const checkConnectionInterval = setInterval(async () => {
+              const result = await checkConnection();
+              if (result?.connected) {
+                clearInterval(checkConnectionInterval);
+              }
+
+            }, 6000);
+          }
+        }
+      },
+      { immediate: true }
+    );
+
+    return {
+      config,
+      isRunning,
+      connectionClasses,
+      contryCodeClass,
+      connectionStationLabel,
+      reconnect: SubmtActions.serverStart,
+      stop: SubmtActions.serverStop,
+      checkConEnabled,
+      checkConnection
+    };
   },
 });
 </script>
+<style scoped>
+.FormTable td span.label.flag {
+  margin-left: 5px;
+}
+</style>

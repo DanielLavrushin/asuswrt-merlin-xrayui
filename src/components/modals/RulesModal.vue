@@ -7,10 +7,11 @@
         </tr>
       </thead>
       <tbody v-if="rules.length">
-        <tr v-for="(r, index) in rules" :key="index">
+        <tr v-for="(r, index) in rules.filter((r) => !r.isSystem())" :key="index">
           <td>rule #{{ index + 1 }}</td>
           <td style="color: #ffcc00">{{ !r.name || r.name == "" ? getRuleName(r) : r.name }}</td>
           <td>
+            <text v-show="r.isSystem">system rule</text>
             <span class="row-buttons">
               <input class="button_gen button_gen_small" type="button" value="&#8593;" @click="reorderRule(r, index)"
                 v-if="index > 0" />
@@ -41,7 +42,7 @@
             </hint>
           </th>
           <td>
-            <input v-model="currentRule.name" type="text" class="input_25_table" />
+            <input v-model="currentRule.name" type="text" class="input_25_table" :readonly="currentRule.isSystem" />
             <span class="hint-color"></span>
           </td>
         </tr>
@@ -271,7 +272,7 @@ export default defineComponent({
   },
   setup(props, { emit }) {
     // Reactive state
-    const rules = ref<XrayRoutingRuleObject[]>([...props.rules]);
+    const rules = ref<XrayRoutingRuleObject[]>([...props.rules.filter((r) => !r.isSystem())]);
 
     const currentRule = ref<XrayRoutingRuleObject>(new XrayRoutingRuleObject());
     const currentIndex = ref<number>(-1);
@@ -446,4 +447,13 @@ export default defineComponent({
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+.FormTable tbody tr.rule-system td text {
+  float: left;
+  padding-left: 5px;
+}
+
+.FormTable tbody tr.rule-system td {
+  color: rgb(255, 0, 255)
+}
+</style>

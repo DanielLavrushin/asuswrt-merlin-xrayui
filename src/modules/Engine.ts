@@ -26,6 +26,12 @@ class EngineSsl {
   public certificateFile!: string;
   public keyFile!: string;
 }
+class EngineClientConnectionStatus {
+  public ipAddress?: string;
+  public countryName?: string;
+  public countryCode?: string;
+  public connected?: boolean;
+}
 
 class EngineLoadingProgress {
   public progress = 0;
@@ -48,6 +54,7 @@ class EngineResponseConfig {
   public xray?: { test: string };
   public geodata?: EngineGeodatConfig = new EngineGeodatConfig();
   public loading?: EngineLoadingProgress;
+  public connection_check?: EngineClientConnectionStatus;
 }
 class EngineGeodatConfig {
   public community?: Record<string, string>;
@@ -84,7 +91,8 @@ enum SubmtActions {
   geoDataRecompileAll = "xrayui_geodata_customrecompileall",
   geoDataCustomDeleteTag = "xrayui_geodata_customdeletetag",
   fetchXrayLogs = "xrayui_configuration_logs_fetch",
-  updateLogsLevel = "xrayui_configuration_logs_changeloglevel"
+  updateLogsLevel = "xrayui_configuration_logs_changeloglevel",
+  checkConnection = "xrayui_configuration_checkconnection"
 }
 
 class Engine {
@@ -220,6 +228,11 @@ class Engine {
   async getSslCertificates(): Promise<EngineSsl | undefined> {
     const response = await this.getXrayResponse();
     return response.certificates;
+  }
+
+  async getClientConnectionStatus(): Promise<EngineClientConnectionStatus | undefined> {
+    const response = await this.getXrayResponse();
+    return response.connection_check;
   }
 
   async getXrayResponse(): Promise<EngineResponseConfig> {
@@ -477,4 +490,4 @@ class Engine {
 let engine = new Engine();
 export default engine;
 
-export { EngineLoadingProgress, EngineGeodatConfig, GeodatTagRequest, SubmtActions, Engine, engine };
+export { EngineClientConnectionStatus, EngineLoadingProgress, EngineGeodatConfig, GeodatTagRequest, SubmtActions, Engine, engine };

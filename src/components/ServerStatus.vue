@@ -22,20 +22,21 @@
           </span>
         </td>
       </tr>
-      <startup-control></startup-control>
+      <general-options v-model:config="config"></general-options>
     </tbody>
   </table>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, ref } from "vue";
 import engine, { SubmtActions } from "../modules/Engine";
-import StartupControl from "./StartupControl.vue";
+import GeneralOptions from "./GeneralOptions.vue";
+import { XrayObject } from "@/modules/XrayConfig";
 
 export default defineComponent({
   name: "ServerStatus",
   components: {
-    StartupControl,
+    GeneralOptions,
   },
   data() {
     return {
@@ -65,6 +66,16 @@ export default defineComponent({
       });
     },
   },
-  mounted() { },
+  props: {
+    config: {
+      type: XrayObject,
+      required: true,
+    }
+  },
+  setup(props) {
+    const config = ref(props.config);
+
+    return { config };
+  },
 });
 </script>

@@ -54,8 +54,12 @@ export default defineComponent({
 
 .hint {
   color: #fc0 !important;
-  text-decoration: underline !important;
+  text-decoration: underline;
   cursor: pointer;
+}
+
+.hint.tag {
+  text-decoration: none;
 }
 
 input[type="checkbox"],
@@ -96,6 +100,11 @@ input[type="radio"] {
 
 .FormTable td span.label-success {
   background-color: green;
+}
+
+.FormTable td span.label-warning {
+  background-color: #ffcc00;
+  color: #596e74;
 }
 
 .row-buttons {
@@ -183,8 +192,11 @@ select>option[disabled] {
 }
 
 .FormTable td .proxy-label.tag {
-  background-color: #ffcc00;
-  color: #596e74;
+  border: 1px solid #ffcc00;
+  text-decoration: none;
+  background: transparent;
+  color: #fc0;
+  ;
 }
 
 .FormTable td .proxy-label.reality {

@@ -1,5 +1,9 @@
 # XRAYUI Changelog
 
+## [0.33.0] - 2025-02-xx
+
+- IMPROVED: Codacy code standards comply.
+
 ## [0.32.1] - 2025-02-02
 
 > _Important: Please clear your browser cache (e.g.**ctrl+f5**) to ensure that outdated files are updated._

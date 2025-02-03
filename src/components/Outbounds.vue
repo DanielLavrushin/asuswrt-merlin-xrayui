@@ -18,7 +18,7 @@
         </td>
       </tr>
       <slot v-for="(proxy, index) in config.outbounds" :key="index">
-        <tr>
+        <tr v-show="!proxy.isSystem()">
           <th>{{ proxy.protocol.toUpperCase() }}</th>
           <td>
             <a class="hint" href="#" @click.prevent="edit_proxy(proxy)">

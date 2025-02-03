@@ -78,7 +78,7 @@
           </hint>
         </th>
         <td>
-          {{ routing.rules.length }} item(s)
+          {{ countRules() }} item(s)
           <input class="button_gen button_gen_small" type="button" value="manage" @click.prevent="manage_rules()" />
           <span class="hint-color"></span>
           <rules-modal ref="modal" v-model:rules="routing.rules"></rules-modal>
@@ -200,7 +200,9 @@ export default defineComponent({
         daysPassed.value = Math.floor(df / (1000 * 60 * 60 * 24));
       }
     };
-
+    const countRules = () => {
+      return routing.value.rules?.filter((r) => !r.isSystem()).length;
+    };
     load_geodat_dates();
 
     return {
@@ -214,6 +216,7 @@ export default defineComponent({
       manage_geodat,
       manage_rules,
       manage_redirect_ports,
+      countRules,
       domainStrategyOptions: XrayRoutingObject.domainStrategyOptions,
       domainMatcherOptions: XrayRoutingObject.domainMatcherOptions
     };

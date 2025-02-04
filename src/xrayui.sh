@@ -36,6 +36,11 @@ printlog() {
     printf "${CINFO}${3}%s${CRESET}\\n" "$2"
 }
 
+show_version() {
+    local XRAY_VERSION=$(xray version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
+    printlog true "XRAYUI: $XRAYUI_VERSION, XRAY-CORE: $XRAY_VERSION" $CSUC
+}
+
 start() {
 
     mode=$(am_settings_get xray_mode)
@@ -1851,7 +1856,7 @@ check_connection() {
     if [ -z "$response" ]; then
         response="{}"
     fi
-    printlog true "Response: $response"
+
     case "$response" in
     '{'*) ;;
     *) printlog true "Response is not valid JSON. Skipping connection update: $response" && return 0 ;;
@@ -1871,6 +1876,9 @@ check_connection() {
 }
 
 case "$1" in
+version)
+    show_version
+    ;;
 install)
     install
     ;;
@@ -2053,7 +2061,7 @@ service_event)
     exit 0
     ;;
 *)
-    echo "Usage: $0 {install|uninstall|start|stop|restart|update|mount_ui|unmount_ui|remount_ui}"
+    echo "Usage: $0 {version|install|uninstall|start|stop|restart|update|mount_ui|unmount_ui|remount_ui}"
     exit 1
     ;;
 esac

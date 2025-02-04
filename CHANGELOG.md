@@ -1,5 +1,9 @@
 # XRAYUI Changelog
 
+## [0.xx.x] - 2025-02-xx
+
+- ADDED: version command to display XRAYUI current version. Usage `/jffs/scripts/xrayui version`.
+
 ## [0.33.0] - 2025-02-04
 
 - UPDATED: Introduced a `General options` row in the `Configuration` section.

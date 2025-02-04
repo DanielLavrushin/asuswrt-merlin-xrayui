@@ -20,6 +20,11 @@ class XrayOutboundObject<TProxy extends IProtocolType> {
       this.tag = "obd-" + this.protocol;
     }
   }
+
+  public isSystem = (): boolean => {
+    return this.tag?.startsWith("sys:") ?? false;
+  };
+
   normalize = () => {
     this.sendThrough = this.sendThrough === "0.0.0.0" ? undefined : this.sendThrough;
     this.tag = this.tag === "" ? undefined : this.tag;

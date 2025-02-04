@@ -22,6 +22,10 @@ class XrayInboundObject<TProxy extends IProtocolType> {
     }
   }
 
+  public isSystem = (): boolean => {
+    return this.tag?.startsWith("sys:") ?? false;
+  };
+
   normalize = () => {
     this.tag = this.tag === "" ? undefined : this.tag;
 
@@ -90,12 +94,13 @@ class XrayTrojanInboundObject implements IProtocolType {
 class XraySocksInboundObject implements IProtocolType {
   public ip? = "127.0.0.1";
   public auth? = "noauth";
-  public accounts: XraySocksClientObject[] = [];
+  public accounts?: XraySocksClientObject[] = [];
   public udp? = false;
   normalize = () => {
     this.ip = !this.ip || this.ip === "127.0.0.1" ? undefined : this.ip;
     this.udp = this.udp ? this.udp : undefined;
     this.auth = this.auth === "noauth" ? undefined : this.auth;
+    this.accounts = this.accounts && this.accounts.length > 0 ? this.accounts : undefined;
   };
 }
 

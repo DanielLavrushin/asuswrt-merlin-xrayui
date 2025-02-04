@@ -61,11 +61,13 @@ start() {
         configure_firewall_server
     elif [ "$mode" = "client" ]; then
         configure_firewall_client
+        check_connection &
     else
         mode="server"
         am_settings_set xray_mode $mode
         configure_firewall_server
     fi
+
 }
 
 stop() {
@@ -79,7 +81,15 @@ stop() {
         rm -f "$PIDFILE"
         printlog true "PID file $PIDFILE removed successfully."
     fi
+
+    rm -f $XRAY_UI_RESPONSE_FILE
+
     cleanup_firewall
+
+    mode=$(am_settings_get xray_mode)
+    if [ "$mode" = "client" ]; then
+        check_connection &
+    fi
 
 }
 restart() {
@@ -1812,6 +1822,54 @@ webapp_restart() {
     webapp_start
 }
 
+check_connection() {
+
+    ensure_ui_response_file
+    local json_content
+    if [ -f "$XRAY_UI_RESPONSE_FILE" ]; then
+        json_content=$(cat "$XRAY_UI_RESPONSE_FILE")
+    else
+        json_content="{}"
+    fi
+
+    local outbound_address
+    outbound_address=$(jq -r 'first(.outbounds[] | select(.protocol != "freedom" and .protocol != "blackhole") |
+      if (.settings | has("servers")) then .settings.servers[0].address else .settings.vnext[0].address end)' "$xray_config")
+
+    local sys_con_domain
+    sys_con_domain=$(jq -r 'first(.routing.rules[] | select(.name == "sys:connection-check")).domain[0]' "$xray_config")
+    local uri="https://$sys_con_domain/api/json"
+
+    local response
+    if [ -f "$PIDFILE" ]; then
+        sleep 10
+        response=$(curl -s -A "Mozilla/5.0" --socks5-hostname 127.0.0.1:1080 "$uri")
+    else
+        response=$(curl -s "$uri")
+    fi
+
+    if [ -z "$response" ]; then
+        response="{}"
+    fi
+    printlog true "Response: $response"
+    case "$response" in
+    '{'*) ;;
+    *) printlog true "Response is not valid JSON. Skipping connection update: $response" && return 0 ;;
+    esac
+
+    local response_ip
+    response_ip=$(echo "$response" | jq -r '.ipAddress')
+    local connected
+    if [ "$response_ip" = "$outbound_address" ]; then
+        connected=true
+    else
+        connected=false
+    fi
+
+    json_content=$(echo "$json_content" | jq --argjson response "$response" --argjson connected "$connected" '.connection_check = ($response + {connected: $connected})')
+    echo "$json_content" >"$XRAY_UI_RESPONSE_FILE"
+}
+
 case "$1" in
 install)
     install
@@ -1929,6 +1987,9 @@ service_event)
             ;;
         "generatedefaultconfig")
             generate_default_config
+            ;;
+        checkconnection)
+            check_connection
             ;;
         esac
         exit 0

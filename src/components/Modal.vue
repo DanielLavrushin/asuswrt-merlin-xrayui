@@ -120,6 +120,11 @@ export default defineComponent({
   margin-top: 10px;
 }
 
+.xray-modal-body :deep(a) {
+  color: #ffcc00;
+  text-decoration: underline;
+}
+
 .xray-modal-footer {
   margin-top: 20px;
   text-align: center;

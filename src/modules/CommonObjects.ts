@@ -347,6 +347,7 @@ class XrayPortsPolicy {
   };
 }
 class XrayRoutingRuleObject {
+  static connectionCheckRuleName = "sys:connection-check";
   static networkOptions = ["", "tcp", "udp", "tcp,udp"];
   static protocolOptions = ["http", "tls", "bittorrent"];
   public name?: string;
@@ -378,6 +379,10 @@ class XrayRoutingRuleObject {
     this.outboundTag = this.outboundTag == "" ? undefined : this.outboundTag;
     this.network = this.network == "" ? undefined : this.network;
   }
+
+  public isSystem = (): boolean => {
+    return this.name?.startsWith("sys:") ?? false;
+  };
 }
 
 class XrayStreamSettingsObject {
@@ -426,7 +431,7 @@ class XrayStreamSettingsObject {
         (this[prop as keyof XrayStreamSettingsObject] as object | undefined) = undefined;
       } else {
         const isec = this[prop as keyof XrayStreamSettingsObject] as ISecurityProtocol;
-        if (isec?.normalize) isec.normalize();
+        if (isec && isec.normalize) isec.normalize();
       }
     });
   }

@@ -66,6 +66,9 @@ start() {
         am_settings_set xray_mode $mode
         configure_firewall_server
     fi
+
+    check_connection &
+
 }
 
 stop() {
@@ -83,6 +86,8 @@ stop() {
     rm -f $XRAY_UI_RESPONSE_FILE
 
     cleanup_firewall
+
+    check_connection &
 
 }
 restart() {
@@ -1832,9 +1837,10 @@ check_connection() {
     local sys_con_domain
     sys_con_domain=$(jq -r 'first(.routing.rules[] | select(.name == "sys:connection-check")).domain[0]' "$xray_config")
     local uri="https://$sys_con_domain/api/json"
-    echo $uri
+
     local response
     if [ -f "$PIDFILE" ]; then
+        sleep 10
         response=$(curl -s -A "Mozilla/5.0" --socks5-hostname 127.0.0.1:1080 "$uri")
     else
         response=$(curl -s "$uri")
@@ -1843,7 +1849,7 @@ check_connection() {
     if [ -z "$response" ]; then
         response="{}"
     fi
-
+    printlog true "Response: $response"
     case "$response" in
     '{'*) ;;
     *) printlog true "Response is not valid JSON. Skipping connection update: $response" && return 0 ;;

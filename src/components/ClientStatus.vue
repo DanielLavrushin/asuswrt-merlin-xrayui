@@ -84,7 +84,6 @@ export default defineComponent({
     const checkConEnabled = ref(false);
 
     const checkConnection = async (): Promise<EngineClientConnectionStatus | null> => {
-      await engine.submit(SubmtActions.checkConnection);
       const rule = config.value.routing?.rules?.find((r) => r.name === XrayRoutingRuleObject.connectionCheckRuleName);
       checkConEnabled.value = rule !== undefined;
       if (checkConEnabled.value) {
@@ -114,7 +113,7 @@ export default defineComponent({
                 clearInterval(checkConnectionInterval);
               }
 
-            }, 6000);
+            }, 1000);
           }
         }
       },

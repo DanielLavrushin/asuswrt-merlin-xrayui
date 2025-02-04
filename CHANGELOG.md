@@ -3,6 +3,7 @@
 ## [0.xx.x] - 2025-02-xx
 
 - ADDED: version command to display XRAYUI current version. Usage `/jffs/scripts/xrayui version`.
+- ADDED: add symlink to `/jffs/scripts/xrayui` for direct invocation of `xrayui`.
 
 ## [0.33.0] - 2025-02-04
 

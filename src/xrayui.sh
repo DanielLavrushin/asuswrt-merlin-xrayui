@@ -601,8 +601,10 @@ mount_ui() {
         mkdir -p "$XRAYUI_SHARED_DIR/data"
     fi
 
-    ln -s -f /jffs/addons/xrayui/app.js $dir_xrayui/app.js
-    ln -s -f /opt/etc/xray/config.json $dir_xrayui/xray-config.json
+    ln -s -f /jffs/scripts/xrayui /opt/bin/xrayui || printlog true "Failed to create symlink for xrayui." $CERR
+
+    ln -s -f /jffs/addons/xrayui/app.js $dir_xrayui/app.js || printlog true "Failed to create symlink for app.js." $CERR
+    ln -s -f /opt/etc/xray/config.json $dir_xrayui/xray-config.json || printlog true "Failed to create symlink for xray-config.json." $CERR
 
     geodata_remount_to_web
 
@@ -648,6 +650,8 @@ unmount_ui() {
 
     rm -rf $dir_xrayui
     am_settings_del xray_page
+
+    rm -rf /opt/bin/xrayui || printlog true "Failed to remove symlink for xrayui." $CERR
 
     flock -u "$FD"
 

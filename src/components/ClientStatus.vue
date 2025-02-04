@@ -17,8 +17,9 @@
           <span class="row-buttons">
             <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(reconnect)">reconnect</a>
             <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(stop)">stop</a>
-            <a class="button_gen button_gen_small" href="/ext/xrayui/xray-config.json" target="_blank">show config</a>
+            <input class="button_gen button_gen_small" type="button" value="show config" @click.prevent="show_config_modal()" />
           </span>
+          <config-modal ref="configModal"></config-modal>
         </td>
       </tr>
       <import-config v-model:config="config"></import-config>
@@ -34,12 +35,14 @@
   import ImportConfig from "./ImportConfig.vue";
   import { XrayObject } from "@/modules/XrayConfig";
   import { XrayRoutingRuleObject } from "@/modules/CommonObjects";
+  import ConfigModal from "./modals/ConfigModal.vue";
 
   export default defineComponent({
     name: "ClientStatus",
     components: {
       GeneralOptions,
-      ImportConfig
+      ImportConfig,
+      ConfigModal
     },
     props: {
       config: {
@@ -69,6 +72,7 @@
     },
     setup(props) {
       const config = ref(props.config);
+      const configModal = ref();
       const contryCodeClass = ref<string>("flag-icon flag-icon-unknown");
       const connectionStatus = ref<boolean>(false);
       const connectionStationLabel = ref<string>("Checking connection...");
@@ -80,6 +84,10 @@
 
       const isRunning = ref<boolean>(window.xray.server.isRunning);
       const checkConEnabled = ref(false);
+
+      const show_config_modal = () => {
+        configModal.value.show();
+      };
 
       const checkConnection = async (): Promise<EngineClientConnectionStatus | null> => {
         const rule = config.value.routing?.rules?.find((r) => r.name === XrayRoutingRuleObject.connectionCheckRuleName);
@@ -118,6 +126,7 @@
 
       return {
         config,
+        configModal,
         isRunning,
         connectionClasses,
         contryCodeClass,
@@ -125,7 +134,8 @@
         reconnect: SubmtActions.serverStart,
         stop: SubmtActions.serverStop,
         checkConEnabled,
-        checkConnection
+        checkConnection,
+        show_config_modal
       };
     }
   });

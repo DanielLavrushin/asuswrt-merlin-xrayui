@@ -110,6 +110,10 @@
   .row-buttons {
     float: right;
   }
+  .row-buttons label {
+    margin-right: 10px;
+    vertical-align: middle;
+  }
 
   .button_gen_small {
     min-width: auto;

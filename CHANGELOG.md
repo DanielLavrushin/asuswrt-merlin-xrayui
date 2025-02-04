@@ -2,7 +2,9 @@
 
 ## [0.33.0] - 2025-02-xx
 
-- IMPROVED: Codacy code standards comply.
+- UPDATED: Introduced a `General options` row in the `Configuration` section.
+- ADDED: A new option, `Check connection to xray server`, in the `General options` section of Client mode. Enabling it allows XRAYUI to check the connection status of the outbound proxy. After restarting Xray, the check sends a connection request to an external service ([freeipapi.com](https://freeipapi.com)) to verify that the connection is truly established via the outbound proxy. Next to the status, a flag representing the X-RAY outbound server `country` location appears to indicate the connection status. Please note that it takes a couple of seconds after restart to validate the connection. When this option is enabled, XRAYUI automatically adds some system configurations (an inbound `SOCKS` proxy and a system routing rule).
+- IMPROVED: Compliance with `Codacy` code standards.
 
 ## [0.32.1] - 2025-02-02
 

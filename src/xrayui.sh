@@ -61,13 +61,12 @@ start() {
         configure_firewall_server
     elif [ "$mode" = "client" ]; then
         configure_firewall_client
+        check_connection &
     else
         mode="server"
         am_settings_set xray_mode $mode
         configure_firewall_server
     fi
-
-    check_connection &
 
 }
 
@@ -87,7 +86,10 @@ stop() {
 
     cleanup_firewall
 
-    check_connection &
+    mode=$(am_settings_get xray_mode)
+    if [ "$mode" = "client" ]; then
+        check_connection &
+    fi
 
 }
 restart() {

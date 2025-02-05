@@ -164,11 +164,11 @@ export default defineComponent({
     const routing = ref<XrayRoutingObject>(xrayConfig.routing || new XrayRoutingObject());
 
     const manage_geodat = async () => {
-      geodatModal.value.show();
+      await geodatModal.value.show();
     };
     const update_geodat = async () => {
       await engine.executeWithLoadingProgress(async () => {
-        await engine.submit(SubmtActions.geodataCommunityUpdate);
+        await engine.submit(SubmtActions.geodataCommunityUpdate, null, 1000);
       });
     };
 

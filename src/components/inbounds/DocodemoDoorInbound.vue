@@ -20,7 +20,8 @@
                         </hint>
                     </th>
                     <td>
-                        <input type="text" class="input_20_table" v-model="inbound.settings.address" />
+                        <input type="text" class="input_20_table" v-model="inbound.settings.address" autocomplete="off"
+                            autocorrect="off" autocapitalize="off" />
                         <span class="hint-color"></span>
                     </td>
                 </tr>

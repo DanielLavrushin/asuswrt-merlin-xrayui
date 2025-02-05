@@ -253,25 +253,27 @@ class Engine {
 
   async checkLoadingProgress(loadingProgress: EngineLoadingProgress, windowReload = true): Promise<void> {
     return new Promise((resolve, reject) => {
-      const checkProgressInterval = setInterval(async () => {
-        try {
-          const response = await this.getXrayResponse();
-          if (response.loading) {
-            loadingProgress = response.loading;
-            window.updateLoadingProgress(loadingProgress);
-          } else {
+      const checkProgressInterval = setInterval(() => {
+        (async () => {
+          try {
+            const response = await this.getXrayResponse();
+            if (response.loading) {
+              loadingProgress = response.loading;
+              window.updateLoadingProgress(loadingProgress);
+            } else {
+              clearInterval(checkProgressInterval);
+              window.hideLoading();
+              resolve();
+              if (windowReload) {
+                window.location.reload();
+              }
+            }
+          } catch (error) {
             clearInterval(checkProgressInterval);
             window.hideLoading();
-            resolve();
-            if (windowReload) {
-              window.location.reload();
-            }
+            reject(new Error("Error while checking loading progress"));
           }
-        } catch (error) {
-          clearInterval(checkProgressInterval);
-          window.hideLoading();
-          reject(new Error("Error while checking loading progress"));
-        }
+        })();
       }, 1000);
     });
   }

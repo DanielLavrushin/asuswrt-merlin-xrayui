@@ -71,10 +71,10 @@ class XrayVmessInboundObject implements IProtocolType {
 }
 
 class XrayHttpInboundObject implements IProtocolType {
-  public allowTransparen? = false;
+  public allowTransparent? = false;
   public clients: XrayHttpClientObject[] = [];
   normalize = () => {
-    this.allowTransparen = this.allowTransparen ? this.allowTransparen : undefined;
+    this.allowTransparent = this.allowTransparent ? this.allowTransparent : undefined;
   };
 }
 

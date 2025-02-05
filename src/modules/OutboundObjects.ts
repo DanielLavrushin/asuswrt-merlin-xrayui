@@ -43,6 +43,9 @@ class XrayVlessOutboundObject implements IProtocolType {
   }
 
   normalize = () => void 0;
+  isTargetAddress = (address: string) => {
+    return this.vnext.find((server) => server.address === address) !== undefined;
+  };
 }
 
 class XrayVmessOutboundObject implements IProtocolType {
@@ -52,6 +55,9 @@ class XrayVmessOutboundObject implements IProtocolType {
   }
 
   normalize = () => void 0;
+  isTargetAddress = (address: string) => {
+    return this.vnext.find((server) => server.address === address) !== undefined;
+  };
 }
 
 class XrayBlackholeOutboundObject implements IProtocolType {
@@ -68,6 +74,9 @@ class XrayHttpOutboundObject implements IProtocolType {
   }
 
   normalize = () => void 0;
+  isTargetAddress = (address: string) => {
+    return this.servers.find((server) => server.address === address) !== undefined;
+  };
 }
 class XrayShadowsocksOutboundObject implements IProtocolType {
   public servers: XrayShadowsocksServerObject[] = [];
@@ -85,6 +94,9 @@ class XrayTrojanOutboundObject implements IProtocolType {
   }
 
   normalize = () => void 0;
+  isTargetAddress = (address: string) => {
+    return this.servers.find((server) => server.address === address) !== undefined;
+  };
 }
 
 class XrayWireguardOutboundObject implements IProtocolType {
@@ -145,6 +157,9 @@ class XraySocksOutboundObject implements IProtocolType {
   }
 
   normalize = () => void 0;
+  isTargetAddress = (address: string) => {
+    return this.servers.find((server) => server.address === address) !== undefined;
+  };
 }
 
 export { XrayWireguardOutboundObject, XrayTrojanOutboundObject, XraySocksOutboundObject, XrayShadowsocksOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, XrayLoopbackOutboundObject, XrayBlackholeOutboundObject, XrayHttpOutboundObject, XrayVlessOutboundObject, XrayVmessOutboundObject, XrayOutboundObject };

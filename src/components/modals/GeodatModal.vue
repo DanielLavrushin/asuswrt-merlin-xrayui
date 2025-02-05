@@ -76,7 +76,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, watch } from "vue";
+import { defineComponent, ref } from "vue";
 import Modal from "../Modal.vue";
 import Hint from "../Hint.vue";
 import engine, { EngineGeodatConfig, GeodatTagRequest, SubmtActions } from "../../modules/Engine";
@@ -108,10 +108,10 @@ export default defineComponent({
       isSelected.value = false;
       await engine.executeWithLoadingProgress(async () => {
         await engine.submit(SubmtActions.geoDataCustomGetTags);
-        geodata.value = await engine.getGeodata();
-        isLoading.value = false;
-        modal.value.show();
       }, false);
+      geodata.value = await engine.getGeodata();
+      isLoading.value = false;
+      modal.value.show();
     };
 
 
@@ -149,7 +149,7 @@ export default defineComponent({
       if (!confirm("Are you sure you want to delete this tag file?")) return;
 
       await engine.executeWithLoadingProgress(async () => {
-        await engine.submit(SubmtActions.geoDataCustomDeleteTag, file.value);
+        await engine.submit(SubmtActions.geoDataCustomDeleteTag, { tag: file.value.tag });
         file.value = new GeodatTagRequest();
       });
     };

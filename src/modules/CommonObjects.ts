@@ -404,36 +404,19 @@ class XrayStreamSettingsObject {
     this.network = this.network == "" || this.network == "tcp" ? undefined : this.network;
     this.security = this.security == "" || this.security == "none" ? undefined : this.security;
 
-    this.normalizeProtocol();
-    this.normalizeSecurity();
+    this.normalizeAllSettings();
     this.sockopt = this.sockopt?.normalize();
 
     if (JSON.stringify(this) === JSON.stringify({})) return undefined;
     return this;
   }
-
-  public normalizeProtocol() {
-    const networkOptions = XrayOptions.transportOptions.map((opt) => `${opt}Settings`);
-    networkOptions.forEach((prop) => {
-      if (!this.network || (this[prop as keyof XrayStreamSettingsObject] && this.network && !prop.startsWith(this.network))) {
-        (this[prop as keyof XrayStreamSettingsObject] as object | undefined) = undefined;
-      } else {
-        const itransport = this[prop as keyof XrayStreamSettingsObject] as ITransportNetwork;
-        if (itransport.normalize) itransport.normalize();
-      }
-    });
-  }
-
-  public normalizeSecurity() {
-    const securityOptions = XrayOptions.securityOptions.map((opt) => `${opt}Settings`);
-    securityOptions.forEach((prop) => {
-      if (this[prop as keyof XrayStreamSettingsObject] && this.security && !prop.startsWith(this.security)) {
-        (this[prop as keyof XrayStreamSettingsObject] as object | undefined) = undefined;
-      } else {
-        const isec = this[prop as keyof XrayStreamSettingsObject] as ISecurityProtocol;
-        if (isec && isec.normalize) isec.normalize();
-      }
-    });
+  normalizeAllSettings(): void {
+    Object.keys(this)
+      .filter((key) => key.endsWith("Settings"))
+      .forEach((key) => {
+        const setting = this[key as keyof XrayStreamSettingsObject] as { normalize?: () => void } | undefined;
+        setting?.normalize?.();
+      });
   }
 }
 
@@ -442,6 +425,7 @@ class XrayServerObject<IClient> implements IXrayServer<IClient> {
   public port!: number;
   public users?: IClient[] | undefined = [];
 }
+
 class XrayTrojanServerObject extends XrayServerObject<XrayHttpClientObject> {
   public email?: string;
   public password!: string;
@@ -451,6 +435,7 @@ class XrayTrojanServerObject extends XrayServerObject<XrayHttpClientObject> {
     delete this.users;
   }
 }
+
 class XrayHttpServerObject extends XrayServerObject<XrayHttpClientObject> {}
 class XraySocksServerObject extends XrayServerObject<XraySocksClientObject> {}
 class XrayVlessServerObject extends XrayServerObject<XrayVlessClientObject> {}

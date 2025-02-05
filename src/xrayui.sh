@@ -8,8 +8,9 @@ PIDFILE=/var/run/xray.pid
 
 xray_addons_asp_page=/jffs/addons/xrayui/index.asp
 
-xray_config="/opt/etc/xray/config.json"
+XRAY_CONFIG="/opt/etc/xray/config.json"
 dir_xrayui="/www/user/xrayui"
+XRAYUI_CONFIG_FILE="/opt/etc/xrayui.conf"
 XRAY_UI_RESPONSE_FILE="$dir_xrayui/xray-ui-response.json"
 XRAY_UI_CLIENTS_FILE="$dir_xrayui/clients-online.json"
 XRAY="xray"
@@ -41,6 +42,12 @@ show_version() {
     printlog true "XRAYUI: $XRAYUI_VERSION, XRAY-CORE: $XRAY_VERSION" $CSUC
 }
 
+init_xrayui_config() {
+    if [ -f "$XRAYUI_CONFIG_FILE" ]; then
+        . "$XRAYUI_CONFIG_FILE"
+    fi
+}
+
 start() {
 
     mode=$(am_settings_get xray_mode)
@@ -61,12 +68,11 @@ start() {
     xray $ARGS >/dev/null 2>&1 &
     echo $! >$PIDFILE
 
-    ARGS=" -c $xray_config"
+    ARGS=" -c $XRAY_CONFIG"
     if [ "$mode" = "server" ]; then
         configure_firewall_server
     elif [ "$mode" = "client" ]; then
         configure_firewall_client
-        check_connection &
     else
         mode="server"
         am_settings_set xray_mode $mode
@@ -90,13 +96,8 @@ stop() {
     rm -f $XRAY_UI_RESPONSE_FILE
 
     cleanup_firewall
-
-    mode=$(am_settings_get xray_mode)
-    if [ "$mode" = "client" ]; then
-        check_connection &
-    fi
-
 }
+
 restart() {
     printlog true "Restarting $DESC" $CWARN
     stop
@@ -114,7 +115,7 @@ update() {
 
     printlog true "Downloading the latest version..."
     update_loading_progress "Downloading the latest version..."
-    if wget -O "$temp_file" "$url"; then
+    if wget -q --show-progress -O "$temp_file" "$url"; then
         printlog true "Download completed successfully."
     else
         printlog true "Failed to download the latest version. Exiting."
@@ -199,7 +200,7 @@ configure_firewall_server() {
         # Create a custom chain for Xray rules
         iptables -N XRAYUI 2>/dev/null
 
-        inbounds_ports=$(jq -r '.inbounds[]?.port // empty' "$xray_config")
+        inbounds_ports=$(jq -r '.inbounds[]?.port // empty' "$XRAY_CONFIG")
         if [ -z "$inbounds_ports" ]; then
             printlog true "No valid ports found in Xray configuration. Cannot configure firewall rules." $CERR
             return 1
@@ -267,9 +268,9 @@ configure_firewall_client() {
         return
     fi
 
-    XRAY_PORT="$(jq -r '.inbounds[0].port // empty' "$xray_config")"
-    TPROXY_MODE="$(jq -r '.inbounds[0].streamSettings.sockopt.tproxy // "off"' "$xray_config")"
-    SERVER_IPS=$(jq -r '[.outbounds[] | select(.settings.vnext != null) | .settings.vnext[].address] | unique | join(" ")' "$xray_config")
+    XRAY_PORT="$(jq -r '.inbounds[0].port // empty' "$XRAY_CONFIG")"
+    TPROXY_MODE="$(jq -r '.inbounds[0].streamSettings.sockopt.tproxy // "off"' "$XRAY_CONFIG")"
+    SERVER_IPS=$(jq -r '[.outbounds[] | select(.settings.vnext != null) | .settings.vnext[].address] | unique | join(" ")' "$XRAY_CONFIG")
 
     printlog true "Configuring Xray on port $XRAY_PORT ..."
     if [ -z "$XRAY_PORT" ]; then
@@ -298,9 +299,9 @@ configure_firewall_client_direct() {
     # --- Begin Exclusion Rules (NAT) ---
 
     # Ports policy: bypass or redirect
-    XRAY_PP_MODE="$(jq -r '.routing.portsPolicy.mode // empty' "$xray_config")"
-    XRAY_PP_TCP="$(jq -r '.routing.portsPolicy.tcp // empty' "$xray_config")"
-    XRAY_PP_UDP="$(jq -r '.routing.portsPolicy.udp // empty' "$xray_config")"
+    XRAY_PP_MODE="$(jq -r '.routing.portsPolicy.mode // empty' "$XRAY_CONFIG")"
+    XRAY_PP_TCP="$(jq -r '.routing.portsPolicy.tcp // empty' "$XRAY_CONFIG")"
+    XRAY_PP_UDP="$(jq -r '.routing.portsPolicy.udp // empty' "$XRAY_CONFIG")"
 
     # Exclude local (RFC1918) subnets dynamically:
     local local_networks=$(
@@ -501,7 +502,7 @@ cleanup_firewall() {
     local script="$XRAYUI_USER_SCRIPTS/firewall_cleanup"
     if [ -x "$script" ]; then
         printlog true "Executing user firewall script: $script"
-        "$script" "$xray_config" || printlog true "Error executing $script." $CERR
+        "$script" "$XRAY_CONFIG" || printlog true "Error executing $script." $CERR
     fi
 
     printlog true "Restarting firewall and DNS services..."
@@ -670,7 +671,7 @@ remount_ui() {
 
 make_clean_config() {
     local tempconfig="/tmp/xray-config-clean.json"
-    sed 's/\/\/.*//' "$xray_config" >$tempconfig
+    sed 's/\/\/.*//' "$XRAY_CONFIG" >$tempconfig
     echo $tempconfig
 }
 
@@ -685,7 +686,7 @@ get_connected_clients() {
     >"$temp_file"
 
     ports_list=""
-    inbounds_ports=$(jq -r '.inbounds[]?.port // empty' "$xray_config")
+    inbounds_ports=$(jq -r '.inbounds[]?.port // empty' "$XRAY_CONFIG")
     for XRAY_PORT in $inbounds_ports; do
         if echo "$XRAY_PORT" | grep -q '-'; then
             PORT_START=$(echo "$XRAY_PORT" | cut -d'-' -f1)
@@ -702,7 +703,7 @@ get_connected_clients() {
 
     ips=$(netstat -an | grep "$pattern" | awk '$6=="ESTABLISHED" { split($5,a,":"); if (length(a) >= 4) print a[4]; else print a[1] }' | sort -u)
 
-    access_log=$(jq -r '.log.access' "$xray_config")
+    access_log=$(jq -r '.log.access' "$XRAY_CONFIG")
 
     for ip in $ips; do
         if [ -n "$ip" ]; then
@@ -912,7 +913,7 @@ apply_config() {
         exit 1
     fi
 
-    cp "$xray_config" "$backup_config"
+    cp "$XRAY_CONFIG" "$backup_config"
     if [ $? -ne 0 ]; then
         printlog true "Failed to backup existing configuration to $backup_config." $CERR
         rm -f "$temp_config"
@@ -920,10 +921,10 @@ apply_config() {
     fi
     printlog true "Existing configuration backed up to $backup_config."
 
-    cp "$temp_config" "$xray_config"
+    cp "$temp_config" "$XRAY_CONFIG"
     if [ $? -ne 0 ]; then
-        printlog true "Failed to apply new configuration to $xray_config." $CERR
-        cp "$backup_config" "$xray_config"
+        printlog true "Failed to apply new configuration to $XRAY_CONFIG." $CERR
+        cp "$backup_config" "$XRAY_CONFIG"
         if [ $? -ne 0 ]; then
             printlog true "Critical: Failed to restore configuration from backup." $CERR
         fi
@@ -942,7 +943,7 @@ apply_config() {
 
     if [ $? -ne 0 ]; then
         printlog true "Failed to restart Xray service after applying new configuration." $CERR
-        cp "$backup_config" "$xray_config"
+        cp "$backup_config" "$XRAY_CONFIG"
         restart
         exit 1
     fi
@@ -1060,6 +1061,22 @@ install() {
     install_opkg_package logrotate false
     install_opkg_package xray true
 
+    # xrayui config
+    if [ ! -f "$XRAYUI_CONFIG_FILE" ]; then
+
+        printlog true "XRAYUI config file not found. Creating default config."
+
+        cat <<EOF >"$XRAYUI_CONFIG_FILE"
+geoip_url=
+geosite_url=
+EOF
+        chmod 600 "$XRAYUI_CONFIG_FILE"
+
+        printlog true "Default XRAYUI config created successfully." $CSUC
+    else
+        printlog true "XRAYUI config file $XRAYUI_CONFIG_FILE found."
+    fi
+
     generate_default_config
 
     # backup config
@@ -1146,7 +1163,7 @@ install() {
     mkdir -p "$XRAYUI_SHARED_DIR" || printlog true "Failed to create $XRAYUI_SHARED_DIR." $CERR
 
     update_loading_progress "Downloading XRAYUI geodata files builder..."
-    if wget --no-hsts -O "/tmp/xraydatbuilder.tar.gz" "https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/releases/latest/download/xrayui-datbuilder.tar.gz"; then
+    if wget -q --show-progress --no-hsts -O "/tmp/xraydatbuilder.tar.gz" "https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/releases/latest/download/xrayui-datbuilder.tar.gz"; then
         tar -xzf /tmp/xraydatbuilder.tar.gz -C "$XRAYUI_SHARED_DIR" || printlog true "Failed to extract xraydatbuilder.tar.gz." $CERR
         rm -f /tmp/xraydatbuilder.tar.gz || printlog true "Failed to remove xraydatbuilder.tar.gz." $CERR
         chmod +x "$XRAYUI_SHARED_DIR/xraydatbuilder" || printlog true "Failed to make xraydatbuilder executable." $CERR
@@ -1175,6 +1192,18 @@ install() {
 EOF
     # chown root:root /etc/logrotate.d/xrayui || printlog true "Failed to make logrotate root-owned." $CERR
     chmod 0644 /opt/etc/logrotate.d/xrayui || printlog true "Failed to make logrotate executable." $CERR
+
+    # ---------------------------------------------------------
+    # performing version updates
+
+    local json_content=$(cat "$XRAY_CONFIG")
+
+    # patch 0.33->0.34 update system connection check rule
+    json_content=$(echo "$json_content" | jq '(.routing.rules[] | select(.name=="sys:connection-check") | .domain) |= map(if .=="freeipapi.com" then "ip-api.com" else . end)') || printlog true "Failed to update connection check rule." $CERR
+
+    echo "$json_content" >"$XRAY_CONFIG"
+
+    # ---------------------------------------------------------
 
     printlog true "============================================" $CSUC
     printlog true "Installation process completed successfully." $CSUC
@@ -1311,13 +1340,13 @@ enable_config_logs() {
     printlog true "Checking for the 'log' section in the Xray configuration."
 
     # Check if the config file exists
-    if [ ! -f "$xray_config" ]; then
-        printlog true "Configuration file not found: $xray_config"
+    if [ ! -f "$XRAY_CONFIG" ]; then
+        printlog true "Configuration file not found: $XRAY_CONFIG"
         return 1
     fi
 
     # Check if the 'log' section is missing
-    if ! jq -e '.log' "$xray_config" >/dev/null 2>&1; then
+    if ! jq -e '.log' "$XRAY_CONFIG" >/dev/null 2>&1; then
         printlog true "'log' section is missing. Adding it to the configuration."
 
         # Add the 'log' section
@@ -1327,10 +1356,10 @@ enable_config_logs() {
                 "error": "/tmp/xray_error.log",
                 "access": "/tmp/xray_access.log"
             }
-        }' "$xray_config" >"$temp_file"
+        }' "$XRAY_CONFIG" >"$temp_file"
 
         if [ $? -eq 0 ]; then
-            mv "$temp_file" "$xray_config"
+            mv "$temp_file" "$XRAY_CONFIG"
             printlog true "'log' section added successfully."
         else
             printlog true "Failed to update the configuration with 'log' section."
@@ -1367,10 +1396,10 @@ toggle_startup() {
 
 generate_default_config() {
     # Validate base configuration
-    if [ ! -f "$xray_config" ]; then
+    if [ ! -f "$XRAY_CONFIG" ]; then
         printlog true "Base configuration file not found. Creating a default config..." $CWARN
         mkdir -p /opt/etc/xray
-        cat >$xray_config <<EOF
+        cat >$XRAY_CONFIG <<EOF
 {
     "log": {
         "loglevel": "warning",
@@ -1416,9 +1445,10 @@ fixme() {
 
 update_community_geodata() {
     update_loading_progress "Updating community geodata files..." 0
+    init_xrayui_config
 
-    local geosite_url="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
-    local geoip_url="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
+    local geosite_url="${geosite_url:-https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat}"
+    local geoip_url="${geoip_url:-https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat}"
 
     local target_dir=$(dirname "$(which xray)")
 
@@ -1740,14 +1770,14 @@ change_log_level() {
     local updated_json=$(jq --arg log_level "$log_level" '
         if .log.loglevel then del(.log.loglevel) else . end |
         .log.loglevel = $log_level
-    ' "$xray_config")
+    ' "$XRAY_CONFIG")
 
     if [ $? -ne 0 ]; then
         printlog true "Error: Failed to update JSON content with log level." "$CERR"
         return 1
     fi
 
-    echo "$updated_json" >"$xray_config"
+    echo "$updated_json" >"$XRAY_CONFIG"
 
     if [ -f "$PIDFILE" ]; then
         restart
@@ -1829,54 +1859,6 @@ webapp_stop() {
 webapp_restart() {
     webapp_stop
     webapp_start
-}
-
-check_connection() {
-
-    ensure_ui_response_file
-    local json_content
-    if [ -f "$XRAY_UI_RESPONSE_FILE" ]; then
-        json_content=$(cat "$XRAY_UI_RESPONSE_FILE")
-    else
-        json_content="{}"
-    fi
-
-    local outbound_address
-    outbound_address=$(jq -r 'first(.outbounds[] | select(.protocol != "freedom" and .protocol != "blackhole") |
-      if (.settings | has("servers")) then .settings.servers[0].address else .settings.vnext[0].address end)' "$xray_config")
-
-    local sys_con_domain
-    sys_con_domain=$(jq -r 'first(.routing.rules[] | select(.name == "sys:connection-check")).domain[0]' "$xray_config")
-    local uri="https://$sys_con_domain/api/json"
-
-    local response
-    if [ -f "$PIDFILE" ]; then
-        sleep 10
-        response=$(curl -s -A "Mozilla/5.0" --socks5-hostname 127.0.0.1:1080 "$uri")
-    else
-        response=$(curl -s "$uri")
-    fi
-
-    if [ -z "$response" ]; then
-        response="{}"
-    fi
-
-    case "$response" in
-    '{'*) ;;
-    *) printlog true "Response is not valid JSON. Skipping connection update: $response" && return 0 ;;
-    esac
-
-    local response_ip
-    response_ip=$(echo "$response" | jq -r '.ipAddress')
-    local connected
-    if [ "$response_ip" = "$outbound_address" ]; then
-        connected=true
-    else
-        connected=false
-    fi
-
-    json_content=$(echo "$json_content" | jq --argjson response "$response" --argjson connected "$connected" '.connection_check = ($response + {connected: $connected})')
-    echo "$json_content" >"$XRAY_UI_RESPONSE_FILE"
 }
 
 case "$1" in
@@ -1999,9 +1981,6 @@ service_event)
             ;;
         "generatedefaultconfig")
             generate_default_config
-            ;;
-        checkconnection)
-            check_connection
             ;;
         esac
         exit 0

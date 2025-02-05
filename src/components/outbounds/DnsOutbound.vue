@@ -34,9 +34,8 @@
             </hint>
           </th>
           <td>
-            <input type="text" maxlength="15" class="input_20_table" v-model="proxy.settings.address"
-              onkeypress="return validator.isIPAddr(this, event);" autocomplete="off" autocorrect="off"
-              autocapitalize="off" />
+            <input type="text" class="input_20_table" v-model="proxy.settings.address" autocomplete="off"
+              autocorrect="off" autocapitalize="off" />
             <span class="hint-color"></span>
           </td>
         </tr>

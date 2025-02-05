@@ -1,9 +1,15 @@
 # XRAYUI Changelog
 
-## [0.xx.x] - 2025-02-xx
+## [0.34.0] - 2025-02-05
 
-- ADDED: version command to display XRAYUI current version. Usage `/jffs/scripts/xrayui version`.
-- ADDED: add symlink to `/jffs/scripts/xrayui` for direct invocation of `xrayui`.
+- ADDED: Version command to display the current XRAYUI version. Usage: `/jffs/scripts/xrayui version`.
+- ADDED: Symlink to `/jffs/scripts/xrayui` for direct invocation of `xrayui`.
+- ADDED: XRAYUI configuration file (`/opt/etc/xrayui.conf`) to allow specifying custom community `geosite` and `geoip` URLs.
+- FIXED: `HTTP` Inbound type error in the `allowTransparent` property.
+- FIXED: Custom geodata tag files were not loaded properly.
+- FIXED: Unable to delete large custom geodata files.
+- REMOVED: Constraints on the address field that prevented entering domain names.
+- UPDATED: Due to limitations in `curl` on some routers, the connection-check logic was moved from the server-side to the client-side, and the endpoint was switched from `freeapi.com` to `ip-api.com`.
 
 ## [0.33.0] - 2025-02-04
 

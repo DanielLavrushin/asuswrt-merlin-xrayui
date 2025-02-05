@@ -87,7 +87,7 @@
           </th>
           <td class="flex-checkbox">
             <div v-for="(opt, index) in users" :key="index">
-              <label :for="'inbound-' + index" class="settingvalueclass">
+              <label :for="'user-' + index" class="settingvalueclass">
                 <input v-model="currentRule.user" type="checkbox" class="input" :value="opt" :id="'inbound-' + index" />
                 {{ opt }}
               </label>

@@ -1,6 +1,6 @@
 # XRAYUI Changelog
 
-## [0.34.1] - 2025-02-05
+## [0.34.2] - 2025-02-05
 
 - ADDED: Ability to define an array of users on the routing rule level. The rule will now take effect when the source user's email matches any address in the array.
 - FIXED: Resolved an issue where QR code PNG images with transparent backgrounds could not be read.

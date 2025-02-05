@@ -43,9 +43,9 @@ export default defineComponent({
   },
   methods: {
     onClosePressed() { },
-    async show(onClose: () => void) {
+    async show(onClose?: () => void) {
       this.isVisible = true;
-      this.onClosePressed = onClose;
+      if (onClose) this.onClosePressed = onClose;
 
     },
     async close() {

@@ -22,7 +22,16 @@
           </span>
         </td>
       </tr>
-      <general-options v-model:config="config"></general-options>
+      <tr>
+        <th>General options</th>
+        <td>
+          <span class="row-buttons">
+            <input class="button_gen button_gen_small" type="button" value="manage"
+              @click.prevent="manage_general_options()" />
+          </span>
+          <general-options-modal ref="generalOptionsModal" v-model:config="config"></general-options-modal>
+        </td>
+      </tr>
     </tbody>
   </table>
 </template>
@@ -30,13 +39,13 @@
 <script lang="ts">
 import { defineComponent, ref } from "vue";
 import engine, { SubmtActions } from "../modules/Engine";
-import GeneralOptions from "./GeneralOptions.vue";
+import GeneralOptionsModal from "./modals/GeneralOptionsModal.vue";
 import { XrayObject } from "@/modules/XrayConfig";
 
 export default defineComponent({
   name: "ServerStatus",
   components: {
-    GeneralOptions,
+    GeneralOptionsModal,
   },
   data() {
     return {
@@ -74,8 +83,16 @@ export default defineComponent({
   },
   setup(props) {
     const config = ref(props.config);
+    const generalOptionsModal = ref();
+    const manage_general_options = () => {
+      generalOptionsModal.value.show();
+    };
 
-    return { config };
+    return {
+      config,
+      generalOptionsModal,
+      manage_general_options
+    };
   },
 });
 </script>

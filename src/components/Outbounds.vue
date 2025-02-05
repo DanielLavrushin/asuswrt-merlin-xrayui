@@ -34,9 +34,12 @@
             </span>
             <span class="row-buttons">
               <a class="button_gen button_gen_small" href="#" @click.prevent="show_transport(proxy)">transport</a>
-              <a class="button_gen button_gen_small" href="#" @click.prevent="reorder_proxy(proxy)" v-if="index > 0">&#8593;</a>
-              <a class="button_gen button_gen_small" href="#" @click.prevent="edit_proxy(proxy)" title="edit">&#8494;</a>
-              <a class="button_gen button_gen_small" href="#" @click.prevent="remove_proxy(proxy)" title="delete">&#10005;</a>
+              <a class="button_gen button_gen_small" href="#" @click.prevent="reorder_proxy(proxy)"
+                v-if="index > 0">&#8593;</a>
+              <a class="button_gen button_gen_small" href="#" @click.prevent="edit_proxy(proxy)"
+                title="edit">&#8494;</a>
+              <a class="button_gen button_gen_small" href="#" @click.prevent="remove_proxy(proxy)"
+                title="delete">&#10005;</a>
             </span>
           </td>
         </tr>
@@ -53,142 +56,151 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, computed, nextTick } from "vue";
-  import engine from "../modules/Engine";
-  import Modal from "./Modal.vue";
-  import { xrayProtocols } from "../modules/XrayConfig";
+import { defineComponent, ref, computed, nextTick, watch } from "vue";
+import engine from "../modules/Engine";
+import Modal from "./Modal.vue";
+import { xrayProtocols } from "../modules/XrayConfig";
 
-  import { IProtocolType } from "../modules/Interfaces";
-  import { XrayProtocol } from "../modules/CommonObjects";
-  import { XrayOutboundObject } from "../modules/OutboundObjects";
-  import { XrayProtocolOption } from "../modules/CommonObjects";
-  import { XrayProtocolMode } from "../modules/Options";
+import { IProtocolType } from "../modules/Interfaces";
+import { XrayProtocol } from "../modules/CommonObjects";
+import { XrayOutboundObject } from "../modules/OutboundObjects";
+import { XrayProtocolOption } from "../modules/CommonObjects";
+import { XrayProtocolMode } from "../modules/Options";
 
-  import FreedomOutbound from "./outbounds/FreedomOutbound.vue";
-  import BlackholeOutbound from "./outbounds/BlackholeOutbound.vue";
-  import DnsOutbound from "./outbounds/DnsOutbound.vue";
-  import HttpOutbound from "./outbounds/HttpOutbound.vue";
-  import LoopbackOutbound from "./outbounds/LoopbackOutbound.vue";
-  import VlessOutbound from "./outbounds/VlessOutbound.vue";
-  import VmessOutbound from "./outbounds/VmessOutbound.vue";
-  import SocksOutbound from "./outbounds/SocksOutbound.vue";
-  import ShadowsocksOutbound from "./outbounds/ShadowsocksOutbound.vue";
-  import TrojanOutbound from "./outbounds/TrojanOutbound.vue";
-  import WireguardOutbound from "./outbounds/WireguardOutbound.vue";
+import FreedomOutbound from "./outbounds/FreedomOutbound.vue";
+import BlackholeOutbound from "./outbounds/BlackholeOutbound.vue";
+import DnsOutbound from "./outbounds/DnsOutbound.vue";
+import HttpOutbound from "./outbounds/HttpOutbound.vue";
+import LoopbackOutbound from "./outbounds/LoopbackOutbound.vue";
+import VlessOutbound from "./outbounds/VlessOutbound.vue";
+import VmessOutbound from "./outbounds/VmessOutbound.vue";
+import SocksOutbound from "./outbounds/SocksOutbound.vue";
+import ShadowsocksOutbound from "./outbounds/ShadowsocksOutbound.vue";
+import TrojanOutbound from "./outbounds/TrojanOutbound.vue";
+import WireguardOutbound from "./outbounds/WireguardOutbound.vue";
 
-  export default defineComponent({
-    name: "Outbounds",
-    emits: ["show-transport", "show-sniffing"],
-    components: {
-      Modal
+export default defineComponent({
+  name: "Outbounds",
+  emits: ["show-transport", "show-sniffing"],
+  components: {
+    Modal
+  },
+  methods: {
+    async show_transport(proxy: XrayOutboundObject<IProtocolType>) {
+      this.$emit("show-transport", proxy, "outbound");
     },
-    methods: {
-      async show_transport(proxy: XrayOutboundObject<IProtocolType>) {
-        this.$emit("show-transport", proxy, "outbound");
-      },
-      reorder_proxy(proxy: XrayOutboundObject<IProtocolType>) {
-        const index = this.config.outbounds.indexOf(proxy);
-        this.config.outbounds.splice(index, 1);
-        this.config.outbounds.splice(index - 1, 0, proxy);
-      },
+    reorder_proxy(proxy: XrayOutboundObject<IProtocolType>) {
+      const index = this.config.outbounds.indexOf(proxy);
+      this.config.outbounds.splice(index, 1);
+      this.config.outbounds.splice(index - 1, 0, proxy);
+    },
 
-      save_protocol() {
-        this.proxyModal.close();
-      },
+    save_protocol() {
+      this.proxyModal.close();
+    },
 
-      async edit_proxy(proxy: XrayOutboundObject<IProtocolType> | undefined = undefined) {
-        if (proxy) {
-          this.selectedProxy = proxy;
-          this.selectedProxyType = proxy.protocol;
-        }
+    async edit_proxy(proxy: XrayOutboundObject<IProtocolType> | undefined = undefined) {
+      if (proxy) {
+        this.selectedProxy = proxy;
+        this.selectedProxyType = proxy.protocol;
 
-        await nextTick();
-
-        this.proxyModal.show(() => {
-          this.selectedProxy = undefined;
-          this.selectedProxyType = undefined;
-        });
-      },
-
-      async remove_proxy(proxy: XrayOutboundObject<IProtocolType>) {
-        if (!confirm("Are you sure you want to delete this outbound?")) return;
-        let index = this.config.outbounds.indexOf(proxy);
-        this.config.outbounds.splice(index, 1);
-      },
-
-      async save_proxy() {
-        let proxy = this.proxyRef.proxy;
-        if (this.config.outbounds.filter((i) => i != proxy && i.tag == proxy.tag).length > 0) {
-          alert("Tag  already exists, please choose another one");
-          return;
-        }
-
-        let index = this.config.outbounds.indexOf(proxy);
-        if (index >= 0) {
-          this.config.outbounds[index] = proxy;
-        } else {
-          this.config.outbounds.push(proxy);
-        }
-
-        this.proxyModal.close();
+        watch(() => proxy.tag, (newVal, oldVal) => {
+          if (oldVal && newVal && oldVal !== newVal) {
+            this.config.routing?.rules?.map(r => {
+              r.outboundTag = r.outboundTag === oldVal ? newVal : r.outboundTag;
+            }
+            );
+          }
+        }, { immediate: true });
       }
+
+      await nextTick();
+
+      this.proxyModal.show(() => {
+        this.selectedProxy = undefined;
+        this.selectedProxyType = undefined;
+      });
     },
 
-    setup() {
-      const config = ref(engine.xrayConfig);
-      const availableProxies = ref<XrayProtocolOption[]>(xrayProtocols.filter((p) => p.modes & XrayProtocolMode.Outbound));
-      const selectedProxyType = ref<string>();
-      const selectedProxy = ref<any>();
-      const proxyModal = ref();
-      const proxyRef = ref();
-      const parserModal = ref();
+    async remove_proxy(proxy: XrayOutboundObject<IProtocolType>) {
+      if (!confirm("Are you sure you want to delete this outbound?")) return;
+      let index = this.config.outbounds.indexOf(proxy);
+      this.config.outbounds.splice(index, 1);
+    },
 
-      const showImportModal = () => {
-        parserModal.value.show();
-      };
+    async save_proxy() {
+      let proxy = this.proxyRef.proxy;
+      if (this.config.outbounds.filter((i) => i != proxy && i.tag == proxy.tag).length > 0) {
+        alert("Tag  already exists, please choose another one");
+        return;
+      }
 
-      const proxyComponent = computed(() => {
-        switch (selectedProxyType.value) {
-          case XrayProtocol.FREEDOM:
-            return FreedomOutbound;
-          case XrayProtocol.BLACKHOLE:
-            return BlackholeOutbound;
-          case XrayProtocol.DNS:
-            return DnsOutbound;
-          case XrayProtocol.HTTP:
-            return HttpOutbound;
-          case XrayProtocol.LOOPBACK:
-            return LoopbackOutbound;
-          case XrayProtocol.VLESS:
-            return VlessOutbound;
-          case XrayProtocol.VMESS:
-            return VmessOutbound;
-          case XrayProtocol.SOCKS:
-            return SocksOutbound;
-          case XrayProtocol.SHADOWSOCKS:
-            return ShadowsocksOutbound;
-          case XrayProtocol.TROJAN:
-            return TrojanOutbound;
-          case XrayProtocol.WIREGUARD:
-            return WireguardOutbound;
-          default:
-            return null;
-        }
-      });
+      let index = this.config.outbounds.indexOf(proxy);
+      if (index >= 0) {
+        this.config.outbounds[index] = proxy;
+      } else {
+        this.config.outbounds.push(proxy);
+      }
 
-      return {
-        config,
-        proxyComponent,
-        proxyRef,
-        proxyModal,
-        selectedProxy,
-        availableProxies,
-        selectedProxyType,
-        showImportModal,
-        parserModal
-      };
+      this.proxyModal.close();
     }
-  });
+  },
+
+  setup() {
+    const config = ref(engine.xrayConfig);
+    const availableProxies = ref<XrayProtocolOption[]>(xrayProtocols.filter((p) => p.modes & XrayProtocolMode.Outbound));
+    const selectedProxyType = ref<string>();
+    const selectedProxy = ref<any>();
+    const proxyModal = ref();
+    const proxyRef = ref();
+    const parserModal = ref();
+
+    const showImportModal = () => {
+      parserModal.value.show();
+    };
+
+    const proxyComponent = computed(() => {
+      switch (selectedProxyType.value) {
+        case XrayProtocol.FREEDOM:
+          return FreedomOutbound;
+        case XrayProtocol.BLACKHOLE:
+          return BlackholeOutbound;
+        case XrayProtocol.DNS:
+          return DnsOutbound;
+        case XrayProtocol.HTTP:
+          return HttpOutbound;
+        case XrayProtocol.LOOPBACK:
+          return LoopbackOutbound;
+        case XrayProtocol.VLESS:
+          return VlessOutbound;
+        case XrayProtocol.VMESS:
+          return VmessOutbound;
+        case XrayProtocol.SOCKS:
+          return SocksOutbound;
+        case XrayProtocol.SHADOWSOCKS:
+          return ShadowsocksOutbound;
+        case XrayProtocol.TROJAN:
+          return TrojanOutbound;
+        case XrayProtocol.WIREGUARD:
+          return WireguardOutbound;
+        default:
+          return null;
+      }
+    });
+
+    return {
+      config,
+      proxyComponent,
+      proxyRef,
+      proxyModal,
+      selectedProxy,
+      availableProxies,
+      selectedProxyType,
+      showImportModal,
+      parserModal
+    };
+  }
+});
 </script>
 
 <style scoped></style>

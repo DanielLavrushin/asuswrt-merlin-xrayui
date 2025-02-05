@@ -1,5 +1,13 @@
 # XRAYUI Changelog
 
+## [0.34.1] - 2025-02-05
+
+- ADDED: Ability to define an array of users on the routing rule level. The rule will now take effect when the source user's email matches any address in the array.
+- FIXED: Resolved an issue where QR code PNG images with transparent backgrounds could not be read.
+- FIXED: Addressed a warning in the `import manager` related to replacing a configuration when the full config import checkbox was unchecked.
+- IMPROVED: Enhanced the inbound/outbound tag editing so that any changes are now automatically propagated to the corresponding rules.
+- UPDATED: Relocated XRAYUI options (`Check Connection` and `Restart on Reboot`) to the General Options window.
+
 ## [0.34.0] - 2025-02-05
 
 - ADDED: Version command to display the current XRAYUI version. Usage: `/jffs/scripts/xrayui version`.

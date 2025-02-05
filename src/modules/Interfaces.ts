@@ -1,6 +1,7 @@
 interface IProtocolType {
   normalize?: () => void;
   isTargetAddress?: (address: string) => boolean;
+  getUserNames?: () => string[];
 }
 
 interface ITransportNetwork {

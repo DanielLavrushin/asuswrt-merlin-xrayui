@@ -46,6 +46,9 @@ class XrayVlessOutboundObject implements IProtocolType {
   isTargetAddress = (address: string) => {
     return this.vnext.find((server) => server.address === address) !== undefined;
   };
+  getUserNames = (): string[] => {
+    return this.vnext?.flatMap((c) => c.users?.map((u) => u.email).filter((email): email is string => !!email) ?? []) ?? [];
+  };
 }
 
 class XrayVmessOutboundObject implements IProtocolType {
@@ -57,6 +60,9 @@ class XrayVmessOutboundObject implements IProtocolType {
   normalize = () => void 0;
   isTargetAddress = (address: string) => {
     return this.vnext.find((server) => server.address === address) !== undefined;
+  };
+  getUserNames = (): string[] => {
+    return this.vnext?.flatMap((c) => c.users?.map((u) => u.email).filter((email): email is string => !!email) ?? []) ?? [];
   };
 }
 
@@ -77,6 +83,9 @@ class XrayHttpOutboundObject implements IProtocolType {
   isTargetAddress = (address: string) => {
     return this.servers.find((server) => server.address === address) !== undefined;
   };
+  getUserNames = (): string[] => {
+    return this.servers?.flatMap((c) => c.users?.map((u) => u.user).filter((email): email is string => !!email) ?? []) ?? [];
+  };
 }
 class XrayShadowsocksOutboundObject implements IProtocolType {
   public servers: XrayShadowsocksServerObject[] = [];
@@ -85,6 +94,9 @@ class XrayShadowsocksOutboundObject implements IProtocolType {
   }
 
   normalize = () => void 0;
+  getUserNames = (): string[] => {
+    return this.servers?.flatMap((c) => c.users?.map((u) => u.email).filter((email): email is string => !!email) ?? []) ?? [];
+  };
 }
 
 class XrayTrojanOutboundObject implements IProtocolType {
@@ -96,6 +108,9 @@ class XrayTrojanOutboundObject implements IProtocolType {
   normalize = () => void 0;
   isTargetAddress = (address: string) => {
     return this.servers.find((server) => server.address === address) !== undefined;
+  };
+  getUserNames = (): string[] => {
+    return this.servers?.flatMap((c) => c.users?.map((u) => u.user).filter((email): email is string => !!email) ?? []) ?? [];
   };
 }
 
@@ -159,6 +174,9 @@ class XraySocksOutboundObject implements IProtocolType {
   normalize = () => void 0;
   isTargetAddress = (address: string) => {
     return this.servers.find((server) => server.address === address) !== undefined;
+  };
+  getUserNames = (): string[] => {
+    return this.servers?.flatMap((c) => c.users?.map((u) => u.user).filter((email): email is string => !!email) ?? []) ?? [];
   };
 }
 

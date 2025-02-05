@@ -25,15 +25,24 @@
         </td>
       </tr>
       <import-config v-model:config="config"></import-config>
-      <general-options v-model:config="config"></general-options>
+      <tr>
+        <th>General options</th>
+        <td>
+          <span class="row-buttons">
+            <input class="button_gen button_gen_small" type="button" value="manage"
+              @click.prevent="manage_general_options()" />
+          </span>
+          <general-options-modal ref="generalOptionsModal" v-model:config="config"></general-options-modal>
+        </td>
+      </tr>
     </tbody>
   </table>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref, computed, watch } from "vue";
-import engine, { EngineClientConnectionStatus, SubmtActions } from "../modules/Engine";
-import GeneralOptions from "./GeneralOptions.vue";
+import engine, { SubmtActions } from "../modules/Engine";
+import GeneralOptionsModal from "./modals/GeneralOptionsModal.vue";
 import ImportConfig from "./ImportConfig.vue";
 import { XrayObject } from "@/modules/XrayConfig";
 import { XrayProtocol, XrayRoutingRuleObject } from "@/modules/CommonObjects";
@@ -51,7 +60,7 @@ class IpApiResponse {
 export default defineComponent({
   name: "ClientStatus",
   components: {
-    GeneralOptions,
+    GeneralOptionsModal,
     ImportConfig,
     ConfigModal
   },
@@ -84,6 +93,7 @@ export default defineComponent({
   setup(props) {
     const config = ref(props.config);
     const configModal = ref();
+    const generalOptionsModal = ref();
     const contryCodeClass = ref<string>("flag-icon flag-icon-unknown");
     const connectionStatus = ref<boolean>(false);
     const connectionStationLabel = ref<string>("Checking connection...");
@@ -125,6 +135,10 @@ export default defineComponent({
       return null;
     };
 
+    const manage_general_options = () => {
+      generalOptionsModal.value.show();
+    };
+
     watch(
       () => config.value.routing?.rules?.length,
       (newObj) => {
@@ -151,11 +165,13 @@ export default defineComponent({
       connectionClasses,
       contryCodeClass,
       connectionStationLabel,
+      generalOptionsModal,
       reconnect: SubmtActions.serverStart,
       stop: SubmtActions.serverStop,
       checkConEnabled,
       checkConnection,
-      show_config_modal
+      show_config_modal,
+      manage_general_options
     };
   }
 });

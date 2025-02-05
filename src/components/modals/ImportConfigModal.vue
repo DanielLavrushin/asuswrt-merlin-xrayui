@@ -144,7 +144,9 @@ export default defineComponent({
     async function decodeQRCode(imageFile: MediaSource) {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
+
       if (ctx) {
+
         const image = new Image();
         image.src = URL.createObjectURL(imageFile);
 
@@ -154,23 +156,28 @@ export default defineComponent({
 
         canvas.width = image.width;
         canvas.height = image.height;
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
         ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "attemptBoth" });
 
         if (code) {
           return code.data;
         }
+        alert("Failed to decode QR code");
       }
     }
+
     const show = () => {
       importModal.value.show();
     };
 
     const parse = async () => {
 
-      if (!confirm("You selected a complete setup. This will overwrite your current configuration. Are you sure?")) {
+      if (completeSetup.value && !confirm("You selected a complete setup. This will overwrite your current configuration. Are you sure?")) {
         return;
       }
 
@@ -260,15 +267,4 @@ export default defineComponent({
   }
 });
 </script>
-<style scoped>
-.flex-checkbox {
-  border: none;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-}
-
-.flex-checkbox>* {
-  flex: 0 1 calc(25%);
-}
-</style>
+<style scoped></style>

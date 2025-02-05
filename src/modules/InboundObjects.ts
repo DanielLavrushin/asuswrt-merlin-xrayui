@@ -63,11 +63,17 @@ class XrayVlessInboundObject implements IProtocolType {
   public decryption = "none";
   public clients: XrayVlessClientObject[] = [];
   normalize = () => void 0;
+  getUserNames = (): string[] => {
+    return this.clients.map((c) => c.email);
+  };
 }
 
 class XrayVmessInboundObject implements IProtocolType {
   public clients: XrayVmessClientObject[] = [];
   normalize = () => void 0;
+  getUserNames = (): string[] => {
+    return this.clients.map((c) => c.email);
+  };
 }
 
 class XrayHttpInboundObject implements IProtocolType {
@@ -75,6 +81,10 @@ class XrayHttpInboundObject implements IProtocolType {
   public clients: XrayHttpClientObject[] = [];
   normalize = () => {
     this.allowTransparent = this.allowTransparent ? this.allowTransparent : undefined;
+  };
+
+  getUserNames = (): string[] => {
+    return this.clients.map((c) => c.user);
   };
 }
 
@@ -84,11 +94,17 @@ class XrayShadowsocksInboundObject implements IProtocolType {
   normalize = () => {
     this.network = this.network && this.network !== "tcp" ? this.network : undefined;
   };
+  getUserNames = (): string[] => {
+    return this.clients.map((c) => c.email);
+  };
 }
 
 class XrayTrojanInboundObject implements IProtocolType {
   public clients: XrayTrojanClientObject[] = [];
   normalize = () => void 0;
+  getUserNames = (): string[] => {
+    return this.clients.map((c) => c.email);
+  };
 }
 
 class XraySocksInboundObject implements IProtocolType {
@@ -101,6 +117,9 @@ class XraySocksInboundObject implements IProtocolType {
     this.udp = this.udp ? this.udp : undefined;
     this.auth = this.auth === "noauth" ? undefined : this.auth;
     this.accounts = this.accounts && this.accounts.length > 0 ? this.accounts : undefined;
+  };
+  getUserNames = (): string[] => {
+    return this.accounts?.map((c) => c.user) ?? [];
   };
 }
 

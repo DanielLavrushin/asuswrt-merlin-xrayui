@@ -1,19 +1,17 @@
 <template>
   <div class="formfontdesc">
-    <p>Configures REALITY. REALITY is a piece of advanced encryption technology developed in-house, with higher security
-      than vanilla TLS, but configs of both are largely the same.</p>
+    <p v-html="$t('components.Reality.modal_desc')"></p>
     <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="2">Settings</td>
+          <td colspan="2">{{ $t('components.Reality.modal_title') }}</td>
         </tr>
       </thead>
       <tbody v-if="transport.realitySettings">
         <tr>
-          <th>Enable Logs
-            <hint>
-              Emits verbose logs when `true`.
-            </hint>
+          <th>
+            {{ $t('components.Reality.label_enable_logs') }}
+            <hint v-html="$t('components.Reality.hint_enable_logs')"></hint>
           </th>
           <td>
             <input v-model="transport.realitySettings.show" type="checkbox" class="input" />
@@ -21,21 +19,16 @@
           </td>
         </tr>
         <tr v-if="engine.mode === 'server'">
-          <th>Dest
-            <hint>
-              The destination address of the server. Same schema as `dest` in `VLESS`. **Required**.
-            </hint>
+          <th> {{ $t('components.Reality.label_dest') }}
+            <hint v-html="$t('components.Reality.hint_dest')"></hint>
           </th>
           <td>
             <input v-model="transport.realitySettings.dest" type="text" class="input_20_table" />
-            <span class="hint-color">same as dest in VLESS</span>
           </td>
         </tr>
         <tr v-if="engine.mode === 'server'">
-          <th>Server names
-            <hint>
-              A list of accepted server names. No support for `*` wildcards yet. **Required**.
-            </hint>
+          <th>{{ $t('components.Reality.label_server_names') }}
+            <hint v-html="$t('components.Reality.hint_server_names')"></hint>
           </th>
           <td>
             <div class="textarea-wrapper">
@@ -44,10 +37,8 @@
           </td>
         </tr>
         <tr v-if="engine.mode === 'client'">
-          <th>Server name
-            <hint>
-              One of the server names accepted by the server.. **Required**.
-            </hint>
+          <th>{{ $t('components.Reality.label_server_name') }}
+            <hint v-html="$t('components.Reality.hint_server_name')"></hint>
           </th>
           <td>
             <input v-model="transport.realitySettings.serverName" type="text" class="input_20_table" />
@@ -55,12 +46,8 @@
           </td>
         </tr>
         <tr v-if="engine.mode === 'client'">
-          <th>Short id
-            <hint>
-              One of the short IDs accepted by the server.
-
-              `shortId` on clients can be left blank if a blank value exists on the server.
-            </hint>
+          <th>{{ $t('components.Reality.label_short_id') }}
+            <hint v-html="$t('components.Reality.hint_short_id')"></hint>
           </th>
           <td>
             <input v-model="transport.realitySettings.shortId" type="text" class="input_20_table" />
@@ -68,37 +55,29 @@
           </td>
         </tr>
         <tr v-if="engine.mode === 'server' && transport.realitySettings.shortIds">
-          <th>Short Ids
-            <hint>
-              **Required**. A list of `shortIds` accepted. Can be used to distinguish different clients.
-
-              Specified in hex strings, with the length as multiples of `2`. Cannot be longer than `16` characters.
-              <br />
-              `shortId` on clients can be left blank if a blank value exists on the server.
-            </hint>
+          <th>{{ $t('components.Reality.label_short_ids') }}
+            <hint v-html="$t('components.Reality.hint_short_ids')"></hint>
           </th>
           <td>
             {{ transport.realitySettings.shortIds.length }} item(s)
-            <input class="button_gen button_gen_small" type="button" value="manage"
+            <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')"
               @click.prevent="manage_short_ids()" />
             <modal ref="shortIdsModal" width="200" title="Short Id List">
               <div class="textarea-wrapper">
                 <textarea v-model="shortIds"></textarea>
               </div>
               <template v-slot:footer>
-                <input class="button_gen button_gen_small" type="button" value="add new id"
+                <input class="button_gen button_gen_small" type="button" :value="$t('components.Reality.add_new_id')"
                   @click.prevent="append_shortid()" />
-                <input class="button_gen button_gen_small" type="button" value="save"
+                <input class="button_gen button_gen_small" type="button" :value="$t('labels.save')"
                   @click.prevent="shortIdsModal.close()" />
               </template>
             </modal>
           </td>
         </tr>
         <tr v-if="engine.mode === 'server'">
-          <th>PROXY Version
-            <hint>
-              The version of the PROXY protocol to use. Same schema as `xver` in `VLESS`. **Optional**.
-            </hint>
+          <th>{{ $t('components.Reality.label_proxy_version') }}
+            <hint v-html="$t('components.Reality.hint_proxy_version')"></hint>
           </th>
           <td>
             <select v-model="transport.realitySettings.xver" class="input_option">
@@ -110,10 +89,8 @@
           </td>
         </tr>
         <tr v-if="engine.mode === 'server'">
-          <th>Private Key
-            <hint>
-              Generate with `xray x25519`. **Required**.
-            </hint>
+          <th>{{ $t('components.Reality.label_private_key') }}
+            <hint v-html="$t('components.Reality.hintl_private_key')"></hint>
           </th>
           <td>
             <input v-model="transport.realitySettings.privateKey" type="text" class="input_30_table" />
@@ -124,41 +101,24 @@
           </td>
         </tr>
         <tr>
-          <th>Public Key
-            <hint>
-              The public key that corresponds to the private key on the server. Can be obtained by `xray x25519 -i
-              -privateKey-`. **Required**.
-            </hint>
+          <th>{{ $t('components.Reality.label_public_key') }}
+            <hint v-html="$t('components.Reality.hint_public_key')"></hint>
           </th>
           <td>
             <input v-model="transport.realitySettings.publicKey" type="text" class="input_30_table" />
           </td>
         </tr>
         <tr>
-          <th>Spider X
-            <hint>
-              The bootstrapping path and query params of the spider. It's recommended to have this varied per client.
-            </hint>
+          <th>{{ $t('components.Reality.label_spider_x') }}
+            <hint v-html="$t('components.Reality.hint_spider_x')"></hint>
           </th>
           <td>
             <input v-model="transport.realitySettings.spiderX" type="text" class="input_30_table" />
           </td>
         </tr>
         <tr v-if="engine.mode === 'client'">
-          <th>Fingerprint
-            <hint>
-              Specifies the fingerprint of the TLS Client Hello message. When empty, fingerprint simulation will not be
-              enabled.
-              When enabled, Xray will simulate the TLS fingerprint through the uTLS library or have it generated
-              randomly.
-              <ul>
-                <li>`random`: randomly select one of the up-to-date browsers</li>
-                <li>`randomized`: generate a completely random and unique fingerprint (100% compatible with TLS 1.3
-                  using
-                  `X25519`)
-                </li>
-              </ul>
-            </hint>
+          <th>{{ $t('components.Reality.label_fingerprint') }}
+            <hint v-html="$t('components.Reality.hint_fingerprint')"></hint>
           </th>
           <td>
             <select class="input_option" v-model="transport.realitySettings.fingerprint">

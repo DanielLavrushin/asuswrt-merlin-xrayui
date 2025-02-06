@@ -3,38 +3,16 @@
     <thead>
       <tr>
         <td colspan="2">
-          Routing
-          <hint>
-            The routing module can send inbound data through different outbound connections according to different rules
-            to achieve on-demand proxying.
-            <p>A common use case is to split domestic and foreign traffic. Xray can use its internal mechanisms to
-              determine the traffic from different regions and then send them to different outbound proxies.</p>
-          </hint>
+          {{ $t('components.Routing.title') }}
+          <hint v-html="$t('components.Routing.hint_title')"></hint>
         </td>
       </tr>
     </thead>
     <tbody>
       <tr>
         <th>
-          Domain Strategy
-          <hint>
-            The domain name resolution strategy, which uses different strategies based on different settings.
-            <ul>
-              <li>**AsIs**: Use only the domain name for routing selection. Default value.</li>
-              <li>
-                **IPIfNonMatch**: If the domain name does not match any rule, resolve the domain name into an IP address
-                (A record or AAAA record) and match it again
-                <ul>
-                  <li>When a domain name has multiple A records, it will try to match all A records until one of them
-                    matches a rule</li>
-                  <li>The resolved IP only works for routing selection, and the original domain name is still used in
-                    the forwarded packets</li>
-                </ul>
-              </li>
-              <li>**IPOnDemand**: If any IP-based rules are encountered during matching, immediately resolve the domain
-                name into an IP address for matching</li>
-            </ul>
-          </hint>
+          {{ $t('components.Routing.label_domain_strategy') }}
+          <hint v-html="$t('components.Routing.hint_domain_strategy')"></hint>
         </th>
         <td>
           <select class="input_option" v-model="routing.domainStrategy">
@@ -47,16 +25,8 @@
       </tr>
       <tr>
         <th>
-          Domain Matcher
-          <hint>
-            The domain name matching algorithm, which uses different algorithms based on different settings. This option
-            affects all RuleObject that do not have a separately specified matching algorithm.
-            <ul>
-              <li>**hybrid**: Use the new domain name matching algorithm, which is faster and takes up less space.
-                Default value.</li>
-              <li>**linear**: Use the original domain name matching algorithm.</li>
-            </ul>
-          </hint>
+          {{ $t('components.Routing.label_domain_matcher') }}
+          <hint v-html="$t('components.Routing.hint_domain_matcher')"></hint>
         </th>
         <td>
           <select class="input_option" v-model="routing.domainMatcher">
@@ -69,33 +39,28 @@
       </tr>
       <tr v-if="routing.rules">
         <th>
-          Rules
-          <hint>
-            An array corresponding to a list of rules. For each connection, the routing will judge these rules from top
-            to bottom in order. When it encounters the first effective rule, it will forward the connection to the
-            outboundTag or balancerTag specified by the rule.
-            <blockquote>When no rules match, the traffic is sent out by the first outbound by default.</blockquote>
-          </hint>
+          {{ $t('components.Routing.label_rules') }}
+          <hint v-html="$t('components.Routing.hint_rules')"></hint>
         </th>
         <td>
           {{ countRules() }} item(s)
-          <input class="button_gen button_gen_small" type="button" value="manage" @click.prevent="manage_rules()" />
+          <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')"
+            @click.prevent="manage_rules()" />
           <span class="hint-color"></span>
           <rules-modal ref="modal" v-model:rules="routing.rules"></rules-modal>
         </td>
       </tr>
       <tr v-if="routing.rules">
         <th>
-          GeoIp/GeoSite Metadata
-          <hint> Update the GeoIP and GeoSite metadata files. This operation will take some time, please be patient.
-          </hint>
+          {{ $t('components.Routing.label_geodat_metadata') }}
+          <hint v-html="$t('components.Routing.hint_geodat_metadata')"></hint>
         </th>
         <td>
-          <input class="button_gen button_gen_small" type="button" value="manage local files"
+          <input class="button_gen button_gen_small" type="button" :value="$t('components.Routing.manage_local_files')"
             @click.prevent="manage_geodat()" />
           <geodat-modal ref="geodatModal"></geodat-modal>
-          <input class="button_gen button_gen_small" type="button" value="update community files"
-            @click.prevent="update_geodat()" />
+          <input class="button_gen button_gen_small" type="button"
+            :value="$t('components.Routing.update_community_files')" @click.prevent="update_geodat()" />
           <span class="hint-small" v-if="daysPassed > 1"> updated {{ daysPassed }} days ago</span>
           <span class="hint-color"> [<a href="https://github.com/Loyalsoldier/v2ray-rules-dat/releases"
               target="_blank">source</a>, <a href="https://github.com/v2fly/domain-list-community/tree/master/data"
@@ -104,21 +69,12 @@
       </tr>
       <tr v-if="engine.mode == 'client' && routing.portsPolicy">
         <th>
-          Ports Bypass/Redirect Policy
-          <hint>
-            By default, the mode `redirect` is used, meaning that traffic on all ports is redirected to the inbound port
-            of xray. Specify any additional ports that should be routed through or bypass Xray.
-            <ul>
-              <li><strong>redirect</strong>: Traffic on all ports is redirected to the inbound port. You define the
-                ports that should NOT be redirected to Xray.</li>
-              <li><strong>bypass</strong>: Traffic on all ports bypasses Xray. You define the ports that should be
-                explicitly redirected to Xray.</li>
-            </ul>
-          </hint>
+          {{ $t('components.Routing.label_ports_policy') }}
+          <hint v-html="$t('components.Routing.hint_ports_policy')"></hint>
         </th>
         <td>
           mode: {{ routing.portsPolicy.mode }}
-          <input class="button_gen button_gen_small" type="button" value="manage"
+          <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')"
             @click.prevent="manage_redirect_ports()" />
           <ports-policy-modal ref="modalRedirectPorts" v-model:ports="routing.portsPolicy"></ports-policy-modal>
         </td>

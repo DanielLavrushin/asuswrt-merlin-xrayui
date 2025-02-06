@@ -2,12 +2,12 @@
   <table width="100%" bordercolor="#6b8fa3" class="FormTable">
     <thead>
       <tr>
-        <td colspan="2">Inbounds</td>
+        <td colspan="2">{{ $t('components.Inbounds.title') }}</td>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <th>Create new</th>
+        <th>{{ $t('components.Inbounds.label_create_new') }}</th>
         <td>
           <select class="input_option" v-model="selectedInboundType" @change="edit_proxy()">
             <option></option>
@@ -33,10 +33,14 @@
               {{ proxy.streamSettings?.security }}
             </span>
             <span class="row-buttons">
-              <a class="button_gen button_gen_small" href="#" @click.prevent="show_transport(proxy)">transport</a>
-              <a class="button_gen button_gen_small" href="#" @click.prevent="show_sniffing(proxy)">sniffing</a>
-              <a class="button_gen button_gen_small" href="#" @click.prevent="reorder_proxy(proxy)"
-                v-if="index > 0">&#8593;</a>
+              <a class="button_gen button_gen_small" href="#" @click.prevent="show_transport(proxy)">
+                {{ $t('labels.transport') }}
+              </a>
+              <a class="button_gen button_gen_small" href="#" @click.prevent="show_sniffing(proxy)">
+                {{ $t('labels.sniffing') }}
+              </a>
+              <a class="button_gen button_gen_small" href="#" @click.prevent="reorder_proxy(proxy)" v-if="index > 0"
+                :title="$t('labels.redorder')">&#8593;</a>
               <a class="button_gen button_gen_small" href="#" @click.prevent="edit_proxy(proxy)"
                 title="edit">&#8494;</a>
               <a class="button_gen button_gen_small" href="#" @click.prevent="remove_proxy(proxy)"
@@ -48,10 +52,11 @@
     </tbody>
   </table>
 
-  <modal ref="inboundModal" title="Inbound Settings">
+  <modal ref="inboundModal" :title="$t('components.Inbounds.modal_title_inbound_settings')">
     <component ref="inboundComponentRef" :is="inboundComponent" :inbound="selectedInbound" />
     <template v-slot:footer>
-      <input class="button_gen button_gen_small" type="button" value="Save" @click.prevent="save_inbound" />
+      <input class="button_gen button_gen_small" type="button" :value="$t('labels.save')"
+        @click.prevent="save_inbound" />
     </template>
   </modal>
 </template>
@@ -77,6 +82,8 @@ import ShadowsocksInbound from "./inbounds/ShadowsocksInbound.vue";
 import SocksInbound from "./inbounds/SocksInbound.vue";
 import TrojanInbound from "./inbounds/TrojanInbound.vue";
 import WireguardInbound from "./inbounds/WireguardInbound.vue";
+
+import { useI18n } from 'vue-i18n';
 
 export default defineComponent({
   name: "Inbounds",
@@ -125,7 +132,7 @@ export default defineComponent({
     },
 
     async remove_proxy(proxy: XrayInboundObject<IProtocolType>) {
-      if (!window.confirm("Are you sure you want to delete this inbound?")) return;
+      if (!window.confirm(this.$t('components.Inbounds.alert_delete_confirm'))) return;
       let index = this.config.inbounds.indexOf(proxy);
       this.config.inbounds.splice(index, 1);
     },
@@ -133,7 +140,7 @@ export default defineComponent({
     async save_inbound() {
       let inbound = this.inboundComponentRef.inbound;
       if (this.config.inbounds.filter((i) => i != inbound && i.tag == inbound.tag).length > 0) {
-        alert("Tag  already exists, please choose another one");
+        alert(this.$t('components.Inbounds.alert_tag_exists'));
         return;
       }
 
@@ -149,6 +156,7 @@ export default defineComponent({
   },
 
   setup() {
+    const { t } = useI18n();
     const config = ref(engine.xrayConfig);
     const availableProxies = ref<XrayProtocolOption[]>(xrayProtocols.filter((p) => p.modes & XrayProtocolMode.Inbound));
     const selectedInboundType = ref<string>();

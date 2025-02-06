@@ -8,7 +8,7 @@
   <sniffing-modal ref="sniffingModal" />
   <stream-settings-modal ref="transportModal" />
   <div class="apply_gen">
-    <input class="button_gen" @click.prevent="applySettings()" type="button" value="Apply" />
+    <input class="button_gen" @click.prevent="applySettings()" type="button" :value="$t('labels.apply')" />
   </div>
   <clients-online v-if="engine.mode == 'server'"></clients-online>
   <logs-manager v-if="config.log" v-model:logs="config.log"></logs-manager>

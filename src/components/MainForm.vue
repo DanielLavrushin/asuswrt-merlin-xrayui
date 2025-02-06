@@ -29,19 +29,18 @@
                           <td valign="top">
                             <div class="formfontdesc">
                               <div>&nbsp;</div>
-                              <div class="formfonttitle" style="text-align: center">X-RAY UI Core v{{ version }}</div>
+                              <div class="formfonttitle" style="text-align: center">X-RAY UI v{{ version }}</div>
                               <div class="xray_type_switches">
                                 <div class="xray_type_switch left" :class="{ selected: engine.mode === 'server' }"
                                   @click.prevent="switch_type('server')">
-                                  <div>Server</div>
+                                  <div>{{ $t('labels.server') }}</div>
                                 </div>
                                 <div class="xray_type_switch right" :class="{ selected: engine.mode === 'client' }"
                                   @click.prevent="switch_type('client')">
-                                  <div>Client</div>
+                                  <div>{{ $t('labels.client') }}</div>
                                 </div>
                               </div>
-                              <div id="formfontdesc" class="formfontdesc">This UI control page provides a simple
-                                interface to manage and monitor the X-ray Core's configuration and it's status.</div>
+                              <div id="formfontdesc" class="formfontdesc">{{ $t('labels.xrayui_desc') }}</div>
                               <div style="margin: 10px 0 10px 5px" class="splitLine"></div>
                               <mode-server v-model:config="xrayConfig"></mode-server>
                             </div>

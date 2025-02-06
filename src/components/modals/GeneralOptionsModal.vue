@@ -1,10 +1,10 @@
 <template>
-    <modal ref="modal" title="XRAYUI General Settings" width="600">
+    <modal ref="modal" :title="$t('components.GeneralOptionsModal.modal_title')" width="600">
         <div class="formfontdesc">
             <table class="FormTable modal-form-table">
                 <tbody>
                     <tr>
-                        <th>Start X-RAY on router reboot</th>
+                        <th>{{ $t('components.GeneralOptionsModal.start_xray_on_reboot') }}</th>
                         <td>
                             <label class="go-option">
                                 <input type="checkbox" v-model="startup" @click="updatestartup" />
@@ -12,33 +12,21 @@
                         </td>
                     </tr>
                     <tr>
-                        <th>Check connection to xray server</th>
+                        <th>{{ $t('components.GeneralOptionsModal.check_xray_connection') }}</th>
                         <td>
                             <label class="go-option" v-show="validateCheckConOption()">
                                 <input type="checkbox" v-model="checkconenabled" @change="setcheckconnection" />
                             </label>
-                            <modal ref="conModal" title="XRAYUI General Settings" width="450">
-                                <div class="formfontdesc">
-                                    <p>
-                                        This option verifies that the actual connection is working by sending a request
-                                        to
-                                        <a href="https://ip-api.com/" target="_blank">ip-api.com</a> through the
-                                        outbound
-                                        proxy at
-                                        startup.
-                                    </p>
-                                    <p>XRAYUI will insert a system rule into the routing rules and create a SOCKS
-                                        inbound
-                                        proxy for this
-                                        check.
-                                        These system settings are tagged with `sys` and will remain hidden in the UI.
-                                    </p>
+                            <modal ref="conModal" :title="$t('components.generalOptionsModal.modalConnectTitle')"
+                                width="450">
+                                <div class="formfontdesc"
+                                    v-html="$t('components.GeneralOptionsModal.modalConnectCheckDescription')">
                                 </div>
                                 <template #footer>
-                                    <input class="button_gen button_gen_small" type="button" value="cancel"
-                                        @click.prevent="concheckcancel" />
-                                    <input class="button_gen button_gen_small" type="button" value="accept"
-                                        @click.prevent="concheckaccept" />
+                                    <input class="button_gen button_gen_small" type="button"
+                                        :value="$t('labels.cancel')" @click.prevent="concheckcancel" />
+                                    <input class="button_gen button_gen_small" type="button"
+                                        :value="$t('labels.accept')" @click.prevent="concheckaccept" />
                                 </template>
                             </modal>
                         </td>

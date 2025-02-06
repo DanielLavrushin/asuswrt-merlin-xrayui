@@ -1,6 +1,11 @@
 import { createApp } from "vue";
+import { createI18n } from "vue-i18n";
+
 import App from "./App.vue";
 import { EngineLoadingProgress } from "./modules/Engine";
+
+import en from "./translations/en.json";
+import ru from "./translations/ru.json";
 
 window.hint = (message: string) => {
   window.overlib(message);
@@ -81,5 +86,17 @@ window.updateLoadingProgress = (progress?: EngineLoadingProgress) => {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-  createApp(App).mount("#xrayui-app");
+  const currentLanguage = (window.xray.router.language || "en").toLowerCase();
+
+  const i18n = createI18n({
+    locale: currentLanguage,
+    fallbackLocale: "en",
+    legacy: false,
+    messages: {
+      en,
+      ru
+    }
+  });
+
+  createApp(App).use(i18n).mount("#xrayui-app");
 });

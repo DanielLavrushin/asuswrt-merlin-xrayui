@@ -20,6 +20,7 @@
     "version-clean": "^1.9.0",
     "version-compare": "^3.11.0",
     "vue": "^3.5.13",
+    "vue-i18n": "^11.1.0",
     "vue-json-pretty": "^2.4.0"
   },
   "devDependencies": {

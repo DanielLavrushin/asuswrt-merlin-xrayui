@@ -1,0 +1,63 @@
+{
+  "labels": {
+    "import": "import",
+    "reconnect": "reconnect",
+    "stop": "stop",
+    "show_config": "show config",
+    "manage": "manage",
+    "add": "add",
+    "server": "server",
+    "client": "client",
+    "transport": "transport",
+    "sniffing": "sniffing",
+    "apply": "apply",
+    "close": "close",
+    "cancel": "cancel",
+    "accept": "accept",
+    "xrayui_desc": "This UI control page provides a simple interface to manage and monitor the X-ray Core's configuration and it's status."
+  },
+  "components": {
+    "ClientStatus": {
+      "configuration": "Configuration",
+      "connection_status": "Connection status",
+      "general_options": "General options",
+      "xray_connecting": "Checking connection...",
+      "xray_connected": "XRAY is connected",
+      "xray_stopped": "XRAY is stopped",
+      "xray_running": "XRAY service is running"
+    },
+
+    "GeneralOptionsModal": {
+      "modal_title": "XRAYUI General Settings",
+      "check_xray_connection": "Check connection to xray server",
+      "start_xray_on_reboot": "Start X-RAY on router reboot",
+      "modalConnectTitle": "XRAY Connection Check",
+      "modalConnectCheckDescription": "<p>This option verifies that the actual connection is working by sending a request to <a href=\"https://ip-api.com/\" target=\"_blank\">ip-api.com</a> through the outbound proxy at startup.</p><p>XRAYUI will insert a system rule into the routing rules and create a SOCKS inbound proxy for this check. These system settings are tagged with <code>sys</code> and will remain hidden in the UI.</p>"
+    },
+    "ImportConfig": {
+      "import_config_file": "Import config file"
+    },
+    "ImportConfigModal": {
+      "modal_title": "Import configuration",
+      "modal_desc": "Here you can import a configuration from a QR code or a protocol URL.",
+      "label_qr_code": "QR code",
+      "label_proxy_uri": "Outbound Proxy Uri",
+      "label_complete_setup": "I'd like to have a complete setup!",
+      "label_unblock": "Unblock",
+      "label_dont_break": "Don't break my network devices",
+      "hint_qr_code": "Try to print screen your QR code and xrayui will try to read it.",
+      "hint_proxy_uri": "You can paste here the URL of the protocol here. Usually they start with `vless://` or `vmess://`.",
+      "hint_complete_setup": "If you select this option, xrayui will overwrite your current configuration with the most suitabledefault configuration for the imported protocol.<hr />A default Routing rule will be created to test the proxy outbound connection. After importing and applying the configuration, you can try to open the `https://ip-api.com/`. You should see the IP of the server you are connected to.<hr />After that, it is recommended to set up your your own traffic routing rules.",
+      "hint_unblock": "  Select the services you want to unblock. This will automatically create a `routing rule` that channels their traffic through the proxy.<hr />It's recommended to only choose services that are blocked in your region. You'll be able to add, update, or delete these rules later in the `Routing` section.",
+      "hint_dont_break": "Check this box if you have IoT devices on your router network, like `Smart TVs`, `Xbox`, `PlayStation` or other devices you prefer not to affect with X-RAY. <hr />This option limits the rerouted traffic to X-RAY via your router, reducing the risk of disconnecting these devices. Later You can adjust this option in the Routing section (`Ports Bypass/Redirect Policy`).<hr />If you don't have any IoT devices, it's best to leave this option unchecked."
+    },
+    "ConfigModal": {
+      "modal_title": "Show XRAY configuration file",
+      "hide_sensetive_data": "hide sensitive data",
+      "open_raw": "open raw",
+      "copy_to_clipboard": "copy to clipboard",
+      "alert_copy_ok_hiddendata": "Configuration copied to clipboard. Sensitive data has been hidden. However, please review the configuration before sharing.",
+      "alert_copy_ok_nohiddendata": "Configuration copied to clipboard. Warning: Sensitive data is visible. Please be cautious when sharing."
+    }
+  }
+}

@@ -1,6 +1,6 @@
 # XRAYUI Changelog
 
-## [0.34.3] - 2025-02-05
+## [0.34.3] - 2025-02-06
 
 - FIXED: Resolved an issue during configuration import where routing rules were incorrectly assigned to a default `proxy` tag instead of the imported one (#21).
 - ADDED: Introduced an `Outbound` column to the routing rules list for improved clarity.

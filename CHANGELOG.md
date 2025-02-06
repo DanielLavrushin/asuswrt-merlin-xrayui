@@ -1,5 +1,10 @@
 # XRAYUI Changelog
 
+## [0.34.3] - 2025-02-05
+
+- FIXED: Resolved an issue during configuration import where routing rules were incorrectly assigned to a default `proxy` tag instead of the imported one.
+- ADDED: Introduced an `Outbound` column to the routing rules list for improved clarity.
+
 ## [0.34.2] - 2025-02-05
 
 - ADDED: Ability to define an array of users on the routing rule level. The rule will now take effect when the source user's email matches any address in the array.

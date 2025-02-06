@@ -253,22 +253,22 @@ class XrayRoutingObject {
     return this;
   }
 
-  public default = (unblockItems: string[] | undefined): this => {
+  public default = (outboundTag: string, unblockItems: string[] | undefined): this => {
     this.domainStrategy = "IPIfNonMatch";
     this.rules = [];
     if (!unblockItems || unblockItems.length == 0) {
       const rule = new XrayRoutingRuleObject();
       rule.name = "myip.com to proxy";
       rule.domain = ["domain:myip.com"];
-      rule.outboundTag = "proxy";
+      rule.outboundTag = outboundTag;
 
       this.rules.push(rule);
     } else if (unblockItems.length > 0) {
       unblockItems.forEach((item) => {
         const gs = item.toLowerCase();
         const rule = new XrayRoutingRuleObject();
-        rule.name = `${item} to proxy`;
-        rule.outboundTag = "proxy";
+        rule.name = `${item} to ${outboundTag}`;
+        rule.outboundTag = outboundTag;
 
         switch (gs) {
           case "kinopub":

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable no-console */
 const path = require("path");
+const webpack = require("webpack");
 const { VueLoaderPlugin } = require("vue-loader");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const { exec } = require("child_process");
@@ -42,6 +43,9 @@ module.exports = {
   },
   plugins: [
     new VueLoaderPlugin(),
+    new webpack.DefinePlugin({
+      __VUE_PROD_DEVTOOLS__: JSON.stringify(false)
+    }),
     new CopyWebpackPlugin({
       patterns: [
         { from: "src/app.html", to: "index.asp" },

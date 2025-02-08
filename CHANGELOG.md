@@ -1,21 +1,22 @@
 # XRAYUI Changelog
 
-## [0.35.0] - 2025-02-08
+## [0.35.1] - 2025-02-08
 
-> _Important: Please clear your browser cache (e.g.**ctrl+f5**) to ensure that outdated files are updated._
+> _Important: Please clear your browser cache (e.g.**Ctrl+F5**) to ensure that outdated files are updated._
 
-- ADDED: Languages support.
+- FIXED: missing compile-time flag `__VUE_PROD_DEVTOOLS__` casued the app crash on production.
+- ADDED: Language support.
 
 ## [0.34.3] - 2025-02-06
 
-> _Important: Please clear your browser cache (e.g.**ctrl+f5**) to ensure that outdated files are updated._
+> _Important: Please clear your browser cache (e.g.**Ctrl+F5**) to ensure that outdated files are updated._
 
 - FIXED: Resolved an issue during configuration import where routing rules were incorrectly assigned to a default `proxy` tag instead of the imported one (#21).
 - ADDED: Introduced an `Outbound` column to the routing rules list for improved clarity.
 
 ## [0.34.2] - 2025-02-05
 
-> _Important: Please clear your browser cache (e.g.**ctrl+f5**) to ensure that outdated files are updated._
+> _Important: Please clear your browser cache (e.g.**Ctrl+F5**) to ensure that outdated files are updated._
 
 - ADDED: Ability to define an array of users on the routing rule level. The rule will now take effect when the source user's email matches any address in the array.
 - FIXED: Resolved an issue where QR code PNG images with transparent backgrounds could not be read.
@@ -25,7 +26,7 @@
 
 ## [0.34.0] - 2025-02-05
 
-> _Important: Please clear your browser cache (e.g.**ctrl+f5**) to ensure that outdated files are updated._
+> _Important: Please clear your browser cache (e.g.**Ctrl+F5**) to ensure that outdated files are updated._
 
 - ADDED: Version command to display the current XRAYUI version. Usage: `/jffs/scripts/xrayui version`.
 - ADDED: Symlink to `/jffs/scripts/xrayui` for direct invocation of `xrayui`.
@@ -38,7 +39,7 @@
 
 ## [0.33.0] - 2025-02-04
 
-> _Important: Please clear your browser cache (e.g.**ctrl+f5**) to ensure that outdated files are updated._
+> _Important: Please clear your browser cache (e.g.**Ctrl+F5**) to ensure that outdated files are updated._
 
 - UPDATED: Introduced a `General options` row in the `Configuration` section.
 - ADDED: A new option, `Check connection to xray server`, in the `General options` section of Client mode. Enabling it allows XRAYUI to check the connection status of the outbound proxy. After restarting Xray, the check sends a connection request to an external service ([freeipapi.com](https://freeipapi.com)) to verify that the connection is truly established via the outbound proxy. Next to the status, a flag representing the X-RAY outbound server `country` location appears to indicate the connection status. Please note that it takes a couple of seconds after restart to validate the connection. When this option is enabled, XRAYUI automatically adds some system configurations (an inbound `SOCKS` proxy and a system routing rule).
@@ -47,7 +48,7 @@
 
 ## [0.32.1] - 2025-02-02
 
-> _Important: Please clear your browser cache (e.g.**ctrl+f5**) to ensure that outdated files are updated._
+> _Important: Please clear your browser cache (e.g.**Ctrl+F5**) to ensure that outdated files are updated._
 
 - ADDED: When importing a new client configuration, it is now possible to select the services to unblock. They will automatically be added to the `routing rules`, so there's no need to set them up manually later.
 - ADDED: A checkbox `Don't break my network devices` in the `import configuration` window. This will set the default mode to `bypass`, potentially preventing disruption to `IoT` devices on the network.
@@ -61,7 +62,7 @@
 
 ## [0.31.1] - 2025-01-30
 
-> _Important: Please clear your browser cache (e.g.**ctrl+f5**) to ensure that outdated files are updated._
+> _Important: Please clear your browser cache (e.g.**Ctrl+F5**) to ensure that outdated files are updated._
 
 - ADDED: `transport` and `secururity` labels for Outbounds proxies.
 - IMPROVED: visual `proxy`, `transport` and `security` labels.
@@ -69,7 +70,7 @@
 
 ## [0.31.0] - 2025-01-29
 
-> _Important: Please clear your browser cache (e.g.**ctrl+f5**) to ensure that outdated files are updated._
+> _Important: Please clear your browser cache (e.g.**Ctrl+F5**) to ensure that outdated files are updated._
 
 - ADDED: Display selected mode in the `Ports Bypass/Redirect Policy`.
 - ADDED: A new `Logs` section to monitor the Xray logs from the web UI.

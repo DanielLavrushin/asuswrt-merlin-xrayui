@@ -1,23 +1,17 @@
 <template>
-  <modal ref="modal" title="The port allocation strategy">
+  <modal ref="modal" :title="$t('components.AllocateModal.modal_title')">
     <div class="formfontdesc">
       <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
         <thead>
           <tr>
-            <td colspan="2">Settings</td>
+            <td colspan="2">{{ $t('components.AllocateModal.label_settings') }}</td>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <th>Strategy
-              <hint>
-                The port allocation strategy.
-                <ul>
-                  <li>`always`: all specified ports in port will be allocated, and Xray will listen on these ports.</li>
-                  <li>`random`: ports will be randomly selected from the port range every refresh minutes, and
-                    concurrency ports will be listened on.</li>
-                </ul>
-              </hint>
+            <th>
+              {{ $t('components.AllocateModal.label_strategy') }}
+              <hint v-html="$t('components.AllocateModal.hint_strategy')"></hint>
             </th>
             <td>
               <select v-model="allocate.strategy" class="input_option">
@@ -27,11 +21,9 @@
             </td>
           </tr>
           <tr v-if="allocate.strategy == 'random'">
-            <th>Refresh
-              <hint>
-                The interval for refreshing randomly allocated ports in minutes. The minimum value is `2`, and it is
-                recommended to set to `5`. This property is only effective when `strategy` is set to `random`.
-              </hint>
+            <th>
+              {{ $t('components.AllocateModal.label_refresh') }}
+              <hint v-html="$t('components.AllocateModal.hint_refresh')"></hint>
             </th>
             <td>
               <input type="text" maxlength="2" class="input_6_table" v-model="allocate.refresh"
@@ -40,12 +32,9 @@
             </td>
           </tr>
           <tr v-if="allocate.strategy == 'random'">
-            <th>Concurrency
-              <hint>
-                The number of randomly allocated ports. The `minimum` value is `1`, and the `maximum` value is one-third
-                of
-                the port range. It is recommended to set to `3`.
-              </hint>
+            <th>
+              {{ $t('components.AllocateModal.label_concurrency') }}
+              <hint v-html="$t('components.AllocateModal.hint_concurrency')"></hint>
             </th>
             <td>
               <input type="text" maxlength="2" class="input_6_table" v-model="allocate.concurrency"
@@ -57,7 +46,7 @@
       </table>
     </div>
     <template v-slot:footer>
-      <input class="button_gen button_gen_small" type="button" value="Save" @click.prevent="save" />
+      <input class="button_gen button_gen_small" type="button" :value="$t('labels.save')" @click.prevent="save" />
     </template>
   </modal>
 </template>

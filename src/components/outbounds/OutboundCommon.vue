@@ -1,13 +1,7 @@
 <template>
     <tr>
-        <th>Tag
-            <hint>
-                The identifier of this outbound connection, used to locate this connection in other configurations.
-                <blockquote>
-                    **Danger**:
-                    When it is not empty, its value must be unique among all tags.
-                </blockquote>
-            </hint>
+        <th>{{ $t('components.OutboundCommon.label_tag') }}
+            <hint v-html="$t('components.OutboundCommon.hint_tag')"></hint>
         </th>
         <td>
             <input type="text" class="input_20_table" v-model="proxy.tag" />
@@ -15,23 +9,9 @@
         </td>
     </tr>
     <tr>
-        <th>The IP address used to send data
-            <hint>
-                The IP address used to send data. It is effective when the host has multiple IP addresses, and the
-                default value is "0.0.0.0".
-                <p>
-                    It is allowed to fill in the IPv6 CIDR block (such as `114:514:1919:810::/64`), and Xray will use
-                    the
-                    random IP address in the address block to initiate external connections. Network access, routing
-                    tables,
-                    and kernel parameters need to be configured correctly to allow Xray to bind to any IP within the
-                    address
-                    block.
-                </p>
-                For networks that use ndp to access, it is not recommended to set a subnet smaller than `/120`,
-                otherwise
-                it may cause NDP flood and a series of problems such as the router neighbor cache being filled up.
-            </hint>
+        <th>
+            {{ $t('components.OutboundCommon.label_send_through') }}
+            <hint v-html="$t('components.OutboundCommon.hint_send_through')"></hint>
         </th>
         <td>
             <input type="text" class="input_20_table" v-model="proxy.sendThrough" autocomplete="off" autocorrect="off"

@@ -1,39 +1,39 @@
 <template>
-  <modal ref="modal" title="Transports specify how Xray communicates with peers">
+  <modal ref="modal" :title="$t('components.StreamSettingsModal.modal_title')">
     <div class="formfontdesc">
-      <p>Transports specify how to achieve stable data transmission. Both ends of a connection often need to specify the
-        same transport protocol to successfully establish a connection. Like, if one end uses WebSocket, the other end
-        must also use WebSocket, or else the connection cannot be established.</p>
+      <p v-html="$t('components.StreamSettingsModal.modal_desc')"></p>
       <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
         <thead>
           <tr>
-            <td colspan="2">Settings</td>
+            <td colspan="2">
+              {{ $t('components.StreamSettingsModal.title') }}
+            </td>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <th>Security
-              <hint>
-                Specifies the security settings for the transport layer. The default value is `none`.
-              </hint>
+            <th>
+              {{ $t('components.StreamSettingsModal.label_security') }}
+              <hint v-html="$t('components.StreamSettingsModal.hint_security')"></hint>
             </th>
             <td>
               <select class="input_option" v-model="transport.security">
                 <option v-for="(opt, index) in securityOptions" :key="index" :value="opt">{{ opt }}</option>
               </select>
               <span class="row-buttons" v-if="transport.security != 'none'">
-                <input class="button_gen button_gen_small" type="button" value="settings" @click="manage_security" />
+                <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')"
+                  @click="manage_security" />
               </span>
-              <modal ref="securityModal" title="Security Settings" v-if="transport.security != 'none'">
+              <modal ref="securityModal" :title="$t('components.StreamSettingsModal.modal_security_title')"
+                v-if="transport.security != 'none'">
                 <component :is="securityComponent" :transport="transport" />
               </modal>
             </td>
           </tr>
           <tr>
-            <th>Network
-              <hint>
-                Specifies the network protocol. The default value is `tcp`.
-              </hint>
+            <th>
+              {{ $t('components.StreamSettingsModal.label_network') }}
+              <hint v-html="$t('components.StreamSettingsModal.hint_network')"></hint>
             </th>
             <td>
               <select class="input_option" v-model="transport.network">
@@ -43,14 +43,14 @@
             </td>
           </tr>
           <tr>
-            <th>Socket options (tproxy)
-              <hint>
-                Specifies the socket options for the transport layer. The default value is `off`.
-              </hint>
+            <th>
+              {{ $t('components.StreamSettingsModal.label_tproxy') }}
+              <hint v-html="$t('components.StreamSettingsModal.hint_tproxy')"></hint>
             </th>
             <td>
               <span class="row-buttons">
-                <input class="button_gen button_gen_small" type="button" value="manage" @click="manage_sockopt" />
+                <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')"
+                  @click="manage_sockopt" />
                 <modal ref="sockoptModal" title="Sockopt Settings">
                   <sockopt v-model:transport="transport"></sockopt>
                 </modal>
@@ -62,7 +62,7 @@
       </table>
     </div>
     <template v-slot:footer>
-      <input class="button_gen button_gen_small" type="button" value="Save" @click.prevent="save" />
+      <input class="button_gen button_gen_small" type="button" :value="$t('labels.save')" @click.prevent="save" />
     </template>
   </modal>
 </template>
@@ -145,9 +145,9 @@ export default defineComponent({
         case "httpupgrade":
           transport.value.httpupgradeSettings = transport.value.httpupgradeSettings ?? new XrayStreamHttpUpgradeSettingsObject();
           return NetworkHttpUpgrade;
-        case "splithttp":
-          transport.value.splithttpSettings = transport.value.splithttpSettings ?? new XrayStreamSplitHttpSettingsObject();
-          return NetworkSplitHttp;
+        /* case "splithttp":
+           transport.value.splithttpSettings = transport.value.splithttpSettings ?? new XrayStreamSplitHttpSettingsObject();
+           return NetworkSplitHttp;*/
         case "grpc":
           transport.value.grpcSettings = transport.value.grpcSettings ?? new XrayStreamGrpcSettingsObject();
           return NetworkGrpc;

@@ -2,12 +2,12 @@
   <table width="100%" bordercolor="#6b8fa3" class="FormTable">
     <thead>
       <tr>
-        <td colspan="2">Configuration</td>
+        <td colspan="2">{{ $t('components.ClientStatus.configuration') }}</td>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <th>Connection Status</th>
+        <th>{{ $t('components.ClientStatus.connection_status') }}</th>
         <td>
           <span class="label" :class="connectionClasses" v-text="statusLabel"></span>
           <span v-if="!isRunning">
@@ -16,9 +16,13 @@
           </span>
           <span :class="[' label', 'flag', 'fi', contryCodeClass]"></span>
           <span class="row-buttons">
-            <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(reconnect)">reconnect</a>
-            <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(stop)">stop</a>
-            <input class="button_gen button_gen_small" type="button" value="show config"
+            <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(reconnect)">{{
+              $t("labels.reconnect") }}
+            </a>
+            <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(stop)">
+              {{ $t('labels.stop') }}
+            </a>
+            <input class="button_gen button_gen_small" type="button" :value="$t('labels.show_config')"
               @click.prevent="show_config_modal()" />
           </span>
           <config-modal ref="configModal"></config-modal>
@@ -26,10 +30,10 @@
       </tr>
       <import-config v-model:config="config"></import-config>
       <tr>
-        <th>General options</th>
+        <th>{{ $t('components.ClientStatus.general_options') }}</th>
         <td>
           <span class="row-buttons">
-            <input class="button_gen button_gen_small" type="button" value="manage"
+            <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')"
               @click.prevent="manage_general_options()" />
           </span>
           <general-options-modal ref="generalOptionsModal" v-model:config="config"></general-options-modal>
@@ -48,6 +52,7 @@ import { XrayObject } from "@/modules/XrayConfig";
 import { XrayProtocol, XrayRoutingRuleObject } from "@/modules/CommonObjects";
 import ConfigModal from "./modals/ConfigModal.vue";
 import axios from "axios";
+import { useI18n } from 'vue-i18n';
 
 class IpApiResponse {
   public status?: string;
@@ -72,7 +77,7 @@ export default defineComponent({
   },
   computed: {
     statusLabel(): string {
-      return !this.checkConEnabled ? (this.isRunning ? "XRAY is running " : "XRAY is stopped") : this.connectionStationLabel;
+      return !this.checkConEnabled ? (this.isRunning ? this.$t('components.ClientStatus.xray_running') : this.$t('components.ClientStatus.xray_stopped')) : this.connectionStationLabel;
     }
   },
   methods: {
@@ -91,12 +96,13 @@ export default defineComponent({
     }
   },
   setup(props) {
+    const { t } = useI18n();
     const config = ref(props.config);
     const configModal = ref();
     const generalOptionsModal = ref();
     const contryCodeClass = ref<string>("flag-icon flag-icon-unknown");
     const connectionStatus = ref<boolean>(false);
-    const connectionStationLabel = ref<string>("Checking connection...");
+    const connectionStationLabel = ref<string>(t('components.ClientStatus.xray_running'));
     const connectionClasses = computed(() => ({
       "label-success": isRunning.value,
       "label-error": !isRunning.value,
@@ -127,7 +133,7 @@ export default defineComponent({
           status.connected = config.value.outbounds?.find((o) => o.protocol !== XrayProtocol.BLACKHOLE && o.protocol !== XrayProtocol.FREEDOM && o.settings?.isTargetAddress?.(status.query!)) !== undefined;
           isRunning.value = window.xray.server.isRunning;
           connectionStatus.value = status.connected;
-          connectionStationLabel.value = status.connected ? "XRAY is connected!" : "Checking connection...";
+          connectionStationLabel.value = status.connected ? t('components.ClientStatus.xray_connected') : t('components.ClientStatus.xray_connecting');
           contryCodeClass.value = `fi-${status.countryCode?.toLowerCase()}`;
           return status;
         }

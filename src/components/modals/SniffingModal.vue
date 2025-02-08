@@ -1,59 +1,42 @@
 <template>
-  <modal ref="modal" title="Traffic sniffing">
+  <modal ref="modal" :title="$t('components.SniffingModal.modal_title')">
     <div class="formfontdesc">
-      <p>Traffic sniffing is mainly used in transparent proxies</p>
+      <p>{{ $t('components.SniffingModal.modal_desc') }}</p>
       <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
         <thead>
           <tr>
-            <td colspan="2">Settings</td>
+            <td colspan="2">{{ $t('components.SniffingModal.label_settings') }}</td>
           </tr>
         </thead>
         <tbody>
           <tr>
             <th>
-              Sniffing
-              <hint>
-                Whether to enable traffic sniffing.
-              </hint>
+              {{ $t('components.SniffingModal.label_enabled') }}
+              <hint v-html="$t('components.SniffingModal.hint_enabled')"></hint>
             </th>
             <td>
               <input type="radio" v-model="sniffing.enabled" class="input" :value="true" :id="'snifon'" />
-              <label class="settingvalue" :for="'snifon'">Enabled</label>
+              <label class="settingvalue" :for="'snifon'">{{ $t('labels.enabled') }}</label>
               <input type="radio" v-model="sniffing.enabled" class="input" :value="false" :id="'snifoff'" />
-              <label class="settingvalue" :for="'snifoff'">Disabled</label>
+              <label class="settingvalue" :for="'snifoff'">{{ $t('labels.disabled') }}</label>
             </td>
           </tr>
           <tr v-if="sniffing.enabled">
             <th>
-              Metadata only
-              <hint>
-                When enabled, only use the connection's metadata to sniff the target address. In this case, sniffer
-                other than `fakedns` (including `fakedns+others`) cannot be activated.
-                <p>
-                  If metadata-only is `disabled`, the client must send data before the proxy server actually establishes
-                  the connection. This behavior is incompatible with protocols that require the server to initiate the
-                  first message, such as the SMTP protocol.
-                </p>
-              </hint>
+              {{ $t('components.SniffingModal.label_metadata_only') }}
+              <hint v-html="$t('components.SniffingModal.hint_metadata_only')"></hint>
             </th>
             <td>
               <input type="radio" v-model="sniffing.metadataOnly" class="input" :value="true" :id="'metaon'" />
-              <label class="settingvalue" :for="'metaon'">Enabled</label>
+              <label class="settingvalue" :for="'metaon'">{{ $t('labels.enabled') }}</label>
               <input type="radio" v-model="sniffing.metadataOnly" class="input" :value="false" :id="'metaoff'" />
-              <label class="settingvalue" :for="'metaoff'">Disabled</label>
+              <label class="settingvalue" :for="'metaoff'">{{ $t('labels.disabled') }}</label>
             </td>
           </tr>
           <tr v-if="sniffing.enabled && !sniffing.metadataOnly">
             <th>
-              Destination Override
-              <hint>
-                When the traffic is of a specified type, reset the destination of the current connection to the target
-                address included in the list.
-
-                ["fakedns+others"] is equivalent to ["http", "tls", "quic", "fakedns"], and when the IP address is in
-                the FakeIP range but no domain records are hit, http, tls, and quic will be used for matching. This
-                option is only effective when metadataOnly is set to false.
-              </hint>
+              {{ $t('components.SniffingModal.label_dest_override') }}
+              <hint v-html="$t('components.SniffingModal.hint_dest_override')"></hint>
             </th>
             <td>
               <slot v-for="(opt, index) in destOptions" :key="index">
@@ -65,21 +48,8 @@
           </tr>
           <tr v-if="sniffing.enabled && sniffing.destOverride && sniffing.destOverride.length > 0">
             <th>
-              Route only
-              <hint>
-                Use the sniffed domain name for routing only, and keep the target address as the IP address. The default
-                value is `false`.
-
-                This option requires `destOverride` to be enabled.
-
-                <blockquote>
-                  When it is possible to ensure that the proxied connection can obtain correct DNS resolution, by using
-                  `routeOnly` and enabling `destOverride`, and setting the routing matching strategy `domainStrategy` to
-                  `AsIs`,
-                  it is possible to achieve domain and IP separation without DNS resolution throughout the process. The
-                  IP used when encountering an IP rule match is the original IP of the domain.
-                </blockquote>
-              </hint>
+              {{ $t('components.SniffingModal.label_route_only') }}
+              <hint v-html="$t('components.SniffingModal.hint_route_only')"></hint>
             </th>
             <td>
               <input type="checkbox" v-model="sniffing.routeOnly" class="input" :id="'snifrouteonly'" />
@@ -87,26 +57,17 @@
             </td>
           </tr>
           <tr v-if="sniffing.enabled">
-            <th>Domains Excluded
-              <hint>
-                A list of domain names. If the traffic sniffing result matches a domain name in this list, the target
-                address will not be reset.
-                <blockquote>
-                  **Warning**
-                  Currently, `domainsExcluded` does not support domain name matching in the routing sense. This option
-                  may
-                  change in the future and cross-version compatibility is not guaranteed.
-                </blockquote>
-              </hint>
+            <th>
+              {{ $t('components.SniffingModal.label_domains_excluded') }}
+              <hint v-html="$t('components.SniffingModal.hint_domains_excluded')"></hint>
             </th>
             <td>
-              <a v-if="sniffing.domainsExcluded">{{ sniffing.domainsExcluded.length }} domain(s)</a>
-              <input class="button_gen button_gen_small" type="button" value="Manage"
+              <a v-if="sniffing.domainsExcluded">{{ $t('labels.items', [sniffing.domainsExcluded.length]) }}</a>
+              <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')"
                 @click.prevent="manage_domains_exclude" />
-              <modal width="400" ref="modalDomains" title="A list of domain names">
+              <modal width="500" ref="modalDomains" :title="$t('components.SniffingModal.modal_domains_title')">
                 <div class="formfontdesc">
-                  <p>If the traffic sniffing result matches a domain name in this list, the target address will not be
-                    reset.</p>
+                  <p>{{ $t('components.SniffingModal.modal_domains_desc') }}</p>
                   <div class="textarea-wrapper">
                     <textarea v-model="domainsExludedContent" class="input_100" rows="8"></textarea>
                   </div>
@@ -118,7 +79,7 @@
       </table>
     </div>
     <template v-slot:footer>
-      <input class="button_gen button_gen_small" type="button" value="Save" @click.prevent="save" />
+      <input class="button_gen button_gen_small" type="button" :value="$t('labels.save')" @click.prevent="save" />
     </template>
   </modal>
 </template>

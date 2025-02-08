@@ -2,12 +2,8 @@
   <tbody v-if="transport.grpcSettings">
     <tr>
       <th>
-        Service name
-        <hint>
-          A string that specifies the service name, similar to the path in `HTTP/2`.
-
-          The client will use this name for communication, and the server will verify whether the service name matches.
-        </hint>
+        {{ $t('components.Grpc.label_service_name') }}
+        <hint v-html="$t('components.Grpc.hint_service_name')"></hint>
       </th>
       <td>
         <input type="text" maxlength="15" class="input_20_table" v-model="transport.grpcSettings.serviceName" />
@@ -16,11 +12,8 @@
     </tr>
     <tr v-if="isOutbound">
       <th>
-        The health check
-        <hint>
-          The health check is performed when no data transmission occurs for a certain period of time, measured in
-          `seconds`. If this value is set to less than `10`, `10` will be used as the `minimum` value.
-        </hint>
+        {{ $t('components.Grpc.label_health_check') }}
+        <hint v-html="$t('components.Grpc.hint_health_check')"></hint>
       </th>
       <td>
         <input type="number" min="10" maxlength="4" class="input_6_table"
@@ -30,11 +23,8 @@
     </tr>
     <tr v-if="isOutbound">
       <th>
-        The timeout for the health check
-        <hint>
-          The timeout for the health check, measured in seconds. If the health check is not completed within this time
-          period, it is considered to have failed. The default value is `20`
-        </hint>
+        {{ $t('components.Grpc.label_health_check_timeout') }}
+        <hint v-html="$t('components.Grpc.hint_health_check_timeout')"></hint>
       </th>
       <td>
         <input type="number" maxlength="4" class="input_6_table" onkeypress="return validator.isNumber(this,event);"
@@ -43,11 +33,9 @@
       </td>
     </tr>
     <tr v-if="isOutbound">
-      <th>Permit without stream
-        <hint>
-          If set to `true` allows health checks to be performed when there are no sub-connections. The default value is
-          `false`.
-        </hint>
+      <th>
+        {{ $t('components.Grpc.label_permit_without_stream') }}
+        <hint v-html="$t('components.Grpc.hint_permit_without_stream')"></hint>
       </th>
       <td>
         <input v-model="transport.grpcSettings.permit_without_stream" type="checkbox" class="input" />
@@ -56,13 +44,8 @@
     </tr>
     <tr v-if="isOutbound">
       <th>
-        The initial window size of the h2 stream
-        <hint>
-          The initial window size of the `h2` stream. When the value is less than or equal to `0`, this feature does not
-          take effect. When the value is greater than `65535`, the Dynamic Window mechanism will be disabled. The
-          default
-          value is `0`, which means it is not effective.
-        </hint>
+        {{ $t('components.Grpc.label_initial_windows_size') }}
+        <hint v-html="$t('components.Grpc.hint_initial_windows_size')"></hint>
       </th>
       <td>
         <input type="number" maxlength="5" min="0" max="65535" class="input_6_table"

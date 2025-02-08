@@ -1,6 +1,6 @@
 import { XrayHttpClientObject, XraySocksClientObject, XrayVlessClientObject, XrayVmessClientObject } from "./ClientsObjects";
-import { ISecurityProtocol, ITransportNetwork, IXrayServer } from "./Interfaces";
-import { XrayOptions, XrayProtocol, XrayProtocolMode } from "./Options";
+import { ISecurityProtocol, IXrayServer } from "./Interfaces";
+import { XrayProtocol, XrayProtocolMode } from "./Options";
 import { XrayStreamHttpSettingsObject, XrayStreamKcpSettingsObject, XrayStreamTcpSettingsObject, XrayStreamWsSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamSplitHttpSettingsObject } from "./TransportObjects";
 
 class XraySniffingObject {

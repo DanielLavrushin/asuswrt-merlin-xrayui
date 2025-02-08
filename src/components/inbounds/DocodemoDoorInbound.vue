@@ -1,23 +1,28 @@
 <template>
     <div class="formfontdesc">
-        <p>Dokodemo door (Anywhere Door) can listen to a local port and forward all incoming data on this port to a
-            specified server's port, achieving the effect of port mapping.</p>
+        <p>{{ $t('components.DocodemoDoorInbound.modal_desc') }}</p>
         <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
             <thead>
                 <tr>
-                    <td colspan="2">Dokodemo-Door</td>
+                    <td colspan="2">{{ $t('components.DocodemoDoorInbound.modal_title') }}</td>
                 </tr>
             </thead>
             <tbody>
                 <inbound-common :inbound="inbound"></inbound-common>
                 <tr>
-                    <th>The address to forward
-                        <hint>
-                            The address to forward the traffic to. It can be an IP address like `1.2.3.4` or a domain
-                            name like `xray.com`.
-
-                            When `followRedirect` is set to `true`, address can be empty.
-                        </hint>
+                    <th>
+                        {{ $t('components.DocodemoDoorInbound.label_follow_redirect') }}
+                        <hint v-html="$t('components.DocodemoDoorInbound.hint_follow_redirect')"></hint>
+                    </th>
+                    <td>
+                        <input type="checkbox" v-model="inbound.settings.followRedirect" />
+                        <span class="hint-color"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                        {{ $t('components.DocodemoDoorInbound.label_address') }}
+                        <hint v-html="$t('components.DocodemoDoorInbound.hint_address')"></hint>
                     </th>
                     <td>
                         <input type="text" class="input_20_table" v-model="inbound.settings.address" autocomplete="off"
@@ -26,11 +31,9 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>Destination Port
-                        <hint>
-                            The specified port on the destination address to forward the traffic to. It is a numeric
-                            value and is a **required** parameter.
-                        </hint>
+                    <th>
+                        {{ $t('components.DocodemoDoorInbound.label_port') }}
+                        <hint v-html="$t('components.DocodemoDoorInbound.hint_port')"></hint>
                     </th>
                     <td>
                         <input type="number" maxlength="5" class="input_6_table" v-model="inbound.settings.port"
@@ -40,11 +43,9 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>Network
-                        <hint>
-                            The supported network protocol type. For example, when specified as `tcp`, it will only
-                            receive TCP traffic. The default value is `tcp`.
-                        </hint>
+                    <th>
+                        {{ $t('components.DocodemoDoorInbound.label_network') }}
+                        <hint v-html="$t('components.DocodemoDoorInbound.hint_network')"></hint>
                     </th>
                     <td>
                         <select class="input_option" v-model="inbound.settings.network">
@@ -53,21 +54,6 @@
                             </option>
                         </select>
                         <span class="hint-color">default: tcp</span>
-                    </td>
-                </tr>
-                <tr>
-                    <th>Follow Redirect
-                        <hint>
-                            When set to `true`, dokodemo-door will recognize data forwarded by `iptables` and forward it
-                            to
-                            the corresponding destination address.
-
-                            Refer to the `tproxy` setting in the `Transport Configuration`
-                        </hint>
-                    </th>
-                    <td>
-                        <input type="checkbox" v-model="inbound.settings.followRedirect" />
-                        <span class="hint-color"></span>
                     </td>
                 </tr>
             </tbody>

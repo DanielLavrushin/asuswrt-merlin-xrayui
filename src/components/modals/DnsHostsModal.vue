@@ -40,7 +40,7 @@
   </modal>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref, watch } from "vue";
+import { defineComponent, ref, watch } from "vue";
 import Modal from "../Modal.vue";
 
 export default defineComponent({

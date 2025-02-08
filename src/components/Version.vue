@@ -1,22 +1,21 @@
 <template>
     <div class="version"><a href="#" @click.prevent="open_update">
-            <span class="button_gen button_gen_small button_info" title="a more recent update is available"
-                v-if="hasUpdate">!</span>
+            <span class="button_gen button_gen_small button_info"
+                :title="$t('components.Version.tooltip_update_avialable')" v-if="hasUpdate">!</span>
             XRAYUI v{{ current_version }}</a></div>
-    <modal ref="updateModal" width="600" title="XRAYUI Version Log">
+    <modal ref="updateModal" width="600" :title="$t('components.Version.modal_title')">
         <div class="modal-content">
-            <p class="current-version">Current version: <strong>{{ current_version }}</strong></p>
+            <p class="current-version">{{ $t('components.Version.current_version', [current_version]) }}</p>
             <div v-if="hasUpdate" class="update-details">
-                <p>A newer version is available: <strong style="color:#FFCC00">{{ latest_version }}</strong></p>
-                <input class="button_gen button_gen_small button-primary" type="button" value="update now"
-                    @click.prevent="update" />
+                <p v-html="$t('components.Version.new_version', [latest_version])"></p>
+                <input class="button_gen button_gen_small button-primary" type="button"
+                    :value="$t('components.Version.update_now')" @click.prevent="update" />
             </div>
-            <p v-else class="no-updates">Your version is up-to-date!</p>
+            <p v-else class="no-updates">{{ $t('components.Version.version_is_up_to_date') }}</p>
 
             <div class="textarea-wrapper">
                 <div class="changelog" v-html="changelog"></div>
-                open full <a target="_blank"
-                    href="https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/blob/main/CHANGELOG.md">changelog</a>
+                <p v-html="$t('components.Version.open_chengelog')"></p>
             </div>
         </div>
         <template v-slot:footer></template>

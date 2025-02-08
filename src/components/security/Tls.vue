@@ -1,23 +1,17 @@
 <template>
   <div class="formfontdesc">
-    <p>Configures vanilla TLS. The TLS encryption suite is provided by Golang, which often uses TLS 1.3, and has no
-      support for DTLS.</p>
+    <p>{{ $t('components.Tls.modal_desc') }}</p>
     <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="2">Settings</td>
+          <td colspan="2">{{ $t('components.Tls.modal_title') }}</td>
         </tr>
       </thead>
       <tbody v-if="transport.tlsSettings">
         <tr v-if="engine.mode === 'client'">
-          <th>Server Name
-            <hint>
-              Specifies the domain of the server-side certificate, useful when connecting only via IP addresses.
-              <br />
-              When the target is specified by domains, like when the domain is received by `SOCKS` inbounds or detected
-              via sniffing, the extracted domain will automatically be used as `serverName`, without any need for manual
-              configuration.
-            </hint>
+          <th>
+            {{ $t('components.Tls.label_server_name') }}
+            <hint v-html="$t('components.Tls.hint_server_name')"></hint>
           </th>
           <td>
             <input v-model="transport.tlsSettings.serverName" type="text" class="input_20_table" />
@@ -25,17 +19,9 @@
           </td>
         </tr>
         <tr v-if="engine.mode === 'client'">
-          <th>Whether to allow insecure connections
-            <hint>
-              Whether to allow insecure connections (client-only). Defaults to `false`.
-              <br />
-              When `true`, Xray will not verify the validity of the TLS certificate provided by the outbound.
-              <blockquote>
-                **Danger**:
-                This should not be set to `true` in deployments for security reaons, or it can be susceptible to
-                man-in-the-middle attacks.
-              </blockquote>
-            </hint>
+          <th>
+            {{ $t('components.Tls.label_allow_insecure') }}
+            <hint v-html="$t('components.Tls.hint_allow_insecure')"></hint>
           </th>
           <td>
             <input v-model="transport.tlsSettings.allowInsecure" type="checkbox" class="input" />
@@ -43,12 +29,9 @@
           </td>
         </tr>
         <tr v-if="engine.mode === 'server'">
-          <th>Reject unkown SNI
-            <hint>
-              When `true`, the server rejects `TLS` handshakes if the SNI received does not match domains specified in
-              the
-              certificate. The default value is `false`.
-            </hint>
+          <th>
+            {{ $t('components.Tls.label_reject_unknown_sni') }}
+            <hint v-html="$t('components.Tls.hint_reject_unknown_sni')"></hint>
           </th>
           <td>
             <input v-model="transport.tlsSettings.rejectUnknownSni" type="checkbox" class="input" />
@@ -56,28 +39,29 @@
           </td>
         </tr>
         <tr>
-          <th>Don't use CA</th>
+          <th>
+            {{ $t('components.Tls.label_dont_use_ca') }}
+            <hint v-html="$t('components.Tls.hint_dont_use_ca')"></hint>
+          </th>
           <td>
             <input v-model="transport.tlsSettings.disableSystemRoot" type="checkbox" class="input" />
             <span class="hint-color">default: false</span>
           </td>
         </tr>
         <tr v-if="engine.mode === 'client'">
-          <th>Session Resumption</th>
+          <th>
+            {{ $t('components.Tls.label_session_resumption') }}
+            <hint v-html="$t('components.Tls.hint_session_resumption')"></hint>
+          </th>
           <td>
             <input v-model="transport.tlsSettings.enableSessionResumption" type="checkbox" class="input" />
             <span class="hint-color">default: false</span>
           </td>
         </tr>
         <tr>
-          <th>ALPN
-            <hint>
-              An array of strings specifying the ALPN values used in TLS handshakes. Defaults to ["h2", "http/1.1"].
-              <br />
-              Application-Layer Protocol Negotiation (ALPN) is a TLS extension that allows the application to negotiate
-              which protocol should be performed over a secure connection in a manner that is more efficient than
-              sending multiple requests over the same connection.
-            </hint>
+          <th>
+            {{ $t('components.Tls.label_alpn') }}
+            <hint v-html="$t('components.Tls.hint_alpn')"></hint>
           </th>
           <td>
             <template v-for="(opt, index) in alpnOptions" :key="index">
@@ -89,10 +73,9 @@
           </td>
         </tr>
         <tr>
-          <th>TLS Version
-            <hint>
-              Specifies the `minimum` and `maximum` version of the TLS protocol.
-            </hint>
+          <th>
+            {{ $t('components.Tls.label_tls_version') }}
+            <hint v-html="$t('components.Tls.hint_tls_version')"></hint>
           </th>
           <td>
             <select v-model="transport.tlsSettings.minVersion" class="input_option">
@@ -110,20 +93,9 @@
           </td>
         </tr>
         <tr v-if="engine.mode === 'client'">
-          <th>Fingerprint
-            <hint>
-              Specifies the fingerprint of the TLS Client Hello message. When empty, fingerprint simulation will not be
-              enabled.
-              When enabled, Xray will simulate the TLS fingerprint through the uTLS library or have it generated
-              randomly.
-              <ul>
-                <li>`random`: randomly select one of the up-to-date browsers</li>
-                <li>`randomized`: generate a completely random and unique fingerprint (100% compatible with TLS 1.3
-                  using
-                  `X25519`)
-                </li>
-              </ul>
-            </hint>
+          <th>
+            {{ $t('components.Tls.label_fingerprint') }}
+            <hint v-html="$t('components.Tls.hint_fingerprint')"></hint>
           </th>
           <td>
             <select class="input_option" v-model="transport.tlsSettings.fingerprint">
@@ -135,15 +107,14 @@
           </td>
         </tr>
         <tr v-if="engine.mode === 'server'">
-          <th>TLS Certificate
-            <hint>
-              A list of certificates, each representing a single certificate (fullchain recommended).
-            </hint>
+          <th>
+            {{ $t('components.Tls.label_certificate') }}
+            <hint v-html="$t('components.Tls.hint_certificate')"></hint>
           </th>
           <td>
-            <input class="button_gen button_gen_small" type="button" value="Manage"
+            <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')"
               @click.prevent="certificate_manage()" />
-            <input class="button_gen button_gen_small" type="button" value="Renew"
+            <input class="button_gen button_gen_small" type="button" :value="$t('labels.renew')"
               @click.prevent="certificate_renew()" />
             <certificates-modal ref="certificatesModal"
               :certificates="transport.tlsSettings.certificates"></certificates-modal>

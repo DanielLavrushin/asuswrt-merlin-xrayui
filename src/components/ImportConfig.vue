@@ -1,9 +1,9 @@
 <template>
     <tr>
-        <th>Import config file</th>
+        <th>{{ $t('components.ImportConfig.import_config_file') }}</th>
         <td>
             <span class="row-buttons">
-                <a class="button_gen button_gen_small" href="#" @click.prevent="show">import</a>
+                <a class="button_gen button_gen_small" href="#" @click.prevent="show">{{ $t('labels.import') }}</a>
             </span>
             <import-config-modal ref="parserModal" v-model:config="config"></import-config-modal>
         </td>

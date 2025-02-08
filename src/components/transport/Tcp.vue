@@ -2,7 +2,8 @@
   <tbody v-if="transport.tcpSettings">
     <tr v-if="isInbound">
       <th>
-        Accept the PROXY protocol
+        {{ $t('components.Tcp.label_accept_proxy_protocol') }}
+        <hint v-html="$t('components.Tcp.hint_accept_proxy_protocol')"></hint>
       </th>
       <td>
         <input type="checkbox" name="xray_network_tcp_accept_proxy" class="input"
@@ -16,9 +17,13 @@
 <script lang="ts">
 import { defineComponent, ref } from "vue";
 import { XrayStreamSettingsObject } from "../../modules/CommonObjects";
+import Hint from "../Hint.vue";
 
 export default defineComponent({
   name: "Tcp",
+  components: {
+    Hint,
+  },
   props: {
     transport: XrayStreamSettingsObject,
     proxyType: String,

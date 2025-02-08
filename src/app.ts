@@ -1,6 +1,15 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 import { createApp } from "vue";
+import { createI18n } from "vue-i18n";
+
 import App from "./App.vue";
 import { EngineLoadingProgress } from "./modules/Engine";
+
+import en from "./translations/en.json";
+import de from "./translations/de.json";
+import ru from "./translations/ru.json";
+import uk from "./translations/uk.json";
 
 window.hint = (message: string) => {
   window.overlib(message);
@@ -81,5 +90,21 @@ window.updateLoadingProgress = (progress?: EngineLoadingProgress) => {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-  createApp(App).mount("#xrayui-app");
+  const currentLanguage = (window.xray.router.language || "en").toLowerCase();
+
+  const i18n = createI18n({
+    locale: currentLanguage,
+    globalInjection: true,
+    fallbackLocale: "en",
+    legacy: false,
+    warnHtmlMessage: false,
+    messages: {
+      en,
+      de,
+      ru,
+      uk
+    }
+  });
+
+  createApp(App).use(i18n).mount("#xrayui-app");
 });

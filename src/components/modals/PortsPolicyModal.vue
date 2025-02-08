@@ -1,26 +1,12 @@
 <template>
-  <modal ref="modal" title="Ports Bypass/Redirect Policy" width="700px">
+  <modal ref="modal" :title="$t('components.PortsPolicyModal.modal_title')" width="700px">
     <div class="formfontdesc">
-      <div style="text-align: left;">
-        By default, the mode <strong>redirect</strong> is used, meaning that traffic on all ports is
-        redirected to the inbound port of xray.
-        Specify any additional ports that should be routed through or bypass Xray.
-        <ul>
-          <li>
-            <strong>redirect</strong>: Traffic on all ports is redirected to the inbound port. You define
-            the ports that should NOT be redirected to Xray.
-          </li>
-          <li>
-            <strong>bypass</strong>: Traffic on all ports bypasses Xray. You define the ports that should be
-            explicitly redirected to Xray.
-          </li>
-        </ul>
-      </div>
+      <div style="text-align: left;" v-html="$t('components.PortsPolicyModal.modal_desc')"></div>
       <table class="FormTable modal-form-table">
         <tbody v-if="ports">
           <tr>
             <th>
-              Mode
+              {{ $t('components.PortsPolicyModal.label_mode') }}
             </th>
             <td>
               <select v-model="ports.mode" class="input_option" @change="modeChange">
@@ -32,7 +18,7 @@
           </tr>
           <tr>
             <th>
-              Apply well-known service ports
+              {{ $t('components.PortsPolicyModal.label_wellknown_ports') }}
             </th>
             <td>
               <select v-model="vendor" class="input_option" @change="vendorChange">
@@ -48,17 +34,15 @@
             </td>
           </tr>
           <tr>
-            <th>TCP ports
-              <hint>
-                Only allowed characters are numbers, commas, and dashes. You may use a new line for each port.
-                <br />
-                Example: 80,443,8080,1000-2000
-              </hint><br />
+            <th>
+              {{ $t('components.PortsPolicyModal.label_tcp_ports') }}
+              <hint v-html="$t('components.PortsPolicyModal.hint_tcp_ports')"></hint>
+              <br />
               <div class="hint-color" v-show="ports.mode == 'bypass'">
-                these ports will be redirected to xray
+                {{ $t('components.PortsPolicyModal.hint_bypass') }}
               </div>
               <div class="hint-color" v-show="ports.mode == 'redirect'">
-                these ports will bypass xray
+                {{ $t('components.PortsPolicyModal.hint_redirect') }}
               </div>
             </th>
             <td>
@@ -68,17 +52,14 @@
             </td>
           </tr>
           <tr>
-            <th>UDP ports
-              <hint>
-                Only allowed characters are numbers, commas, and dashes. You may use a new line for each port.
-                <br />
-                Example: 80,443,8080,1000-2000
-              </hint>
+            <th> {{ $t('components.PortsPolicyModal.label_udp_ports') }}
+              <hint v-html="$t('components.PortsPolicyModal.hint_udp_ports')"></hint>
+              <br />
               <div class="hint-color" v-show="ports.mode == 'bypass'">
-                these ports will be redirected to xray
+                {{ $t('components.PortsPolicyModal.hint_bypass') }}
               </div>
               <div class="hint-color" v-show="ports.mode == 'redirect'">
-                these ports will bypass xray
+                {{ $t('components.PortsPolicyModal.hint_redirect') }}
               </div>
             </th>
             <td>

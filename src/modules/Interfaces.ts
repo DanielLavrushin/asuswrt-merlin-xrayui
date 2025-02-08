@@ -1,5 +1,6 @@
 interface IProtocolType {
   normalize?: () => void;
+  //eslint-disable-next-line
   isTargetAddress?: (address: string) => boolean;
   getUserNames?: () => string[];
 }

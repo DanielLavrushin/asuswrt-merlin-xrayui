@@ -2,12 +2,12 @@
   <table width="100%" bordercolor="#6b8fa3" class="FormTable">
     <thead>
       <tr>
-        <td colspan="2">Outbounds</td>
+        <td colspan="2">{{ $t('components.Outbounds.title') }}</td>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <th>Create new</th>
+        <th>{{ $t('components.Outbounds.label_create_new') }}</th>
         <td>
           <select class="input_option" v-model="selectedProxyType" @change="edit_proxy()">
             <option></option>
@@ -33,13 +33,15 @@
               {{ proxy.streamSettings?.security }}
             </span>
             <span class="row-buttons">
-              <a class="button_gen button_gen_small" href="#" @click.prevent="show_transport(proxy)">transport</a>
-              <a class="button_gen button_gen_small" href="#" @click.prevent="reorder_proxy(proxy)"
-                v-if="index > 0">&#8593;</a>
+              <a class="button_gen button_gen_small" href="#" @click.prevent="show_transport(proxy)">
+                {{ $t('labels.transport') }}
+              </a>
+              <a class="button_gen button_gen_small" href="#" @click.prevent="reorder_proxy(proxy)" v-if="index > 0"
+                :title="$t('labels.redorder')">&#8593;</a>
               <a class="button_gen button_gen_small" href="#" @click.prevent="edit_proxy(proxy)"
-                title="edit">&#8494;</a>
+                :title="$t('labels.edit')">&#8494;</a>
               <a class="button_gen button_gen_small" href="#" @click.prevent="remove_proxy(proxy)"
-                title="delete">&#10005;</a>
+                :title="$t('labels.delete')">&#10005;</a>
             </span>
           </td>
         </tr>
@@ -78,6 +80,8 @@ import SocksOutbound from "./outbounds/SocksOutbound.vue";
 import ShadowsocksOutbound from "./outbounds/ShadowsocksOutbound.vue";
 import TrojanOutbound from "./outbounds/TrojanOutbound.vue";
 import WireguardOutbound from "./outbounds/WireguardOutbound.vue";
+
+import { I18n } from 'vue-i18n';
 
 export default defineComponent({
   name: "Outbounds",
@@ -123,7 +127,7 @@ export default defineComponent({
     },
 
     async remove_proxy(proxy: XrayOutboundObject<IProtocolType>) {
-      if (!confirm("Are you sure you want to delete this outbound?")) return;
+      if (!window.confirm(this.$t('components.Outbounds.alert_delete_confirm'))) return;
       let index = this.config.outbounds.indexOf(proxy);
       this.config.outbounds.splice(index, 1);
     },
@@ -131,7 +135,7 @@ export default defineComponent({
     async save_proxy() {
       let proxy = this.proxyRef.proxy;
       if (this.config.outbounds.filter((i) => i != proxy && i.tag == proxy.tag).length > 0) {
-        alert("Tag  already exists, please choose another one");
+        alert(this.$t('components.Outbounds.alert_tag_exists'));
         return;
       }
 

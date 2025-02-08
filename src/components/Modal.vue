@@ -16,7 +16,7 @@
         <footer class="xray-modal-footer">
           <span class="row-buttons">
             <slot name="footer">
-              <button @click.prevent="close" class="button_gen button_gen_small">Close</button>
+              <button @click.prevent="close" class="button_gen button_gen_small">{{ $t('labels.close') }}</button>
             </slot>
           </span>
         </footer>

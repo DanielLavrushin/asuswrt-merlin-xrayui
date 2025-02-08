@@ -241,7 +241,7 @@ class Engine {
     return responseConfig;
   }
 
-  async executeWithLoadingProgress(action: Function, windowReload = true): Promise<void> {
+  async executeWithLoadingProgress(action: () => Promise<void>, windowReload = true): Promise<void> {
     let loadingProgress = new EngineLoadingProgress(0, "Please, wait");
     window.showLoading(null, loadingProgress);
 
@@ -254,6 +254,7 @@ class Engine {
   async checkLoadingProgress(loadingProgress: EngineLoadingProgress, windowReload = true): Promise<void> {
     return new Promise((resolve, reject) => {
       const checkProgressInterval = setInterval(() => {
+        // eslint-disable-next-line
         (async () => {
           try {
             const response = await this.getXrayResponse();

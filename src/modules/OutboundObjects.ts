@@ -62,7 +62,7 @@ class XrayVmessOutboundObject implements IProtocolType {
     return this.vnext.find((server) => server.address === address) !== undefined;
   };
   getUserNames = (): string[] => {
-    return this.vnext?.flatMap((c) => c.users?.map((u) => u.email).filter((email): email is string => !!email) ?? []) ?? [];
+    return this.vnext?.flatMap((c) => c.users?.map((u) => u.email).filter((email): email is string => !!email) ?? []);
   };
 }
 
@@ -84,7 +84,7 @@ class XrayHttpOutboundObject implements IProtocolType {
     return this.servers.find((server) => server.address === address) !== undefined;
   };
   getUserNames = (): string[] => {
-    return this.servers?.flatMap((c) => c.users?.map((u) => u.user).filter((email): email is string => !!email) ?? []) ?? [];
+    return this.servers?.flatMap((c) => c.users?.map((u) => u.user).filter((email): email is string => !!email) ?? []);
   };
 }
 class XrayShadowsocksOutboundObject implements IProtocolType {
@@ -95,7 +95,7 @@ class XrayShadowsocksOutboundObject implements IProtocolType {
 
   normalize = () => void 0;
   getUserNames = (): string[] => {
-    return this.servers?.flatMap((c) => c.users?.map((u) => u.email).filter((email): email is string => !!email) ?? []) ?? [];
+    return this.servers?.flatMap((c) => c.users?.map((u) => u.email).filter((email): email is string => !!email) ?? []);
   };
 }
 
@@ -110,7 +110,7 @@ class XrayTrojanOutboundObject implements IProtocolType {
     return this.servers.find((server) => server.address === address) !== undefined;
   };
   getUserNames = (): string[] => {
-    return this.servers?.flatMap((c) => c.users?.map((u) => u.user).filter((email): email is string => !!email) ?? []) ?? [];
+    return this.servers?.flatMap((c) => c.users?.map((u) => u.user).filter((email): email is string => !!email) ?? []);
   };
 }
 

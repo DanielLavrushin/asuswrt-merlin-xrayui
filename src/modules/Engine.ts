@@ -241,7 +241,7 @@ class Engine {
     return responseConfig;
   }
 
-  async executeWithLoadingProgress(action: Function, windowReload = true): Promise<void> {
+  async executeWithLoadingProgress(action: () => Promise<void>, windowReload = true): Promise<void> {
     let loadingProgress = new EngineLoadingProgress(0, "Please, wait");
     window.showLoading(null, loadingProgress);
 

@@ -5,7 +5,9 @@ import App from "./App.vue";
 import { EngineLoadingProgress } from "./modules/Engine";
 
 import en from "./translations/en.json";
+import de from "./translations/de.json";
 import ru from "./translations/ru.json";
+import uk from "./translations/uk.json";
 
 window.hint = (message: string) => {
   window.overlib(message);
@@ -90,11 +92,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const i18n = createI18n({
     locale: currentLanguage,
+    globalInjection: true,
     fallbackLocale: "en",
     legacy: false,
+    warnHtmlMessage: false,
     messages: {
       en,
-      ru
+      de,
+      ru,
+      uk
     }
   });
 

@@ -145,9 +145,9 @@ export default defineComponent({
         case "httpupgrade":
           transport.value.httpupgradeSettings = transport.value.httpupgradeSettings ?? new XrayStreamHttpUpgradeSettingsObject();
           return NetworkHttpUpgrade;
-        case "splithttp":
-          transport.value.splithttpSettings = transport.value.splithttpSettings ?? new XrayStreamSplitHttpSettingsObject();
-          return NetworkSplitHttp;
+        /* case "splithttp":
+           transport.value.splithttpSettings = transport.value.splithttpSettings ?? new XrayStreamSplitHttpSettingsObject();
+           return NetworkSplitHttp;*/
         case "grpc":
           transport.value.grpcSettings = transport.value.grpcSettings ?? new XrayStreamGrpcSettingsObject();
           return NetworkGrpc;

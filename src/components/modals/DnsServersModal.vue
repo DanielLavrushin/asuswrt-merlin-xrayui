@@ -1,17 +1,16 @@
 <template>
   <modal ref="modal" title="Servers">
     <div class="formfontdesc">
-      <p>A list of DNS servers, which can be either DNS addresses (in string form) or DnsServerObjects (advanced
-        options).</p>
+      <p>{{ $t('components.DnsServersModal.modal_desc') }}</p>
       <table width="100%" bordercolor="#6b8fa3" class="FormTable SettingsTable tableApi_table">
         <thead>
           <tr>
-            <td colspan="2">List</td>
+            <td colspan="2">{{ $t('components.DnsServersModal.list') }}</td>
           </tr>
         </thead>
         <tbody>
           <tr class="row_title">
-            <th>Server</th>
+            <th>{{ $t('components.DnsServersModal.server') }}</th>
             <th></th>
           </tr>
           <tr class="row_title">
@@ -19,18 +18,19 @@
               <input v-model="server.address" class="input_25_table" placeholder="address" />
             </td>
             <td>
-              <button @click.prevent="advanced()" class="button_gen button_gen_small">advanced</button>
-              <button @click.prevent="addSimple()" class="button_gen button_gen_small">add</button>
+              <button @click.prevent="advanced()" class="button_gen button_gen_small">{{
+                $t('components.DnsServersModal.advanced') }}</button>
+              <button @click.prevent="addSimple()" class="button_gen button_gen_small">{{ $t('labels.add') }}</button>
             </td>
           </tr>
           <tr v-if="!servers.length" class="data_tr">
-            <td colspan="2" style="color: #ffcc00">No hosts defined</td>
+            <td colspan="2" style="color: #ffcc00">{{ $t('components.DnsServersModal.no_hosts_defined') }}</td>
           </tr>
           <tr v-for="(server, index) in servers" :key="index" class="data_tr">
             <td>{{ getServer(server) }}</td>
             <td>
               <button v-if="typeof server === 'string' == false" @click.prevent="manage(server, index)"
-                class="button_gen button_gen_small">manage</button>
+                class="button_gen button_gen_small">{{ $t('labels.edit') }}</button>
               <button @click.prevent="remove(server)" class="button_gen button_gen_small">&#10005;</button>
               <a class="button_gen button_gen_small" href="#" @click="reorder(server, index)"
                 v-if="index > 0">&#8593;</a>
@@ -42,31 +42,36 @@
   </modal>
 
   <!-- Advanced Modal -->
-  <modal ref="modalAdvanced" title="Advanced options" width="500px">
+  <modal ref="modalAdvanced" :title="$t('components.DnsServersModal.modal_server_title')" width="500px">
     <div class="formfontdesc">
       <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
         <thead>
           <tr>
-            <td colspan="2">Server Settings</td>
+            <td colspan="2">{{ $t('components.DnsServersModal.modal_server_title2') }}</td>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <th>Address
+            <th>
+              {{ $t('components.DnsServersModal.label_address') }}
             </th>
             <td>
               <input type="text" v-model="server.address" class="input_25_table" placeholder="address" />
             </td>
           </tr>
           <tr>
-            <th>Client ip
+            <th>
+              {{ $t('components.DnsServersModal.label_client_ip') }}
+              <hint v-html="$t('components.DnsServersModal.hint_client_ip')"></hint>
             </th>
             <td>
               <input type="text" v-model="server.clientIP" class="input_25_table" placeholder="client ip" />
             </td>
           </tr>
           <tr>
-            <th>Port
+            <th>
+              {{ $t('components.DnsServersModal.label_port') }}
+              <hint v-html="$t('components.DnsServersModal.hint_port')"></hint>
             </th>
             <td>
               <input type="number" v-model="server.port" class="input_6_table" placeholder="port" />
@@ -74,7 +79,10 @@
             </td>
           </tr>
           <tr>
-            <th>Domains</th>
+            <th>
+              {{ $t('components.DnsServersModal.label_domains') }}
+              <hint v-html="$t('components.DnsServersModal.hint_domains')"></hint>
+            </th>
             <td>
               <div class="textarea-wrapper">
                 <textarea v-model="domains" rows="10"></textarea>
@@ -82,7 +90,10 @@
             </td>
           </tr>
           <tr>
-            <th>Expected IPs</th>
+            <th>
+              {{ $t('components.DnsServersModal.label_expected_ips') }}
+              <hint v-html="$t('components.DnsServersModal.hint_expected_ips')"></hint>
+            </th>
             <td>
               <div class="textarea-wrapper">
                 <textarea v-model="ips" rows="10"></textarea>
@@ -90,7 +101,10 @@
             </td>
           </tr>
           <tr>
-            <th>Skip fallback</th>
+            <th>
+              {{ $t('components.DnsServersModal.label_skip_fallback') }}
+              <hint v-html="$t('components.DnsServersModal.hint_skip_fallback')"></hint>
+            </th>
             <td>
               <input type="checkbox" v-model="server.skipFallback" />
               <span class="hint-color">default: false</span>
@@ -101,19 +115,22 @@
 
     </div>
     <template v-slot:footer>
-      <input class="button_gen button_gen_small" type="button" value="Save" @click.prevent="addOrUpdateComplex()" />
+      <input class="button_gen button_gen_small" type="button" :value="$t('labels.save')"
+        @click.prevent="addOrUpdateComplex()" />
     </template>
   </modal>
 </template>
 <script lang="ts">
-import { defineComponent, ref, watch } from "vue";
+import { defineComponent, ref } from "vue";
 import { XrayDnsServerObject } from "../../modules/CommonObjects";
 import Modal from "../Modal.vue";
+import Hint from "../Hint.vue";
 
 export default defineComponent({
   name: "DnsServersModal",
   components: {
     Modal,
+    Hint
   },
   props: {
     servers: {
@@ -123,6 +140,7 @@ export default defineComponent({
   },
   methods: {
     addSimple() {
+      if (!this.server?.address) return;
       if (this.server.address.trim()) {
         this.servers.push(this.server.address.trim());
         this.server.address = "";

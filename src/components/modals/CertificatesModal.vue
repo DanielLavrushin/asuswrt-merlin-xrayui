@@ -1,13 +1,11 @@
 <template>
-  <modal width="755" ref="certModal" title="Manage TLS Certificate">
+  <modal width="755" ref="certModal" :title="$t('components.CertificatesModal.modal_title')">
     <table class="FormTable modal-form-table">
       <tbody>
         <tr>
-          <th>OCSP stapling
-            <hint>
-              OCSP stapling update interval in seconds for certificate hot reload. Default value is `3600`, i.e. one
-              hour.
-            </hint>
+          <th>
+            {{ $t("components.CertificatesModal.label_ocsp_stapling") }}
+            <hint v-html="$t('components.CertificatesModal.hint_ocsp_stapling')"></hint>
           </th>
           <td>
             <input v-model="certificate.ocspStapling" type="number" maxlength="4" class="input_6_table"
@@ -16,32 +14,17 @@
           </td>
         </tr>
         <tr>
-          <th>Load only once
-            <hint>
-              Load only once. When set to `true`, it will disable certificate hot reload and OCSP stapling feature.
-              <blockquote>
-                **Warning**:
-                When set to `true`, `OCSP` stapling will be `disabled`.
-              </blockquote>
-            </hint>
+          <th> {{ $t("components.CertificatesModal.label_one_time_loading") }}
+            <hint v-html="$t('components.CertificatesModal.hint_one_time_loading')"></hint>
           </th>
           <td>
             <input v-model="certificate.oneTimeLoading" type="checkbox" class="input" />
           </td>
         </tr>
         <tr>
-          <th>Usage
-            <hint>
-              Certificate usage, default value is `encipherment`.
-              <ul>
-                <li>`encipherment`: The certificate is used for TLS authentication and encryption.</li>
-                <li>`verify`: The certificate is used to verify the remote TLS certificate. When using this option, the
-                  current certificate must be a CA certificate.</li>
-                <li>`issue`: The certificate is used to issue other certificates. When using this option, the current
-                  certificate must be a CA certificate.</li>
-              </ul>
-
-            </hint>
+          <th>
+            {{ $t("components.CertificatesModal.label_usage") }}
+            <hint v-html="$t('components.CertificatesModal.hint_usage')"></hint>
           </th>
           <td>
             <template v-for="(opt, index) in usageOptions" :key="index">
@@ -53,29 +36,18 @@
           </td>
         </tr>
         <tr v-if="certificate.usage == 'issue'">
-          <th>Build chain
-            <hint>
-              Only valid when usage is issue. When set to `true`, the CA certificate will be appended to leaf
-              certificate
-              as chain
-              during issuing certificates.
-              <blockquote>
-                Root certificates should not be embedded in the certificate chain. This option is only applicable when
-                the
-                signing CA certificate is an intermediate certificate.
-              </blockquote>
-            </hint>
+          <th>
+            {{ $t("components.CertificatesModal.label_build_chain") }}
+            <hint v-html="$t('components.CertificatesModal.hint_build_chain')"></hint>
           </th>
           <td>
             <input v-model="certificate.buildChain" type="checkbox" class="input" />
           </td>
         </tr>
         <tr>
-          <th>Path to .crt file
-            <hint>
-              Path to the certificate file. When the certificate content is empty, the content will be read from the
-              file.
-            </hint>
+          <th>
+            {{ $t("components.CertificatesModal.label_certificate_file") }}
+            <hint v-html="$t('components.CertificatesModal.hint_certificate_file')"></hint>
           </th>
           <td>
             <input v-model="certificate.certificateFile" type="text" class="input_25_table"
@@ -83,10 +55,9 @@
           </td>
         </tr>
         <tr>
-          <th>Certificate content
-            <hint>
-              Certificate content. When the certificate file path is empty, the content will be read from the field.
-            </hint>
+          <th>
+            {{ $t("components.CertificatesModal.label_certificate_content") }}
+            <hint v-html="$t('components.CertificatesModal.hint_certificate_content')"></hint>
           </th>
           <td>
             <div class="textarea-wrapper">
@@ -96,10 +67,9 @@
           </td>
         </tr>
         <tr>
-          <th>Path to .key file
-            <hint>
-              Path to the key file. When the key content is empty, the content will be read from the file.
-            </hint>
+          <th>
+            {{ $t("components.CertificatesModal.label_key_file") }}
+            <hint v-html="$t('components.CertificatesModal.hint_key_file')"></hint>
           </th>
           <td>
             <input v-model="certificate.keyFile" type="text" class="input_25_table"
@@ -107,10 +77,9 @@
           </td>
         </tr>
         <tr>
-          <th>Key content
-            <hint>
-              Key content. When the key file path is empty, the content will be read from the field.
-            </hint>
+          <th>
+            {{ $t("components.CertificatesModal.label_key_content") }}
+            <hint v-html="$t('components.CertificatesModal.hint_key_content')"></hint>
           </th>
           <td>
             <div class="textarea-wrapper">

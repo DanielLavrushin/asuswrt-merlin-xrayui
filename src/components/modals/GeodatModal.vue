@@ -1,16 +1,16 @@
 <template>
-  <modal ref="modal" title="Geodat Files Manager" width="700px">
+  <modal ref="modal" :title="$t('components.GeodatModal.modal_title')" width="700px">
     <div class="formfontdesc">
       <div style="text-align: left;">
         <p>
-          Here you can create, edit and manage your own geosite/geoip data files.
+          {{ $t('components.GeodatModal.modal_desc') }}
         </p>
       </div>
       <table class="FormTable modal-form-table">
         <tbody v-if="isLoading">
           <tr>
             <th>
-              Loading...
+              {{ $t('components.GeodatModal.loading') }}
             </th>
             <td>
               <div class="loading"></div>
@@ -21,11 +21,11 @@
         <tbody v-if="geodata && !isLoading">
           <tr>
             <th>
-              Select a file
+              {{ $t('components.GeodatModal.label_select_file') }}
             </th>
             <td>
               <select v-model="file.tag" class="input_option" @change="loadContent">
-                <option value>create a new file</option>
+                <option value>{{ $t('components.GeodatModal.option_create_new_file') }}</option>
                 <option v-for="opt in geodata.tags" :key="opt" :value="opt">
                   {{ opt }}
                 </option>
@@ -37,20 +37,17 @@
         <tbody v-if="geodata && isSelected && !isLoading">
           <tr v-if="isNewFile">
             <th>
-              Tag
-              <hint>
-                Tag is the name of the file. It must be unique. You ill use it as `ext:xrayui:{tag}`
-              </hint>
+              {{ $t('components.GeodatModal.label_tag') }}
+              <hint v-html="$t('components.GeodatModal.hint_tag')"></hint>
             </th>
             <td>
               <input v-model="file.tag" class="input_25_table" placeholder="tag" />
             </td>
           </tr>
           <tr>
-            <th>Content
-              <hint>
-                <p>Here you can edit the content of the tag file.</p>
-              </hint>
+            <th>
+              {{ $t('components.GeodatModal.label_content') }}
+              <hint v-html="$t('components.GeodatModal.hint_content')"></hint>
             </th>
             <td>
               <div class="textarea-wrapper">
@@ -63,13 +60,12 @@
     </div>
     <template v-slot:footer>
       <div>
-        <input class="button_gen button_gen_small" type="button" value="delete" @click.prevent="deletdat"
+        <input class="button_gen button_gen_small" type="button" :value="$t('labels.delete')" @click.prevent="deletdat"
           v-show="!isNewFile && isSelected" />
-        <input class="button_gen button_gen_small" type="button" value="recompile all"
-          title="usefull when you edit your tag files directly on your router and only want to recompile the xrayui geodata."
-          @click.prevent="complile_all" v-if="!isSelected" />
-        <input class="button_gen button_gen_small" type="button" value="compile" v-show="isSelected"
-          title="save tag file content and compile into xrayui geodata." @click.prevent="compile" />
+        <input class="button_gen button_gen_small" type="button" :value="$t('components.GeodatModal.recompile_all')"
+          :title="$t('components.GeodatModal.hit_recompile_all')" @click.prevent="complile_all" v-if="!isSelected" />
+        <input class="button_gen button_gen_small" type="button" :value="$t('components.GeodatModal.compile')"
+          v-show="isSelected" :title="$t('components.GeodatModal.hit_compile')" @click.prevent="compile" />
       </div>
     </template>
   </modal>
@@ -81,6 +77,8 @@ import Modal from "../Modal.vue";
 import Hint from "../Hint.vue";
 import engine, { EngineGeodatConfig, GeodatTagRequest, SubmtActions } from "../../modules/Engine";
 import axios from "axios";
+import { useI18n } from 'vue-i18n';
+
 
 export default defineComponent({
   name: "GeodatModal",
@@ -92,7 +90,8 @@ export default defineComponent({
   props: {
   },
 
-  setup(props, { emit }) {
+  setup() {
+    const { t } = useI18n();
     const modal = ref();
     const isLoading = ref(false);
     const isSelected = ref(false);
@@ -137,7 +136,7 @@ export default defineComponent({
     const compile = async () => {
       await engine.executeWithLoadingProgress(async () => {
         if (!file.value.content?.length) {
-          alert("Well... Nice try, but you need to write something into the content field.");
+          alert(t('components.GeodatModal.alert_empty_content'));
           return;
         }
 
@@ -146,7 +145,7 @@ export default defineComponent({
     };
 
     const deletdat = async () => {
-      if (!confirm("Are you sure you want to delete this tag file?")) return;
+      if (!confirm(t('components.GeodatModal.alert_delete_confirm'))) return;
 
       await engine.executeWithLoadingProgress(async () => {
         await engine.submit(SubmtActions.geoDataCustomDeleteTag, { tag: file.value.tag });

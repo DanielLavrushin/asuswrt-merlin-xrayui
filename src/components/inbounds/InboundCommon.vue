@@ -1,9 +1,7 @@
 <template>
   <tr>
-    <th>Tag
-      <hint>
-        The identifier of this inbound connection, used to locate this connection in other configurations.
-      </hint>
+    <th>{{ $t('components.InboundCommon.label_tag') }}
+      <hint v-html="$t('components.InboundCommon.hint_tag')"></hint>
     </th>
     <td>
       <input type="text" class="input_20_table" v-model="inbound.tag" />
@@ -11,13 +9,9 @@
     </td>
   </tr>
   <tr>
-    <th>The listening address
-      <hint>
-        The listening address, either an IP address or a Unix domain socket. The default value is "0.0.0.0", which means
-        accepting connections on all network interfaces.
-
-        An available system IP address can be specified.
-      </hint>
+    <th>
+      {{ $t('components.InboundCommon.label_listen') }}
+      <hint v-html="$t('components.InboundCommon.hint_listen')"></hint>
     </th>
     <td>
       <input type="text" maxlength="15" class="input_20_table" v-model="inbound.listen"
@@ -27,9 +21,9 @@
     </td>
   </tr>
   <tr>
-    <th>Listening Port
-      <hint> Listening port for inbound connections. Xray listens for inbound connections on that port.
-      </hint>
+    <th>
+      {{ $t('components.InboundCommon.label_port') }}
+      <hint v-html="$t('components.InboundCommon.hint_port')"></hint>
     </th>
     <td>
       <span style="float: left" v-if="engine.mode == 'server'">
@@ -44,7 +38,8 @@
           autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
       </span>
       <span class="row-buttons">
-        <a class="button_gen button_gen_small" href="#" @click="show_allocate(inbound)">Port allocation</a>
+        <a class="button_gen button_gen_small" href="#" @click="show_allocate(inbound)">{{
+          $t('components.InboundCommon.label_port_allocate') }}</a>
       </span>
       <allocate-modal ref="allocateModal" />
     </td>

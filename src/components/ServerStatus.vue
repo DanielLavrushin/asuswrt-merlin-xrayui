@@ -2,12 +2,12 @@
   <table width="100%" bordercolor="#6b8fa3" class="FormTable">
     <thead>
       <tr>
-        <td colspan="2">Configuration</td>
+        <td colspan="2">{{ $t('components.ServerStatus.configuration') }}</td>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <th>Server Status</th>
+        <th>{{ $t('components.ServerStatus.connection_status') }}</th>
         <td>
           <span class="label" :class="{ 'label-success': isRunning, 'label-error': !isRunning }"
             v-text="statusLabel"></span>
@@ -16,14 +16,18 @@
               title="try to retrieve a server-side error">!</a>
           </span>
           <span class="row-buttons">
-            <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(restart)">Restart</a>
-            <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(stop)">Stop</a>
-            <a class="button_gen button_gen_small" href="/ext/xrayui/xray-config.json" target="_blank">Show config</a>
+            <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(restart)"> {{
+              $t('labels.restart') }}</a>
+            <a class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(stop)"> {{ $t('labels.stop')
+              }}</a>
+            <input class="button_gen button_gen_small" type="button" :value="$t('labels.show_config')"
+              @click.prevent="show_config_modal()" />
           </span>
+          <config-modal ref="configModal"></config-modal>
         </td>
       </tr>
       <tr>
-        <th>General options</th>
+        <th>{{ $t('components.ClientStatus.general_options') }}</th>
         <td>
           <span class="row-buttons">
             <input class="button_gen button_gen_small" type="button" value="manage"
@@ -41,11 +45,14 @@ import { defineComponent, ref } from "vue";
 import engine, { SubmtActions } from "../modules/Engine";
 import GeneralOptionsModal from "./modals/GeneralOptionsModal.vue";
 import { XrayObject } from "@/modules/XrayConfig";
+import ConfigModal from "./modals/ConfigModal.vue";
+import { useI18n } from 'vue-i18n';
 
 export default defineComponent({
   name: "ServerStatus",
   components: {
     GeneralOptionsModal,
+    ConfigModal
   },
   data() {
     return {
@@ -56,8 +63,8 @@ export default defineComponent({
   },
   computed: {
     statusLabel(): string {
-      return this.isRunning ? "is up & running" : "stopped";
-    },
+      return this.isRunning ? this.$t('components.ClientStatus.xray_running') : this.$t('components.ClientStatus.xray_stopped');
+    }
   },
   methods: {
     async testConfig() {
@@ -84,14 +91,19 @@ export default defineComponent({
   setup(props) {
     const config = ref(props.config);
     const generalOptionsModal = ref();
+    const configModal = ref();
     const manage_general_options = () => {
       generalOptionsModal.value.show();
     };
-
+    const show_config_modal = () => {
+      configModal.value.show();
+    };
     return {
       config,
+      configModal,
       generalOptionsModal,
-      manage_general_options
+      manage_general_options,
+      show_config_modal
     };
   },
 });

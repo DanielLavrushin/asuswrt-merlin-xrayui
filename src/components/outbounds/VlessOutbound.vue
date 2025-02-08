@@ -1,21 +1,18 @@
 <template>
   <div class="formfontdesc">
-    <p>VLESS is a stateless lightweight transport protocol, which is divided into inbound and outbound parts, and can be
-      used as a bridge between Xray clients and servers. Unlike VMess, VLESS does not rely on system time, and the
-      authentication method is also UUID.</p>
+    <p>{{ $t('components.VlessOutbound.modal_desc') }}</p>
     <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="2">VLESS</td>
+          <td colspan="2">{{ $t('components.VlessOutbound.modal_title') }}</td>
         </tr>
       </thead>
       <tbody>
         <outbound-common :proxy="proxy"></outbound-common>
         <tr>
-          <th>Server address
-            <hint>
-              Server address, pointing to the server, supporting domain names, `IPv4` and `IPv6`.
-            </hint>
+          <th>
+            {{ $t('components.VlessOutbound.label_address') }}
+            <hint v-html="$t('components.VlessOutbound.hint_address')"></hint>
           </th>
           <td>
             <input type="text" class="input_20_table" v-model="proxy.settings.vnext[0].address" autocomplete="off"
@@ -24,10 +21,9 @@
           </td>
         </tr>
         <tr>
-          <th>Server port
-            <hint>
-              Server port, usually the same as the port listened by the server.
-            </hint>
+          <th>
+            {{ $t('components.VlessOutbound.label_port') }}
+            <hint v-html="$t('components.VlessOutbound.hint_port')"></hint>
           </th>
           <td>
             <input type="number" maxlength="5" class="input_6_table" v-model="proxy.settings.vnext[0].port"

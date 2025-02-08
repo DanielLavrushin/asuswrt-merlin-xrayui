@@ -1,19 +1,18 @@
 <template>
   <div class="formfontdesc">
-    <p>VMess is an encrypted transport protocol commonly used as a bridge between Xray clients and servers.</p>
+    <p v-html="$t('components.VmessOutbound.modal_desc')"></p>
     <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="2">VMess</td>
+          <td colspan="2" v-html="$t('components.VmessOutbound.modal_title')"></td>
         </tr>
       </thead>
       <tbody>
         <outbound-common :proxy="proxy"></outbound-common>
         <tr>
-          <th>Server address
-            <hint>
-              The server address, which can be an IP address or domain name.
-            </hint>
+          <th>
+            {{ $t('components.VmessOutbound.label_address') }}
+            <hint v-html="$t('components.VlessOutbound.hint_address')"></hint>
           </th>
           <td>
             <input type="text" class="input_20_table" v-model="proxy.settings.vnext[0].address" autocomplete="off"
@@ -22,10 +21,9 @@
           </td>
         </tr>
         <tr>
-          <th>Server port
-            <hint>
-              The port number that the server is listening on. **Required**.
-            </hint>
+          <th>
+            {{ $t('components.VmessOutbound.label_port') }}
+            <hint v-html="$t('components.VmessOutbound.hint_port')"></hint>
           </th>
           <td>
             <input type="number" maxlength="5" class="input_6_table" v-model="proxy.settings.vnext[0].port"

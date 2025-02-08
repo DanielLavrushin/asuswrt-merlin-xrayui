@@ -1,4 +1,4 @@
-/* eslint-disable unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import { createApp } from "vue";
 import { createI18n } from "vue-i18n";

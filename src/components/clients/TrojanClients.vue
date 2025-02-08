@@ -29,8 +29,8 @@
         <td>{{ client.email }}</td>
         <td>{{ client.password }}</td>
         <td>
-          <button @click.prevent="showQrCode(client)" class="button_gen button_gen_small">manage</button>
-          <button @click.prevent="removeClient(client)" class="button_gen button_gen_small">remove</button>
+          <button @click.prevent="editClient(client, index)" class="button_gen button_gen_small">&#8494;</button>
+          <button @click.prevent="removeClient(client)" class="button_gen button_gen_small">&#10005;</button>
         </td>
       </tr>
     </tbody>
@@ -57,25 +57,39 @@ export default defineComponent({
   },
   methods: {
 
-    resetNewForm() {
-      this.newClient.email = "";
-      this.newClient.password = "";
-    },
+  },
+  props: {
+    clients: Array<XrayTrojanClientObject>,
+  },
 
-    showQrCode(client: XrayTrojanClientObject) {
-      this.qr_content = JSON.stringify(xrayConfig);
-      this.modalQr.value?.show();
-    },
+  setup(props) {
 
-    removeClient(client: XrayTrojanClientObject) {
+    const editingIndex = ref<number | null>(null);
+    const clients = ref<XrayTrojanClientObject[]>(props.clients ?? []);
+    const newClient = ref<XrayTrojanClientObject>(new XrayTrojanClientObject());
+    const modalQr = ref();
+    let qr_content = ref("");
+
+
+    const resetNewForm = () => {
+      newClient.value.email = "";
+      newClient.value.password = "";
+    };
+
+    const showQrCode = (client: XrayTrojanClientObject) => {
+      qr_content.value = JSON.stringify(xrayConfig);
+      modalQr.value?.show();
+    };
+
+    const removeClient = (client: XrayTrojanClientObject) => {
       if (!confirm("Are you sure you want to remove this client?")) return;
-      this.clients.splice(this.clients.indexOf(client), 1);
-    },
+      clients.value.splice(clients.value.indexOf(client), 1);
+    };
 
-    addClient() {
+    const addClient = () => {
       let client = new XrayTrojanClientObject();
-      client.email = this.newClient.email;
-      client.password = this.newClient.password;
+      client.email = newClient.value.email;
+      client.password = newClient.value.password;
       if (!client.email) {
         alert("Email is required");
         return;
@@ -84,20 +98,16 @@ export default defineComponent({
         alert("Password is required");
         return;
       }
-      this.clients.push(client);
-      this.resetNewForm();
-    },
-  },
-  props: {
-    clients: Array<XrayTrojanClientObject>,
-  },
+      clients.value.push(client);
+      resetNewForm();
+    };
 
-  setup(props) {
-
-    const clients = ref<XrayTrojanClientObject[]>(props.clients ?? []);
-    const newClient = ref<XrayTrojanClientObject>(new XrayTrojanClientObject());
-    const modalQr = ref();
-    let qr_content = ref("");
+    const editClient = (client: XrayTrojanClientObject, index: number) => {
+      newClient.value.email = client.email;
+      newClient.value.password = client.password;
+      editingIndex.value = index;
+      clients.value.splice(clients.value.indexOf(client), 1);
+    }
 
     return {
       flows: XrayOptions.clientFlowOptions,
@@ -106,6 +116,10 @@ export default defineComponent({
       qr_size: 500,
       newClient,
       modalQr,
+      addClient,
+      editClient,
+      removeClient,
+      showQrCode
     };
   },
 });

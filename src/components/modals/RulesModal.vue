@@ -8,7 +8,7 @@
       </thead>
       <tbody v-if="rules.length">
         <tr v-for="(r, index) in rules.filter((r) => !r.isSystem())" :key="index">
-          <td>{{ $t('components.RulesModal.rule_no', [index + 1]) }}</td>
+          <th>{{ $t('components.RulesModal.rule_no', [index + 1]) }}</th>
           <td style="color: #ffcc00">{{ !r.name || r.name == "" ? getRuleName(r) : r.name }}</td>
           <td>{{ r.outboundTag }}</td>
           <td>
@@ -398,6 +398,22 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.FormTable tr th {
+  width: auto
+}
+
+.FormTable tr:hover th {
+  text-shadow: 2px 2px 25px #fc0;
+}
+
+.FormTable tr:hover>* {
+  border-left-color: #fc0;
+}
+
+.FormTable tr:hover>:last-child {
+  border-right-color: #fc0;
+}
+
 .FormTable tbody tr.rule-system td text {
   float: left;
   padding-left: 5px;

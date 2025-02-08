@@ -101,3 +101,21 @@ export default defineComponent({
   margin-bottom: 10px;
 }
 </style>
+<style>
+.FormTable tr.proxy-row th {
+  font-weight: bold;
+}
+
+.FormTable tr.proxy-row:hover th {
+  text-shadow: 2px 2px 25px #fc0;
+}
+
+.FormTable tr.proxy-row:hover>:last-child {
+  border-right-color: #fc0;
+}
+
+
+.FormTable tr.proxy-row:hover>* {
+  border-left-color: #fc0;
+}
+</style>

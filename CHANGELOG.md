@@ -1,5 +1,14 @@
 # XRAYUI Changelog
 
+## [0.xx.x] - 2025-02-xx
+
+> _Important: Please clear your browser cache (e.g.**Ctrl+F5**) to ensure that outdated files are updated._
+
+- ADDED: An `edit` button to edit already created proxy users.
+- UPDATED: Swap tags and proxy labels in Inbounds and Outbounds display.
+- IMPROVED: Enhance UI for proxy rows with improved styling display.
+- IMPROVED: Enhance UI for eouting rules rows with improved styling display.
+
 ## [0.35.1] - 2025-02-08
 
 > _Important: Please clear your browser cache (e.g.**Ctrl+F5**) to ensure that outdated files are updated._

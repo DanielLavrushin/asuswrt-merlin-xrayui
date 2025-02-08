@@ -38,7 +38,8 @@
         <td style="min-width:120px">{{ client.flow }}</td>
         <td>
           <qr v-if="isServerMode" ref="modalQr" :client="client" :proxy="proxy"></qr>
-          <button @click.prevent="removeClient(client)" class="button_gen button_gen_small">remove</button>
+          <button @click.prevent="editClient(client, index)" class="button_gen button_gen_small">&#8494;</button>
+          <button @click.prevent="removeClient(client)" class="button_gen button_gen_small">&#10005;</button>
         </td>
       </tr>
     </tbody>
@@ -60,41 +61,6 @@ export default defineComponent({
     modal,
     Qr
   },
-  methods: {
-
-    resetNewForm() {
-      this.newClient.id = engine.uuid();
-      this.newClient.email = "";
-      this.newClient.flow = XrayOptions.clientFlowOptions[0];
-    },
-
-    removeClient(client: XrayVlessClientObject) {
-      if (!confirm("Are you sure you want to remove this client?")) return;
-      this.clients.splice(this.clients.indexOf(client), 1);
-    },
-
-    addClient() {
-      let client = new XrayVlessClientObject();
-      client.id = this.newClient.id;
-      client.email = this.newClient.email;
-      client.flow = this.newClient.flow;
-      if (!client.email) {
-        alert("Email is required");
-        return;
-      }
-      if (!client.id) {
-        alert("Id is required");
-        return;
-      }
-
-      if (this.mode == "outbound") {
-        client.encryption = "none";
-      }
-
-      this.clients.push(client);
-      this.resetNewForm();
-    },
-  },
   props: {
     proxy: Object,
     clients: Array<XrayVlessClientObject>,
@@ -102,6 +68,7 @@ export default defineComponent({
   },
 
   setup(props) {
+    const editingIndex = ref<number | null>(null);
     const clients = ref<XrayVlessClientObject[]>(props.clients ?? []);
     const newClient = ref<XrayVlessClientObject>(new XrayVlessClientObject());
     const mode = ref(props.mode);
@@ -118,13 +85,55 @@ export default defineComponent({
         break;
     }
 
+    const resetNewForm = () => {
+      newClient.value.id = engine.uuid();
+      newClient.value.email = "";
+      newClient.value.flow = XrayOptions.clientFlowOptions[0];
+    };
 
+    const removeClient = (client: XrayVlessClientObject) => {
+      if (!confirm("Are you sure you want to remove this client?")) return;
+      clients.value.splice(clients.value.indexOf(client), 1);
+    };
+
+    const addClient = () => {
+      let client = new XrayVlessClientObject();
+      client.id = newClient.value.id;
+      client.email = newClient.value.email;
+      client.flow = newClient.value.flow;
+      if (!client.email) {
+        alert("Email is required");
+        return;
+      }
+      if (!client.id) {
+        alert("Id is required");
+        return;
+      }
+
+      if (mode.value == "outbound") {
+        client.encryption = "none";
+      }
+
+      clients.value.push(client);
+      resetNewForm();
+    };
+
+    const editClient = (client: XrayVlessClientObject, index: number) => {
+      newClient.value.id = client.id;
+      newClient.value.email = client.email;
+      newClient.value.flow = client.flow;
+      editingIndex.value = index;
+      clients.value.splice(clients.value.indexOf(client), 1);
+    }
     return {
       flows,
       clients,
       newClient,
       modalQr,
       isServerMode: engine.mode == "server",
+      editClient,
+      removeClient,
+      addClient,
     };
   },
 });

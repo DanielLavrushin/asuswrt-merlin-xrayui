@@ -39,8 +39,9 @@
         <td>{{ client.method }}</td>
         <td>
           <button @click.prevent="showQrCode(client)" class="button_gen button_gen_small"
-            title="open user's configuration">m</button>
-          <button @click.prevent="removeClient(client)" class="button_gen button_gen_small" title="delete">d</button>
+            title="open user's configuration">QR</button>
+          <button @click.prevent="removeClient(client)" class="button_gen button_gen_small"
+            title="delete">&#10005;</button>
         </td>
       </tr>
     </tbody>

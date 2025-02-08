@@ -37,7 +37,8 @@
         <td v-if="securities.length">{{ client.security }}</td>
         <td>
           <qr ref="modalQr" :client="client" :proxy="proxy"></qr>
-          <button @click.prevent="removeClient(client)" class="button_gen button_gen_small">remove</button>
+          <button @click.prevent="editClient(client, index)" class="button_gen button_gen_small">&#8494;</button>
+          <button @click.prevent="removeClient(client)" class="button_gen button_gen_small">&#10005;</button>
         </td>
       </tr>
     </tbody>
@@ -96,6 +97,7 @@ export default defineComponent({
   },
 
   setup(props) {
+    const editingIndex = ref<number | null>(null);
     const clients = ref<XrayVmessClientObject[]>(props.clients ?? []);
     const newClient = ref<XrayVmessClientObject>(new XrayVmessClientObject());
     newClient.value.id = engine.uuid();
@@ -111,6 +113,41 @@ export default defineComponent({
 
     const span = mode.value == "outbound" ? 4 : 3;
 
+    const resetNewForm = () => {
+      newClient.value.id = engine.uuid();
+      newClient.value.email = "";
+      newClient.value.security = "auto";
+    };
+
+    const removeClient = (client: XrayVmessClientObject) => {
+      if (!confirm("Are you sure you want to remove this client?")) return;
+      clients.value.splice(clients.value.indexOf(client), 1);
+    };
+
+    const addClient = () => {
+      let client = new XrayVmessClientObject();
+      client.id = newClient.value.id;
+      client.email = newClient.value.email;
+      client.security = newClient.value.security;
+      if (!client.email) {
+        alert("Email is required");
+        return;
+      }
+      if (!client.id) {
+        alert("Id is required");
+        return;
+      }
+      clients.value.push(client);
+      resetNewForm();
+    };
+
+    const editClient = (client: XrayVmessClientObject, index: number) => {
+      newClient.value.id = client.id;
+      newClient.value.email = client.email;
+      editingIndex.value = index;
+      clients.value.splice(clients.value.indexOf(client), 1);
+    };
+
     return {
       proxy: props.proxy,
       securities: mode.value == "outbound" ? ["aes-128-gcm", "chacha20-poly1305", "auto", "none", "zero"] : [],
@@ -118,7 +155,10 @@ export default defineComponent({
       clients,
       newClient,
       modalQr,
+      editClient,
+      removeClient,
+      addClient
     };
-  },
+  }
 });
 </script>

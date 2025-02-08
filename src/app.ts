@@ -1,3 +1,5 @@
+/* eslint-disable unsafe-assignment */
+
 import { createApp } from "vue";
 import { createI18n } from "vue-i18n";
 
@@ -90,7 +92,6 @@ window.updateLoadingProgress = (progress?: EngineLoadingProgress) => {
 document.addEventListener("DOMContentLoaded", () => {
   const currentLanguage = (window.xray.router.language || "en").toLowerCase();
 
-  // eslint-disable unsafe-assignment
   const i18n = createI18n({
     locale: currentLanguage,
     globalInjection: true,

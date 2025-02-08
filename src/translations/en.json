@@ -7,6 +7,7 @@
     "show_config": "show config",
     "manage": "manage",
     "add": "add",
+    "delete": "delete",
     "server": "server",
     "client": "client",
     "transport": "transport",

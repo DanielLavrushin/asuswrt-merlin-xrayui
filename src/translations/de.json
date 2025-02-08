@@ -7,6 +7,7 @@
     "show_config": "Konfiguration anzeigen",
     "manage": "Verwalten",
     "add": "Hinzufügen",
+    "delete": "Löschen",
     "server": "Server",
     "client": "Client",
     "transport": "Transport",

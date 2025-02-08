@@ -90,6 +90,7 @@ window.updateLoadingProgress = (progress?: EngineLoadingProgress) => {
 document.addEventListener("DOMContentLoaded", () => {
   const currentLanguage = (window.xray.router.language || "en").toLowerCase();
 
+  // eslint-disable unsafe-assignment
   const i18n = createI18n({
     locale: currentLanguage,
     globalInjection: true,

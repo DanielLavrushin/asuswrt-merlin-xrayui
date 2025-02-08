@@ -2,14 +2,20 @@
 
 ## [0.35.0] - 2025-02-08
 
+> _Important: Please clear your browser cache (e.g.**ctrl+f5**) to ensure that outdated files are updated._
+
 - ADDED: Languages support.
 
 ## [0.34.3] - 2025-02-06
+
+> _Important: Please clear your browser cache (e.g.**ctrl+f5**) to ensure that outdated files are updated._
 
 - FIXED: Resolved an issue during configuration import where routing rules were incorrectly assigned to a default `proxy` tag instead of the imported one (#21).
 - ADDED: Introduced an `Outbound` column to the routing rules list for improved clarity.
 
 ## [0.34.2] - 2025-02-05
+
+> _Important: Please clear your browser cache (e.g.**ctrl+f5**) to ensure that outdated files are updated._
 
 - ADDED: Ability to define an array of users on the routing rule level. The rule will now take effect when the source user's email matches any address in the array.
 - FIXED: Resolved an issue where QR code PNG images with transparent backgrounds could not be read.
@@ -18,6 +24,8 @@
 - UPDATED: Relocated XRAYUI options (`Check Connection` and `Restart on Reboot`) to the General Options window.
 
 ## [0.34.0] - 2025-02-05
+
+> _Important: Please clear your browser cache (e.g.**ctrl+f5**) to ensure that outdated files are updated._
 
 - ADDED: Version command to display the current XRAYUI version. Usage: `/jffs/scripts/xrayui version`.
 - ADDED: Symlink to `/jffs/scripts/xrayui` for direct invocation of `xrayui`.
@@ -29,6 +37,8 @@
 - UPDATED: Due to limitations in `curl` on some routers, the connection-check logic was moved from the server-side to the client-side, and the endpoint was switched from `freeapi.com` to `ip-api.com`.
 
 ## [0.33.0] - 2025-02-04
+
+> _Important: Please clear your browser cache (e.g.**ctrl+f5**) to ensure that outdated files are updated._
 
 - UPDATED: Introduced a `General options` row in the `Configuration` section.
 - ADDED: A new option, `Check connection to xray server`, in the `General options` section of Client mode. Enabling it allows XRAYUI to check the connection status of the outbound proxy. After restarting Xray, the check sends a connection request to an external service ([freeipapi.com](https://freeipapi.com)) to verify that the connection is truly established via the outbound proxy. Next to the status, a flag representing the X-RAY outbound server `country` location appears to indicate the connection status. Please note that it takes a couple of seconds after restart to validate the connection. When this option is enabled, XRAYUI automatically adds some system configurations (an inbound `SOCKS` proxy and a system routing rule).

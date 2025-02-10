@@ -1,5 +1,12 @@
 # XRAYUI Changelog
 
+## [0.35.3] - 2025-02-10
+
+> _Important: Please clear your browser cache (e.g.**Ctrl+F5**) to ensure that outdated files are updated._
+
+- ADDED: Support for older `Shadowsocks` encryption methods (`aes-256-gcm`, `aes-128-gcm`, `chacha20-ietf-poly1305`, `none`, and `plain`), alongside the recommended 2022 ciphers.
+- CHANGED: Improved password generation logic, setting the password to an empty string for encryption methods that require no key.
+
 ## [0.35.2] - 2025-02-09
 
 > _Important: Please clear your browser cache (e.g.**Ctrl+F5**) to ensure that outdated files are updated._

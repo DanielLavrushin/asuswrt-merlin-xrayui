@@ -1,5 +1,16 @@
 # XRAYUI Changelog
 
+## [0.3x.x] - 2025-02-xx
+
+> _Important: Please clear your browser cache (e.g.**Ctrl+F5**) to ensure that outdated files are updated._
+
+- ADDED: Display of `X-Ray Core` process uptime, showing how long the process has been running.
+- ADDED: `X-Ray Core` version label in the `Configuration` section, aligned to the right.
+- FIXED: An incorrect modal window translation in the general settings.
+- FIXED: A bug where pressing the reconnect button spawned a new X-Ray process instead of restarting it.
+- UPDATED: When importing a configuration, DNS settings now revert to their default values (`queryStrategy` set to `UseIP` and `domainStrategy` set to `AsIs`).
+- REMOVED: DNS `queryStrategy=UseIP` from the config, since it’s already the default.
+
 ## [0.35.3] - 2025-02-10
 
 > _Important: Please clear your browser cache (e.g.**Ctrl+F5**) to ensure that outdated files are updated._

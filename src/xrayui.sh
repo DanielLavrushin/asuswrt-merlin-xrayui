@@ -1483,7 +1483,7 @@ update_community_geodata() {
 
 }
 
-set_community_geodata_dates() {
+collect_initial_response() {
     local geoip_file="/opt/sbin/geoip.dat"
     local geosite_file="/opt/sbin/geosite.dat"
 
@@ -1505,6 +1505,12 @@ set_community_geodata_dates() {
         printlog true "Error: Failed to update JSON content with file dates." $CERR
         return 1
     fi
+
+    local uptime_xray=$(get_proc_uptime "xray")
+    json_content=$(echo "$json_content" | jq --argjson uptime "$uptime_xray" '.xray.uptime = $uptime')
+
+    local XRAY_VERSION=$(xray version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
+    json_content=$(echo "$json_content" | jq --arg xray_ver "$XRAY_VERSION" --arg xrayui_ver "$XRAYUI_VERSION" '.xray.ui_version = $xrayui_ver | .xray.core_version = $xray_ver')
 
     echo "$json_content" >"$XRAY_UI_RESPONSE_FILE"
     if [ $? -eq 0 ]; then
@@ -1861,6 +1867,20 @@ webapp_restart() {
     webapp_start
 }
 
+get_proc_uptime() {
+    local uptime_s=$(cut -d. -f1 /proc/uptime)
+    local pid=$(pidof "$1")
+
+    local localstart_time_jiffies=$(awk '{print $22}' /proc/$pid/stat)
+
+    local jiffies_per_sec=100
+
+    local process_start_s=$((localstart_time_jiffies / jiffies_per_sec))
+
+    local proc_uptime=$((uptime_s - process_start_s))
+    echo $proc_uptime
+}
+
 case "$1" in
 version)
     show_version
@@ -1935,8 +1955,6 @@ service_event)
         if [ "$3" = "communityupdate" ]; then
             update_community_geodata
             update_loading_progress "Community geodata files updated successfully." 100
-        elif [ "$3" = "communitydatecheck" ]; then
-            set_community_geodata_dates
         elif [ "$3" = "customtagfiles" ]; then
             get_custom_geodata_tagfiles
             update_loading_progress "Custom tagfiles retrieved successfully." 100
@@ -1981,6 +1999,9 @@ service_event)
             ;;
         "generatedefaultconfig")
             generate_default_config
+            ;;
+        initresponse)
+            collect_initial_response
             ;;
         esac
         exit 0

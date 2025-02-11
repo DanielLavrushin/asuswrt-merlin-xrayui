@@ -1,6 +1,7 @@
 {
   "labels": {
     "import": "Importieren",
+    "connect": "Verbinden",
     "reconnect": "Neu verbinden",
     "restart": "Neustarten",
     "stop": "Stopp",

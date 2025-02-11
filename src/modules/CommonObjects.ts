@@ -199,7 +199,7 @@ class XrayDnsObject {
 
   public normalize(): this {
     this.clientIp = this.clientIp == "" ? undefined : this.clientIp;
-    this.queryStrategy = this.queryStrategy == "" ? undefined : this.queryStrategy;
+    this.queryStrategy = this.queryStrategy == "" || this.queryStrategy == "UseIP" ? undefined : this.queryStrategy;
     this.disableCache = !this.disableCache ? undefined : this.disableCache;
     this.disableFallback = !this.disableFallback ? undefined : this.disableFallback;
     this.disableFallbackIfMatch = !this.disableFallbackIfMatch ? undefined : this.disableFallbackIfMatch;
@@ -211,9 +211,6 @@ class XrayDnsObject {
 
   public default = (): this => {
     this.queryStrategy = "UseIP";
-    this.servers = [];
-    this.servers.push("https+local://dns.google/dns-query");
-
     return this;
   };
 }
@@ -254,7 +251,6 @@ class XrayRoutingObject {
   }
 
   public default = (outboundTag: string, unblockItems: string[] | undefined): this => {
-    this.domainStrategy = "IPIfNonMatch";
     this.rules = [];
     if (!unblockItems || unblockItems.length == 0) {
       const rule = new XrayRoutingRuleObject();

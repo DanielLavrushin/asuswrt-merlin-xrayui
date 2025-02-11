@@ -1,6 +1,7 @@
 {
   "labels": {
     "import": "import",
+    "connect": "connect",
     "reconnect": "reconnect",
     "restart": "restart",
     "stop": "stop",
@@ -445,6 +446,10 @@
       "hint_port": "The port number of the DNS server, such as 53. If not specified, the default is 53. This item is not applicable when using DOH, DOHL, or DOQL modes, and non-standard ports should be specified in the URL.",
       "hint_expected_ips": "A list of IP ranges in the same format as in routing configuration. When this item is configured, Xray DNS will verify the returned IP addresses and only return addresses that are included in the expectIPs list. If this item is not configured, the IP address will be returned as is.",
       "hint_skip_fallback": "true means to skip this server when performing DNS fallback queries, and the default is false, which means not to skip."
+    },
+    "ProcessUptime": {
+      "label": "X-RAY Core uptime",
+      "formatted_time": "{0}d {1}h {2}m {3}s"
     }
   }
 }

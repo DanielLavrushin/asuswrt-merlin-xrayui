@@ -51,7 +51,7 @@ class EngineResponseConfig {
   public wireguard?: EngineWireguard;
   public reality?: EngineReality;
   public certificates?: EngineSsl;
-  public xray?: { test: string };
+  public xray?: { test: string; uptime: number; ui_version: string; core_version: string };
   public geodata?: EngineGeodatConfig = new EngineGeodatConfig();
   public loading?: EngineLoadingProgress;
   public connection_check?: EngineClientConnectionStatus;
@@ -85,14 +85,14 @@ enum SubmtActions {
   toggleStartupOption = "xrayui_configuration_togglestartup",
   configurationGenerateDefaultConfig = "xrayui_configuration_generatedefaultconfig",
   geodataCommunityUpdate = "xrayui_geodata_communityupdate",
-  geodataCommunityDates = "xrayui_geodata_communitydatecheck",
   geoDataCustomGetTags = "xrayui_geodata_customtagfiles",
   geoDataRecompile = "xrayui_geodata_customrecompile",
   geoDataRecompileAll = "xrayui_geodata_customrecompileall",
   geoDataCustomDeleteTag = "xrayui_geodata_customdeletetag",
   fetchXrayLogs = "xrayui_configuration_logs_fetch",
   updateLogsLevel = "xrayui_configuration_logs_changeloglevel",
-  checkConnection = "xrayui_configuration_checkconnection"
+  checkConnection = "xrayui_configuration_checkconnection",
+  initResponse = "xrayui_configuration_initresponse"
 }
 
 class Engine {
@@ -235,7 +235,6 @@ class Engine {
     const response = await this.getXrayResponse();
     return response.connection_check;
   }
-
   async getXrayResponse(): Promise<EngineResponseConfig> {
     const response = await axios.get<EngineResponseConfig>("/ext/xrayui/xray-ui-response.json");
     let responseConfig = response.data;
@@ -494,4 +493,4 @@ class Engine {
 let engine = new Engine();
 export default engine;
 
-export { EngineClientConnectionStatus, EngineLoadingProgress, EngineGeodatConfig, GeodatTagRequest, SubmtActions, Engine, engine };
+export { EngineResponseConfig, EngineClientConnectionStatus, EngineLoadingProgress, EngineGeodatConfig, GeodatTagRequest, SubmtActions, Engine, engine };

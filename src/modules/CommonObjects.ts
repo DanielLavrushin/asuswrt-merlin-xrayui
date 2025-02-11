@@ -230,6 +230,7 @@ class XrayRoutingObject {
   public domainStrategy? = "AsIs";
   public domainMatcher? = "hybrid";
   public rules?: XrayRoutingRuleObject[] = [];
+  public disabled_rules?: XrayRoutingRuleObject[] = [];
   public portsPolicy?: XrayPortsPolicy = new XrayPortsPolicy();
 
   public normalize(): this {
@@ -346,7 +347,9 @@ class XrayRoutingRuleObject {
   static connectionCheckRuleName = "sys:connection-check";
   static networkOptions = ["", "tcp", "udp", "tcp,udp"];
   static protocolOptions = ["http", "tls", "bittorrent"];
+  public idx: number = 0;
   public name?: string;
+  public enabled: boolean = true;
   public domainMatcher? = "hybrid";
   public domain?: string[];
   public ip?: string[];

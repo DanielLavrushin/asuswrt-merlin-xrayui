@@ -17,7 +17,6 @@
           () => uiResponse?.value.xray?.core_version,
           (value) => {
             if (value) {
-              console.log("xray_version", value);
               xray_version.value = value;
             }
           }

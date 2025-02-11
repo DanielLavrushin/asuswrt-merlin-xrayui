@@ -46,7 +46,7 @@
           {{ countRules() }} item(s)
           <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click.prevent="manage_rules()" />
           <span class="hint-color"></span>
-          <rules-modal ref="modal" v-model:rules="routing.rules"></rules-modal>
+          <rules-modal ref="modal" v-model:rules="routing.rules" v-model:disabled_rules="routing.disabled_rules"></rules-modal>
         </td>
       </tr>
       <tr v-if="routing.rules">
@@ -90,7 +90,7 @@
 <script lang="ts">
   import { defineComponent, ref, watch, inject, onMounted, Ref } from "vue";
 
-  import { XrayRoutingObject } from "../modules/CommonObjects";
+  import { XrayRoutingObject, XrayRoutingRuleObject } from "../modules/CommonObjects";
   import xrayConfig from "../modules/XrayConfig";
   import engine, { EngineResponseConfig, SubmtActions } from "../modules/Engine";
   import RulesModal from "./modals/RulesModal.vue";
@@ -150,7 +150,7 @@
       };
 
       const manage_rules = async () => {
-        modal.value.show();
+        modal.value.show((rules: XrayRoutingRuleObject[], disabled_rules: XrayRoutingRuleObject[]) => {});
       };
 
       const countRules = () => {

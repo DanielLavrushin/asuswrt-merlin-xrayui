@@ -446,11 +446,18 @@ class Engine {
 
       if (response.data.routing) {
         this.xrayConfig.routing = plainToInstance(XrayRoutingObject, response.data.routing) as XrayRoutingObject;
+        this.xrayConfig.routing.portsPolicy = plainToInstance(XrayPortsPolicy, response.data.routing.portsPolicy ?? new XrayPortsPolicy()) as XrayPortsPolicy;
         if (this.xrayConfig.routing.rules) {
-          this.xrayConfig.routing.portsPolicy = plainToInstance(XrayPortsPolicy, response.data.routing.portsPolicy ?? new XrayPortsPolicy()) as XrayPortsPolicy;
           this.xrayConfig.routing.rules.forEach((rule, index) => {
             if (this.xrayConfig.routing?.rules) {
               this.xrayConfig.routing.rules[index] = plainToInstance(XrayRoutingRuleObject, rule) as XrayRoutingRuleObject;
+            }
+          });
+        }
+        if (this.xrayConfig.routing.disabled_rules) {
+          this.xrayConfig.routing.disabled_rules.forEach((rule, index) => {
+            if (this.xrayConfig.routing?.disabled_rules) {
+              this.xrayConfig.routing.disabled_rules[index] = plainToInstance(XrayRoutingRuleObject, rule) as XrayRoutingRuleObject;
             }
           });
         }

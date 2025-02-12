@@ -7,7 +7,7 @@
             <th>{{ $t("components.GeneralOptionsModal.start_xray_on_reboot") }}</th>
             <td>
               <label class="go-option">
-                <input type="checkbox" v-model="startup" @click="updatestartup" />
+                <input type="checkbox" v-model="options.startup" @click="updatestartup" />
               </label>
             </td>
           </tr>
@@ -28,24 +28,101 @@
           </tr>
         </tbody>
       </table>
+      <table class="FormTable modal-form-table">
+        <thead>
+          <tr>
+            <td colspan="2">{{ $t("components.GeneralOptionsModal.geodad_header") }}</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>{{ $t("components.GeneralOptionsModal.label_geoip_url") }}</th>
+            <td>
+              <input v-model="options.geo_ip_url" type="text" class="input_32_table" />
+            </td>
+          </tr>
+          <tr>
+            <th>{{ $t("components.GeneralOptionsModal.label_geosite_url") }}</th>
+            <td>
+              <input v-model="options.geo_site_url" type="text" class="input_32_table" />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <table class="FormTable modal-form-table">
+        <thead>
+          <tr>
+            <td colspan="2">{{ $t("components.GeneralOptionsModal.logs_header") }}</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>{{ $t("components.GeneralOptionsModal.label_logs_enable_access") }}</th>
+            <td>
+              <label class="go-option">
+                <input type="checkbox" v-model="options.logs_access" />
+              </label>
+            </td>
+          </tr>
+          <tr>
+            <th>{{ $t("components.GeneralOptionsModal.label_logs_enable_error") }}</th>
+            <td>
+              <label class="go-option">
+                <input type="checkbox" v-model="options.logs_error" />
+              </label>
+            </td>
+          </tr>
+          <tr v-if="options.logs_error">
+            <th>{{ $t("components.GeneralOptionsModal.label_logs_level") }}</th>
+            <td>
+              <select class="input_option" v-model="options.logs_level">
+                <option v-for="level in log_levels" :value="level">{{ level }}</option>
+              </select>
+              <span class="hint-color">`none` also turn-off access logs</span>
+            </td>
+          </tr>
+          <tr>
+            <th>{{ $t("components.GeneralOptionsModal.label_logs_enable_dns") }}</th>
+            <td>
+              <label class="go-option">
+                <input type="checkbox" v-model="options.logs_dns" />
+              </label>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-    <template #footer> </template>
+    <template #footer>
+      <input class="button_gen button_gen_small" type="button" :value="$t('labels.save')" @click.prevent="save" />
+    </template>
   </modal>
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, watch } from "vue";
-  import engine, { SubmtActions } from "../../modules/Engine";
+  import { defineComponent, inject, Ref, ref, watch } from "vue";
+  import engine, { EngineResponseConfig, SubmtActions } from "../../modules/Engine";
   import { XrayObject } from "@/modules/XrayConfig";
   import { XrayProtocol, XrayRoutingRuleObject } from "@/modules/CommonObjects";
+  import Hint from "@/components/Hint.vue";
 
   import Modal from "./../Modal.vue";
   import { XrayInboundObject, XraySocksInboundObject } from "@/modules/InboundObjects";
 
+  class GeneralOptions {
+    public startup = false;
+    public logs_access = false;
+    public logs_error = false;
+    public logs_dns = false;
+    public logs_level = "warning";
+    public geo_ip_url = "";
+    public geo_site_url = "";
+  }
+
   export default defineComponent({
     name: "GeneralOptionsModal",
     components: {
-      Modal
+      Modal,
+      Hint
     },
     props: {
       config: {
@@ -54,10 +131,11 @@
       }
     },
     setup(props) {
+      const uiResponse = inject<Ref<EngineResponseConfig>>("uiResponse")!;
+      const config = ref<XrayObject>(props.config);
       const modal = ref();
       const conModal = ref();
-
-      const startup = ref<boolean>(window.xray.custom_settings.xray_startup === "y");
+      const options = ref<GeneralOptions>(new GeneralOptions());
 
       const checkconenabled = ref<boolean>(props.config.routing?.rules?.find((r) => r.name === XrayRoutingRuleObject.connectionCheckRuleName) !== undefined);
 
@@ -68,7 +146,21 @@
         }
       );
 
+      const save = async () => {
+        await engine.executeWithLoadingProgress(async () => {
+          await engine.submit(SubmtActions.generalOptionsApply, options.value, 3000);
+        });
+      };
+
       const show = () => {
+        options.value = new GeneralOptions();
+        options.value.startup = window.xray.custom_settings.xray_startup === "y";
+        options.value.logs_access = config.value.log?.access != "none";
+        options.value.logs_error = config.value.log?.error != "none";
+        options.value.logs_dns = config.value.log?.dnsLog ?? false;
+        options.value.logs_level = config.value.log?.loglevel ?? "warning";
+        options.value.geo_ip_url = uiResponse?.value.geodata?.geoip_url ?? "";
+        options.value.geo_site_url = uiResponse?.value.geodata?.geosite_url ?? "";
         modal.value.show();
       };
 
@@ -129,12 +221,14 @@
       };
 
       return {
-        startup,
+        options,
         modal,
         conModal,
         checkconenabled,
         config: props.config,
+        log_levels: ["none", "debug", "info", "warning", "error"],
         show,
+        save,
         updatestartup,
         setcheckconnection,
         concheckcancel,

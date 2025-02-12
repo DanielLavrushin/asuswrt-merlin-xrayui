@@ -58,6 +58,8 @@ class EngineResponseConfig {
 }
 class EngineGeodatConfig {
   public community?: Record<string, string>;
+  public geoip_url?: string;
+  public geosite_url?: string;
   public tags?: string[] = [];
 }
 
@@ -92,7 +94,8 @@ enum SubmtActions {
   fetchXrayLogs = "xrayui_configuration_logs_fetch",
   updateLogsLevel = "xrayui_configuration_logs_changeloglevel",
   checkConnection = "xrayui_configuration_checkconnection",
-  initResponse = "xrayui_configuration_initresponse"
+  initResponse = "xrayui_configuration_initresponse",
+  generalOptionsApply = "xrayui_configuration_applygeneraloptions"
 }
 
 class Engine {
@@ -204,6 +207,11 @@ class Engine {
       config.routing.normalize();
       if (config.routing.rules) {
         config.routing.rules.forEach((rule) => {
+          rule.normalize();
+        });
+      }
+      if (config.routing.disabled_rules) {
+        config.routing.disabled_rules.forEach((rule) => {
           rule.normalize();
         });
       }

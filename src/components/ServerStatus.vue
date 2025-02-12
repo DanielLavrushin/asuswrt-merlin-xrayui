@@ -24,6 +24,7 @@
           <config-modal ref="configModal"></config-modal>
         </td>
       </tr>
+      <process-uptime></process-uptime>
       <tr>
         <th>{{ $t("components.ClientStatus.general_options") }}</th>
         <td>
@@ -44,6 +45,7 @@
   import { XrayObject } from "@/modules/XrayConfig";
   import ConfigModal from "./modals/ConfigModal.vue";
   import XrayVersion from "./XrayVersion.vue";
+  import ProcessUptime from "./ProcessUptime.vue";
   import { useI18n } from "vue-i18n";
 
   export default defineComponent({
@@ -51,7 +53,8 @@
     components: {
       GeneralOptionsModal,
       ConfigModal,
-      XrayVersion
+      XrayVersion,
+      ProcessUptime
     },
     data() {
       return {

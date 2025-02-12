@@ -51,7 +51,15 @@
       "check_xray_connection": "Перевірити з'єднання з сервером XRAY",
       "start_xray_on_reboot": "Запустити XRAY при перезавантаженні роутера",
       "modalConnectTitle": "Перевірка з'єднання XRAY",
-      "modalConnectCheckDescription": "<p>Ця опція перевіряє, чи працює з'єднання, надсилаючи запит до <a href=\"https://ip-api.com/\" target=\"_blank\">ip-api.com</a> через вихідний проксі під час запуску.</p><p>XRAYUI додасть системне правило до правил маршрутизації та створить вхідний SOCKS-проксі для цієї перевірки. Ці системні налаштування позначені тегом <code>sys</code> і залишаться прихованими в інтерфейсі.</p>"
+      "modalConnectCheckDescription": "<p>Ця опція перевіряє, чи працює з'єднання, надсилаючи запит до <a href=\"https://ip-api.com/\" target=\"_blank\">ip-api.com</a> через вихідний проксі під час запуску.</p><p>XRAYUI додасть системне правило до правил маршрутизації та створить вхідний SOCKS-проксі для цієї перевірки. Ці системні налаштування позначені тегом <code>sys</code> і залишаться прихованими в інтерфейсі.</p>",
+      "logs_header": "Логи",
+      "label_logs_enable_access": "Включити логи доступу",
+      "label_logs_enable_error": "Включити логи помилок",
+      "label_logs_enable_dns": "Включити DNS-логи",
+      "label_logs_level": "Рівень логування",
+      "geodad_header": "GeoIP/GeoSite метадані",
+      "label_geoip_url": "URL GeoIP",
+      "label_geosite_url": "URL GeoSite"
     },
     "ImportConfig": {
       "import_config_file": "Імпортувати файл конфігурації"

@@ -6,7 +6,7 @@ import { XrayOutboundObject } from "./OutboundObjects";
 import { XrayProtocol, XrayProtocolMode } from "./Options";
 
 class XrayObject {
-  public log?: XrayLogObject;
+  public log?: XrayLogObject = new XrayLogObject();
   public dns?: XrayDnsObject = new XrayDnsObject();
   public inbounds: XrayInboundObject<IProtocolType>[] = [];
   public outbounds: XrayOutboundObject<IProtocolType>[] = [];

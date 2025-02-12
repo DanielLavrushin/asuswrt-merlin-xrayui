@@ -379,6 +379,10 @@
         disabledRules.value = [...props.disabled_rules];
         rules.value = [...props.rules];
 
+        disabledRules.value.forEach((r, idx) => {
+          r.enabled = false;
+        });
+
         modalList.value?.show(() => {
           reindexRules();
           onCloseAction(rules.value, disabledRules.value);

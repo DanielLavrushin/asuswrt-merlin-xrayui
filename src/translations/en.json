@@ -51,7 +51,15 @@
       "check_xray_connection": "Check connection to xray server",
       "start_xray_on_reboot": "Start X-RAY on router reboot",
       "modalConnectTitle": "XRAY Connection Check",
-      "modalConnectCheckDescription": "<p>This option verifies that the actual connection is working by sending a request to <a href=\"https://ip-api.com/\" target=\"_blank\">ip-api.com</a> through the outbound proxy at startup.</p><p>XRAYUI will insert a system rule into the routing rules and create a SOCKS inbound proxy for this check. These system settings are tagged with <code>sys</code> and will remain hidden in the UI.</p>"
+      "modalConnectCheckDescription": "<p>This option verifies that the actual connection is working by sending a request to <a href=\"https://ip-api.com/\" target=\"_blank\">ip-api.com</a> through the outbound proxy at startup.</p><p>XRAYUI will insert a system rule into the routing rules and create a SOCKS inbound proxy for this check. These system settings are tagged with <code>sys</code> and will remain hidden in the UI.</p>",
+      "logs_header": "Logs",
+      "label_logs_enable_access": "Enable access logs",
+      "label_logs_enable_error": "Enable error logs",
+      "label_logs_enable_dns": "Enable DNS logs",
+      "label_logs_level": "Log level",
+      "geodad_header": "GeoIP/GeoSite Metadata",
+      "label_geoip_url": "GeoIP dat URL",
+      "label_geosite_url": "GeoSite dat URL"
     },
     "ImportConfig": {
       "import_config_file": "Import config file"

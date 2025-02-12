@@ -27,6 +27,8 @@ CWARN='\033[0;33m'
 CINFO='\033[0;36m'
 CRESET='\033[0m'
 
+DEFAULT_GEOIP_URL="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
+DEFAULT_GEOSITE_URL="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
 #error_handler() {}
 #trap 'error_handler' EXIT
 
@@ -45,6 +47,17 @@ show_version() {
 init_xrayui_config() {
     if [ -f "$XRAYUI_CONFIG_FILE" ]; then
         . "$XRAYUI_CONFIG_FILE"
+    fi
+}
+
+update_xrayui_config() {
+    local key="$1"
+    local value="$2"
+    [ -f "$XRAYUI_CONFIG_FILE" ] || touch "$XRAYUI_CONFIG_FILE"
+    if grep -qE "^${key}=" "$XRAYUI_CONFIG_FILE"; then
+        sed -i "s|^${key}=.*|${key}=\"${value}\"|" "$XRAYUI_CONFIG_FILE"
+    else
+        echo "${key}=\"${value}\"" >>"$XRAYUI_CONFIG_FILE"
     fi
 }
 
@@ -885,6 +898,55 @@ switch_mode() {
 
     am_settings_set xray_mode $mode_type
 }
+apply_general_options() {
+    update_loading_progress "Applying general settings..." 0
+    printlog true "Applying general settings..."
+
+    json_content=$(cat "$XRAY_CONFIG")
+
+    local genopts=$(reconstruct_payload)
+
+    # setting logs
+    local log_level=$(echo "$genopts" | jq -r '.logs_level')
+    local logs_access=$(echo "$genopts" | jq -r '.logs_access')
+    local logs_error=$(echo "$genopts" | jq -r '.logs_error')
+    local logs_dns=$(echo "$genopts" | jq -r '.logs_dns')
+
+    local geosite_url=$(echo "$genopts" | jq -r '.geo_site_url')
+    local geoip_url=$(echo "$genopts" | jq -r '.geo_ip_url')
+
+    printlog true "$log_level $logs_access $logs_error $logs_dns $geosite_url $geoip_url"
+
+    json_content=$(echo "$json_content" | jq --arg loglevel "$log_level" '.log.loglevel = $loglevel')
+
+    if [ "$logs_access" = "true" ]; then
+        json_content=$(echo "$json_content" | jq '.log.access = "/tmp/xray_access.log"')
+    else
+        json_content=$(echo "$json_content" | jq '.log.access = "none"')
+    fi
+
+    if [ "$logs_error" = "true" ]; then
+        json_content=$(echo "$json_content" | jq '.log.error = "/tmp/xray_error.log"')
+    else
+        json_content=$(echo "$json_content" | jq '.log.error = "none"')
+    fi
+
+    if [ "$logs_dns" = "true" ]; then
+        json_content=$(echo "$json_content" | jq '.log.dnsLog = true')
+    else
+        json_content=$(echo "$json_content" | jq 'del(.log.dnsLog)')
+    fi
+
+    echo "$json_content" >"$XRAY_CONFIG"
+
+    update_xrayui_config "geosite_url" "$geosite_url"
+    update_xrayui_config "geoip_url" "$geoip_url"
+
+    update_loading_progress "General settings applied." 100
+
+    exit 0
+
+}
 
 apply_config() {
     update_loading_progress "Applying new server configuration..." 0
@@ -991,11 +1053,16 @@ cleanup_payloads() {
 }
 
 ensure_ui_response_file() {
-    if [ ! -f "$XRAY_UI_RESPONSE_FILE" ]; then
+    FD=386
+    eval exec "$FD>$XRAYUI_LOCKFILE"
+
+    if [ ! -f "$XRAY_UI_RESPONSE_FILE" ] || [ "$(head -c1 "$XRAY_UI_RESPONSE_FILE")" != "{" ]; then
         printlog true "Creating XRAY UI response file: $XRAY_UI_RESPONSE_FILE"
         echo '{"xray":{}}' >"$XRAY_UI_RESPONSE_FILE"
         chmod 600 "$XRAY_UI_RESPONSE_FILE"
     fi
+
+    flock -u "$FD"
 }
 
 test_xray_config() {
@@ -1447,8 +1514,8 @@ update_community_geodata() {
     update_loading_progress "Updating community geodata files..." 0
     init_xrayui_config
 
-    local geosite_url="${geosite_url:-https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat}"
-    local geoip_url="${geoip_url:-https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat}"
+    local geositeurl="${geosite_url:-$DEFAULT_GEOSITE_URL}"
+    local geoipurl="${geoip_url:-$DEFAULT_GEOIP_URL}"
 
     local target_dir=$(dirname "$(which xray)")
 
@@ -1456,7 +1523,7 @@ update_community_geodata() {
 
     printlog true "Downloading geosite.dat..."
     update_loading_progress "Downloading geosite.dat..."
-    curl -L "$geosite_url" -o "$target_dir/geosite.dat"
+    curl -L "$geositeurl" -o "$target_dir/geosite.dat"
     if [ $? -ne 0 ]; then
         printlog true "Failed to download geosite.dat." $CERR
         return 1
@@ -1464,7 +1531,7 @@ update_community_geodata() {
 
     printlog true "Downloading geoip.dat..."
     update_loading_progress "Downloading geoip.dat..."
-    curl -L "$geoip_url" -o "$target_dir/geoip.dat"
+    curl -L "$geoipurl" -o "$target_dir/geoip.dat"
     if [ $? -ne 0 ]; then
         printlog true "Failed to download geoip.dat." $CERR
         return 1
@@ -1484,6 +1551,9 @@ update_community_geodata() {
 }
 
 collect_initial_response() {
+    ensure_ui_response_file
+    init_xrayui_config
+
     local geoip_file="/opt/sbin/geoip.dat"
     local geosite_file="/opt/sbin/geosite.dat"
 
@@ -1491,7 +1561,12 @@ collect_initial_response() {
     geoip_date=$(date -r "$geoip_file" "+%Y-%m-%d %H:%M:%S")
     geosite_date=$(date -r "$geosite_file" "+%Y-%m-%d %H:%M:%S")
 
-    ensure_ui_response_file
+    local geositeurl="${geosite_url:-$DEFAULT_GEOSITE_URL}"
+    local geoipurl="${geoip_url:-$DEFAULT_GEOIP_URL}"
+
+    printlog true "geosite_url: $geositeurl"
+    printlog true "geoip_url: $geoipurl"
+
     local json_content
     if [ -f "$XRAY_UI_RESPONSE_FILE" ]; then
         json_content=$(cat "$XRAY_UI_RESPONSE_FILE")
@@ -1499,8 +1574,8 @@ collect_initial_response() {
         json_content="{}"
     fi
 
-    json_content=$(echo "$json_content" | jq --arg geoip "$geoip_date" --arg geosite "$geosite_date" \
-        '.geodata.community["geoip.dat"] = $geoip | .geodata.community["geosite.dat"] = $geosite')
+    json_content=$(echo "$json_content" | jq --arg geoip "$geoip_date" --arg geosite "$geosite_date" --arg geoipurl "$geoipurl" --arg geositeurl "$geositeurl" \
+        '.geodata.geoip_url = $geoipurl | .geodata.geosite_url = $geoipurl | .geodata.community["geoip.dat"] = $geoip | .geodata.community["geosite.dat"] = $geosite')
     if [ $? -ne 0 ]; then
         printlog true "Error: Failed to update JSON content with file dates." $CERR
         return 1
@@ -2002,6 +2077,9 @@ service_event)
             ;;
         initresponse)
             collect_initial_response
+            ;;
+        applygeneraloptions)
+            apply_general_options
             ;;
         esac
         exit 0

@@ -51,7 +51,15 @@
       "check_xray_connection": "Verbindung zum XRAY-Server überprüfen",
       "start_xray_on_reboot": "XRAY beim Router-Neustart starten",
       "modalConnectTitle": "XRAY Verbindungsprüfung",
-      "modalConnectCheckDescription": "<p>Diese Option überprüft, ob die Verbindung funktioniert, indem beim Start eine Anfrage an <a href=\"https://ip-api.com/\" target=\"_blank\">ip-api.com</a> über den ausgehenden Proxy gesendet wird.</p><p>XRAYUI fügt eine Systemregel in die Routing-Regeln ein und erstellt einen SOCKS-Eingangsproxy für diese Prüfung. Diese Systemeinstellungen sind mit <code>sys</code> gekennzeichnet und bleiben in der Benutzeroberfläche verborgen.</p>"
+      "modalConnectCheckDescription": "<p>Diese Option überprüft, ob die Verbindung funktioniert, indem beim Start eine Anfrage an <a href=\"https://ip-api.com/\" target=\"_blank\">ip-api.com</a> über den ausgehenden Proxy gesendet wird.</p><p>XRAYUI fügt eine Systemregel in die Routing-Regeln ein und erstellt einen SOCKS-Eingangsproxy für diese Prüfung. Diese Systemeinstellungen sind mit <code>sys</code> gekennzeichnet und bleiben in der Benutzeroberfläche verborgen.</p>",
+      "logs_header": "Protokolle",
+      "label_logs_enable_access": "Zugriffsprotokolle aktivieren",
+      "label_logs_enable_error": "Fehlerprotokolle aktivieren",
+      "label_logs_enable_dns": "DNS-Protokolle aktivieren",
+      "label_logs_level": "Protokollstufe",
+      "geodad_header": "GeoIP/GeoSite Daten",
+      "label_geoip_url": "GeoIP Daten URL",
+      "label_geosite_url": "GeoSite Daten URL"
     },
     "ImportConfig": {
       "import_config_file": "Konfigurationsdatei importieren"

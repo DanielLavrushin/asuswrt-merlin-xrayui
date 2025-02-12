@@ -347,9 +347,9 @@ class XrayRoutingRuleObject {
   static connectionCheckRuleName = "sys:connection-check";
   static networkOptions = ["", "tcp", "udp", "tcp,udp"];
   static protocolOptions = ["http", "tls", "bittorrent"];
-  public idx: number = 0;
+  public idx = 0;
   public name?: string;
-  public enabled: boolean = true;
+  public enabled = true;
   public domainMatcher? = "hybrid";
   public domain?: string[];
   public ip?: string[];

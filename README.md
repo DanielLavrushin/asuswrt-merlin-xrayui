@@ -6,7 +6,7 @@
 ![image](https://img.shields.io/github/downloads/DanielLavrushin/asuswrt-merlin-xrayui/total?label=total%20downloads)
 
 # ASUSWRT Merlin XrayUI
-This repository provides a lightweight and efficient UI to manage your Xray VPN services on routers running ASUSWRT-Merlin firmware.
+This repository provides a lightweight and efficient UI to manage your [X-RAY Core](https://github.com/XTLS/Xray-core) services on routers running ASUSWRT-Merlin firmware.
 ![image](https://github.com/user-attachments/assets/aeb63ef5-615a-4758-b305-8cf5d6feb709)
 
 ## Requirements

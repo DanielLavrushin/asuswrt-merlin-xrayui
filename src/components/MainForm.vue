@@ -130,7 +130,6 @@
         window.location.reload();
       };
       const show_transport = (proxy: XrayInboundObject<IProtocolType> | XrayOutboundObject<IProtocolType>, type: string) => {
-        console.log("show_transport", proxy, type);
         transportModal.value.show(proxy, type);
       };
 

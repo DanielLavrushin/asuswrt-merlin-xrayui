@@ -9,8 +9,10 @@
       <tbody v-if="allRules.length">
         <tr v-for="(r, index) in allRules.filter((r) => !r.isSystem())" :key="index">
           <th>
-            <input type="checkbox" v-model="r.enabled" @change.prevent="on_off_rule(r, index)" />
-            {{ $t("components.RulesModal.rule_no", [index + 1]) }}
+            <label>
+              <input type="checkbox" v-model="r.enabled" @change.prevent="on_off_rule(r, index)" />
+              {{ $t("components.RulesModal.rule_no", [index + 1]) }}
+            </label>
           </th>
           <td style="color: #ffcc00">{{ !r.name || r.name == "" ? getRuleName(r) : r.name }}</td>
           <td>{{ r.outboundTag }}</td>
@@ -240,7 +242,6 @@
       });
 
       const currentRule = ref<XrayRoutingRuleObject>(new XrayRoutingRuleObject());
-      const currentIndex = ref<number>(-1);
       const modalList = ref<InstanceType<typeof Modal> | null>(null);
       const modalAdd = ref<InstanceType<typeof Modal> | null>(null);
 
@@ -254,17 +255,17 @@
 
       // Methods
       const deleteRule = (rule: XrayRoutingRuleObject) => {
-        const index = rules.value.indexOf(rule);
+        const arr = rule.enabled ? rules : disabledRules;
+        const index = arr.value.indexOf(rule);
 
         if (!confirm(t("components.RulesModal.alert_delete_rule_confirm"))) return;
 
-        allRules.value.splice(index, 1);
+        arr.value.splice(index, 1);
         emit("update:rules", rules.value);
         emit("update:disabled_rules", disabledRules.value);
       };
 
       const addRule = () => {
-        currentIndex.value = -1;
         currentRule.value = new XrayRoutingRuleObject();
         domains.value = "";
         ips.value = "";
@@ -276,21 +277,16 @@
       };
 
       const editRule = (rule: XrayRoutingRuleObject) => {
-        const index = rules.value.indexOf(rule);
-        currentIndex.value = index;
-        const ruleToEdit = { ...rules.value[index] };
-        ruleToEdit.inboundTag = [...(ruleToEdit.inboundTag || [])];
-        ruleToEdit.protocol = [...(ruleToEdit.protocol || [])];
-        ruleToEdit.user = [...(ruleToEdit.user || [])];
-        currentRule.value = ruleToEdit;
-        domains.value = ruleToEdit.domain ? ruleToEdit.domain.join("\n") : "";
-        ips.value = ruleToEdit.ip ? ruleToEdit.ip.join("\n") : "";
-        source.value = ruleToEdit.source ? ruleToEdit.source.join("\n") : "";
+        currentRule.value = rule;
+        domains.value = rule.domain ? rule.domain.join("\n") : "";
+        ips.value = rule.ip ? rule.ip.join("\n") : "";
+        source.value = rule.source ? rule.source.join("\n") : "";
         modalAdd.value?.show(() => {});
       };
 
       const saveRule = () => {
         const newRule = new XrayRoutingRuleObject();
+        newRule.enabled = currentRule.value.enabled;
         newRule.name = currentRule.value.name;
         newRule.outboundTag = currentRule.value.outboundTag;
         newRule.inboundTag = [...(currentRule.value.inboundTag || [])];
@@ -319,15 +315,18 @@
         newRule.sourcePort = currentRule.value.sourcePort;
         newRule.port = currentRule.value.port;
 
-        if (currentIndex.value > -1) {
-          allRules.value[currentIndex.value] = newRule;
+        const rulesArr = newRule.enabled ? rules : disabledRules;
+        const indexOfRule = rulesArr.value.indexOf(currentRule.value);
+        if (indexOfRule >= 0) {
+          rulesArr.value[indexOfRule] = newRule;
         } else {
-          allRules.value.push(newRule);
+          rulesArr.value.push(newRule);
         }
+        reindexRules();
 
-        modalAdd.value?.close();
         emit("update:rules", rules.value);
         emit("update:disabled_rules", disabledRules.value);
+        modalAdd.value?.close();
       };
 
       const getRuleName = (rule: XrayRoutingRuleObject): string => {
@@ -337,18 +336,17 @@
         };
 
         const outbound = rule.outboundTag || "n/a";
-        const inbound = rule.inboundTag && rule.inboundTag.length > 0 ? rule.inboundTag.join(", ") : "all";
         const domains = summarize(rule.domain);
         const ips = summarize(rule.ip);
 
-        return `${inbound} to ${outbound} | dmns: ${domains} | ips: ${ips}`;
+        return `to ${outbound} | dmns: ${domains} | ips: ${ips}`;
       };
 
       const reorderRule = (rule: XrayRoutingRuleObject) => {
-        const currIndex = rules.value.indexOf(rule);
-
-        allRules.value.splice(currIndex, 1);
-        allRules.value.splice(currIndex - 1, 0, rule);
+        let index = allRules.value.indexOf(rule);
+        allRules.value.splice(index, 1);
+        allRules.value.splice(index - 1, 0, rule);
+        reindexRules();
         emit("update:rules", rules.value);
         emit("update:disabled_rules", disabledRules.value);
       };
@@ -381,11 +379,8 @@
         disabledRules.value = [...props.disabled_rules];
         rules.value = [...props.rules];
 
-        allRules.value.forEach((r, idx) => {
-          r.idx = idx;
-        });
-
         modalList.value?.show(() => {
+          reindexRules();
           onCloseAction(rules.value, disabledRules.value);
         });
       };
@@ -400,10 +395,16 @@
         rules.value = stillEnabled;
         disabledRules.value = nowDisabled;
 
+        reindexRules();
         emit("update:rules", rules.value);
         emit("update:disabled_rules", disabledRules.value);
       };
 
+      const reindexRules = () => {
+        allRules.value.forEach((r, idx) => {
+          r.idx = idx;
+        });
+      };
       // Expose to template
       return {
         rules,

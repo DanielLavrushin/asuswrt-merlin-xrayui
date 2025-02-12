@@ -52,7 +52,7 @@
                                 <input class="button_gen" @click.prevent="apply_settings()" type="button" :value="$t('labels.apply')" />
                               </div>
                               <clients-online v-if="engine.mode == 'server'"></clients-online>
-                              <logs-manager v-if="config.log" v-model:logs="config.log"></logs-manager>
+                              <logs-manager v-if="config.log?.access != 'none' || config.log?.error != 'none'" v-model:logs="config.log!"></logs-manager>
                               <version></version>
                             </div>
                           </td>

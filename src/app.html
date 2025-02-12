@@ -43,7 +43,7 @@
       try {
         xray.custom_settings = JSON.parse(custom_settings);
       } catch (e) {
-        if (custom_settings.indexOf("xray_payload")) {
+        if (custom_settings.indexOf("xray_payload") !== -1) {
           console.error("Invalid custom settings: xray_payload detected. Please  run '/jffs/scripts/xrayui fixme'. This is unexpected, please report.");
         }
       }

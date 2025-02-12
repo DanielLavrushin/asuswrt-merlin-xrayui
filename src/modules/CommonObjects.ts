@@ -169,8 +169,8 @@ class XrayStreamRealitySettingsObject implements ISecurityProtocol {
 
 class XrayLogObject {
   static levelOptions = ["debug", "info", "warning", "error", "none"];
-  public access? = "/tmp/xray_access.log";
-  public error? = "/tmp/xray_error.log";
+  public access?: string;
+  public error?: string;
   public loglevel? = "warning";
   public dnsLog? = false;
   public maskAddress? = "";
@@ -349,7 +349,7 @@ class XrayRoutingRuleObject {
   static protocolOptions = ["http", "tls", "bittorrent"];
   public idx = 0;
   public name?: string;
-  public enabled = true;
+  public enabled? = true;
   public domainMatcher? = "hybrid";
   public domain?: string[];
   public ip?: string[];
@@ -365,6 +365,7 @@ class XrayRoutingRuleObject {
   public attrs?: unknown;
 
   public normalize() {
+    this.enabled = undefined;
     this.domainMatcher = this.domainMatcher == "hybrid" ? undefined : this.domainMatcher;
     this.domain = this.domain?.length == 0 ? undefined : this.domain;
     this.ip = this.ip?.length == 0 ? undefined : this.ip;

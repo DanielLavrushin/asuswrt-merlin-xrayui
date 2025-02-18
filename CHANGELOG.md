@@ -1,5 +1,20 @@
 # XRAYUI Changelog
 
+## [0.37.0] - 2025-02-18
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure that outdated files are updated._
+
+- FIXED: a bug where editing a rule changed its position in the list.
+- FIXED: a bug that prevented disabling the connection status check in the `General Options`.
+- FIXED: a bug where a geosite URL was replaced with a geoip URL.
+  > _Important: Double-check your geosite URL. You may need to revert it to its original source._
+- ADDED: When Xray runs in `TPROXY` mode, the maximum number of open file descriptors is automatically raised to `65535` to accommodate high connection counts.
+- ADDED: Introduced per-device “bypass” and “redirect” policies in both `NAT` (REDIRECT) and `TPROXY` modes.
+  - `Bypass` policies now only proxy the specified ports and return all other traffic.
+  - `Redirect` policies proxy all traffic except for the listed ports.
+    This change unifies behavior between NAT and TPROXY and allows you to configure fine-grained rules per device.
+    > _Important: Since the previous setting `Ports redirect/bypass policy` has been removed, you may need to adjust your settings in the new `Device policies` manager._
+
 ## [0.36.0] - 2025-02-12
 
 > _Important: Please clear your browser cache (e.g.**Ctrl+F5**) to ensure that outdated files are updated._

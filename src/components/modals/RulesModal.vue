@@ -287,6 +287,7 @@
       const saveRule = () => {
         const newRule = new XrayRoutingRuleObject();
         newRule.enabled = currentRule.value.enabled;
+        newRule.idx = currentRule.value.idx;
         newRule.name = currentRule.value.name;
         newRule.outboundTag = currentRule.value.outboundTag;
         newRule.inboundTag = [...(currentRule.value.inboundTag || [])];
@@ -322,6 +323,7 @@
         } else {
           rulesArr.value.push(newRule);
         }
+
         reindexRules();
 
         emit("update:rules", rules.value);

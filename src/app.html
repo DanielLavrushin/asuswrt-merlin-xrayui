@@ -31,7 +31,8 @@
           language: '<% nvram_get("preferred_lang"); %>',
           ip: '<% nvram_get("lan_ipaddr"); %>',
           territory: '<% nvram_get("territory_code"); %>',
-          features: JSON.parse(`<% get_ui_support(); %>`),
+          devices_online: JSON.parse(`<% get_clientlist(); %>`),
+          devices: JSON.parse(`<% get_all_basic_clientlist(); %>`),
           wan_ip: '<% nvram_get("wan_ipaddr"); %>'
         },
         server: {

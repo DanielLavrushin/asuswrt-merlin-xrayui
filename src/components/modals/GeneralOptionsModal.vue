@@ -181,6 +181,10 @@
           const socks = props.config.inbounds?.find((i) => i.tag === "sys:socks-in");
           if (socks) {
             props.config.inbounds?.splice(props.config.inbounds?.indexOf(socks), 1);
+            await engine.executeWithLoadingProgress(async () => {
+              let cfg = engine.prepareServerConfig(props.config);
+              await engine.submit(SubmtActions.configurationApply, cfg);
+            });
           }
         }
       };

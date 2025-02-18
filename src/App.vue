@@ -255,4 +255,11 @@
   .flex-checkbox > * {
     flex: 0 1 calc(25%);
   }
+
+  .flex-checkbox.flex-checkbox-25 > * {
+    flex: 0 1 calc(25%);
+  }
+  .flex-checkbox.flex-checkbox-50 > * {
+    flex: 0 1 calc(50%);
+  }
 </style>

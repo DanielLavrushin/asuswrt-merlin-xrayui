@@ -231,14 +231,16 @@ class XrayRoutingObject {
   public domainMatcher? = "hybrid";
   public rules?: XrayRoutingRuleObject[] = [];
   public disabled_rules?: XrayRoutingRuleObject[] = [];
-  public portsPolicy?: XrayPortsPolicy = new XrayPortsPolicy();
+  public policies?: XrayRoutingPolicy[] = [];
 
   public normalize(): this {
     this.domainStrategy = this.domainStrategy == "AsIs" ? undefined : this.domainStrategy;
     this.domainMatcher = this.domainMatcher == "hybrid" ? undefined : this.domainMatcher;
 
-    if (this.portsPolicy) {
-      this.portsPolicy = this.portsPolicy.normalize();
+    if (this.policies) {
+      this.policies.forEach((policy) => {
+        policy.normalize();
+      });
     }
     if (this.rules && this.rules.length > 0) {
       this.rules.forEach((rule) => {
@@ -299,12 +301,15 @@ class XrayRoutingObject {
   };
 }
 
-class XrayPortsPolicy {
+class XrayRoutingPolicy {
   static defaultPorts = ["443", "80", "22"];
   static modes = ["redirect", "bypass"];
-  public mode? = "redirect";
-  public udp? = "";
+  public name?: string;
+  public mac?: string[] = [];
   public tcp? = "";
+  public udp? = "";
+  public mode?: string = "redirect";
+  public enabled? = true;
 
   public static vendors: { name: string; tcp: string; udp: string }[] | null = [
     { name: "Default ports", tcp: "443,80,22", udp: "443,80,22" },
@@ -315,9 +320,10 @@ class XrayPortsPolicy {
   ];
 
   public normalize = (): this | undefined => {
-    this.mode = this.mode && XrayPortsPolicy.modes.includes(this.mode) ? this.mode : undefined;
+    this.mode = this.mode && XrayRoutingPolicy.modes.includes(this.mode) ? this.mode : undefined;
     this.tcp = this.normalizePorts(this.tcp == "" ? undefined : this.tcp);
     this.udp = this.normalizePorts(this.udp == "" ? undefined : this.udp);
+    this.mac = this.mac?.length == 0 ? undefined : this.mac;
 
     if (!this.tcp && !this.udp && this.mode == "redirect") {
       return undefined;
@@ -338,11 +344,13 @@ class XrayPortsPolicy {
 
   public default = (): this => {
     this.mode = "bypass";
+    this.name = "bypass xray except web traffic";
     this.tcp = `443,80,22`;
     this.udp = `443,80,22`;
     return this;
   };
 }
+
 class XrayRoutingRuleObject {
   static connectionCheckRuleName = "sys:connection-check";
   static networkOptions = ["", "tcp", "udp", "tcp,udp"];
@@ -535,4 +543,4 @@ class XrayParsedUrlObject {
   }
 }
 
-export { XrayPortsPolicy, XrayParsedUrlObject, XraySockoptObject, XrayDnsObject, XrayDnsServerObject, XrayTrojanServerObject, XrayPeerObject, XrayNoiseObject, XrayShadowsocksServerObject, XrayHttpServerObject, XraySocksServerObject, XrayProtocolOption, XrayProtocol, XrayVlessServerObject, XrayVmessServerObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsCertificateObject, XrayStreamSettingsObject, XrayRoutingRuleObject, XrayRoutingObject, XrayLogObject, XrayAllocateObject, XraySniffingObject, XrayHeaderObject, XrayHeaderRequestObject, XrayHeaderResponseObject, XrayXmuxObject };
+export { XrayRoutingPolicy, XrayParsedUrlObject, XraySockoptObject, XrayDnsObject, XrayDnsServerObject, XrayTrojanServerObject, XrayPeerObject, XrayNoiseObject, XrayShadowsocksServerObject, XrayHttpServerObject, XraySocksServerObject, XrayProtocolOption, XrayProtocol, XrayVlessServerObject, XrayVmessServerObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsCertificateObject, XrayStreamSettingsObject, XrayRoutingRuleObject, XrayRoutingObject, XrayLogObject, XrayAllocateObject, XraySniffingObject, XrayHeaderObject, XrayHeaderRequestObject, XrayHeaderResponseObject, XrayXmuxObject };

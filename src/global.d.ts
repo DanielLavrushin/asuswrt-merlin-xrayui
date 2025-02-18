@@ -24,6 +24,8 @@ interface XrayRouter {
   firmware: string;
   features: unknown;
   wan_ip: string;
+  devices: [[string, string]];
+  devices_online: unknown;
 }
 
 interface XrayUiGlobal {

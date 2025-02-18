@@ -37,6 +37,17 @@
           <span class="hint-color">default: hybrid</span>
         </td>
       </tr>
+      <tr v-if="routing.policies">
+        <th>
+          {{ $t("components.Routing.label_policies") }}
+          <hint v-html="$t('components.Routing.hint_policies')"></hint>
+        </th>
+        <td>
+          {{ routing.policies.length }} item(s)
+          <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click.prevent="manage_policy()" />
+          <policy-modal ref="policyModal" v-model:policies="routing.policies"></policy-modal>
+        </td>
+      </tr>
       <tr v-if="routing.rules">
         <th>
           {{ $t("components.Routing.label_rules") }}
@@ -45,7 +56,6 @@
         <td>
           {{ countRules() }} item(s)
           <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click.prevent="manage_rules()" />
-          <span class="hint-color"></span>
           <rules-modal ref="modal" v-model:rules="routing.rules" v-model:disabled_rules="routing.disabled_rules"></rules-modal>
         </td>
       </tr>
@@ -60,17 +70,6 @@
           <input class="button_gen button_gen_small" type="button" :value="$t('components.Routing.update_community_files')" @click.prevent="update_geodat()" />
           <span class="hint-small" v-if="daysPassed > 1"> updated {{ daysPassed }} days ago</span>
           <span class="hint-color"> [<a href="https://github.com/Loyalsoldier/v2ray-rules-dat/releases" target="_blank">source</a>, <a href="https://github.com/v2fly/domain-list-community/tree/master/data" target="_blank">geosite</a>] </span>
-        </td>
-      </tr>
-      <tr v-if="engine.mode == 'client' && routing.portsPolicy">
-        <th>
-          {{ $t("components.Routing.label_ports_policy") }}
-          <hint v-html="$t('components.Routing.hint_ports_policy')"></hint>
-        </th>
-        <td>
-          mode: {{ routing.portsPolicy.mode }}
-          <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click.prevent="manage_redirect_ports()" />
-          <ports-policy-modal ref="modalRedirectPorts" v-model:ports="routing.portsPolicy"></ports-policy-modal>
         </td>
       </tr>
       <!-- <tr>
@@ -93,22 +92,22 @@
   import { XrayRoutingObject, XrayRoutingRuleObject } from "../modules/CommonObjects";
   import xrayConfig from "../modules/XrayConfig";
   import engine, { EngineResponseConfig, SubmtActions } from "../modules/Engine";
+  import PolicyModal from "./modals/PolicyModal.vue";
   import RulesModal from "./modals/RulesModal.vue";
   import Hint from "./Hint.vue";
-  import PortsPolicyModal from "./modals/PortsPolicyModal.vue";
   import GeodatModal from "./modals/GeodatModal.vue";
   export default defineComponent({
     name: "Routing",
     components: {
       Hint,
       RulesModal,
-      PortsPolicyModal,
+      PolicyModal,
       GeodatModal
     },
     setup() {
       const modal = ref();
+      const policyModal = ref();
       const geodatModal = ref();
-      const modalRedirectPorts = ref();
       const daysPassed = ref(0);
       const routing = ref<XrayRoutingObject>(xrayConfig.routing || new XrayRoutingObject());
       const uiResponse = inject<Ref<EngineResponseConfig>>("uiResponse")!;
@@ -145,8 +144,9 @@
           }
         }
       );
-      const manage_redirect_ports = async () => {
-        modalRedirectPorts.value.show();
+
+      const manage_policy = async () => {
+        policyModal.value.show();
       };
 
       const manage_rules = async () => {
@@ -163,11 +163,11 @@
         routing,
         daysPassed,
         modal,
-        modalRedirectPorts,
+        policyModal,
         update_geodat,
         manage_geodat,
         manage_rules,
-        manage_redirect_ports,
+        manage_policy,
         countRules,
         domainStrategyOptions: XrayRoutingObject.domainStrategyOptions,
         domainMatcherOptions: XrayRoutingObject.domainMatcherOptions

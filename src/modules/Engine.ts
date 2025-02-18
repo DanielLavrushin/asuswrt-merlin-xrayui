@@ -7,7 +7,7 @@
 import axios, { AxiosError } from "axios";
 import { xrayConfig, XrayObject } from "./XrayConfig";
 import { XrayBlackholeOutboundObject, XrayLoopbackOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, XrayTrojanOutboundObject, XrayOutboundObject, XraySocksOutboundObject, XrayVmessOutboundObject, XrayVlessOutboundObject, XrayHttpOutboundObject, XrayShadowsocksOutboundObject } from "./OutboundObjects";
-import { XrayProtocol, XrayDnsObject, XrayStreamSettingsObject, XrayRoutingObject, XrayRoutingRuleObject, XraySniffingObject, XrayPortsPolicy, XrayAllocateObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject, XraySockoptObject, XrayLogObject, XrayStreamTlsCertificateObject } from "./CommonObjects";
+import { XrayProtocol, XrayDnsObject, XrayStreamSettingsObject, XrayRoutingObject, XrayRoutingRuleObject, XraySniffingObject, XrayRoutingPolicy, XrayAllocateObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject, XraySockoptObject, XrayLogObject, XrayStreamTlsCertificateObject } from "./CommonObjects";
 import { plainToInstance } from "class-transformer";
 import { XrayDokodemoDoorInboundObject, XrayHttpInboundObject, XrayInboundObject, XrayShadowsocksInboundObject, XraySocksInboundObject, XrayTrojanInboundObject, XrayVlessInboundObject, XrayVmessInboundObject, XrayWireguardInboundObject } from "./InboundObjects";
 import { XrayStreamHttpSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamKcpSettingsObject, XrayStreamTcpSettingsObject, XrayStreamWsSettingsObject } from "./TransportObjects";
@@ -451,7 +451,15 @@ class Engine {
 
       if (response.data.routing) {
         this.xrayConfig.routing = plainToInstance(XrayRoutingObject, response.data.routing) as XrayRoutingObject;
-        this.xrayConfig.routing.portsPolicy = plainToInstance(XrayPortsPolicy, response.data.routing.portsPolicy ?? new XrayPortsPolicy()) as XrayPortsPolicy;
+
+        if (this.xrayConfig.routing.policies) {
+          this.xrayConfig.routing.policies.forEach((policy, index) => {
+            if (this.xrayConfig.routing?.policies) {
+              this.xrayConfig.routing.policies[index] = plainToInstance(XrayRoutingPolicy, policy) as XrayRoutingPolicy;
+            }
+          });
+        }
+
         if (this.xrayConfig.routing.rules) {
           this.xrayConfig.routing.rules.forEach((rule, index) => {
             if (this.xrayConfig.routing?.rules) {

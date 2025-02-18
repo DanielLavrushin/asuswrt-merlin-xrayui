@@ -77,11 +77,20 @@ start() {
     printlog true "Xray operates in $mode mode"
     printlog true "Starting $DESC with $ARGS"
 
+    ARGS=" -c $XRAY_CONFIG"
+
+    # Check if TPROXY is enabled
+    local TPROXY_MODE="$(jq -r '.inbounds[0].streamSettings.sockopt.tproxy // "off"' "$XRAY_CONFIG")"
+    if [ "$TPROXY_MODE" != "off" ]; then
+        printlog true "TPROXY mode is $TPROXY_MODE. Increasing max open files to 65535."
+        ulimit -Hn 65535
+        ulimit -Sn 65535
+    fi
+
     update_loading_progress "Starting $DESC..."
     xray $ARGS >/dev/null 2>&1 &
     echo $! >$PIDFILE
 
-    ARGS=" -c $XRAY_CONFIG"
     if [ "$mode" = "server" ]; then
         configure_firewall_server
     elif [ "$mode" = "client" ]; then
@@ -91,7 +100,6 @@ start() {
         am_settings_set xray_mode $mode
         configure_firewall_server
     fi
-
 }
 
 stop() {
@@ -311,11 +319,6 @@ configure_firewall_client_direct() {
 
     # --- Begin Exclusion Rules (NAT) ---
 
-    # Ports policy: bypass or redirect
-    XRAY_PP_MODE="$(jq -r '.routing.portsPolicy.mode // empty' "$XRAY_CONFIG")"
-    XRAY_PP_TCP="$(jq -r '.routing.portsPolicy.tcp // empty' "$XRAY_CONFIG")"
-    XRAY_PP_UDP="$(jq -r '.routing.portsPolicy.udp // empty' "$XRAY_CONFIG")"
-
     # Exclude local (RFC1918) subnets dynamically:
     local local_networks=$(
         ip -4 route show |
@@ -326,6 +329,7 @@ configure_firewall_client_direct() {
     done
 
     update_loading_progress "Configuring firewall Exclusion rules..."
+    printlog true "Configuring firewall Exclusion rules..."
     # Always exclude loopback:
     iptables -t nat -A XRAYUI -d 127.0.0.1/32 -j RETURN || printlog true "Failed to add loopback rule in NAT." $CERR
 
@@ -363,6 +367,64 @@ configure_firewall_client_direct() {
         printlog true "Excluding Xray server IP from NAT."
         iptables -t nat -A XRAYUI -d "$serverip" -j RETURN || printlog true "Failed to add rule to exclude Xray server IP in NAT." $CERR
     done
+
+    jq -c '(.routing.policies // []) | if length == 0 then [{mode:"redirect", enabled:true, name:"all traffic to xray"}] else . end | .[]' "$XRAY_CONFIG" | while IFS= read -r policy; do
+        enabled="$(echo "$policy" | jq -r '.enabled // "false"')"
+        [ "$enabled" != "true" ] && continue
+
+        mode="$(echo "$policy" | jq -r '.mode // "bypass"')"
+        tcpPorts="$(echo "$policy" | jq -r '.tcp // ""')"
+        udpPorts="$(echo "$policy" | jq -r '.udp // ""')"
+        macCount="$(echo "$policy" | jq '.mac | length')"
+
+        if [ "$macCount" -eq 0 ]; then
+            # No MAC array => apply policy to ALL devices
+            if [ "$mode" = "bypass" ]; then
+                # Bypass all except the listed TCP/UDP ports -> those get redirected
+                printlog true "Ports policy bypass for ALL devices: redirect only TCP($tcpPorts), UDP($udpPorts)" $CWARN
+
+                [ -n "$tcpPorts" ] && iptables -t nat -A XRAYUI -p tcp -m multiport --dports "$tcpPorts" -j REDIRECT --to-port "$XRAY_PORT"
+                [ -n "$udpPorts" ] && iptables -t nat -A XRAYUI -p udp -m multiport --dports "$udpPorts" -j REDIRECT --to-port "$XRAY_PORT"
+
+                iptables -t nat -A XRAYUI -j RETURN
+            else
+                # Redirect mode = redirect everything except the listed TCP/UDP ports
+                printlog true "Ports policy redirect for ALL devices: exclude TCP($tcpPorts), UDP($udpPorts)" $CWARN
+
+                [ -n "$tcpPorts" ] && iptables -t nat -A XRAYUI -p tcp -m multiport --dports "$tcpPorts" -j RETURN
+                [ -n "$udpPorts" ] && iptables -t nat -A XRAYUI -p udp -m multiport --dports "$udpPorts" -j RETURN
+
+                iptables -t nat -A XRAYUI -p tcp -j REDIRECT --to-port "$XRAY_PORT"
+                iptables -t nat -A XRAYUI -p udp -j REDIRECT --to-port "$XRAY_PORT"
+            fi
+        else
+            # Read each MAC in the policy
+            echo "$policy" | jq -r '.mac[]?' | while IFS= read -r mac; do
+                if [ "$mode" = "bypass" ]; then
+                    # Bypass all except the listed TCP/UDP ports -> those get redirected
+                    printlog true "Ports policy bypass for $mac: redirect only TCP($tcpPorts), UDP($udpPorts)" $CWARN
+
+                    [ -n "$tcpPorts" ] && iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p tcp -m multiport --dports "$tcpPorts" -j REDIRECT --to-port "$XRAY_PORT"
+                    [ -n "$udpPorts" ] && iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p udp -m multiport --dports "$udpPorts" -j REDIRECT --to-port "$XRAY_PORT"
+
+                    # Default for bypass = return
+                    iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -j RETURN
+
+                else
+                    # Redirect mode = redirect everything except the listed TCP/UDP ports
+                    printlog true "Ports policy redirect for $mac: exclude TCP($tcpPorts), UDP($udpPorts)" $CWARN
+
+                    [ -n "$tcpPorts" ] && iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p tcp -m multiport --dports "$tcpPorts" -j RETURN
+                    [ -n "$udpPorts" ] && iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p udp -m multiport --dports "$udpPorts" -j RETURN
+
+                    # Default for redirect = redirect all
+                    iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p tcp -j REDIRECT --to-port "$XRAY_PORT"
+                    iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p udp -j REDIRECT --to-port "$XRAY_PORT"
+                fi
+            done
+        fi
+    done
+
     # --- End Exclusion Rules ---
 
     # Execute custom rules for TPROXY (if any)
@@ -372,26 +434,7 @@ configure_firewall_client_direct() {
         "$script" || printlog true "Error executing $script." $CERR
     fi
 
-    if [ "$XRAY_PP_MODE" = "bypass" ]; then
-        printlog true "Ports policy mode is 'bypass': All ports bypass Xray by default. Redirecting only specified ports: TCP($XRAY_PP_TCP), UDP($XRAY_PP_UDP)" $CWARN
-        if [ -n "$XRAY_PP_TCP" ]; then
-            iptables -t nat -A XRAYUI -p tcp -m multiport --dports "$XRAY_PP_TCP" -j REDIRECT --to-port "$XRAY_PORT" || printlog true "No TCP ports specified for bypass mode redirect." $CERR
-        fi
-        if [ -n "$XRAY_PP_UDP" ]; then
-            iptables -t nat -A XRAYUI -p udp -m multiport --dports "$XRAY_PP_UDP" -j REDIRECT --to-port "$XRAY_PORT" || printlog true "No UDP ports specified for bypass mode redirect." $CERR
-        fi
-        iptables -t nat -A XRAYUI -j RETURN || printlog true "Failed to add default bypass rule in NAT." $CERR
-    else
-        printlog true "Ports policy mode is 'redirect': All ports are redirected to Xray by default, except excluded ports: TCP($XRAY_PP_TCP), UDP($XRAY_PP_UDP)" $CWARN
-        if [ -n "$XRAY_PP_TCP" ]; then
-            iptables -t nat -A XRAYUI -p tcp -m multiport --dports "$XRAY_PP_TCP" -j RETURN || printlog true "No TCP ports specified for exclusion in redirect mode." $CERR
-        fi
-        if [ -n "$XRAY_PP_UDP" ]; then
-            iptables -t nat -A XRAYUI -p udp -m multiport --dports "$XRAY_PP_UDP" -j RETURN || printlog true "No UDP ports specified for exclusion in redirect mode." $CERR
-        fi
-        iptables -t nat -A XRAYUI -p tcp -j REDIRECT --to-port "$XRAY_PORT" || printlog true "Failed to add default TCP REDIRECT." $CERR
-        iptables -t nat -A XRAYUI -p udp -j REDIRECT --to-port "$XRAY_PORT" || printlog true "Failed to add default UDP REDIRECT." $CERR
-    fi
+    iptables -t nat -A XRAYUI -j RETURN || printlog true "Failed to add default rule in NAT." $CERR
 
     # Hook chain into NAT PREROUTING:
     iptables -t nat -A PREROUTING -j XRAYUI || printlog true "Failed to hook NAT chain." $CERR
@@ -476,6 +519,50 @@ configure_firewall_client_tproxy() {
         printlog true "Excluding Xray server rom NAT and MANGLE."
         iptables -t mangle -A XRAYUI -d "$serverip" -j RETURN || printlog true "Failed to add rule to exclude Xray server in MANGLE." $CERR
     done
+
+    # bypass/redirect rules
+    jq -c '(.routing.policies // []) | if length == 0 then [{mode:"redirect", enabled:true, name:"all traffic to xray"}] else . end | .[]' "$XRAY_CONFIG" | while IFS= read -r policy; do
+        enabled="$(echo "$policy" | jq -r '.enabled // "false"')"
+        [ "$enabled" != "true" ] && continue
+
+        mode="$(echo "$policy" | jq -r '.mode // "bypass"')"
+        tcpPorts="$(echo "$policy" | jq -r '.tcp // ""')"
+        udpPorts="$(echo "$policy" | jq -r '.udp // ""')"
+        macCount="$(echo "$policy" | jq '.mac | length')"
+
+        if [ "$macCount" -eq 0 ]; then
+            # No MAC => apply policy to all devices
+            if [ "$mode" = "bypass" ]; then
+                # BYPASS => TPROXY only the listed ports; everything else returns
+                [ -n "$tcpPorts" ] && iptables -t mangle -A XRAYUI -p tcp -m multiport --dports "$tcpPorts" -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777
+                [ -n "$udpPorts" ] && iptables -t mangle -A XRAYUI -p udp -m multiport --dports "$udpPorts" -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777
+                iptables -t mangle -A XRAYUI -j RETURN
+            else
+                # REDIRECT => TPROXY everything; listed ports are returned
+                [ -n "$tcpPorts" ] && iptables -t mangle -A XRAYUI -p tcp -m multiport --dports "$tcpPorts" -j RETURN
+                [ -n "$udpPorts" ] && iptables -t mangle -A XRAYUI -p udp -m multiport --dports "$udpPorts" -j RETURN
+                iptables -t mangle -A XRAYUI -p tcp -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777
+                iptables -t mangle -A XRAYUI -p udp -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777
+            fi
+        else
+            # Per-device logic
+            echo "$policy" | jq -r '.mac[]?' | while IFS= read -r mac; do
+                if [ "$mode" = "bypass" ]; then
+                    # BYPASS => TPROXY only the listed ports; everything else returns
+                    [ -n "$tcpPorts" ] && iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p tcp -m multiport --dports "$tcpPorts" -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777
+                    [ -n "$udpPorts" ] && iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p udp -m multiport --dports "$udpPorts" -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777
+                    iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -j RETURN
+                else
+                    # REDIRECT => TPROXY everything; listed ports are returned
+                    [ -n "$tcpPorts" ] && iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p tcp -m multiport --dports "$tcpPorts" -j RETURN
+                    [ -n "$udpPorts" ] && iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p udp -m multiport --dports "$udpPorts" -j RETURN
+                    iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p tcp -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777
+                    iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p udp -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777
+                fi
+            done
+        fi
+    done
+
     # --- End Exclusion Rules ---
 
     # Execute custom rules for TPROXY (if any)
@@ -898,6 +985,7 @@ switch_mode() {
 
     am_settings_set xray_mode $mode_type
 }
+
 apply_general_options() {
     update_loading_progress "Applying general settings..." 0
     printlog true "Applying general settings..."
@@ -1268,6 +1356,9 @@ EOF
     # patch 0.33->0.34 update system connection check rule
     json_content=$(echo "$json_content" | jq '(.routing.rules[] | select(.name=="sys:connection-check") | .domain) |= map(if .=="freeipapi.com" then "ip-api.com" else . end)') || printlog true "Failed to update connection check rule." $CERR
 
+    # patch 0.36->0.37
+    json_content=$(echo "$json_content" | jq 'del(.routing.portsPolicy)')
+
     echo "$json_content" >"$XRAY_CONFIG"
 
     # ---------------------------------------------------------
@@ -1575,7 +1666,7 @@ collect_initial_response() {
     fi
 
     json_content=$(echo "$json_content" | jq --arg geoip "$geoip_date" --arg geosite "$geosite_date" --arg geoipurl "$geoipurl" --arg geositeurl "$geositeurl" \
-        '.geodata.geoip_url = $geoipurl | .geodata.geosite_url = $geoipurl | .geodata.community["geoip.dat"] = $geoip | .geodata.community["geosite.dat"] = $geosite')
+        '.geodata.geoip_url = $geoipurl | .geodata.geosite_url = $geositeurl | .geodata.community["geoip.dat"] = $geoip | .geodata.community["geosite.dat"] = $geosite')
     if [ $? -ne 0 ]; then
         printlog true "Error: Failed to update JSON content with file dates." $CERR
         return 1

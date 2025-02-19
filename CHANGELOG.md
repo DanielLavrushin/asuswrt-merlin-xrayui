@@ -1,5 +1,11 @@
 # XRAYUI Changelog
 
+## [0.3x.x] - 2025-xx-xx
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure that outdated files are updated._
+
+- ADDED: When a new version is available, an update modal automatically appears on page load. The modal includes a `Don't want to update` button which, when clicked, dismisses the modal and prevents future notifications for that specific version.
+
 ## [0.37.1] - 2025-02-19
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure that outdated files are updated._

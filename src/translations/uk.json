@@ -210,7 +210,8 @@
       "new_version": "Доступна новіша версія: <strong style='color:#FFCC00'>{0}</strong>",
       "version_is_up_to_date": "Ваша версія актуальна.",
       "open_chengelog": "відкрити повний <a target='_blank' href='https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/blob/main/CHANGELOG.md'>журнал змін</a>",
-      "update_now": "оновити зараз!"
+      "update_now": "оновити зараз!",
+      "dont_want_update": "Не оновлювати до {0}"
     },
     "Reality": {
       "modal_title": "Налаштування REALITY",

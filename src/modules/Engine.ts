@@ -113,6 +113,28 @@ class Engine {
     return chunks;
   }
 
+  public setCookie = (name: string, val: string): void => {
+    const date = new Date();
+    const value = val;
+    date.setTime(date.getTime() + 365 * 24 * 60 * 60 * 1000);
+    document.cookie = name + "=" + value + "; expires=" + date.toUTCString() + "; path=/";
+  };
+
+  public getCookie = (name: string): string | undefined => {
+    const value = "; " + document.cookie;
+    const parts = value.split("; " + name + "=");
+
+    if (parts.length === 2) {
+      return parts.pop()?.split(";").shift();
+    }
+  };
+
+  public deleteCookie = (name: string): void => {
+    const date = new Date();
+    date.setTime(date.getTime() + -1 * 24 * 60 * 60 * 1000);
+    document.cookie = name + "=; expires=" + date.toUTCString() + "; path=/";
+  };
+
   public submit(action: string, payload: object | string | number | null | undefined = undefined, delay = 0): Promise<void> {
     return new Promise((resolve) => {
       const iframeName = "hidden_frame_" + Math.random().toString(36).substring(2, 9);

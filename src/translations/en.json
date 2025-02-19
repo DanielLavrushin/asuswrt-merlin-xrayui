@@ -210,7 +210,8 @@
       "new_version": "A newer version is available: <strong style='color:#FFCC00'>{0}</strong>",
       "version_is_up_to_date": "Your version is up to date.",
       "open_chengelog": "open full <a target='_blank' href='https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/blob/main/CHANGELOG.md'>changelog</a>",
-      "update_now": "update now!"
+      "update_now": "update now!",
+      "dont_want_update": "Don't want to update to {0}"
     },
     "Reality": {
       "modal_title": "REALITY Settings",

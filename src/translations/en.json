@@ -110,7 +110,7 @@
       "title": "Routing",
       "label_domain_strategy": "Domain strategy",
       "label_domain_matcher": "Domain matcher",
-      "label_policies": "Device policies",
+      "label_policies": "Redirect/Bypass Policies",
       "label_rules": "Rules",
       "label_geodat_metadata": "GeoIp/GeoSite Metadata",
       "manage_local_files": "manage local files",

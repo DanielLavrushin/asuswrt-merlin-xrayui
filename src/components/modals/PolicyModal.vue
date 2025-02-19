@@ -65,14 +65,14 @@
             {{ $t("components.PolicyModal.label_mac") }}
             <hint v-html="$t('components.PolicyModal.hint_mac')"></hint>
             <br />
-            <div class="hint-color" v-show="currentRule.mode == 'bypass'">
+            <div class="hint-color" v-show="currentRule.mode == 'redirect'">
               {{ $t("components.PolicyModal.hint_bypass_devices") }}
             </div>
-            <div class="hint-color" v-show="currentRule.mode == 'redirect'">
+            <div class="hint-color" v-show="currentRule.mode == 'bypass'">
               {{ $t("components.PolicyModal.hint_redirect_devices") }}
             </div>
           </th>
-          <td class="flex-checkbox flex-checkbox-50">
+          <td class="flex-checkbox flex-checkbox-50 height-overflow">
             <label>
               <input type="checkbox" v-model="showAll" />
               {{ $t("components.PolicyModal.label_show_all") }}

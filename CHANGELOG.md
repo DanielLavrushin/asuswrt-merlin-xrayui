@@ -1,5 +1,13 @@
 # XRAYUI Changelog
 
+## [0.37.1] - 2025-02-19
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure that outdated files are updated._
+
+- FIXED: A confusing description under the `Devices` field in the `Redirect/Bypass` manager.
+- ADDED: A scrollbar to the `Devices` field to correctly display a large list of devices.
+- UPDATED: Renamed `Device policies` to the `Redirect/Bypass policies` in the `Routing` section.
+
 ## [0.37.0] - 2025-02-18
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure that outdated files are updated._

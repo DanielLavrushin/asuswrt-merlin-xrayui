@@ -245,6 +245,13 @@
     background-color: rgb(94, 10, 59);
   }
 
+  .FormTable td.height-overflow {
+    max-height: 140px;
+    overflow: hidden;
+    overflow-y: scroll;
+    scrollbar-width: thin;
+    scrollbar-color: #ffffff #576d73;
+  }
   .flex-checkbox {
     border: none !important;
     display: flex;

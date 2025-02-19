@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 import { SubmtActions, EngineLoadingProgress } from "./modules/Engine";
+import { XrayRouterDeviceOnline } from "./modules/Interfaces";
 
 export {};
 
@@ -25,7 +26,7 @@ interface XrayRouter {
   features: unknown;
   wan_ip: string;
   devices: [[string, string]];
-  devices_online: unknown;
+  devices_online: Record<string, XrayRouterDeviceOnline>;
 }
 
 interface XrayUiGlobal {

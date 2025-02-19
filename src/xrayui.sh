@@ -1923,12 +1923,35 @@ geodata_delete_tag() {
     return 0
 }
 
+replace_ips_with_domains() {
+    file="$1"
+    tmpfile="/tmp/$(basename "$file").tmp"
+    sed_script="/tmp/xrayui_sed_replace.sed"
+
+    tail -n 1000 /opt/var/log/dnsmasq.log | awk '{
+      for(i=1; i<=NF; i++){
+        if($i=="is" && (i+1)<=NF){
+          mapping[$(i+1)] = $(i-1)
+        }
+      }
+    } END {
+      for(ip in mapping){
+        print "s|tcp:" ip "|tcp:" mapping[ip] "|g"
+        print "s|udp:" ip "|udp:" mapping[ip] "|g"
+      }
+    }' >"$sed_script"
+
+    sed -f "$sed_script" "$file" >"$tmpfile"
+    mv "$tmpfile" "$file"
+}
+
 logs_fetch() {
     update_loading_progress "Fetching logs..." 0
     local log_access="/tmp/xray_access.log"
     local log_error="/tmp/xray_error.log"
-    tail -n 200 "$log_access" >/www/user/xrayui/xray_access_partial.asp
     tail -n 200 "$log_error" >/www/user/xrayui/xray_error_partial.asp
+    tail -n 200 "$log_access" >/www/user/xrayui/xray_access_partial.asp
+    replace_ips_with_domains /www/user/xrayui/xray_access_partial.asp
     update_loading_progress "Logs fetched successfully." 100
 }
 

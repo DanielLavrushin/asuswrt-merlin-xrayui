@@ -20,4 +20,10 @@ interface IXrayServer<TClient> {
   users?: TClient[] | undefined;
 }
 
-export { IXrayServer, ISecurityProtocol, IProtocolType, ITransportNetwork, IClient };
+interface XrayRouterDeviceOnline {
+  name: string;
+  ip: string;
+  mac: string;
+}
+
+export { IXrayServer, XrayRouterDeviceOnline, ISecurityProtocol, IProtocolType, ITransportNetwork, IClient };

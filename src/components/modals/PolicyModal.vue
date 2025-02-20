@@ -72,12 +72,15 @@
               {{ $t("components.PolicyModal.hint_redirect_devices") }}
             </div>
           </th>
-          <td class="flex-checkbox flex-checkbox-50 height-overflow">
+          <td class="flex-checkbox flex-checkbox-50 height-overflow" style="max-height: 240px">
             <label>
               <input type="checkbox" v-model="showAll" />
               {{ $t("components.PolicyModal.label_show_all") }}
             </label>
-            <label v-for="device in devices" :key="device.mac" v-show="showAll || device.isOnline" :class="{ online: showAll && device.isOnline }" :title="device.mac">
+            <label v-if="devices.length > 10">
+              <input type="text" v-model="deviceFilter" class="input_15_table" placeholder="filter devices" @input="applyDeviceFilter" />
+            </label>
+            <label v-for="device in devices" :key="device.mac" v-show="(showAll || device.isOnline) && device.isVisible" :class="{ online: showAll && device.isOnline }" :title="device.mac">
               <input type="checkbox" :value="device.mac" v-model="currentRule.mac" />
               {{ device.name || device.mac }}
             </label>
@@ -146,6 +149,7 @@
     public mac!: string;
     public name?: string;
     public isOnline!: boolean;
+    public isVisible!: boolean;
   }
 
   export default defineComponent({
@@ -172,11 +176,14 @@
       const showAll = ref(false);
       const vendor = ref();
       const devices = ref<MacDevice[]>([]);
+      const deviceFilter = ref("");
+
       window.xray.router.devices.forEach((device) => {
         devices.value.push({
           mac: device[0],
           name: device[1],
-          isOnline: false
+          isOnline: false,
+          isVisible: deviceFilter.value ? device[1].toLowerCase().includes(deviceFilter.value.toLowerCase()) : true
         });
       });
       Object.getOwnPropertyNames(window.xray.router.devices_online).forEach((mac) => {
@@ -257,6 +264,13 @@
         emit("update:policies", policies.value);
         modalAdd.value?.close();
       };
+
+      const applyDeviceFilter = () => {
+        devices.value.forEach((device) => {
+          device.isVisible = deviceFilter.value && deviceFilter.value != "" ? (device.name || device.mac).toLowerCase().includes(deviceFilter.value.toLowerCase()) : true;
+        });
+      };
+
       return {
         policies,
         currentRule,
@@ -274,7 +288,9 @@
         reorderRule,
         addRule,
         editRule,
-        saveRule
+        saveRule,
+        deviceFilter,
+        applyDeviceFilter
       };
     }
   });

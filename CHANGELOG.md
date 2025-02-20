@@ -5,6 +5,7 @@
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure that outdated files are updated._
 
 - ADDED: When a new version is available, an update modal automatically appears on page load. The modal includes a `Don't want to update` button which, when clicked, dismisses the modal and prevents future notifications for that specific version.
+- ADDED: a new filter text box to filter the big list of devices (appears next to `Show all devices` checkbox).
 - IMPROVED: Enhanced X-RAY `access` log display. Access logs now show the source device name (if available) and the target domain name (if available), providing clearer context for connections. **This is not precise though**.
 
 ## [0.37.1] - 2025-02-19

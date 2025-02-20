@@ -64,13 +64,12 @@
           hasUpdate.value = vCompare(latest_version.value, current_version.value) === 1;
           if (hasUpdate.value === true) {
             window.xray.server.xray_version_latest = latest_version.value;
+            if (refusedToUpdateVersion.value != latest_version.value) {
+              updateModal.value.show();
+            }
           }
 
           changelog.value = md.render(response.data[0].body);
-
-          if (refusedToUpdateVersion.value != latest_version.value) {
-            updateModal.value.show();
-          }
         }
       }, 2000);
 

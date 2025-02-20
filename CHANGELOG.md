@@ -1,5 +1,11 @@
 # XRAYUI Changelog
 
+## [0.38.1] - 2025-02-20
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure that outdated files are updated._
+
+- FIXED: a new version window fix.
+
 ## [0.38.0] - 2025-02-20
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure that outdated files are updated._

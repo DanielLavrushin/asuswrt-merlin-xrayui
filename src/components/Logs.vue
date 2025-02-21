@@ -102,7 +102,7 @@
           .split("\n")
           .map((line) => {
             // 2025/02/19 17:06:49 from 192.168.1.100:61132 accepted tcp:target:443 [outbound -> inbound]
-            const regex = /^\d{4}\/\d{2}\/\d{2}\s(\d{2}:\d{2}:\d{2}) from (\d{1,3}(?:\.\d{1,3}){3})(?::\d+)? accepted (?:tcp|udp):([^:]+):(\d+) \[([^ ]+) -> ([^\]]+)\]$/;
+            const regex = /^\d{4}\/\d{2}\/\d{2}\s(\d{2}:\d{2}:\d{2})(?:\.\d+)? from (\d{1,3}(?:\.\d{1,3}){3})(?::\d+)? accepted (?:tcp|udp):([^:]+):(\d+) \[([^ ]+) -> ([^\]]+)\]$/;
             const match = line.match(regex);
             if (match) {
               let logentry = new AccessLogEntry(match);

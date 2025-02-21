@@ -61,6 +61,10 @@ A: If you already have an Xray configuration file that you want to use, you need
 ```
 Once the file is placed here, the ASUSWRT Merlin XrayUI interface will automatically reflect the changes.
 
+**Q: What is Bypass/Redirect Policy?**
+
+A: The [Bypass/Redirect Policy](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/wiki/Bypass-Redirect-Policy-Overview) is a set of rules that determines how network traffic is handled by Xray on a per-port or per-device basis.
+
 **Q: How can I configure a simple client on my ASUS router?**
 
 A: you can refference this [wiki guide](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/wiki/Xray-Client-Configuration-Guide)

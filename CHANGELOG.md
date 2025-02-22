@@ -1,5 +1,13 @@
 # XRAYUI Changelog
 
+## [0.xx.x] - 2025-xx-xx
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure that outdated files are updated._
+
+- FIXED: logs are not correctly parsed in the `xray-core 25.2`.
+- REMOVED: loading window on page load.
+- ADDED: config size to visualize config limit.
+
 ## [0.38.1] - 2025-02-20
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure that outdated files are updated._

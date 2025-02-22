@@ -31,11 +31,9 @@
 
       onMounted(async () => {
         window.show_menu();
-        window.showLoading(null, "waiting");
         await engine.loadXrayConfig();
-        await engine.submit(SubmtActions.initResponse, null, 1000);
+        await engine.submit(SubmtActions.initResponse);
         uiResponse.value = await engine.getXrayResponse();
-        window.hideLoading();
       });
 
       provide("uiResponse", uiResponse);

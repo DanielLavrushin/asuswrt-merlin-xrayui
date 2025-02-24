@@ -344,6 +344,9 @@ configure_firewall_client_direct() {
     # Exclude STUN (WebRTC)
     iptables -t nat -A XRAYUI -p udp -m u32 --u32 "32=0x2112A442" -j RETURN || printlog true "Failed to add STUN in NAT." $CERR
 
+    # Exclude NTP (UDP port 123)
+    iptables -t nat -A XRAYUI -p udp --dport 123 -j RETURN || printlog true "Failed to add NTP rule in NAT." $CERR
+
     # Exclude the WireGuard subnet 10.122.0.0/24
     if [ "$(nvram get wgs_enable)" == "1" ]; then
         printlog true "WireGuard enabled. Adding exclusion rules for WireGuard."
@@ -491,10 +494,13 @@ configure_firewall_client_tproxy() {
     iptables -t mangle -A XRAYUI -d 239.0.0.0/8 -j RETURN || printlog true "Failed to add multicast rule (239.0.0.0/8) in MANGLE." $CERR
 
     # Exclude STUN (WebRTC)
-    iptables -t mangle -A XRAYUI -p udp -m u32 --u32 "32=0x2112A442" -j RETURN || printlog true "Failed to add STUN in mangle." $CERR
+    iptables -t mangle -A XRAYUI -p udp -m u32 --u32 "32=0x2112A442" -j RETURN || printlog true "Failed to add STUN in MANGLE." $CERR
 
     # Exclude traffic in DNAT state (covers inbound port-forwards):
     iptables -t mangle -A XRAYUI -m conntrack --ctstate DNAT -j RETURN
+
+    # Exclude NTP (UDP port 123)
+    iptables -t mangle -A XRAYUI -p udp --dport 123 -j RETURN || printlog true "Failed to add NTP rule in MANGLE." $CERR
 
     # Exclude the WireGuard subnet 10.122.0.0/24
     if [ "$(nvram get wgs_enable)" == "1" ]; then

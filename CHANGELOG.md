@@ -1,13 +1,13 @@
 # XRAYUI Changelog
 
-## [0.xx.x] - 2025-xx-xx
+## [0.38.2] - 2025-02-24
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure that outdated files are updated._
 
+- ADDED: an exclusion rule for `NTP` traffic (UDP port `123`), preventing time synchronization services from being inadvertently redirected to `xray`.
 - FIXED: an issue where logs were not correctly parsed in `xray-core 25.2`.
 - REMOVED: the loading window that appeared on page load, improving the user experience.
-- ADDED: a visible indicator showing current `config.json` size, helping users keep track of the configuration file limit.
-- ADDED: an exclusion rule for `NTP` traffic (UDP port `123`), preventing time synchronization services from being inadvertently redirected to `xray`.
+- ADDED: a visible character counter showing current `config.json` size, helping users keep track of the configuration file limit.
 
 ## [0.38.1] - 2025-02-20
 

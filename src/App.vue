@@ -267,4 +267,9 @@
   .flex-checkbox.flex-checkbox-50 > * {
     flex: 0 1 calc(50%);
   }
+  blockquote {
+    margin: 10px 0;
+    padding: 5px;
+    border-left: 3px solid #ffcc00;
+  }
 </style>

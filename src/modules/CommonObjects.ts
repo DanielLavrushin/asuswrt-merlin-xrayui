@@ -1,6 +1,6 @@
 import { XrayHttpClientObject, XraySocksClientObject, XrayVlessClientObject, XrayVmessClientObject } from "./ClientsObjects";
 import { ISecurityProtocol, IXrayServer } from "./Interfaces";
-import { XrayProtocol, XrayProtocolMode } from "./Options";
+import XrayOptions, { XrayProtocol, XrayProtocolMode } from "./Options";
 import { XrayStreamHttpSettingsObject, XrayStreamKcpSettingsObject, XrayStreamTcpSettingsObject, XrayStreamWsSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamSplitHttpSettingsObject } from "./TransportObjects";
 
 class XraySniffingObject {
@@ -65,7 +65,7 @@ class XrayAllocateObject {
 }
 
 class XrayStreamTlsCertificateObject {
-  static usageOptions = ["encipherment", "verify", "issue"];
+  static usageOptions = XrayOptions.usageOptions;
 
   public ocspStapling? = 3600;
   public oneTimeLoading? = false;
@@ -86,7 +86,7 @@ class XrayStreamTlsCertificateObject {
 }
 
 class XrayStreamTlsSettingsObject implements ISecurityProtocol {
-  static alpnOptions = ["h2", "http/1.1"];
+  static alpnOptions = XrayOptions.alpnOptions;
   static fingerprintOptions = ["", "randomized", "random", "chrome", "firefox", "ios", "android", "safari", "edge", "360", "qq"];
   static tlsVersionsOptions = ["1.0", "1.1", "1.2", "1.3"];
 
@@ -532,22 +532,47 @@ class XrayParsedUrlObject {
 
   public constructor(url: string) {
     const [protocol, rest] = url.split("://");
+    this.protocol = protocol;
+    const extraParams = {} as any;
+
+    if (protocol === XrayProtocol.VMESS) {
+      const vmessJson = JSON.parse(atob(rest));
+      this.server = vmessJson.add;
+      this.port = parseInt(vmessJson.port);
+      this.uuid = vmessJson.id;
+      this.tag = vmessJson.ps;
+      this.network = vmessJson.net;
+      this.security = vmessJson.tls;
+      this.parsedParams = vmessJson;
+      return;
+    } else if (protocol === "ss") {
+      const [authHost, queryFragment] = rest.split("?");
+      const [uuid, serverPort] = authHost.split("@");
+      const ssDecoded = atob(uuid);
+      const [method, pass] = ssDecoded.split(":");
+      extraParams["method"] = method;
+      extraParams["pass"] = pass;
+    }
+
     const [authHost, queryFragment] = rest.split("?");
     const [uuid, serverPort] = authHost.split("@");
     const [server, port] = serverPort.split(":");
     const [query, tag] = queryFragment.split("#");
 
     const params = new URLSearchParams(query);
-
     params.forEach((value: string, key: string) => {
-      // eslint-disable-next-line
       this.parsedParams[key] = value;
     });
+    if (extraParams) {
+      Object.keys(extraParams).forEach((key) => {
+        // eslint-disable-next-line
+        this.parsedParams[key] = extraParams[key];
+      });
+    }
 
     this.tag = tag;
     this.server = server;
     this.port = parseInt(port);
-    this.protocol = protocol;
     this.uuid = uuid;
     this.network = this.parsedParams.type;
     this.security = this.parsedParams.security;

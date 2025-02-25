@@ -9,7 +9,7 @@ const XrayOptions = {
   domainStrategyOptions: ["AsIs", "IPIfNonMatch", "IPOnDemand"],
   domainMatcherOptions: ["hybrid", "linear"],
   usageOptions: ["encipherment", "verify", "issue"],
-  alpnOptions: ["h2", "http/1.1"],
+  alpnOptions: ["h3", "h2", "http/1.1"],
   fingerprintOptions: ["randomized", "random", "chrome", "firefox", "ios", "android", "safari", "edge", "360", "qq"],
   tlsVersionsOptions: ["1.0", "1.1", "1.2", "1.3"],
   headerTypes: ["none", "http", "srtp", "utp", "wechat-video", "dtls", "wireguard"],

@@ -1,5 +1,14 @@
 # XRAYUI Changelog
 
+## [0.3x.x] - 2025-0x-xx
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure that outdated files are updated._
+
+- ADDED: Support for detailed importing of configuration links for `Vmess`, `Shadowsocks`, and `Trojan`.
+  - **Vmess:** Configuration links are decoded. All essential connection parameters (such as server address, port, UUID, and network settings) are extracted.
+  - **Shadowsocks:** Encrypted user credentials are decoded to retrieve the encryption method and password.
+  - **Trojan:** Connection details, including host, port, and security settings, are accurately parsed.
+
 ## [0.38.3] - 2025-02-25
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure that outdated files are updated._

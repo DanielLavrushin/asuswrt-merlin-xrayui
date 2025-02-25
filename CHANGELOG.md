@@ -1,5 +1,13 @@
 # XRAYUI Changelog
 
+## [0.38.3] - 2025-02-25
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure that outdated files are updated._
+
+- FIXED: Resolved an issue where sorting rules were not applied correctly in the final rules array.
+  > Please reapply your settings (no additional changes needed).
+- FIXED: The page now remains responsive even when there is no internet connection.
+
 ## [0.38.2] - 2025-02-24
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure that outdated files are updated._

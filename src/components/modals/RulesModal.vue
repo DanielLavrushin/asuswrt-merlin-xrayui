@@ -410,6 +410,8 @@
         allRules.value.forEach((r, idx) => {
           r.idx = idx;
         });
+        rules.value = rules.value.sort((a, b) => (a.idx || 0) - (b.idx || 0));
+        disabledRules.value = disabledRules.value.sort((a, b) => (a.idx || 0) - (b.idx || 0));
       };
       // Expose to template
       return {

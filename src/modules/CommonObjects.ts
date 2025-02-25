@@ -242,10 +242,21 @@ class XrayRoutingObject {
         policy.normalize();
       });
     }
+
+    if (this.disabled_rules && this.disabled_rules.length > 0) {
+      this.disabled_rules.forEach((rule) => {
+        rule.normalize();
+      });
+      this.disabled_rules = this.disabled_rules.sort((a, b) => a.idx - b.idx);
+    } else {
+      this.disabled_rules = undefined;
+    }
+
     if (this.rules && this.rules.length > 0) {
       this.rules.forEach((rule) => {
         rule.normalize();
       });
+      this.rules = this.rules.sort((a, b) => a.idx - b.idx);
     } else {
       this.rules = undefined;
     }

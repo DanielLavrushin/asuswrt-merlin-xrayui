@@ -13,7 +13,6 @@
     <link rel="stylesheet" type="text/css" href="index_style.css" />
     <link rel="stylesheet" type="text/css" href="form_style.css" />
     <link rel="stylesheet" type="text/css" href="/js/table/table.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css" />
 
     <script language="JavaScript" type="text/javascript" src="/js/jquery.js"></script>
     <script language="JavaScript" type="text/javascript" src="/js/httpApi.js"></script>
@@ -33,7 +32,8 @@
           territory: '<% nvram_get("territory_code"); %>',
           devices_online: JSON.parse(`<% get_clientlist(); %>`),
           devices: JSON.parse(`<% get_all_basic_clientlist(); %>`),
-          wan_ip: '<% nvram_get("wan_ipaddr"); %>'
+          wan_ip: '<% nvram_get("wan_ipaddr"); %>',
+          wan_connected: '<% nvram_get("link_internet"); %>' == "2"
         },
         server: {
           isRunning: parseInt('<% sysinfo("pid.xray"); %>') > 0
@@ -54,9 +54,14 @@
   <body>
     <div id="xrayui-app"></div>
     <div id="xrayui-modals"></div>
-    <script src="/ext/xrayui/app.js"></script>
     <script>
-      window.xray_hints = {};
+      if (xray.router.wan_connected) {
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = "https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css";
+        document.head.appendChild(link);
+      }
     </script>
+    <script src="/ext/xrayui/app.js"></script>
   </body>
 </html>

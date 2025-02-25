@@ -227,16 +227,6 @@ class Engine {
 
     if (config.routing) {
       config.routing.normalize();
-      if (config.routing.rules) {
-        config.routing.rules.forEach((rule) => {
-          rule.normalize();
-        });
-      }
-      if (config.routing.disabled_rules) {
-        config.routing.disabled_rules.forEach((rule) => {
-          rule.normalize();
-        });
-      }
     }
 
     if (config.log) {

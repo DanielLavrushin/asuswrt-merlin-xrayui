@@ -8,6 +8,8 @@ PIDFILE=/var/run/xray.pid
 
 xray_addons_asp_page=/jffs/addons/xrayui/index.asp
 
+RMODEL=$(nvram get model)
+
 XRAY_CONFIG="/opt/etc/xray/config.json"
 dir_xrayui="/www/user/xrayui"
 XRAYUI_CONFIG_FILE="/opt/etc/xrayui.conf"
@@ -1220,7 +1222,15 @@ install() {
     install_opkg_package libopenssl false
     install_opkg_package flock false
     install_opkg_package logrotate false
-    install_opkg_package xray true
+
+    case "$RMODEL" in
+    "RT-AX56U" | "RT-AX56U V2" | "RT-AX55" | "RP-AX56")
+        install_opkg_package xray_nohf true
+        ;;
+    *)
+        install_opkg_package xray true
+        ;;
+    esac
 
     # xrayui config
     if [ ! -f "$XRAYUI_CONFIG_FILE" ]; then

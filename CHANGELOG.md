@@ -4,6 +4,7 @@
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure that outdated files are updated._
 
+- ADDED: Fallback to software floating-point support (`xray_nohf`) for lower-end router models (`RT-AX56U`, `RT-AX56U V2`, `RT-AX55`, `RP-AX56`).
 - ADDED: Support for detailed importing of configuration links for `Vmess`, `Shadowsocks`, and `Trojan`.
   - **Vmess:** Configuration links are decoded. All essential connection parameters (such as server address, port, UUID, and network settings) are extracted.
   - **Shadowsocks:** Encrypted user credentials are decoded to retrieve the encryption method and password.

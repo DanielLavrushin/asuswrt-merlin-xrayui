@@ -33,7 +33,9 @@
         window.show_menu();
         await engine.loadXrayConfig();
         await engine.submit(SubmtActions.initResponse);
-        uiResponse.value = await engine.getXrayResponse();
+        setTimeout(async () => {
+          uiResponse.value = await engine.getXrayResponse();
+        }, 1000);
       });
 
       provide("uiResponse", uiResponse);

@@ -154,6 +154,7 @@
 
       const show = () => {
         options.value = new GeneralOptions();
+        console.log(uiResponse?.value);
         options.value.startup = window.xray.custom_settings.xray_startup === "y";
         options.value.logs_access = config.value.log?.access != "none";
         options.value.logs_error = config.value.log?.error != "none";

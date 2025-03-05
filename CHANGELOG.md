@@ -8,6 +8,7 @@
   - **Vmess:** Configuration links are decoded. All essential connection parameters (such as server address, port, UUID, and network settings) are extracted.
   - **Shadowsocks:** Encrypted user credentials are decoded to retrieve the encryption method and password.
   - **Trojan:** Connection details, including host, port, and security settings, are accurately parsed.
+- IMPROVED: General frontend code refactor/cleanup.
 
 ## [0.38.3] - 2025-02-25
 

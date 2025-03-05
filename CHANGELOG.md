@@ -1,6 +1,6 @@
 # XRAYUI Changelog
 
-## [0.3x.x] - 2025-0x-xx
+## [0.39.0] - 2025-03-05
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure that outdated files are updated._
 
@@ -9,6 +9,7 @@
   - **Shadowsocks:** Encrypted user credentials are decoded to retrieve the encryption method and password.
   - **Trojan:** Connection details, including host, port, and security settings, are accurately parsed.
 - IMPROVED: General frontend code refactor/cleanup.
+- FIXED: Add a delay before fetching Xray response data on page initial load.
 
 ## [0.38.3] - 2025-02-25
 

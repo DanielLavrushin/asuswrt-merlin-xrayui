@@ -9,6 +9,24 @@
 This repository provides a lightweight and efficient UI to manage your [X-RAY Core](https://github.com/XTLS/Xray-core) services on routers running ASUSWRT-Merlin firmware.
 ![image](https://github.com/user-attachments/assets/aeb63ef5-615a-4758-b305-8cf5d6feb709)
 
+<details>
+    <summary>Supported devices</summary>
+    In general, all devices that can run Merlin-WRT firmware (`384.15` or later, `3006.102.1` or later) are supported. Below is the list of models where xrayui has been proven to work: 
+
+    - RT-AC66U
+    - RT-AC68U
+    - TUF-AX5400
+    - RT-AX58U
+    - RT-AX86U
+    - RT-AX88U
+    - RT-AX92U
+    - GT-AX6000
+    - GT-AXE11000
+    - RT-BE88U
+
+</details>
+ 
+
 ## Requirements
 
 ### SSH Access 

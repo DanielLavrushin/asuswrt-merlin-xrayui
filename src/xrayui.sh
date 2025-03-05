@@ -1222,15 +1222,7 @@ install() {
     install_opkg_package libopenssl false
     install_opkg_package flock false
     install_opkg_package logrotate false
-
-    case "$RMODEL" in
-    "RT-AX56U" | "RT-AX56U V2" | "RT-AX55" | "RP-AX56")
-        install_opkg_package xray_nohf true
-        ;;
-    *)
-        install_opkg_package xray true
-        ;;
-    esac
+    install_opkg_package xray true
 
     # xrayui config
     if [ ! -f "$XRAYUI_CONFIG_FILE" ]; then

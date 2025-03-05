@@ -103,18 +103,25 @@
     },
     setup(props) {
       const proxy = ref<XrayOutboundObject<XrayShadowsocksOutboundObject>>(props.proxy ?? new XrayOutboundObject<XrayShadowsocksOutboundObject>(XrayProtocol.SHADOWSOCKS, new XrayShadowsocksOutboundObject()));
+      const encryptions = [
+        { e: "2022-blake3-aes-128-gcm", l: 16 },
+        { e: "2022-blake3-aes-256-gcm", l: 32 },
+        { e: "2022-blake3-chacha20-poly1305", l: 32 },
+        { e: "aes-256-gcm", l: 32 },
+        { e: "aes-128-gcm", l: 16 },
+        { e: "chacha20-ietf-poly1305", l: 32 },
+        { e: "none", l: 0 },
+        { e: "plain", l: 0 }
+      ];
+
+      const generate_password = () => {
+        const selectedEnc = encryptions.find((e) => e.e === proxy.value.settings.servers[0].method);
+        proxy.value.settings.servers[0].password = engine.generateRandomBase64(selectedEnc?.l);
+      };
       return {
         proxy,
-        encryptions: [
-          { e: "2022-blake3-aes-128-gcm", l: 16 },
-          { e: "2022-blake3-aes-256-gcm", l: 32 },
-          { e: "2022-blake3-chacha20-poly1305", l: 32 },
-          { e: "aes-256-gcm", l: 32 },
-          { e: "aes-128-gcm", l: 16 },
-          { e: "chacha20-ietf-poly1305", l: 32 },
-          { e: "none", l: 0 },
-          { e: "plain", l: 0 }
-        ]
+        encryptions,
+        generate_password
       };
     }
   });

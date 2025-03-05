@@ -166,7 +166,7 @@ class Engine {
         const customSettings = JSON.stringify(window.xray.custom_settings);
         if (customSettings.length > 8 * 1024) {
           alert("Configuration is too large to submit via custom settings.");
-          return;
+          throw new Error("Configuration is too large to submit via custom settings.");
         }
 
         amngCustomInput.type = "hidden";
@@ -339,41 +339,13 @@ class Engine {
             break;
         }
 
-        proxy.streamSettings = plainToInstance(XrayStreamSettingsObject, proxy.streamSettings) ?? new XrayStreamSettingsObject();
+        proxy.streamSettings = transformStreamSettings(proxy.streamSettings);
         if (proxy.allocate) {
           proxy.allocate = plainToInstance(XrayAllocateObject, proxy.allocate) as XrayAllocateObject;
         }
 
         if (proxy.sniffing) {
           proxy.sniffing = plainToInstance(XraySniffingObject, proxy.sniffing) as XraySniffingObject;
-        }
-        if (proxy.streamSettings.sockopt) {
-          proxy.streamSettings.sockopt = plainToInstance(XraySockoptObject, proxy.streamSettings.sockopt) as XraySockoptObject;
-        }
-
-        if (proxy.streamSettings.realitySettings) {
-          proxy.streamSettings.realitySettings = plainToInstance(XrayStreamRealitySettingsObject, proxy.streamSettings.realitySettings) as XrayStreamRealitySettingsObject;
-        }
-        if (proxy.streamSettings.tlsSettings) {
-          proxy.streamSettings.tlsSettings = plainToInstance(XrayStreamTlsSettingsObject, proxy.streamSettings.tlsSettings) as XrayStreamTlsSettingsObject;
-        }
-        if (proxy.streamSettings.tcpSettings) {
-          proxy.streamSettings.tcpSettings = plainToInstance(XrayStreamTcpSettingsObject, proxy.streamSettings.tcpSettings) as XrayStreamTcpSettingsObject;
-        }
-        if (proxy.streamSettings.kcpSettings) {
-          proxy.streamSettings.kcpSettings = plainToInstance(XrayStreamKcpSettingsObject, proxy.streamSettings.kcpSettings) as XrayStreamKcpSettingsObject;
-        }
-        if (proxy.streamSettings.wsSettings) {
-          proxy.streamSettings.wsSettings = plainToInstance(XrayStreamWsSettingsObject, proxy.streamSettings.wsSettings) as XrayStreamWsSettingsObject;
-        }
-        if (proxy.streamSettings.httpupgradeSettings) {
-          proxy.streamSettings.httpupgradeSettings = plainToInstance(XrayStreamHttpUpgradeSettingsObject, proxy.streamSettings.httpupgradeSettings) as XrayStreamHttpUpgradeSettingsObject;
-        }
-        if (proxy.streamSettings.grpcSettings) {
-          proxy.streamSettings.grpcSettings = plainToInstance(XrayStreamGrpcSettingsObject, proxy.streamSettings.grpcSettings) as XrayStreamGrpcSettingsObject;
-        }
-        if (proxy.streamSettings.xhttpSettings) {
-          proxy.streamSettings.xhttpSettings = plainToInstance(XrayStreamHttpSettingsObject, proxy.streamSettings.xhttpSettings) as XrayStreamHttpSettingsObject;
         }
         this.xrayConfig.inbounds[index] = proxy;
       });
@@ -426,34 +398,7 @@ class Engine {
             break;
         }
 
-        proxy.streamSettings = plainToInstance(XrayStreamSettingsObject, proxy.streamSettings) ?? new XrayStreamSettingsObject();
-        if (proxy.streamSettings.sockopt) {
-          proxy.streamSettings.sockopt = plainToInstance(XraySockoptObject, proxy.streamSettings.sockopt) as XraySockoptObject;
-        }
-        if (proxy.streamSettings.realitySettings) {
-          proxy.streamSettings.realitySettings = plainToInstance(XrayStreamRealitySettingsObject, proxy.streamSettings.realitySettings) as XrayStreamRealitySettingsObject;
-        }
-        if (proxy.streamSettings.tlsSettings) {
-          proxy.streamSettings.tlsSettings = plainToInstance(XrayStreamTlsSettingsObject, proxy.streamSettings.tlsSettings) as XrayStreamTlsSettingsObject;
-        }
-        if (proxy.streamSettings.tcpSettings) {
-          proxy.streamSettings.tcpSettings = plainToInstance(XrayStreamTcpSettingsObject, proxy.streamSettings.tcpSettings) as XrayStreamTcpSettingsObject;
-        }
-        if (proxy.streamSettings.kcpSettings) {
-          proxy.streamSettings.kcpSettings = plainToInstance(XrayStreamKcpSettingsObject, proxy.streamSettings.kcpSettings) as XrayStreamKcpSettingsObject;
-        }
-        if (proxy.streamSettings.wsSettings) {
-          proxy.streamSettings.wsSettings = plainToInstance(XrayStreamWsSettingsObject, proxy.streamSettings.wsSettings) as XrayStreamWsSettingsObject;
-        }
-        if (proxy.streamSettings.httpupgradeSettings) {
-          proxy.streamSettings.httpupgradeSettings = plainToInstance(XrayStreamHttpUpgradeSettingsObject, proxy.streamSettings.httpupgradeSettings) as XrayStreamHttpUpgradeSettingsObject;
-        }
-        if (proxy.streamSettings.grpcSettings) {
-          proxy.streamSettings.grpcSettings = plainToInstance(XrayStreamGrpcSettingsObject, proxy.streamSettings.grpcSettings) as XrayStreamGrpcSettingsObject;
-        }
-        if (proxy.streamSettings.xhttpSettings) {
-          proxy.streamSettings.xhttpSettings = plainToInstance(XrayStreamHttpSettingsObject, proxy.streamSettings.xhttpSettings) as XrayStreamHttpSettingsObject;
-        }
+        proxy.streamSettings = transformStreamSettings(proxy.streamSettings);
         this.xrayConfig.outbounds[index] = proxy;
       });
 
@@ -520,6 +465,40 @@ class Engine {
     }
     return null;
   }
+}
+
+function transformStreamSettings(streamSettings: XrayStreamSettingsObject | undefined): XrayStreamSettingsObject {
+  if (!streamSettings) return new XrayStreamSettingsObject();
+  const settings = plainToInstance(XrayStreamSettingsObject, streamSettings);
+
+  if (streamSettings.sockopt) {
+    settings.sockopt = plainToInstance(XraySockoptObject, streamSettings.sockopt) as XraySockoptObject;
+  }
+  if (streamSettings.realitySettings) {
+    settings.realitySettings = plainToInstance(XrayStreamRealitySettingsObject, streamSettings.realitySettings) as XrayStreamRealitySettingsObject;
+  }
+  if (streamSettings.tlsSettings) {
+    settings.tlsSettings = plainToInstance(XrayStreamTlsSettingsObject, streamSettings.tlsSettings) as XrayStreamTlsSettingsObject;
+  }
+  if (streamSettings.tcpSettings) {
+    settings.tcpSettings = plainToInstance(XrayStreamTcpSettingsObject, streamSettings.tcpSettings) as XrayStreamTcpSettingsObject;
+  }
+  if (streamSettings.kcpSettings) {
+    settings.kcpSettings = plainToInstance(XrayStreamKcpSettingsObject, streamSettings.kcpSettings) as XrayStreamKcpSettingsObject;
+  }
+  if (streamSettings.wsSettings) {
+    settings.wsSettings = plainToInstance(XrayStreamWsSettingsObject, streamSettings.wsSettings) as XrayStreamWsSettingsObject;
+  }
+  if (streamSettings.httpupgradeSettings) {
+    settings.httpupgradeSettings = plainToInstance(XrayStreamHttpUpgradeSettingsObject, streamSettings.httpupgradeSettings) as XrayStreamHttpUpgradeSettingsObject;
+  }
+  if (streamSettings.grpcSettings) {
+    settings.grpcSettings = plainToInstance(XrayStreamGrpcSettingsObject, streamSettings.grpcSettings) as XrayStreamGrpcSettingsObject;
+  }
+  if (streamSettings.xhttpSettings) {
+    settings.xhttpSettings = plainToInstance(XrayStreamHttpSettingsObject, streamSettings.xhttpSettings) as XrayStreamHttpSettingsObject;
+  }
+  return settings;
 }
 
 let engine = new Engine();

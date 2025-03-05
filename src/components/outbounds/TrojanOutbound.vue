@@ -70,7 +70,6 @@
     props: {
       proxy: XrayOutboundObject<XrayTrojanOutboundObject>
     },
-    methods: {},
     setup(props) {
       const proxy = ref<XrayOutboundObject<XrayTrojanOutboundObject>>(props.proxy ?? new XrayOutboundObject<XrayTrojanOutboundObject>(XrayProtocol.TROJAN, new XrayTrojanOutboundObject()));
       return {

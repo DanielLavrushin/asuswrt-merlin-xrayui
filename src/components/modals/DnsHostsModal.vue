@@ -11,7 +11,7 @@
           <tr class="row_title">
             <th>Domain</th>
             <th>Address(s) split with ;</th>
-            <th style="min-width:120px"></th>
+            <th style="min-width: 120px"></th>
           </tr>
           <tr class="row_title">
             <td>
@@ -40,75 +40,73 @@
   </modal>
 </template>
 <script lang="ts">
-import { defineComponent, ref, watch } from "vue";
-import Modal from "../Modal.vue";
+  import { defineComponent, ref, watch } from "vue";
+  import Modal from "../Modal.vue";
 
-export default defineComponent({
-  name: "DnsHostsModal",
-  components: {
-    Modal,
-  },
-  props: {
-    hosts: {
-      type: Object,
-      required: true,
+  export default defineComponent({
+    name: "DnsHostsModal",
+    components: {
+      Modal
     },
-  },
-  methods: {
-    add() {
-      if (this.host.domain && this.host.address) {
-        let addr = this.host.address.indexOf(";") > -1 ? this.host.address.split(";") : this.host.address;
-        this.hostsList.push({ domain: this.host.domain, address: addr });
-        this.host.domain = "";
-        this.host.address = "";
-        this.syncHosts();
+    props: {
+      hosts: {
+        type: Object,
+        required: true
       }
     },
-    remove(host: any) {
-      if (!confirm("Are you sure you want to remove this host?")) return;
-      this.hostsList.splice(this.hostsList.indexOf(host), 1);
-      this.syncHosts();
-    },
-    show() {
-      this.modal.show();
-    },
-    syncHosts() {
-      const updatedHosts: { [key: string]: string | string[] } = {};
-      this.hostsList.forEach((host) => {
-        updatedHosts[host.domain] =
-          typeof host.address === "string" && host.address.includes(";")
-            ? host.address.split(";")
-            : host.address;
-      });
-      this.$emit("update:hosts", updatedHosts);
-    },
-  },
-  setup(props) {
-    const modal = ref();
-    const host = ref({ domain: "", address: "" });
 
-    const hostsList = ref<any[]>([]);
+    setup(props, { emit }) {
+      const modal = ref();
+      const host = ref({ domain: "", address: "" });
+      const hostsList = ref<any[]>([]);
 
-    watch(
-      () => props.hosts,
-      (newHosts) => {
-        hostsList.value = Object.keys(newHosts).map((key) => ({
-          domain: key,
-          address: Array.isArray(newHosts[key])
-            ? newHosts[key].join(";")
-            : newHosts[key],
-        }));
-      },
-      { immediate: true, deep: true }
-    );
+      const add = () => {
+        if (host.value.domain && host.value.address) {
+          let addr = host.value.address.indexOf(";") > -1 ? host.value.address.split(";") : host.value.address;
+          hostsList.value.push({ domain: host.value.domain, address: addr });
+          host.value.domain = "";
+          host.value.address = "";
+          syncHosts();
+        }
+      };
+      const remove = (host: any) => {
+        if (!confirm("Are you sure you want to remove this host?")) return;
+        hostsList.value.splice(hostsList.value.indexOf(host), 1);
+        syncHosts();
+      };
+      const show = () => {
+        modal.value.show();
+      };
+      const syncHosts = () => {
+        const updatedHosts: { [key: string]: string | string[] } = {};
+        hostsList.value.forEach((host) => {
+          updatedHosts[host.domain] = typeof host.address === "string" && host.address.includes(";") ? host.address.split(";") : host.address;
+        });
+        emit("update:hosts", updatedHosts);
+      };
 
-    return {
-      modal,
-      host,
-      hostsList
-    };
-  },
-});
+      watch(
+        () => props.hosts,
+        (newHosts) => {
+          hostsList.value = Object.keys(newHosts).map((key) => ({
+            domain: key,
+            address: Array.isArray(newHosts[key]) ? newHosts[key].join(";") : newHosts[key]
+          }));
+        },
+        { immediate: true, deep: true }
+      );
+
+      return {
+        modal,
+        host,
+        hostsList,
+        add,
+        remove,
+        show,
+        syncHosts
+      };
+    }
+  });
 </script>
 
 <style scoped></style>

@@ -83,9 +83,6 @@
       Modal,
       Hint
     },
-    data() {
-      return {};
-    },
     props: {
       config: XrayObject
     },

@@ -29,7 +29,6 @@
       Modal,
       JsonPretty
     },
-    props: {},
 
     setup(props) {
       const { t } = useI18n();

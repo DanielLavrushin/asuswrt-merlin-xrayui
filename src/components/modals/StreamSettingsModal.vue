@@ -6,14 +6,14 @@
         <thead>
           <tr>
             <td colspan="2">
-              {{ $t('components.StreamSettingsModal.title') }}
+              {{ $t("components.StreamSettingsModal.title") }}
             </td>
           </tr>
         </thead>
         <tbody>
           <tr>
             <th>
-              {{ $t('components.StreamSettingsModal.label_security') }}
+              {{ $t("components.StreamSettingsModal.label_security") }}
               <hint v-html="$t('components.StreamSettingsModal.hint_security')"></hint>
             </th>
             <td>
@@ -21,18 +21,16 @@
                 <option v-for="(opt, index) in securityOptions" :key="index" :value="opt">{{ opt }}</option>
               </select>
               <span class="row-buttons" v-if="transport.security != 'none'">
-                <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')"
-                  @click="manage_security" />
+                <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click="manage_security" />
               </span>
-              <modal ref="securityModal" :title="$t('components.StreamSettingsModal.modal_security_title')"
-                v-if="transport.security != 'none'">
+              <modal ref="securityModal" :title="$t('components.StreamSettingsModal.modal_security_title')" v-if="transport.security != 'none'">
                 <component :is="securityComponent" :transport="transport" />
               </modal>
             </td>
           </tr>
           <tr>
             <th>
-              {{ $t('components.StreamSettingsModal.label_network') }}
+              {{ $t("components.StreamSettingsModal.label_network") }}
               <hint v-html="$t('components.StreamSettingsModal.hint_network')"></hint>
             </th>
             <td>
@@ -44,13 +42,12 @@
           </tr>
           <tr>
             <th>
-              {{ $t('components.StreamSettingsModal.label_tproxy') }}
+              {{ $t("components.StreamSettingsModal.label_tproxy") }}
               <hint v-html="$t('components.StreamSettingsModal.hint_tproxy')"></hint>
             </th>
             <td>
               <span class="row-buttons">
-                <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')"
-                  @click="manage_sockopt" />
+                <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click="manage_sockopt" />
                 <modal ref="sockoptModal" title="Sockopt Settings">
                   <sockopt v-model:transport="transport"></sockopt>
                 </modal>
@@ -68,119 +65,124 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed } from "vue";
+  import { defineComponent, ref, computed } from "vue";
 
-import { ITransportNetwork, IProtocolType } from "../../modules/Interfaces";
-import { XrayInboundObject } from "../../modules/InboundObjects";
-import { XrayOutboundObject } from "../../modules/OutboundObjects";
-import { XrayOptions } from "../../modules/Options";
-import { XrayStreamGrpcSettingsObject, XrayStreamTcpSettingsObject, XrayStreamKcpSettingsObject, XrayStreamHttpSettingsObject, XrayStreamWsSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamSplitHttpSettingsObject } from "../../modules/TransportObjects";
-import { XrayStreamSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject } from "../../modules/CommonObjects";
+  import { ITransportNetwork, IProtocolType } from "../../modules/Interfaces";
+  import { XrayInboundObject } from "../../modules/InboundObjects";
+  import { XrayOutboundObject } from "../../modules/OutboundObjects";
+  import { XrayOptions } from "../../modules/Options";
+  import { XrayStreamGrpcSettingsObject, XrayStreamTcpSettingsObject, XrayStreamKcpSettingsObject, XrayStreamHttpSettingsObject, XrayStreamWsSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamSplitHttpSettingsObject } from "../../modules/TransportObjects";
+  import { XrayStreamSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject } from "../../modules/CommonObjects";
 
-import Hint from "../Hint.vue";
-import Modal from "../Modal.vue";
+  import Hint from "../Hint.vue";
+  import Modal from "../Modal.vue";
 
-import NetworkTcp from "../transport/Tcp.vue";
-import NetworkKcp from "../transport/Kcp.vue";
-import NetworkWs from "../transport/Ws.vue";
-import NetworkHttp from "../transport/Http.vue";
-import NetworkHttpUpgrade from "../transport/HttpUpgrade.vue";
-import NetworkSplitHttp from "../transport/SplitHttp.vue";
-import NetworkGrpc from "../transport/Grpc.vue";
-import Sockopt from "../transport/Sockopt.vue";
+  import NetworkTcp from "../transport/Tcp.vue";
+  import NetworkKcp from "../transport/Kcp.vue";
+  import NetworkWs from "../transport/Ws.vue";
+  import NetworkHttp from "../transport/Http.vue";
+  import NetworkHttpUpgrade from "../transport/HttpUpgrade.vue";
+  import NetworkSplitHttp from "../transport/SplitHttp.vue";
+  import NetworkGrpc from "../transport/Grpc.vue";
+  import Sockopt from "../transport/Sockopt.vue";
 
-import SecurityTls from "../security/Tls.vue";
-import SecurityReality from "../security/Reality.vue";
+  import SecurityTls from "../security/Tls.vue";
+  import SecurityReality from "../security/Reality.vue";
 
-export default defineComponent({
-  name: "StreamSettingsModal",
-  components: {
-    Modal,
-    Sockopt,
-    Hint
-  },
-  props: {
-    transport: XrayStreamSettingsObject
-  },
-  methods: {
-    manage_security() {
-      this.securityModal.show();
+  export default defineComponent({
+    name: "StreamSettingsModal",
+    components: {
+      Modal,
+      Sockopt,
+      Hint
     },
-    manage_sockopt() {
-      this.sockoptModal.show();
+    props: {
+      transport: XrayStreamSettingsObject
     },
+    methods: {},
+    setup(props, { emit }) {
+      const modal = ref();
+      const securityModal = ref();
+      const sockoptModal = ref();
+      const transport = ref<XrayStreamSettingsObject>(props.transport ?? new XrayStreamSettingsObject());
+      const network = ref<ITransportNetwork>();
+      const proxyType = ref<string>();
 
-    show(proxy: XrayInboundObject<IProtocolType> | XrayOutboundObject<IProtocolType>, proxyType: string) {
-      proxy.streamSettings = this.transport = proxy.streamSettings ?? new XrayStreamSettingsObject();
-      this.proxyType = proxyType;
-      this.modal.show();
-    },
-    save() {
-      this.$emit("save", this.transport);
-      this.modal.close();
-    },
-  },
-  setup(props) {
-    const modal = ref();
-    const securityModal = ref();
-    const sockoptModal = ref();
-    const transport = ref<XrayStreamSettingsObject>(props.transport ?? new XrayStreamSettingsObject());
-    const network = ref<ITransportNetwork>();
-    const proxyType = ref<string>();
-
-    const networkComponent = computed(() => {
-      switch (transport.value.network) {
-        case "tcp":
-          transport.value.tcpSettings = transport.value.tcpSettings ?? new XrayStreamTcpSettingsObject();
-          return NetworkTcp;
-        case "kcp":
-          transport.value.kcpSettings = transport.value.kcpSettings ?? new XrayStreamKcpSettingsObject();
-          return NetworkKcp;
-        case "ws":
-          transport.value.wsSettings = transport.value.wsSettings ?? new XrayStreamWsSettingsObject();
-          return NetworkWs;
-        case "xhttp":
-          transport.value.xhttpSettings = transport.value.xhttpSettings ?? new XrayStreamHttpSettingsObject();
-          return NetworkHttp;
-        case "httpupgrade":
-          transport.value.httpupgradeSettings = transport.value.httpupgradeSettings ?? new XrayStreamHttpUpgradeSettingsObject();
-          return NetworkHttpUpgrade;
-        /* case "splithttp":
+      const networkComponent = computed(() => {
+        switch (transport.value.network) {
+          case "tcp":
+            transport.value.tcpSettings = transport.value.tcpSettings ?? new XrayStreamTcpSettingsObject();
+            return NetworkTcp;
+          case "kcp":
+            transport.value.kcpSettings = transport.value.kcpSettings ?? new XrayStreamKcpSettingsObject();
+            return NetworkKcp;
+          case "ws":
+            transport.value.wsSettings = transport.value.wsSettings ?? new XrayStreamWsSettingsObject();
+            return NetworkWs;
+          case "xhttp":
+            transport.value.xhttpSettings = transport.value.xhttpSettings ?? new XrayStreamHttpSettingsObject();
+            return NetworkHttp;
+          case "httpupgrade":
+            transport.value.httpupgradeSettings = transport.value.httpupgradeSettings ?? new XrayStreamHttpUpgradeSettingsObject();
+            return NetworkHttpUpgrade;
+          /* case "splithttp":
            transport.value.splithttpSettings = transport.value.splithttpSettings ?? new XrayStreamSplitHttpSettingsObject();
            return NetworkSplitHttp;*/
-        case "grpc":
-          transport.value.grpcSettings = transport.value.grpcSettings ?? new XrayStreamGrpcSettingsObject();
-          return NetworkGrpc;
-        default:
-          return null;
-      }
-    });
+          case "grpc":
+            transport.value.grpcSettings = transport.value.grpcSettings ?? new XrayStreamGrpcSettingsObject();
+            return NetworkGrpc;
+          default:
+            return null;
+        }
+      });
 
-    const securityComponent = computed(() => {
-      switch (transport.value.security) {
-        case "tls":
-          transport.value.tlsSettings = transport.value.tlsSettings ?? new XrayStreamTlsSettingsObject();
-          return SecurityTls;
-        case "reality":
-          transport.value.realitySettings = transport.value.realitySettings ?? new XrayStreamRealitySettingsObject();
-          return SecurityReality;
+      const securityComponent = computed(() => {
+        switch (transport.value.security) {
+          case "tls":
+            transport.value.tlsSettings = transport.value.tlsSettings ?? new XrayStreamTlsSettingsObject();
+            return SecurityTls;
+          case "reality":
+            transport.value.realitySettings = transport.value.realitySettings ?? new XrayStreamRealitySettingsObject();
+            return SecurityReality;
 
-        default:
-          return null;
-      }
-    });
+          default:
+            return null;
+        }
+      });
 
-    return {
-      transport,
-      network,
-      modal,
-      securityModal, sockoptModal,
-      networkComponent,
-      securityComponent,
-      proxyType,
-      securityOptions: XrayOptions.securityOptions,
-      transportOptions: XrayOptions.transportOptions,
-    };
-  },
-});
+      const manage_security = () => {
+        securityModal.value.show();
+      };
+      const manage_sockopt = () => {
+        sockoptModal.value.show();
+      };
+
+      const show = (proxy: XrayInboundObject<IProtocolType> | XrayOutboundObject<IProtocolType>, pxtype: string) => {
+        proxy.streamSettings = transport.value = proxy.streamSettings ?? new XrayStreamSettingsObject();
+        proxyType.value = pxtype;
+        modal.value.show();
+      };
+      const save = () => {
+        emit("save", transport.value);
+        modal.value.close();
+      };
+
+      return {
+        transport,
+        network,
+        modal,
+        securityModal,
+        sockoptModal,
+        networkComponent,
+        securityComponent,
+        proxyType,
+        securityOptions: XrayOptions.securityOptions,
+        transportOptions: XrayOptions.transportOptions,
+        manage_security,
+        manage_sockopt,
+        show,
+        save
+      };
+    }
+  });
 </script>

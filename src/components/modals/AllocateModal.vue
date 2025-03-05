@@ -4,13 +4,13 @@
       <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
         <thead>
           <tr>
-            <td colspan="2">{{ $t('components.AllocateModal.label_settings') }}</td>
+            <td colspan="2">{{ $t("components.AllocateModal.label_settings") }}</td>
           </tr>
         </thead>
         <tbody>
           <tr>
             <th>
-              {{ $t('components.AllocateModal.label_strategy') }}
+              {{ $t("components.AllocateModal.label_strategy") }}
               <hint v-html="$t('components.AllocateModal.hint_strategy')"></hint>
             </th>
             <td>
@@ -22,23 +22,21 @@
           </tr>
           <tr v-if="allocate.strategy == 'random'">
             <th>
-              {{ $t('components.AllocateModal.label_refresh') }}
+              {{ $t("components.AllocateModal.label_refresh") }}
               <hint v-html="$t('components.AllocateModal.hint_refresh')"></hint>
             </th>
             <td>
-              <input type="text" maxlength="2" class="input_6_table" v-model="allocate.refresh"
-                onkeypress="return validator.isNumber(this,event);" />
+              <input type="text" maxlength="2" class="input_6_table" v-model="allocate.refresh" onkeypress="return validator.isNumber(this,event);" />
               <span class="hint-color">The minimum is 2, and recommended is 5</span>
             </td>
           </tr>
           <tr v-if="allocate.strategy == 'random'">
             <th>
-              {{ $t('components.AllocateModal.label_concurrency') }}
+              {{ $t("components.AllocateModal.label_concurrency") }}
               <hint v-html="$t('components.AllocateModal.hint_concurrency')"></hint>
             </th>
             <td>
-              <input type="text" maxlength="2" class="input_6_table" v-model="allocate.concurrency"
-                onkeypress="return validator.isNumber(this,event);" />
+              <input type="text" maxlength="2" class="input_6_table" v-model="allocate.concurrency" onkeypress="return validator.isNumber(this,event);" />
               <span class="hint-color">The minimum is 1, and recommended is 3</span>
             </td>
           </tr>
@@ -51,42 +49,44 @@
   </modal>
 </template>
 <script lang="ts">
-import { defineComponent, ref, } from "vue";
-import Modal from "../Modal.vue";
-import { XrayAllocateObject } from "../../modules/CommonObjects";
-import { XrayInboundObject } from "../../modules/InboundObjects";
-import { IProtocolType } from "../../modules/Interfaces";
-import Hint from "../Hint.vue";
+  import { defineComponent, ref } from "vue";
+  import Modal from "../Modal.vue";
+  import { XrayAllocateObject } from "../../modules/CommonObjects";
+  import { XrayInboundObject } from "../../modules/InboundObjects";
+  import { IProtocolType } from "../../modules/Interfaces";
+  import Hint from "../Hint.vue";
 
-export default defineComponent({
-  name: "AllocateModal",
-  components: {
-    Hint,
-    Modal,
-  },
-  props: {
-    allocate: XrayAllocateObject,
-  },
-  methods: {
-    show(inbound: XrayInboundObject<IProtocolType>) {
-      inbound.allocate = this.allocate = inbound.allocate ?? new XrayAllocateObject();
-      this.modal.show();
+  export default defineComponent({
+    name: "AllocateModal",
+    components: {
+      Hint,
+      Modal
     },
-    save() {
-      this.$emit("save", this.allocate);
-      this.modal.close();
+    props: {
+      allocate: XrayAllocateObject
     },
-  },
-  setup(props) {
-    const modal = ref();
+    setup(props, { emit }) {
+      const modal = ref();
+      const allocate = ref<XrayAllocateObject>(props.allocate ?? new XrayAllocateObject());
 
-    const allocate = ref<XrayAllocateObject>(props.allocate ?? new XrayAllocateObject());
-    return {
-      modal,
-      allocate
-    };
-  },
-});
+      const show = (inbound: XrayInboundObject<IProtocolType>) => {
+        inbound.allocate = allocate.value = inbound.allocate ?? new XrayAllocateObject();
+        modal.value.show();
+      };
+
+      const save = () => {
+        emit("save", allocate.value);
+        modal.value.close();
+      };
+
+      return {
+        modal,
+        allocate,
+        show,
+        save
+      };
+    }
+  });
 </script>
 
 <style scoped></style>

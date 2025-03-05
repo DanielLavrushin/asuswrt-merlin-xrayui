@@ -68,21 +68,6 @@
         return this.isRunning ? this.$t("components.ClientStatus.xray_running") : this.$t("components.ClientStatus.xray_stopped");
       }
     },
-    methods: {
-      async testConfig() {
-        let delay = 1000;
-        window.showLoading(delay);
-        await engine.submit(SubmtActions.serverTestConfig, null, delay);
-        let users = await engine.getXrayResponse();
-        window.hideLoading();
-        alert(users.xray?.test);
-      },
-      async handleStatus(action: string) {
-        await engine.executeWithLoadingProgress(async () => {
-          await engine.submit(action);
-        });
-      }
-    },
     props: {
       config: {
         type: XrayObject,
@@ -99,12 +84,28 @@
       const show_config_modal = () => {
         configModal.value.show();
       };
+      const testConfig = async () => {
+        let delay = 1000;
+        window.showLoading(delay);
+        await engine.submit(SubmtActions.serverTestConfig, null, delay);
+        let users = await engine.getXrayResponse();
+        window.hideLoading();
+        alert(users.xray?.test);
+      };
+
+      const handleStatus = async (action: string) => {
+        await engine.executeWithLoadingProgress(async () => {
+          await engine.submit(action);
+        });
+      };
       return {
         config,
         configModal,
         generalOptionsModal,
         manage_general_options,
-        show_config_modal
+        show_config_modal,
+        testConfig,
+        handleStatus
       };
     }
   });

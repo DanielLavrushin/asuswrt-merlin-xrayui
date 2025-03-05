@@ -115,7 +115,6 @@
       StreamSettingsModal,
       LogsManager
     },
-    methods: {},
 
     setup() {
       const config = ref(engine.xrayConfig);

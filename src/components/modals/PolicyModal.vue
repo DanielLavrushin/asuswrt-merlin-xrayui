@@ -158,9 +158,7 @@
       Modal,
       Hint
     },
-    data() {
-      return {};
-    },
+
     props: {
       policies: {
         type: Array<XrayRoutingPolicy>,

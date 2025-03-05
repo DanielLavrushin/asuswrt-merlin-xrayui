@@ -4,13 +4,13 @@
     <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="2">{{ $t('components.Reality.modal_title') }}</td>
+          <td colspan="2">{{ $t("components.Reality.modal_title") }}</td>
         </tr>
       </thead>
       <tbody v-if="transport.realitySettings">
         <tr>
           <th>
-            {{ $t('components.Reality.label_enable_logs') }}
+            {{ $t("components.Reality.label_enable_logs") }}
             <hint v-html="$t('components.Reality.hint_enable_logs')"></hint>
           </th>
           <td>
@@ -19,7 +19,8 @@
           </td>
         </tr>
         <tr v-if="engine.mode === 'server'">
-          <th> {{ $t('components.Reality.label_dest') }}
+          <th>
+            {{ $t("components.Reality.label_dest") }}
             <hint v-html="$t('components.Reality.hint_dest')"></hint>
           </th>
           <td>
@@ -27,7 +28,8 @@
           </td>
         </tr>
         <tr v-if="engine.mode === 'server'">
-          <th>{{ $t('components.Reality.label_server_names') }}
+          <th>
+            {{ $t("components.Reality.label_server_names") }}
             <hint v-html="$t('components.Reality.hint_server_names')"></hint>
           </th>
           <td>
@@ -37,7 +39,8 @@
           </td>
         </tr>
         <tr v-if="engine.mode === 'client'">
-          <th>{{ $t('components.Reality.label_server_name') }}
+          <th>
+            {{ $t("components.Reality.label_server_name") }}
             <hint v-html="$t('components.Reality.hint_server_name')"></hint>
           </th>
           <td>
@@ -46,7 +49,8 @@
           </td>
         </tr>
         <tr v-if="engine.mode === 'client'">
-          <th>{{ $t('components.Reality.label_short_id') }}
+          <th>
+            {{ $t("components.Reality.label_short_id") }}
             <hint v-html="$t('components.Reality.hint_short_id')"></hint>
           </th>
           <td>
@@ -55,28 +59,27 @@
           </td>
         </tr>
         <tr v-if="engine.mode === 'server' && transport.realitySettings.shortIds">
-          <th>{{ $t('components.Reality.label_short_ids') }}
+          <th>
+            {{ $t("components.Reality.label_short_ids") }}
             <hint v-html="$t('components.Reality.hint_short_ids')"></hint>
           </th>
           <td>
             {{ transport.realitySettings.shortIds.length }} item(s)
-            <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')"
-              @click.prevent="manage_short_ids()" />
+            <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click.prevent="manage_short_ids()" />
             <modal ref="shortIdsModal" width="200" title="Short Id List">
               <div class="textarea-wrapper">
                 <textarea v-model="shortIds"></textarea>
               </div>
               <template v-slot:footer>
-                <input class="button_gen button_gen_small" type="button" :value="$t('components.Reality.add_new_id')"
-                  @click.prevent="append_shortid()" />
-                <input class="button_gen button_gen_small" type="button" :value="$t('labels.save')"
-                  @click.prevent="shortIdsModal.close()" />
+                <input class="button_gen button_gen_small" type="button" :value="$t('components.Reality.add_new_id')" @click.prevent="append_shortid()" />
+                <input class="button_gen button_gen_small" type="button" :value="$t('labels.save')" @click.prevent="shortIdsModal.close()" />
               </template>
             </modal>
           </td>
         </tr>
         <tr v-if="engine.mode === 'server'">
-          <th>{{ $t('components.Reality.label_proxy_version') }}
+          <th>
+            {{ $t("components.Reality.label_proxy_version") }}
             <hint v-html="$t('components.Reality.hint_proxy_version')"></hint>
           </th>
           <td>
@@ -89,19 +92,20 @@
           </td>
         </tr>
         <tr v-if="engine.mode === 'server'">
-          <th>{{ $t('components.Reality.label_private_key') }}
+          <th>
+            {{ $t("components.Reality.label_private_key") }}
             <hint v-html="$t('components.Reality.hintl_private_key')"></hint>
           </th>
           <td>
             <input v-model="transport.realitySettings.privateKey" type="text" class="input_30_table" />
             <span class="row-buttons">
-              <input class="button_gen button_gen_small" type="button" value="Regenerate"
-                @click.prevent="regenerate_keys()" />
+              <input class="button_gen button_gen_small" type="button" value="Regenerate" @click.prevent="regenerate_keys()" />
             </span>
           </td>
         </tr>
         <tr>
-          <th>{{ $t('components.Reality.label_public_key') }}
+          <th>
+            {{ $t("components.Reality.label_public_key") }}
             <hint v-html="$t('components.Reality.hint_public_key')"></hint>
           </th>
           <td>
@@ -109,7 +113,8 @@
           </td>
         </tr>
         <tr>
-          <th>{{ $t('components.Reality.label_spider_x') }}
+          <th>
+            {{ $t("components.Reality.label_spider_x") }}
             <hint v-html="$t('components.Reality.hint_spider_x')"></hint>
           </th>
           <td>
@@ -117,7 +122,8 @@
           </td>
         </tr>
         <tr v-if="engine.mode === 'client'">
-          <th>{{ $t('components.Reality.label_fingerprint') }}
+          <th>
+            {{ $t("components.Reality.label_fingerprint") }}
             <hint v-html="$t('components.Reality.hint_fingerprint')"></hint>
           </th>
           <td>
@@ -135,94 +141,95 @@
 </template>
 
 <script lang="ts">
-import Modal from "../Modal.vue";
-import engine, { SubmtActions } from "@/modules/Engine";
-import { defineComponent, ref, watch } from "vue";
-import { XrayStreamRealitySettingsObject, XrayStreamSettingsObject } from "@/modules/CommonObjects";
-import XrayOptions from "@/modules/Options";
-import Hint from "@/components/Hint.vue";
+  import Modal from "../Modal.vue";
+  import engine, { SubmtActions } from "@/modules/Engine";
+  import { defineComponent, ref, watch } from "vue";
+  import { XrayStreamRealitySettingsObject, XrayStreamSettingsObject } from "@/modules/CommonObjects";
+  import XrayOptions from "@/modules/Options";
+  import Hint from "@/components/Hint.vue";
 
-export default defineComponent({
-  name: "Reality",
-  components: {
-    Modal,
-    Hint
-  },
-  props: {
-    transport: XrayStreamSettingsObject,
-  },
-  methods: {
-    manage_short_ids() {
-      this.shortIdsModal.show();
+  export default defineComponent({
+    name: "Reality",
+    components: {
+      Modal,
+      Hint
     },
-    append_shortid() {
-      this.shortIds = (this.shortIds + "\n" + this.generateShortId())
-        .split("\n")
-        .filter(line => line.trim() !== "")
-        .join("\n");
+    props: {
+      transport: XrayStreamSettingsObject
     },
-    generateShortId: (byteLength = 8) => {
-      const array = new Uint8Array(byteLength);
-      window.crypto.getRandomValues(array);
-      return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join("");
-    },
-    async regenerate_keys() {
-      window.showLoading();
-      if (this.transport.realitySettings) {
+    setup(props) {
+      const shortIdsModal = ref();
+      const transport = ref<XrayStreamSettingsObject>(props.transport ?? new XrayStreamSettingsObject());
+      transport.value.realitySettings = transport.value.realitySettings ?? new XrayStreamRealitySettingsObject();
 
-        await engine.submit(SubmtActions.regenerateRealityKeys, null, 1000);
-        let result = await engine.getRealityKeys();
-        if (result) {
-          this.transport.realitySettings.privateKey = result.privateKey;
-          this.transport.realitySettings.publicKey = result.publicKey;
+      const serverNames = ref(transport.value.realitySettings.serverNames?.join("\n") ?? "");
+      const shortIds = ref(transport.value.realitySettings.shortIds?.join("\n") ?? "");
+
+      const manage_short_ids = () => {
+        shortIdsModal.value.show();
+      };
+      const append_shortid = () => {
+        shortIds.value = (shortIds + "\n" + generateShortId())
+          .split("\n")
+          .filter((line) => line.trim() !== "")
+          .join("\n");
+      };
+      const generateShortId = (byteLength = 8) => {
+        const array = new Uint8Array(byteLength);
+        window.crypto.getRandomValues(array);
+        return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join("");
+      };
+      const regenerate_keys = async () => {
+        window.showLoading();
+        if (transport.value.realitySettings) {
+          await engine.submit(SubmtActions.regenerateRealityKeys, null, 1000);
+          let result = await engine.getRealityKeys();
+          if (result) {
+            transport.value.realitySettings.privateKey = result.privateKey;
+            transport.value.realitySettings.publicKey = result.publicKey;
+          }
+          window.hideLoading();
         }
-        window.hideLoading();
+      };
+
+      if (engine.mode === "server") {
+        if (!transport.value.realitySettings.shortIds) {
+          transport.value.realitySettings.shortIds = [];
+        }
+
+        watch(
+          () => serverNames.value,
+          (newObj) => {
+            if (newObj && transport.value.realitySettings) {
+              transport.value.realitySettings.serverNames = newObj.split("\n").filter((x) => x);
+            }
+          },
+          { immediate: true }
+        );
+
+        watch(
+          () => shortIds.value,
+          (newObj) => {
+            if (newObj && transport.value.realitySettings) {
+              transport.value.realitySettings.shortIds = newObj.split("\n").filter((x) => x);
+            }
+          },
+          { immediate: true }
+        );
       }
-    },
-  },
-  setup(props) {
-    const shortIdsModal = ref();
-    const transport = ref<XrayStreamSettingsObject>(props.transport ?? new XrayStreamSettingsObject());
-    transport.value.realitySettings = transport.value.realitySettings ?? new XrayStreamRealitySettingsObject();
 
-    const serverNames = ref(transport.value.realitySettings.serverNames?.join("\n") ?? "");
-    const shortIds = ref(transport.value.realitySettings.shortIds?.join("\n") ?? "");
-
-    if (engine.mode === 'server') {
-      if (!transport.value.realitySettings.shortIds) {
-        transport.value.realitySettings.shortIds = [];
-      }
-
-      watch(
-        () => serverNames.value,
-        (newObj) => {
-          if (newObj && transport.value.realitySettings) {
-            transport.value.realitySettings.serverNames = newObj.split("\n").filter((x) => x);
-          }
-        },
-        { immediate: true }
-      );
-
-      watch(
-        () => shortIds.value,
-        (newObj) => {
-          if (newObj && transport.value.realitySettings) {
-            transport.value.realitySettings.shortIds = newObj.split("\n").filter((x) => x);
-          }
-        },
-        { immediate: true }
-      );
+      return {
+        engine,
+        fingerprints: XrayOptions.fingerprintOptions,
+        transport,
+        shortIdsModal,
+        serverNames,
+        shortIds,
+        manage_short_ids,
+        append_shortid,
+        regenerate_keys
+      };
     }
-
-    return {
-      engine,
-      fingerprints: XrayOptions.fingerprintOptions,
-      transport,
-      shortIdsModal,
-      serverNames,
-      shortIds,
-    };
-  },
-});
+  });
 </script>
 <style scoped></style>

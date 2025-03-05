@@ -82,21 +82,6 @@
         return !this.checkConEnabled ? (this.isRunning ? this.$t("components.ClientStatus.xray_running") : this.$t("components.ClientStatus.xray_stopped")) : this.connectionStationLabel;
       }
     },
-    methods: {
-      async testConfig() {
-        let delay = 1000;
-        window.showLoading(delay);
-        await engine.submit(SubmtActions.serverTestConfig, null, delay);
-        let users = await engine.getXrayResponse();
-        window.hideLoading();
-        alert(users.xray?.test.replace(/\\"/g, '"'));
-      },
-      async handleStatus(action: string) {
-        await engine.executeWithLoadingProgress(async () => {
-          await engine.submit(action);
-        });
-      }
-    },
     setup(props) {
       const { t } = useI18n();
       const config = ref(props.config);
@@ -147,6 +132,21 @@
         generalOptionsModal.value.show();
       };
 
+      const testConfig = async () => {
+        let delay = 1000;
+        window.showLoading(delay);
+        await engine.submit(SubmtActions.serverTestConfig, null, delay);
+        let users = await engine.getXrayResponse();
+        window.hideLoading();
+        alert(users.xray?.test.replace(/\\"/g, '"'));
+      };
+
+      const handleStatus = async (action: string) => {
+        await engine.executeWithLoadingProgress(async () => {
+          await engine.submit(action);
+        });
+      };
+
       onMounted(async () => {
         watch(
           () => config.value.routing?.rules?.length,
@@ -182,7 +182,9 @@
         checkConEnabled,
         checkConnection,
         show_config_modal,
-        manage_general_options
+        manage_general_options,
+        testConfig,
+        handleStatus
       };
     }
   });

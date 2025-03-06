@@ -519,6 +519,15 @@ class XraySockoptObject {
     return this;
   };
 }
+interface ParseJsonObject {
+  add: string;
+  id: string;
+  ps: string;
+  net: string;
+  tls: string;
+  port: string;
+  [key: string]: string;
+}
 
 class XrayParsedUrlObject {
   public server!: string;
@@ -536,7 +545,7 @@ class XrayParsedUrlObject {
     const extraParams = {} as Record<string, string>;
 
     if (protocol === XrayProtocol.VMESS) {
-      const vmessJson = JSON.parse(atob(rest));
+      const vmessJson = JSON.parse(atob(rest)) as ParseJsonObject;
       this.server = vmessJson.add;
       this.port = parseInt(vmessJson.port);
       this.uuid = vmessJson.id;

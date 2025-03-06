@@ -8,8 +8,6 @@ PIDFILE=/var/run/xray.pid
 
 xray_addons_asp_page=/jffs/addons/xrayui/index.asp
 
-RMODEL=$(nvram get model)
-
 XRAY_CONFIG="/opt/etc/xray/config.json"
 dir_xrayui="/www/user/xrayui"
 XRAYUI_CONFIG_FILE="/opt/etc/xrayui.conf"

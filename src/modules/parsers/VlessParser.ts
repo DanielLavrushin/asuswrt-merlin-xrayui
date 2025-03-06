@@ -1,5 +1,5 @@
 import { XrayVlessClientObject } from "../ClientsObjects";
-import { XrayParsedUrlObject, XrayProtocol, XrayStreamSettingsObject } from "../CommonObjects";
+import { XrayParsedUrlObject, XrayStreamSettingsObject } from "../CommonObjects";
 import { XrayOutboundObject, XrayVlessOutboundObject } from "../OutboundObjects";
 
 const VlessParser = (parsedObj: XrayParsedUrlObject): XrayOutboundObject<XrayVlessOutboundObject> | null => {

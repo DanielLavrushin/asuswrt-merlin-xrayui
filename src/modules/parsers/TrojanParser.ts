@@ -1,6 +1,5 @@
-import { XrayTrojanClientObject } from "../ClientsObjects";
 import { XrayParsedUrlObject, XrayProtocol, XrayStreamSettingsObject, XrayTrojanServerObject } from "../CommonObjects";
-import { XrayOutboundObject, XrayTrojanOutboundObject, XrayVlessOutboundObject } from "../OutboundObjects";
+import { XrayOutboundObject, XrayTrojanOutboundObject } from "../OutboundObjects";
 
 const TrojanParser = (parsedObj: XrayParsedUrlObject): XrayOutboundObject<XrayTrojanOutboundObject> | null => {
   if (parsedObj.protocol !== XrayProtocol.TROJAN) return null;

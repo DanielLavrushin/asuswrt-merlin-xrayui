@@ -9,6 +9,8 @@ class XrayStreamTcpSettingsObject implements ITransportNetwork {
 }
 
 class XrayStreamKcpSettingsObject implements ITransportNetwork {
+  static headerTypes = ["none", "srtp", "utp", "wechat-video", "dtls", "wireguard"];
+
   public mtu? = 1350;
   public tti? = 50;
   public uplinkCapacity? = 5;
@@ -18,6 +20,17 @@ class XrayStreamKcpSettingsObject implements ITransportNetwork {
   public writeBufferSize? = 2;
   public seed?: string;
   public header?: XrayHeaderObject = new XrayHeaderObject();
+
+  constructor(parsedObject?: XrayParsedUrlObject | undefined) {
+    if (parsedObject) {
+      this.seed = parsedObject.parsedParams.seed;
+      if (parsedObject.parsedParams.headerType) {
+        this.header = new XrayHeaderObject();
+        this.header.type = parsedObject.parsedParams.headerType;
+      }
+    }
+  }
+
   normalize = () => {
     this.mtu = this.mtu === 1350 ? undefined : this.mtu;
     this.tti = this.tti === 50 ? undefined : this.tti;
@@ -35,7 +48,7 @@ class XrayStreamWsSettingsObject implements ITransportNetwork {
   public acceptProxyProtocol = false;
   public path = "/";
   public host?: string;
-  public headers: Record<string, any> | undefined = {};
+  public headers: Record<string, unknown> | undefined = {};
 
   constructor(parsedObject?: XrayParsedUrlObject | undefined) {
     if (parsedObject) {

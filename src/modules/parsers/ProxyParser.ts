@@ -1,7 +1,7 @@
 import { XrayParsedUrlObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject } from "../CommonObjects";
 import { IProtocolType } from "../Interfaces";
 import { XrayOutboundObject } from "../OutboundObjects";
-import { XrayStreamWsSettingsObject } from "../TransportObjects";
+import { XrayStreamKcpSettingsObject, XrayStreamWsSettingsObject } from "../TransportObjects";
 import VlessParser from "./VlessParser";
 import VmessParser from "./VmessParser";
 import TrojanParser from "./TrojanParser";
@@ -44,6 +44,8 @@ export default class ProxyParser {
 
         if (this.parsedObject.network === "ws") {
           proxy.streamSettings.wsSettings = new XrayStreamWsSettingsObject(this.parsedObject);
+        } else if (this.parsedObject.network === "kcp") {
+          proxy.streamSettings.kcpSettings = new XrayStreamKcpSettingsObject(this.parsedObject);
         }
       }
 

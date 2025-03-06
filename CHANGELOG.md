@@ -1,5 +1,14 @@
 # XRAYUI Changelog
 
+## [0.39.1] - 2025-03-06
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- FIXED: Importing an `mKCP` configuration.
+- FIXED: Numeric values in the `mKCP` saved as strings.
+  > _(If you had non-default values set for KCP, we recommend first reverting them to default values, applying the configuration, and then setting them to your desired values. This will reconvert previously saved values to numeric types.)_
+- ADDED: A new `Configuration for packet header obfuscation` field to the `mKCP` configuration.
+
 ## [0.39.0] - 2025-03-05
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure that outdated files are updated._

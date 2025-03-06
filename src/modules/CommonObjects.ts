@@ -572,12 +572,11 @@ class XrayParsedUrlObject {
     params.forEach((value: string, key: string) => {
       this.parsedParams[key] = value;
     });
-    if (extraParams) {
-      Object.keys(extraParams).forEach((key) => {
-        // eslint-disable-next-line
-        this.parsedParams[key] = extraParams[key];
-      });
-    }
+
+    Object.keys(extraParams).forEach((key) => {
+      // eslint-disable-next-line
+      this.parsedParams[key] = extraParams[key];
+    });
 
     this.tag = tag;
     this.server = server;

@@ -469,36 +469,40 @@ class Engine {
 
 function transformStreamSettings(streamSettings: XrayStreamSettingsObject | undefined): XrayStreamSettingsObject {
   if (!streamSettings) return new XrayStreamSettingsObject();
-  const settings = plainToInstance(XrayStreamSettingsObject, streamSettings);
-
-  if (streamSettings.sockopt) {
-    settings.sockopt = plainToInstance(XraySockoptObject, streamSettings.sockopt);
+  try {
+    const settings = plainToInstance(XrayStreamSettingsObject, streamSettings);
+    if (streamSettings.sockopt) {
+      settings.sockopt = plainToInstance(XraySockoptObject, streamSettings.sockopt) ?? undefined;
+    }
+    if (streamSettings.realitySettings) {
+      settings.realitySettings = plainToInstance(XrayStreamRealitySettingsObject, streamSettings.realitySettings) ?? undefined;
+    }
+    if (streamSettings.tlsSettings) {
+      settings.tlsSettings = plainToInstance(XrayStreamTlsSettingsObject, streamSettings.tlsSettings) ?? undefined;
+    }
+    if (streamSettings.tcpSettings) {
+      settings.tcpSettings = plainToInstance(XrayStreamTcpSettingsObject, streamSettings.tcpSettings) ?? undefined;
+    }
+    if (streamSettings.kcpSettings) {
+      settings.kcpSettings = plainToInstance(XrayStreamKcpSettingsObject, streamSettings.kcpSettings) ?? undefined;
+    }
+    if (streamSettings.wsSettings) {
+      settings.wsSettings = plainToInstance(XrayStreamWsSettingsObject, streamSettings.wsSettings) ?? undefined;
+    }
+    if (streamSettings.httpupgradeSettings) {
+      settings.httpupgradeSettings = plainToInstance(XrayStreamHttpUpgradeSettingsObject, streamSettings.httpupgradeSettings) ?? undefined;
+    }
+    if (streamSettings.grpcSettings) {
+      settings.grpcSettings = plainToInstance(XrayStreamGrpcSettingsObject, streamSettings.grpcSettings) ?? undefined;
+    }
+    if (streamSettings.xhttpSettings) {
+      settings.xhttpSettings = plainToInstance(XrayStreamHttpSettingsObject, streamSettings.xhttpSettings) ?? undefined;
+    }
+    return settings;
+  } catch (error) {
+    console.error("Failed to transform stream settings:", error);
+    return new XrayStreamSettingsObject();
   }
-  if (streamSettings.realitySettings) {
-    settings.realitySettings = plainToInstance(XrayStreamRealitySettingsObject, streamSettings.realitySettings);
-  }
-  if (streamSettings.tlsSettings) {
-    settings.tlsSettings = plainToInstance(XrayStreamTlsSettingsObject, streamSettings.tlsSettings);
-  }
-  if (streamSettings.tcpSettings) {
-    settings.tcpSettings = plainToInstance(XrayStreamTcpSettingsObject, streamSettings.tcpSettings);
-  }
-  if (streamSettings.kcpSettings) {
-    settings.kcpSettings = plainToInstance(XrayStreamKcpSettingsObject, streamSettings.kcpSettings);
-  }
-  if (streamSettings.wsSettings) {
-    settings.wsSettings = plainToInstance(XrayStreamWsSettingsObject, streamSettings.wsSettings);
-  }
-  if (streamSettings.httpupgradeSettings) {
-    settings.httpupgradeSettings = plainToInstance(XrayStreamHttpUpgradeSettingsObject, streamSettings.httpupgradeSettings);
-  }
-  if (streamSettings.grpcSettings) {
-    settings.grpcSettings = plainToInstance(XrayStreamGrpcSettingsObject, streamSettings.grpcSettings);
-  }
-  if (streamSettings.xhttpSettings) {
-    settings.xhttpSettings = plainToInstance(XrayStreamHttpSettingsObject, streamSettings.xhttpSettings);
-  }
-  return settings;
 }
 
 let engine = new Engine();

@@ -533,7 +533,7 @@ class XrayParsedUrlObject {
   public constructor(url: string) {
     const [protocol, rest] = url.split("://");
     this.protocol = protocol;
-    const extraParams = {} as any;
+    const extraParams = {} as Record<string, string>;
 
     if (protocol === XrayProtocol.VMESS) {
       const vmessJson = JSON.parse(atob(rest));
@@ -546,12 +546,12 @@ class XrayParsedUrlObject {
       this.parsedParams = vmessJson;
       return;
     } else if (protocol === "ss") {
-      const [authHost, queryFragment] = rest.split("?");
-      const [uuid, serverPort] = authHost.split("@");
+      const [authHost] = rest.split("?");
+      const [uuid] = authHost.split("@");
       const ssDecoded = atob(uuid);
       const [method, pass] = ssDecoded.split(":");
-      extraParams["method"] = method;
-      extraParams["pass"] = pass;
+      extraParams.method = method;
+      extraParams.pass = pass;
     }
 
     const [authHost, queryFragment] = rest.split("?");

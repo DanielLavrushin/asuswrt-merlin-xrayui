@@ -97,7 +97,8 @@ enum SubmtActions {
   updateLogsLevel = "xrayui_configuration_logs_changeloglevel",
   checkConnection = "xrayui_configuration_checkconnection",
   initResponse = "xrayui_configuration_initresponse",
-  generalOptionsApply = "xrayui_configuration_applygeneraloptions"
+  generalOptionsApply = "xrayui_configuration_applygeneraloptions",
+  xrayVersionSwitch = "xrayui_configuration_xrayversionswitch"
 }
 
 class Engine {

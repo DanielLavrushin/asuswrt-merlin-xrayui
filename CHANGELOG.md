@@ -1,5 +1,10 @@
 # XRAYUI Changelog
 
+## [0.40.0] - 2025-03-11
+
+- ADDED: You can now update the `XRAY-CORE` binaries directly from the official repository. Click on the Xray-core version (on the top right corner) to open the `switch` modal window and initiate the update.
+- ADDED: Reverse proxy UI support. A new section `Reverse Proxy` has been added. When adding `bridge` or `portal` items to the reverse configuration, you can immediately reference them in `routing` configuration.
+
 ## [0.39.1] - 2025-03-06
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

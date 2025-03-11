@@ -473,6 +473,11 @@
     "ProcessUptime": {
       "label": "X-RAY Core uptime",
       "formatted_time": "{0}d {1}h {2}m {3}s"
+    },
+    "XrayCoreVersionModal": {
+      "modal_title": "X-RAY Core Update",
+      "modal_desc": "Select a version to switch to:",
+      "switch": "Switch to this version"
     }
   }
 }

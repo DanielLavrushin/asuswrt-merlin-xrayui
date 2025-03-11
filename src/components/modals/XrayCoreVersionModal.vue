@@ -1,8 +1,10 @@
 <template>
-  <modal ref="modal" :title="$t('components.XrayCoreVersionModal.modal_title')" width="400px">
+  <modal ref="modal" :title="$t('components.XrayCoreVersionModal.modal_title')" width="300">
     <div class="formfontdesc">
       <p>
         {{ $t("components.XrayCoreVersionModal.modal_desc") }}
+      </p>
+      <p>
         <select class="input_option" v-model="selected_url">
           <option v-for="(opt, index) in xray_versions" :key="index" :value="opt.url">{{ opt.version }}</option>
         </select>
@@ -40,7 +42,7 @@
       const xray_versions = ref<{ version: string; url: string }[]>([]);
       const load_xray_versions = async () => {
         const response = await axios.get("https://api.github.com/repos/XTLS/Xray-core/releases");
-        for (const release of response.data.slice(0, 5)) {
+        for (const release of response.data.slice(0, 6)) {
           xray_versions.value.push({
             version: release.tag_name.replace(/[^\d\.]/, ""),
             url: release.assets_url

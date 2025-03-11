@@ -45,6 +45,7 @@
                               <inbounds @show-transport="show_transport" @show-sniffing="show_sniffing"></inbounds>
                               <outbounds @show-transport="show_transport"></outbounds>
                               <dns></dns>
+                              <reverse-proxy></reverse-proxy>
                               <routing></routing>
                               <sniffing-modal ref="sniffingModal" />
                               <stream-settings-modal ref="transportModal" />
@@ -88,6 +89,7 @@
   import Dns from "./Dns.vue";
   import Version from "./Version.vue";
   import ClientsOnline from "./ClientsOnline.vue";
+  import ReverseProxy from "./ReverseProxy.vue";
 
   import SniffingModal from "./modals/SniffingModal.vue";
   import StreamSettingsModal from "./modals/StreamSettingsModal.vue";
@@ -113,7 +115,8 @@
       SniffingModal,
       ClientsOnline,
       StreamSettingsModal,
-      LogsManager
+      LogsManager,
+      ReverseProxy
     },
 
     setup() {

@@ -9,7 +9,7 @@
 import axios, { AxiosError } from "axios";
 import { xrayConfig, XrayObject } from "./XrayConfig";
 import { XrayBlackholeOutboundObject, XrayLoopbackOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, XrayTrojanOutboundObject, XrayOutboundObject, XraySocksOutboundObject, XrayVmessOutboundObject, XrayVlessOutboundObject, XrayHttpOutboundObject, XrayShadowsocksOutboundObject } from "./OutboundObjects";
-import { XrayProtocol, XrayDnsObject, XrayStreamSettingsObject, XrayRoutingObject, XrayRoutingRuleObject, XraySniffingObject, XrayRoutingPolicy, XrayAllocateObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject, XraySockoptObject, XrayLogObject, XrayStreamTlsCertificateObject } from "./CommonObjects";
+import { XrayProtocol, XrayDnsObject, XrayStreamSettingsObject, XrayRoutingObject, XrayRoutingRuleObject, XraySniffingObject, XrayRoutingPolicy, XrayAllocateObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject, XraySockoptObject, XrayLogObject, XrayStreamTlsCertificateObject, XrayReverseObject, XrayReverseItem } from "./CommonObjects";
 import { plainToInstance } from "class-transformer";
 import { XrayDokodemoDoorInboundObject, XrayHttpInboundObject, XrayInboundObject, XrayShadowsocksInboundObject, XraySocksInboundObject, XrayTrojanInboundObject, XrayVlessInboundObject, XrayVmessInboundObject, XrayWireguardInboundObject } from "./InboundObjects";
 import { XrayStreamHttpSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamKcpSettingsObject, XrayStreamTcpSettingsObject, XrayStreamWsSettingsObject } from "./TransportObjects";
@@ -235,6 +235,9 @@ class Engine {
     if (config.log) {
       config.log.normalize();
     }
+    if (config.reverse) {
+      config.reverse = config.reverse.normalize();
+    }
 
     return config;
   }
@@ -306,6 +309,24 @@ class Engine {
       if (this.xrayConfig.log) {
         this.xrayConfig.log = plainToInstance(XrayLogObject, response.data.log);
       }
+
+      this.xrayConfig.reverse = plainToInstance(XrayReverseObject, response.data.reverse);
+      if (this.xrayConfig.reverse?.bridges) {
+        this.xrayConfig.reverse.bridges.forEach((item, index) => {
+          if (this.xrayConfig.reverse?.bridges) {
+            this.xrayConfig.reverse.bridges[index] = plainToInstance(XrayReverseItem, item);
+          }
+        });
+      }
+
+      if (this.xrayConfig.reverse?.portals) {
+        this.xrayConfig.reverse.portals.forEach((item, index) => {
+          if (this.xrayConfig.reverse?.portals) {
+            this.xrayConfig.reverse.portals[index] = plainToInstance(XrayReverseItem, item);
+          }
+        });
+      }
+
       this.xrayConfig.inbounds.forEach((proxy, index) => {
         switch (proxy.protocol) {
           case XrayProtocol.DOKODEMODOOR:

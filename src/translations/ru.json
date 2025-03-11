@@ -473,6 +473,11 @@
     "ProcessUptime": {
       "label": "Время работы X-RAY Core",
       "formatted_time": "{0}д {1}ч {2}м {3}с"
+    },
+    "XrayCoreVersionModal": {
+      "modal_title": "Обновление X-RAY Core",
+      "modal_desc": "Выберите версию для переключения:",
+      "switch": "Переключиться на эту версию"
     }
   }
 }

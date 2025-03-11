@@ -478,6 +478,18 @@
       "modal_title": "X-RAY Core Update",
       "modal_desc": "Select a version to switch to:",
       "switch": "Switch to this version"
+    },
+    "ReverseProxy": {
+      "title": "Reverse Proxy",
+      "hint_title": "A reverse proxy forwards traffic from a server to a client, which is known as reverse traffic forwarding.",
+      "label_bridges": "Bridges",
+      "label_portals": "Portals",
+      "hint_bridges": "An array in which each item represents a bridge. The configuration of each bridge is a `BridgeObject`.",
+      "hint_portals": "An array in which each item represents a portal. The configuration of each portal is a `PortalObject`."
+    },
+    "ReverseItemsModal": {
+      "modal_title": "Reverse Proxy Items",
+      "modal_title2": "List"
     }
   }
 }

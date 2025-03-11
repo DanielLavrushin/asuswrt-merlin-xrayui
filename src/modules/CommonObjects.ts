@@ -223,6 +223,37 @@ class XrayDnsServerObject {
   public skipFallback?: boolean;
   public clientIP?: string;
 }
+const XrayReverseItemType = {
+  BRIDGE: "bridge",
+  PORTAL: "portal"
+};
+class XrayReverseItem {
+  public tag?: string;
+  public domain?: string;
+}
+
+class XrayReverseObject {
+  public bridges?: XrayReverseItem[] = [];
+  public portals?: XrayReverseItem[] = [];
+
+  public normalize(): this | undefined {
+    if (this.bridges && this.bridges.length > 0) {
+      this.bridges = this.bridges.filter((bridge) => bridge.tag && bridge.domain);
+    } else {
+      this.bridges = undefined;
+    }
+
+    if (this.portals && this.portals.length > 0) {
+      this.portals = this.portals.filter((portal) => portal.tag && portal.domain);
+    } else {
+      this.portals = undefined;
+    }
+    if (!this.bridges && !this.portals) {
+      return undefined;
+    }
+    return this;
+  }
+}
 
 class XrayRoutingObject {
   static domainStrategyOptions = ["AsIs", "IPIfNonMatch", "IPOnDemand"];
@@ -587,4 +618,4 @@ class XrayParsedUrlObject {
   }
 }
 
-export { XrayRoutingPolicy, XrayParsedUrlObject, XraySockoptObject, XrayDnsObject, XrayDnsServerObject, XrayTrojanServerObject, XrayPeerObject, XrayNoiseObject, XrayShadowsocksServerObject, XrayHttpServerObject, XraySocksServerObject, XrayProtocolOption, XrayProtocol, XrayVlessServerObject, XrayVmessServerObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsCertificateObject, XrayStreamSettingsObject, XrayRoutingRuleObject, XrayRoutingObject, XrayLogObject, XrayAllocateObject, XraySniffingObject, XrayHeaderObject, XrayHeaderRequestObject, XrayHeaderResponseObject, XrayXmuxObject };
+export { XrayReverseItemType, XrayReverseObject, XrayReverseItem, XrayRoutingPolicy, XrayParsedUrlObject, XraySockoptObject, XrayDnsObject, XrayDnsServerObject, XrayTrojanServerObject, XrayPeerObject, XrayNoiseObject, XrayShadowsocksServerObject, XrayHttpServerObject, XraySocksServerObject, XrayProtocolOption, XrayProtocol, XrayVlessServerObject, XrayVmessServerObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsCertificateObject, XrayStreamSettingsObject, XrayRoutingRuleObject, XrayRoutingObject, XrayLogObject, XrayAllocateObject, XraySniffingObject, XrayHeaderObject, XrayHeaderRequestObject, XrayHeaderResponseObject, XrayXmuxObject };

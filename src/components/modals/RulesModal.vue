@@ -208,7 +208,7 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, computed, watch } from "vue";
+  import { defineComponent, ref, computed } from "vue";
   import Modal from "../Modal.vue";
   import xrayConfig from "../../modules/XrayConfig";
   import { XrayRoutingRuleObject, XrayRoutingObject } from "../../modules/CommonObjects";
@@ -352,17 +352,28 @@
         emit("update:rules", rules.value);
         emit("update:disabled_rules", disabledRules.value);
       };
+
       const show = (onCloseAction: (rules: XrayRoutingRuleObject[], disabledRules: XrayRoutingRuleObject[]) => void) => {
         currentRule.value = new XrayRoutingRuleObject();
-        inbounds.value = xrayConfig.inbounds
-          .filter((o) => !o.isSystem())
-          .map((o) => o.tag)
-          .filter((tag): tag is string => tag !== undefined);
 
-        outbounds.value = xrayConfig.outbounds
-          .filter((o) => !o.isSystem())
-          .map((o) => o.tag)
-          .filter((tag): tag is string => tag !== undefined);
+        const reverse_bridges = xrayConfig.reverse?.bridges?.map((o) => o.tag!).filter(Boolean) ?? [];
+        const reverse_portals = xrayConfig.reverse?.portals?.map((o) => o.tag!).filter(Boolean) ?? [];
+
+        inbounds.value = [
+          ...xrayConfig.inbounds
+            .filter((o) => !o.isSystem())
+            .map((o) => o.tag)
+            .filter((tag): tag is string => tag !== undefined),
+          ...reverse_bridges
+        ];
+
+        outbounds.value = [
+          ...xrayConfig.outbounds
+            .filter((o) => !o.isSystem())
+            .map((o) => o.tag)
+            .filter((tag): tag is string => tag !== undefined),
+          ...reverse_portals
+        ];
 
         domains.value = currentRule.value.domain ? currentRule.value.domain.join("\n") : "";
         ips.value = currentRule.value.ip ? currentRule.value.ip.join("\n") : "";

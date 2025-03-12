@@ -41,6 +41,7 @@
 
       const xray_versions = ref<{ version: string; url: string }[]>([]);
       const load_xray_versions = async () => {
+        xray_versions.value = [];
         const response = await axios.get("https://api.github.com/repos/XTLS/Xray-core/releases");
         for (const release of response.data.slice(0, 6)) {
           xray_versions.value.push({

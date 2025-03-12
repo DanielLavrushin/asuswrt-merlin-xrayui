@@ -169,7 +169,7 @@
         shortIdsModal.value.show();
       };
       const append_shortid = () => {
-        shortIds.value = (shortIds + "\n" + generateShortId())
+        shortIds.value = ((shortIds.value ? shortIds.value + "\n" : "") + generateShortId())
           .split("\n")
           .filter((line) => line.trim() !== "")
           .join("\n");

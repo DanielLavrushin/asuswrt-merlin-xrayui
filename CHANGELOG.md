@@ -1,5 +1,10 @@
 # XRAYUI Changelog
 
+## [0.40.1] - 2025-03-xx
+
+- FIXED: Ensure `shortId` is correctly generated.
+- FIXED: reset `XRAY` versions list before loading new data.
+
 ## [0.40.0] - 2025-03-11
 
 - ADDED: You can now update the `XRAY-CORE` binaries directly from the official repository. Click on the Xray-core version (on the top right corner) to open the `switch` modal window and initiate the update.

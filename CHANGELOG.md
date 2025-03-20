@@ -4,6 +4,7 @@
 
 - FIXED: Ensure `shortId` is correctly generated.
 - FIXED: reset `XRAY` versions list before loading new data.
+- IMPROVED: Ensure default settings are applied for proxy configurations.
 
 ## [0.40.0] - 2025-03-11
 

@@ -331,35 +331,35 @@ class Engine {
         switch (proxy.protocol) {
           case XrayProtocol.DOKODEMODOOR:
             proxy = plainToInstance(XrayInboundObject<XrayDokodemoDoorInboundObject>, proxy);
-            proxy.settings = plainToInstance(XrayDokodemoDoorInboundObject, proxy.settings);
+            proxy.settings = plainToInstance(XrayDokodemoDoorInboundObject, proxy.settings) ?? new XrayDokodemoDoorInboundObject();
             break;
           case XrayProtocol.SOCKS:
             proxy = plainToInstance(XrayInboundObject<XraySocksInboundObject>, proxy);
-            proxy.settings = plainToInstance(XraySocksInboundObject, proxy.settings);
+            proxy.settings = plainToInstance(XraySocksInboundObject, proxy.settings) ?? new XraySocksInboundObject();
             break;
           case XrayProtocol.WIREGUARD:
             proxy = plainToInstance(XrayInboundObject<XrayWireguardInboundObject>, proxy);
-            proxy.settings = plainToInstance(XrayWireguardInboundObject, proxy.settings);
+            proxy.settings = plainToInstance(XrayWireguardInboundObject, proxy.settings) ?? new XrayWireguardInboundObject();
             break;
           case XrayProtocol.VLESS:
             proxy = plainToInstance(XrayInboundObject<XrayVlessInboundObject>, proxy);
-            proxy.settings = plainToInstance(XrayVlessInboundObject, proxy.settings);
+            proxy.settings = plainToInstance(XrayVlessInboundObject, proxy.settings) ?? new XrayVlessInboundObject();
             break;
           case XrayProtocol.VMESS:
             proxy = plainToInstance(XrayInboundObject<XrayVmessInboundObject>, proxy);
-            proxy.settings = plainToInstance(XrayVmessInboundObject, proxy.settings);
+            proxy.settings = plainToInstance(XrayVmessInboundObject, proxy.settings) ?? new XrayVmessInboundObject();
             break;
           case XrayProtocol.SHADOWSOCKS:
             proxy = plainToInstance(XrayInboundObject<XrayShadowsocksInboundObject>, proxy);
-            proxy.settings = plainToInstance(XrayShadowsocksInboundObject, proxy.settings);
+            proxy.settings = plainToInstance(XrayShadowsocksInboundObject, proxy.settings) ?? new XrayShadowsocksInboundObject();
             break;
           case XrayProtocol.HTTP:
             proxy = plainToInstance(XrayInboundObject<XrayHttpInboundObject>, proxy);
-            proxy.settings = plainToInstance(XrayHttpInboundObject, proxy.settings);
+            proxy.settings = plainToInstance(XrayHttpInboundObject, proxy.settings) ?? new XrayHttpInboundObject();
             break;
           case XrayProtocol.TROJAN:
             proxy = plainToInstance(XrayInboundObject<XrayTrojanInboundObject>, proxy);
-            proxy.settings = plainToInstance(XrayTrojanInboundObject, proxy.settings);
+            proxy.settings = plainToInstance(XrayTrojanInboundObject, proxy.settings) ?? new XrayTrojanInboundObject();
             break;
         }
 
@@ -378,47 +378,47 @@ class Engine {
         switch (proxy.protocol) {
           case XrayProtocol.FREEDOM:
             proxy = plainToInstance(XrayOutboundObject<XrayFreedomOutboundObject>, proxy);
-            proxy.settings = plainToInstance(XrayFreedomOutboundObject, proxy.settings);
+            proxy.settings = plainToInstance(XrayFreedomOutboundObject, proxy.settings) ?? new XrayFreedomOutboundObject();
             break;
           case XrayProtocol.BLACKHOLE:
             proxy = plainToInstance(XrayOutboundObject<XrayBlackholeOutboundObject>, proxy);
-            proxy.settings = plainToInstance(XrayBlackholeOutboundObject, proxy.settings);
+            proxy.settings = plainToInstance(XrayBlackholeOutboundObject, proxy.settings) ?? new XrayBlackholeOutboundObject();
             break;
           case XrayProtocol.SOCKS:
             proxy = plainToInstance(XrayOutboundObject<XraySocksOutboundObject>, proxy);
-            proxy.settings = plainToInstance(XraySocksOutboundObject, proxy.settings);
+            proxy.settings = plainToInstance(XraySocksOutboundObject, proxy.settings) ?? new XraySocksOutboundObject();
             break;
           case XrayProtocol.TROJAN:
             proxy = plainToInstance(XrayOutboundObject<XrayTrojanOutboundObject>, proxy);
-            proxy.settings = plainToInstance(XrayTrojanOutboundObject, proxy.settings);
+            proxy.settings = plainToInstance(XrayTrojanOutboundObject, proxy.settings) ?? new XrayTrojanOutboundObject();
             break;
           case XrayProtocol.VMESS:
             proxy = plainToInstance(XrayOutboundObject<XrayVmessOutboundObject>, proxy);
-            proxy.settings = plainToInstance(XrayVmessOutboundObject, proxy.settings);
+            proxy.settings = plainToInstance(XrayVmessOutboundObject, proxy.settings) ?? new XrayVmessOutboundObject();
             break;
           case XrayProtocol.VLESS:
             proxy = plainToInstance(XrayOutboundObject<XrayVlessOutboundObject>, proxy);
-            proxy.settings = plainToInstance(XrayVlessOutboundObject, proxy.settings);
+            proxy.settings = plainToInstance(XrayVlessOutboundObject, proxy.settings) ?? new XrayVlessOutboundObject();
             break;
           case XrayProtocol.WIREGUARD:
             proxy = plainToInstance(XrayOutboundObject<XrayWireguardInboundObject>, proxy);
-            proxy.settings = plainToInstance(XrayWireguardInboundObject, proxy.settings);
+            proxy.settings = plainToInstance(XrayWireguardInboundObject, proxy.settings) ?? new XrayWireguardInboundObject();
             break;
           case XrayProtocol.LOOPBACK:
             proxy = plainToInstance(XrayOutboundObject<XrayLoopbackOutboundObject>, proxy);
-            proxy.settings = plainToInstance(XrayLoopbackOutboundObject, proxy.settings);
+            proxy.settings = plainToInstance(XrayLoopbackOutboundObject, proxy.settings) ?? new XrayLoopbackOutboundObject();
             break;
           case XrayProtocol.DNS:
             proxy = plainToInstance(XrayOutboundObject<XrayDnsOutboundObject>, proxy);
-            proxy.settings = plainToInstance(XrayDnsOutboundObject, proxy.settings);
+            proxy.settings = plainToInstance(XrayDnsOutboundObject, proxy.settings) ?? new XrayDnsOutboundObject();
             break;
           case XrayProtocol.HTTP:
             proxy = plainToInstance(XrayOutboundObject<XrayHttpOutboundObject>, proxy);
-            proxy.settings = plainToInstance(XrayHttpOutboundObject, proxy.settings);
+            proxy.settings = plainToInstance(XrayHttpOutboundObject, proxy.settings) ?? new XrayHttpOutboundObject();
             break;
           case XrayProtocol.SHADOWSOCKS:
             proxy = plainToInstance(XrayOutboundObject<XrayShadowsocksOutboundObject>, proxy);
-            proxy.settings = plainToInstance(XrayShadowsocksOutboundObject, proxy.settings);
+            proxy.settings = plainToInstance(XrayShadowsocksOutboundObject, proxy.settings) ?? new XrayShadowsocksOutboundObject();
             break;
         }
 

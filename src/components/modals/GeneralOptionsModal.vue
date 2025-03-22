@@ -11,10 +11,10 @@
               </label>
             </td>
           </tr>
-          <tr>
+          <tr v-show="validateCheckConOption()">
             <th>{{ $t("components.GeneralOptionsModal.check_xray_connection") }}</th>
             <td>
-              <label class="go-option" v-show="validateCheckConOption()">
+              <label class="go-option">
                 <input type="checkbox" v-model="checkconenabled" @change="setcheckconnection" />
               </label>
               <modal ref="conModal" :title="$t('components.GeneralOptionsModal.modalConnectTitle')" width="450">
@@ -200,7 +200,7 @@
       };
       const validateCheckConOption = () => {
         const outbound = props.config.outbounds?.find((o) => o.protocol !== XrayProtocol.FREEDOM && o.protocol !== XrayProtocol.BLACKHOLE);
-        return engine.mode === "client" && outbound !== undefined;
+        return outbound !== undefined;
       };
 
       const concheckaccept = async () => {

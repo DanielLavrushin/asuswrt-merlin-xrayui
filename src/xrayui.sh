@@ -63,18 +63,10 @@ update_xrayui_config() {
 
 start() {
 
-    mode=$(am_settings_get xray_mode)
-    if [ -z "$mode" ]; then
-        printlog true "No mode found in custom settings. Defaulting to server mode."
-        mode="server"
-        am_settings_set xray_mode $mode
-    fi
-
     update_loading_progress "Testing xray configuration $DESC..."
 
     test_xray_config
 
-    printlog true "Xray operates in $mode mode"
     printlog true "Starting $DESC with $ARGS"
 
     ARGS=" -c $XRAY_CONFIG"
@@ -91,15 +83,7 @@ start() {
     xray $ARGS >/dev/null 2>&1 &
     echo $! >$PIDFILE
 
-    if [ "$mode" = "server" ]; then
-        configure_firewall_server
-    elif [ "$mode" = "client" ]; then
-        configure_firewall_client
-    else
-        mode="server"
-        am_settings_set xray_mode $mode
-        configure_firewall_server
-    fi
+    configure_firewall
 }
 
 stop() {
@@ -207,72 +191,7 @@ get_xray_proc() {
     xray_pid=$(/bin/pidof xray 2>/dev/null)
 }
 
-configure_firewall_server() {
-    mode=$(am_settings_get xray_mode)
-    if [ "$mode" = "server" ]; then
-
-        # Check if 'xray' process is running
-        get_xray_proc
-        if [ -z "$xray_pid" ]; then
-            printlog true "Xray process not found. Skipping client firewall configuration." $CWARN
-            return
-        fi
-
-        # Create a custom chain for Xray rules
-        iptables -N XRAYUI 2>/dev/null
-
-        inbounds_ports=$(jq -r '.inbounds[]?.port // empty' "$XRAY_CONFIG")
-        if [ -z "$inbounds_ports" ]; then
-            printlog true "No valid ports found in Xray configuration. Cannot configure firewall rules." $CERR
-            return 1
-        fi
-
-        for XRAY_PORT in $inbounds_ports; do
-            # Determine PORT_START and PORT_END
-            if echo "$XRAY_PORT" | grep -q '-'; then
-                PORT_START=$(echo "$XRAY_PORT" | cut -d'-' -f1)
-                PORT_END=$(echo "$XRAY_PORT" | cut -d'-' -f2)
-            else
-                PORT_START="$XRAY_PORT"
-                PORT_END="$XRAY_PORT"
-            fi
-
-            # Validate PORT_START and PORT_END
-            if ! echo "$PORT_START" | grep -qE '^[0-9]+$' || ! echo "$PORT_END" | grep -qE '^[0-9]+$'; then
-                printlog true "Invalid port or range: $XRAY_PORT. Skipping." $CWARN
-                continue
-            fi
-
-            # Define PORT_RANGE
-            PORT_RANGE="$PORT_START"
-            if [ "$PORT_START" != "$PORT_END" ]; then
-                PORT_RANGE="$PORT_START:$PORT_END"
-            fi
-
-            # Add rules to the XRAYUI chain
-            iptables -A XRAYUI -p tcp --dport "$PORT_RANGE" -j ACCEPT
-            iptables -A XRAYUI -p udp --dport "$PORT_RANGE" -j ACCEPT
-
-            printlog true "Firewall rules applied for port(s) $PORT_RANGE." $CSUC
-        done
-
-        # Hook the custom chain into INPUT and FORWARD chains
-        iptables -I INPUT -j XRAYUI
-        iptables -I FORWARD -j XRAYUI
-
-        local script="$XRAYUI_USER_SCRIPTS/firewall_server"
-        if [ -x "$script" ]; then
-            printlog true "Executing user firewall script: $script"
-            "$script" || printlog true "Error executing $script." $CERR
-        fi
-
-        printlog true "All Xray firewall rules applied successfully." $CSUC
-    else
-        printlog true "Xray Server firewall rules not applied, mode is not server." $CWARN
-    fi
-}
-
-configure_firewall_client() {
+configure_firewall() {
     printlog true "Configuring Xray firewall rules..."
     update_loading_progress "Configuring Xray firewall rules..."
 
@@ -283,34 +202,73 @@ configure_firewall_client() {
         return
     fi
 
-    mode=$(am_settings_get xray_mode)
-    if [ "$mode" != "client" ]; then
-        printlog true "XRAYUI Client firewall rules not applied; mode is not client." $CWARN
-        return
-    fi
+    # Create a custom chain for Xray rules
+    iptables -N XRAYUI 2>/dev/null
 
-    XRAY_PORT="$(jq -r '.inbounds[0].port // empty' "$XRAY_CONFIG")"
-    TPROXY_MODE="$(jq -r '.inbounds[0].streamSettings.sockopt.tproxy // "off"' "$XRAY_CONFIG")"
+    configure_firewall_server
+
+    iptables -I INPUT -j XRAYUI
+    iptables -I FORWARD -j XRAYUI
+
+    local dokodemo_inbound=$(jq -c '.inbounds[] | select(.protocol == "dokodemo-door")' "$XRAY_CONFIG")
+
     SERVER_IPS=$(jq -r '[.outbounds[] | select(.settings.vnext != null) | .settings.vnext[].address] | unique | join(" ")' "$XRAY_CONFIG")
 
-    printlog true "Configuring Xray on port $XRAY_PORT ..."
-    if [ -z "$XRAY_PORT" ]; then
-        printlog true "Invalid or missing port in Xray configuration. Cannot configure firewall rules." $CERR
-        return 1
-    fi
-
-    if [ "$TPROXY_MODE" = "tproxy" ]; then
-        configure_firewall_client_tproxy
+    if [ -n "$dokodemo_inbound" ]; then
+        local dokodemo_port=$(echo "$dokodemo_inbound" | jq -r '.port // empty')
+        if [ -n "$dokodemo_port" ]; then
+            TPROXY_MODE="$(echo "$dokodemo_inbound" | jq -r '.streamSettings.sockopt.tproxy // "off"')"
+            if [ "$TPROXY_MODE" = "tproxy" ]; then
+                configure_firewall_client_tproxy $dokodemo_port
+            else
+                configure_firewall_client_direct $dokodemo_port
+            fi
+        else
+            printlog true "No valid port found for dokodemo-door inbound. Skipping client firewall configuration." $CWARN
+        fi
     else
-        configure_firewall_client_direct
+        printlog true "No suitable dokodemo-door inbound found. Skipping client firewall configuration." $CWARN
     fi
 
     printlog true "XRAYUI firewall rules applied successfully." $CSUC
 }
 
+configure_firewall_server() {
+
+    # Iterate over all inbounds
+    jq -c '.inbounds[]' "$XRAY_CONFIG" | while IFS= read -r inbound; do
+        local tag=$(echo "$inbound" | jq -r '.tag // empty')
+        local protocol=$(echo "$inbound" | jq -r '.protocol // empty')
+
+        # Skip inbounds with tags starting with 'sys:' and 'dokodemo-door' protocol
+        if [[ "$tag" =~ ^sys: ]] || [ "$protocol" = "dokodemo-door" ]; then
+            continue
+        fi
+
+        local port=$(echo "$inbound" | jq -r '.port // empty')
+        if [ -z "$port" ]; then
+            printlog true "No valid port found for inbound with tag $tag. Skipping." $CWARN
+            continue
+        fi
+
+        # Validate PORT_START and PORT_END
+        if ! echo "$port" | grep -qE '^[0-9]+$'; then
+            printlog true "Invalid port or range: $port. Skipping." $CWARN
+            continue
+        fi
+
+        # Add rules to the XRAYUI chain
+        iptables -A XRAYUI -p tcp --dport "$port" -j ACCEPT
+        iptables -A XRAYUI -p udp --dport "$port" -j ACCEPT
+
+        printlog true "Firewall SERVER rules applied for port $port." $CSUC
+    done
+}
+
 configure_firewall_client_direct() {
 
-    update_loading_progress "Configuring firewall DIRECT rules..."
+    local dokodemo_port=$1
+    printlog true "Configuring Xray client firewall rules for dokodemo-door on port $dokodemo_port..."
 
     # Set up NAT-only rules for REDIRECT mode.
     iptables -t nat -F XRAYUI 2>/dev/null
@@ -371,6 +329,18 @@ configure_firewall_client_direct() {
         iptables -t nat -A XRAYUI -d "$serverip" -j RETURN || printlog true "Failed to add rule to exclude Xray server IP in NAT." $CERR
     done
 
+    # Exclude server ports
+    server_ports=$(jq -r '.inbounds[]
+    | select(.protocol != "dokodemo-door" and (.tag | startswith("sys:") | not))
+    | .port' "$XRAY_CONFIG" | sort -u)
+
+    if [ -n "$server_ports" ]; then
+        tcp_ports=$(echo "$server_ports" | tr '\n' ',' | sed 's/,$//')
+        iptables -t nat -A XRAYUI -p tcp -m multiport --dports "$tcp_ports" -j RETURN
+        iptables -t nat -A XRAYUI -p udp -m multiport --dports "$tcp_ports" -j RETURN
+    fi
+
+    # apply policy rules
     jq -c '(.routing.policies // []) | if length == 0 then [{mode:"redirect", enabled:true, name:"all traffic to xray"}] else . end | .[]' "$XRAY_CONFIG" | while IFS= read -r policy; do
         enabled="$(echo "$policy" | jq -r '.enabled // "false"')"
         [ "$enabled" != "true" ] && continue
@@ -386,8 +356,8 @@ configure_firewall_client_direct() {
                 # Bypass all except the listed TCP/UDP ports -> those get redirected
                 printlog true "Ports policy bypass for ALL devices: redirect only TCP($tcpPorts), UDP($udpPorts)" $CWARN
 
-                [ -n "$tcpPorts" ] && iptables -t nat -A XRAYUI -p tcp -m multiport --dports "$tcpPorts" -j REDIRECT --to-port "$XRAY_PORT"
-                [ -n "$udpPorts" ] && iptables -t nat -A XRAYUI -p udp -m multiport --dports "$udpPorts" -j REDIRECT --to-port "$XRAY_PORT"
+                [ -n "$tcpPorts" ] && iptables -t nat -A XRAYUI -p tcp -m multiport --dports "$tcpPorts" -j REDIRECT --to-port "$dokodemo_port"
+                [ -n "$udpPorts" ] && iptables -t nat -A XRAYUI -p udp -m multiport --dports "$udpPorts" -j REDIRECT --to-port "$dokodemo_port"
 
                 iptables -t nat -A XRAYUI -j RETURN
             else
@@ -397,8 +367,8 @@ configure_firewall_client_direct() {
                 [ -n "$tcpPorts" ] && iptables -t nat -A XRAYUI -p tcp -m multiport --dports "$tcpPorts" -j RETURN
                 [ -n "$udpPorts" ] && iptables -t nat -A XRAYUI -p udp -m multiport --dports "$udpPorts" -j RETURN
 
-                iptables -t nat -A XRAYUI -p tcp -j REDIRECT --to-port "$XRAY_PORT"
-                iptables -t nat -A XRAYUI -p udp -j REDIRECT --to-port "$XRAY_PORT"
+                iptables -t nat -A XRAYUI -p tcp -j REDIRECT --to-port "$dokodemo_port"
+                iptables -t nat -A XRAYUI -p udp -j REDIRECT --to-port "$dokodemo_port"
             fi
         else
             # Read each MAC in the policy
@@ -407,8 +377,8 @@ configure_firewall_client_direct() {
                     # Bypass all except the listed TCP/UDP ports -> those get redirected
                     printlog true "Ports policy bypass for $mac: redirect only TCP($tcpPorts), UDP($udpPorts)" $CWARN
 
-                    [ -n "$tcpPorts" ] && iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p tcp -m multiport --dports "$tcpPorts" -j REDIRECT --to-port "$XRAY_PORT"
-                    [ -n "$udpPorts" ] && iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p udp -m multiport --dports "$udpPorts" -j REDIRECT --to-port "$XRAY_PORT"
+                    [ -n "$tcpPorts" ] && iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p tcp -m multiport --dports "$tcpPorts" -j REDIRECT --to-port "$dokodemo_port"
+                    [ -n "$udpPorts" ] && iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p udp -m multiport --dports "$udpPorts" -j REDIRECT --to-port "$dokodemo_port"
 
                     # Default for bypass = return
                     iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -j RETURN
@@ -421,8 +391,8 @@ configure_firewall_client_direct() {
                     [ -n "$udpPorts" ] && iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p udp -m multiport --dports "$udpPorts" -j RETURN
 
                     # Default for redirect = redirect all
-                    iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p tcp -j REDIRECT --to-port "$XRAY_PORT"
-                    iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p udp -j REDIRECT --to-port "$XRAY_PORT"
+                    iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p tcp -j REDIRECT --to-port "$dokodemo_port"
+                    iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p udp -j REDIRECT --to-port "$dokodemo_port"
                 fi
             done
         fi
@@ -447,7 +417,8 @@ configure_firewall_client_direct() {
 
 configure_firewall_client_tproxy() {
 
-    update_loading_progress "Configuring firewall TPROXY rules..."
+    local dokodemo_port=$1
+    printlog true "Configuring Xray TPROXY client firewall rules for dokodemo-door on port $dokodemo_port..."
 
     # Ensure TPROXY module is loaded
     if ! lsmod | grep -q "xt_TPROXY"; then
@@ -540,30 +511,30 @@ configure_firewall_client_tproxy() {
             # No MAC => apply policy to all devices
             if [ "$mode" = "bypass" ]; then
                 # BYPASS => TPROXY only the listed ports; everything else returns
-                [ -n "$tcpPorts" ] && iptables -t mangle -A XRAYUI -p tcp -m multiport --dports "$tcpPorts" -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777
-                [ -n "$udpPorts" ] && iptables -t mangle -A XRAYUI -p udp -m multiport --dports "$udpPorts" -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777
+                [ -n "$tcpPorts" ] && iptables -t mangle -A XRAYUI -p tcp -m multiport --dports "$tcpPorts" -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
+                [ -n "$udpPorts" ] && iptables -t mangle -A XRAYUI -p udp -m multiport --dports "$udpPorts" -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
                 iptables -t mangle -A XRAYUI -j RETURN
             else
                 # REDIRECT => TPROXY everything; listed ports are returned
                 [ -n "$tcpPorts" ] && iptables -t mangle -A XRAYUI -p tcp -m multiport --dports "$tcpPorts" -j RETURN
                 [ -n "$udpPorts" ] && iptables -t mangle -A XRAYUI -p udp -m multiport --dports "$udpPorts" -j RETURN
-                iptables -t mangle -A XRAYUI -p tcp -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777
-                iptables -t mangle -A XRAYUI -p udp -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777
+                iptables -t mangle -A XRAYUI -p tcp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
+                iptables -t mangle -A XRAYUI -p udp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
             fi
         else
             # Per-device logic
             echo "$policy" | jq -r '.mac[]?' | while IFS= read -r mac; do
                 if [ "$mode" = "bypass" ]; then
                     # BYPASS => TPROXY only the listed ports; everything else returns
-                    [ -n "$tcpPorts" ] && iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p tcp -m multiport --dports "$tcpPorts" -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777
-                    [ -n "$udpPorts" ] && iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p udp -m multiport --dports "$udpPorts" -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777
+                    [ -n "$tcpPorts" ] && iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p tcp -m multiport --dports "$tcpPorts" -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
+                    [ -n "$udpPorts" ] && iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p udp -m multiport --dports "$udpPorts" -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
                     iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -j RETURN
                 else
                     # REDIRECT => TPROXY everything; listed ports are returned
                     [ -n "$tcpPorts" ] && iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p tcp -m multiport --dports "$tcpPorts" -j RETURN
                     [ -n "$udpPorts" ] && iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p udp -m multiport --dports "$udpPorts" -j RETURN
-                    iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p tcp -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777
-                    iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p udp -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777
+                    iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p tcp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
+                    iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p udp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
                 fi
             done
         fi
@@ -579,8 +550,8 @@ configure_firewall_client_tproxy() {
     fi
 
     # Add TPROXY rules in mangle:
-    iptables -t mangle -A XRAYUI -p tcp -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777 || printlog true "Failed to add TPROXY rule for TCP." $CERR
-    iptables -t mangle -A XRAYUI -p udp -j TPROXY --on-port "$XRAY_PORT" --tproxy-mark 0x8777 || printlog true "Failed to add TPROXY rule for UDP." $CERR
+    iptables -t mangle -A XRAYUI -p tcp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777 || printlog true "Failed to add TPROXY rule for TCP." $CERR
+    iptables -t mangle -A XRAYUI -p udp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777 || printlog true "Failed to add TPROXY rule for UDP." $CERR
 
     # Add routing rules for marked packets:
     ip rule list | grep -q "fwmark 0x8777" || ip rule add fwmark 0x8777 table 8777 priority 100 || printlog true "Failed to add fwmark rule." $CERR
@@ -786,13 +757,16 @@ am_settings_del() {
     sed -i "/$key/d" /jffs/addons/custom_settings.txt
 }
 
-# function to get connected clients in the server mode
+# function to get connected clients
 get_connected_clients() {
     temp_file="/tmp/xray_clients_online.json"
     >"$temp_file"
 
     ports_list=""
-    inbounds_ports=$(jq -r '.inbounds[]?.port // empty' "$XRAY_CONFIG")
+    inbounds_ports=$(jq -r '.inbounds[]
+    | select(.protocol != "dokodemo-door" and (.tag | startswith("sys:") | not))
+    | .port' "$XRAY_CONFIG" | sort -u)
+
     for XRAY_PORT in $inbounds_ports; do
         if echo "$XRAY_PORT" | grep -q '-'; then
             PORT_START=$(echo "$XRAY_PORT" | cut -d'-' -f1)
@@ -804,6 +778,8 @@ get_connected_clients() {
             ports_list="$ports_list $XRAY_PORT"
         fi
     done
+
+    printlog true "Checking connected clients for ports: $ports_list"
 
     pattern=$(echo "$ports_list" | tr ' ' '\n' | grep -E '^[0-9]+$' | sort -n -u | awk '{printf "%s|", $0}' | sed 's/|$//')
 
@@ -981,15 +957,6 @@ regenerate_wireguard_keys() {
     fi
 
     return 0
-}
-
-switch_mode() {
-    mode=$(reconstruct_payload)
-
-    mode_type=$(echo "$mode" | jq -r '.mode')
-    printlog true "Switching Xray mode to $mode_type"
-
-    am_settings_set xray_mode $mode_type
 }
 
 apply_general_options() {
@@ -1308,14 +1275,6 @@ EOF
         printlog true "xray_startup was empty. Set to 'enabled'." $CWARN
     else
         printlog true "xray_startup already set. Skipping."
-    fi
-
-    local current_mode=$(am_settings_get xray_mode)
-    if [ -z "$current_mode" ]; then
-        am_settings_set xray_mode "server"
-        printlog true "xray_mode was empty. Set to 'server'."
-    else
-        printlog true "xray_mode already set to '$current_mode'. Skipping."
     fi
 
     mkdir -p $XRAYUI_USER_SCRIPTS
@@ -2273,9 +2232,6 @@ service_event)
         case "$3" in
         "apply")
             apply_config
-            ;;
-        "mode")
-            switch_mode
             ;;
         "logs")
             case "$4" in

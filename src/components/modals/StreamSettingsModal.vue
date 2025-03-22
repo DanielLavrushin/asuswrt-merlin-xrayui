@@ -24,7 +24,7 @@
                 <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click="manage_security" />
               </span>
               <modal ref="securityModal" :title="$t('components.StreamSettingsModal.modal_security_title')" v-if="transport.security != 'none'">
-                <component :is="securityComponent" :transport="transport" />
+                <component :is="securityComponent" :transport="transport" v-model:proxyType="proxyType" />
               </modal>
             </td>
           </tr>
@@ -106,7 +106,7 @@
       const sockoptModal = ref();
       const transport = ref<XrayStreamSettingsObject>(props.transport ?? new XrayStreamSettingsObject());
       const network = ref<ITransportNetwork>();
-      const proxyType = ref<string>();
+      const proxyType = ref<string>("");
 
       const networkComponent = computed(() => {
         switch (transport.value.network) {

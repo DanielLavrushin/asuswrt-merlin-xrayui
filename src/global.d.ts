@@ -8,7 +8,6 @@ interface XrayUiCustomSettings {
   [key: string]: string;
   xray_page: string;
   xray_version: string;
-  xray_mode: string;
   xray_startup: string;
 }
 

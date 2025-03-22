@@ -490,6 +490,11 @@
     "ReverseItemsModal": {
       "modal_title": "Reverse Proxy Items",
       "modal_title2": "List"
+    },
+    "Profiles": {
+      "manager": "Profiles Manager",
+      "modal_title": "Manage Profiles",
+      "hint": "Select a configuration profile from the list below. This list is automatically populated with all JSON files in the `/opt/etc/xray` directory. Once you choose a profile.<br/>You can also manage the list by adding or removing configuration files as needed."
     }
   }
 }

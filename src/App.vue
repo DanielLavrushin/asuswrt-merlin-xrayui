@@ -179,7 +179,9 @@
     border-radius: 10px;
     padding: 3px 8px 5px 8px;
   }
-
+  select {
+    vertical-align: middle;
+  }
   select > option[disabled] {
     color: $c_yellow;
   }

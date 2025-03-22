@@ -3,6 +3,7 @@
     "import": "import",
     "connect": "connect",
     "reconnect": "reconnect",
+    "start": "start",
     "restart": "restart",
     "stop": "stop",
     "show_config": "show config",

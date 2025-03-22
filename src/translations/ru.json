@@ -3,6 +3,7 @@
     "import": "импорт",
     "connect": "подключить",
     "reconnect": "переподключить",
+    "start": "запустить",
     "restart": "перезапустить",
     "stop": "остановить",
     "show_config": "config.json",

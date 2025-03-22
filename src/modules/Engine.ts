@@ -99,7 +99,8 @@ enum SubmtActions {
   initResponse = "xrayui_configuration_initresponse",
   generalOptionsApply = "xrayui_configuration_applygeneraloptions",
   xrayVersionSwitch = "xrayui_configuration_xrayversionswitch",
-  changeProfile = "xrayui_configuration_changeprofile"
+  changeProfile = "xrayui_configuration_changeprofile",
+  deleteProfile = "xrayui_configuration_deleteprofile"
 }
 
 class Engine {

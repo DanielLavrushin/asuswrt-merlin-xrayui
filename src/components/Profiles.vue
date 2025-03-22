@@ -14,7 +14,9 @@
           <tbody>
             <tr v-for="p in profiles" :key="p">
               <td>{{ p }}</td>
-              <td></td>
+              <td>
+                <input v-if="p !== uiResponse.xray.profile" class="button_gen button_gen_small" type="button" value="&#10005;" :title="$t('labels.delete')" @click.prevent="deleteProfile(p)" />
+              </td>
             </tr>
             <tr>
               <td>
@@ -66,9 +68,20 @@
           await engine.submit(SubmtActions.changeProfile, { profile: profile.value }, 3000);
         });
       };
+      const delete_profile = async (p: string) => {
+        await engine.executeWithLoadingProgress(async () => {
+          await engine.submit(SubmtActions.deleteProfile, { profile: p }, 1000);
+        }, false);
+      };
       const manage = () => {
         profile_name.value = "";
         modal.value.show();
+      };
+      const deleteProfile = async (p: string) => {
+        if (confirm("Are you sure you want to delete config profile " + p + "?")) {
+          profiles.value = profiles.value.filter((x) => x !== p);
+          await delete_profile(p);
+        }
       };
       const add = async () => {
         profile_name.value =
@@ -90,9 +103,12 @@
         profile_name,
         profiles,
         modal,
+        uiResponse,
         manage,
         change_profile,
-        add
+        delete_profile,
+        add,
+        deleteProfile
       };
     }
   });

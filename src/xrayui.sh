@@ -2192,6 +2192,38 @@ change_config_profile() {
     return 0
 }
 
+delete_config_profile() {
+    update_loading_progress "Deleting configuration profile..." 0
+
+    init_xrayui_config
+
+    local payload=$(reconstruct_payload)
+    local profile=$(echo "$payload" | jq -r '.profile')
+
+    # Ensure profile ends with ".json"
+    case "$profile" in
+    *.json) ;; # Already ends with .json
+    *) profile="${profile}.json" ;;
+    esac
+
+    local profile_path="/opt/etc/xray/$profile"
+
+    if [ -f "$profile_path" ]; then
+        rm -f "$profile_path"
+        if [ $? -eq 0 ]; then
+            printlog true "Profile $profile deleted successfully." $CSUC
+        else
+            printlog true "Failed to delete profile $profile." $CERR
+            return 1
+        fi
+    else
+        printlog true "Profile $profile does not exist." $CWARN
+    fi
+
+    update_loading_progress "Configuration profile deleted successfully." 100
+    return 0
+}
+
 case "$1" in
 version)
     show_version
@@ -2319,6 +2351,9 @@ service_event)
             ;;
         changeprofile)
             change_config_profile
+            ;;
+        deleteprofile)
+            delete_config_profile
             ;;
         esac
         exit 0

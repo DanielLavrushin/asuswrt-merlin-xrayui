@@ -63,7 +63,7 @@
     public connected?: boolean;
   }
   export default defineComponent({
-    name: "ClientStatus",
+    name: "ServiceStatus",
     components: {
       GeneralOptionsModal,
       ImportConfig,

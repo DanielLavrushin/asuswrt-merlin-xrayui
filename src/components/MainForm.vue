@@ -32,7 +32,7 @@
                               <div class="formfonttitle" style="text-align: left">X-RAY UI v{{ version }}</div>
                               <div id="formfontdesc" class="formfontdesc">{{ $t("labels.xrayui_desc") }}</div>
                               <div style="margin: 10px 0 10px 5px" class="splitLine"></div>
-                              <client-status v-model:config="config"></client-status>
+                              <service-status v-model:config="config"></service-status>
                               <inbounds @show-transport="show_transport" @show-sniffing="show_sniffing"></inbounds>
                               <outbounds @show-transport="show_transport"></outbounds>
                               <dns></dns>
@@ -72,8 +72,7 @@
   import { XrayInboundObject } from "../modules/InboundObjects";
   import { XrayOutboundObject } from "../modules/OutboundObjects";
 
-  import ServerStatus from "./ServerStatus.vue";
-  import ClientStatus from "./ClientStatus.vue";
+  import ServiceStatus from "./ServiceStatus.vue";
   import Inbounds from "./Inbounds.vue";
   import Outbounds from "./Outbounds.vue";
   import Routing from "./Routing.vue";
@@ -101,8 +100,7 @@
       Dns,
       Version,
       Outbounds,
-      ServerStatus,
-      ClientStatus,
+      ServiceStatus,
       SniffingModal,
       ClientsOnline,
       StreamSettingsModal,

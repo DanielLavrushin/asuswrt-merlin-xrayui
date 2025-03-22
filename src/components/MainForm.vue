@@ -30,18 +30,9 @@
                             <div class="formfontdesc">
                               <div>&nbsp;</div>
                               <div class="formfonttitle" style="text-align: left">X-RAY UI v{{ version }}</div>
-                              <div class="xray_type_switches">
-                                <div class="xray_type_switch left" :class="{ selected: engine.mode === 'server' }" @click.prevent="switch_type('server')">
-                                  <div>{{ $t("labels.server") }}</div>
-                                </div>
-                                <div class="xray_type_switch right" :class="{ selected: engine.mode === 'client' }" @click.prevent="switch_type('client')">
-                                  <div>{{ $t("labels.client") }}</div>
-                                </div>
-                              </div>
                               <div id="formfontdesc" class="formfontdesc">{{ $t("labels.xrayui_desc") }}</div>
                               <div style="margin: 10px 0 10px 5px" class="splitLine"></div>
-                              <server-status v-if="engine.mode == 'server'" v-model:config="config"></server-status>
-                              <client-status v-if="engine.mode == 'client'" v-model:config="config"></client-status>
+                              <client-status v-model:config="config"></client-status>
                               <inbounds @show-transport="show_transport" @show-sniffing="show_sniffing"></inbounds>
                               <outbounds @show-transport="show_transport"></outbounds>
                               <dns></dns>
@@ -52,7 +43,7 @@
                               <div class="apply_gen">
                                 <input class="button_gen" @click.prevent="apply_settings()" type="button" :value="$t('labels.apply')" />
                               </div>
-                              <clients-online v-if="engine.mode == 'server'"></clients-online>
+                              <clients-online></clients-online>
                               <logs-manager v-if="config.log?.access != 'none' || config.log?.error != 'none'" v-model:logs="config.log!"></logs-manager>
                               <version></version>
                             </div>
@@ -123,14 +114,7 @@
       const config = ref(engine.xrayConfig);
       const transportModal = ref();
       const sniffingModal = ref();
-      const switch_type = async (type: string) => {
-        engine.mode = type;
-        let delay = 1000;
-        window.showLoading(delay);
-        window.xray.custom_settings.xray_mode = type;
-        await engine.submit(SubmtActions.configurationSetMode, { mode: type }, delay);
-        window.location.reload();
-      };
+
       const show_transport = (proxy: XrayInboundObject<IProtocolType> | XrayOutboundObject<IProtocolType>, type: string) => {
         transportModal.value.show(proxy, type);
       };
@@ -154,7 +138,6 @@
         sniffingModal,
         version: window.xray.custom_settings.xray_version,
         xray_page: window.xray.custom_settings.xray_page,
-        switch_type,
         show_transport,
         show_sniffing,
         apply_settings

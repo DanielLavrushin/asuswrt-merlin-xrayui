@@ -10,7 +10,7 @@
         <th>Id</th>
         <th>Email</th>
         <th>Flow</th>
-        <th style="min-width:120px"></th>
+        <th style="min-width: 120px"></th>
       </tr>
       <tr class="row_title">
         <td>
@@ -20,7 +20,7 @@
           <input v-model="newClient.email" type="text" class="input_20_table" placeholder="Email" />
         </td>
 
-        <td style="min-width:120px">
+        <td style="min-width: 120px">
           <select v-model="newClient.flow" class="input_12_table">
             <option v-for="flow in flows" :value="flow" :key="flow">{{ flow }}</option>
           </select>
@@ -35,106 +35,104 @@
       <tr v-for="(client, index) in clients" :key="index" class="data_tr">
         <td>{{ client.id }}</td>
         <td>{{ client.email }}</td>
-        <td style="min-width:120px">{{ client.flow }}</td>
+        <td style="min-width: 120px">{{ client.flow }}</td>
         <td>
-          <qr v-if="isServerMode" ref="modalQr" :client="client" :proxy="proxy"></qr>
+          <qr :client="client" :proxy="proxy"></qr>
           <button @click.prevent="editClient(client, index)" class="button_gen button_gen_small">&#8494;</button>
           <button @click.prevent="removeClient(client)" class="button_gen button_gen_small">&#10005;</button>
         </td>
       </tr>
     </tbody>
   </table>
-
 </template>
 
 <script lang="ts">
-import { engine } from "../../modules/Engine";
-import { XrayVlessClientObject } from "../../modules/ClientsObjects";
-import { XrayOptions } from "../../modules/Options";
-import { defineComponent, ref } from "vue";
-import modal from "../Modal.vue";
-import Qr from "./QrCodeClient.vue";
+  import { engine } from "../../modules/Engine";
+  import { XrayVlessClientObject } from "../../modules/ClientsObjects";
+  import { XrayOptions } from "../../modules/Options";
+  import { defineComponent, ref } from "vue";
+  import modal from "../Modal.vue";
+  import Qr from "./QrCodeClient.vue";
 
-export default defineComponent({
-  name: "VlessClients",
-  components: {
-    modal,
-    Qr
-  },
-  props: {
-    proxy: Object,
-    clients: Array<XrayVlessClientObject>,
-    mode: String,
-  },
+  export default defineComponent({
+    name: "VlessClients",
+    components: {
+      modal,
+      Qr
+    },
+    props: {
+      proxy: Object,
+      clients: Array<XrayVlessClientObject>,
+      mode: String
+    },
 
-  setup(props) {
-    const editingIndex = ref<number | null>(null);
-    const clients = ref<XrayVlessClientObject[]>(props.clients ?? []);
-    const newClient = ref<XrayVlessClientObject>(new XrayVlessClientObject());
-    const mode = ref(props.mode);
-    newClient.value.id = engine.uuid();
-    const modalQr = ref();
-    const flows = ref();
-
-    switch (mode.value) {
-      case "outbound":
-        flows.value = ["xtls-rprx-vision", "xtls-rprx-vision-udp443"];
-        break;
-      default:
-        flows.value = XrayOptions.clientFlowOptions;
-        break;
-    }
-
-    const resetNewForm = () => {
+    setup(props) {
+      const editingIndex = ref<number | null>(null);
+      const clients = ref<XrayVlessClientObject[]>(props.clients ?? []);
+      const newClient = ref<XrayVlessClientObject>(new XrayVlessClientObject());
+      const mode = ref(props.mode);
       newClient.value.id = engine.uuid();
-      newClient.value.email = "";
-      newClient.value.flow = XrayOptions.clientFlowOptions[0];
-    };
+      const modalQr = ref();
+      const flows = ref();
 
-    const removeClient = (client: XrayVlessClientObject) => {
-      if (!confirm("Are you sure you want to remove this client?")) return;
-      clients.value.splice(clients.value.indexOf(client), 1);
-    };
-
-    const addClient = () => {
-      let client = new XrayVlessClientObject();
-      client.id = newClient.value.id;
-      client.email = newClient.value.email;
-      client.flow = newClient.value.flow;
-      if (!client.email) {
-        alert("Email is required");
-        return;
-      }
-      if (!client.id) {
-        alert("Id is required");
-        return;
+      switch (mode.value) {
+        case "outbound":
+          flows.value = ["xtls-rprx-vision", "xtls-rprx-vision-udp443"];
+          break;
+        default:
+          flows.value = XrayOptions.clientFlowOptions;
+          break;
       }
 
-      if (mode.value == "outbound") {
-        client.encryption = "none";
-      }
+      const resetNewForm = () => {
+        newClient.value.id = engine.uuid();
+        newClient.value.email = "";
+        newClient.value.flow = XrayOptions.clientFlowOptions[0];
+      };
 
-      clients.value.push(client);
-      resetNewForm();
-    };
+      const removeClient = (client: XrayVlessClientObject) => {
+        if (!confirm("Are you sure you want to remove this client?")) return;
+        clients.value.splice(clients.value.indexOf(client), 1);
+      };
 
-    const editClient = (client: XrayVlessClientObject, index: number) => {
-      newClient.value.id = client.id;
-      newClient.value.email = client.email;
-      newClient.value.flow = client.flow;
-      editingIndex.value = index;
-      clients.value.splice(clients.value.indexOf(client), 1);
+      const addClient = () => {
+        let client = new XrayVlessClientObject();
+        client.id = newClient.value.id;
+        client.email = newClient.value.email;
+        client.flow = newClient.value.flow;
+        if (!client.email) {
+          alert("Email is required");
+          return;
+        }
+        if (!client.id) {
+          alert("Id is required");
+          return;
+        }
+
+        if (mode.value == "outbound") {
+          client.encryption = "none";
+        }
+
+        clients.value.push(client);
+        resetNewForm();
+      };
+
+      const editClient = (client: XrayVlessClientObject, index: number) => {
+        newClient.value.id = client.id;
+        newClient.value.email = client.email;
+        newClient.value.flow = client.flow;
+        editingIndex.value = index;
+        clients.value.splice(clients.value.indexOf(client), 1);
+      };
+      return {
+        flows,
+        clients,
+        newClient,
+        modalQr,
+        editClient,
+        removeClient,
+        addClient
+      };
     }
-    return {
-      flows,
-      clients,
-      newClient,
-      modalQr,
-      isServerMode: engine.mode == "server",
-      editClient,
-      removeClient,
-      addClient,
-    };
-  },
-});
+  });
 </script>

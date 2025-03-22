@@ -18,8 +18,8 @@
           </span>
           <span :class="[' label', 'flag', 'fi', contryCodeClass]"></span>
           <span class="row-buttons">
-            <a v-if="!isRunning" class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(connect)">{{ $t("labels.connect") }} </a>
-            <a v-if="isRunning" class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(reconnect)">{{ $t("labels.reconnect") }} </a>
+            <a v-if="!isRunning" class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(connect)">{{ $t("labels.start") }} </a>
+            <a v-if="isRunning" class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(reconnect)">{{ $t("labels.restart") }} </a>
             <a v-if="isRunning" class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(stop)">{{ $t("labels.stop") }}</a>
             <input class="button_gen button_gen_small" type="button" :value="$t('labels.show_config')" @click.prevent="show_config_modal()" />
           </span>

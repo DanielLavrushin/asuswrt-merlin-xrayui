@@ -43,7 +43,7 @@
           <dns-servers-modal ref="modalServers" v-model:servers="dns.servers"></dns-servers-modal>
         </td>
       </tr>
-      <tr v-if="engine.mode == 'client'">
+      <tr>
         <th>
           {{ $t("components.Dns.label_client_ip") }}
           <hint v-html="$t('components.Dns.hint_client_ip')"></hint>

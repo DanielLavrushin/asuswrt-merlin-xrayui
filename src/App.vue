@@ -24,7 +24,6 @@
     },
     setup() {
       const uiResponse = ref(new EngineResponseConfig());
-      engine.mode = window.xray.custom_settings.xray_mode;
       window.scrollTo = () => {};
       const xrayConfig = engine.xrayConfig;
       provide("xrayConfig", xrayConfig);

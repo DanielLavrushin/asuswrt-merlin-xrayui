@@ -8,7 +8,7 @@
         </tr>
       </thead>
       <tbody v-if="transport.tlsSettings">
-        <tr v-if="engine.mode === 'client'">
+        <tr v-if="proxyType === 'outbound'">
           <th>
             {{ $t("components.Tls.label_server_name") }}
             <hint v-html="$t('components.Tls.hint_server_name')"></hint>
@@ -18,7 +18,7 @@
             <span class="hint-color"></span>
           </td>
         </tr>
-        <tr v-if="engine.mode === 'client'">
+        <tr v-if="proxyType === 'outbound'">
           <th>
             {{ $t("components.Tls.label_allow_insecure") }}
             <hint v-html="$t('components.Tls.hint_allow_insecure')"></hint>
@@ -28,7 +28,7 @@
             <span class="hint-color">default: false</span>
           </td>
         </tr>
-        <tr v-if="engine.mode === 'server'">
+        <tr v-if="proxyType === 'inbound'">
           <th>
             {{ $t("components.Tls.label_reject_unknown_sni") }}
             <hint v-html="$t('components.Tls.hint_reject_unknown_sni')"></hint>
@@ -48,7 +48,7 @@
             <span class="hint-color">default: false</span>
           </td>
         </tr>
-        <tr v-if="engine.mode === 'client'">
+        <tr v-if="proxyType === 'outbound'">
           <th>
             {{ $t("components.Tls.label_session_resumption") }}
             <hint v-html="$t('components.Tls.hint_session_resumption')"></hint>
@@ -91,7 +91,7 @@
             <span class="hint-color">min and max version, default: 1.3</span>
           </td>
         </tr>
-        <tr v-if="engine.mode === 'client'">
+        <tr v-if="proxyType === 'outbound'">
           <th>
             {{ $t("components.Tls.label_fingerprint") }}
             <hint v-html="$t('components.Tls.hint_fingerprint')"></hint>
@@ -105,7 +105,7 @@
             <span class="hint-color">optional</span>
           </td>
         </tr>
-        <tr v-if="engine.mode === 'server'">
+        <tr v-if="proxyType === 'inbound'">
           <th>
             {{ $t("components.Tls.label_certificate") }}
             <hint v-html="$t('components.Tls.hint_certificate')"></hint>
@@ -136,9 +136,14 @@
       Hint
     },
     props: {
+      proxyType: {
+        type: String,
+        required: true
+      },
       transport: XrayStreamSettingsObject
     },
     setup(props) {
+      const proxyType = ref(props.proxyType);
       const certificatesModal = ref();
       const transport = ref<XrayStreamSettingsObject>(props.transport ?? new XrayStreamSettingsObject());
       transport.value.tlsSettings = transport.value.tlsSettings ?? new XrayStreamTlsSettingsObject();
@@ -187,6 +192,7 @@
         usageOptions: XrayStreamTlsCertificateObject.usageOptions,
         tlsVersions: XrayOptions.tlsVersionsOptions,
         alpnOptions: XrayOptions.alpnOptions,
+        proxyType,
         certificate_manage,
         certificate_renew
       };

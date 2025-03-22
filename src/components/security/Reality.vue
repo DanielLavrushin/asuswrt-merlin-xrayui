@@ -18,7 +18,7 @@
             <span class="hint-color">default: false</span>
           </td>
         </tr>
-        <tr v-if="engine.mode === 'server'">
+        <tr v-if="proxyType === 'inbound'">
           <th>
             {{ $t("components.Reality.label_dest") }}
             <hint v-html="$t('components.Reality.hint_dest')"></hint>
@@ -27,7 +27,7 @@
             <input v-model="transport.realitySettings.dest" type="text" class="input_20_table" />
           </td>
         </tr>
-        <tr v-if="engine.mode === 'server'">
+        <tr v-if="proxyType === 'inbound'">
           <th>
             {{ $t("components.Reality.label_server_names") }}
             <hint v-html="$t('components.Reality.hint_server_names')"></hint>
@@ -38,7 +38,7 @@
             </div>
           </td>
         </tr>
-        <tr v-if="engine.mode === 'client'">
+        <tr v-if="proxyType === 'outbound'">
           <th>
             {{ $t("components.Reality.label_server_name") }}
             <hint v-html="$t('components.Reality.hint_server_name')"></hint>
@@ -48,7 +48,7 @@
             <span class="hint-color">required</span>
           </td>
         </tr>
-        <tr v-if="engine.mode === 'client'">
+        <tr v-if="proxyType === 'outbound'">
           <th>
             {{ $t("components.Reality.label_short_id") }}
             <hint v-html="$t('components.Reality.hint_short_id')"></hint>
@@ -58,7 +58,7 @@
             <span class="hint-color"></span>
           </td>
         </tr>
-        <tr v-if="engine.mode === 'server' && transport.realitySettings.shortIds">
+        <tr v-if="proxyType === 'inbound' && transport.realitySettings.shortIds">
           <th>
             {{ $t("components.Reality.label_short_ids") }}
             <hint v-html="$t('components.Reality.hint_short_ids')"></hint>
@@ -77,7 +77,7 @@
             </modal>
           </td>
         </tr>
-        <tr v-if="engine.mode === 'server'">
+        <tr v-if="proxyType === 'inbound'">
           <th>
             {{ $t("components.Reality.label_proxy_version") }}
             <hint v-html="$t('components.Reality.hint_proxy_version')"></hint>
@@ -91,7 +91,7 @@
             <span class="hint-color">default: 0</span>
           </td>
         </tr>
-        <tr v-if="engine.mode === 'server'">
+        <tr v-if="proxyType === 'inbound'">
           <th>
             {{ $t("components.Reality.label_private_key") }}
             <hint v-html="$t('components.Reality.hintl_private_key')"></hint>
@@ -121,7 +121,7 @@
             <input v-model="transport.realitySettings.spiderX" type="text" class="input_30_table" />
           </td>
         </tr>
-        <tr v-if="engine.mode === 'client'">
+        <tr v-if="proxyType === 'outbound'">
           <th>
             {{ $t("components.Reality.label_fingerprint") }}
             <hint v-html="$t('components.Reality.hint_fingerprint')"></hint>
@@ -155,9 +155,14 @@
       Hint
     },
     props: {
+      proxyType: {
+        type: String,
+        required: true
+      },
       transport: XrayStreamSettingsObject
     },
     setup(props) {
+      const proxyType = ref(props.proxyType);
       const shortIdsModal = ref();
       const transport = ref<XrayStreamSettingsObject>(props.transport ?? new XrayStreamSettingsObject());
       transport.value.realitySettings = transport.value.realitySettings ?? new XrayStreamRealitySettingsObject();
@@ -192,7 +197,7 @@
         }
       };
 
-      if (engine.mode === "server") {
+      if (proxyType.value === "inbound") {
         if (!transport.value.realitySettings.shortIds) {
           transport.value.realitySettings.shortIds = [];
         }

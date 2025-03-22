@@ -2,13 +2,18 @@
 
 ## [0.4x.x] - 2025-03-xx
 
-- FIXED: Ensure `shortId` is correctly generated.
-- FIXED: reset `XRAY` versions list before loading new data.
-- ADDED: It is now possible to define custom logs location in the general settings.
-- IMPROVED: Ensure default settings are applied for proxy configurations.
-- CHANGED: Switch to `SCSS`.
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- CHANGED: `Client/Server` mode. XRAYUI now operates as a single proxy service on the router. This is a critical change that might affect some configurations. This change means that `XRAYUI` can configure `XRAY` to act as both a server and a client simultaneously. External devices can now connect to your home network, while local devices continue to be routed through the external VPS. In client mode, `XRAYUI` still expects at least one `dokodemo` inbound. Please report any issues on [GitHub](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues) if you encounter any.
+- FIXED: Ensured that `shortId` is generated correctly.
+- FIXED: Reset the `XRAY` versions list before loading new data.
+- ADDED: It is now possible to specify a custom logs location in the general settings.
+- IMPROVED: Default settings are now correctly applied for proxy configurations.
+- CHANGED: Switched to `SCSS`.
 
 ## [0.40.0] - 2025-03-11
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - ADDED: You can now update the `XRAY-CORE` binaries directly from the official repository. Click on the Xray-core version (on the top right corner) to open the `switch` modal window and initiate the update.
 - ADDED: Reverse proxy UI support. A new section `Reverse Proxy` has been added. When adding `bridge` or `portal` items to the reverse configuration, you can immediately reference them in `routing` configuration.

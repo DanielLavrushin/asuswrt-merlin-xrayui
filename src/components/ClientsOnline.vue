@@ -1,5 +1,5 @@
 <template>
-  <div class="formfontdesc">
+  <div class="formfontdesc" v-if="enable_check()">
     <table class="FormTable SettingsTable tableApi_table">
       <thead>
         <tr>
@@ -19,12 +19,12 @@
           <td colspan="3" style="color: #ffcc00">No one is online</td>
         </tr>
       </tbody>
-      <tbody v-if="!logsEnabled">
+      <tbody v-else>
         <tr class="data_tr">
           <td colspan="3" style="color: #ffcc00">
             To check online users, xray logging must be enabled. Would you like to enable it?
             <br />
-            <input class="button_gen button_gen_small" type="button" value="enable logs" @click.prevent="enable_logs()" />
+            <input class="button_gen button_gen_small" type="button" value="enable logs" @click.prevent="enable_logs" />
           </td>
         </tr>
       </tbody>
@@ -37,6 +37,7 @@
   import axios from "axios";
   import engine, { SubmtActions } from "../modules/Engine";
   import xrayConfig from "@/modules/XrayConfig";
+  import { XrayProtocol } from "@/modules/Options";
 
   interface Client {
     ip: string;
@@ -47,7 +48,7 @@
     name: "ClientsOnline",
     setup() {
       const clients = ref<Client[]>([]);
-      let intervalId: number | undefined;
+      let pollTimeout: number | null = null;
 
       const fetchClients = async () => {
         try {
@@ -66,34 +67,45 @@
         });
       };
 
-      if (engine.mode == "server") {
-        onMounted(async () => {
-          await engine.submit(SubmtActions.clientsOnline);
-          await fetchClients();
-          intervalId = setInterval(async () => {
-            await engine.submit(SubmtActions.clientsOnline);
-            await fetchClients();
-          }, 3000);
-        });
-        watch(
-          () => xrayConfig.log,
-          async (logs) => {
-            logsEnabled.value = logs !== undefined;
-          },
-          { immediate: true }
-        );
-      }
+      const pollClients = async () => {
+        if (!enable_check()) {
+          return;
+        }
+        await engine.submit(SubmtActions.clientsOnline);
+        await fetchClients();
+        pollTimeout = window.setTimeout(pollClients, 3000);
+      };
+
+      onMounted(async () => {
+        await engine.submit(SubmtActions.clientsOnline);
+        await fetchClients();
+        pollClients();
+      });
+
+      watch(
+        () => xrayConfig.log,
+        (logs) => {
+          logsEnabled.value = logs !== undefined;
+        },
+        { immediate: true }
+      );
 
       onBeforeUnmount(() => {
-        if (intervalId) {
-          clearInterval(intervalId);
+        if (pollTimeout !== null) {
+          clearTimeout(pollTimeout);
         }
       });
+
+      const enable_check = () => {
+        const proxy = xrayConfig.inbounds?.find((o) => !o.tag?.startsWith("sys:") && o.protocol !== XrayProtocol.FREEDOM && o.protocol !== XrayProtocol.DOKODEMODOOR && o.protocol !== XrayProtocol.BLACKHOLE);
+        return proxy !== undefined;
+      };
 
       return {
         logsEnabled,
         clients,
-        enable_logs
+        enable_logs,
+        enable_check
       };
     }
   });

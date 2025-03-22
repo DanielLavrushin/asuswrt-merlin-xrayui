@@ -72,7 +72,12 @@
     public outbound?: string;
 
     constructor(match: RegExpMatchArray) {
-      this.time = match[1];
+      // match[1] now contains the full datetime string (e.g., "2025/02/19 17:06:49")
+      const utcDateTimeStr = match[1];
+      // Convert "YYYY/MM/DD HH:mm:ss" to ISO format "YYYY-MM-DDTHH:mm:ssZ"
+      const isoDateTime = utcDateTimeStr.replace(/\//g, "-").replace(" ", "T") + "Z";
+      const localDate = new Date(isoDateTime);
+      this.time = localDate.toLocaleTimeString([], { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
       this.source = match[2];
       this.target = match[3];
       this.target_port = match[4];
@@ -102,7 +107,7 @@
           .split("\n")
           .map((line) => {
             // 2025/02/19 17:06:49 from 192.168.1.100:61132 accepted tcp:target:443 [outbound -> inbound]
-            const regex = /^\d{4}\/\d{2}\/\d{2}\s(\d{2}:\d{2}:\d{2})(?:\.\d+)? from (\d{1,3}(?:\.\d{1,3}){3})(?::\d+)? accepted (?:tcp|udp):([^:]+):(\d+) \[([^ ]+) -> ([^\]]+)\]$/;
+            const regex = /^(\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2})(?:\.\d+)? from (\d{1,3}(?:\.\d{1,3}){3})(?::\d+)? accepted (?:tcp|udp):([^:]+):(\d+) \[([^ ]+) -> ([^\]]+)\]$/;
             const match = line.match(regex);
             if (match) {
               let logentry = new AccessLogEntry(match);
@@ -155,24 +160,24 @@
     }
   });
 </script>
-<style scoped>
+<style scoped lang="scss">
   .scrollable-table {
     max-height: 200px;
     overflow-y: auto;
     display: block;
     scrollbar-width: thin;
     scrollbar-color: #ffffff #576d73;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+
+      th,
+      td {
+        border-color: #888;
+      }
+    }
   }
 
-  .scrollable-table table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  .scrollable-table th,
-  .scrollable-table td {
-    border-color: #888;
-  }
   .device {
     font-weight: bold;
     color: greenyellow;
@@ -197,5 +202,11 @@
     font-size: 11px;
     scrollbar-width: thin;
     scrollbar-color: #ffffff #576d73;
+
+    td {
+      overflow: hidden;
+      text-wrap: none;
+      white-space: nowrap;
+    }
   }
 </style>

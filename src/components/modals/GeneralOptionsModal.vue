@@ -62,6 +62,7 @@
               <label class="go-option">
                 <input type="checkbox" v-model="options.logs_access" />
               </label>
+              <input v-if="options.logs_access" v-model="options.logs_access_path" class="input_25_table" placeholder="access.log path" />
             </td>
           </tr>
           <tr>
@@ -70,6 +71,7 @@
               <label class="go-option">
                 <input type="checkbox" v-model="options.logs_error" />
               </label>
+              <input v-if="options.logs_error" v-model="options.logs_error_path" class="input_25_table" placeholder="error.log path" />
             </td>
           </tr>
           <tr v-if="options.logs_error">
@@ -112,6 +114,8 @@
     public startup = false;
     public logs_access = false;
     public logs_error = false;
+    public logs_access_path = "";
+    public logs_error_path = "";
     public logs_dns = false;
     public logs_level = "warning";
     public geo_ip_url = "";
@@ -154,7 +158,6 @@
 
       const show = () => {
         options.value = new GeneralOptions();
-        console.log(uiResponse?.value);
         options.value.startup = window.xray.custom_settings.xray_startup === "y";
         options.value.logs_access = config.value.log?.access != "none";
         options.value.logs_error = config.value.log?.error != "none";
@@ -162,6 +165,8 @@
         options.value.logs_level = config.value.log?.loglevel ?? "warning";
         options.value.geo_ip_url = uiResponse?.value.geodata?.geoip_url ?? "";
         options.value.geo_site_url = uiResponse?.value.geodata?.geosite_url ?? "";
+        options.value.logs_access_path = config.value.log?.access ?? "";
+        options.value.logs_error_path = config.value.log?.error ?? "";
         modal.value.show();
       };
 

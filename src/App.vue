@@ -47,7 +47,9 @@
   });
 </script>
 
-<style>
+<style lang="scss">
+  @use "./variables" as *;
+
   #Loading {
     z-index: 9999;
   }
@@ -57,7 +59,7 @@
   }
 
   .hint {
-    color: #fc0 !important;
+    color: $c_yellow !important;
     text-decoration: underline;
     cursor: pointer;
   }
@@ -70,9 +72,14 @@
   input[type="radio"] {
     vertical-align: top;
   }
-
+  input::placeholder {
+    color: $c_yellow;
+    font-weight: bold;
+    opacity: 0.5;
+    font-style: italic;
+  }
   .hint-color {
-    color: #fc0;
+    color: $c_yellow;
     float: right;
     margin-right: 5px;
   }
@@ -83,7 +90,7 @@
 
   .hint-color a {
     text-decoration: underline;
-    color: #fc0;
+    color: $c_yellow;
   }
 
   .FormTable {
@@ -107,7 +114,7 @@
   }
 
   .FormTable td span.label-warning {
-    background-color: #ffcc00;
+    background-color: $c_yellow;
     color: #596e74;
   }
 
@@ -168,14 +175,14 @@
 
   .button_info {
     background: initial;
-    background-color: #ffcc00;
+    background-color: $c_yellow;
     font-weight: bold;
     border-radius: 10px;
     padding: 3px 8px 5px 8px;
   }
 
   select > option[disabled] {
-    color: #fc0;
+    color: $c_yellow;
   }
 
   .xrayui-hint {
@@ -199,14 +206,14 @@
   }
 
   .FormTable td .proxy-label.tag:hover {
-    box-shadow: 0 0 5px #ffcc00;
+    box-shadow: 0 0 5px $c_yellow;
   }
 
   .FormTable td .proxy-label.tag {
-    border: 1px solid #ffcc00;
+    border: 1px solid $c_yellow;
     text-decoration: none;
     background: transparent;
-    color: #fc0;
+    color: $c_yellow;
   }
 
   .FormTable td .proxy-label.reality {
@@ -272,6 +279,6 @@
   blockquote {
     margin: 10px 0;
     padding: 5px;
-    border-left: 3px solid #ffcc00;
+    border-left: 3px solid $c_yellow;
   }
 </style>

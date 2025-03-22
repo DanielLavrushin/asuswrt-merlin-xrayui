@@ -1004,6 +1004,8 @@ apply_general_options() {
     local log_level=$(echo "$genopts" | jq -r '.logs_level')
     local logs_access=$(echo "$genopts" | jq -r '.logs_access')
     local logs_error=$(echo "$genopts" | jq -r '.logs_error')
+    local logs_access_path=$(echo "$genopts" | jq -r '.logs_access_path')
+    local logs_error_path=$(echo "$genopts" | jq -r '.logs_error_path')
     local logs_dns=$(echo "$genopts" | jq -r '.logs_dns')
 
     local geosite_url=$(echo "$genopts" | jq -r '.geo_site_url')
@@ -1014,13 +1016,13 @@ apply_general_options() {
     json_content=$(echo "$json_content" | jq --arg loglevel "$log_level" '.log.loglevel = $loglevel')
 
     if [ "$logs_access" = "true" ]; then
-        json_content=$(echo "$json_content" | jq '.log.access = "/tmp/xray_access.log"')
+        json_content=$(echo "$json_content" | jq --arg logs_access_path $logs_access_path '.log.access = $logs_access_path')
     else
         json_content=$(echo "$json_content" | jq '.log.access = "none"')
     fi
 
     if [ "$logs_error" = "true" ]; then
-        json_content=$(echo "$json_content" | jq '.log.error = "/tmp/xray_error.log"')
+        json_content=$(echo "$json_content" | jq --arg logs_error_path $logs_error_path '.log.error = $logs_error_path')
     else
         json_content=$(echo "$json_content" | jq '.log.error = "none"')
     fi
@@ -1953,8 +1955,10 @@ replace_ips_with_domains() {
 
 logs_fetch() {
     update_loading_progress "Fetching logs..." 0
-    local log_access="/tmp/xray_access.log"
-    local log_error="/tmp/xray_error.log"
+
+    local log_access="$(jq -r '.log.access // "/tmp/xray_access.log"' "$XRAY_CONFIG")"
+    local log_error="$(jq -r '.log.error // "/tmp/xray_error.log"' "$XRAY_CONFIG")"
+
     tail -n 200 "$log_error" >/www/user/xrayui/xray_error_partial.asp
     tail -n 200 "$log_access" >/www/user/xrayui/xray_access_partial.asp
     replace_ips_with_domains /www/user/xrayui/xray_access_partial.asp

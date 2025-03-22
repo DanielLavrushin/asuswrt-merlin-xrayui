@@ -1,10 +1,12 @@
 # XRAYUI Changelog
 
-## [0.40.1] - 2025-03-xx
+## [0.4x.x] - 2025-03-xx
 
 - FIXED: Ensure `shortId` is correctly generated.
 - FIXED: reset `XRAY` versions list before loading new data.
+- ADDED: It is now possible to define custom logs location in the general settings.
 - IMPROVED: Ensure default settings are applied for proxy configurations.
+- CHANGED: Switch to `SCSS`.
 
 ## [0.40.0] - 2025-03-11
 

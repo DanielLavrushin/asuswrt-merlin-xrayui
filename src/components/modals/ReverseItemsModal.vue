@@ -52,7 +52,6 @@
       };
       const addItem = () => {
         props.items.push({ tag: newItem.value.tag!.trim(), domain: newItem.value.domain!.trim() });
-        console.log("items", props.items);
         newItem.value.tag = "";
         newItem.value.domain = "";
       };

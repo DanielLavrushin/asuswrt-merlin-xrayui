@@ -101,56 +101,57 @@
     }
   });
 </script>
-<style scoped>
+<style scoped lang="scss">
   .version {
     padding-top: 10px;
-  }
 
-  .version a {
-    text-decoration: underline;
-    font-size: 10px;
-    color: #ffcc00;
-    font-weight: bold;
-    position: absolute;
-    bottom: 0;
-    right: 5px;
+    a {
+      text-decoration: underline;
+      font-size: 10px;
+      color: #ffcc00;
+      font-weight: bold;
+      position: absolute;
+      bottom: 0;
+      right: 5px;
+    }
   }
+  .textarea-wrapper {
+    .changelog {
+      text-align: left;
+      background-color: #2f3a3e;
+      border: 1px solid #222;
+      padding: 0 10px;
+      min-height: 150px;
+      font-family: "Courier New", Courier, monospace;
 
-  .textarea-wrapper .changelog {
-    text-align: left;
-    background-color: #2f3a3e;
-    border: 1px solid #222;
-    padding: 0 10px;
-    min-height: 150px;
-    font-family: "Courier New", Courier, monospace;
-  }
+      :deep(h2) {
+        margin: 5px;
+      }
 
-  .textarea-wrapper .changelog :deep(h2) {
-    margin: 5px;
-  }
+      :deep(ul) {
+        margin: 5px;
+        padding: 0 10px;
+      }
 
-  .textarea-wrapper .changelog :deep(ul) {
-    margin: 5px;
-    padding: 0 10px;
-  }
+      :deep(ul li) {
+        margin: 5px;
+        padding-bottom: 5px;
+        border-bottom: 1px dashed #222;
+      }
 
-  .textarea-wrapper .changelog :deep(ul li) {
-    margin: 5px;
-    padding-bottom: 5px;
-    border-bottom: 1px dashed #222;
-  }
+      :deep(ul li):last-child {
+        border-bottom: none;
+      }
 
-  .textarea-wrapper .changelog :deep(ul li):last-child {
-    border-bottom: none;
-  }
+      :deep(code) {
+        font-weight: bold;
+      }
+    }
 
-  .textarea-wrapper .changelog :deep(code) {
-    font-weight: bold;
-  }
-
-  .textarea-wrapper :deep(a) {
-    color: #ffcc00;
-    text-decoration: underline;
+    :deep(a) {
+      color: #ffcc00;
+      text-decoration: underline;
+    }
   }
 
   .modal-content :deep(strong),

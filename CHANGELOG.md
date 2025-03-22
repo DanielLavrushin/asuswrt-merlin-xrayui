@@ -1,6 +1,6 @@
 # XRAYUI Changelog
 
-## [0.4x.x] - 2025-03-xx
+## [0.41.0] - 2025-03-22
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
@@ -11,6 +11,7 @@
 - FIXED: Reset the `XRAY` versions list before loading new data.
 - FIXED: Display log times in local time zone and improve log entry parsing.
 - ADDED: It is now possible to specify a custom logs location in the general settings.
+- ADDED: Configuration Profiles. You can now easily switch between configuration files using a new selection option in the Main Configuration section. This option dynamically lists all available JSON configuration files from the `/opt/etc/xray` directory, enabling quick and flexible profile management.
 - IMPROVED: Default settings are now correctly applied for proxy configurations.
 
 ## [0.40.0] - 2025-03-11

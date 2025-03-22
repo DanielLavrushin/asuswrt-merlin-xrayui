@@ -53,7 +53,7 @@ class EngineResponseConfig {
   public wireguard?: EngineWireguard;
   public reality?: EngineReality;
   public certificates?: EngineSsl;
-  public xray?: { test: string; uptime: number; ui_version: string; core_version: string };
+  public xray?: { test: string; uptime: number; ui_version: string; core_version: string; profile: string; profiles: string[] };
   public geodata?: EngineGeodatConfig = new EngineGeodatConfig();
   public loading?: EngineLoadingProgress;
   public connection_check?: EngineClientConnectionStatus;
@@ -98,7 +98,8 @@ enum SubmtActions {
   checkConnection = "xrayui_configuration_checkconnection",
   initResponse = "xrayui_configuration_initresponse",
   generalOptionsApply = "xrayui_configuration_applygeneraloptions",
-  xrayVersionSwitch = "xrayui_configuration_xrayversionswitch"
+  xrayVersionSwitch = "xrayui_configuration_xrayversionswitch",
+  changeProfile = "xrayui_configuration_changeprofile"
 }
 
 class Engine {

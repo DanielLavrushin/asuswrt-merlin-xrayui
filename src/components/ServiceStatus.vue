@@ -26,6 +26,7 @@
           <config-modal ref="configModal"></config-modal>
         </td>
       </tr>
+      <profiles></profiles>
       <process-uptime></process-uptime>
       <import-config v-model:config="config"></import-config>
       <tr>
@@ -53,6 +54,7 @@
   import { useI18n } from "vue-i18n";
   import ProcessUptime from "./ProcessUptime.vue";
   import XrayVersion from "./XrayVersion.vue";
+  import Profiles from "./Profiles.vue";
 
   class IpApiResponse {
     public status?: string;
@@ -69,7 +71,8 @@
       ImportConfig,
       ConfigModal,
       ProcessUptime,
-      XrayVersion
+      XrayVersion,
+      Profiles
     },
     props: {
       config: {

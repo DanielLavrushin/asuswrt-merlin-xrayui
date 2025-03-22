@@ -2,15 +2,28 @@
 
 export PATH=/opt/bin:/opt/sbin:/sbin:/bin:/usr/sbin:/usr/bin
 source /usr/sbin/helper.sh
-ARGS="run -config /opt/etc/xray/config.json"
 DESC="Xray Core UI"
 PIDFILE=/var/run/xray.pid
 
 xray_addons_asp_page=/jffs/addons/xrayui/index.asp
-
-XRAY_CONFIG="/opt/etc/xray/config.json"
 dir_xrayui="/www/user/xrayui"
+
+DEFAULT_PROFILE="config.json"
+DEFAULT_GEOIP_URL="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
+DEFAULT_GEOSITE_URL="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+
 XRAYUI_CONFIG_FILE="/opt/etc/xrayui.conf"
+if [ -f "$XRAYUI_CONFIG_FILE" ]; then
+    . "$XRAYUI_CONFIG_FILE"
+fi
+
+XRAY_CONFIG="/opt/etc/xray/${profile:-$DEFAULT_PROFILE}"
+if [ ! -f "$XRAY_CONFIG" ]; then
+    XRAY_CONFIG="/opt/etc/xray/config.json"
+fi
+
+ARGS="run -config $XRAY_CONFIG"
+
 XRAY_UI_RESPONSE_FILE="$dir_xrayui/xray-ui-response.json"
 XRAY_UI_CLIENTS_FILE="$dir_xrayui/clients-online.json"
 XRAY="xray"
@@ -26,11 +39,6 @@ CSUC='\033[0;32m'
 CWARN='\033[0;33m'
 CINFO='\033[0;36m'
 CRESET='\033[0m'
-
-DEFAULT_GEOIP_URL="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
-DEFAULT_GEOSITE_URL="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
-#error_handler() {}
-#trap 'error_handler' EXIT
 
 printlog() {
     if [ "$1" = "true" ]; then
@@ -682,7 +690,7 @@ mount_ui() {
     ln -s -f /jffs/scripts/xrayui /opt/bin/xrayui || printlog true "Failed to create symlink for xrayui." $CERR
 
     ln -s -f /jffs/addons/xrayui/app.js $dir_xrayui/app.js || printlog true "Failed to create symlink for app.js." $CERR
-    ln -s -f /opt/etc/xray/config.json $dir_xrayui/xray-config.json || printlog true "Failed to create symlink for xray-config.json." $CERR
+    ln -s -f $XRAY_CONFIG $dir_xrayui/xray-config.json || printlog true "Failed to create symlink for xray-config.json." $CERR
 
     geodata_remount_to_web
 
@@ -1131,7 +1139,7 @@ ensure_ui_response_file() {
 test_xray_config() {
     local output
 
-    if ! output=$(xray -c /opt/etc/xray/config.json -test 2>&1); then
+    if ! output=$(xray -c $XRAY_CONFIG -test 2>&1); then
         message=$(echo "$output" | sed -n '/> infra\/conf:/ {s/.*> infra\/conf: //p}')
         if [ -z "$message" ]; then
             message="$output"
@@ -1210,7 +1218,7 @@ EOF
     generate_default_config
 
     # backup config
-    cp "/opt/etc/xray/config.json" "/opt/etc/xray/config.json.bak"
+    cp $XRAY_CONFIG "/opt/etc/xray/config.json.bak"
 
     update_loading_progress "Configuring XRAY UI..."
     # Add or update nat-start
@@ -1625,9 +1633,7 @@ collect_initial_response() {
 
     local geositeurl="${geosite_url:-$DEFAULT_GEOSITE_URL}"
     local geoipurl="${geoip_url:-$DEFAULT_GEOIP_URL}"
-
-    printlog true "geosite_url: $geositeurl"
-    printlog true "geoip_url: $geoipurl"
+    local profile="${profile:-$DEFAULT_PROFILE}"
 
     local json_content
     if [ -f "$XRAY_UI_RESPONSE_FILE" ]; then
@@ -1645,9 +1651,19 @@ collect_initial_response() {
 
     local uptime_xray=$(get_proc_uptime "xray")
     json_content=$(echo "$json_content" | jq --argjson uptime "$uptime_xray" '.xray.uptime = $uptime')
+    json_content=$(echo "$json_content" | jq --arg profile "$profile" '.xray.profile = $profile')
 
     local XRAY_VERSION=$(xray version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
     json_content=$(echo "$json_content" | jq --arg xray_ver "$XRAY_VERSION" --arg xrayui_ver "$XRAYUI_VERSION" '.xray.ui_version = $xrayui_ver | .xray.core_version = $xray_ver')
+
+    # Collect the names of all JSON files from /opt/etc/xray
+    local profiles
+    profiles=$(find /opt/etc/xray -maxdepth 1 -type f -name "*.json" -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
+    if [ -z "$profiles" ]; then
+        profiles="[]"
+    fi
+
+    json_content=$(echo "$json_content" | jq --argjson profiles "$profiles" '.xray.profiles = $profiles')
 
     echo "$json_content" >"$XRAY_UI_RESPONSE_FILE"
     if [ $? -eq 0 ]; then
@@ -2141,6 +2157,41 @@ switch_xray_version() {
     update_loading_progress "Switched Xray version successfully!" 100
 }
 
+change_config_profile() {
+    update_loading_progress "Changing configuration profile..." 0
+
+    init_xrayui_config
+
+    local payload=$(reconstruct_payload)
+    local profile=$(echo "$payload" | jq -r '.profile')
+
+    # Ensure profile ends with ".json"
+    case "$profile" in
+    *.json) ;; # Already ends with .json
+    *) profile="${profile}.json" ;;
+    esac
+
+    update_xrayui_config "profile" "$profile"
+
+    XRAY_CONFIG="/opt/etc/xray/$profile"
+
+    # Check if the configuration file exists, if not, generate a default config
+    if [ ! -f "$XRAY_CONFIG" ]; then
+        printlog true "Profile file $XRAY_CONFIG does not exist. Generating default configuration." $CWARN
+        generate_default_config
+    fi
+
+    ln -s -f $XRAY_CONFIG $dir_xrayui/xray-config.json || printlog true "Failed to create symlink for xray-config.json." $CERR
+
+    update_loading_progress "Changing configuration profile to $XRAY_CONFIG..."
+    printlog true "Changing configuration profile to $XRAY_CONFIG..."
+
+    restart
+
+    update_loading_progress "Configuration profile changed successfully." 100
+    return 0
+}
+
 case "$1" in
 version)
     show_version
@@ -2265,6 +2316,9 @@ service_event)
             ;;
         xrayversionswitch)
             switch_xray_version
+            ;;
+        changeprofile)
+            change_config_profile
             ;;
         esac
         exit 0

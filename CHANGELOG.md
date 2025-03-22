@@ -5,12 +5,13 @@
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - CHANGED: `Client/Server` mode. XRAYUI now operates as a single proxy service on the router. This is a critical change that might affect some configurations. This change means that `XRAYUI` can configure `XRAY` to act as both a server and a client simultaneously. External devices can now connect to your home network, while local devices continue to be routed through the external VPS. In client mode, `XRAYUI` still expects at least one `dokodemo` inbound. Please report any issues on [GitHub](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues) if you encounter any.
+- CHANGED: `logrotate`: use configurable log file paths for access and error logs.
+- CHANGED: Switched to `SCSS`.
 - FIXED: Ensured that `shortId` is generated correctly.
 - FIXED: Reset the `XRAY` versions list before loading new data.
 - FIXED: Display log times in local time zone and improve log entry parsing.
 - ADDED: It is now possible to specify a custom logs location in the general settings.
 - IMPROVED: Default settings are now correctly applied for proxy configurations.
-- CHANGED: Switched to `SCSS`.
 
 ## [0.40.0] - 2025-03-11
 

@@ -1296,8 +1296,11 @@ EOF
     # setup logrotate
     printlog true "Setting up logrotate for XRAY UI..."
 
+    local log_access="$(jq -r '.log.access // "/tmp/xray_access.log"' "$XRAY_CONFIG")"
+    local log_error="$(jq -r '.log.error // "/tmp/xray_error.log"' "$XRAY_CONFIG")"
+
     cat >/opt/etc/logrotate.d/xrayui <<EOF
-/tmp/xray_*.log {
+$log_access $log_error {
     su nobody root
     daily
     missingok
@@ -1312,6 +1315,7 @@ EOF
     endscript
 }
 EOF
+
     # chown root:root /etc/logrotate.d/xrayui || printlog true "Failed to make logrotate root-owned." $CERR
     chmod 0644 /opt/etc/logrotate.d/xrayui || printlog true "Failed to make logrotate executable." $CERR
 

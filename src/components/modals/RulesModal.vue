@@ -187,18 +187,6 @@
             <span class="hint-color"></span>
           </td>
         </tr>
-        <!-- <tr>
-          <th>Users</th>
-          <td>
-            <div v-for="(opt, index) in users" :key="index">
-              <input type="checkbox" v-model="currentRule.user" class="input" :value="opt" :id="'useropt-' + index" />
-              <label :for="'useropt-' + index" class="settingvalue">
-                {{ opt }}
-              </label>
-            </div>
-          </td>
-        </tr>
-        -->
       </tbody>
     </table>
     <template v-slot:footer>
@@ -453,29 +441,31 @@
   });
 </script>
 
-<style scoped>
-  .FormTable tr th {
-    width: auto;
-  }
+<style scoped lang="scss">
+  .FormTable {
+    tr th {
+      width: auto;
+    }
 
-  .FormTable tr:hover th {
-    text-shadow: 2px 2px 25px #fc0;
-  }
+    tr:hover th {
+      text-shadow: 2px 2px 25px #fc0;
+    }
 
-  .FormTable tr:hover > * {
-    border-left-color: #fc0;
-  }
+    tr:hover > * {
+      border-left-color: #fc0;
+    }
 
-  .FormTable tr:hover > :last-child {
-    border-right-color: #fc0;
-  }
+    tr:hover > :last-child {
+      border-right-color: #fc0;
+    }
 
-  .FormTable tbody tr.rule-system td text {
-    float: left;
-    padding-left: 5px;
-  }
+    tbody tr.rule-system td text {
+      float: left;
+      padding-left: 5px;
+    }
 
-  .FormTable tbody tr.rule-system td {
-    color: rgb(255, 0, 255);
+    tbody tr.rule-system td {
+      color: rgb(255, 0, 255);
+    }
   }
 </style>

@@ -1,67 +1,90 @@
 <template>
-    <button @click.prevent="showQrCode(client)" class="button_gen button_gen_small">QR</button>
-    <modal ref="modalQr" title="QR Code Modal">
-        <qrcode-vue :value="link" :size="400" level="H" render-as="svg" />
-    </modal>
+  <button @click.prevent="showQrCode" class="button_gen button_gen_small">QR</button>
+  <modal ref="modalQr" title="QR Code Modal">
+    <qrcode-vue :value="link" :size="400" level="H" render-as="svg" />
+  </modal>
 </template>
+
 <script lang="ts">
-import Modal from "../Modal.vue";
-import { defineComponent, ref } from "vue";
-import QrcodeVue from "qrcode.vue";
+  import { defineComponent, ref } from "vue";
+  import Modal from "../Modal.vue";
+  import QrcodeVue from "qrcode.vue";
+  import { XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject } from "@/modules/CommonObjects";
 
-export default defineComponent({
+  interface Client {
+    id: string;
+    flow: string;
+  }
+
+  interface Proxy {
+    protocol: string;
+    port: number | string;
+    streamSettings: {
+      security?: string;
+      realitySettings?: XrayStreamRealitySettingsObject;
+      tlsSettings?: XrayStreamTlsSettingsObject;
+    };
+  }
+
+  export default defineComponent({
     name: "Qr",
-
     components: {
-        Modal,
-        QrcodeVue
-    },
-    methods: {
+      Modal,
+      QrcodeVue
     },
     props: {
-        client: Object,
-        proxy: Object
+      client: {
+        type: Object as () => Client,
+        required: true
+      },
+      proxy: {
+        type: Object as () => Proxy,
+        required: true
+      }
     },
     setup(props) {
-        const link = ref("");
-        const modalQr = ref();
-        const showQrCode = (client: any) => {
-            if (props.proxy) {
+      const link = ref("");
+      const modalQr = ref<InstanceType<typeof Modal> | null>(null);
 
-                var p = props.proxy;
-                if (!p.streamSettings.security || p.streamSettings.security == 'none') {
-                    alert("Please set security to tls or reality before generating QR code");
-                    return;
-                }
-                let wanip = window.xray.router.wan_ip + ":" + p.port;
-                let security = p.streamSettings.realitySettings ? 'reality' : p.streamSettings.tlsSettings ? 'tls' : 'none';
-                let sni = "";
-                let pbk = "";
-                let shortId = "";
-                let fp = "";
-                if (security == 'reality') {
-                    sni = p.streamSettings.realitySettings.serverNames[0];
-                    pbk = p.streamSettings.realitySettings.publicKey;
-                    shortId = p.streamSettings.realitySettings.shortIds[0];
-                    fp = p.streamSettings.realitySettings.fingerPrints ? p.streamSettings.realitySettings.fingerPrints[0] : 'chrome'
-                } else if (security == 'tls') {
-                    sni = p.streamSettings.tlsSettings.serverName;
-                    pbk = p.streamSettings.tlsSettings.publicKey;
-                    shortId = p.streamSettings.tlsSettings.shortId;
-                    fp = p.streamSettings.tlsSettings.fingerPrints ? p.streamSettings.tlsSettings.fingerPrints[0] : 'chrome'
-                }
-                link.value = p.protocol + "://" + client.id + "@" + wanip + "?flow=" + client.flow + "&type=raw&security=" + security + "&fp=" + fp + "&sni=" + sni + "&pbk=" + pbk + "&sid=" + shortId + "#" + window.xray.router.name;
+      const showQrCode = () => {
+        const p = props.proxy;
+        // Ensure that security is set properly.
+        if (!p.streamSettings.security || p.streamSettings.security === "none") {
+          alert("Please set security to tls or reality before generating QR code");
+          return;
+        }
 
-                modalQr.value.show();
-            }
+        const wanip = `${window.xray.router.wan_ip}:${p.port}`;
+        const security = p.streamSettings.realitySettings ? "reality" : p.streamSettings.tlsSettings ? "tls" : "none";
 
-        };
-        return {
-            showQrCode,
-            link,
-            modalQr
-        };
-    },
-});
+        let sni = "";
+        let pbk = "";
+        let shortId = "";
+        let fp = "";
+        let spx = "";
+        let alpn = "";
+        if (security === "reality" && p.streamSettings.realitySettings) {
+          sni = p.streamSettings.realitySettings.serverNames?.[0]!;
+          pbk = p.streamSettings.realitySettings.publicKey!;
+          shortId = p.streamSettings.realitySettings.shortIds?.[0]!;
+          fp = p.streamSettings.realitySettings.fingerprint!;
+          spx = p.streamSettings.realitySettings.spiderX!;
+        } else if (security === "tls" && p.streamSettings.tlsSettings) {
+          sni = p.streamSettings.tlsSettings.serverName!;
+          fp = p.streamSettings.tlsSettings.fingerprint!;
+          alpn = p.streamSettings.tlsSettings.alpn?.join(",")!;
+        }
+
+        link.value = `${p.protocol}://${props.client.id}@${wanip}?flow=${props.client.flow}&type=raw&security=${security}&spx=${spx}&fp=${fp}&sni=${sni}&alpn=&${alpn}&pbk=${pbk}&sid=${shortId}#${window.xray.router.name}`;
+
+        modalQr.value?.show();
+      };
+
+      return {
+        showQrCode,
+        link,
+        modalQr
+      };
+    }
+  });
 </script>
-<style scoped></style>

@@ -1,8 +1,8 @@
 <template>
-  <top-banner></top-banner>
-  <loading></loading>
-  <main-form></main-form>
-  <asus-footer></asus-footer>
+  <top-banner />
+  <loading />
+  <main-form />
+  <asus-footer />
 </template>
 
 <script lang="ts">
@@ -10,9 +10,12 @@
   import TopBanner from "./components/asus/TopBanner.vue";
   import Loading from "./components/asus/Loading.vue";
   import AsusFooter from "./components/asus/Footer.vue";
+  import MainForm from "./components/MainForm.vue";
 
   import engine, { EngineResponseConfig, SubmtActions } from "./modules/Engine";
-  import MainForm from "./components/MainForm.vue";
+
+  // Helper delay function
+  const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
   export default defineComponent({
     name: "App",
@@ -25,22 +28,31 @@
     setup() {
       const uiResponse = ref(new EngineResponseConfig());
       window.scrollTo = () => {};
+
       const xrayConfig = engine.xrayConfig;
       provide("xrayConfig", xrayConfig);
 
       onMounted(async () => {
-        window.show_menu();
-        await engine.loadXrayConfig();
-        await engine.submit(SubmtActions.initResponse);
-        setTimeout(async () => {
+        try {
+          // Ensure window.show_menu exists before calling
+          if (typeof window.show_menu === "function") {
+            window.show_menu();
+          }
+          await engine.loadXrayConfig();
+          await engine.submit(SubmtActions.initResponse);
+          // Use our delay helper instead of setTimeout inside an async function.
+          await delay(1000);
           uiResponse.value = await engine.getXrayResponse();
-        }, 1000);
+        } catch (error) {
+          console.error("Error during initialization:", error);
+        }
       });
 
       provide("uiResponse", uiResponse);
+
       return {
         engine,
-        xrayConfig: engine.xrayConfig
+        xrayConfig
       };
     }
   });
@@ -49,10 +61,7 @@
 <style lang="scss">
   @use "./variables" as *;
 
-  #Loading {
-    z-index: 9999;
-  }
-
+  #Loading,
   #overDiv {
     z-index: 9999;
   }
@@ -61,69 +70,136 @@
     color: $c_yellow !important;
     text-decoration: underline;
     cursor: pointer;
-  }
 
-  .hint.tag {
-    text-decoration: none;
+    &.tag {
+      text-decoration: none;
+    }
   }
 
   input[type="checkbox"],
   input[type="radio"] {
     vertical-align: top;
   }
+
   input::placeholder {
     color: $c_yellow;
     font-weight: bold;
     opacity: 0.5;
     font-style: italic;
   }
+
   .hint-color {
     color: $c_yellow;
     float: right;
     margin-right: 5px;
+
+    a {
+      text-decoration: underline;
+      color: $c_yellow;
+    }
   }
 
   .hint-small {
     font-size: 8pt;
   }
 
-  .hint-color a {
-    text-decoration: underline;
-    color: $c_yellow;
-  }
-
   .FormTable {
     margin-bottom: 14px;
-  }
 
-  .FormTable td span.label {
-    color: white;
-    padding: 0 5px;
-    border-radius: 4px;
-    margin: 4px 0 0 0;
-    font-weight: bold;
-  }
+    td {
+      span.label {
+        color: white;
+        padding: 3px 5px;
+        border-radius: 4px;
+        margin: 4px 0 0 0;
+        font-weight: bold;
+      }
 
-  .FormTable td span.label-error {
-    background-color: red;
-  }
+      span {
+        &.label-error {
+          background-color: red;
+        }
+        &.label-success {
+          background-color: green;
+        }
+        &.label-warning {
+          background-color: $c_yellow;
+          color: #596e74;
+        }
+      }
 
-  .FormTable td span.label-success {
-    background-color: green;
-  }
+      // Proxy label styles
+      .proxy-label {
+        color: white;
+        padding: 2px 10px;
+        border-radius: 4px;
+        margin-left: 4px;
+        font-weight: bold;
+        background-color: #929ea1;
+        box-shadow: 0 0 2px #000;
 
-  .FormTable td span.label-warning {
-    background-color: $c_yellow;
-    color: #596e74;
+        &.tag {
+          border: 1px solid $c_yellow;
+          text-decoration: none;
+          background: transparent;
+          color: $c_yellow;
+
+          &:hover {
+            box-shadow: 0 0 5px $c_yellow;
+          }
+        }
+        &.reality {
+          background-color: rgb(95, 1, 95);
+        }
+        &.tls {
+          background-color: rgb(136, 5, 5);
+        }
+        &.tcp {
+          background-color: rgb(35, 46, 46);
+        }
+        &.kcp {
+          background-color: rgb(0, 114, 0);
+        }
+        &.ws {
+          background-color: rgb(2, 0, 150);
+        }
+        &.xhttp {
+          background-color: rgb(153, 130, 0);
+        }
+        &.grpc {
+          background-color: rgb(207, 78, 2);
+        }
+        &.httpupgrade {
+          background-color: rgb(2, 82, 119);
+        }
+        &.splithttp {
+          background-color: rgb(94, 10, 59);
+        }
+      }
+
+      &.height-overflow {
+        max-height: 140px;
+        overflow: hidden;
+        overflow-y: scroll;
+        scrollbar-width: thin;
+        scrollbar-color: #ffffff #576d73;
+      }
+
+      // Hint colors inside td
+      .hint-color {
+        margin-left: 5px;
+        vertical-align: middle;
+      }
+    }
   }
 
   .row-buttons {
     float: right;
-  }
 
-  .row-buttons label {
-    margin-right: 10px;
-    vertical-align: middle;
+    label {
+      margin-right: 10px;
+      vertical-align: middle;
+    }
   }
 
   .button_gen_small {
@@ -142,22 +218,13 @@
     width: 70%;
   }
 
-  td .hint-color {
-    margin-left: 5px;
-    vertical-align: middle;
-  }
-
-  .FormTable td span.label {
-    padding: 3px 5px 3px 5px;
-  }
-
   .textarea-wrapper {
-    margin: 0px 10px 0 2px;
+    margin: 0 10px 0 2px;
   }
 
   textarea {
     color: #ffffff;
-    background: #596e74;
+    background: #596d74;
     border: 1px solid #929ea1;
     font-family: Courier New, Courier, monospace;
     font-size: 13px;
@@ -167,9 +234,11 @@
     height: 100px;
   }
 
-  .formfontdesc p {
-    text-align: left;
-    margin-bottom: 10px;
+  .formfontdesc {
+    p {
+      text-align: left;
+      margin-bottom: 10px;
+    }
   }
 
   .button_info {
@@ -179,104 +248,50 @@
     border-radius: 10px;
     padding: 3px 8px 5px 8px;
   }
+
   select {
     vertical-align: middle;
-  }
-  select > option[disabled] {
-    color: $c_yellow;
+
+    > option[disabled] {
+      color: $c_yellow;
+    }
   }
 
   .xrayui-hint {
     display: none;
   }
 
-  #overDiv blockquote {
-    margin: 10px;
-    padding: 0 0 0 1em;
-    border-left: 3px solid #ffcc00;
+  #overDiv {
+    blockquote {
+      margin: 10px;
+      padding: 0 0 0 1em;
+      border-left: 3px solid #ffcc00;
+    }
   }
 
-  .FormTable td .proxy-label {
-    color: white;
-    padding: 2px 10px;
-    border-radius: 4px;
-    margin: 0 0 0 4px;
-    font-weight: bold;
-    background-color: #929ea1;
-    box-shadow: 0 0 2px #000;
-  }
-
-  .FormTable td .proxy-label.tag:hover {
-    box-shadow: 0 0 5px $c_yellow;
-  }
-
-  .FormTable td .proxy-label.tag {
-    border: 1px solid $c_yellow;
-    text-decoration: none;
-    background: transparent;
-    color: $c_yellow;
-  }
-
-  .FormTable td .proxy-label.reality {
-    background-color: rgb(95, 1, 95);
-  }
-
-  .FormTable td .proxy-label.tls {
-    background-color: rgb(136, 5, 5);
-  }
-
-  .FormTable td .proxy-label.tcp {
-    background-color: rgb(35, 46, 46);
-  }
-
-  .FormTable td .proxy-label.kcp {
-    background-color: rgb(0, 114, 0);
-  }
-
-  .FormTable td .proxy-label.ws {
-    background-color: rgb(2, 0, 150);
-  }
-
-  .FormTable td .proxy-label.xhttp {
-    background-color: rgb(153, 130, 0);
-  }
-
-  .FormTable td .proxy-label.grpc {
-    background-color: rgb(207, 78, 2);
-  }
-
-  .FormTable td .proxy-label.httpupgrade {
-    background-color: rgb(2, 82, 119);
-  }
-
-  .FormTable td .proxy-label.splithttp {
-    background-color: rgb(94, 10, 59);
-  }
-
-  .FormTable td.height-overflow {
-    max-height: 140px;
-    overflow: hidden;
-    overflow-y: scroll;
-    scrollbar-width: thin;
-    scrollbar-color: #ffffff #576d73;
-  }
   .flex-checkbox {
     border: none !important;
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
+
+    > * {
+      flex: 0 1 calc(25%);
+    }
+
+    &.flex-checkbox-25 {
+      > * {
+        flex: 0 1 calc(25%);
+      }
+    }
+
+    &.flex-checkbox-50 {
+      > * {
+        flex: 0 1 calc(50%);
+      }
+    }
   }
 
-  .flex-checkbox > * {
-    flex: 0 1 calc(25%);
-  }
-
-  .flex-checkbox.flex-checkbox-25 > * {
-    flex: 0 1 calc(25%);
-  }
-  .flex-checkbox.flex-checkbox-50 > * {
-    flex: 0 1 calc(50%);
-  }
   blockquote {
     margin: 10px 0;
     padding: 5px;

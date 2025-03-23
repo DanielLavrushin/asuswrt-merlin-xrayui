@@ -1,5 +1,5 @@
 <template>
-  <modal ref="importModal" :title="$t('components.ImportConfigModal.modal_title')" width="700px">
+  <modal ref="importModal" :title="$t('components.ImportConfigModal.modal_title')" width="700">
     <div class="formfontdesc">
       <p v-html="$t('components.ImportConfigModal.modal_desc')"></p>
       <table class="FormTable modal-form-table">

@@ -1,5 +1,5 @@
 <template>
-  <modal ref="modal" :title="$t('components.GeodatModal.modal_title')" width="700px">
+  <modal ref="modal" :title="$t('components.GeodatModal.modal_title')" width="700">
     <div class="formfontdesc">
       <div style="text-align: left">
         <p>

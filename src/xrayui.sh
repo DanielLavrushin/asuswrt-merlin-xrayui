@@ -1010,6 +1010,11 @@ apply_general_options() {
 
     echo "$json_content" >"$XRAY_CONFIG"
 
+    if [ -f /opt/etc/logrotate.d/xrayui ]; then
+        sed -i "1s@^.*{@$logs_access_path $logs_error_path {@" /opt/etc/logrotate.d/xrayui
+        printlog true "Logrotate configuration updated with new log paths: $logs_access_path $logs_error_path" $CSUC
+    fi
+
     update_xrayui_config "geosite_url" "$geosite_url"
     update_xrayui_config "geoip_url" "$geoip_url"
 
@@ -1304,10 +1309,13 @@ EOF
     # setup logrotate
     printlog true "Setting up logrotate for XRAY UI..."
 
-    local log_access="$(jq -r '.log.access // "/tmp/xray_access.log"' "$XRAY_CONFIG")"
-    local log_error="$(jq -r '.log.error // "/tmp/xray_error.log"' "$XRAY_CONFIG")"
+    if [ ! -f /opt/etc/logrotate.d/xrayui ]; then
+        local log_access
+        local log_error
+        log_access="$(jq -r '.log.access // "/tmp/xray_access.log"' "$XRAY_CONFIG")"
+        log_error="$(jq -r '.log.error // "/tmp/xray_error.log"' "$XRAY_CONFIG")"
 
-    cat >/opt/etc/logrotate.d/xrayui <<EOF
+        cat >/opt/etc/logrotate.d/xrayui <<EOF
 $log_access $log_error {
     su nobody root
     daily
@@ -1324,8 +1332,11 @@ $log_access $log_error {
 }
 EOF
 
-    # chown root:root /etc/logrotate.d/xrayui || printlog true "Failed to make logrotate root-owned." $CERR
-    chmod 0644 /opt/etc/logrotate.d/xrayui || printlog true "Failed to make logrotate executable." $CERR
+        chmod 0644 /opt/etc/logrotate.d/xrayui || printlog true "Failed to make logrotate executable." $CERR
+        printlog true "Logrotate configuration created successfully." $CSUC
+    else
+        printlog true "Logrotate configuration already exists. Skipping creation." $CWARN
+    fi
 
     # ---------------------------------------------------------
     # performing version updates

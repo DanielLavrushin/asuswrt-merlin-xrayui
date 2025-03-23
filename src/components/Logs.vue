@@ -40,8 +40,8 @@
                   <tr v-for="(log, index) in parsedLogs" :key="index">
                     <td>{{ log.time }}</td>
                     <td>
-                      <text v-show="!log.source_device">{{ log.source }}</text>
-                      <a class="device" v-show="log.source_device" :title="log.source">{{ log.source_device }}</a>
+                      <span v-if="!log.source_device">{{ log.source }}</span>
+                      <a class="device" v-else :title="log.source">{{ log.source_device }}</a>
                     </td>
                     <td>{{ log.target }}:{{ log.target_port }}</td>
                     <td>{{ log.inbound }}</td>
@@ -58,10 +58,11 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, onMounted, ref, watch, computed } from "vue";
+  import { defineComponent, onMounted, onBeforeUnmount, ref, computed, watch } from "vue";
   import axios from "axios";
   import engine, { SubmtActions } from "../modules/Engine";
   import { XrayLogObject } from "@/modules/CommonObjects";
+
   class AccessLogEntry {
     public time?: string;
     public source?: string;
@@ -71,25 +72,37 @@
     public inbound?: string;
     public outbound?: string;
 
-    constructor(match: RegExpMatchArray) {
-      // match[1] now contains the full datetime string (e.g., "2025/02/19 17:06:49")
+    constructor(match: RegExpMatchArray, devices: Record<string, any>) {
+      // match[1] contains the full datetime string (e.g., "2025/02/19 17:06:49")
       const utcDateTimeStr = match[1];
+
       // Convert "YYYY/MM/DD HH:mm:ss" to ISO format "YYYY-MM-DDTHH:mm:ssZ"
       const isoDateTime = utcDateTimeStr.replace(/\//g, "-").replace(" ", "T") + "Z";
       const localDate = new Date(isoDateTime);
-      this.time = localDate.toLocaleTimeString([], { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+
+      // Format time as 24-hour clock
+      this.time = localDate.toLocaleTimeString([], {
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
       this.source = match[2];
       this.target = match[3];
       this.target_port = match[4];
       this.inbound = match[5];
       this.outbound = match[6];
+      if (this.source) {
+        this.source_device = devices[this.source]?.name;
+      }
     }
   }
+
   export default defineComponent({
     name: "Logs",
     props: {
       logs: {
-        type: XrayLogObject,
+        type: Object as () => XrayLogObject,
         required: true
       }
     },
@@ -98,75 +111,74 @@
       const FILE_ACCESS = "/ext/xrayui/xray_access_partial.asp";
       const FILE_ERROR = "/ext/xrayui/xray_error_partial.asp";
       const file = ref<string>(FILE_ACCESS);
-      const logs = ref<XrayLogObject>(props.logs);
       const logsContent = ref<string>("");
-      const devices = Object.fromEntries(Object.entries(window.xray.router.devices_online).map(([mac, device]) => [device.ip, device]));
-      const parsedLogs = ref<AccessLogEntry[]>([]);
-      const parseLogs = () => {
+
+      // Wrap device mapping in a computed property.
+      const devices = computed(() => {
+        return Object.fromEntries(Object.entries(window.xray.router.devices_online).map(([mac, device]) => [device.ip, device]));
+      });
+
+      // Use a computed property to parse logs on the fly.
+      const parsedLogs = computed<AccessLogEntry[]>(() => {
+        if (!logsContent.value) return [];
         return logsContent.value
           .split("\n")
           .map((line) => {
-            // 2025/02/19 17:06:49 from 192.168.1.100:61132 accepted tcp:target:443 [outbound -> inbound]
+            // Example log format: "2025/02/19 17:06:49 from 192.168.1.100:61132 accepted tcp:target:443 [outbound -> inbound]"
             const regex = /^(\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2})(?:\.\d+)? from (\d{1,3}(?:\.\d{1,3}){3})(?::\d+)? accepted (?:tcp|udp):([^:]+):(\d+) \[([^ ]+) -> ([^\]]+)\]$/;
             const match = line.match(regex);
-            if (match) {
-              let logentry = new AccessLogEntry(match);
-              if (logentry.source) {
-                logentry.source_device = devices[logentry.source]?.name;
-              }
-              return logentry;
-            }
-            return null;
+            return match ? new AccessLogEntry(match, devices.value) : null;
           })
-          .filter((entry) => entry !== null);
-      };
+          .filter((entry): entry is AccessLogEntry => entry !== null);
+      });
 
+      // Refactored fetchLogs with a proper delay and error handling.
       const fetchLogs = async () => {
-        if (!follow.value) {
-          return;
-        }
-
-        await engine.submit(SubmtActions.fetchXrayLogs);
-        await setTimeout(async () => {
+        if (!follow.value) return;
+        try {
+          await engine.submit(SubmtActions.fetchXrayLogs);
+          // Wait for 1 second before fetching the updated logs.
+          await new Promise((resolve) => setTimeout(resolve, 1000));
           const response = await axios.get(file.value);
           logsContent.value = response.data;
-          parsedLogs.value = parseLogs();
-        }, 1000);
+        } catch (error) {
+          console.error("Error fetching logs:", error);
+        }
       };
 
-      onMounted(async () => {
-        setInterval(async () => {
-          await fetchLogs();
-        }, 2000);
+      let refreshInterval: number;
+      onMounted(() => {
+        // Start auto-refresh; the interval will run regardless, but fetchLogs itself returns early if follow is false.
+        refreshInterval = window.setInterval(fetchLogs, 2000);
+      });
 
-        watch(
-          () => props.logs,
-          (val) => {
-            logs.value = val;
-          }
-        );
+      onBeforeUnmount(() => {
+        clearInterval(refreshInterval);
       });
 
       return {
         follow,
         file,
-        logs,
+        logs: props.logs,
         logsContent,
         parsedLogs,
-        engine,
         FILE_ACCESS,
         FILE_ERROR
       };
     }
   });
 </script>
-<style scoped lang="scss">
+
+<style lang="scss" scoped>
+  @use "./../variables" as *;
+
   .scrollable-table {
     max-height: 200px;
     overflow-y: auto;
     display: block;
     scrollbar-width: thin;
-    scrollbar-color: #ffffff #576d73;
+    scrollbar-color: $scrollbar-thumb $scrollbar-track;
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -182,6 +194,7 @@
     font-weight: bold;
     color: greenyellow;
   }
+
   .logs-area-row {
     padding: 0;
     margin: 0;
@@ -201,7 +214,7 @@
     font-family: Courier New, Courier, monospace;
     font-size: 11px;
     scrollbar-width: thin;
-    scrollbar-color: #ffffff #576d73;
+    scrollbar-color: $scrollbar-thumb $scrollbar-track;
 
     td {
       overflow: hidden;

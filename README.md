@@ -14,17 +14,20 @@ This repository provides a lightweight and efficient UI to manage your [X-RAY Co
     <summary>Supported devices</summary>
     In general, all devices that can run Merlin-WRT firmware (`384.15` or later, `3006.102.1` or later) are supported. Below is the list of models where xrayui has been proven to work: 
 
-    - RT-AC66U
-    - RT-AC68U
-    - TUF-AX5400
-    - RT-AX58U
-    - RT-AX86U
-    - RT-AX88U
-    - RT-AX92U
-    - GT-AX6000
-    - GT-AXE11000
-    - RT-BE88U
-
+- RT-AC66U
+- RT-AC68U
+- RT-AX58U
+- TUF-AX5400
+- RT-AX92U
+- RT-AX86U
+- RT-AX88U
+- GT-AX11000
+- GT-AXE11000
+- GT-AX6000
+- RT-AX86U Pro
+- RT-AX88U Pro
+- GT-AX11000 Pro
+- RT-BE88U
 </details>
  
 

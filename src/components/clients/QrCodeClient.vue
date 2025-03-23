@@ -64,7 +64,7 @@
 
         addQueryParam("security", security);
         addQueryParam("flow", props.client.flow);
-        addQueryParam("type", "raw");
+        addQueryParam("type", "tcp");
         if (security === "reality" && p.streamSettings.realitySettings) {
           addQueryParam("sni", p.streamSettings.realitySettings.serverNames?.[0]!);
           addQueryParam("pbk", p.streamSettings.realitySettings.publicKey!);

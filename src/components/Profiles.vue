@@ -15,7 +15,7 @@
             <tr v-for="p in profiles" :key="p">
               <td>{{ p }}</td>
               <td>
-                <input v-if="p !== uiResponse.xray.profile" class="button_gen button_gen_small" type="button" value="&#10005;" :title="$t('labels.delete')" @click.prevent="deleteProfile(p)" />
+                <input v-if="uiResponse.xray && p !== uiResponse.xray.profile" class="button_gen button_gen_small" type="button" value="&#10005;" :title="$t('labels.delete')" @click.prevent="deleteProfile(p)" />
               </td>
             </tr>
             <tr>

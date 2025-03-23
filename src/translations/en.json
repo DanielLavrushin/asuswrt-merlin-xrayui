@@ -496,6 +496,15 @@
       "manager": "Profiles Manager",
       "modal_title": "Manage Profiles",
       "hint": "Select a configuration profile from the list below. This list is automatically populated with all JSON files in the `/opt/etc/xray` directory. Once you choose a profile.<br/>You can also manage the list by adding or removing configuration files as needed."
+    },
+    "ClientsOnline": {
+      "title": "Clients Online",
+      "label_client": "Client",
+      "label_ip": "Ip",
+      "message_logs": "To check online users, xray logging must be enabled. Would you like to enable it?",
+      "enable_logs": "Enable logs",
+      "online": "online",
+      "noone_is_online": "No one is online"
     }
   }
 }

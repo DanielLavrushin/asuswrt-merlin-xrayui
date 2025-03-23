@@ -1,20 +1,24 @@
 <template>
-  <modal ref="modal" :title="$t('components.ConfigModal.modal_title')" width="800px">
+  <modal ref="modal" :title="$t('components.ConfigModal.modal_title')" width="800">
     <div class="formfontdesc">
       <div class="configArea">
-        <json-pretty :data="configJson" :deep="2" :show-line-number="true" :show-icon="true" :show-line="false" :show-length="true"></json-pretty>
+        <json-pretty :data="configJson" :deep="2" :show-line-number="true" :show-icon="true" :show-line="false" :show-length="true"> </json-pretty>
       </div>
-      <label style="float: right; font-size: 10px"> {{ configSize }}/8000 ({{ ((configSize / 8000) * 100).toFixed(0) }}%)</label>
+      <label class="config-size-label"> {{ configSize }}/8000 ({{ ((configSize / 8000) * 100).toFixed(0) }}%) </label>
     </div>
     <template v-slot:footer>
-      <label><input type="checkbox" v-model="hideSenseData" @change="hide_sense_data()" /> {{ $t("components.ConfigModal.hide_sensetive_data") }}</label>
-      <input class="button_gen button_gen_small" type="button" :value="$t('components.ConfigModal.copy_to_clipboard')" @click.prevent="copy_to_clipboard()" />
+      <label>
+        <input type="checkbox" v-model="hideSenseData" @change="hide_sense_data" />
+        {{ $t("components.ConfigModal.hide_sensetive_data") }}
+      </label>
+      <input class="button_gen button_gen_small" type="button" :value="$t('components.ConfigModal.copy_to_clipboard')" @click.prevent="copy_to_clipboard" />
       <a class="button_gen button_gen_small" :href="configUri" target="_blank">
         {{ $t("components.ConfigModal.open_raw") }}
       </a>
     </template>
   </modal>
 </template>
+
 <script lang="ts">
   import { defineComponent, ref } from "vue";
   import Modal from "../Modal.vue";
@@ -22,41 +26,89 @@
   import JsonPretty from "vue-json-pretty";
   import "vue-json-pretty/lib/styles.css";
   import { useI18n } from "vue-i18n";
+
   export default defineComponent({
-    name: "AllocateModal",
+    name: "ConfigModal",
     components: {
       Hint,
       Modal,
       JsonPretty
     },
-
-    setup(props) {
+    setup() {
       const { t } = useI18n();
-      const modal = ref();
-      let originalConfig = {};
-      const configJson = ref();
-      const configSize = ref(0);
+      const modal = ref<any>(null);
+      let originalConfig: any = {};
+      const configJson = ref<any>(null);
+      const configSize = ref<number>(0);
       const configUri = "/ext/xrayui/xray-config.json";
-      const hideSenseData = ref(true);
+      const hideSenseData = ref<boolean>(true);
+      const sensitiveKeys = ["secretKey", "address", "password", "serverName", "publicKey", "shortIds", "privateKey", "shortId", "email", "id", "user", "pass", "certificate", "key", "mac"];
 
-      const load = async () => {
-        let response = await fetch(configUri);
-        let data = await response.json();
-        configJson.value = originalConfig = data;
-        configSize.value = JSON.stringify(data).length;
-        hide_sense_data();
+      const maskObject = (obj: any): any => {
+        if (Array.isArray(obj)) {
+          return obj.map((item) => maskObject(item));
+        } else if (obj !== null && typeof obj === "object") {
+          const newObj: any = {};
+          for (const key in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
+              if (sensitiveKeys.includes(key)) {
+                // If the value is an array, process each element.
+                if (Array.isArray(obj[key])) {
+                  newObj[key] = obj[key].map((item) => (typeof item === "string" || typeof item === "number" ? hide_chars(item) : maskObject(item)));
+                } else if (typeof obj[key] === "string" || typeof obj[key] === "number") {
+                  newObj[key] = hide_chars(obj[key]);
+                } else {
+                  newObj[key] = maskObject(obj[key]);
+                }
+              } else {
+                newObj[key] = maskObject(obj[key]);
+              }
+            }
+          }
+          return newObj;
+        } else {
+          return obj;
+        }
       };
+
+      // Replaces every character in a string with '*' or returns a masked number.
+      const hide_chars = (str: string | number | undefined) => {
+        if (str === undefined) return undefined;
+        if (typeof str === "string") return str.replace(/./g, "*");
+        return Number(str.toString().replace(/.\d/g, "0"));
+      };
+
+      // Loads the configuration from the URI and updates reactive state.
+      const load = async () => {
+        try {
+          const response = await fetch(configUri);
+          const data = await response.json();
+          originalConfig = data;
+          configJson.value = data;
+          configSize.value = JSON.stringify(data).length;
+          hide_sense_data();
+        } catch (error) {
+          console.error("Error loading config:", error);
+        }
+      };
+
       const show = async () => {
         await load();
         modal.value.show();
       };
 
+      // Copies the configuration (after applying sensitive-data masking) to the clipboard.
       const copy_to_clipboard = async () => {
         hide_sense_data();
         const configStr = JSON.stringify(configJson.value, null, 2);
         if (navigator.clipboard && navigator.clipboard.writeText) {
           try {
             await navigator.clipboard.writeText(configStr);
+            if (hideSenseData.value) {
+              alert(t("components.ConfigModal.alert_copy_ok_hiddendata"));
+            } else {
+              alert(t("components.ConfigModal.alert_copy_ok_nohiddendata"));
+            }
           } catch (err) {
             console.error("Clipboard API error, falling back", err);
             fallbackCopyTextToClipboard(configStr);
@@ -66,25 +118,25 @@
         }
       };
 
+      // Fallback for copying text to clipboard using a temporary textarea.
       const fallbackCopyTextToClipboard = (text: string) => {
         const textArea = document.createElement("textarea");
         textArea.value = text;
-        textArea.style.position = "fixed";
-        textArea.style.top = "0";
-        textArea.style.left = "0";
-        textArea.style.width = "2em";
-        textArea.style.height = "2em";
-        textArea.style.padding = "0";
-        textArea.style.border = "none";
-        textArea.style.outline = "none";
-        textArea.style.boxShadow = "none";
-        textArea.style.background = "transparent";
-
+        Object.assign(textArea.style, {
+          position: "fixed",
+          top: "0",
+          left: "0",
+          width: "2em",
+          height: "2em",
+          padding: "0",
+          border: "none",
+          outline: "none",
+          boxShadow: "none",
+          background: "transparent"
+        });
         document.body.appendChild(textArea);
         textArea.select();
-
         try {
-          // eslint-disable-next-line
           const successful = document.execCommand("copy");
           if (!successful) {
             alert("Copying to clipboard failed. Please copy the text manually:\n\n" + text);
@@ -99,98 +151,18 @@
           console.error("Fallback copy error:", err);
           alert("Copying to clipboard failed. Please copy the text manually:\n\n" + text);
         }
-
         document.body.removeChild(textArea);
       };
 
-      const hide_chars = (str: string | number | undefined) => {
-        if (str === undefined) return undefined;
-
-        if (typeof str === "string") return str.replace(/./g, "*");
-
-        return parseInt(str.toString().replace(/.\d/g, "0"));
-      };
-      const maskField = (obj: any, field: string) => {
-        if (obj && obj[field] !== undefined) {
-          obj[field] = hide_chars(obj[field]);
-        }
-      };
       const hide_sense_data = () => {
         if (hideSenseData.value) {
           const clone = JSON.parse(JSON.stringify(originalConfig));
-          if (clone.inbounds) {
-            clone.inbounds.forEach((inbound: any) => {
-              if (inbound.settings) {
-                maskField(inbound.settings, "secretKey");
-                maskField(inbound.settings, "address");
-                maskField(inbound.settings, "port");
-                maskField(inbound.settings, "password");
-              }
-              if (inbound.streamSettings) {
-                if (inbound.streamSettings.realitySettings) {
-                  maskField(inbound.streamSettings.realitySettings, "serverName");
-                  maskField(inbound.streamSettings.realitySettings, "publicKey");
-                  maskField(inbound.streamSettings.realitySettings, "shortId");
-                }
-                if (inbound.streamSettings.tlsSecurity) {
-                  maskField(inbound.streamSettings.tlsSecurity, "serverName");
-                }
-              }
-              if (inbound.clients) {
-                inbound.clients.forEach((client: any) => {
-                  maskField(client, "email");
-                  maskField(client, "id");
-                  maskField(client, "user");
-                  maskField(client, "pass");
-                });
-              }
-            });
-          }
-          if (clone.outbounds) {
-            clone.outbounds.forEach((outbound: any) => {
-              if (outbound.streamSettings) {
-                if (outbound.streamSettings.realitySettings) {
-                  maskField(outbound.streamSettings.realitySettings, "serverName");
-                  maskField(outbound.streamSettings.realitySettings, "publicKey");
-                  maskField(outbound.streamSettings.realitySettings, "shortId");
-                }
-                if (outbound.streamSettings.tlsSecurity) {
-                  maskField(outbound.streamSettings.tlsSecurity, "serverName");
-                }
-              }
-              if (outbound.settings?.servers) {
-                outbound.settings.servers.forEach((server: any) => {
-                  maskField(server, "address");
-                  maskField(server, "port");
-                  if (server.users) {
-                    server.users.forEach((user: any) => {
-                      maskField(user, "email");
-                      maskField(user, "id");
-                      maskField(user, "password");
-                    });
-                  }
-                });
-              }
-              if (outbound.settings?.vnext) {
-                outbound.settings.vnext.forEach((server: any) => {
-                  maskField(server, "address");
-                  maskField(server, "port");
-                  if (server.users) {
-                    server.users.forEach((user: any) => {
-                      maskField(user, "email");
-                      maskField(user, "id");
-                      maskField(user, "password");
-                    });
-                  }
-                });
-              }
-            });
-          }
-          configJson.value = clone;
+          configJson.value = maskObject(clone);
         } else {
           configJson.value = originalConfig;
         }
       };
+
       return {
         modal,
         configJson,
@@ -222,5 +194,10 @@
   :deep(.vjs-tree-node.is-highlight),
   :deep(.vjs-tree-node:hover) {
     background-color: initial;
+  }
+
+  .config-size-label {
+    float: right;
+    font-size: 10px;
   }
 </style>

@@ -1,5 +1,15 @@
 # XRAYUI Changelog
 
+## [0.41.x] - 2025-xx-xx
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- FIXED: When updating, the `logrotate` file is no longer overwritten if it already exists.
+- FIXED: The `logrotate` file is now updated with the new log file paths when the logs path in the `XRAY` config is changed.
+- IMPROVE: Config masking when sharing.
+- IMPROVE: Minor front-end refactoring.
+- IMPROVE: QR import for `REALITY` and `TLS`.
+
 ## [0.41.0] - 2025-03-22
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

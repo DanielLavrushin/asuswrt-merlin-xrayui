@@ -56,27 +56,34 @@
 
         const wanip = `${window.xray.router.wan_ip}:${p.port}`;
         const security = p.streamSettings.realitySettings ? "reality" : p.streamSettings.tlsSettings ? "tls" : "none";
+        const queryParams = Array<{ key: string; value: string }>();
 
-        let sni = "";
-        let pbk = "";
-        let shortId = "";
-        let fp = "";
-        let spx = "";
-        let alpn = "";
+        const addQueryParam = (key: string, value: string) => {
+          queryParams.push({ key, value });
+        };
+
+        addQueryParam("security", security);
+        addQueryParam("flow", props.client.flow);
+        addQueryParam("type", "raw");
         if (security === "reality" && p.streamSettings.realitySettings) {
-          sni = p.streamSettings.realitySettings.serverNames?.[0]!;
-          pbk = p.streamSettings.realitySettings.publicKey!;
-          shortId = p.streamSettings.realitySettings.shortIds?.[0]!;
-          fp = p.streamSettings.realitySettings.fingerprint!;
-          spx = p.streamSettings.realitySettings.spiderX!;
+          addQueryParam("sni", p.streamSettings.realitySettings.serverNames?.[0]!);
+          addQueryParam("pbk", p.streamSettings.realitySettings.publicKey!);
+          addQueryParam("sid", p.streamSettings.realitySettings.shortIds?.[0]!);
+          addQueryParam("fp", p.streamSettings.realitySettings.fingerprint ?? "chrome");
+          addQueryParam("spx", p.streamSettings.realitySettings.spiderX ?? "");
         } else if (security === "tls" && p.streamSettings.tlsSettings) {
-          sni = p.streamSettings.tlsSettings.serverName!;
-          fp = p.streamSettings.tlsSettings.fingerprint!;
-          alpn = p.streamSettings.tlsSettings.alpn?.join(",")!;
+          addQueryParam("sni", p.streamSettings.tlsSettings.serverName!);
+          addQueryParam("fp", p.streamSettings.tlsSettings.fingerprint ?? "chrome");
+          addQueryParam("alpn", p.streamSettings.tlsSettings.alpn?.join(",")!);
         }
 
-        link.value = `${p.protocol}://${props.client.id}@${wanip}?flow=${props.client.flow}&type=raw&security=${security}&spx=${spx}&fp=${fp}&sni=${sni}&alpn=&${alpn}&pbk=${pbk}&sid=${shortId}#${window.xray.router.name}`;
+        const queryString = queryParams
+          .filter((param) => param.value !== "")
+          .map((param) => `${encodeURIComponent(param.key)}=${encodeURIComponent(param.value)}`)
+          .join("&");
 
+        link.value = `${p.protocol}://${props.client.id}@${wanip}?${queryString}#${window.xray.router.name}`;
+        console.log(link.value);
         modalQr.value?.show();
       };
 

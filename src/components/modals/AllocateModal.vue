@@ -1,5 +1,5 @@
 <template>
-  <modal ref="modal" :title="$t('components.AllocateModal.modal_title')">
+  <modal ref="modal" :title="$t('components.AllocateModal.modal_title')" width="500">
     <div class="formfontdesc">
       <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
         <thead>

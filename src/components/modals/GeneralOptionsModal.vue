@@ -1,5 +1,5 @@
 <template>
-  <modal ref="modal" :title="$t('components.GeneralOptionsModal.modal_title')" width="600">
+  <modal ref="modal" :title="$t('components.GeneralOptionsModal.modal_title')" width="700">
     <div class="formfontdesc">
       <table class="FormTable modal-form-table">
         <tbody>
@@ -35,6 +35,18 @@
           </tr>
         </thead>
         <tbody>
+          <tr>
+            <th>{{ $t("components.GeneralOptionsModal.wellknown_geodata") }}</th>
+            <td>
+              <select class="input_option" v-model="selected_wellknown" @change="setwellknown">
+                <option></option>
+                <option v-for="source in known_geodat_sources" :value="source">{{ source.name }}</option>
+              </select>
+              <span class="hint-color">
+                <a v-if="selected_wellknown?.source" :href="selected_wellknown?.source" target="_blank">{{ selected_wellknown?.name }}</a>
+              </span>
+            </td>
+          </tr>
           <tr>
             <th>{{ $t("components.GeneralOptionsModal.label_geoip_url") }}</th>
             <td>
@@ -122,6 +134,13 @@
     public geo_site_url = "";
   }
 
+  interface WellKnownGeodatSource {
+    name: string;
+    source: string;
+    geoip_url: string;
+    geosite_url: string;
+  }
+
   export default defineComponent({
     name: "GeneralOptionsModal",
     components: {
@@ -140,8 +159,41 @@
       const modal = ref();
       const conModal = ref();
       const options = ref<GeneralOptions>(new GeneralOptions());
-
+      const selected_wellknown = ref<WellKnownGeodatSource>();
       const checkconenabled = ref<boolean>(props.config.routing?.rules?.find((r) => r.name === XrayRoutingRuleObject.connectionCheckRuleName) !== undefined);
+
+      const known_geodat_sources = ref<WellKnownGeodatSource[]>([
+        {
+          name: "Loyalsoldier source",
+          source: "https://github.com/Loyalsoldier/v2ray-rules-dat",
+          geoip_url: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat",
+          geosite_url: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+        },
+        {
+          name: "RUNET Freedom source",
+          source: "https://github.com/runetfreedom/russia-v2ray-rules-dat",
+          geoip_url: "https://raw.githubusercontent.com/runetfreedom/russia-v2ray-rules-dat/release/geoip.dat",
+          geosite_url: "https://raw.githubusercontent.com/runetfreedom/russia-v2ray-rules-dat/release/geosite.dat"
+        },
+        {
+          name: "Nidelon source",
+          source: "https://github.com/Nidelon/ru-block-v2ray-rules",
+          geoip_url: "https://github.com/Nidelon/ru-block-v2ray-rules/releases/latest/download/geoip.dat",
+          geosite_url: "https://github.com/Nidelon/ru-block-v2ray-rules/releases/latest/download/geosite.dat"
+        },
+        {
+          name: "DustinWin source",
+          source: "https://github.com/DustinWin/ruleset_geodata",
+          geoip_url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo/geoip.dat",
+          geosite_url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo/geosite.dat"
+        },
+        {
+          name: "Chocolate4U source",
+          source: "https://github.com/Chocolate4U/Iran-v2ray-rules",
+          geoip_url: "https://raw.githubusercontent.com/Chocolate4U/Iran-v2ray-rules/release/geoip.dat",
+          geosite_url: "https://raw.githubusercontent.com/Chocolate4U/Iran-v2ray-rules/release/geosite.dat"
+        }
+      ]);
 
       watch(
         () => props.config.routing?.rules,
@@ -149,7 +201,12 @@
           checkconenabled.value = rules?.find((r) => r.name === XrayRoutingRuleObject.connectionCheckRuleName) !== undefined;
         }
       );
-
+      const setwellknown = (event: Event) => {
+        if (selected_wellknown.value) {
+          options.value.geo_ip_url = selected_wellknown.value.geoip_url;
+          options.value.geo_site_url = selected_wellknown.value.geosite_url;
+        }
+      };
       const save = async () => {
         await engine.executeWithLoadingProgress(async () => {
           await engine.submit(SubmtActions.generalOptionsApply, options.value, 3000);
@@ -236,9 +293,12 @@
         conModal,
         checkconenabled,
         config: props.config,
+        known_geodat_sources,
+        selected_wellknown,
         log_levels: ["none", "debug", "info", "warning", "error"],
         show,
         save,
+        setwellknown,
         updatestartup,
         setcheckconnection,
         concheckcancel,

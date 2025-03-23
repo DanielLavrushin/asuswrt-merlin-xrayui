@@ -37,7 +37,7 @@
         <td>{{ client.email }}</td>
         <td style="min-width: 120px">{{ client.flow }}</td>
         <td>
-          <qr :client="client" :proxy="proxy"></qr>
+          <qr v-if="mode == 'inbound'" :client="client" :proxy="proxy"></qr>
           <button @click.prevent="editClient(client, index)" class="button_gen button_gen_small">&#8494;</button>
           <button @click.prevent="removeClient(client)" class="button_gen button_gen_small">&#10005;</button>
         </td>
@@ -129,6 +129,7 @@
         clients,
         newClient,
         modalQr,
+        mode,
         editClient,
         removeClient,
         addClient

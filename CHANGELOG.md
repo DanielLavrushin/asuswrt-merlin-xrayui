@@ -1,9 +1,10 @@
 # XRAYUI Changelog
 
-## [0.41.x] - 2025-xx-xx
+## [0.41.1] - 2025-03-23
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
+- ADDED: well-known geodata sources selection to the Genral Options.
 - FIXED: When updating, the `logrotate` file is no longer overwritten if it already exists.
 - FIXED: The `logrotate` file is now updated with the new log file paths when the logs path in the `XRAY` config is changed.
 - IMPROVE: Config masking when sharing.

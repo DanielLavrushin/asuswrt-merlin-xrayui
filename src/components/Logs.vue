@@ -58,10 +58,10 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, onMounted, onBeforeUnmount, ref, computed, watch } from "vue";
-  import axios from "axios";
-  import engine, { SubmtActions } from "../modules/Engine";
-  import { XrayLogObject } from "@/modules/CommonObjects";
+  import { defineComponent, onMounted, onBeforeUnmount, ref, computed, watch } from 'vue';
+  import axios from 'axios';
+  import engine, { SubmtActions } from '../modules/Engine';
+  import { XrayLogObject } from '@/modules/CommonObjects';
 
   class AccessLogEntry {
     public time?: string;
@@ -77,15 +77,15 @@
       const utcDateTimeStr = match[1];
 
       // Convert "YYYY/MM/DD HH:mm:ss" to ISO format "YYYY-MM-DDTHH:mm:ssZ"
-      const isoDateTime = utcDateTimeStr.replace(/\//g, "-").replace(" ", "T") + "Z";
+      const isoDateTime = utcDateTimeStr.replace(/\//g, '-').replace(' ', 'T') + 'Z';
       const localDate = new Date(isoDateTime);
 
       // Format time as 24-hour clock
       this.time = localDate.toLocaleTimeString([], {
         hour12: false,
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit"
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
       });
       this.source = match[2];
       this.target = match[3];
@@ -99,7 +99,7 @@
   }
 
   export default defineComponent({
-    name: "Logs",
+    name: 'Logs',
     props: {
       logs: {
         type: Object as () => XrayLogObject,
@@ -108,10 +108,10 @@
     },
     setup(props) {
       const follow = ref<boolean>(false);
-      const FILE_ACCESS = "/ext/xrayui/xray_access_partial.asp";
-      const FILE_ERROR = "/ext/xrayui/xray_error_partial.asp";
+      const FILE_ACCESS = '/ext/xrayui/xray_access_partial.asp';
+      const FILE_ERROR = '/ext/xrayui/xray_error_partial.asp';
       const file = ref<string>(FILE_ACCESS);
-      const logsContent = ref<string>("");
+      const logsContent = ref<string>('');
 
       // Wrap device mapping in a computed property.
       const devices = computed(() => {
@@ -122,7 +122,7 @@
       const parsedLogs = computed<AccessLogEntry[]>(() => {
         if (!logsContent.value) return [];
         return logsContent.value
-          .split("\n")
+          .split('\n')
           .map((line) => {
             // Example log format: "2025/02/19 17:06:49 from 192.168.1.100:61132 accepted tcp:target:443 [outbound -> inbound]"
             const regex = /^(\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2})(?:\.\d+)? from (\d{1,3}(?:\.\d{1,3}){3})(?::\d+)? accepted (?:tcp|udp):([^:]+):(\d+) \[([^ ]+) -> ([^\]]+)\]$/;
@@ -142,7 +142,7 @@
           const response = await axios.get(file.value);
           logsContent.value = response.data;
         } catch (error) {
-          console.error("Error fetching logs:", error);
+          console.error('Error fetching logs:', error);
         }
       };
 
@@ -170,7 +170,7 @@
 </script>
 
 <style lang="scss" scoped>
-  @use "./../variables" as *;
+  @use './../variables' as *;
 
   .scrollable-table {
     max-height: 200px;

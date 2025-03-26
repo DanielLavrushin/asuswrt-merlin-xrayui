@@ -1,10 +1,10 @@
-import { XrayHttpClientObject, XraySocksClientObject, XrayVlessClientObject, XrayVmessClientObject } from "./ClientsObjects";
-import { ISecurityProtocol, IXrayServer } from "./Interfaces";
-import XrayOptions, { XrayProtocol, XrayProtocolMode } from "./Options";
-import { XrayStreamHttpSettingsObject, XrayStreamKcpSettingsObject, XrayStreamTcpSettingsObject, XrayStreamWsSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamSplitHttpSettingsObject } from "./TransportObjects";
+import { XrayHttpClientObject, XraySocksClientObject, XrayVlessClientObject, XrayVmessClientObject } from './ClientsObjects';
+import { ISecurityProtocol, IXrayServer } from './Interfaces';
+import XrayOptions, { XrayProtocol, XrayProtocolMode } from './Options';
+import { XrayStreamHttpSettingsObject, XrayStreamKcpSettingsObject, XrayStreamTcpSettingsObject, XrayStreamWsSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamSplitHttpSettingsObject } from './TransportObjects';
 
 class XraySniffingObject {
-  static destOverrideOptions = ["http", "tls", "quic", "fakedns"];
+  static destOverrideOptions = ['http', 'tls', 'quic', 'fakedns'];
   public enabled? = false;
   public metadataOnly? = false;
   public routeOnly? = false;
@@ -21,22 +21,22 @@ class XraySniffingObject {
 }
 
 class XrayHeaderObject {
-  public type = "none";
+  public type = 'none';
   public request?: XrayHeaderRequestObject;
   public response?: XrayHeaderResponseObject;
 }
 
 class XrayHeaderRequestObject {
-  public version = "1.1";
-  public method = "GET";
-  public path = "/";
+  public version = '1.1';
+  public method = 'GET';
+  public path = '/';
   public headers: unknown = {};
 }
 
 class XrayHeaderResponseObject {
-  public version = "1.1";
-  public status = "200";
-  public reason = "OK";
+  public version = '1.1';
+  public status = '200';
+  public reason = 'OK';
   public headers: unknown = {};
 }
 
@@ -51,12 +51,12 @@ class XrayAllocateObject {
   static defaultRefresh = 5;
   static defaultConcurrency = 3;
 
-  public strategy = "always";
-  public refresh? = this.strategy == "random" ? XrayAllocateObject.defaultRefresh : undefined;
-  public concurrency? = this.strategy == "random" ? XrayAllocateObject.defaultConcurrency : undefined;
+  public strategy = 'always';
+  public refresh? = this.strategy == 'random' ? XrayAllocateObject.defaultRefresh : undefined;
+  public concurrency? = this.strategy == 'random' ? XrayAllocateObject.defaultConcurrency : undefined;
 
   normalize = (): this | undefined => {
-    if (this.strategy == "always") return undefined;
+    if (this.strategy == 'always') return undefined;
     this.refresh = this.refresh == 0 ? undefined : this.refresh;
     this.concurrency = this.concurrency == 0 ? undefined : this.concurrency;
 
@@ -70,7 +70,7 @@ class XrayStreamTlsCertificateObject {
   public ocspStapling? = 3600;
   public oneTimeLoading? = false;
   public buildChain? = false;
-  public usage? = "encipherment";
+  public usage? = 'encipherment';
   public certificateFile?: string;
   public keyFile?: string;
   public key?: string;
@@ -78,7 +78,7 @@ class XrayStreamTlsCertificateObject {
 
   public normalize(): this | undefined {
     this.ocspStapling = !this.ocspStapling || this.ocspStapling == 3600 ? undefined : this.ocspStapling;
-    this.usage = !this.usage || this.usage == "encipherment" ? undefined : this.usage;
+    this.usage = !this.usage || this.usage == 'encipherment' ? undefined : this.usage;
 
     if (!this.keyFile && !this.key && !this.certificateFile && !this.certificate) return undefined;
     return this;
@@ -87,8 +87,8 @@ class XrayStreamTlsCertificateObject {
 
 class XrayStreamTlsSettingsObject implements ISecurityProtocol {
   static alpnOptions = XrayOptions.alpnOptions;
-  static fingerprintOptions = ["", "randomized", "random", "chrome", "firefox", "ios", "android", "safari", "edge", "360", "qq"];
-  static tlsVersionsOptions = ["1.0", "1.1", "1.2", "1.3"];
+  static fingerprintOptions = ['', 'randomized', 'random', 'chrome', 'firefox', 'ios', 'android', 'safari', 'edge', '360', 'qq'];
+  static tlsVersionsOptions = ['1.0', '1.1', '1.2', '1.3'];
 
   public serverName?: string;
   public rejectUnknownSni? = false;
@@ -168,38 +168,38 @@ class XrayStreamRealitySettingsObject implements ISecurityProtocol {
 }
 
 class XrayLogObject {
-  static levelOptions = ["debug", "info", "warning", "error", "none"];
+  static levelOptions = ['debug', 'info', 'warning', 'error', 'none'];
   public access?: string;
   public error?: string;
-  public loglevel? = "warning";
+  public loglevel? = 'warning';
   public dnsLog? = false;
-  public maskAddress? = "";
+  public maskAddress? = '';
 
   normalize(): this {
-    this.access = this.access == "" ? undefined : this.access;
-    this.error = this.error == "" ? undefined : this.error;
-    this.loglevel = this.loglevel == "none" ? undefined : this.loglevel;
+    this.access = this.access == '' ? undefined : this.access;
+    this.error = this.error == '' ? undefined : this.error;
+    this.loglevel = this.loglevel == 'none' ? undefined : this.loglevel;
     this.dnsLog = !this.dnsLog ? undefined : this.dnsLog;
-    this.maskAddress = this.maskAddress == "" ? undefined : this.maskAddress;
+    this.maskAddress = this.maskAddress == '' ? undefined : this.maskAddress;
 
     return this;
   }
 }
 
 class XrayDnsObject {
-  static strategyOptions = ["UseIP", "UseIPv4", "UseIPv6"];
-  public tag? = "dnsQuery";
+  static strategyOptions = ['UseIP', 'UseIPv4', 'UseIPv6'];
+  public tag? = 'dnsQuery';
   public hosts?: Record<string, string | string[]> | undefined = {};
   public servers: (string | XrayDnsServerObject)[] | undefined = [];
   public clientIp?: string;
-  public queryStrategy?: string = "UseIP";
+  public queryStrategy?: string = 'UseIP';
   public disableCache?: boolean;
   public disableFallback?: boolean;
   public disableFallbackIfMatch?: boolean;
 
   public normalize(): this {
-    this.clientIp = this.clientIp == "" ? undefined : this.clientIp;
-    this.queryStrategy = this.queryStrategy == "" || this.queryStrategy == "UseIP" ? undefined : this.queryStrategy;
+    this.clientIp = this.clientIp == '' ? undefined : this.clientIp;
+    this.queryStrategy = this.queryStrategy == '' || this.queryStrategy == 'UseIP' ? undefined : this.queryStrategy;
     this.disableCache = !this.disableCache ? undefined : this.disableCache;
     this.disableFallback = !this.disableFallback ? undefined : this.disableFallback;
     this.disableFallbackIfMatch = !this.disableFallbackIfMatch ? undefined : this.disableFallbackIfMatch;
@@ -210,7 +210,7 @@ class XrayDnsObject {
   }
 
   public default = (): this => {
-    this.queryStrategy = "UseIP";
+    this.queryStrategy = 'UseIP';
     return this;
   };
 }
@@ -224,8 +224,8 @@ class XrayDnsServerObject {
   public clientIP?: string;
 }
 const XrayReverseItemType = {
-  BRIDGE: "bridge",
-  PORTAL: "portal"
+  BRIDGE: 'bridge',
+  PORTAL: 'portal'
 };
 class XrayReverseItem {
   public tag?: string;
@@ -256,17 +256,17 @@ class XrayReverseObject {
 }
 
 class XrayRoutingObject {
-  static domainStrategyOptions = ["AsIs", "IPIfNonMatch", "IPOnDemand"];
-  static domainMatcherOptions = ["hybrid", "linear"];
-  public domainStrategy? = "AsIs";
-  public domainMatcher? = "hybrid";
+  static domainStrategyOptions = ['AsIs', 'IPIfNonMatch', 'IPOnDemand'];
+  static domainMatcherOptions = ['hybrid', 'linear'];
+  public domainStrategy? = 'AsIs';
+  public domainMatcher? = 'hybrid';
   public rules?: XrayRoutingRuleObject[] = [];
   public disabled_rules?: XrayRoutingRuleObject[] = [];
   public policies?: XrayRoutingPolicy[] = [];
 
   public normalize(): this {
-    this.domainStrategy = this.domainStrategy == "AsIs" ? undefined : this.domainStrategy;
-    this.domainMatcher = this.domainMatcher == "hybrid" ? undefined : this.domainMatcher;
+    this.domainStrategy = this.domainStrategy == 'AsIs' ? undefined : this.domainStrategy;
+    this.domainMatcher = this.domainMatcher == 'hybrid' ? undefined : this.domainMatcher;
 
     if (this.policies) {
       this.policies.forEach((policy) => {
@@ -299,8 +299,8 @@ class XrayRoutingObject {
     this.rules = [];
     if (!unblockItems || unblockItems.length == 0) {
       const rule = new XrayRoutingRuleObject();
-      rule.name = "myip.com to proxy";
-      rule.domain = ["domain:myip.com"];
+      rule.name = 'myip.com to proxy';
+      rule.domain = ['domain:myip.com'];
       rule.outboundTag = outboundTag;
 
       this.rules.push(rule);
@@ -312,19 +312,19 @@ class XrayRoutingObject {
         rule.outboundTag = outboundTag;
 
         switch (gs) {
-          case "kinopub":
+          case 'kinopub':
             rule.ip = [`89.34.0.0/16`, `31.40.0.0/16`, `93.189.57.0/24`, `93.189.61.0/24`, `194.59.142.0/24`];
             break;
-          case "envato":
+          case 'envato':
             rule.domain = [`domain:envato.com`, `domain:envato.net`, `domain:envatoelements.com`, `domain:envatousercontent.com`];
             break;
-          case "facebook":
+          case 'facebook':
             rule.domain = [`geosite:${gs}`, `geosite:facebook-dev`];
             break;
-          case "metacritic":
+          case 'metacritic':
             rule.domain = [`domain:metacritic.com`];
             break;
-          case "wikipedia":
+          case 'wikipedia':
             rule.domain = [`geosite:wikimedia`];
             break;
           default: {
@@ -344,30 +344,30 @@ class XrayRoutingObject {
 }
 
 class XrayRoutingPolicy {
-  static defaultPorts = ["443", "80", "22"];
-  static modes = ["redirect", "bypass"];
+  static defaultPorts = ['443', '80', '22'];
+  static modes = ['redirect', 'bypass'];
   public name?: string;
   public mac?: string[] = [];
-  public tcp? = "";
-  public udp? = "";
-  public mode?: string = "redirect";
+  public tcp? = '';
+  public udp? = '';
+  public mode?: string = 'redirect';
   public enabled? = true;
 
   public static vendors: { name: string; tcp: string; udp: string }[] | null = [
-    { name: "Default ports", tcp: "443,80,22", udp: "443,80,22" },
-    { name: "Steam", tcp: "7777:7788,3478:4380,27000:27100", udp: "7777:7788,3478:4380,27000:27100" },
-    { name: "Microsoft Xbox", tcp: "", udp: "3544,4500,500" },
-    { name: "Epic Games Store", tcp: "5060,5062,5222,6250", udp: "5060,5062,5222,6250" },
-    { name: "Sony Playstation", tcp: "983,987,1935,3974,3658,5223,3478:3480,4658,9293:9297", udp: "983,987,1935,3974,3658,5223,3478:3480,4658,9293:9297" }
+    { name: 'Default ports', tcp: '443,80,22', udp: '443,80,22' },
+    { name: 'Steam', tcp: '7777:7788,3478:4380,27000:27100', udp: '7777:7788,3478:4380,27000:27100' },
+    { name: 'Microsoft Xbox', tcp: '', udp: '3544,4500,500' },
+    { name: 'Epic Games Store', tcp: '5060,5062,5222,6250', udp: '5060,5062,5222,6250' },
+    { name: 'Sony Playstation', tcp: '983,987,1935,3974,3658,5223,3478:3480,4658,9293:9297', udp: '983,987,1935,3974,3658,5223,3478:3480,4658,9293:9297' }
   ];
 
   public normalize = (): this | undefined => {
     this.mode = this.mode && XrayRoutingPolicy.modes.includes(this.mode) ? this.mode : undefined;
-    this.tcp = this.normalizePorts(this.tcp == "" ? undefined : this.tcp);
-    this.udp = this.normalizePorts(this.udp == "" ? undefined : this.udp);
+    this.tcp = this.normalizePorts(this.tcp == '' ? undefined : this.tcp);
+    this.udp = this.normalizePorts(this.udp == '' ? undefined : this.udp);
     this.mac = this.mac?.length == 0 ? undefined : this.mac;
 
-    if (!this.tcp && !this.udp && this.mode == "redirect") {
+    if (!this.tcp && !this.udp && this.mode == 'redirect') {
       return undefined;
     }
     return this;
@@ -375,18 +375,18 @@ class XrayRoutingPolicy {
   public normalizePorts = (ports: string | undefined) => {
     if (!ports) return ports;
     return ports
-      .replace(/\n/g, ",")
-      .replace(/-/g, ":")
-      .replace(/[^0-9,:]/g, "")
-      .split(",")
+      .replace(/\n/g, ',')
+      .replace(/-/g, ':')
+      .replace(/[^0-9,:]/g, '')
+      .split(',')
       .filter((x) => x)
-      .join(",")
+      .join(',')
       .trim();
   };
 
   public default = (): this => {
-    this.mode = "bypass";
-    this.name = "bypass xray except web traffic";
+    this.mode = 'bypass';
+    this.name = 'bypass xray except web traffic';
     this.tcp = `443,80,22`;
     this.udp = `443,80,22`;
     return this;
@@ -394,18 +394,18 @@ class XrayRoutingPolicy {
 }
 
 class XrayRoutingRuleObject {
-  static connectionCheckRuleName = "sys:connection-check";
-  static networkOptions = ["", "tcp", "udp", "tcp,udp"];
-  static protocolOptions = ["http", "tls", "bittorrent"];
+  static connectionCheckRuleName = 'sys:connection-check';
+  static networkOptions = ['', 'tcp', 'udp', 'tcp,udp'];
+  static protocolOptions = ['http', 'tls', 'bittorrent'];
   public idx = 0;
   public name?: string;
   public enabled? = true;
-  public domainMatcher? = "hybrid";
+  public domainMatcher? = 'hybrid';
   public domain?: string[];
   public ip?: string[];
   public port?: string;
   public sourcePort?: string;
-  public type = "field";
+  public type = 'field';
   public network?: string;
   public source?: string[];
   public protocol?: string[] = [];
@@ -416,7 +416,7 @@ class XrayRoutingRuleObject {
 
   public normalize() {
     this.enabled = undefined;
-    this.domainMatcher = this.domainMatcher == "hybrid" ? undefined : this.domainMatcher;
+    this.domainMatcher = this.domainMatcher == 'hybrid' ? undefined : this.domainMatcher;
     this.domain = this.domain?.length == 0 ? undefined : this.domain;
     this.ip = this.ip?.length == 0 ? undefined : this.ip;
     this.protocol = this.protocol?.length == 0 ? undefined : this.protocol;
@@ -424,20 +424,20 @@ class XrayRoutingRuleObject {
     this.inboundTag = this.inboundTag?.length == 0 ? undefined : this.inboundTag;
     this.user = this.user?.length == 0 ? undefined : this.user;
 
-    this.port = this.port == "" ? undefined : this.port;
-    this.sourcePort = this.sourcePort == "" ? undefined : this.sourcePort;
-    this.outboundTag = this.outboundTag == "" ? undefined : this.outboundTag;
-    this.network = this.network == "" ? undefined : this.network;
+    this.port = this.port == '' ? undefined : this.port;
+    this.sourcePort = this.sourcePort == '' ? undefined : this.sourcePort;
+    this.outboundTag = this.outboundTag == '' ? undefined : this.outboundTag;
+    this.network = this.network == '' ? undefined : this.network;
   }
 
   public isSystem = (): boolean => {
-    return this.name?.startsWith("sys:") ?? false;
+    return this.name?.startsWith('sys:') ?? false;
   };
 }
 
 class XrayStreamSettingsObject {
-  public network? = "tcp";
-  public security? = "none";
+  public network? = 'tcp';
+  public security? = 'none';
   public tlsSettings?: XrayStreamTlsSettingsObject;
   public realitySettings?: XrayStreamRealitySettingsObject;
   public tcpSettings?: XrayStreamTcpSettingsObject;
@@ -451,8 +451,8 @@ class XrayStreamSettingsObject {
   public sockopt?: XraySockoptObject;
 
   public normalize(): this | undefined {
-    this.network = this.network == "" || this.network == "tcp" ? undefined : this.network;
-    this.security = this.security == "" || this.security == "none" ? undefined : this.security;
+    this.network = this.network == '' || this.network == 'tcp' ? undefined : this.network;
+    this.security = this.security == '' || this.security == 'none' ? undefined : this.security;
 
     this.normalizeAllSettings();
     this.sockopt = this.sockopt?.normalize();
@@ -462,7 +462,7 @@ class XrayStreamSettingsObject {
   }
   normalizeAllSettings(): void {
     Object.keys(this)
-      .filter((key) => key.endsWith("Settings"))
+      .filter((key) => key.endsWith('Settings'))
       .forEach((key) => {
         const setting = this[key as keyof XrayStreamSettingsObject] as { normalize?: () => void } | undefined;
         setting?.normalize?.();
@@ -492,7 +492,7 @@ class XrayVlessServerObject extends XrayServerObject<XrayVlessClientObject> {}
 class XrayVmessServerObject extends XrayServerObject<XrayVmessClientObject> {}
 class XrayShadowsocksServerObject extends XrayServerObject<XrayVmessClientObject> {
   public email?: string;
-  public method = "2022-blake3-aes-256-gcm";
+  public method = '2022-blake3-aes-256-gcm';
   public password!: string;
   public uot?: boolean;
   public level? = 0;
@@ -508,8 +508,8 @@ class XrayProtocolOption {
 }
 
 class XrayNoiseObject {
-  static typeOptions = ["rand", "str", "base64"];
-  public type = "rand";
+  static typeOptions = ['rand', 'str', 'base64'];
+  public type = 'rand';
   public packet!: string;
   public delay: string | number = 0;
 }
@@ -523,13 +523,13 @@ class XrayPeerObject {
 }
 
 class XraySockoptObject {
-  static tproxyOptions = ["off", "redirect", "tproxy"];
-  static domainStrategyOptions = ["AsIs", "UseIP", "UseIPv4", "UseIPv6"];
+  static tproxyOptions = ['off', 'redirect', 'tproxy'];
+  static domainStrategyOptions = ['AsIs', 'UseIP', 'UseIPv4', 'UseIPv6'];
 
   public mark?: number;
   public tcpFastOpen?: boolean;
   public tproxy?: string;
-  public domainStrategy?: string = "AsIs";
+  public domainStrategy?: string = 'AsIs';
   public dialerProxy?: string;
   public acceptProxyProtocol?: boolean;
   public tcpKeepAliveInterval?: number;
@@ -539,14 +539,14 @@ class XraySockoptObject {
   public tcpNoDelay?: boolean;
 
   normalize = (): this | undefined => {
-    if (this.tproxy == "off") return undefined;
+    if (this.tproxy == 'off') return undefined;
 
     this.mark = !this.mark && this.mark == 0 ? undefined : this.mark;
-    this.interface = this.interface == "" ? undefined : this.interface;
-    this.tproxy = this.tproxy == "off" || this.tproxy == "" ? undefined : this.tproxy;
+    this.interface = this.interface == '' ? undefined : this.interface;
+    this.tproxy = this.tproxy == 'off' || this.tproxy == '' ? undefined : this.tproxy;
     this.tcpMptcp = !this.tcpMptcp ? undefined : this.tcpMptcp;
     this.tcpNoDelay = !this.tcpNoDelay ? undefined : this.tcpNoDelay;
-    this.domainStrategy = this.domainStrategy == "AsIs" ? undefined : this.domainStrategy;
+    this.domainStrategy = this.domainStrategy == 'AsIs' ? undefined : this.domainStrategy;
     return this;
   };
 }
@@ -571,7 +571,7 @@ class XrayParsedUrlObject {
   public parsedParams: Record<string, string | undefined> = {};
 
   public constructor(url: string) {
-    const [protocol, rest] = url.split("://");
+    const [protocol, rest] = url.split('://');
     this.protocol = protocol;
     const extraParams = {} as Record<string, string>;
 
@@ -585,19 +585,19 @@ class XrayParsedUrlObject {
       this.security = vmessJson.tls;
       this.parsedParams = vmessJson;
       return;
-    } else if (protocol === "ss") {
-      const [authHost] = rest.split("?");
-      const [uuid] = authHost.split("@");
+    } else if (protocol === 'ss') {
+      const [authHost] = rest.split('?');
+      const [uuid] = authHost.split('@');
       const ssDecoded = atob(uuid);
-      const [method, pass] = ssDecoded.split(":");
+      const [method, pass] = ssDecoded.split(':');
       extraParams.method = method;
       extraParams.pass = pass;
     }
 
-    const [authHost, queryFragment] = rest.split("?");
-    const [uuid, serverPort] = authHost.split("@");
-    const [server, port] = serverPort.split(":");
-    const [query, tag] = queryFragment.split("#");
+    const [authHost, queryFragment] = rest.split('?');
+    const [uuid, serverPort] = authHost.split('@');
+    const [server, port] = serverPort.split(':');
+    const [query, tag] = queryFragment.split('#');
 
     const params = new URLSearchParams(query);
     params.forEach((value: string, key: string) => {

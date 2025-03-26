@@ -78,11 +78,11 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, watch } from "vue";
-  import { XraySockoptObject, XrayStreamSettingsObject } from "../../modules/CommonObjects";
-  import Hint from "../Hint.vue";
+  import { defineComponent, ref, watch } from 'vue';
+  import { XraySockoptObject, XrayStreamSettingsObject } from '../../modules/CommonObjects';
+  import Hint from '../Hint.vue';
   export default defineComponent({
-    name: "Sockopt",
+    name: 'Sockopt',
     components: {
       Hint
     },

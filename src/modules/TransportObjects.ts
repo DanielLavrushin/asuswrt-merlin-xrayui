@@ -1,5 +1,5 @@
-import { XrayHeaderObject, XrayParsedUrlObject, XrayXmuxObject } from "./CommonObjects";
-import { ITransportNetwork } from "./Interfaces";
+import { XrayHeaderObject, XrayParsedUrlObject, XrayXmuxObject } from './CommonObjects';
+import { ITransportNetwork } from './Interfaces';
 
 class XrayStreamTcpSettingsObject implements ITransportNetwork {
   public acceptProxyProtocol? = false;
@@ -9,7 +9,7 @@ class XrayStreamTcpSettingsObject implements ITransportNetwork {
 }
 
 class XrayStreamKcpSettingsObject implements ITransportNetwork {
-  static headerTypes = ["none", "srtp", "utp", "wechat-video", "dtls", "wireguard"];
+  static headerTypes = ['none', 'srtp', 'utp', 'wechat-video', 'dtls', 'wireguard'];
 
   public mtu? = 1350;
   public tti? = 50;
@@ -39,20 +39,20 @@ class XrayStreamKcpSettingsObject implements ITransportNetwork {
     this.congestion = !this.congestion ? undefined : this.congestion;
     this.readBufferSize = this.readBufferSize === 2 ? undefined : this.readBufferSize;
     this.writeBufferSize = this.writeBufferSize === 2 ? undefined : this.writeBufferSize;
-    this.seed = !this.seed || this.seed == "" ? undefined : this.seed;
-    this.header = this.header?.type === "none" ? undefined : this.header;
+    this.seed = !this.seed || this.seed == '' ? undefined : this.seed;
+    this.header = this.header?.type === 'none' ? undefined : this.header;
   };
 }
 
 class XrayStreamWsSettingsObject implements ITransportNetwork {
   public acceptProxyProtocol = false;
-  public path = "/";
+  public path = '/';
   public host?: string;
   public headers: Record<string, unknown> | undefined = {};
 
   constructor(parsedObject?: XrayParsedUrlObject | undefined) {
     if (parsedObject) {
-      this.path = parsedObject.parsedParams.path ?? "/";
+      this.path = parsedObject.parsedParams.path ?? '/';
       this.host = parsedObject.parsedParams.host;
     }
   }
@@ -61,16 +61,16 @@ class XrayStreamWsSettingsObject implements ITransportNetwork {
 
 class XrayStreamHttpSettingsObject implements ITransportNetwork {
   public host?: string[];
-  public path = "/";
+  public path = '/';
   public headers = {};
   public read_idle_timeout?: number;
   public health_check_timeout?: number;
-  public method = "PUT";
+  public method = 'PUT';
   normalize = () => void 0;
 }
 
 class XrayStreamGrpcSettingsObject implements ITransportNetwork {
-  public serviceName = "";
+  public serviceName = '';
   public multiMode = false;
   public idle_timeout = 60;
   public health_check_timeout = 20;
@@ -81,14 +81,14 @@ class XrayStreamGrpcSettingsObject implements ITransportNetwork {
 
 class XrayStreamHttpUpgradeSettingsObject implements ITransportNetwork {
   public acceptProxyProtocol = false;
-  public path = "/";
+  public path = '/';
   public host?: string;
   public headers = {};
   normalize = () => void 0;
 }
 
 class XrayStreamSplitHttpSettingsObject implements ITransportNetwork {
-  public path = "/";
+  public path = '/';
   public host?: string;
   public headers = {};
   public scMaxEachPostBytes = 1 * 1024 * 1024;

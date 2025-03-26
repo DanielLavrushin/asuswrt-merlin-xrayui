@@ -7,11 +7,11 @@
   </div>
   <modal ref="updateModal" width="600" :title="$t('components.Version.modal_title')">
     <div class="modal-content">
-      <p class="current-version">{{ $t("components.Version.current_version", [current_version]) }}</p>
+      <p class="current-version">{{ $t('components.Version.current_version', [current_version]) }}</p>
       <div v-if="hasUpdate" class="update-details">
         <p v-html="$t('components.Version.new_version', [latest_version])"></p>
       </div>
-      <p v-else class="no-updates">{{ $t("components.Version.version_is_up_to_date") }}</p>
+      <p v-else class="no-updates">{{ $t('components.Version.version_is_up_to_date') }}</p>
 
       <div class="textarea-wrapper">
         <div class="changelog" v-html="changelog"></div>
@@ -19,43 +19,43 @@
       </div>
     </div>
     <template v-slot:footer v-if="hasUpdate">
-      <button class="button_gen button_gen_small" @click.prevent="dont_want_update">{{ $t("components.Version.dont_want_update", [latest_version]) }}</button>
+      <button class="button_gen button_gen_small" @click.prevent="dont_want_update">{{ $t('components.Version.dont_want_update', [latest_version]) }}</button>
       <input class="button_gen button_gen_small button-primary" type="button" :value="$t('components.Version.update_now')" @click.prevent="update" />
     </template>
   </modal>
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref } from "vue";
-  import Modal from "./Modal.vue";
-  import axios from "axios";
-  import vClean from "version-clean";
-  import vCompare from "version-compare";
-  import engine, { SubmtActions } from "../modules/Engine";
-  import markdownit from "markdown-it";
+  import { defineComponent, ref } from 'vue';
+  import Modal from './Modal.vue';
+  import axios from 'axios';
+  import vClean from 'version-clean';
+  import vCompare from 'version-compare';
+  import engine, { SubmtActions } from '../modules/Engine';
+  import markdownit from 'markdown-it';
 
   export default defineComponent({
-    name: "Version",
+    name: 'Version',
     components: {
       Modal
     },
     setup() {
       const md = markdownit({ html: true, breaks: true });
       let tempcurvers = window.xray.custom_settings.xray_version;
-      if (tempcurvers.split(".").length === 2) {
-        tempcurvers += ".0";
+      if (tempcurvers.split('.').length === 2) {
+        tempcurvers += '.0';
       }
-      const COOKIE_NAME = "xrayui_dontupdate";
+      const COOKIE_NAME = 'xrayui_dontupdate';
 
       const current_version = ref<string>(tempcurvers);
       const latest_version = ref<string>();
       const updateModal = ref();
       const hasUpdate = ref(false);
-      const changelog = ref<string>("");
+      const changelog = ref<string>('');
       const refusedToUpdateVersion = ref(engine.getCookie(COOKIE_NAME));
 
       setTimeout(async () => {
-        const gh_releases_url = "https://api.github.com/repos/daniellavrushin/asuswrt-merlin-xrayui/releases";
+        const gh_releases_url = 'https://api.github.com/repos/daniellavrushin/asuswrt-merlin-xrayui/releases';
 
         const response = await axios.get(gh_releases_url);
 
@@ -122,7 +122,7 @@
       border: 1px solid #222;
       padding: 0 10px;
       min-height: 150px;
-      font-family: "Courier New", Courier, monospace;
+      font-family: 'Courier New', Courier, monospace;
 
       :deep(h2) {
         margin: 5px;

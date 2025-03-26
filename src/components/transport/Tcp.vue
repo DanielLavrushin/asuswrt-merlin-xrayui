@@ -2,7 +2,7 @@
   <tbody v-if="transport.tcpSettings">
     <tr v-if="isInbound">
       <th>
-        {{ $t("components.Tcp.label_accept_proxy_protocol") }}
+        {{ $t('components.Tcp.label_accept_proxy_protocol') }}
         <hint v-html="$t('components.Tcp.hint_accept_proxy_protocol')"></hint>
       </th>
       <td>
@@ -14,12 +14,12 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref } from "vue";
-  import { XrayStreamSettingsObject } from "../../modules/CommonObjects";
-  import Hint from "../Hint.vue";
+  import { defineComponent, ref } from 'vue';
+  import { XrayStreamSettingsObject } from '../../modules/CommonObjects';
+  import Hint from '../Hint.vue';
 
   export default defineComponent({
-    name: "Tcp",
+    name: 'Tcp',
     components: {
       Hint
     },
@@ -31,7 +31,7 @@
       const transport = ref<XrayStreamSettingsObject>(props.transport ?? new XrayStreamSettingsObject());
       return {
         transport,
-        isInbound: props.proxyType == "inbound"
+        isInbound: props.proxyType == 'inbound'
       };
     }
   });

@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-import { createApp } from "vue";
-import { createI18n } from "vue-i18n";
+import { createApp } from 'vue';
+import { createI18n } from 'vue-i18n';
 
-import App from "./App.vue";
-import { EngineLoadingProgress } from "./modules/Engine";
+import App from './App.vue';
+import { EngineLoadingProgress } from './modules/Engine';
 
-import en from "./translations/en.json";
-import de from "./translations/de.json";
-import ru from "./translations/ru.json";
-import uk from "./translations/uk.json";
+import en from './translations/en.json';
+import de from './translations/de.json';
+import ru from './translations/ru.json';
+import uk from './translations/uk.json';
 
 window.hint = (message: string) => {
   window.overlib(message);
@@ -25,18 +25,18 @@ window.LoadingTime = (seconds: number, flag: string | EngineLoadingProgress | un
     return;
   }
   loadingProgressStarted = true;
-  const proceedingMainText = document.getElementById("proceeding_main_txt");
-  const proceedingText = document.getElementById("proceeding_txt");
-  const loading = document.getElementById("Loading");
+  const proceedingMainText = document.getElementById('proceeding_main_txt');
+  const proceedingText = document.getElementById('proceeding_txt');
+  const loading = document.getElementById('Loading');
 
   if (!proceedingMainText || !proceedingText || !loading) {
-    console.error("Required DOM elements not found.");
+    console.error('Required DOM elements not found.');
     return;
   }
 
-  const text = "Please wait...";
+  const text = 'Please wait...';
   window.showtext(proceedingMainText, text);
-  loading.style.visibility = "visible";
+  loading.style.visibility = 'visible';
 
   let progressPercentage = 0;
   let currentStep = 0;
@@ -56,9 +56,9 @@ window.LoadingTime = (seconds: number, flag: string | EngineLoadingProgress | un
       // Once we reach 100%
       progressPercentage = 0;
       window.showtext(proceedingMainText, text);
-      window.showtext(proceedingText, "");
+      window.showtext(proceedingText, '');
 
-      if (flag !== "waiting") {
+      if (flag !== 'waiting') {
         setTimeout(() => {
           loadingProgressStarted = false;
           window.hideLoading();
@@ -72,30 +72,30 @@ window.LoadingTime = (seconds: number, flag: string | EngineLoadingProgress | un
 };
 
 window.updateLoadingProgress = (progress?: EngineLoadingProgress) => {
-  const proceedingMainText = document.getElementById("proceeding_main_txt");
-  const proceedingText = document.getElementById("proceeding_txt");
-  const loading = document.getElementById("Loading");
+  const proceedingMainText = document.getElementById('proceeding_main_txt');
+  const proceedingText = document.getElementById('proceeding_txt');
+  const loading = document.getElementById('Loading');
 
   if (!proceedingMainText || !proceedingText || !loading) {
-    console.error("Required DOM elements not found.");
+    console.error('Required DOM elements not found.');
     return;
   }
 
-  loading.style.visibility = "visible";
+  loading.style.visibility = 'visible';
 
   if (progress?.message) {
     // eslint-disable-next-line xss/no-mixed-html
-    window.showtext(proceedingMainText, progress.message + "<br />");
+    window.showtext(proceedingMainText, progress.message + '<br />');
   }
 };
 
-document.addEventListener("DOMContentLoaded", () => {
-  const currentLanguage = (window.xray.router.language || "en").toLowerCase();
+document.addEventListener('DOMContentLoaded', () => {
+  const currentLanguage = (window.xray.router.language || 'en').toLowerCase();
 
   const i18n = createI18n({
     locale: currentLanguage,
     globalInjection: true,
-    fallbackLocale: "en",
+    fallbackLocale: 'en',
     legacy: false,
     warnHtmlMessage: false,
     messages: {
@@ -106,5 +106,5 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  createApp(App).use(i18n).mount("#xrayui-app");
+  createApp(App).use(i18n).mount('#xrayui-app');
 });

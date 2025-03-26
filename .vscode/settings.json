@@ -13,5 +13,10 @@
   },
   "[properties]": {
     "editor.defaultFormatter": "foxundermoon.shell-format"
+  },
+  "explorer.fileNesting.expand": true,
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "*.vue": "${capture}.*"
   }
 }

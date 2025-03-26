@@ -6,13 +6,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import axios, { AxiosError } from "axios";
-import { xrayConfig, XrayObject } from "./XrayConfig";
-import { XrayBlackholeOutboundObject, XrayLoopbackOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, XrayTrojanOutboundObject, XrayOutboundObject, XraySocksOutboundObject, XrayVmessOutboundObject, XrayVlessOutboundObject, XrayHttpOutboundObject, XrayShadowsocksOutboundObject } from "./OutboundObjects";
-import { XrayProtocol, XrayDnsObject, XrayStreamSettingsObject, XrayRoutingObject, XrayRoutingRuleObject, XraySniffingObject, XrayRoutingPolicy, XrayAllocateObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject, XraySockoptObject, XrayLogObject, XrayStreamTlsCertificateObject, XrayReverseObject, XrayReverseItem } from "./CommonObjects";
-import { plainToInstance } from "class-transformer";
-import { XrayDokodemoDoorInboundObject, XrayHttpInboundObject, XrayInboundObject, XrayShadowsocksInboundObject, XraySocksInboundObject, XrayTrojanInboundObject, XrayVlessInboundObject, XrayVmessInboundObject, XrayWireguardInboundObject } from "./InboundObjects";
-import { XrayStreamHttpSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamKcpSettingsObject, XrayStreamTcpSettingsObject, XrayStreamWsSettingsObject } from "./TransportObjects";
+import axios, { AxiosError } from 'axios';
+import { xrayConfig, XrayObject } from './XrayConfig';
+import { XrayBlackholeOutboundObject, XrayLoopbackOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, XrayTrojanOutboundObject, XrayOutboundObject, XraySocksOutboundObject, XrayVmessOutboundObject, XrayVlessOutboundObject, XrayHttpOutboundObject, XrayShadowsocksOutboundObject } from './OutboundObjects';
+import { XrayProtocol, XrayDnsObject, XrayStreamSettingsObject, XrayRoutingObject, XrayRoutingRuleObject, XraySniffingObject, XrayRoutingPolicy, XrayAllocateObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject, XraySockoptObject, XrayLogObject, XrayStreamTlsCertificateObject, XrayReverseObject, XrayReverseItem } from './CommonObjects';
+import { plainToInstance } from 'class-transformer';
+import { XrayDokodemoDoorInboundObject, XrayHttpInboundObject, XrayInboundObject, XrayShadowsocksInboundObject, XraySocksInboundObject, XrayTrojanInboundObject, XrayVlessInboundObject, XrayVmessInboundObject, XrayWireguardInboundObject } from './InboundObjects';
+import { XrayStreamHttpSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamKcpSettingsObject, XrayStreamTcpSettingsObject, XrayStreamWsSettingsObject } from './TransportObjects';
 
 class EngineWireguard {
   public privateKey!: string;
@@ -37,7 +37,7 @@ class EngineClientConnectionStatus {
 
 class EngineLoadingProgress {
   public progress = 0;
-  public message = "";
+  public message = '';
 
   constructor(progress?: number, message?: string) {
     if (progress) {
@@ -73,40 +73,40 @@ class GeodatTagRequest {
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 enum SubmtActions {
-  configurationSetMode = "xrayui_configuration_mode",
-  configurationApply = "xrayui_configuration_apply",
-  clientsOnline = "xrayui_connectedclients",
-  refreshConfig = "xrayui_refreshconfig",
-  serverStart = "xrayui_serverstatus_start",
-  serverRestart = "xrayui_serverstatus_restart",
-  serverStop = "xrayui_serverstatus_stop",
-  serverTestConfig = "xrayui_testconfig",
-  regenerateRealityKeys = "xrayui_regenerate_realitykeys",
-  regenerateWireguardyKeys = "xrayui_regenerate_wgkeys",
-  regenerateSslCertificates = "xrayui_regenerate_sslcertificates",
-  enableLogs = "xrayui_configuration_logs",
-  performUpdate = "xrayui_update",
-  toggleStartupOption = "xrayui_configuration_togglestartup",
-  configurationGenerateDefaultConfig = "xrayui_configuration_generatedefaultconfig",
-  geodataCommunityUpdate = "xrayui_geodata_communityupdate",
-  geoDataCustomGetTags = "xrayui_geodata_customtagfiles",
-  geoDataRecompile = "xrayui_geodata_customrecompile",
-  geoDataRecompileAll = "xrayui_geodata_customrecompileall",
-  geoDataCustomDeleteTag = "xrayui_geodata_customdeletetag",
-  fetchXrayLogs = "xrayui_configuration_logs_fetch",
-  updateLogsLevel = "xrayui_configuration_logs_changeloglevel",
-  checkConnection = "xrayui_configuration_checkconnection",
-  initResponse = "xrayui_configuration_initresponse",
-  generalOptionsApply = "xrayui_configuration_applygeneraloptions",
-  xrayVersionSwitch = "xrayui_configuration_xrayversionswitch",
-  changeProfile = "xrayui_configuration_changeprofile",
-  deleteProfile = "xrayui_configuration_deleteprofile"
+  configurationSetMode = 'xrayui_configuration_mode',
+  configurationApply = 'xrayui_configuration_apply',
+  clientsOnline = 'xrayui_connectedclients',
+  refreshConfig = 'xrayui_refreshconfig',
+  serverStart = 'xrayui_serverstatus_start',
+  serverRestart = 'xrayui_serverstatus_restart',
+  serverStop = 'xrayui_serverstatus_stop',
+  serverTestConfig = 'xrayui_testconfig',
+  regenerateRealityKeys = 'xrayui_regenerate_realitykeys',
+  regenerateWireguardyKeys = 'xrayui_regenerate_wgkeys',
+  regenerateSslCertificates = 'xrayui_regenerate_sslcertificates',
+  enableLogs = 'xrayui_configuration_logs',
+  performUpdate = 'xrayui_update',
+  toggleStartupOption = 'xrayui_configuration_togglestartup',
+  configurationGenerateDefaultConfig = 'xrayui_configuration_generatedefaultconfig',
+  geodataCommunityUpdate = 'xrayui_geodata_communityupdate',
+  geoDataCustomGetTags = 'xrayui_geodata_customtagfiles',
+  geoDataRecompile = 'xrayui_geodata_customrecompile',
+  geoDataRecompileAll = 'xrayui_geodata_customrecompileall',
+  geoDataCustomDeleteTag = 'xrayui_geodata_customdeletetag',
+  fetchXrayLogs = 'xrayui_configuration_logs_fetch',
+  updateLogsLevel = 'xrayui_configuration_logs_changeloglevel',
+  checkConnection = 'xrayui_configuration_checkconnection',
+  initResponse = 'xrayui_configuration_initresponse',
+  generalOptionsApply = 'xrayui_configuration_applygeneraloptions',
+  xrayVersionSwitch = 'xrayui_configuration_xrayversionswitch',
+  changeProfile = 'xrayui_configuration_changeprofile',
+  deleteProfile = 'xrayui_configuration_deleteprofile'
 }
 
 class Engine {
   public xrayConfig: XrayObject = xrayConfig;
-  public mode = "server";
-  private zero_uuid = "10000000-1000-4000-8000-100000000000";
+  public mode = 'server';
+  private zero_uuid = '10000000-1000-4000-8000-100000000000';
 
   private splitPayload(payload: string, chunkSize: number): string[] {
     const chunks: string[] = [];
@@ -122,44 +122,44 @@ class Engine {
     const date = new Date();
     const value = val;
     date.setTime(date.getTime() + 365 * 24 * 60 * 60 * 1000);
-    document.cookie = name + "=" + value + "; expires=" + date.toUTCString() + "; path=/";
+    document.cookie = name + '=' + value + '; expires=' + date.toUTCString() + '; path=/';
   };
 
   public getCookie = (name: string): string | undefined => {
-    const value = "; " + document.cookie;
-    const parts = value.split("; " + name + "=");
+    const value = '; ' + document.cookie;
+    const parts = value.split('; ' + name + '=');
 
     if (parts.length === 2) {
-      return parts.pop()?.split(";").shift();
+      return parts.pop()?.split(';').shift();
     }
   };
 
   public deleteCookie = (name: string): void => {
     const date = new Date();
     date.setTime(date.getTime() + -1 * 24 * 60 * 60 * 1000);
-    document.cookie = name + "=; expires=" + date.toUTCString() + "; path=/";
+    document.cookie = name + '=; expires=' + date.toUTCString() + '; path=/';
   };
 
   public submit(action: string, payload: object | string | number | null | undefined = undefined, delay = 0): Promise<void> {
     return new Promise((resolve) => {
-      const iframeName = "hidden_frame_" + Math.random().toString(36).substring(2, 9);
-      const iframe = document.createElement("iframe");
+      const iframeName = 'hidden_frame_' + Math.random().toString(36).substring(2, 9);
+      const iframe = document.createElement('iframe');
       iframe.name = iframeName;
-      iframe.style.display = "none";
+      iframe.style.display = 'none';
 
       document.body.appendChild(iframe);
 
-      const form = document.createElement("form");
-      form.method = "post";
-      form.action = "/start_apply.htm";
+      const form = document.createElement('form');
+      form.method = 'post';
+      form.action = '/start_apply.htm';
       form.target = iframeName;
 
-      this.create_form_element(form, "hidden", "action_mode", "apply");
-      this.create_form_element(form, "hidden", "action_script", action);
-      this.create_form_element(form, "hidden", "modified", "0");
-      this.create_form_element(form, "hidden", "action_wait", "");
+      this.create_form_element(form, 'hidden', 'action_mode', 'apply');
+      this.create_form_element(form, 'hidden', 'action_script', action);
+      this.create_form_element(form, 'hidden', 'modified', '0');
+      this.create_form_element(form, 'hidden', 'action_wait', '');
 
-      const amngCustomInput = document.createElement("input");
+      const amngCustomInput = document.createElement('input');
       if (payload) {
         const chunkSize = 2048;
         const payloadString = JSON.stringify(payload);
@@ -170,12 +170,12 @@ class Engine {
 
         const customSettings = JSON.stringify(window.xray.custom_settings);
         if (customSettings.length > 8 * 1024) {
-          alert("Configuration is too large to submit via custom settings.");
-          throw new Error("Configuration is too large to submit via custom settings.");
+          alert('Configuration is too large to submit via custom settings.');
+          throw new Error('Configuration is too large to submit via custom settings.');
         }
 
-        amngCustomInput.type = "hidden";
-        amngCustomInput.name = "amng_custom";
+        amngCustomInput.type = 'hidden';
+        amngCustomInput.name = 'amng_custom';
         amngCustomInput.value = customSettings;
         form.appendChild(amngCustomInput);
       }
@@ -198,7 +198,7 @@ class Engine {
   }
 
   create_form_element = (form: HTMLFormElement, type: string, name: string, value: string): HTMLInputElement => {
-    const input = document.createElement("input");
+    const input = document.createElement('input');
     input.type = type;
     input.name = name;
     input.value = value;
@@ -211,7 +211,7 @@ class Engine {
   };
 
   generateRandomBase64 = (length: number | undefined = 32): string => {
-    if (!length || length < 1) return "";
+    if (!length || length < 1) return '';
     const randomBytes = crypto.getRandomValues(new Uint8Array(length));
     const base64String = btoa(String.fromCharCode(...randomBytes));
     return base64String;
@@ -264,13 +264,13 @@ class Engine {
     return response.connection_check;
   }
   async getXrayResponse(): Promise<EngineResponseConfig> {
-    const response = await axios.get<EngineResponseConfig>("/ext/xrayui/xray-ui-response.json");
+    const response = await axios.get<EngineResponseConfig>('/ext/xrayui/xray-ui-response.json');
     let responseConfig = response.data;
     return responseConfig;
   }
 
   async executeWithLoadingProgress(action: () => Promise<void>, windowReload = true): Promise<void> {
-    let loadingProgress = new EngineLoadingProgress(0, "Please, wait");
+    let loadingProgress = new EngineLoadingProgress(0, 'Please, wait');
     window.showLoading(null, loadingProgress);
 
     const progressPromise = this.checkLoadingProgress(loadingProgress, windowReload);
@@ -298,7 +298,7 @@ class Engine {
         } catch (error) {
           clearInterval(checkProgressInterval);
           window.hideLoading();
-          reject(new Error("Error while checking loading progress"));
+          reject(new Error('Error while checking loading progress'));
         }
       }, 1000);
     });
@@ -306,7 +306,7 @@ class Engine {
 
   async loadXrayConfig(): Promise<XrayObject | null> {
     try {
-      const response = await axios.get<XrayObject>("/ext/xrayui/xray-config.json");
+      const response = await axios.get<XrayObject>('/ext/xrayui/xray-config.json');
       this.xrayConfig = plainToInstance(XrayObject, response.data);
       if (this.xrayConfig.log) {
         this.xrayConfig.log = plainToInstance(XrayLogObject, response.data.log);
@@ -484,7 +484,7 @@ class Engine {
     } catch (e) {
       var axiosError = e as AxiosError;
       if (axiosError.status === 404) {
-        if (confirm("XRAY Configuration file not found in the /opt/etc/xray directory. Please check your configuration file. If you want to generate an empty configuration file, press OK.")) {
+        if (confirm('XRAY Configuration file not found in the /opt/etc/xray directory. Please check your configuration file. If you want to generate an empty configuration file, press OK.')) {
           await this.submit(SubmtActions.configurationGenerateDefaultConfig);
         }
       }

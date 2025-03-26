@@ -30,7 +30,7 @@
                             <div class="formfontdesc">
                               <div>&nbsp;</div>
                               <div class="formfonttitle" style="text-align: left">X-RAY UI v{{ version }}</div>
-                              <div id="formfontdesc" class="formfontdesc">{{ $t("labels.xrayui_desc") }}</div>
+                              <div id="formfontdesc" class="formfontdesc">{{ $t('labels.xrayui_desc') }}</div>
                               <div style="margin: 10px 0 10px 5px" class="splitLine"></div>
                               <service-status v-model:config="config"></service-status>
                               <inbounds @show-transport="show_transport" @show-sniffing="show_sniffing"></inbounds>
@@ -63,33 +63,33 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref } from "vue";
-  import engine, { SubmtActions } from "../modules/Engine";
+  import { defineComponent, ref } from 'vue';
+  import engine, { SubmtActions } from '../modules/Engine';
 
-  import Modal from "./Modal.vue";
+  import Modal from './Modal.vue';
 
-  import { IProtocolType } from "../modules/Interfaces";
-  import { XrayInboundObject } from "../modules/InboundObjects";
-  import { XrayOutboundObject } from "../modules/OutboundObjects";
+  import { IProtocolType } from '../modules/Interfaces';
+  import { XrayInboundObject } from '../modules/InboundObjects';
+  import { XrayOutboundObject } from '../modules/OutboundObjects';
 
-  import ServiceStatus from "./ServiceStatus.vue";
-  import Inbounds from "./Inbounds.vue";
-  import Outbounds from "./Outbounds.vue";
-  import Routing from "./Routing.vue";
-  import Dns from "./Dns.vue";
-  import Version from "./Version.vue";
-  import ClientsOnline from "./ClientsOnline.vue";
-  import ReverseProxy from "./ReverseProxy.vue";
+  import ServiceStatus from './ServiceStatus.vue';
+  import Inbounds from './Inbounds.vue';
+  import Outbounds from './Outbounds.vue';
+  import Routing from './Routing.vue';
+  import Dns from './Dns.vue';
+  import Version from './Version.vue';
+  import ClientsOnline from './ClientsOnline.vue';
+  import ReverseProxy from './ReverseProxy.vue';
 
-  import SniffingModal from "./modals/SniffingModal.vue";
-  import StreamSettingsModal from "./modals/StreamSettingsModal.vue";
-  import LogsManager from "./Logs.vue";
-  import MainMenu from "./asus/MainMenu.vue";
-  import TabMenu from "./asus/TabMenu.vue";
-  import SubMenu from "./asus/SubMenu.vue";
+  import SniffingModal from './modals/SniffingModal.vue';
+  import StreamSettingsModal from './modals/StreamSettingsModal.vue';
+  import LogsManager from './Logs.vue';
+  import MainMenu from './asus/MainMenu.vue';
+  import TabMenu from './asus/TabMenu.vue';
+  import SubMenu from './asus/SubMenu.vue';
 
   export default defineComponent({
-    name: "MainForm",
+    name: 'MainForm',
     components: {
       TabMenu,
       MainMenu,

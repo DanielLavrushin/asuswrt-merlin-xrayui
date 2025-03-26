@@ -6,11 +6,11 @@
 </template>
 
 <script>
-  import { defineComponent, onMounted, ref } from "vue";
-  import markdownit from "markdown-it";
+  import { defineComponent, onMounted, ref } from 'vue';
+  import markdownit from 'markdown-it';
 
   export default defineComponent({
-    name: "Hint",
+    name: 'Hint',
     props: {
       title: {
         type: String
@@ -19,7 +19,7 @@
     setup(props) {
       const elm = ref(null);
       const visible = ref(true);
-      const content = ref("");
+      const content = ref('');
       const md = markdownit({ html: true, breaks: true });
 
       const showTooltip = () => {
@@ -31,7 +31,7 @@
       };
 
       const hideTooltip = () => {
-        const overDiv = document.getElementById("overDiv");
+        const overDiv = document.getElementById('overDiv');
         if (overDiv && overDiv.parentElement) {
           overDiv.parentElement.removeChild(overDiv);
         }
@@ -41,9 +41,9 @@
         const parent = elm.value?.parentElement;
         content.value = md.render(elm.value.innerHTML);
         if (parent) {
-          parent.style.cursor = "help";
-          parent.addEventListener("mouseover", showTooltip);
-          parent.addEventListener("mouseout", hideTooltip);
+          parent.style.cursor = 'help';
+          parent.addEventListener('mouseover', showTooltip);
+          parent.addEventListener('mouseout', hideTooltip);
         }
       });
 

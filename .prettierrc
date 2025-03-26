@@ -3,6 +3,6 @@
   "printWidth": 2000,
   "endOfLine": "lf",
   "semi": true,
-  "singleQuote": false,
+  "singleQuote": true,
   "trailingComma": "none"
 }

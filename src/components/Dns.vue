@@ -3,7 +3,7 @@
     <thead>
       <tr>
         <td colspan="2">
-          {{ $t("components.Dns.title") }}
+          {{ $t('components.Dns.title') }}
           <hint v-html="$t('components.Dns.hint_title')"></hint>
         </td>
       </tr>
@@ -11,7 +11,7 @@
     <tbody>
       <tr>
         <th>
-          {{ $t("components.Dns.label_tag") }}
+          {{ $t('components.Dns.label_tag') }}
           <hint v-html="$t('components.Dns.hint_tag')"></hint>
         </th>
         <td>
@@ -21,7 +21,7 @@
       </tr>
       <tr v-if="dns.hosts">
         <th>
-          {{ $t("components.Dns.label_hosts") }}
+          {{ $t('components.Dns.label_hosts') }}
           <hint v-html="$t('components.Dns.hint_hosts')"></hint>
         </th>
         <td>
@@ -33,7 +33,7 @@
       </tr>
       <tr v-if="dns.servers">
         <th>
-          {{ $t("components.Dns.label_servers") }}
+          {{ $t('components.Dns.label_servers') }}
           <hint v-html="$t('components.Dns.hint_servers')"></hint>
         </th>
         <td>
@@ -45,7 +45,7 @@
       </tr>
       <tr>
         <th>
-          {{ $t("components.Dns.label_client_ip") }}
+          {{ $t('components.Dns.label_client_ip') }}
           <hint v-html="$t('components.Dns.hint_client_ip')"></hint>
         </th>
         <td>
@@ -55,7 +55,7 @@
       </tr>
       <tr>
         <th>
-          {{ $t("components.Dns.label_query_strategy") }}
+          {{ $t('components.Dns.label_query_strategy') }}
           <hint v-html="$t('components.Dns.hint_query_strategy')"></hint>
         </th>
         <td>
@@ -69,7 +69,7 @@
       </tr>
       <tr>
         <th>
-          {{ $t("components.Dns.label_disable_cache") }}
+          {{ $t('components.Dns.label_disable_cache') }}
           <hint v-html="$t('components.Dns.hint_disable_cache')"></hint>
         </th>
         <td>
@@ -79,7 +79,7 @@
       </tr>
       <tr>
         <th>
-          {{ $t("components.Dns.label_disable_fallback") }}
+          {{ $t('components.Dns.label_disable_fallback') }}
           <hint v-html="$t('components.Dns.hint_disable_fallback')"></hint>
         </th>
         <td>
@@ -89,7 +89,7 @@
       </tr>
       <tr>
         <th>
-          {{ $t("components.Dns.label_fallback_if_match") }}
+          {{ $t('components.Dns.label_fallback_if_match') }}
           <hint v-html="$t('components.Dns.hint_fallback_if_match')"></hint>
         </th>
         <td>
@@ -102,16 +102,16 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, watch } from "vue";
-  import engine from "../modules/Engine";
-  import { XrayDnsObject } from "../modules/CommonObjects";
-  import xrayConfig from "../modules/XrayConfig";
-  import DnsHostsModal from "./modals/DnsHostsModal.vue";
-  import DnsServersModal from "./modals/DnsServersModal.vue";
-  import Hint from "./Hint.vue";
+  import { defineComponent, ref, watch } from 'vue';
+  import engine from '../modules/Engine';
+  import { XrayDnsObject } from '../modules/CommonObjects';
+  import xrayConfig from '../modules/XrayConfig';
+  import DnsHostsModal from './modals/DnsHostsModal.vue';
+  import DnsServersModal from './modals/DnsServersModal.vue';
+  import Hint from './Hint.vue';
 
   export default defineComponent({
-    name: "Dns",
+    name: 'Dns',
     components: {
       Hint,
       DnsHostsModal,

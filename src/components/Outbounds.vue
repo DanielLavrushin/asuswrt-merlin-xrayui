@@ -2,12 +2,12 @@
   <table width="100%" bordercolor="#6b8fa3" class="FormTable">
     <thead>
       <tr>
-        <td colspan="2">{{ $t("components.Outbounds.title") }}</td>
+        <td colspan="2">{{ $t('components.Outbounds.title') }}</td>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <th>{{ $t("components.Outbounds.label_create_new") }}</th>
+        <th>{{ $t('components.Outbounds.label_create_new') }}</th>
         <td>
           <select class="input_option" v-model="selectedProxyType" @change="edit_proxy()">
             <option></option>
@@ -19,7 +19,7 @@
       </tr>
       <slot v-for="(proxy, index) in config.outbounds" :key="index">
         <tr v-show="!proxy.isSystem()" class="proxy-row">
-          <th>{{ proxy.tag == "" ? "no tag" : proxy.tag! }}</th>
+          <th>{{ proxy.tag == '' ? 'no tag' : proxy.tag! }}</th>
           <td>
             <a class="hint" href="#" @click.prevent="edit_proxy(proxy)">
               <span v-show="proxy.streamSettings?.network" :class="['proxy-label', 'tag']">
@@ -34,7 +34,7 @@
             </span>
             <span class="row-buttons">
               <a class="button_gen button_gen_small" href="#" @click.prevent="show_transport(proxy)">
-                {{ $t("labels.transport") }}
+                {{ $t('labels.transport') }}
               </a>
               <a class="button_gen button_gen_small" href="#" @click.prevent="reorder_proxy(proxy)" v-if="index > 0" :title="$t('labels.redorder')">&#8593;</a>
               <a class="button_gen button_gen_small" href="#" @click.prevent="edit_proxy(proxy)" :title="$t('labels.edit')">&#8494;</a>
@@ -55,34 +55,34 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, computed, nextTick, watch } from "vue";
-  import engine from "../modules/Engine";
-  import Modal from "./Modal.vue";
-  import { xrayProtocols } from "../modules/XrayConfig";
+  import { defineComponent, ref, computed, nextTick, watch } from 'vue';
+  import engine from '../modules/Engine';
+  import Modal from './Modal.vue';
+  import { xrayProtocols } from '../modules/XrayConfig';
 
-  import { IProtocolType } from "../modules/Interfaces";
-  import { XrayProtocol } from "../modules/CommonObjects";
-  import { XrayOutboundObject } from "../modules/OutboundObjects";
-  import { XrayProtocolOption } from "../modules/CommonObjects";
-  import { XrayProtocolMode } from "../modules/Options";
+  import { IProtocolType } from '../modules/Interfaces';
+  import { XrayProtocol } from '../modules/CommonObjects';
+  import { XrayOutboundObject } from '../modules/OutboundObjects';
+  import { XrayProtocolOption } from '../modules/CommonObjects';
+  import { XrayProtocolMode } from '../modules/Options';
 
-  import FreedomOutbound from "./outbounds/FreedomOutbound.vue";
-  import BlackholeOutbound from "./outbounds/BlackholeOutbound.vue";
-  import DnsOutbound from "./outbounds/DnsOutbound.vue";
-  import HttpOutbound from "./outbounds/HttpOutbound.vue";
-  import LoopbackOutbound from "./outbounds/LoopbackOutbound.vue";
-  import VlessOutbound from "./outbounds/VlessOutbound.vue";
-  import VmessOutbound from "./outbounds/VmessOutbound.vue";
-  import SocksOutbound from "./outbounds/SocksOutbound.vue";
-  import ShadowsocksOutbound from "./outbounds/ShadowsocksOutbound.vue";
-  import TrojanOutbound from "./outbounds/TrojanOutbound.vue";
-  import WireguardOutbound from "./outbounds/WireguardOutbound.vue";
+  import FreedomOutbound from '@obd/FreedomOutbound.vue';
+  import BlackholeOutbound from '@obd/BlackholeOutbound.vue';
+  import DnsOutbound from '@obd/DnsOutbound.vue';
+  import HttpOutbound from '@obd/HttpOutbound.vue';
+  import LoopbackOutbound from '@obd/LoopbackOutbound.vue';
+  import VlessOutbound from '@obd/VlessOutbound.vue';
+  import VmessOutbound from '@obd/VmessOutbound.vue';
+  import SocksOutbound from '@obd/SocksOutbound.vue';
+  import ShadowsocksOutbound from '@obd/ShadowsocksOutbound.vue';
+  import TrojanOutbound from '@obd/TrojanOutbound.vue';
+  import WireguardOutbound from '@obd/WireguardOutbound.vue';
 
-  import { useI18n } from "vue-i18n";
+  import { useI18n } from 'vue-i18n';
 
   export default defineComponent({
-    name: "Outbounds",
-    emits: ["show-transport", "show-sniffing"],
+    name: 'Outbounds',
+    emits: ['show-transport', 'show-sniffing'],
     components: {
       Modal
     },
@@ -103,7 +103,7 @@
       };
 
       const show_transport = async (proxy: XrayOutboundObject<IProtocolType>) => {
-        emit("show-transport", proxy, "outbound");
+        emit('show-transport', proxy, 'outbound');
       };
 
       const reorder_proxy = (proxy: XrayOutboundObject<IProtocolType>) => {
@@ -138,7 +138,7 @@
       };
 
       const remove_proxy = async (proxy: XrayOutboundObject<IProtocolType>) => {
-        if (!window.confirm(t("components.Outbounds.alert_delete_confirm"))) return;
+        if (!window.confirm(t('components.Outbounds.alert_delete_confirm'))) return;
         let index = config.value.outbounds.indexOf(proxy);
         config.value.outbounds.splice(index, 1);
       };
@@ -146,7 +146,7 @@
       const save_proxy = async () => {
         let proxy = proxyRef.value.proxy;
         if (config.value.outbounds.filter((i) => i != proxy && i.tag == proxy.tag).length > 0) {
-          alert(t("components.Outbounds.alert_tag_exists"));
+          alert(t('components.Outbounds.alert_tag_exists'));
           return;
         }
 

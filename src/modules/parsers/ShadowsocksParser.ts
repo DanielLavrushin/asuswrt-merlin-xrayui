@@ -1,5 +1,5 @@
-import { XrayParsedUrlObject, XrayProtocol, XrayShadowsocksServerObject, XrayStreamSettingsObject } from "../CommonObjects";
-import { XrayOutboundObject, XrayShadowsocksOutboundObject } from "../OutboundObjects";
+import { XrayParsedUrlObject, XrayProtocol, XrayShadowsocksServerObject, XrayStreamSettingsObject } from '../CommonObjects';
+import { XrayOutboundObject, XrayShadowsocksOutboundObject } from '../OutboundObjects';
 
 const ShadowsocksParser = (parsedObj: XrayParsedUrlObject): XrayOutboundObject<XrayShadowsocksOutboundObject> | null => {
   const proxy = new XrayOutboundObject<XrayShadowsocksOutboundObject>();
@@ -13,8 +13,8 @@ const ShadowsocksParser = (parsedObj: XrayParsedUrlObject): XrayOutboundObject<X
 
   proxy.settings.servers = [];
   const server = new XrayShadowsocksServerObject();
-  server.method = parsedObj.parsedParams.method ?? "none";
-  server.password = parsedObj.parsedParams.pass ?? "";
+  server.method = parsedObj.parsedParams.method ?? 'none';
+  server.password = parsedObj.parsedParams.pass ?? '';
   server.address = parsedObj.server;
   server.port = parsedObj.port;
   server.email = parsedObj.tag;

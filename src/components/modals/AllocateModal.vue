@@ -4,13 +4,13 @@
       <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
         <thead>
           <tr>
-            <td colspan="2">{{ $t("components.AllocateModal.label_settings") }}</td>
+            <td colspan="2">{{ $t('components.AllocateModal.label_settings') }}</td>
           </tr>
         </thead>
         <tbody>
           <tr>
             <th>
-              {{ $t("components.AllocateModal.label_strategy") }}
+              {{ $t('components.AllocateModal.label_strategy') }}
               <hint v-html="$t('components.AllocateModal.hint_strategy')"></hint>
             </th>
             <td>
@@ -22,7 +22,7 @@
           </tr>
           <tr v-if="allocate.strategy == 'random'">
             <th>
-              {{ $t("components.AllocateModal.label_refresh") }}
+              {{ $t('components.AllocateModal.label_refresh') }}
               <hint v-html="$t('components.AllocateModal.hint_refresh')"></hint>
             </th>
             <td>
@@ -32,7 +32,7 @@
           </tr>
           <tr v-if="allocate.strategy == 'random'">
             <th>
-              {{ $t("components.AllocateModal.label_concurrency") }}
+              {{ $t('components.AllocateModal.label_concurrency') }}
               <hint v-html="$t('components.AllocateModal.hint_concurrency')"></hint>
             </th>
             <td>
@@ -49,15 +49,15 @@
   </modal>
 </template>
 <script lang="ts">
-  import { defineComponent, ref } from "vue";
-  import Modal from "../Modal.vue";
-  import { XrayAllocateObject } from "../../modules/CommonObjects";
-  import { XrayInboundObject } from "../../modules/InboundObjects";
-  import { IProtocolType } from "../../modules/Interfaces";
-  import Hint from "../Hint.vue";
+  import { defineComponent, ref } from 'vue';
+  import Modal from '../Modal.vue';
+  import { XrayAllocateObject } from '../../modules/CommonObjects';
+  import { XrayInboundObject } from '../../modules/InboundObjects';
+  import { IProtocolType } from '../../modules/Interfaces';
+  import Hint from '../Hint.vue';
 
   export default defineComponent({
-    name: "AllocateModal",
+    name: 'AllocateModal',
     components: {
       Hint,
       Modal
@@ -75,7 +75,7 @@
       };
 
       const save = () => {
-        emit("save", allocate.value);
+        emit('save', allocate.value);
         modal.value.close();
       };
 

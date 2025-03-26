@@ -1,22 +1,22 @@
 <template>
   <tr v-if="isRunning">
-    <th>{{ $t("components.ProcessUptime.label") }}</th>
+    <th>{{ $t('components.ProcessUptime.label') }}</th>
     <td>{{ formattedTime }}</td>
   </tr>
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, watch, inject, computed, onMounted, onBeforeUnmount, Ref } from "vue";
-  import { EngineResponseConfig } from "@/modules/Engine";
-  import { useI18n } from "vue-i18n";
+  import { defineComponent, ref, watch, inject, computed, onMounted, onBeforeUnmount, Ref } from 'vue';
+  import { EngineResponseConfig } from '@/modules/Engine';
+  import { useI18n } from 'vue-i18n';
 
   export default defineComponent({
-    name: "ProcessUptime",
+    name: 'ProcessUptime',
     setup() {
       const { t } = useI18n();
       const seconds = ref(0);
 
-      const uiResponse = inject<Ref<EngineResponseConfig>>("uiResponse");
+      const uiResponse = inject<Ref<EngineResponseConfig>>('uiResponse');
       const isRunning = ref<boolean>(window.xray.server.isRunning);
 
       let uptimeInterval: number | undefined;
@@ -51,7 +51,7 @@
         totalSeconds -= hours * 3600;
         const minutes = Math.floor(totalSeconds / 60);
         totalSeconds -= minutes * 60;
-        return t("components.ProcessUptime.formatted_time", [days, hours, minutes, totalSeconds]);
+        return t('components.ProcessUptime.formatted_time', [days, hours, minutes, totalSeconds]);
       });
 
       return {

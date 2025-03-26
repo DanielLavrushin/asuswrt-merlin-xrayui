@@ -45,13 +45,13 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, watch } from "vue";
-  import { XrayStreamSettingsObject } from "../../modules/CommonObjects";
-  import { XrayOptions } from "../../modules/Options";
-  import HeadersMapping from "./HeadersMapping.vue";
+  import { defineComponent, ref, watch } from 'vue';
+  import { XrayStreamSettingsObject } from '../../modules/CommonObjects';
+  import { XrayOptions } from '../../modules/Options';
+  import HeadersMapping from './HeadersMapping.vue';
 
   export default defineComponent({
-    name: "Http",
+    name: 'Http',
     components: {
       HeadersMapping
     },
@@ -60,7 +60,7 @@
     },
     setup(props) {
       const transport = ref<XrayStreamSettingsObject>(props.transport ?? new XrayStreamSettingsObject());
-      const hosts = ref<string>(transport.value.xhttpSettings?.host?.join("\n") ?? "");
+      const hosts = ref<string>(transport.value.xhttpSettings?.host?.join('\n') ?? '');
       const onheaderapupdate = (headers: any) => {
         if (transport.value.xhttpSettings) transport.value.xhttpSettings.headers = headers;
       };
@@ -68,7 +68,7 @@
         () => hosts.value,
         (newObj) => {
           if (newObj && transport.value.xhttpSettings) {
-            transport.value.xhttpSettings.host = newObj.split("\n").filter((x) => x);
+            transport.value.xhttpSettings.host = newObj.split('\n').filter((x) => x);
           }
         },
         { immediate: true }

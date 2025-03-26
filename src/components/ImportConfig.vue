@@ -1,9 +1,9 @@
 <template>
   <tr>
-    <th>{{ $t("components.ImportConfig.import_config_file") }}</th>
+    <th>{{ $t('components.ImportConfig.import_config_file') }}</th>
     <td>
       <span class="row-buttons">
-        <a class="button_gen button_gen_small" href="#" @click.prevent="show">{{ $t("labels.import") }}</a>
+        <a class="button_gen button_gen_small" href="#" @click.prevent="show">{{ $t('labels.import') }}</a>
       </span>
       <import-config-modal ref="parserModal" v-model:config="config"></import-config-modal>
     </td>
@@ -11,13 +11,13 @@
 </template>
 
 <script>
-  import { defineComponent, ref } from "vue";
-  import Modal from "./Modal.vue";
-  import ImportConfigModal from "./modals/ImportConfigModal.vue";
-  import { XrayObject } from "@/modules/XrayConfig";
+  import { defineComponent, ref } from 'vue';
+  import Modal from './Modal.vue';
+  import ImportConfigModal from './modals/ImportConfigModal.vue';
+  import { XrayObject } from '@/modules/XrayConfig';
 
   export default defineComponent({
-    name: "ImportConfig",
+    name: 'ImportConfig',
     components: {
       Modal,
       ImportConfigModal

@@ -2,7 +2,7 @@
   <tbody v-if="transport.kcpSettings">
     <tr>
       <th>
-        {{ $t("components.Kcp.label_mtu") }}
+        {{ $t('components.Kcp.label_mtu') }}
         <hint v-html="$t('components.Kcp.hint_mtu')"></hint>
       </th>
       <td>
@@ -12,7 +12,7 @@
     </tr>
     <tr>
       <th>
-        {{ $t("components.Kcp.label_tti") }}
+        {{ $t('components.Kcp.label_tti') }}
         <hint v-html="$t('components.Kcp.hint_tti')"></hint>
       </th>
       <td>
@@ -22,7 +22,7 @@
     </tr>
     <tr>
       <th>
-        {{ $t("components.Kcp.label_uplink_capacity") }}
+        {{ $t('components.Kcp.label_uplink_capacity') }}
         <hint v-html="$t('components.Kcp.hint_uplink_capacity')"></hint>
       </th>
       <td>
@@ -32,7 +32,7 @@
     </tr>
     <tr>
       <th>
-        {{ $t("components.Kcp.label_downlink_capacity") }}
+        {{ $t('components.Kcp.label_downlink_capacity') }}
         <hint v-html="$t('components.Kcp.hint_downlink_capacity')"></hint>
       </th>
       <td>
@@ -42,7 +42,7 @@
     </tr>
     <tr>
       <th>
-        {{ $t("components.Kcp.label_congestion") }}
+        {{ $t('components.Kcp.label_congestion') }}
         <hint v-html="$t('components.Kcp.hint_congestion')"></hint>
       </th>
       <td>
@@ -52,7 +52,7 @@
     </tr>
     <tr>
       <th>
-        {{ $t("components.Kcp.label_read_buffer") }}
+        {{ $t('components.Kcp.label_read_buffer') }}
         <hint v-html="$t('components.Kcp.hint_read_buffer')"></hint>
       </th>
       <td>
@@ -62,7 +62,7 @@
     </tr>
     <tr>
       <th>
-        {{ $t("components.Kcp.label_write_buffer") }}
+        {{ $t('components.Kcp.label_write_buffer') }}
         <hint v-html="$t('components.Kcp.hint_write_buffer')"></hint>
       </th>
       <td>
@@ -72,20 +72,20 @@
     </tr>
     <tr>
       <th>
-        {{ $t("components.Kcp.label_seed") }}
+        {{ $t('components.Kcp.label_seed') }}
         <hint v-html="$t('components.Kcp.hint_seed')"></hint>
       </th>
       <td>
         <input type="text" class="input_25_table" v-model="transport.kcpSettings.seed" />
         <span class="hint-color"></span>
         <span class="row-buttons">
-          <a class="button_gen button_gen_small" href="#" @click="regenerate_seed()">{{ $t("labels.regenerate") }}</a>
+          <a class="button_gen button_gen_small" href="#" @click="regenerate_seed()">{{ $t('labels.regenerate') }}</a>
         </span>
       </td>
     </tr>
     <tr v-if="transport.kcpSettings.header">
       <th>
-        {{ $t("components.Kcp.label_header") }}
+        {{ $t('components.Kcp.label_header') }}
         <hint v-html="$t('components.Kcp.hint_header')"></hint>
       </th>
       <td>
@@ -99,13 +99,13 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref } from "vue";
-  import { XrayStreamSettingsObject } from "../../modules/CommonObjects";
-  import Hint from "../Hint.vue";
-  import { XrayStreamKcpSettingsObject } from "@/modules/TransportObjects";
+  import { defineComponent, ref } from 'vue';
+  import { XrayStreamSettingsObject } from '../../modules/CommonObjects';
+  import Hint from '../Hint.vue';
+  import { XrayStreamKcpSettingsObject } from '@/modules/TransportObjects';
 
   export default defineComponent({
-    name: "Kcp",
+    name: 'Kcp',
     components: {
       Hint
     },
@@ -119,8 +119,8 @@
         if (!transport.value.kcpSettings) return;
         const randomBytes = crypto.getRandomValues(new Uint8Array(16));
         transport.value.kcpSettings.seed = Array.from(randomBytes)
-          .map((byte) => byte.toString(16).padStart(2, "0"))
-          .join("");
+          .map((byte) => byte.toString(16).padStart(2, '0'))
+          .join('');
       };
 
       return {

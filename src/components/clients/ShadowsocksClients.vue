@@ -49,14 +49,14 @@
 </template>
 
 <script lang="ts">
-  import { XrayOptions } from '../../modules/Options';
-  import { XrayShadowsocksClientObject } from '../../modules/ClientsObjects';
+  import { XrayOptions } from '@/modules/Options';
+  import { XrayShadowsocksClientObject } from '@/modules/ClientsObjects';
   import { defineComponent, ref } from 'vue';
-  import engine from '../../modules/Engine';
-  import xrayConfig from '../../modules/XrayConfig';
+  import engine from '@/modules/Engine';
+  import xrayConfig from '@/modules/XrayConfig';
   import QrcodeVue from 'qrcode.vue';
 
-  import modal from '../Modal.vue';
+  import modal from '@main/Modal.vue';
 
   export default defineComponent({
     name: 'ShadowsocksClients',

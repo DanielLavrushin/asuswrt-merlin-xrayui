@@ -47,11 +47,11 @@
 </template>
 
 <script lang="ts">
-  import { engine } from '../../modules/Engine';
-  import { XrayVlessClientObject } from '../../modules/ClientsObjects';
-  import { XrayOptions } from '../../modules/Options';
+  import { engine } from '@/modules/Engine';
+  import { XrayVlessClientObject } from '@/modules/ClientsObjects';
+  import { XrayOptions } from '@/modules/Options';
   import { defineComponent, ref } from 'vue';
-  import modal from '../Modal.vue';
+  import modal from '@main/Modal.vue';
   import Qr from './QrCodeClient.vue';
 
   export default defineComponent({

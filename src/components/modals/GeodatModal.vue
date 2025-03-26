@@ -69,9 +69,9 @@
 
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import Modal from '../Modal.vue';
-  import Hint from '../Hint.vue';
-  import engine, { EngineGeodatConfig, GeodatTagRequest, SubmtActions } from '../../modules/Engine';
+  import Modal from '@main/Modal.vue';
+  import Hint from '@main/Hint.vue';
+  import engine, { EngineGeodatConfig, GeodatTagRequest, SubmtActions } from '@/modules/Engine';
   import axios from 'axios';
   import { useI18n } from 'vue-i18n';
 

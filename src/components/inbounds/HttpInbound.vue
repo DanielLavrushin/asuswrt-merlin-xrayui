@@ -30,11 +30,11 @@
 
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import Clients from '../clients/HttpClients.vue';
+  import Clients from '@clients/HttpClients.vue';
   import InboundCommon from './InboundCommon.vue';
-  import { XrayProtocol } from '../../modules/CommonObjects';
-  import { XrayHttpInboundObject, XrayInboundObject } from '../../modules/InboundObjects';
-  import Hint from '../Hint.vue';
+  import { XrayProtocol } from '@/modules/CommonObjects';
+  import { XrayHttpInboundObject, XrayInboundObject } from '@/modules/InboundObjects';
+  import Hint from '@main/Hint.vue';
 
   export default defineComponent({
     name: 'HttpInbound',

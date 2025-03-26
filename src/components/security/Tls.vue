@@ -1,16 +1,16 @@
 <template>
   <div class="formfontdesc">
-    <p>{{ $t("components.Tls.modal_desc") }}</p>
+    <p>{{ $t('components.Tls.modal_desc') }}</p>
     <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="2">{{ $t("components.Tls.modal_title") }}</td>
+          <td colspan="2">{{ $t('components.Tls.modal_title') }}</td>
         </tr>
       </thead>
       <tbody v-if="transport.tlsSettings">
         <tr v-if="proxyType === 'outbound'">
           <th>
-            {{ $t("components.Tls.label_server_name") }}
+            {{ $t('components.Tls.label_server_name') }}
             <hint v-html="$t('components.Tls.hint_server_name')"></hint>
           </th>
           <td>
@@ -20,7 +20,7 @@
         </tr>
         <tr v-if="proxyType === 'outbound'">
           <th>
-            {{ $t("components.Tls.label_allow_insecure") }}
+            {{ $t('components.Tls.label_allow_insecure') }}
             <hint v-html="$t('components.Tls.hint_allow_insecure')"></hint>
           </th>
           <td>
@@ -30,7 +30,7 @@
         </tr>
         <tr v-if="proxyType === 'inbound'">
           <th>
-            {{ $t("components.Tls.label_reject_unknown_sni") }}
+            {{ $t('components.Tls.label_reject_unknown_sni') }}
             <hint v-html="$t('components.Tls.hint_reject_unknown_sni')"></hint>
           </th>
           <td>
@@ -40,7 +40,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.Tls.label_dont_use_ca") }}
+            {{ $t('components.Tls.label_dont_use_ca') }}
             <hint v-html="$t('components.Tls.hint_dont_use_ca')"></hint>
           </th>
           <td>
@@ -50,7 +50,7 @@
         </tr>
         <tr v-if="proxyType === 'outbound'">
           <th>
-            {{ $t("components.Tls.label_session_resumption") }}
+            {{ $t('components.Tls.label_session_resumption') }}
             <hint v-html="$t('components.Tls.hint_session_resumption')"></hint>
           </th>
           <td>
@@ -60,7 +60,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.Tls.label_alpn") }}
+            {{ $t('components.Tls.label_alpn') }}
             <hint v-html="$t('components.Tls.hint_alpn')"></hint>
           </th>
           <td>
@@ -73,7 +73,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.Tls.label_tls_version") }}
+            {{ $t('components.Tls.label_tls_version') }}
             <hint v-html="$t('components.Tls.hint_tls_version')"></hint>
           </th>
           <td>
@@ -93,7 +93,7 @@
         </tr>
         <tr v-if="proxyType === 'outbound'">
           <th>
-            {{ $t("components.Tls.label_fingerprint") }}
+            {{ $t('components.Tls.label_fingerprint') }}
             <hint v-html="$t('components.Tls.hint_fingerprint')"></hint>
           </th>
           <td>
@@ -107,7 +107,7 @@
         </tr>
         <tr v-if="proxyType === 'inbound'">
           <th>
-            {{ $t("components.Tls.label_certificate") }}
+            {{ $t('components.Tls.label_certificate') }}
             <hint v-html="$t('components.Tls.hint_certificate')"></hint>
           </th>
           <td>
@@ -122,15 +122,15 @@
 </template>
 
 <script lang="ts">
-  import engine, { SubmtActions } from "@/modules/Engine";
-  import { defineComponent, ref, watch } from "vue";
-  import CertificatesModal from "../modals/CertificatesModal.vue";
-  import { XrayStreamSettingsObject, XrayStreamTlsSettingsObject, XrayStreamTlsCertificateObject } from "@/modules/CommonObjects";
-  import { XrayOptions } from "@/modules/Options";
-  import Hint from "@/components/Hint.vue";
+  import { defineComponent, ref, watch } from 'vue';
+  import engine, { SubmtActions } from '@/modules/Engine';
+  import CertificatesModal from '@modal/CertificatesModal.vue';
+  import { XrayStreamSettingsObject, XrayStreamTlsSettingsObject, XrayStreamTlsCertificateObject } from '@/modules/CommonObjects';
+  import { XrayOptions } from '@/modules/Options';
+  import Hint from '@/components/Hint.vue';
 
   export default defineComponent({
-    name: "Tls",
+    name: 'Tls',
     components: {
       CertificatesModal,
       Hint

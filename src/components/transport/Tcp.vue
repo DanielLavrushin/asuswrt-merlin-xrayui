@@ -15,8 +15,8 @@
 
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import { XrayStreamSettingsObject } from '../../modules/CommonObjects';
-  import Hint from '../Hint.vue';
+  import { XrayStreamSettingsObject } from '@/modules/CommonObjects';
+  import Hint from '@main/Hint.vue';
 
   export default defineComponent({
     name: 'Tcp',

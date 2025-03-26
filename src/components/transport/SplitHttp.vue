@@ -69,7 +69,7 @@
 
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import { XrayStreamSettingsObject } from '../../modules/CommonObjects';
+  import { XrayStreamSettingsObject } from '@/modules/CommonObjects';
 
   import HeadersMapping from './HeadersMapping.vue';
   export default defineComponent({

@@ -56,10 +56,10 @@
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
   import OutboundCommon from './OutboundCommon.vue';
-  import { XrayOutboundObject } from '../../modules/OutboundObjects';
-  import { XrayTrojanOutboundObject } from '../../modules/OutboundObjects';
-  import { XrayProtocol } from '../../modules/Options';
-  import Hint from '../Hint.vue';
+  import { XrayOutboundObject } from '@/modules/OutboundObjects';
+  import { XrayTrojanOutboundObject } from '@/modules/OutboundObjects';
+  import { XrayProtocol } from '@/modules/Options';
+  import Hint from '@main/Hint.vue';
 
   export default defineComponent({
     name: 'HttpOutbound',

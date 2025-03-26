@@ -114,12 +114,11 @@
 
 <script lang="ts">
   import { defineComponent, inject, Ref, ref, watch } from 'vue';
-  import engine, { EngineResponseConfig, SubmtActions } from '../../modules/Engine';
+  import engine, { EngineResponseConfig, SubmtActions } from '@/modules/Engine';
   import { XrayObject } from '@/modules/XrayConfig';
   import { XrayProtocol, XrayRoutingRuleObject } from '@/modules/CommonObjects';
-  import Hint from '@/components/Hint.vue';
-
-  import Modal from './../Modal.vue';
+  import Hint from '@main/Hint.vue';
+  import Modal from '@main/Modal.vue';
   import { XrayInboundObject, XraySocksInboundObject } from '@/modules/InboundObjects';
 
   class GeneralOptions {

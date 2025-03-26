@@ -54,8 +54,8 @@
 
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import { XrayStreamSettingsObject } from '../../modules/CommonObjects';
-  import Hint from '../Hint.vue';
+  import { XrayStreamSettingsObject } from '@/modules/CommonObjects';
+  import Hint from '@main/Hint.vue';
 
   import HeadersMapping from './HeadersMapping.vue';
   export default defineComponent({

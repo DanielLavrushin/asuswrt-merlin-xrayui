@@ -36,9 +36,9 @@
 
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import { XrayStreamSettingsObject } from '../../modules/CommonObjects';
+  import { XrayStreamSettingsObject } from '@/modules/CommonObjects';
   import HeadersMapping from './HeadersMapping.vue';
-  import Hint from '../Hint.vue';
+  import Hint from '@main/Hint.vue';
 
   export default defineComponent({
     name: 'HttpUpgrade',

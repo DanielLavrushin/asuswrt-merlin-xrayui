@@ -7,7 +7,7 @@
 
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import Modal from '../Modal.vue';
+  import Modal from '@main/Modal.vue';
   import QrcodeVue from 'qrcode.vue';
   import { XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject } from '@/modules/CommonObjects';
 

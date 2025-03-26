@@ -19,8 +19,8 @@
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
   import axios from 'axios';
-  import Modal from '../Modal.vue';
-  import Hint from '../Hint.vue';
+  import Modal from '@main/Modal.vue';
+  import Hint from '@main/Hint.vue';
   import engine, { SubmtActions } from '@/modules/Engine';
   import { useI18n } from 'vue-i18n';
 

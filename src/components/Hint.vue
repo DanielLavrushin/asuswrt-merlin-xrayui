@@ -1,5 +1,4 @@
 <template>
-  <!-- Render slot content normally -->
   <span class="xrayui-hint" ref="elm" v-show="visible">
     <slot></slot>
   </span>

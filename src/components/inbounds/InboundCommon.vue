@@ -36,11 +36,11 @@
 
 <script lang="ts">
   import { defineComponent, ref, watch } from 'vue';
-  import AllocateModal from '../modals/AllocateModal.vue';
-  import { XrayInboundObject } from '../../modules/InboundObjects';
-  import { IProtocolType } from '../../modules/Interfaces';
-  import engine from '../../modules/Engine';
-  import Hint from '../Hint.vue';
+  import AllocateModal from '@modal/AllocateModal.vue';
+  import { XrayInboundObject } from '@/modules/InboundObjects';
+  import { IProtocolType } from '@/modules/Interfaces';
+  import engine from '@/modules/Engine';
+  import Hint from '@main/Hint.vue';
 
   export default defineComponent({
     name: 'InboundCommon',

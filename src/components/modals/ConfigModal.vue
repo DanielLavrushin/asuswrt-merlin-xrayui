@@ -21,8 +21,8 @@
 
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import Modal from '../Modal.vue';
-  import Hint from '../Hint.vue';
+  import Modal from '@main/Modal.vue';
+  import Hint from '@main/Hint.vue';
   import JsonPretty from 'vue-json-pretty';
   import 'vue-json-pretty/lib/styles.css';
   import { useI18n } from 'vue-i18n';

@@ -27,7 +27,7 @@
 </template>
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import Modal from './../Modal.vue';
+  import Modal from '@main/Modal.vue';
   import { XrayReverseItemType, XrayReverseItem } from '@/modules/CommonObjects';
   export default defineComponent({
     name: 'ReverseItemsModal',

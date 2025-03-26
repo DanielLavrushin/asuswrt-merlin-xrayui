@@ -141,9 +141,9 @@
 
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import Modal from '../Modal.vue';
+  import Modal from '@main/Modal.vue';
   import { XrayRoutingPolicy } from '@/modules/CommonObjects';
-  import Hint from '../Hint.vue';
+  import Hint from '@main/Hint.vue';
 
   class MacDevice {
     public mac!: string;

@@ -16,11 +16,11 @@
 </template>
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import Clients from '../clients/VmessClients.vue';
+  import Clients from '@clients/VmessClients.vue';
   import InboundCommon from './InboundCommon.vue';
-  import { XrayProtocol } from '../../modules/CommonObjects';
-  import { XrayInboundObject } from '../../modules/InboundObjects';
-  import { XrayVmessInboundObject } from '../../modules/InboundObjects';
+  import { XrayProtocol } from '@/modules/CommonObjects';
+  import { XrayInboundObject } from '@/modules/InboundObjects';
+  import { XrayVmessInboundObject } from '@/modules/InboundObjects';
 
   export default defineComponent({
     name: 'VmessInbound',

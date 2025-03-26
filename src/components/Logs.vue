@@ -60,7 +60,7 @@
 <script lang="ts">
   import { defineComponent, onMounted, onBeforeUnmount, ref, computed, watch } from 'vue';
   import axios from 'axios';
-  import engine, { SubmtActions } from '../modules/Engine';
+  import engine, { SubmtActions } from '@/modules/Engine';
   import { XrayLogObject } from '@/modules/CommonObjects';
 
   class AccessLogEntry {

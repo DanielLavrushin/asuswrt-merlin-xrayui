@@ -68,11 +68,11 @@
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
   import engine, { SubmtActions } from '@/modules/Engine';
-  import Modal from '../Modal.vue';
+  import Modal from '@main/Modal.vue';
   import jsQR from 'jsqr';
   import { XrayObject } from '@/modules/XrayConfig';
   import ProxyParser from '@/modules/parsers/ProxyParser';
-  import Hint from '../Hint.vue';
+  import Hint from '@main/Hint.vue';
   import { XrayDnsObject, XrayLogObject, XrayRoutingPolicy, XrayProtocol, XrayRoutingObject, XraySniffingObject } from '@/modules/CommonObjects';
   import { XrayDokodemoDoorInboundObject, XrayInboundObject } from '@/modules/InboundObjects';
   import { XrayBlackholeOutboundObject, XrayFreedomOutboundObject, XrayOutboundObject } from '@/modules/OutboundObjects';

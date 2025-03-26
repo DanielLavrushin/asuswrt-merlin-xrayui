@@ -41,13 +41,13 @@
 </template>
 
 <script lang="ts">
-  import { XrayOptions } from '../../modules/Options';
-  import { XrayHttpClientObject } from '../../modules/ClientsObjects';
-  import xrayConfig from '../../modules/XrayConfig';
+  import { XrayOptions } from '@/modules/Options';
+  import { XrayHttpClientObject } from '@/modules/ClientsObjects';
+  import xrayConfig from '@/modules/XrayConfig';
   import { defineComponent, ref } from 'vue';
   import QrcodeVue from 'qrcode.vue';
 
-  import modal from '../Modal.vue';
+  import modal from '@main/Modal.vue';
 
   export default defineComponent({
     name: 'VlessClients',

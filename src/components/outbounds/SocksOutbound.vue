@@ -35,10 +35,10 @@
 </template>
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import { XrayOutboundObject, XraySocksOutboundObject } from '../../modules/OutboundObjects';
-  import { XrayProtocol } from '../../modules/CommonObjects';
+  import { XrayOutboundObject, XraySocksOutboundObject } from '@/modules/OutboundObjects';
+  import { XrayProtocol } from '@/modules/CommonObjects';
   import OutboundCommon from './OutboundCommon.vue';
-  import Clients from './../clients/SocksClients.vue';
+  import Clients from '@clients/SocksClients.vue';
   import Hint from '@main/Hint.vue';
 
   export default defineComponent({

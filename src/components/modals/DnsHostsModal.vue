@@ -41,7 +41,7 @@
 </template>
 <script lang="ts">
   import { defineComponent, ref, watch } from 'vue';
-  import Modal from '../Modal.vue';
+  import Modal from '@main/Modal.vue';
 
   export default defineComponent({
     name: 'DnsHostsModal',

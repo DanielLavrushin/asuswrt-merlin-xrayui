@@ -4,13 +4,13 @@
     <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="2">{{ $t("components.Reality.modal_title") }}</td>
+          <td colspan="2">{{ $t('components.Reality.modal_title') }}</td>
         </tr>
       </thead>
       <tbody v-if="transport.realitySettings">
         <tr>
           <th>
-            {{ $t("components.Reality.label_enable_logs") }}
+            {{ $t('components.Reality.label_enable_logs') }}
             <hint v-html="$t('components.Reality.hint_enable_logs')"></hint>
           </th>
           <td>
@@ -20,7 +20,7 @@
         </tr>
         <tr v-if="proxyType === 'inbound'">
           <th>
-            {{ $t("components.Reality.label_dest") }}
+            {{ $t('components.Reality.label_dest') }}
             <hint v-html="$t('components.Reality.hint_dest')"></hint>
           </th>
           <td>
@@ -29,7 +29,7 @@
         </tr>
         <tr v-if="proxyType === 'inbound'">
           <th>
-            {{ $t("components.Reality.label_server_names") }}
+            {{ $t('components.Reality.label_server_names') }}
             <hint v-html="$t('components.Reality.hint_server_names')"></hint>
           </th>
           <td>
@@ -40,7 +40,7 @@
         </tr>
         <tr v-if="proxyType === 'outbound'">
           <th>
-            {{ $t("components.Reality.label_server_name") }}
+            {{ $t('components.Reality.label_server_name') }}
             <hint v-html="$t('components.Reality.hint_server_name')"></hint>
           </th>
           <td>
@@ -50,7 +50,7 @@
         </tr>
         <tr v-if="proxyType === 'outbound'">
           <th>
-            {{ $t("components.Reality.label_short_id") }}
+            {{ $t('components.Reality.label_short_id') }}
             <hint v-html="$t('components.Reality.hint_short_id')"></hint>
           </th>
           <td>
@@ -60,7 +60,7 @@
         </tr>
         <tr v-if="proxyType === 'inbound' && transport.realitySettings.shortIds">
           <th>
-            {{ $t("components.Reality.label_short_ids") }}
+            {{ $t('components.Reality.label_short_ids') }}
             <hint v-html="$t('components.Reality.hint_short_ids')"></hint>
           </th>
           <td>
@@ -79,7 +79,7 @@
         </tr>
         <tr v-if="proxyType === 'inbound'">
           <th>
-            {{ $t("components.Reality.label_proxy_version") }}
+            {{ $t('components.Reality.label_proxy_version') }}
             <hint v-html="$t('components.Reality.hint_proxy_version')"></hint>
           </th>
           <td>
@@ -93,7 +93,7 @@
         </tr>
         <tr v-if="proxyType === 'inbound'">
           <th>
-            {{ $t("components.Reality.label_private_key") }}
+            {{ $t('components.Reality.label_private_key') }}
             <hint v-html="$t('components.Reality.hintl_private_key')"></hint>
           </th>
           <td>
@@ -105,7 +105,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.Reality.label_public_key") }}
+            {{ $t('components.Reality.label_public_key') }}
             <hint v-html="$t('components.Reality.hint_public_key')"></hint>
           </th>
           <td>
@@ -114,7 +114,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.Reality.label_spider_x") }}
+            {{ $t('components.Reality.label_spider_x') }}
             <hint v-html="$t('components.Reality.hint_spider_x')"></hint>
           </th>
           <td>
@@ -123,7 +123,7 @@
         </tr>
         <tr v-if="proxyType === 'outbound'">
           <th>
-            {{ $t("components.Reality.label_fingerprint") }}
+            {{ $t('components.Reality.label_fingerprint') }}
             <hint v-html="$t('components.Reality.hint_fingerprint')"></hint>
           </th>
           <td>
@@ -141,15 +141,15 @@
 </template>
 
 <script lang="ts">
-  import Modal from "../Modal.vue";
-  import engine, { SubmtActions } from "@/modules/Engine";
-  import { defineComponent, ref, watch } from "vue";
-  import { XrayStreamRealitySettingsObject, XrayStreamSettingsObject } from "@/modules/CommonObjects";
-  import XrayOptions from "@/modules/Options";
-  import Hint from "@/components/Hint.vue";
+  import { defineComponent, ref, watch } from 'vue';
+  import Modal from '@main/Modal.vue';
+  import Hint from '@/components/Hint.vue';
+  import engine, { SubmtActions } from '@/modules/Engine';
+  import { XrayStreamRealitySettingsObject, XrayStreamSettingsObject } from '@/modules/CommonObjects';
+  import XrayOptions from '@/modules/Options';
 
   export default defineComponent({
-    name: "Reality",
+    name: 'Reality',
     components: {
       Modal,
       Hint
@@ -167,22 +167,22 @@
       const transport = ref<XrayStreamSettingsObject>(props.transport ?? new XrayStreamSettingsObject());
       transport.value.realitySettings = transport.value.realitySettings ?? new XrayStreamRealitySettingsObject();
 
-      const serverNames = ref(transport.value.realitySettings.serverNames?.join("\n") ?? "");
-      const shortIds = ref(transport.value.realitySettings.shortIds?.join("\n") ?? "");
+      const serverNames = ref(transport.value.realitySettings.serverNames?.join('\n') ?? '');
+      const shortIds = ref(transport.value.realitySettings.shortIds?.join('\n') ?? '');
 
       const manage_short_ids = () => {
         shortIdsModal.value.show();
       };
       const append_shortid = () => {
-        shortIds.value = ((shortIds.value ? shortIds.value + "\n" : "") + generateShortId())
-          .split("\n")
-          .filter((line) => line.trim() !== "")
-          .join("\n");
+        shortIds.value = ((shortIds.value ? shortIds.value + '\n' : '') + generateShortId())
+          .split('\n')
+          .filter((line) => line.trim() !== '')
+          .join('\n');
       };
       const generateShortId = (byteLength = 8) => {
         const array = new Uint8Array(byteLength);
         window.crypto.getRandomValues(array);
-        return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join("");
+        return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
       };
       const regenerate_keys = async () => {
         window.showLoading();
@@ -197,7 +197,7 @@
         }
       };
 
-      if (proxyType.value === "inbound") {
+      if (proxyType.value === 'inbound') {
         if (!transport.value.realitySettings.shortIds) {
           transport.value.realitySettings.shortIds = [];
         }
@@ -206,7 +206,7 @@
           () => serverNames.value,
           (newObj) => {
             if (newObj && transport.value.realitySettings) {
-              transport.value.realitySettings.serverNames = newObj.split("\n").filter((x) => x);
+              transport.value.realitySettings.serverNames = newObj.split('\n').filter((x) => x);
             }
           },
           { immediate: true }
@@ -216,7 +216,7 @@
           () => shortIds.value,
           (newObj) => {
             if (newObj && transport.value.realitySettings) {
-              transport.value.realitySettings.shortIds = newObj.split("\n").filter((x) => x);
+              transport.value.realitySettings.shortIds = newObj.split('\n').filter((x) => x);
             }
           },
           { immediate: true }

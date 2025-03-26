@@ -44,12 +44,12 @@
 
 <script lang="ts">
   import { defineComponent, ref, computed, watch, inject, Ref, onMounted } from 'vue';
-  import engine, { SubmtActions } from '../modules/Engine';
-  import GeneralOptionsModal from './modals/GeneralOptionsModal.vue';
+  import engine, { SubmtActions } from '@/modules/Engine';
+  import GeneralOptionsModal from '@modal/GeneralOptionsModal.vue';
   import ImportConfig from './ImportConfig.vue';
   import { XrayObject } from '@/modules/XrayConfig';
   import { XrayProtocol, XrayRoutingRuleObject } from '@/modules/CommonObjects';
-  import ConfigModal from './modals/ConfigModal.vue';
+  import ConfigModal from '@modal/ConfigModal.vue';
   import axios from 'axios';
   import { useI18n } from 'vue-i18n';
   import ProcessUptime from './ProcessUptime.vue';

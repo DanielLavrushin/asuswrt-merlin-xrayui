@@ -27,11 +27,11 @@
 
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import Modal from './Modal.vue';
+  import Modal from '@main/Modal.vue';
   import axios from 'axios';
   import vClean from 'version-clean';
   import vCompare from 'version-compare';
-  import engine, { SubmtActions } from '../modules/Engine';
+  import engine, { SubmtActions } from '@/modules/Engine';
   import markdownit from 'markdown-it';
 
   export default defineComponent({

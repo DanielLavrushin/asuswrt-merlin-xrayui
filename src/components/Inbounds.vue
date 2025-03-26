@@ -59,16 +59,16 @@
 
 <script lang="ts">
   import { defineComponent, ref, computed, nextTick, watch } from 'vue';
-  import engine from '../modules/Engine';
-  import Modal from './Modal.vue';
+  import engine from '@/modules/Engine';
+  import Modal from '@main/Modal.vue';
 
-  import { IProtocolType } from '../modules/Interfaces';
-  import { XrayProtocol } from '../modules/CommonObjects';
-  import { XrayInboundObject } from '../modules/InboundObjects';
-  import { XrayProtocolOption } from '../modules/CommonObjects';
+  import { IProtocolType } from '@/modules/Interfaces';
+  import { XrayProtocol } from '@/modules/CommonObjects';
+  import { XrayInboundObject } from '@/modules/InboundObjects';
+  import { XrayProtocolOption } from '@/modules/CommonObjects';
 
-  import { xrayProtocols } from '../modules/XrayConfig';
-  import { XrayProtocolMode } from '../modules/Options';
+  import { xrayProtocols } from '@/modules/XrayConfig';
+  import { XrayProtocolMode } from '@/modules/Options';
 
   import DocodemoDoorInbound from '@ibd/DocodemoDoorInbound.vue';
   import VmessInbound from '@ibd/VmessInbound.vue';

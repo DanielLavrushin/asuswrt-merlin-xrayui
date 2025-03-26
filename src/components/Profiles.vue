@@ -34,9 +34,9 @@
 </template>
 <script lang="ts">
   import { defineComponent, ref, watch, inject, Ref } from 'vue';
-  import Modal from './Modal.vue';
-  import Hint from './Hint.vue';
-  import engine, { EngineResponseConfig, SubmtActions } from '../modules/Engine';
+  import Modal from '@main/Modal.vue';
+  import Hint from '@main/Hint.vue';
+  import engine, { EngineResponseConfig, SubmtActions } from '@/modules/Engine';
 
   export default defineComponent({
     name: 'Profiles',

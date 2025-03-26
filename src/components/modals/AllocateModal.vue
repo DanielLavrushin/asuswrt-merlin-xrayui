@@ -50,11 +50,11 @@
 </template>
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import Modal from '../Modal.vue';
-  import { XrayAllocateObject } from '../../modules/CommonObjects';
-  import { XrayInboundObject } from '../../modules/InboundObjects';
-  import { IProtocolType } from '../../modules/Interfaces';
-  import Hint from '../Hint.vue';
+  import Modal from '@main/Modal.vue';
+  import { XrayAllocateObject } from '@/modules/CommonObjects';
+  import { XrayInboundObject } from '@/modules/InboundObjects';
+  import { IProtocolType } from '@/modules/Interfaces';
+  import Hint from '@main/Hint.vue';
 
   export default defineComponent({
     name: 'AllocateModal',

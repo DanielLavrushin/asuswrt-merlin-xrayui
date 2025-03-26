@@ -38,7 +38,7 @@
 <script lang="ts">
   import { defineComponent, ref, onMounted, onBeforeUnmount, watch } from 'vue';
   import axios from 'axios';
-  import engine, { SubmtActions } from '../modules/Engine';
+  import engine, { SubmtActions } from '@/modules/Engine';
   import xrayConfig from '@/modules/XrayConfig';
   import { XrayProtocol } from '@/modules/Options';
 

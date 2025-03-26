@@ -7,9 +7,9 @@
 </template>
 
 <script lang="ts">
-  import { EngineResponseConfig } from '@/modules/Engine';
   import { defineComponent, inject, onMounted, Ref, ref, watch } from 'vue';
-  import XrayCoreVersionModal from './modals/XrayCoreVersionModal.vue';
+  import { EngineResponseConfig } from '@/modules/Engine';
+  import XrayCoreVersionModal from '@modal/XrayCoreVersionModal.vue';
 
   export default defineComponent({
     name: 'XrayVersion',

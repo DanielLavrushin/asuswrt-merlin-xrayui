@@ -36,11 +36,11 @@
 </template>
 <script lang="ts">
   import { defineComponent, inject, ref, Ref, watch } from 'vue';
-  import Hint from './Hint.vue';
-  import Modal from './Modal.vue';
+  import Hint from '@main/Hint.vue';
+  import Modal from '@main/Modal.vue';
   import { XrayReverseObject, XrayReverseItemType } from '@/modules/CommonObjects';
   import xrayConfig from '@/modules/XrayConfig';
-  import ReverseItemsModal from './modals/ReverseItemsModal.vue';
+  import ReverseItemsModal from '@modal/ReverseItemsModal.vue';
 
   export default defineComponent({
     name: 'ReverseProxy',

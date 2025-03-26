@@ -47,12 +47,12 @@
 
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import engine from '../../modules/Engine';
-  import xrayConfig from '../../modules/XrayConfig';
-  import { XrayVmessClientObject } from '../../modules/ClientsObjects';
+  import engine from '@/modules/Engine';
+  import xrayConfig from '@/modules/XrayConfig';
+  import { XrayVmessClientObject } from '@/modules/ClientsObjects';
   import Qr from './QrCodeClient.vue';
 
-  import modal from '../Modal.vue';
+  import modal from '@main/Modal.vue';
 
   export default defineComponent({
     name: 'VlessClients',

@@ -89,13 +89,13 @@
 <script lang="ts">
   import { defineComponent, ref, watch, inject, onMounted, Ref } from 'vue';
 
-  import { XrayRoutingObject, XrayRoutingRuleObject } from '../modules/CommonObjects';
-  import xrayConfig from '../modules/XrayConfig';
-  import engine, { EngineResponseConfig, SubmtActions } from '../modules/Engine';
-  import PolicyModal from './modals/PolicyModal.vue';
-  import RulesModal from './modals/RulesModal.vue';
-  import Hint from './Hint.vue';
-  import GeodatModal from './modals/GeodatModal.vue';
+  import { XrayRoutingObject, XrayRoutingRuleObject } from '@/modules/CommonObjects';
+  import xrayConfig from '@/modules/XrayConfig';
+  import engine, { EngineResponseConfig, SubmtActions } from '@/modules/Engine';
+  import PolicyModal from '@modal/PolicyModal.vue';
+  import RulesModal from '@modal/RulesModal.vue';
+  import Hint from '@main/Hint.vue';
+  import GeodatModal from '@modal/GeodatModal.vue';
   export default defineComponent({
     name: 'Routing',
     components: {

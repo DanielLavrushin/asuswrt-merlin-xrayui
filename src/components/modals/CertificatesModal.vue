@@ -90,9 +90,9 @@
 
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import { XrayStreamTlsCertificateObject } from '../../modules/CommonObjects';
-  import Modal from '../Modal.vue';
-  import Hint from '../Hint.vue';
+  import { XrayStreamTlsCertificateObject } from '@/modules/CommonObjects';
+  import Modal from '@main/Modal.vue';
+  import Hint from '@main/Hint.vue';
 
   export default defineComponent({
     name: 'CertificatesModal',

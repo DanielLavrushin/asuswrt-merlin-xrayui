@@ -67,22 +67,21 @@
 <script lang="ts">
   import { defineComponent, ref, computed } from 'vue';
 
-  import { ITransportNetwork, IProtocolType } from '../../modules/Interfaces';
-  import { XrayInboundObject } from '../../modules/InboundObjects';
-  import { XrayOutboundObject } from '../../modules/OutboundObjects';
-  import { XrayOptions } from '../../modules/Options';
-  import { XrayStreamGrpcSettingsObject, XrayStreamTcpSettingsObject, XrayStreamKcpSettingsObject, XrayStreamHttpSettingsObject, XrayStreamWsSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamSplitHttpSettingsObject } from '../../modules/TransportObjects';
-  import { XrayStreamSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject } from '../../modules/CommonObjects';
+  import { ITransportNetwork, IProtocolType } from '@/modules/Interfaces';
+  import { XrayInboundObject } from '@/modules/InboundObjects';
+  import { XrayOutboundObject } from '@/modules/OutboundObjects';
+  import { XrayOptions } from '@/modules/Options';
+  import { XrayStreamGrpcSettingsObject, XrayStreamTcpSettingsObject, XrayStreamKcpSettingsObject, XrayStreamHttpSettingsObject, XrayStreamWsSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamSplitHttpSettingsObject } from '@/modules/TransportObjects';
+  import { XrayStreamSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject } from '@/modules/CommonObjects';
 
-  import Hint from '../Hint.vue';
-  import Modal from '../Modal.vue';
+  import Hint from '@main/Hint.vue';
+  import Modal from '@main/Modal.vue';
 
   import NetworkTcp from '../transport/Tcp.vue';
   import NetworkKcp from '../transport/Kcp.vue';
   import NetworkWs from '../transport/Ws.vue';
   import NetworkHttp from '../transport/Http.vue';
   import NetworkHttpUpgrade from '../transport/HttpUpgrade.vue';
-  import NetworkSplitHttp from '../transport/SplitHttp.vue';
   import NetworkGrpc from '../transport/Grpc.vue';
   import Sockopt from '../transport/Sockopt.vue';
 
@@ -125,9 +124,6 @@
           case 'httpupgrade':
             transport.value.httpupgradeSettings = transport.value.httpupgradeSettings ?? new XrayStreamHttpUpgradeSettingsObject();
             return NetworkHttpUpgrade;
-          /* case "splithttp":
-           transport.value.splithttpSettings = transport.value.splithttpSettings ?? new XrayStreamSplitHttpSettingsObject();
-           return NetworkSplitHttp;*/
           case 'grpc':
             transport.value.grpcSettings = transport.value.grpcSettings ?? new XrayStreamGrpcSettingsObject();
             return NetworkGrpc;

@@ -103,12 +103,12 @@
 
 <script lang="ts">
   import { defineComponent, ref, watch } from 'vue';
-  import engine from '../modules/Engine';
-  import { XrayDnsObject } from '../modules/CommonObjects';
-  import xrayConfig from '../modules/XrayConfig';
-  import DnsHostsModal from './modals/DnsHostsModal.vue';
-  import DnsServersModal from './modals/DnsServersModal.vue';
-  import Hint from './Hint.vue';
+  import engine from '@/modules/Engine';
+  import { XrayDnsObject } from '@/modules/CommonObjects';
+  import xrayConfig from '@/modules/XrayConfig';
+  import DnsHostsModal from '@modal/DnsHostsModal.vue';
+  import DnsServersModal from '@modal/DnsServersModal.vue';
+  import Hint from '@main/Hint.vue';
 
   export default defineComponent({
     name: 'Dns',

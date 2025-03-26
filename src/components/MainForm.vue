@@ -64,13 +64,13 @@
 
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import engine, { SubmtActions } from '../modules/Engine';
+  import engine, { SubmtActions } from '@/modules/Engine';
 
-  import Modal from './Modal.vue';
+  import Modal from '@main/Modal.vue';
 
-  import { IProtocolType } from '../modules/Interfaces';
-  import { XrayInboundObject } from '../modules/InboundObjects';
-  import { XrayOutboundObject } from '../modules/OutboundObjects';
+  import { IProtocolType } from '@/modules/Interfaces';
+  import { XrayInboundObject } from '@/modules/InboundObjects';
+  import { XrayOutboundObject } from '@/modules/OutboundObjects';
 
   import ServiceStatus from './ServiceStatus.vue';
   import Inbounds from './Inbounds.vue';
@@ -81,8 +81,8 @@
   import ClientsOnline from './ClientsOnline.vue';
   import ReverseProxy from './ReverseProxy.vue';
 
-  import SniffingModal from './modals/SniffingModal.vue';
-  import StreamSettingsModal from './modals/StreamSettingsModal.vue';
+  import SniffingModal from '@modal/SniffingModal.vue';
+  import StreamSettingsModal from '@modal/StreamSettingsModal.vue';
   import LogsManager from './Logs.vue';
   import MainMenu from './asus/MainMenu.vue';
   import TabMenu from './asus/TabMenu.vue';

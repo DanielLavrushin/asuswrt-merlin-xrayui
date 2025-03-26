@@ -12,8 +12,8 @@
 
 <script>
   import { defineComponent, ref } from 'vue';
-  import Modal from './Modal.vue';
-  import ImportConfigModal from './modals/ImportConfigModal.vue';
+  import Modal from '@main/Modal.vue';
+  import ImportConfigModal from '@modal/ImportConfigModal.vue';
   import { XrayObject } from '@/modules/XrayConfig';
 
   export default defineComponent({

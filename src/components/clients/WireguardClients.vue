@@ -56,13 +56,13 @@
 </template>
 
 <script lang="ts">
-  import xrayConfig from '../../modules/XrayConfig';
-  import { XrayWireguardClientObject } from '../../modules/ClientsObjects';
-  import { XrayOptions } from '../../modules/Options';
+  import xrayConfig from '@/modules/XrayConfig';
+  import { XrayWireguardClientObject } from '@/modules/ClientsObjects';
+  import { XrayOptions } from '@/modules/Options';
   import { defineComponent, ref } from 'vue';
   import QrcodeVue from 'qrcode.vue';
 
-  import modal from '../Modal.vue';
+  import modal from '@main/Modal.vue';
   import engine, { SubmtActions } from '@/modules/Engine';
 
   export default defineComponent({

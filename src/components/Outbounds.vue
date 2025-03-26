@@ -56,15 +56,15 @@
 
 <script lang="ts">
   import { defineComponent, ref, computed, nextTick, watch } from 'vue';
-  import engine from '../modules/Engine';
-  import Modal from './Modal.vue';
-  import { xrayProtocols } from '../modules/XrayConfig';
+  import engine from '@/modules/Engine';
+  import Modal from '@main/Modal.vue';
+  import { xrayProtocols } from '@/modules/XrayConfig';
 
-  import { IProtocolType } from '../modules/Interfaces';
-  import { XrayProtocol } from '../modules/CommonObjects';
-  import { XrayOutboundObject } from '../modules/OutboundObjects';
-  import { XrayProtocolOption } from '../modules/CommonObjects';
-  import { XrayProtocolMode } from '../modules/Options';
+  import { IProtocolType } from '@/modules/Interfaces';
+  import { XrayProtocol } from '@/modules/CommonObjects';
+  import { XrayOutboundObject } from '@/modules/OutboundObjects';
+  import { XrayProtocolOption } from '@/modules/CommonObjects';
+  import { XrayProtocolMode } from '@/modules/Options';
 
   import FreedomOutbound from '@obd/FreedomOutbound.vue';
   import BlackholeOutbound from '@obd/BlackholeOutbound.vue';

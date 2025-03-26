@@ -61,10 +61,10 @@
 <script lang="ts">
   import { defineComponent, ref, watch } from 'vue';
   import InboundCommon from './InboundCommon.vue';
-  import { XrayProtocol } from './../../modules/CommonObjects';
-  import { XrayDokodemoDoorInboundObject, XrayInboundObject } from './../../modules/InboundObjects';
-  import { XrayOptions } from '../../modules/Options';
-  import Hint from './../Hint.vue';
+  import { XrayProtocol } from '@/modules/CommonObjects';
+  import { XrayDokodemoDoorInboundObject, XrayInboundObject } from '@/modules/InboundObjects';
+  import { XrayOptions } from '@/modules/Options';
+  import Hint from '@main/Hint.vue';
 
   export default defineComponent({
     name: 'DocodemoDoorInbound',

@@ -197,10 +197,10 @@
 
 <script lang="ts">
   import { defineComponent, ref, computed } from 'vue';
-  import Modal from '../Modal.vue';
-  import xrayConfig from '../../modules/XrayConfig';
-  import { XrayRoutingRuleObject, XrayRoutingObject } from '../../modules/CommonObjects';
-  import Hint from '../Hint.vue';
+  import Modal from '@main/Modal.vue';
+  import xrayConfig from '@/modules/XrayConfig';
+  import { XrayRoutingRuleObject, XrayRoutingObject } from '@/modules/CommonObjects';
+  import Hint from '@main/Hint.vue';
 
   import { useI18n } from 'vue-i18n';
 

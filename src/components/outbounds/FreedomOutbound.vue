@@ -1,17 +1,17 @@
 <template>
   <div class="formfontdesc">
-    <p>{{ $t("components.FreedomOutbound.modal_desc") }}</p>
+    <p>{{ $t('components.FreedomOutbound.modal_desc') }}</p>
     <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="2">{{ $t("components.FreedomOutbound.modal_title") }}</td>
+          <td colspan="2">{{ $t('components.FreedomOutbound.modal_title') }}</td>
         </tr>
       </thead>
       <tbody>
         <outbound-common :proxy="proxy"></outbound-common>
         <tr>
           <th>
-            {{ $t("components.FreedomOutbound.label_domain_strategy") }}
+            {{ $t('components.FreedomOutbound.label_domain_strategy') }}
             <hint v-html="$t('components.FreedomOutbound.hint_domain_strategy')"></hint>
           </th>
           <td>
@@ -26,7 +26,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.FreedomOutbound.label_redirect") }}
+            {{ $t('components.FreedomOutbound.label_redirect') }}
             <hint v-html="$t('components.FreedomOutbound.hint_redirect')"></hint>
           </th>
           <td>
@@ -36,7 +36,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.FreedomOutbound.label_proxy_protocol") }}
+            {{ $t('components.FreedomOutbound.label_proxy_protocol') }}
             <hint v-html="$t('components.FreedomOutbound.hint_proxy_protocol')"></hint>
           </th>
           <td>
@@ -52,7 +52,7 @@
       <tbody v-if="proxy.settings.fragment">
         <tr>
           <th>
-            {{ $t("components.FreedomOutbound.label_fragment") }}
+            {{ $t('components.FreedomOutbound.label_fragment') }}
             <hint v-html="$t('components.FreedomOutbound.hint_fragment')"></hint>
           </th>
           <td>
@@ -67,7 +67,7 @@
         </tr>
         <tr v-if="proxy.settings.fragment.packets !== ''">
           <th>
-            {{ $t("components.FreedomOutbound.label_fragment_length") }}
+            {{ $t('components.FreedomOutbound.label_fragment_length') }}
             <hint v-html="$t('components.FreedomOutbound.hint_fragment_length')"></hint>
           </th>
           <td>
@@ -76,7 +76,7 @@
         </tr>
         <tr v-if="proxy.settings.fragment.packets !== ''">
           <th>
-            {{ $t("components.FreedomOutbound.label_fragment_interval") }}
+            {{ $t('components.FreedomOutbound.label_fragment_interval') }}
             <hint v-html="$t('components.FreedomOutbound.hint_fragment_interval')"></hint>
           </th>
           <td>
@@ -87,11 +87,11 @@
       <tbody v-if="proxy.settings.noises">
         <tr>
           <th>
-            {{ $t("components.FreedomOutbound.label_udp_noise") }}
+            {{ $t('components.FreedomOutbound.label_udp_noise') }}
             <hint v-html="$t('components.FreedomOutbound.hint_udp_noise')"></hint>
           </th>
           <td>
-            {{ $t("labels.items", [proxy.settings.noises.length]) }}
+            {{ $t('labels.items', [proxy.settings.noises.length]) }}
             <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click.prevent="manage_noises" />
             <modal width="500" ref="modalNoises" :title="$t('components.FreedomOutbound.modal_udp_noise_title')">
               <table class="FormTable modal-form-table">
@@ -118,7 +118,7 @@
                 <tbody>
                   <tr>
                     <th>
-                      {{ $t("components.FreedomOutbound.label_udp_noise_type") }}
+                      {{ $t('components.FreedomOutbound.label_udp_noise_type') }}
                       <hint v-html="$t('components.FreedomOutbound.hint_udp_noise_type')"></hint>
                     </th>
                     <td>
@@ -131,7 +131,7 @@
                   </tr>
                   <tr>
                     <th>
-                      {{ $t("components.FreedomOutbound.label_udp_noise_packet") }}
+                      {{ $t('components.FreedomOutbound.label_udp_noise_packet') }}
                       <hint v-html="$t('components.FreedomOutbound.hint_udp_noise_packet')"> </hint>
                     </th>
                     <td>
@@ -140,7 +140,7 @@
                   </tr>
                   <tr>
                     <th>
-                      {{ $t("components.FreedomOutbound.label_udp_noise_delay") }}
+                      {{ $t('components.FreedomOutbound.label_udp_noise_delay') }}
                       <hint v-html="$t('components.FreedomOutbound.hint_udp_noise_delay')"></hint>
                     </th>
                     <td>
@@ -160,15 +160,15 @@
   </div>
 </template>
 <script lang="ts">
-  import { computed, defineComponent, ref, watch } from "vue";
-  import OutboundCommon from "./OutboundCommon.vue";
-  import { XrayNoiseObject, XrayProtocol } from "../../modules/CommonObjects";
-  import { XrayFreedomOutboundObject, XrayOutboundObject } from "../../modules/OutboundObjects";
-  import Modal from "../Modal.vue";
-  import Hint from "./../Hint.vue";
+  import { defineComponent, ref } from 'vue';
+  import OutboundCommon from './OutboundCommon.vue';
+  import { XrayNoiseObject, XrayProtocol } from '@/modules/CommonObjects';
+  import { XrayFreedomOutboundObject, XrayOutboundObject } from '@/modules/OutboundObjects';
+  import Modal from '@main/Modal.vue';
+  import Hint from '@main/Hint.vue';
 
   export default defineComponent({
-    name: "FreedomOutbound",
+    name: 'FreedomOutbound',
     components: {
       OutboundCommon,
       Modal,
@@ -214,9 +214,9 @@
         fragmentOptions: XrayFreedomOutboundObject.fragmentOptions,
         noiseTypeOptions: XrayNoiseObject.typeOptions,
         proxyProtocolOptions: [
-          { key: 0, value: "disabled" },
-          { key: 1, value: "version 1" },
-          { key: 2, value: "version 2" }
+          { key: 0, value: 'disabled' },
+          { key: 1, value: 'version 1' },
+          { key: 2, value: 'version 2' }
         ],
         modal_save_noise,
         modal_noises_close,

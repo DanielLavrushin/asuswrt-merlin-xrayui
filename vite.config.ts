@@ -24,6 +24,7 @@ export default defineConfig(({ mode }) => {
 
     resolve: {
       alias: {
+        '@main': path.resolve(__dirname, 'src', 'components'),
         '@ibd': path.resolve(__dirname, 'src', 'components', 'inbounds'),
         '@obd': path.resolve(__dirname, 'src', 'components', 'outbounds'),
         '@modal': path.resolve(__dirname, 'src', 'components', 'modals'),

@@ -49,16 +49,16 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref } from "vue";
-  import Clients from "../clients/SocksClients.vue";
-  import InboundCommon from "./InboundCommon.vue";
-  import { XrayProtocol } from "../../modules/CommonObjects";
-  import { XrayInboundObject } from "../../modules/InboundObjects";
-  import { XraySocksInboundObject } from "../../modules/InboundObjects";
-  import Hint from "../Hint.vue";
+  import { defineComponent, ref } from 'vue';
+  import Clients from '../clients/SocksClients.vue';
+  import InboundCommon from './InboundCommon.vue';
+  import { XrayProtocol } from '../../modules/CommonObjects';
+  import { XrayInboundObject } from '../../modules/InboundObjects';
+  import { XraySocksInboundObject } from '../../modules/InboundObjects';
+  import Hint from '../Hint.vue';
 
   export default defineComponent({
-    name: "SocksInbound",
+    name: 'SocksInbound',
     components: {
       Clients,
       InboundCommon,
@@ -71,7 +71,7 @@
       const inbound = ref<XrayInboundObject<XraySocksInboundObject>>(props.inbound ?? new XrayInboundObject<XraySocksInboundObject>(XrayProtocol.SOCKS, new XraySocksInboundObject()));
       return {
         inbound,
-        authentications: ["noauth", "password"]
+        authentications: ['noauth', 'password']
       };
     }
   });

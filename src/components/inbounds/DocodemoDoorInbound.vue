@@ -1,17 +1,17 @@
 <template>
   <div class="formfontdesc">
-    <p>{{ $t("components.DocodemoDoorInbound.modal_desc") }}</p>
+    <p>{{ $t('components.DocodemoDoorInbound.modal_desc') }}</p>
     <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="2">{{ $t("components.DocodemoDoorInbound.modal_title") }}</td>
+          <td colspan="2">{{ $t('components.DocodemoDoorInbound.modal_title') }}</td>
         </tr>
       </thead>
       <tbody>
         <inbound-common :inbound="inbound"></inbound-common>
         <tr>
           <th>
-            {{ $t("components.DocodemoDoorInbound.label_follow_redirect") }}
+            {{ $t('components.DocodemoDoorInbound.label_follow_redirect') }}
             <hint v-html="$t('components.DocodemoDoorInbound.hint_follow_redirect')"></hint>
           </th>
           <td>
@@ -21,7 +21,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.DocodemoDoorInbound.label_address") }}
+            {{ $t('components.DocodemoDoorInbound.label_address') }}
             <hint v-html="$t('components.DocodemoDoorInbound.hint_address')"></hint>
           </th>
           <td>
@@ -31,7 +31,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.DocodemoDoorInbound.label_port") }}
+            {{ $t('components.DocodemoDoorInbound.label_port') }}
             <hint v-html="$t('components.DocodemoDoorInbound.hint_port')"></hint>
           </th>
           <td>
@@ -41,7 +41,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.DocodemoDoorInbound.label_network") }}
+            {{ $t('components.DocodemoDoorInbound.label_network') }}
             <hint v-html="$t('components.DocodemoDoorInbound.hint_network')"></hint>
           </th>
           <td>
@@ -59,15 +59,15 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, watch } from "vue";
-  import InboundCommon from "./InboundCommon.vue";
-  import { XrayProtocol } from "./../../modules/CommonObjects";
-  import { XrayDokodemoDoorInboundObject, XrayInboundObject } from "./../../modules/InboundObjects";
-  import { XrayOptions } from "../../modules/Options";
-  import Hint from "./../Hint.vue";
+  import { defineComponent, ref, watch } from 'vue';
+  import InboundCommon from './InboundCommon.vue';
+  import { XrayProtocol } from './../../modules/CommonObjects';
+  import { XrayDokodemoDoorInboundObject, XrayInboundObject } from './../../modules/InboundObjects';
+  import { XrayOptions } from '../../modules/Options';
+  import Hint from './../Hint.vue';
 
   export default defineComponent({
-    name: "DocodemoDoorInbound",
+    name: 'DocodemoDoorInbound',
     components: {
       InboundCommon,
       Hint

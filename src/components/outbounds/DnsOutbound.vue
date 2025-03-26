@@ -59,14 +59,14 @@
   </div>
 </template>
 <script lang="ts">
-  import { defineComponent, ref } from "vue";
-  import OutboundCommon from "./OutboundCommon.vue";
-  import { XrayProtocol } from "../../modules/CommonObjects";
-  import { XrayOutboundObject, XrayDnsOutboundObject } from "../../modules/OutboundObjects";
-  import Hint from "../Hint.vue";
+  import { defineComponent, ref } from 'vue';
+  import OutboundCommon from './OutboundCommon.vue';
+  import { XrayProtocol } from '@/modules/CommonObjects';
+  import { XrayOutboundObject, XrayDnsOutboundObject } from '@/modules/OutboundObjects';
+  import Hint from '@main/Hint.vue';
 
   export default defineComponent({
-    name: "DnsOutbound",
+    name: 'DnsOutbound',
     components: {
       OutboundCommon,
       Hint

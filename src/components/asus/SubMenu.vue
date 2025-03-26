@@ -3,11 +3,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+  import { defineComponent } from 'vue';
 
-export default defineComponent({
-  name: "SubMenu",
-});
+  export default defineComponent({
+    name: 'SubMenu'
+  });
 </script>
-
-<style scoped></style>

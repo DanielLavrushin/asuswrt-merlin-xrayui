@@ -34,16 +34,16 @@
   </div>
 </template>
 <script lang="ts">
-  import { defineComponent, ref, watch } from "vue";
-  import OutboundCommon from "./OutboundCommon.vue";
-  import { XrayOutboundObject } from "../../modules/OutboundObjects";
-  import { XrayHttpOutboundObject } from "../../modules/OutboundObjects";
-  import { XrayProtocol, XrayOptions } from "../../modules/Options";
-  import Clients from "./../clients/HttpClients.vue";
-  import Hint from "../Hint.vue";
+  import { defineComponent, ref } from 'vue';
+  import OutboundCommon from './OutboundCommon.vue';
+  import { XrayOutboundObject } from '@/modules/OutboundObjects';
+  import { XrayHttpOutboundObject } from '@/modules/OutboundObjects';
+  import { XrayProtocol, XrayOptions } from '@/modules/Options';
+  import Clients from '@clients/HttpClients.vue';
+  import Hint from '@main/Hint.vue';
 
   export default defineComponent({
-    name: "HttpOutbound",
+    name: 'HttpOutbound',
     components: {
       OutboundCommon,
       Clients,

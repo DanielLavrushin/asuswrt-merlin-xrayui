@@ -13,6 +13,11 @@
     "lib": ["esnext", "dom"],
     "baseUrl": ".",
     "paths": {
+      "@main/*": ["src/components/*"],
+      "@ibd/*": ["src/components/inbounds/*"],
+      "@obd/*": ["src/components/outbounds/*"],
+      "@modal/*": ["src/components/modals/*"],
+      "@clients/*": ["src/components/clients/*"],
       "@/*": ["src/*"]
     }
   },

@@ -1,7 +1,7 @@
 <template>
   <tr>
     <th>
-      {{ $t("components.InboundCommon.label_tag") }}
+      {{ $t('components.InboundCommon.label_tag') }}
       <hint v-html="$t('components.InboundCommon.hint_tag')"></hint>
     </th>
     <td>
@@ -11,7 +11,7 @@
   </tr>
   <tr>
     <th>
-      {{ $t("components.InboundCommon.label_listen") }}
+      {{ $t('components.InboundCommon.label_listen') }}
       <hint v-html="$t('components.InboundCommon.hint_listen')"></hint>
     </th>
     <td>
@@ -21,13 +21,13 @@
   </tr>
   <tr>
     <th>
-      {{ $t("components.InboundCommon.label_port") }}
+      {{ $t('components.InboundCommon.label_port') }}
       <hint v-html="$t('components.InboundCommon.hint_port')"></hint>
     </th>
     <td>
       <input type="number" id="po1" maxlength="5" class="input_6_table" v-model="inbound.port" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
       <span class="row-buttons">
-        <a class="button_gen button_gen_small" href="#" @click="show_allocate(inbound)">{{ $t("components.InboundCommon.label_port_allocate") }}</a>
+        <a class="button_gen button_gen_small" href="#" @click="show_allocate(inbound)">{{ $t('components.InboundCommon.label_port_allocate') }}</a>
       </span>
       <allocate-modal ref="allocateModal" />
     </td>
@@ -35,15 +35,15 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, watch } from "vue";
-  import AllocateModal from "../modals/AllocateModal.vue";
-  import { XrayInboundObject } from "../../modules/InboundObjects";
-  import { IProtocolType } from "../../modules/Interfaces";
-  import engine from "../../modules/Engine";
-  import Hint from "../Hint.vue";
+  import { defineComponent, ref, watch } from 'vue';
+  import AllocateModal from '../modals/AllocateModal.vue';
+  import { XrayInboundObject } from '../../modules/InboundObjects';
+  import { IProtocolType } from '../../modules/Interfaces';
+  import engine from '../../modules/Engine';
+  import Hint from '../Hint.vue';
 
   export default defineComponent({
-    name: "InboundCommon",
+    name: 'InboundCommon',
     components: {
       Hint,
       AllocateModal

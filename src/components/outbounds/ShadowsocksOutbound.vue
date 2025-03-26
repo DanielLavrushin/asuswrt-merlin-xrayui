@@ -78,16 +78,16 @@
   </div>
 </template>
 <script lang="ts">
-  import engine from "../../modules/Engine";
-  import { defineComponent, ref } from "vue";
-  import OutboundCommon from "./OutboundCommon.vue";
-  import { XrayOutboundObject } from "../../modules/OutboundObjects";
-  import { XrayShadowsocksOutboundObject } from "../../modules/OutboundObjects";
-  import { XrayProtocol } from "../../modules/Options";
-  import Hint from "../Hint.vue";
+  import engine from '@/modules/Engine';
+  import { defineComponent, ref } from 'vue';
+  import OutboundCommon from './OutboundCommon.vue';
+  import { XrayOutboundObject } from '@/modules/OutboundObjects';
+  import { XrayShadowsocksOutboundObject } from '@/modules/OutboundObjects';
+  import { XrayProtocol } from '@/modules/Options';
+  import Hint from '@main/Hint.vue';
 
   export default defineComponent({
-    name: "HttpOutbound",
+    name: 'HttpOutbound',
     components: {
       OutboundCommon,
       Hint
@@ -104,14 +104,14 @@
     setup(props) {
       const proxy = ref<XrayOutboundObject<XrayShadowsocksOutboundObject>>(props.proxy ?? new XrayOutboundObject<XrayShadowsocksOutboundObject>(XrayProtocol.SHADOWSOCKS, new XrayShadowsocksOutboundObject()));
       const encryptions = [
-        { e: "2022-blake3-aes-128-gcm", l: 16 },
-        { e: "2022-blake3-aes-256-gcm", l: 32 },
-        { e: "2022-blake3-chacha20-poly1305", l: 32 },
-        { e: "aes-256-gcm", l: 32 },
-        { e: "aes-128-gcm", l: 16 },
-        { e: "chacha20-ietf-poly1305", l: 32 },
-        { e: "none", l: 0 },
-        { e: "plain", l: 0 }
+        { e: '2022-blake3-aes-128-gcm', l: 16 },
+        { e: '2022-blake3-aes-256-gcm', l: 32 },
+        { e: '2022-blake3-chacha20-poly1305', l: 32 },
+        { e: 'aes-256-gcm', l: 32 },
+        { e: 'aes-128-gcm', l: 16 },
+        { e: 'chacha20-ietf-poly1305', l: 32 },
+        { e: 'none', l: 0 },
+        { e: 'plain', l: 0 }
       ];
 
       const generate_password = () => {

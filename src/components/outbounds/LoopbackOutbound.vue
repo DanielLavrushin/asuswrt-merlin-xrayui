@@ -34,15 +34,15 @@
   </div>
 </template>
 <script lang="ts">
-  import { defineComponent, ref } from "vue";
-  import xrayConfig from "../../modules/XrayConfig";
-  import { XrayProtocol } from "../../modules/CommonObjects";
-  import { XrayLoopbackOutboundObject, XrayOutboundObject } from "../../modules/OutboundObjects";
-  import OutboundCommon from "./OutboundCommon.vue";
-  import Hint from "../Hint.vue";
+  import { defineComponent, ref } from 'vue';
+  import xrayConfig from '@/modules/XrayConfig';
+  import { XrayProtocol } from '@/modules/CommonObjects';
+  import { XrayLoopbackOutboundObject, XrayOutboundObject } from '@/modules/OutboundObjects';
+  import OutboundCommon from './OutboundCommon.vue';
+  import Hint from '@main/Hint.vue';
 
   export default defineComponent({
-    name: "LoopbackOutbound",
+    name: 'LoopbackOutbound',
     components: {
       OutboundCommon,
       Hint
@@ -52,7 +52,7 @@
     },
     setup(props) {
       const proxy = ref<XrayOutboundObject<XrayLoopbackOutboundObject>>(props.proxy ?? new XrayOutboundObject<XrayLoopbackOutboundObject>(XrayProtocol.LOOPBACK, new XrayLoopbackOutboundObject()));
-      const inbounds = ref(Array.from(new Set(xrayConfig.routing?.rules?.flatMap((rule) => rule.inboundTag || []).filter((tag) => tag && tag.trim() !== ""))));
+      const inbounds = ref(Array.from(new Set(xrayConfig.routing?.rules?.flatMap((rule) => rule.inboundTag || []).filter((tag) => tag && tag.trim() !== ''))));
       return {
         proxy,
         inbounds

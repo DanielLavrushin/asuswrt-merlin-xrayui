@@ -143,73 +143,25 @@
     }
   });
 </script>
-<style scoped>
-  .xray_type_switches {
-    margin-top: -40px;
-    float: right;
-  }
-
-  .xray_type_switch {
-    cursor: pointer;
-    width: 110px;
-    height: 30px;
-    float: left;
-    background: linear-gradient(to bottom, #758084 0%, #546166 36%, #394245 100%);
-    border-color: #222728;
-    border-width: 1px;
-    border-style: solid;
-  }
-
-  .xray_type_switch.left {
-    border-top-left-radius: 8px;
-    border-bottom-left-radius: 8px;
-  }
-
-  .xray_type_switch.right {
-    border-top-right-radius: 8px;
-    border-bottom-right-radius: 8px;
-  }
-
-  .xray_type_switch.selected {
-    background: none;
-    background-color: #353d40;
-    border-color: #222728;
-    border-width: 1px;
-    border-style: inset;
-  }
-
-  .xray_type_switch.selected div {
-    color: #ffffff;
-    font-weight: bold;
-  }
-
-  .xray_type_switch div {
-    text-align: center;
-    color: #cccccc;
-    font-size: 14px;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+<style lang="scss">
   .apply_gen {
     margin-bottom: 10px;
   }
-</style>
-<style>
-  .FormTable tr.proxy-row th {
-    font-weight: bold;
-  }
+  .FormTable {
+    tr.proxy-row th {
+      font-weight: bold;
+    }
 
-  .FormTable tr.proxy-row:hover th {
-    text-shadow: 2px 2px 25px #fc0;
-  }
+    tr.proxy-row:hover th {
+      text-shadow: 2px 2px 25px $c_yellow;
+    }
 
-  .FormTable tr.proxy-row:hover > :last-child {
-    border-right-color: #fc0;
-  }
+    tr.proxy-row:hover > :last-child {
+      border-right-color: $c_yellow;
+    }
 
-  .FormTable tr.proxy-row:hover > * {
-    border-left-color: #fc0;
+    tr.proxy-row:hover > * {
+      border-left-color: $c_yellow;
+    }
   }
 </style>

@@ -3,9 +3,12 @@ import vue from '@vitejs/plugin-vue';
 import { exec } from 'child_process';
 import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
 import fs from 'fs';
-import path from 'path';
+import path, { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
 
 export default defineConfig(({ mode }) => {
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+
   const isProduction = mode === 'production';
   console.log(`Building for ${isProduction ? 'production' : 'development'}...`);
 
@@ -21,7 +24,16 @@ export default defineConfig(({ mode }) => {
       },
       watch: {}
     },
-
+    css: {
+      preprocessorOptions: {
+        scss: {
+          api: 'modern-compiler',
+          additionalData: `
+            @use "${join(__dirname, 'src', 'App.globals.scss')}" as *;
+        `
+        }
+      }
+    },
     resolve: {
       alias: {
         '@main': path.resolve(__dirname, 'src', 'components'),

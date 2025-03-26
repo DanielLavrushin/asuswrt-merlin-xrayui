@@ -170,8 +170,6 @@
 </script>
 
 <style lang="scss" scoped>
-  @use './../variables' as *;
-
   .scrollable-table {
     max-height: 200px;
     overflow-y: auto;

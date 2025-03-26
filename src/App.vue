@@ -6,19 +6,19 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, onMounted, provide } from "vue";
-  import TopBanner from "./components/asus/TopBanner.vue";
-  import Loading from "./components/asus/Loading.vue";
-  import AsusFooter from "./components/asus/Footer.vue";
-  import MainForm from "./components/MainForm.vue";
+  import { defineComponent, ref, onMounted, provide } from 'vue';
+  import TopBanner from './components/asus/TopBanner.vue';
+  import Loading from './components/asus/Loading.vue';
+  import AsusFooter from './components/asus/Footer.vue';
+  import MainForm from './components/MainForm.vue';
 
-  import engine, { EngineResponseConfig, SubmtActions } from "./modules/Engine";
+  import engine, { EngineResponseConfig, SubmtActions } from './modules/Engine';
 
   // Helper delay function
   const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
   export default defineComponent({
-    name: "App",
+    name: 'App',
     components: {
       TopBanner,
       Loading,
@@ -30,12 +30,12 @@
       window.scrollTo = () => {};
 
       const xrayConfig = engine.xrayConfig;
-      provide("xrayConfig", xrayConfig);
+      provide('xrayConfig', xrayConfig);
 
       onMounted(async () => {
         try {
           // Ensure window.show_menu exists before calling
-          if (typeof window.show_menu === "function") {
+          if (typeof window.show_menu === 'function') {
             window.show_menu();
           }
           await engine.loadXrayConfig();
@@ -44,11 +44,11 @@
           await delay(1000);
           uiResponse.value = await engine.getXrayResponse();
         } catch (error) {
-          console.error("Error during initialization:", error);
+          console.error('Error during initialization:', error);
         }
       });
 
-      provide("uiResponse", uiResponse);
+      provide('uiResponse', uiResponse);
 
       return {
         engine,
@@ -59,8 +59,6 @@
 </script>
 
 <style lang="scss">
-  @use "./variables" as *;
-
   #Loading,
   #overDiv {
     z-index: 9999;
@@ -76,8 +74,8 @@
     }
   }
 
-  input[type="checkbox"],
-  input[type="radio"] {
+  input[type='checkbox'],
+  input[type='radio'] {
     vertical-align: top;
   }
 

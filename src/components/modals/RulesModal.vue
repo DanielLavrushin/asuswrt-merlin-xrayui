@@ -3,7 +3,7 @@
     <table class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="4">{{ $t("components.RulesModal.modal_title2") }}</td>
+          <td colspan="4">{{ $t('components.RulesModal.modal_title2') }}</td>
         </tr>
       </thead>
       <tbody v-if="allRules.length">
@@ -11,10 +11,10 @@
           <th>
             <label>
               <input type="checkbox" v-model="r.enabled" @change.prevent="on_off_rule(r, index)" />
-              {{ $t("components.RulesModal.rule_no", [index + 1]) }}
+              {{ $t('components.RulesModal.rule_no', [index + 1]) }}
             </label>
           </th>
-          <td style="color: #ffcc00">{{ !r.name || r.name == "" ? getRuleName(r) : r.name }}</td>
+          <td style="color: #ffcc00">{{ !r.name || r.name == '' ? getRuleName(r) : r.name }}</td>
           <td>{{ r.outboundTag }}</td>
           <td>
             <text v-show="r.isSystem()">system rule</text>
@@ -28,7 +28,7 @@
       </tbody>
       <tbody v-else>
         <tr>
-          <td colspan="4" style="color: #ffcc00">{{ $t("components.RulesModal.no_rules_defined") }}</td>
+          <td colspan="4" style="color: #ffcc00">{{ $t('components.RulesModal.no_rules_defined') }}</td>
         </tr>
       </tbody>
     </table>
@@ -41,7 +41,7 @@
       <tbody>
         <tr>
           <th>
-            {{ $t("components.RulesModal.label_friendly_name") }}
+            {{ $t('components.RulesModal.label_friendly_name') }}
             <hint v-html="$t('components.RulesModal.hint_friendly_name')"></hint>
           </th>
           <td>
@@ -51,7 +51,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.RulesModal.label_outbound_tag") }}
+            {{ $t('components.RulesModal.label_outbound_tag') }}
             <hint v-html="$t('components.RulesModal.hint_outbound_tag')"></hint>
           </th>
           <td>
@@ -65,7 +65,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.RulesModal.label_inbound_tags") }}
+            {{ $t('components.RulesModal.label_inbound_tags') }}
             <hint v-html="$t('components.RulesModal.hint_inbound_tags')"></hint>
           </th>
           <td>
@@ -79,7 +79,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.RulesModal.label_users") }}
+            {{ $t('components.RulesModal.label_users') }}
             <hint v-html="$t('components.RulesModal.hint_users')"></hint>
           </th>
           <td class="flex-checkbox">
@@ -93,7 +93,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.RulesModal.label_domain_matcher") }}
+            {{ $t('components.RulesModal.label_domain_matcher') }}
             <hint v-html="$t('components.RulesModal.hint_domain_matcher')"></hint>
           </th>
           <td>
@@ -107,7 +107,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.RulesModal.label_network") }}
+            {{ $t('components.RulesModal.label_network') }}
             <hint v-html="$t('components.RulesModal.hint_network')"></hint>
           </th>
           <td>
@@ -121,7 +121,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.RulesModal.label_protocols") }}
+            {{ $t('components.RulesModal.label_protocols') }}
             <hint v-html="$t('components.RulesModal.hint_protocols')"></hint>
           </th>
           <td>
@@ -135,7 +135,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.RulesModal.label_domains") }}
+            {{ $t('components.RulesModal.label_domains') }}
             <hint v-html="$t('components.RulesModal.hint_domains')"></hint>
           </th>
           <td>
@@ -146,7 +146,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.RulesModal.label_target_ips") }}
+            {{ $t('components.RulesModal.label_target_ips') }}
             <hint v-html="$t('components.RulesModal.hint_target_ips')"></hint>
           </th>
           <td>
@@ -157,7 +157,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.RulesModal.label_target_ports") }}
+            {{ $t('components.RulesModal.label_target_ports') }}
             <hint v-html="$t('components.RulesModal.hint_target_ports')"></hint>
           </th>
           <td>
@@ -167,7 +167,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.RulesModal.label_source_ips") }}
+            {{ $t('components.RulesModal.label_source_ips') }}
             <hint v-html="$t('components.RulesModal.hint_source_ips')"></hint>
           </th>
           <td>
@@ -179,7 +179,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.RulesModal.label_source_ports") }}
+            {{ $t('components.RulesModal.label_source_ports') }}
             <hint v-html="$t('components.RulesModal.hint_source_ports')"></hint>
           </th>
           <td>
@@ -196,16 +196,16 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, computed } from "vue";
-  import Modal from "../Modal.vue";
-  import xrayConfig from "../../modules/XrayConfig";
-  import { XrayRoutingRuleObject, XrayRoutingObject } from "../../modules/CommonObjects";
-  import Hint from "../Hint.vue";
+  import { defineComponent, ref, computed } from 'vue';
+  import Modal from '../Modal.vue';
+  import xrayConfig from '../../modules/XrayConfig';
+  import { XrayRoutingRuleObject, XrayRoutingObject } from '../../modules/CommonObjects';
+  import Hint from '../Hint.vue';
 
-  import { useI18n } from "vue-i18n";
+  import { useI18n } from 'vue-i18n';
 
   export default defineComponent({
-    name: "RulesModal",
+    name: 'RulesModal',
     components: {
       Hint,
       Modal
@@ -233,9 +233,9 @@
       const modalList = ref<InstanceType<typeof Modal> | null>(null);
       const modalAdd = ref<InstanceType<typeof Modal> | null>(null);
 
-      const ips = ref<string>("");
-      const domains = ref<string>("");
-      const source = ref<string>("");
+      const ips = ref<string>('');
+      const domains = ref<string>('');
+      const source = ref<string>('');
 
       const outbounds = ref<string[]>([]);
       const inbounds = ref<string[]>([]);
@@ -246,18 +246,18 @@
         const arr = rule.enabled ? rules : disabledRules;
         const index = arr.value.indexOf(rule);
 
-        if (!confirm(t("components.RulesModal.alert_delete_rule_confirm"))) return;
+        if (!confirm(t('components.RulesModal.alert_delete_rule_confirm'))) return;
 
         arr.value.splice(index, 1);
-        emit("update:rules", rules.value);
-        emit("update:disabled_rules", disabledRules.value);
+        emit('update:rules', rules.value);
+        emit('update:disabled_rules', disabledRules.value);
       };
 
       const addRule = () => {
         currentRule.value = new XrayRoutingRuleObject();
-        domains.value = "";
-        ips.value = "";
-        source.value = "";
+        domains.value = '';
+        ips.value = '';
+        source.value = '';
         currentRule.value.inboundTag = [];
         currentRule.value.protocol = [];
         currentRule.value.user = [];
@@ -266,9 +266,9 @@
 
       const editRule = (rule: XrayRoutingRuleObject) => {
         currentRule.value = rule;
-        domains.value = rule.domain ? rule.domain.join("\n") : "";
-        ips.value = rule.ip ? rule.ip.join("\n") : "";
-        source.value = rule.source ? rule.source.join("\n") : "";
+        domains.value = rule.domain ? rule.domain.join('\n') : '';
+        ips.value = rule.ip ? rule.ip.join('\n') : '';
+        source.value = rule.source ? rule.source.join('\n') : '';
         modalAdd.value?.show(() => {});
       };
 
@@ -285,19 +285,19 @@
         newRule.user = [...(currentRule.value.user || [])];
         newRule.domain = domains.value
           ? domains.value
-              .split("\n")
+              .split('\n')
               .map((d) => d.trim())
               .filter((d) => d)
           : [];
         newRule.ip = ips.value
           ? ips.value
-              .split("\n")
+              .split('\n')
               .map((ip) => ip.trim())
               .filter((ip) => ip)
           : [];
         newRule.source = source.value
           ? source.value
-              .split("\n")
+              .split('\n')
               .map((s) => s.trim())
               .filter((s) => s)
           : [];
@@ -314,18 +314,18 @@
 
         reindexRules();
 
-        emit("update:rules", rules.value);
-        emit("update:disabled_rules", disabledRules.value);
+        emit('update:rules', rules.value);
+        emit('update:disabled_rules', disabledRules.value);
         modalAdd.value?.close();
       };
 
       const getRuleName = (rule: XrayRoutingRuleObject): string => {
         const summarize = (arr?: string[]): string => {
-          if (!arr || arr.length === 0) return "n/a";
-          return arr.length > 3 ? arr.slice(0, 3).join(", ") + " …" : arr.join(", ");
+          if (!arr || arr.length === 0) return 'n/a';
+          return arr.length > 3 ? arr.slice(0, 3).join(', ') + ' …' : arr.join(', ');
         };
 
-        const outbound = rule.outboundTag || "n/a";
+        const outbound = rule.outboundTag || 'n/a';
         const domains = summarize(rule.domain);
         const ips = summarize(rule.ip);
 
@@ -337,8 +337,8 @@
         allRules.value.splice(index, 1);
         allRules.value.splice(index - 1, 0, rule);
         reindexRules();
-        emit("update:rules", rules.value);
-        emit("update:disabled_rules", disabledRules.value);
+        emit('update:rules', rules.value);
+        emit('update:disabled_rules', disabledRules.value);
       };
 
       const show = (onCloseAction: (rules: XrayRoutingRuleObject[], disabledRules: XrayRoutingRuleObject[]) => void) => {
@@ -363,9 +363,9 @@
           ...reverse_portals
         ];
 
-        domains.value = currentRule.value.domain ? currentRule.value.domain.join("\n") : "";
-        ips.value = currentRule.value.ip ? currentRule.value.ip.join("\n") : "";
-        source.value = currentRule.value.source ? currentRule.value.source.join("\n") : "";
+        domains.value = currentRule.value.domain ? currentRule.value.domain.join('\n') : '';
+        ips.value = currentRule.value.ip ? currentRule.value.ip.join('\n') : '';
+        source.value = currentRule.value.source ? currentRule.value.source.join('\n') : '';
         users.value = [];
 
         xrayConfig.inbounds.forEach((proxy) => {
@@ -401,8 +401,8 @@
         disabledRules.value = nowDisabled;
 
         reindexRules();
-        emit("update:rules", rules.value);
-        emit("update:disabled_rules", disabledRules.value);
+        emit('update:rules', rules.value);
+        emit('update:disabled_rules', disabledRules.value);
       };
 
       const reindexRules = () => {

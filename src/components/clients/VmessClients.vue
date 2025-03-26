@@ -46,16 +46,16 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref } from "vue";
-  import engine from "../../modules/Engine";
-  import xrayConfig from "../../modules/XrayConfig";
-  import { XrayVmessClientObject } from "../../modules/ClientsObjects";
-  import Qr from "./QrCodeClient.vue";
+  import { defineComponent, ref } from 'vue';
+  import engine from '../../modules/Engine';
+  import xrayConfig from '../../modules/XrayConfig';
+  import { XrayVmessClientObject } from '../../modules/ClientsObjects';
+  import Qr from './QrCodeClient.vue';
 
-  import modal from "../Modal.vue";
+  import modal from '../Modal.vue';
 
   export default defineComponent({
-    name: "VlessClients",
+    name: 'VlessClients',
     components: {
       Qr,
       modal
@@ -63,12 +63,12 @@
     methods: {
       resetNewForm() {
         this.newClient.id = engine.uuid();
-        this.newClient.email = "";
-        this.newClient.security = "auto";
+        this.newClient.email = '';
+        this.newClient.security = 'auto';
       },
 
       removeClient(client: XrayVmessClientObject) {
-        if (!confirm("Are you sure you want to remove this client?")) return;
+        if (!confirm('Are you sure you want to remove this client?')) return;
         this.clients.splice(this.clients.indexOf(client), 1);
       },
 
@@ -78,11 +78,11 @@
         client.email = this.newClient.email;
         client.security = this.newClient.security;
         if (!client.email) {
-          alert("Email is required");
+          alert('Email is required');
           return;
         }
         if (!client.id) {
-          alert("Id is required");
+          alert('Id is required');
           return;
         }
         this.clients.push(client);
@@ -104,22 +104,22 @@
 
       const mode = ref(props.mode);
       switch (mode.value) {
-        case "outbound":
+        case 'outbound':
           break;
         default:
           break;
       }
 
-      const span = mode.value == "outbound" ? 4 : 3;
+      const span = mode.value == 'outbound' ? 4 : 3;
 
       const resetNewForm = () => {
         newClient.value.id = engine.uuid();
-        newClient.value.email = "";
-        newClient.value.security = "auto";
+        newClient.value.email = '';
+        newClient.value.security = 'auto';
       };
 
       const removeClient = (client: XrayVmessClientObject) => {
-        if (!confirm("Are you sure you want to remove this client?")) return;
+        if (!confirm('Are you sure you want to remove this client?')) return;
         clients.value.splice(clients.value.indexOf(client), 1);
       };
 
@@ -129,11 +129,11 @@
         client.email = newClient.value.email;
         client.security = newClient.value.security;
         if (!client.email) {
-          alert("Email is required");
+          alert('Email is required');
           return;
         }
         if (!client.id) {
-          alert("Id is required");
+          alert('Id is required');
           return;
         }
         clients.value.push(client);
@@ -150,7 +150,7 @@
 
       return {
         proxy: props.proxy,
-        securities: mode.value == "outbound" ? ["aes-128-gcm", "chacha20-poly1305", "auto", "none", "zero"] : [],
+        securities: mode.value == 'outbound' ? ['aes-128-gcm', 'chacha20-poly1305', 'auto', 'none', 'zero'] : [],
         span,
         clients,
         newClient,

@@ -40,11 +40,11 @@
   </modal>
 </template>
 <script lang="ts">
-  import { defineComponent, ref, watch } from "vue";
-  import Modal from "../Modal.vue";
+  import { defineComponent, ref, watch } from 'vue';
+  import Modal from '../Modal.vue';
 
   export default defineComponent({
-    name: "DnsHostsModal",
+    name: 'DnsHostsModal',
     components: {
       Modal
     },
@@ -57,20 +57,20 @@
 
     setup(props, { emit }) {
       const modal = ref();
-      const host = ref({ domain: "", address: "" });
+      const host = ref({ domain: '', address: '' });
       const hostsList = ref<any[]>([]);
 
       const add = () => {
         if (host.value.domain && host.value.address) {
-          let addr = host.value.address.indexOf(";") > -1 ? host.value.address.split(";") : host.value.address;
+          let addr = host.value.address.indexOf(';') > -1 ? host.value.address.split(';') : host.value.address;
           hostsList.value.push({ domain: host.value.domain, address: addr });
-          host.value.domain = "";
-          host.value.address = "";
+          host.value.domain = '';
+          host.value.address = '';
           syncHosts();
         }
       };
       const remove = (host: any) => {
-        if (!confirm("Are you sure you want to remove this host?")) return;
+        if (!confirm('Are you sure you want to remove this host?')) return;
         hostsList.value.splice(hostsList.value.indexOf(host), 1);
         syncHosts();
       };
@@ -80,9 +80,9 @@
       const syncHosts = () => {
         const updatedHosts: { [key: string]: string | string[] } = {};
         hostsList.value.forEach((host) => {
-          updatedHosts[host.domain] = typeof host.address === "string" && host.address.includes(";") ? host.address.split(";") : host.address;
+          updatedHosts[host.domain] = typeof host.address === 'string' && host.address.includes(';') ? host.address.split(';') : host.address;
         });
-        emit("update:hosts", updatedHosts);
+        emit('update:hosts', updatedHosts);
       };
 
       watch(
@@ -90,7 +90,7 @@
         (newHosts) => {
           hostsList.value = Object.keys(newHosts).map((key) => ({
             domain: key,
-            address: Array.isArray(newHosts[key]) ? newHosts[key].join(";") : newHosts[key]
+            address: Array.isArray(newHosts[key]) ? newHosts[key].join(';') : newHosts[key]
           }));
         },
         { immediate: true, deep: true }

@@ -6,7 +6,7 @@
         <tbody>
           <tr>
             <th>
-              {{ $t("components.ImportConfigModal.label_qr_code") }}
+              {{ $t('components.ImportConfigModal.label_qr_code') }}
               <hint v-html="$t('components.ImportConfigModal.hint_qr_code')"></hint>
             </th>
             <td>
@@ -15,7 +15,7 @@
           </tr>
           <tr>
             <th>
-              {{ $t("components.ImportConfigModal.label_proxy_uri") }}
+              {{ $t('components.ImportConfigModal.label_proxy_uri') }}
               <hint v-html="$t('components.ImportConfigModal.hint_proxy_uri')"></hint>
             </th>
             <td>
@@ -26,7 +26,7 @@
           </tr>
           <tr>
             <th>
-              {{ $t("components.ImportConfigModal.label_complete_setup") }}
+              {{ $t('components.ImportConfigModal.label_complete_setup') }}
               <hint v-html="$t('components.ImportConfigModal.hint_complete_setup')"></hint>
             </th>
             <td>
@@ -37,7 +37,7 @@
         <tbody v-show="completeSetup">
           <tr>
             <th>
-              {{ $t("components.ImportConfigModal.label_unblock") }}
+              {{ $t('components.ImportConfigModal.label_unblock') }}
               <hint v-html="$t('components.ImportConfigModal.hint_unblock')"></hint>
             </th>
             <td class="flex-checkbox">
@@ -49,7 +49,7 @@
           </tr>
           <tr>
             <th>
-              {{ $t("components.ImportConfigModal.label_dont_break") }}
+              {{ $t('components.ImportConfigModal.label_dont_break') }}
               <hint v-html="$t('components.ImportConfigModal.hint_dont_break')"></hint>
             </th>
             <td>
@@ -66,19 +66,19 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref } from "vue";
-  import engine, { SubmtActions } from "@/modules/Engine";
-  import Modal from "../Modal.vue";
-  import jsQR from "jsqr";
-  import { XrayObject } from "@/modules/XrayConfig";
-  import ProxyParser from "@/modules/parsers/ProxyParser";
-  import Hint from "../Hint.vue";
-  import { XrayDnsObject, XrayLogObject, XrayRoutingPolicy, XrayProtocol, XrayRoutingObject, XraySniffingObject } from "@/modules/CommonObjects";
-  import { XrayDokodemoDoorInboundObject, XrayInboundObject } from "@/modules/InboundObjects";
-  import { XrayBlackholeOutboundObject, XrayFreedomOutboundObject, XrayOutboundObject } from "@/modules/OutboundObjects";
+  import { defineComponent, ref } from 'vue';
+  import engine, { SubmtActions } from '@/modules/Engine';
+  import Modal from '../Modal.vue';
+  import jsQR from 'jsqr';
+  import { XrayObject } from '@/modules/XrayConfig';
+  import ProxyParser from '@/modules/parsers/ProxyParser';
+  import Hint from '../Hint.vue';
+  import { XrayDnsObject, XrayLogObject, XrayRoutingPolicy, XrayProtocol, XrayRoutingObject, XraySniffingObject } from '@/modules/CommonObjects';
+  import { XrayDokodemoDoorInboundObject, XrayInboundObject } from '@/modules/InboundObjects';
+  import { XrayBlackholeOutboundObject, XrayFreedomOutboundObject, XrayOutboundObject } from '@/modules/OutboundObjects';
 
   export default defineComponent({
-    name: "ImportConfigModal",
+    name: 'ImportConfigModal',
     components: {
       Modal,
       Hint
@@ -93,7 +93,7 @@
       const protocolQr = ref<string>();
       const completeSetup = ref<boolean>(true);
       const bypassMode = ref<boolean>(true);
-      const unblockItems = ref<string[]>(["Youtube"]);
+      const unblockItems = ref<string[]>(['Youtube']);
 
       const showModal = () => {
         importModal.value.show();
@@ -112,8 +112,8 @@
       };
 
       async function decodeQRCode(imageFile: MediaSource) {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
 
         if (ctx) {
           const image = new Image();
@@ -125,18 +125,18 @@
 
           canvas.width = image.width;
           canvas.height = image.height;
-          ctx.fillStyle = "white";
+          ctx.fillStyle = 'white';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
 
           ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "attemptBoth" });
+          const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
 
           if (code) {
             return code.data;
           }
-          alert("Failed to decode QR code");
+          alert('Failed to decode QR code');
         }
       }
 
@@ -145,15 +145,15 @@
       };
 
       const parse = async () => {
-        if (completeSetup.value && !confirm("You selected a complete setup. This will overwrite your current configuration. Are you sure?")) {
+        if (completeSetup.value && !confirm('You selected a complete setup. This will overwrite your current configuration. Are you sure?')) {
           return;
         }
 
         if (protocolUrl.value) {
           const parser = new ProxyParser(protocolUrl.value);
           const proxy = parser.getOutbound();
-          protocolUrl.value = "";
-          protocolQr.value = "";
+          protocolUrl.value = '';
+          protocolQr.value = '';
           if (props.config) {
             if (proxy) {
               if (completeSetup.value) {
@@ -161,23 +161,23 @@
                 props.config.inbounds = [];
 
                 const in_doko = new XrayInboundObject<XrayDokodemoDoorInboundObject>();
-                in_doko.tag = "all-in";
+                in_doko.tag = 'all-in';
                 in_doko.settings = new XrayDokodemoDoorInboundObject();
                 in_doko.protocol = XrayProtocol.DOKODEMODOOR;
                 in_doko.port = 5599;
-                in_doko.settings.network = "tcp,udp";
+                in_doko.settings.network = 'tcp,udp';
                 in_doko.settings.followRedirect = true;
                 in_doko.sniffing = new XraySniffingObject();
                 in_doko.sniffing.enabled = true;
-                in_doko.sniffing.destOverride = ["http", "tls", "quic"];
+                in_doko.sniffing.destOverride = ['http', 'tls', 'quic'];
 
                 props.config.inbounds.push(in_doko);
 
                 const out_free = new XrayOutboundObject<XrayFreedomOutboundObject>();
-                out_free.tag = "direct";
+                out_free.tag = 'direct';
                 out_free.settings = new XrayFreedomOutboundObject();
                 out_free.protocol = XrayProtocol.FREEDOM;
-                out_free.settings.domainStrategy = "UseIP";
+                out_free.settings.domainStrategy = 'UseIP';
                 props.config.outbounds.push(out_free);
               }
 
@@ -185,7 +185,7 @@
 
               if (completeSetup.value) {
                 const out_block = new XrayOutboundObject<XrayBlackholeOutboundObject>();
-                out_block.tag = "block";
+                out_block.tag = 'block';
                 out_block.settings = new XrayBlackholeOutboundObject();
                 out_block.protocol = XrayProtocol.BLACKHOLE;
                 props.config.outbounds.push(out_block);
@@ -206,7 +206,7 @@
                 }
               }
 
-              emit("update:config", props.config);
+              emit('update:config', props.config);
               importModal.value.close();
               alert(`Configuration ${proxy.protocol}:${proxy.tag} imported successfully`);
             } else {
@@ -222,7 +222,7 @@
         protocolQr,
         bypassMode,
         completeSetup,
-        unblockItemsList: ["Youtube", "Telegram", "TikTok", "Reddit", "LinkedIn", "DeviantArt", "Flibusta", "Wikipedia", "Twitch", "Disney", "Netflix", "Discord", "Instagram", "Twitter", "Patreon", "Metacritic", "Envato", "SoundCloud", "Kinopub", "Facebook"].sort(),
+        unblockItemsList: ['Youtube', 'Telegram', 'TikTok', 'Reddit', 'LinkedIn', 'DeviantArt', 'Flibusta', 'Wikipedia', 'Twitch', 'Disney', 'Netflix', 'Discord', 'Instagram', 'Twitter', 'Patreon', 'Metacritic', 'Envato', 'SoundCloud', 'Kinopub', 'Facebook'].sort(),
         unblockItems,
         selectFile,
         showModal,

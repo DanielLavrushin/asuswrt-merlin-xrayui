@@ -9,7 +9,7 @@
       <tr class="row_title">
         <th>User</th>
         <th>Password</th>
-        <th style="min-width:120px"></th>
+        <th style="min-width: 120px"></th>
       </tr>
       <tr class="row_title">
         <td>
@@ -41,86 +41,82 @@
 </template>
 
 <script lang="ts">
-import xrayConfig from "../../modules/XrayConfig";
-import { XrayTrojanClientObject } from "../../modules/ClientsObjects";
-import { XrayOptions } from "../../modules/Options";
-import { defineComponent, ref } from "vue";
-import QrcodeVue from "qrcode.vue";
+  import xrayConfig from '../../modules/XrayConfig';
+  import { XrayTrojanClientObject } from '../../modules/ClientsObjects';
+  import { XrayOptions } from '../../modules/Options';
+  import { defineComponent, ref } from 'vue';
+  import QrcodeVue from 'qrcode.vue';
 
-import modal from "../Modal.vue";
+  import modal from '../Modal.vue';
 
-export default defineComponent({
-  name: "TrojanClients",
-  components: {
-    QrcodeVue,
-    modal,
-  },
-  methods: {
+  export default defineComponent({
+    name: 'TrojanClients',
+    components: {
+      QrcodeVue,
+      modal
+    },
+    methods: {},
+    props: {
+      clients: Array<XrayTrojanClientObject>
+    },
 
-  },
-  props: {
-    clients: Array<XrayTrojanClientObject>,
-  },
+    setup(props) {
+      const editingIndex = ref<number | null>(null);
+      const clients = ref<XrayTrojanClientObject[]>(props.clients ?? []);
+      const newClient = ref<XrayTrojanClientObject>(new XrayTrojanClientObject());
+      const modalQr = ref();
+      let qr_content = ref('');
 
-  setup(props) {
+      const resetNewForm = () => {
+        newClient.value.email = '';
+        newClient.value.password = '';
+      };
 
-    const editingIndex = ref<number | null>(null);
-    const clients = ref<XrayTrojanClientObject[]>(props.clients ?? []);
-    const newClient = ref<XrayTrojanClientObject>(new XrayTrojanClientObject());
-    const modalQr = ref();
-    let qr_content = ref("");
+      const showQrCode = (client: XrayTrojanClientObject) => {
+        qr_content.value = JSON.stringify(xrayConfig);
+        modalQr.value?.show();
+      };
 
+      const removeClient = (client: XrayTrojanClientObject) => {
+        if (!confirm('Are you sure you want to remove this client?')) return;
+        clients.value.splice(clients.value.indexOf(client), 1);
+      };
 
-    const resetNewForm = () => {
-      newClient.value.email = "";
-      newClient.value.password = "";
-    };
+      const addClient = () => {
+        let client = new XrayTrojanClientObject();
+        client.email = newClient.value.email;
+        client.password = newClient.value.password;
+        if (!client.email) {
+          alert('Email is required');
+          return;
+        }
+        if (!client.password) {
+          alert('Password is required');
+          return;
+        }
+        clients.value.push(client);
+        resetNewForm();
+      };
 
-    const showQrCode = (client: XrayTrojanClientObject) => {
-      qr_content.value = JSON.stringify(xrayConfig);
-      modalQr.value?.show();
-    };
+      const editClient = (client: XrayTrojanClientObject, index: number) => {
+        newClient.value.email = client.email;
+        newClient.value.password = client.password;
+        editingIndex.value = index;
+        clients.value.splice(clients.value.indexOf(client), 1);
+      };
 
-    const removeClient = (client: XrayTrojanClientObject) => {
-      if (!confirm("Are you sure you want to remove this client?")) return;
-      clients.value.splice(clients.value.indexOf(client), 1);
-    };
-
-    const addClient = () => {
-      let client = new XrayTrojanClientObject();
-      client.email = newClient.value.email;
-      client.password = newClient.value.password;
-      if (!client.email) {
-        alert("Email is required");
-        return;
-      }
-      if (!client.password) {
-        alert("Password is required");
-        return;
-      }
-      clients.value.push(client);
-      resetNewForm();
-    };
-
-    const editClient = (client: XrayTrojanClientObject, index: number) => {
-      newClient.value.email = client.email;
-      newClient.value.password = client.password;
-      editingIndex.value = index;
-      clients.value.splice(clients.value.indexOf(client), 1);
+      return {
+        flows: XrayOptions.clientFlowOptions,
+        clients,
+        qr_content,
+        qr_size: 500,
+        newClient,
+        modalQr,
+        addClient,
+        editClient,
+        removeClient,
+        showQrCode
+      };
     }
-
-    return {
-      flows: XrayOptions.clientFlowOptions,
-      clients,
-      qr_content,
-      qr_size: 500,
-      newClient,
-      modalQr,
-      addClient,
-      editClient,
-      removeClient,
-      showQrCode
-    };
-  },
-});
+  });
 </script>

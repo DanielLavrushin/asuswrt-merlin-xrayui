@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
           entryFileNames: 'app.js'
         }
       },
-      watch: {}
+      watch: process.env.VITE_WATCH ? {} : undefined
     },
     css: {
       preprocessorOptions: {

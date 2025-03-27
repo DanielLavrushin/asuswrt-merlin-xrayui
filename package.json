@@ -4,8 +4,8 @@
   "main": "index.js",
   "scripts": {
     "build": "cross-env NODE_ENV=production vite build",
-    "watch": "NODE_ENV=development vite build --watch --mode development",
-    "watch-prod": "cross-env NODE_ENV=production vite build --watch --mode production"
+    "watch": "cross-env NODE_ENV=development VITE_WATCH=1 vite build --watch --mode development",
+    "watch-prod": "cross-env NODE_ENV=production VITE_WATCH=1 vite build --watch --mode production"
   },
   "keywords": [],
   "author": "",

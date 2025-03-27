@@ -59,6 +59,7 @@ export default defineConfig(({ mode }) => {
         },
         name: 'copy-and-sync',
         closeBundle: () => {
+          if (!process.env.VITE_WATCH) return;
           console.log('Vite finished building. Copying extra files...');
 
           try {

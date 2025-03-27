@@ -3,7 +3,7 @@
     <thead>
       <tr>
         <td colspan="2">
-          {{ $t("components.ReverseProxy.title") }}
+          {{ $t('components.ReverseProxy.title') }}
           <hint v-html="$t('components.ReverseProxy.hint_title')"></hint>
         </td>
       </tr>
@@ -11,7 +11,7 @@
     <tbody>
       <tr v-if="reverse.bridges">
         <th>
-          {{ $t("components.ReverseProxy.label_bridges") }}
+          {{ $t('components.ReverseProxy.label_bridges') }}
           <hint v-html="$t('components.ReverseProxy.hint_bridges')"></hint>
         </th>
         <td>
@@ -22,7 +22,7 @@
       </tr>
       <tr v-if="reverse.portals">
         <th>
-          {{ $t("components.ReverseProxy.label_portals") }}
+          {{ $t('components.ReverseProxy.label_portals') }}
           <hint v-html="$t('components.ReverseProxy.hint_portals')"></hint>
         </th>
         <td>
@@ -35,15 +35,15 @@
   </table>
 </template>
 <script lang="ts">
-  import { defineComponent, inject, ref, Ref, watch } from "vue";
-  import Hint from "./Hint.vue";
-  import Modal from "./Modal.vue";
-  import { XrayReverseObject, XrayReverseItemType } from "@/modules/CommonObjects";
-  import xrayConfig from "@/modules/XrayConfig";
-  import ReverseItemsModal from "./modals/ReverseItemsModal.vue";
+  import { defineComponent, inject, ref, Ref, watch } from 'vue';
+  import Hint from '@main/Hint.vue';
+  import Modal from '@main/Modal.vue';
+  import { XrayReverseObject, XrayReverseItemType } from '@/modules/CommonObjects';
+  import xrayConfig from '@/modules/XrayConfig';
+  import ReverseItemsModal from '@modal/ReverseItemsModal.vue';
 
   export default defineComponent({
-    name: "ReverseProxy",
+    name: 'ReverseProxy',
     components: {
       Hint,
       Modal,

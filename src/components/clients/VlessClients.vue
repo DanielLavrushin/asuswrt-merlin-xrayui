@@ -47,15 +47,15 @@
 </template>
 
 <script lang="ts">
-  import { engine } from "../../modules/Engine";
-  import { XrayVlessClientObject } from "../../modules/ClientsObjects";
-  import { XrayOptions } from "../../modules/Options";
-  import { defineComponent, ref } from "vue";
-  import modal from "../Modal.vue";
-  import Qr from "./QrCodeClient.vue";
+  import { engine } from '@/modules/Engine';
+  import { XrayVlessClientObject } from '@/modules/ClientsObjects';
+  import { XrayOptions } from '@/modules/Options';
+  import { defineComponent, ref } from 'vue';
+  import modal from '@main/Modal.vue';
+  import Qr from './QrCodeClient.vue';
 
   export default defineComponent({
-    name: "VlessClients",
+    name: 'VlessClients',
     components: {
       modal,
       Qr
@@ -76,8 +76,8 @@
       const flows = ref();
 
       switch (mode.value) {
-        case "outbound":
-          flows.value = ["xtls-rprx-vision", "xtls-rprx-vision-udp443"];
+        case 'outbound':
+          flows.value = ['xtls-rprx-vision', 'xtls-rprx-vision-udp443'];
           break;
         default:
           flows.value = XrayOptions.clientFlowOptions;
@@ -86,12 +86,12 @@
 
       const resetNewForm = () => {
         newClient.value.id = engine.uuid();
-        newClient.value.email = "";
+        newClient.value.email = '';
         newClient.value.flow = XrayOptions.clientFlowOptions[0];
       };
 
       const removeClient = (client: XrayVlessClientObject) => {
-        if (!confirm("Are you sure you want to remove this client?")) return;
+        if (!confirm('Are you sure you want to remove this client?')) return;
         clients.value.splice(clients.value.indexOf(client), 1);
       };
 
@@ -101,16 +101,16 @@
         client.email = newClient.value.email;
         client.flow = newClient.value.flow;
         if (!client.email) {
-          alert("Email is required");
+          alert('Email is required');
           return;
         }
         if (!client.id) {
-          alert("Id is required");
+          alert('Id is required');
           return;
         }
 
-        if (mode.value == "outbound") {
-          client.encryption = "none";
+        if (mode.value == 'outbound') {
+          client.encryption = 'none';
         }
 
         clients.value.push(client);

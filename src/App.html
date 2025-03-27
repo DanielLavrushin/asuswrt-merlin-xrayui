@@ -25,7 +25,7 @@
       var xray = {
         router: {
           name: '<% nvram_get("productid"); %>',
-          cpu: JSON.parse("<%cpu_core_num();%>"),
+          cpu: JSON.parse('<%cpu_core_num();%>'),
           firmware: '<% nvram_get("firmver"); %>',
           language: '<% nvram_get("preferred_lang"); %>',
           ip: '<% nvram_get("lan_ipaddr"); %>',
@@ -33,7 +33,7 @@
           devices_online: JSON.parse(`<% get_clientlist(); %>`),
           devices: JSON.parse(`<% get_all_basic_clientlist(); %>`),
           wan_ip: '<% nvram_get("wan_ipaddr"); %>',
-          wan_connected: '<% nvram_get("link_internet"); %>' == "2"
+          wan_connected: '<% nvram_get("link_internet"); %>' == '2'
         },
         server: {
           isRunning: parseInt('<% sysinfo("pid.xray"); %>') > 0
@@ -44,7 +44,7 @@
       try {
         xray.custom_settings = JSON.parse(custom_settings);
       } catch (e) {
-        if (custom_settings.indexOf("xray_payload") !== -1) {
+        if (custom_settings.indexOf('xray_payload') !== -1) {
           console.error("Invalid custom settings: xray_payload detected. Please  run '/jffs/scripts/xrayui fixme'. This is unexpected, please report.");
         }
       }
@@ -56,12 +56,12 @@
     <div id="xrayui-modals"></div>
     <script>
       if (xray.router.wan_connected) {
-        const link = document.createElement("link");
-        link.rel = "stylesheet";
-        link.href = "https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css";
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css';
         document.head.appendChild(link);
       }
     </script>
-    <script src="/ext/xrayui/app.js"></script>
+    <script type="module" src="/ext/xrayui/app.js"></script>
   </body>
 </html>

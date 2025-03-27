@@ -2,7 +2,7 @@
   <tbody v-if="transport.httpupgradeSettings">
     <tr v-if="isInbound">
       <th>
-        {{ $t("components.HttpUpgrade.label_accept_proxy_protocol") }}
+        {{ $t('components.HttpUpgrade.label_accept_proxy_protocol') }}
         <hint v-html="$t('components.HttpUpgrade.hint_accept_proxy_protocol')"></hint>
       </th>
       <td>
@@ -12,7 +12,7 @@
     </tr>
     <tr>
       <th>
-        {{ $t("components.HttpUpgrade.label_path") }}
+        {{ $t('components.HttpUpgrade.label_path') }}
         <hint v-html="$t('components.HttpUpgrade.hint_path')"></hint>
       </th>
       <td>
@@ -22,7 +22,7 @@
     </tr>
     <tr>
       <th>
-        {{ $t("components.HttpUpgrade.label_host") }}
+        {{ $t('components.HttpUpgrade.label_host') }}
         <hint v-html="$t('components.HttpUpgrade.hint_host')"></hint>
       </th>
       <td>
@@ -35,13 +35,13 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref } from "vue";
-  import { XrayStreamSettingsObject } from "../../modules/CommonObjects";
-  import HeadersMapping from "./HeadersMapping.vue";
-  import Hint from "../Hint.vue";
+  import { defineComponent, ref } from 'vue';
+  import { XrayStreamSettingsObject } from '@/modules/CommonObjects';
+  import HeadersMapping from './HeadersMapping.vue';
+  import Hint from '@main/Hint.vue';
 
   export default defineComponent({
-    name: "HttpUpgrade",
+    name: 'HttpUpgrade',
     components: {
       HeadersMapping,
       Hint
@@ -57,7 +57,7 @@
       };
       return {
         transport,
-        isInbound: props.proxyType == "inbound",
+        isInbound: props.proxyType == 'inbound',
         onheaderapupdate
       };
     }

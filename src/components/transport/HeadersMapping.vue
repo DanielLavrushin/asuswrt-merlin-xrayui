@@ -1,6 +1,6 @@
 <template>
   <tr>
-    <th>{{ $t("components.HeadersMapping.label_headers_row") }}</th>
+    <th>{{ $t('components.HeadersMapping.label_headers_row') }}</th>
     <td>
       <div class="textarea-wrapper">
         <spot v-for="(obj, index) in headers" :key="index">
@@ -16,15 +16,15 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, watch } from "vue";
-  import { XrayOptions } from "../../modules/Options";
+  import { defineComponent, ref, watch } from 'vue';
+  import { XrayOptions } from '@/modules/Options';
 
   export default defineComponent({
-    name: "Http",
+    name: 'Http',
     props: {
       headersMap: Object
     },
-    emits: ["on:header:update"],
+    emits: ['on:header:update'],
     setup(props, { emit }) {
       const headersMap = ref(props.headersMap ?? {});
       const headers = ref<{ key: string; value: any }[]>([]);
@@ -36,14 +36,14 @@
         headers.value.splice(headers.value.indexOf(obj), 1);
       };
       const add_new_header = () => {
-        headers.value.push({ key: "", value: "" });
+        headers.value.push({ key: '', value: '' });
       };
       watch(
         headers,
         (newHeaders) => {
           if (headersMap.value) {
             headersMap.value = Object.fromEntries(newHeaders.map(({ key, value }) => [key, value]));
-            emit("on:header:update", headersMap.value);
+            emit('on:header:update', headersMap.value);
           }
         },
         { deep: true }

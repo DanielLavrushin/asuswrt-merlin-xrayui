@@ -16,15 +16,15 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref } from "vue";
-  import Clients from "../clients/TrojanClients.vue";
-  import InboundCommon from "./InboundCommon.vue";
-  import { XrayProtocol } from "../../modules/CommonObjects";
-  import { XrayInboundObject } from "../../modules/InboundObjects";
-  import { XrayTrojanInboundObject } from "../../modules/InboundObjects";
+  import { defineComponent, ref } from 'vue';
+  import Clients from '@clients/TrojanClients.vue';
+  import InboundCommon from './InboundCommon.vue';
+  import { XrayProtocol } from '@/modules/CommonObjects';
+  import { XrayInboundObject } from '@/modules/InboundObjects';
+  import { XrayTrojanInboundObject } from '@/modules/InboundObjects';
 
   export default defineComponent({
-    name: "TrojanInbound",
+    name: 'TrojanInbound',
     components: {
       Clients,
       InboundCommon
@@ -36,7 +36,7 @@
       const inbound = ref<XrayInboundObject<XrayTrojanInboundObject>>(props.inbound ?? new XrayInboundObject<XrayTrojanInboundObject>(XrayProtocol.TROJAN, new XrayTrojanInboundObject()));
       return {
         inbound,
-        authentications: ["noauth", "password"]
+        authentications: ['noauth', 'password']
       };
     }
   });

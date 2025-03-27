@@ -30,7 +30,7 @@
                             <div class="formfontdesc">
                               <div>&nbsp;</div>
                               <div class="formfonttitle" style="text-align: left">X-RAY UI v{{ version }}</div>
-                              <div id="formfontdesc" class="formfontdesc">{{ $t("labels.xrayui_desc") }}</div>
+                              <div id="formfontdesc" class="formfontdesc">{{ $t('labels.xrayui_desc') }}</div>
                               <div style="margin: 10px 0 10px 5px" class="splitLine"></div>
                               <service-status v-model:config="config"></service-status>
                               <inbounds @show-transport="show_transport" @show-sniffing="show_sniffing"></inbounds>
@@ -63,33 +63,33 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref } from "vue";
-  import engine, { SubmtActions } from "../modules/Engine";
+  import { defineComponent, ref } from 'vue';
+  import engine, { SubmtActions } from '@/modules/Engine';
 
-  import Modal from "./Modal.vue";
+  import Modal from '@main/Modal.vue';
 
-  import { IProtocolType } from "../modules/Interfaces";
-  import { XrayInboundObject } from "../modules/InboundObjects";
-  import { XrayOutboundObject } from "../modules/OutboundObjects";
+  import { IProtocolType } from '@/modules/Interfaces';
+  import { XrayInboundObject } from '@/modules/InboundObjects';
+  import { XrayOutboundObject } from '@/modules/OutboundObjects';
 
-  import ServiceStatus from "./ServiceStatus.vue";
-  import Inbounds from "./Inbounds.vue";
-  import Outbounds from "./Outbounds.vue";
-  import Routing from "./Routing.vue";
-  import Dns from "./Dns.vue";
-  import Version from "./Version.vue";
-  import ClientsOnline from "./ClientsOnline.vue";
-  import ReverseProxy from "./ReverseProxy.vue";
+  import ServiceStatus from './ServiceStatus.vue';
+  import Inbounds from './Inbounds.vue';
+  import Outbounds from './Outbounds.vue';
+  import Routing from './Routing.vue';
+  import Dns from './Dns.vue';
+  import Version from './Version.vue';
+  import ClientsOnline from './ClientsOnline.vue';
+  import ReverseProxy from './ReverseProxy.vue';
 
-  import SniffingModal from "./modals/SniffingModal.vue";
-  import StreamSettingsModal from "./modals/StreamSettingsModal.vue";
-  import LogsManager from "./Logs.vue";
-  import MainMenu from "./asus/MainMenu.vue";
-  import TabMenu from "./asus/TabMenu.vue";
-  import SubMenu from "./asus/SubMenu.vue";
+  import SniffingModal from '@modal/SniffingModal.vue';
+  import StreamSettingsModal from '@modal/StreamSettingsModal.vue';
+  import LogsManager from './Logs.vue';
+  import MainMenu from './asus/MainMenu.vue';
+  import TabMenu from './asus/TabMenu.vue';
+  import SubMenu from './asus/SubMenu.vue';
 
   export default defineComponent({
-    name: "MainForm",
+    name: 'MainForm',
     components: {
       TabMenu,
       MainMenu,
@@ -143,73 +143,25 @@
     }
   });
 </script>
-<style scoped>
-  .xray_type_switches {
-    margin-top: -40px;
-    float: right;
-  }
-
-  .xray_type_switch {
-    cursor: pointer;
-    width: 110px;
-    height: 30px;
-    float: left;
-    background: linear-gradient(to bottom, #758084 0%, #546166 36%, #394245 100%);
-    border-color: #222728;
-    border-width: 1px;
-    border-style: solid;
-  }
-
-  .xray_type_switch.left {
-    border-top-left-radius: 8px;
-    border-bottom-left-radius: 8px;
-  }
-
-  .xray_type_switch.right {
-    border-top-right-radius: 8px;
-    border-bottom-right-radius: 8px;
-  }
-
-  .xray_type_switch.selected {
-    background: none;
-    background-color: #353d40;
-    border-color: #222728;
-    border-width: 1px;
-    border-style: inset;
-  }
-
-  .xray_type_switch.selected div {
-    color: #ffffff;
-    font-weight: bold;
-  }
-
-  .xray_type_switch div {
-    text-align: center;
-    color: #cccccc;
-    font-size: 14px;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+<style lang="scss">
   .apply_gen {
     margin-bottom: 10px;
   }
-</style>
-<style>
-  .FormTable tr.proxy-row th {
-    font-weight: bold;
-  }
+  .FormTable {
+    tr.proxy-row th {
+      font-weight: bold;
+    }
 
-  .FormTable tr.proxy-row:hover th {
-    text-shadow: 2px 2px 25px #fc0;
-  }
+    tr.proxy-row:hover th {
+      text-shadow: 2px 2px 25px $c_yellow;
+    }
 
-  .FormTable tr.proxy-row:hover > :last-child {
-    border-right-color: #fc0;
-  }
+    tr.proxy-row:hover > :last-child {
+      border-right-color: $c_yellow;
+    }
 
-  .FormTable tr.proxy-row:hover > * {
-    border-left-color: #fc0;
+    tr.proxy-row:hover > * {
+      border-left-color: $c_yellow;
+    }
   }
 </style>

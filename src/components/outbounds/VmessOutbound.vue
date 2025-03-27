@@ -11,7 +11,7 @@
         <outbound-common :proxy="proxy"></outbound-common>
         <tr>
           <th>
-            {{ $t("components.VmessOutbound.label_address") }}
+            {{ $t('components.VmessOutbound.label_address') }}
             <hint v-html="$t('components.VlessOutbound.hint_address')"></hint>
           </th>
           <td>
@@ -21,7 +21,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.VmessOutbound.label_port") }}
+            {{ $t('components.VmessOutbound.label_port') }}
             <hint v-html="$t('components.VmessOutbound.hint_port')"></hint>
           </th>
           <td>
@@ -34,16 +34,16 @@
   </div>
 </template>
 <script lang="ts">
-  import { defineComponent, ref, watch } from "vue";
-  import { XrayOutboundObject, XrayVmessOutboundObject } from "../../modules/OutboundObjects";
-  import { XrayProtocol } from "../../modules/CommonObjects";
-  import { XrayVmessClientObject } from "../../modules/ClientsObjects";
-  import OutboundCommon from "./OutboundCommon.vue";
-  import Clients from "./../clients/VmessClients.vue";
-  import Hint from "../Hint.vue";
+  import { defineComponent, ref, watch } from 'vue';
+  import { XrayOutboundObject, XrayVmessOutboundObject } from '@/modules/OutboundObjects';
+  import { XrayProtocol } from '@/modules/CommonObjects';
+  import { XrayVmessClientObject } from '@/modules/ClientsObjects';
+  import OutboundCommon from './OutboundCommon.vue';
+  import Clients from '@clients/VmessClients.vue';
+  import Hint from '@main/Hint.vue';
 
   export default defineComponent({
-    name: "VmessOutbound",
+    name: 'VmessOutbound',
     components: {
       OutboundCommon,
       Clients,
@@ -57,7 +57,7 @@
 
       if (proxy.value.settings.vnext.length == 0) {
         proxy.value.settings.vnext.push({
-          address: "",
+          address: '',
           port: 443,
           users: []
         });

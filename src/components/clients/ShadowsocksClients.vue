@@ -18,10 +18,9 @@
         </td>
         <td>
           <input v-model="newClient.password" type="text" class="input_20_table" placeholder="Password" />
-          <button @click.prevent="regenerate()" class="button_gen button_gen_small"
-            title="randomly generate password">re</button>
+          <button @click.prevent="regenerate()" class="button_gen button_gen_small" title="randomly generate password">re</button>
         </td>
-        <td style="min-width:120px">
+        <td style="min-width: 120px">
           <select v-model="newClient.method" class="input_12_table">
             <option v-for="flow in encryptions" :value="flow" :key="flow">{{ flow }}</option>
           </select>
@@ -38,10 +37,8 @@
         <td>{{ client.password }}</td>
         <td>{{ client.method }}</td>
         <td>
-          <button @click.prevent="showQrCode(client)" class="button_gen button_gen_small"
-            title="open user's configuration">QR</button>
-          <button @click.prevent="removeClient(client)" class="button_gen button_gen_small"
-            title="delete">&#10005;</button>
+          <button @click.prevent="showQrCode(client)" class="button_gen button_gen_small" title="open user's configuration">QR</button>
+          <button @click.prevent="removeClient(client)" class="button_gen button_gen_small" title="delete">&#10005;</button>
         </td>
       </tr>
     </tbody>
@@ -52,80 +49,79 @@
 </template>
 
 <script lang="ts">
-import { XrayOptions } from "../../modules/Options";
-import { XrayShadowsocksClientObject } from "../../modules/ClientsObjects";
-import { defineComponent, ref } from "vue";
-import engine from "../../modules/Engine";
-import xrayConfig from "../../modules/XrayConfig";
-import QrcodeVue from "qrcode.vue";
+  import { XrayOptions } from '@/modules/Options';
+  import { XrayShadowsocksClientObject } from '@/modules/ClientsObjects';
+  import { defineComponent, ref } from 'vue';
+  import engine from '@/modules/Engine';
+  import xrayConfig from '@/modules/XrayConfig';
+  import QrcodeVue from 'qrcode.vue';
 
-import modal from "../Modal.vue";
+  import modal from '@main/Modal.vue';
 
-export default defineComponent({
-  name: "ShadowsocksClients",
-  components: {
-    QrcodeVue,
-    modal,
-  },
-  methods: {
-    regenerate() {
-      this.newClient.password = engine.generateRandomBase64();
+  export default defineComponent({
+    name: 'ShadowsocksClients',
+    components: {
+      QrcodeVue,
+      modal
     },
+    methods: {
+      regenerate() {
+        this.newClient.password = engine.generateRandomBase64();
+      },
 
-    resetNewForm() {
-      this.newClient.password = engine.generateRandomBase64();
-      this.newClient.email = "";
-      this.newClient.method = "aes-256-gcm";
-    },
+      resetNewForm() {
+        this.newClient.password = engine.generateRandomBase64();
+        this.newClient.email = '';
+        this.newClient.method = 'aes-256-gcm';
+      },
 
-    showQrCode(client: XrayShadowsocksClientObject) {
-      this.qr_content = JSON.stringify(xrayConfig);
-      this.modalQr.value?.show();
-    },
+      showQrCode(client: XrayShadowsocksClientObject) {
+        this.qr_content = JSON.stringify(xrayConfig);
+        this.modalQr.value?.show();
+      },
 
-    removeClient(client: XrayShadowsocksClientObject) {
-      if (!confirm("Are you sure you want to remove this client?")) return;
-      this.clients.splice(this.clients.indexOf(client), 1);
-    },
+      removeClient(client: XrayShadowsocksClientObject) {
+        if (!confirm('Are you sure you want to remove this client?')) return;
+        this.clients.splice(this.clients.indexOf(client), 1);
+      },
 
-    addClient() {
-      let client = new XrayShadowsocksClientObject();
-      client.password = this.newClient.password;
-      client.email = this.newClient.email;
-      client.method = this.newClient.method;
-      if (!client.email) {
-        alert("Email is required");
-        return;
+      addClient() {
+        let client = new XrayShadowsocksClientObject();
+        client.password = this.newClient.password;
+        client.email = this.newClient.email;
+        client.method = this.newClient.method;
+        if (!client.email) {
+          alert('Email is required');
+          return;
+        }
+        if (!client.password) {
+          alert('Password is required');
+          return;
+        }
+        this.clients.push(client);
+        this.resetNewForm();
       }
-      if (!client.password) {
-        alert("Password is required");
-        return;
-      }
-      this.clients.push(client);
-      this.resetNewForm();
     },
-  },
-  props: {
-    clients: Array<XrayShadowsocksClientObject>,
-  },
+    props: {
+      clients: Array<XrayShadowsocksClientObject>
+    },
 
-  setup(props) {
+    setup(props) {
+      const clients = ref<XrayShadowsocksClientObject[]>(props.clients ?? []);
+      const newClient = ref<XrayShadowsocksClientObject>(new XrayShadowsocksClientObject());
+      newClient.value.password = engine.generateRandomBase64();
+      const modalQr = ref();
+      let qr_content = ref('');
 
-    const clients = ref<XrayShadowsocksClientObject[]>(props.clients ?? []);
-    const newClient = ref<XrayShadowsocksClientObject>(new XrayShadowsocksClientObject());
-    newClient.value.password = engine.generateRandomBase64();
-    const modalQr = ref();
-    let qr_content = ref("");
-
-    return {
-      flows: XrayOptions.clientFlowOptions,
-      encryptions: XrayOptions.encryptionOptions,
-      clients,
-      qr_content,
-      qr_size: 500,
-      newClient,
-      modalQr,
-    };
-  },
-});
+      return {
+        flows: XrayOptions.clientFlowOptions,
+        encryptions: XrayOptions.encryptionOptions,
+        clients,
+        qr_content,
+        qr_size: 500,
+        newClient,
+        modalQr
+      };
+    }
+  });
 </script>

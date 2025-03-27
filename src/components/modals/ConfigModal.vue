@@ -9,26 +9,26 @@
     <template v-slot:footer>
       <label>
         <input type="checkbox" v-model="hideSenseData" @change="hide_sense_data" />
-        {{ $t("components.ConfigModal.hide_sensetive_data") }}
+        {{ $t('components.ConfigModal.hide_sensetive_data') }}
       </label>
       <input class="button_gen button_gen_small" type="button" :value="$t('components.ConfigModal.copy_to_clipboard')" @click.prevent="copy_to_clipboard" />
       <a class="button_gen button_gen_small" :href="configUri" target="_blank">
-        {{ $t("components.ConfigModal.open_raw") }}
+        {{ $t('components.ConfigModal.open_raw') }}
       </a>
     </template>
   </modal>
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref } from "vue";
-  import Modal from "../Modal.vue";
-  import Hint from "../Hint.vue";
-  import JsonPretty from "vue-json-pretty";
-  import "vue-json-pretty/lib/styles.css";
-  import { useI18n } from "vue-i18n";
+  import { defineComponent, ref } from 'vue';
+  import Modal from '@main/Modal.vue';
+  import Hint from '@main/Hint.vue';
+  import JsonPretty from 'vue-json-pretty';
+  import 'vue-json-pretty/lib/styles.css';
+  import { useI18n } from 'vue-i18n';
 
   export default defineComponent({
-    name: "ConfigModal",
+    name: 'ConfigModal',
     components: {
       Hint,
       Modal,
@@ -40,22 +40,22 @@
       let originalConfig: any = {};
       const configJson = ref<any>(null);
       const configSize = ref<number>(0);
-      const configUri = "/ext/xrayui/xray-config.json";
+      const configUri = '/ext/xrayui/xray-config.json';
       const hideSenseData = ref<boolean>(true);
-      const sensitiveKeys = ["secretKey", "address", "password", "serverName", "publicKey", "shortIds", "privateKey", "shortId", "email", "id", "user", "pass", "certificate", "key", "mac"];
+      const sensitiveKeys = ['secretKey', 'address', 'password', 'serverName', 'publicKey', 'shortIds', 'privateKey', 'shortId', 'email', 'id', 'user', 'pass', 'certificate', 'key', 'mac'];
 
       const maskObject = (obj: any): any => {
         if (Array.isArray(obj)) {
           return obj.map((item) => maskObject(item));
-        } else if (obj !== null && typeof obj === "object") {
+        } else if (obj !== null && typeof obj === 'object') {
           const newObj: any = {};
           for (const key in obj) {
             if (Object.prototype.hasOwnProperty.call(obj, key)) {
               if (sensitiveKeys.includes(key)) {
                 // If the value is an array, process each element.
                 if (Array.isArray(obj[key])) {
-                  newObj[key] = obj[key].map((item) => (typeof item === "string" || typeof item === "number" ? hide_chars(item) : maskObject(item)));
-                } else if (typeof obj[key] === "string" || typeof obj[key] === "number") {
+                  newObj[key] = obj[key].map((item) => (typeof item === 'string' || typeof item === 'number' ? hide_chars(item) : maskObject(item)));
+                } else if (typeof obj[key] === 'string' || typeof obj[key] === 'number') {
                   newObj[key] = hide_chars(obj[key]);
                 } else {
                   newObj[key] = maskObject(obj[key]);
@@ -74,8 +74,8 @@
       // Replaces every character in a string with '*' or returns a masked number.
       const hide_chars = (str: string | number | undefined) => {
         if (str === undefined) return undefined;
-        if (typeof str === "string") return str.replace(/./g, "*");
-        return Number(str.toString().replace(/.\d/g, "0"));
+        if (typeof str === 'string') return str.replace(/./g, '*');
+        return Number(str.toString().replace(/.\d/g, '0'));
       };
 
       // Loads the configuration from the URI and updates reactive state.
@@ -88,7 +88,7 @@
           configSize.value = JSON.stringify(data).length;
           hide_sense_data();
         } catch (error) {
-          console.error("Error loading config:", error);
+          console.error('Error loading config:', error);
         }
       };
 
@@ -105,12 +105,12 @@
           try {
             await navigator.clipboard.writeText(configStr);
             if (hideSenseData.value) {
-              alert(t("components.ConfigModal.alert_copy_ok_hiddendata"));
+              alert(t('components.ConfigModal.alert_copy_ok_hiddendata'));
             } else {
-              alert(t("components.ConfigModal.alert_copy_ok_nohiddendata"));
+              alert(t('components.ConfigModal.alert_copy_ok_nohiddendata'));
             }
           } catch (err) {
-            console.error("Clipboard API error, falling back", err);
+            console.error('Clipboard API error, falling back', err);
             fallbackCopyTextToClipboard(configStr);
           }
         } else {
@@ -120,36 +120,36 @@
 
       // Fallback for copying text to clipboard using a temporary textarea.
       const fallbackCopyTextToClipboard = (text: string) => {
-        const textArea = document.createElement("textarea");
+        const textArea = document.createElement('textarea');
         textArea.value = text;
         Object.assign(textArea.style, {
-          position: "fixed",
-          top: "0",
-          left: "0",
-          width: "2em",
-          height: "2em",
-          padding: "0",
-          border: "none",
-          outline: "none",
-          boxShadow: "none",
-          background: "transparent"
+          position: 'fixed',
+          top: '0',
+          left: '0',
+          width: '2em',
+          height: '2em',
+          padding: '0',
+          border: 'none',
+          outline: 'none',
+          boxShadow: 'none',
+          background: 'transparent'
         });
         document.body.appendChild(textArea);
         textArea.select();
         try {
-          const successful = document.execCommand("copy");
+          const successful = document.execCommand('copy');
           if (!successful) {
-            alert("Copying to clipboard failed. Please copy the text manually:\n\n" + text);
+            alert('Copying to clipboard failed. Please copy the text manually:\n\n' + text);
           } else {
             if (hideSenseData.value) {
-              alert(t("components.ConfigModal.alert_copy_ok_hiddendata"));
+              alert(t('components.ConfigModal.alert_copy_ok_hiddendata'));
             } else {
-              alert(t("components.ConfigModal.alert_copy_ok_nohiddendata"));
+              alert(t('components.ConfigModal.alert_copy_ok_nohiddendata'));
             }
           }
         } catch (err) {
-          console.error("Fallback copy error:", err);
-          alert("Copying to clipboard failed. Please copy the text manually:\n\n" + text);
+          console.error('Fallback copy error:', err);
+          alert('Copying to clipboard failed. Please copy the text manually:\n\n' + text);
         }
         document.body.removeChild(textArea);
       };

@@ -1,9 +1,9 @@
-import { XrayVlessClientObject } from "../ClientsObjects";
-import { XrayParsedUrlObject, XrayStreamSettingsObject } from "../CommonObjects";
-import { XrayOutboundObject, XrayVlessOutboundObject } from "../OutboundObjects";
+import { XrayVlessClientObject } from '../ClientsObjects';
+import { XrayParsedUrlObject, XrayStreamSettingsObject } from '../CommonObjects';
+import { XrayOutboundObject, XrayVlessOutboundObject } from '../OutboundObjects';
 
 const VlessParser = (parsedObj: XrayParsedUrlObject): XrayOutboundObject<XrayVlessOutboundObject> | null => {
-  if (parsedObj.protocol !== "vless") return null;
+  if (parsedObj.protocol !== 'vless') return null;
   const proxy = new XrayOutboundObject<XrayVlessOutboundObject>();
   proxy.tag = parsedObj.tag;
   proxy.settings = new XrayVlessOutboundObject();
@@ -20,8 +20,8 @@ const VlessParser = (parsedObj: XrayParsedUrlObject): XrayOutboundObject<XrayVle
   const user = new XrayVlessClientObject();
   user.id = parsedObj.uuid;
   user.flow = parsedObj.parsedParams.flow;
-  user.encryption = parsedObj.parsedParams.encryption ?? "none";
-  user.email = parsedObj.parsedParams.email ?? "user-" + parsedObj.protocol;
+  user.encryption = parsedObj.parsedParams.encryption ?? 'none';
+  user.email = parsedObj.parsedParams.email ?? 'user-' + parsedObj.protocol;
   if (proxy.settings.vnext[0].users) proxy.settings.vnext[0].users.push(user);
 
   return proxy;

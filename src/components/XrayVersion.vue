@@ -7,18 +7,18 @@
 </template>
 
 <script lang="ts">
-  import { EngineResponseConfig } from "@/modules/Engine";
-  import { defineComponent, inject, onMounted, Ref, ref, watch } from "vue";
-  import XrayCoreVersionModal from "./modals/XrayCoreVersionModal.vue";
+  import { defineComponent, inject, onMounted, Ref, ref, watch } from 'vue';
+  import { EngineResponseConfig } from '@/modules/Engine';
+  import XrayCoreVersionModal from '@modal/XrayCoreVersionModal.vue';
 
   export default defineComponent({
-    name: "XrayVersion",
+    name: 'XrayVersion',
     components: {
       XrayCoreVersionModal
     },
     setup() {
-      const uiResponse = inject<Ref<EngineResponseConfig>>("uiResponse")!;
-      const xray_version = ref("");
+      const uiResponse = inject<Ref<EngineResponseConfig>>('uiResponse')!;
+      const xray_version = ref('');
       const modal = ref();
 
       const show = async () => {
@@ -30,7 +30,7 @@
           () => uiResponse?.value.xray?.core_version,
           (value) => {
             if (value) {
-              xray_version.value = value ?? "";
+              xray_version.value = value ?? '';
             }
           }
         );

@@ -173,17 +173,17 @@
   </div>
 </template>
 <script lang="ts">
-  import { defineComponent, ref, watch } from "vue";
-  import OutboundCommon from "./OutboundCommon.vue";
-  import { XrayOutboundObject } from "../../modules/OutboundObjects";
-  import { XrayWireguardOutboundObject } from "../../modules/OutboundObjects";
-  import { XrayPeerObject } from "../../modules/CommonObjects";
-  import { XrayProtocol } from "../../modules/Options";
-  import Modal from "../Modal.vue";
-  import Hint from "../Hint.vue";
+  import { defineComponent, ref, watch } from 'vue';
+  import OutboundCommon from './OutboundCommon.vue';
+  import { XrayOutboundObject } from '@/modules/OutboundObjects';
+  import { XrayWireguardOutboundObject } from '@/modules/OutboundObjects';
+  import { XrayPeerObject } from '@/modules/CommonObjects';
+  import { XrayProtocol } from '@/modules/Options';
+  import Modal from '@main/Modal.vue';
+  import Hint from '@main/Hint.vue';
 
   export default defineComponent({
-    name: "HttpOutbound",
+    name: 'HttpOutbound',
     components: {
       OutboundCommon,
       Modal,
@@ -196,11 +196,11 @@
     setup(props) {
       const proxy = ref<XrayOutboundObject<XrayWireguardOutboundObject>>(props.proxy ?? new XrayOutboundObject<XrayWireguardOutboundObject>(XrayProtocol.WIREGUARD, new XrayWireguardOutboundObject()));
       const peerItem = ref<XrayPeerObject>();
-      const addresses = ref<string>(proxy.value.settings.address.join("\n") ?? "");
-      const peerIps = ref<string>("");
+      const addresses = ref<string>(proxy.value.settings.address.join('\n') ?? '');
+      const peerIps = ref<string>('');
       const modalPeer = ref();
       const modalPeers = ref();
-      const reserved = ref<string>(proxy.value.settings.reserved?.join(", ") ?? "");
+      const reserved = ref<string>(proxy.value.settings.reserved?.join(', ') ?? '');
 
       const modal_save_peer = () => {
         if (peerItem) {
@@ -225,7 +225,7 @@
         } else {
           peerItem.value = new XrayPeerObject();
         }
-        peerIps.value = peerItem.value.allowedIPs?.join("\n") ?? "";
+        peerIps.value = peerItem.value.allowedIPs?.join('\n') ?? '';
         modalPeer.value.show();
       };
 
@@ -233,7 +233,7 @@
         () => reserved.value,
         (newObj) => {
           if (newObj) {
-            proxy.value.settings.reserved = newObj.split(",").map((x) => parseInt(x.trim()));
+            proxy.value.settings.reserved = newObj.split(',').map((x) => parseInt(x.trim()));
           }
         },
         { immediate: true }
@@ -243,7 +243,7 @@
         () => addresses.value,
         (newObj) => {
           if (newObj) {
-            proxy.value.settings.address = newObj.split("\n").filter((x) => x);
+            proxy.value.settings.address = newObj.split('\n').filter((x) => x);
           }
         },
         { immediate: true }
@@ -253,7 +253,7 @@
         () => peerIps.value,
         (newObj) => {
           if (newObj && peerItem.value) {
-            peerItem.value.allowedIPs = newObj.split("\n").filter((x) => x);
+            peerItem.value.allowedIPs = newObj.split('\n').filter((x) => x);
           }
         },
         { immediate: true }

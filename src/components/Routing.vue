@@ -3,7 +3,7 @@
     <thead>
       <tr>
         <td colspan="2">
-          {{ $t("components.Routing.title") }}
+          {{ $t('components.Routing.title') }}
           <hint v-html="$t('components.Routing.hint_title')"></hint>
         </td>
       </tr>
@@ -11,7 +11,7 @@
     <tbody>
       <tr>
         <th>
-          {{ $t("components.Routing.label_domain_strategy") }}
+          {{ $t('components.Routing.label_domain_strategy') }}
           <hint v-html="$t('components.Routing.hint_domain_strategy')"></hint>
         </th>
         <td>
@@ -25,7 +25,7 @@
       </tr>
       <tr>
         <th>
-          {{ $t("components.Routing.label_domain_matcher") }}
+          {{ $t('components.Routing.label_domain_matcher') }}
           <hint v-html="$t('components.Routing.hint_domain_matcher')"></hint>
         </th>
         <td>
@@ -39,7 +39,7 @@
       </tr>
       <tr v-if="routing.policies">
         <th>
-          {{ $t("components.Routing.label_policies") }}
+          {{ $t('components.Routing.label_policies') }}
           <hint v-html="$t('components.Routing.hint_policies')"></hint>
         </th>
         <td>
@@ -50,7 +50,7 @@
       </tr>
       <tr v-if="routing.rules">
         <th>
-          {{ $t("components.Routing.label_rules") }}
+          {{ $t('components.Routing.label_rules') }}
           <hint v-html="$t('components.Routing.hint_rules')"></hint>
         </th>
         <td>
@@ -61,7 +61,7 @@
       </tr>
       <tr v-if="routing.rules">
         <th>
-          {{ $t("components.Routing.label_geodat_metadata") }}
+          {{ $t('components.Routing.label_geodat_metadata') }}
           <hint v-html="$t('components.Routing.hint_geodat_metadata')"></hint>
         </th>
         <td>
@@ -87,17 +87,17 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, watch, inject, onMounted, Ref } from "vue";
+  import { defineComponent, ref, watch, inject, onMounted, Ref } from 'vue';
 
-  import { XrayRoutingObject, XrayRoutingRuleObject } from "../modules/CommonObjects";
-  import xrayConfig from "../modules/XrayConfig";
-  import engine, { EngineResponseConfig, SubmtActions } from "../modules/Engine";
-  import PolicyModal from "./modals/PolicyModal.vue";
-  import RulesModal from "./modals/RulesModal.vue";
-  import Hint from "./Hint.vue";
-  import GeodatModal from "./modals/GeodatModal.vue";
+  import { XrayRoutingObject, XrayRoutingRuleObject } from '@/modules/CommonObjects';
+  import xrayConfig from '@/modules/XrayConfig';
+  import engine, { EngineResponseConfig, SubmtActions } from '@/modules/Engine';
+  import PolicyModal from '@modal/PolicyModal.vue';
+  import RulesModal from '@modal/RulesModal.vue';
+  import Hint from '@main/Hint.vue';
+  import GeodatModal from '@modal/GeodatModal.vue';
   export default defineComponent({
-    name: "Routing",
+    name: 'Routing',
     components: {
       Hint,
       RulesModal,
@@ -110,7 +110,7 @@
       const geodatModal = ref();
       const daysPassed = ref(0);
       const routing = ref<XrayRoutingObject>(xrayConfig.routing || new XrayRoutingObject());
-      const uiResponse = inject<Ref<EngineResponseConfig>>("uiResponse")!;
+      const uiResponse = inject<Ref<EngineResponseConfig>>('uiResponse')!;
 
       const manage_geodat = async () => {
         await geodatModal.value.show();
@@ -137,7 +137,7 @@
         (newVal) => {
           if (newVal) {
             if (newVal?.geodata?.community) {
-              const date = new Date(newVal?.geodata.community["geosite.dat"]);
+              const date = new Date(newVal?.geodata.community['geosite.dat']);
               const df = Date.now() - date.getTime();
               daysPassed.value = Math.floor(df / (1000 * 60 * 60 * 24));
             }

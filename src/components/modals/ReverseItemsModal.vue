@@ -3,7 +3,7 @@
     <table class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="3">{{ $t("components.ReverseItemsModal.modal_title2") }}</td>
+          <td colspan="3">{{ $t('components.ReverseItemsModal.modal_title2') }}</td>
         </tr>
       </thead>
       <tbody>
@@ -26,11 +26,11 @@
   </modal>
 </template>
 <script lang="ts">
-  import { defineComponent, ref } from "vue";
-  import Modal from "./../Modal.vue";
-  import { XrayReverseItemType, XrayReverseItem } from "@/modules/CommonObjects";
+  import { defineComponent, ref } from 'vue';
+  import Modal from '@main/Modal.vue';
+  import { XrayReverseItemType, XrayReverseItem } from '@/modules/CommonObjects';
   export default defineComponent({
-    name: "ReverseItemsModal",
+    name: 'ReverseItemsModal',
     components: {
       Modal
     },
@@ -42,9 +42,9 @@
     },
     setup(props, { emit }) {
       const items = ref(props.items);
-      const newItem = ref<XrayReverseItem>({ tag: "", domain: "" });
+      const newItem = ref<XrayReverseItem>({ tag: '', domain: '' });
       const modalList = ref();
-      const reverse_type = ref("");
+      const reverse_type = ref('');
       const show = (type: string) => {
         reverse_type.value = type;
         items.value = props.items;
@@ -52,13 +52,13 @@
       };
       const addItem = () => {
         props.items.push({ tag: newItem.value.tag!.trim(), domain: newItem.value.domain!.trim() });
-        newItem.value.tag = "";
-        newItem.value.domain = "";
+        newItem.value.tag = '';
+        newItem.value.domain = '';
       };
       const deleteItem = (item: XrayReverseItem) => {
         const index = props.items.indexOf(item);
         props.items.splice(index, 1);
-        emit("update:items", items.value);
+        emit('update:items', items.value);
       };
 
       return { XrayReverseItemType, modalList, items, newItem, show, deleteItem, addItem };

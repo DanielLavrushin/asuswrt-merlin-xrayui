@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
-import { SubmtActions, EngineLoadingProgress } from "./modules/Engine";
-import { XrayRouterDeviceOnline } from "./modules/Interfaces";
+import { SubmtActions, EngineLoadingProgress } from './modules/Engine';
+import { XrayRouterDeviceOnline } from './modules/Interfaces';
 
 export {};
 

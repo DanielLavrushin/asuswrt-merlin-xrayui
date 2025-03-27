@@ -1,6 +1,6 @@
-import { XrayVmessClientObject } from "../ClientsObjects";
-import { XrayParsedUrlObject, XrayStreamSettingsObject } from "../CommonObjects";
-import { XrayOutboundObject, XrayVlessOutboundObject } from "../OutboundObjects";
+import { XrayVmessClientObject } from '../ClientsObjects';
+import { XrayParsedUrlObject, XrayStreamSettingsObject } from '../CommonObjects';
+import { XrayOutboundObject, XrayVlessOutboundObject } from '../OutboundObjects';
 
 const VlessParser = (parsedObj: XrayParsedUrlObject): XrayOutboundObject<XrayVlessOutboundObject> | null => {
   const proxy = new XrayOutboundObject<XrayVlessOutboundObject>();
@@ -18,8 +18,8 @@ const VlessParser = (parsedObj: XrayParsedUrlObject): XrayOutboundObject<XrayVle
 
   const user = new XrayVmessClientObject();
   user.id = parsedObj.uuid;
-  user.email = parsedObj.parsedParams.email ?? "user-" + parsedObj.protocol;
-  user.security = parsedObj.parsedParams.scy ?? "none";
+  user.email = parsedObj.parsedParams.email ?? 'user-' + parsedObj.protocol;
+  user.security = parsedObj.parsedParams.scy ?? 'none';
   if (proxy.settings.vnext[0].users) proxy.settings.vnext[0].users.push(user);
 
   return proxy;

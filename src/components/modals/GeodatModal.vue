@@ -3,14 +3,14 @@
     <div class="formfontdesc">
       <div style="text-align: left">
         <p>
-          {{ $t("components.GeodatModal.modal_desc") }}
+          {{ $t('components.GeodatModal.modal_desc') }}
         </p>
       </div>
       <table class="FormTable modal-form-table">
         <tbody v-if="isLoading">
           <tr>
             <th>
-              {{ $t("components.GeodatModal.loading") }}
+              {{ $t('components.GeodatModal.loading') }}
             </th>
             <td>
               <div class="loading"></div>
@@ -20,23 +20,23 @@
         <tbody v-if="geodata && !isLoading">
           <tr>
             <th>
-              {{ $t("components.GeodatModal.label_select_file") }}
+              {{ $t('components.GeodatModal.label_select_file') }}
             </th>
             <td>
               <select v-model="file.tag" class="input_option" @change="loadContent">
-                <option value>{{ $t("components.GeodatModal.option_create_new_file") }}</option>
+                <option value>{{ $t('components.GeodatModal.option_create_new_file') }}</option>
                 <option v-for="opt in geodata.tags" :key="opt" :value="opt">
                   {{ opt }}
                 </option>
               </select>
-              <span class="hint-color" v-if="file.tag">ext:xrayui:{{ file.tag ?? "{tag}" }}</span>
+              <span class="hint-color" v-if="file.tag">ext:xrayui:{{ file.tag ?? '{tag}' }}</span>
             </td>
           </tr>
         </tbody>
         <tbody v-if="geodata && isSelected && !isLoading">
           <tr v-if="isNewFile">
             <th>
-              {{ $t("components.GeodatModal.label_tag") }}
+              {{ $t('components.GeodatModal.label_tag') }}
               <hint v-html="$t('components.GeodatModal.hint_tag')"></hint>
             </th>
             <td>
@@ -45,7 +45,7 @@
           </tr>
           <tr>
             <th>
-              {{ $t("components.GeodatModal.label_content") }}
+              {{ $t('components.GeodatModal.label_content') }}
               <hint v-html="$t('components.GeodatModal.hint_content')"></hint>
             </th>
             <td>
@@ -68,15 +68,15 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref } from "vue";
-  import Modal from "../Modal.vue";
-  import Hint from "../Hint.vue";
-  import engine, { EngineGeodatConfig, GeodatTagRequest, SubmtActions } from "../../modules/Engine";
-  import axios from "axios";
-  import { useI18n } from "vue-i18n";
+  import { defineComponent, ref } from 'vue';
+  import Modal from '@main/Modal.vue';
+  import Hint from '@main/Hint.vue';
+  import engine, { EngineGeodatConfig, GeodatTagRequest, SubmtActions } from '@/modules/Engine';
+  import axios from 'axios';
+  import { useI18n } from 'vue-i18n';
 
   export default defineComponent({
-    name: "GeodatModal",
+    name: 'GeodatModal',
     components: {
       Modal,
       Hint
@@ -126,7 +126,7 @@
       const compile = async () => {
         await engine.executeWithLoadingProgress(async () => {
           if (!file.value.content?.length) {
-            alert(t("components.GeodatModal.alert_empty_content"));
+            alert(t('components.GeodatModal.alert_empty_content'));
             return;
           }
 
@@ -135,7 +135,7 @@
       };
 
       const deletdat = async () => {
-        if (!confirm(t("components.GeodatModal.alert_delete_confirm"))) return;
+        if (!confirm(t('components.GeodatModal.alert_delete_confirm'))) return;
 
         await engine.executeWithLoadingProgress(async () => {
           await engine.submit(SubmtActions.geoDataCustomDeleteTag, { tag: file.value.tag });

@@ -53,13 +53,13 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref } from "vue";
-  import { XrayStreamSettingsObject } from "../../modules/CommonObjects";
-  import Hint from "../Hint.vue";
+  import { defineComponent, ref } from 'vue';
+  import { XrayStreamSettingsObject } from '@/modules/CommonObjects';
+  import Hint from '@main/Hint.vue';
 
-  import HeadersMapping from "./HeadersMapping.vue";
+  import HeadersMapping from './HeadersMapping.vue';
   export default defineComponent({
-    name: "Ws",
+    name: 'Ws',
     components: {
       HeadersMapping,
       Hint
@@ -78,7 +78,7 @@
 
       return {
         transport,
-        isInbound: props.proxyType == "inbound"
+        isInbound: props.proxyType == 'inbound'
       };
     }
   });

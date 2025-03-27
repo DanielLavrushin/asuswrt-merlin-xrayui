@@ -15,15 +15,15 @@
   </div>
 </template>
 <script lang="ts">
-  import { defineComponent, ref } from "vue";
-  import VlessClients from "../clients/VlessClients.vue";
-  import InboundCommon from "./InboundCommon.vue";
-  import { XrayProtocol } from "../../modules/CommonObjects";
-  import { XrayInboundObject } from "../../modules/InboundObjects";
-  import { XrayVlessInboundObject } from "../../modules/InboundObjects";
+  import { defineComponent, ref } from 'vue';
+  import VlessClients from '@clients/VlessClients.vue';
+  import InboundCommon from './InboundCommon.vue';
+  import { XrayProtocol } from '@/modules/CommonObjects';
+  import { XrayInboundObject } from '@/modules/InboundObjects';
+  import { XrayVlessInboundObject } from '@/modules/InboundObjects';
 
   export default defineComponent({
-    name: "VmessInbound",
+    name: 'VmessInbound',
     components: {
       VlessClients,
       InboundCommon

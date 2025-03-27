@@ -2,12 +2,12 @@
   <table width="100%" bordercolor="#6b8fa3" class="FormTable">
     <thead>
       <tr>
-        <td colspan="2">{{ $t("components.Inbounds.title") }}</td>
+        <td colspan="2">{{ $t('components.Inbounds.title') }}</td>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <th>{{ $t("components.Inbounds.label_create_new") }}</th>
+        <th>{{ $t('components.Inbounds.label_create_new') }}</th>
         <td>
           <select class="input_option" v-model="selectedInboundType" @change="edit_proxy()">
             <option></option>
@@ -19,7 +19,7 @@
       </tr>
       <slot v-for="(proxy, index) in config.inbounds" :key="index">
         <tr v-show="!proxy.isSystem()" class="proxy-row">
-          <th>{{ proxy.tag == "" ? "no tag" : proxy.tag! }}</th>
+          <th>{{ proxy.tag == '' ? 'no tag' : proxy.tag! }}</th>
           <td>
             <a class="hint tag" href="#" @click.prevent="edit_proxy(proxy)">
               <span v-show="proxy.streamSettings?.network" :class="['proxy-label', 'tag']">
@@ -34,10 +34,10 @@
             </span>
             <span class="row-buttons">
               <a class="button_gen button_gen_small" href="#" @click.prevent="show_transport(proxy)">
-                {{ $t("labels.transport") }}
+                {{ $t('labels.transport') }}
               </a>
               <a class="button_gen button_gen_small" href="#" @click.prevent="show_sniffing(proxy)">
-                {{ $t("labels.sniffing") }}
+                {{ $t('labels.sniffing') }}
               </a>
               <a class="button_gen button_gen_small" href="#" @click.prevent="reorder_proxy(proxy)" v-if="index > 0" :title="$t('labels.redorder')">&#8593;</a>
               <a class="button_gen button_gen_small" href="#" @click.prevent="edit_proxy(proxy)" title="edit">&#8494;</a>
@@ -58,32 +58,32 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, computed, nextTick, watch } from "vue";
-  import engine from "../modules/Engine";
-  import Modal from "./Modal.vue";
+  import { defineComponent, ref, computed, nextTick, watch } from 'vue';
+  import engine from '@/modules/Engine';
+  import Modal from '@main/Modal.vue';
 
-  import { IProtocolType } from "../modules/Interfaces";
-  import { XrayProtocol } from "../modules/CommonObjects";
-  import { XrayInboundObject } from "../modules/InboundObjects";
-  import { XrayProtocolOption } from "../modules/CommonObjects";
+  import { IProtocolType } from '@/modules/Interfaces';
+  import { XrayProtocol } from '@/modules/CommonObjects';
+  import { XrayInboundObject } from '@/modules/InboundObjects';
+  import { XrayProtocolOption } from '@/modules/CommonObjects';
 
-  import { xrayProtocols } from "../modules/XrayConfig";
-  import { XrayProtocolMode } from "../modules/Options";
+  import { xrayProtocols } from '@/modules/XrayConfig';
+  import { XrayProtocolMode } from '@/modules/Options';
 
-  import DocodemoDoorInbound from "./inbounds/DocodemoDoorInbound.vue";
-  import VmessInbound from "./inbounds/VmessInbound.vue";
-  import VlessInbound from "./inbounds/VlessInbound.vue";
-  import HttpInbound from "./inbounds/HttpInbound.vue";
-  import ShadowsocksInbound from "./inbounds/ShadowsocksInbound.vue";
-  import SocksInbound from "./inbounds/SocksInbound.vue";
-  import TrojanInbound from "./inbounds/TrojanInbound.vue";
-  import WireguardInbound from "./inbounds/WireguardInbound.vue";
+  import DocodemoDoorInbound from '@ibd/DocodemoDoorInbound.vue';
+  import VmessInbound from '@ibd/VmessInbound.vue';
+  import VlessInbound from '@ibd/VlessInbound.vue';
+  import HttpInbound from '@ibd/HttpInbound.vue';
+  import ShadowsocksInbound from '@ibd/ShadowsocksInbound.vue';
+  import SocksInbound from '@ibd/SocksInbound.vue';
+  import TrojanInbound from '@ibd/TrojanInbound.vue';
+  import WireguardInbound from '@ibd/WireguardInbound.vue';
 
-  import { useI18n } from "vue-i18n";
+  import { useI18n } from 'vue-i18n';
 
   export default defineComponent({
-    name: "Inbounds",
-    emits: ["show-transport", "show-sniffing"],
+    name: 'Inbounds',
+    emits: ['show-transport', 'show-sniffing'],
     components: {
       Modal
     },
@@ -125,10 +125,10 @@
         config.value.inbounds.splice(index - 1, 0, proxy);
       };
       const show_transport = async (inbound: XrayInboundObject<IProtocolType>) => {
-        emit("show-transport", inbound, "inbound");
+        emit('show-transport', inbound, 'inbound');
       };
       const show_sniffing = async (inbound: XrayInboundObject<IProtocolType>) => {
-        emit("show-sniffing", inbound);
+        emit('show-sniffing', inbound);
       };
 
       const edit_proxy = async (proxy: XrayInboundObject<IProtocolType> | undefined = undefined) => {
@@ -158,7 +158,7 @@
         });
       };
       const remove_proxy = async (proxy: XrayInboundObject<IProtocolType>) => {
-        if (!window.confirm(t("components.Inbounds.alert_delete_confirm"))) return;
+        if (!window.confirm(t('components.Inbounds.alert_delete_confirm'))) return;
         let index = config.value.inbounds.indexOf(proxy);
         config.value.inbounds.splice(index, 1);
       };
@@ -166,7 +166,7 @@
       const save_inbound = async () => {
         let inbound = inboundComponentRef.value.inbound;
         if (config.value.inbounds.filter((i) => i != inbound && i.tag == inbound.tag).length > 0) {
-          alert(t("components.Inbounds.alert_tag_exists"));
+          alert(t('components.Inbounds.alert_tag_exists'));
           return;
         }
 

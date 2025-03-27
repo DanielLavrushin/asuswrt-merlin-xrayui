@@ -4,7 +4,7 @@
       <tbody>
         <tr>
           <th>
-            {{ $t("components.CertificatesModal.label_ocsp_stapling") }}
+            {{ $t('components.CertificatesModal.label_ocsp_stapling') }}
             <hint v-html="$t('components.CertificatesModal.hint_ocsp_stapling')"></hint>
           </th>
           <td>
@@ -14,7 +14,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.CertificatesModal.label_one_time_loading") }}
+            {{ $t('components.CertificatesModal.label_one_time_loading') }}
             <hint v-html="$t('components.CertificatesModal.hint_one_time_loading')"></hint>
           </th>
           <td>
@@ -23,7 +23,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.CertificatesModal.label_usage") }}
+            {{ $t('components.CertificatesModal.label_usage') }}
             <hint v-html="$t('components.CertificatesModal.hint_usage')"></hint>
           </th>
           <td>
@@ -36,7 +36,7 @@
         </tr>
         <tr v-if="certificate.usage == 'issue'">
           <th>
-            {{ $t("components.CertificatesModal.label_build_chain") }}
+            {{ $t('components.CertificatesModal.label_build_chain') }}
             <hint v-html="$t('components.CertificatesModal.hint_build_chain')"></hint>
           </th>
           <td>
@@ -45,7 +45,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.CertificatesModal.label_certificate_file") }}
+            {{ $t('components.CertificatesModal.label_certificate_file') }}
             <hint v-html="$t('components.CertificatesModal.hint_certificate_file')"></hint>
           </th>
           <td>
@@ -54,7 +54,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.CertificatesModal.label_certificate_content") }}
+            {{ $t('components.CertificatesModal.label_certificate_content') }}
             <hint v-html="$t('components.CertificatesModal.hint_certificate_content')"></hint>
           </th>
           <td>
@@ -65,7 +65,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.CertificatesModal.label_key_file") }}
+            {{ $t('components.CertificatesModal.label_key_file') }}
             <hint v-html="$t('components.CertificatesModal.hint_key_file')"></hint>
           </th>
           <td>
@@ -74,7 +74,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.CertificatesModal.label_key_content") }}
+            {{ $t('components.CertificatesModal.label_key_content') }}
             <hint v-html="$t('components.CertificatesModal.hint_key_content')"></hint>
           </th>
           <td>
@@ -89,13 +89,13 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref } from "vue";
-  import { XrayStreamTlsCertificateObject } from "../../modules/CommonObjects";
-  import Modal from "../Modal.vue";
-  import Hint from "../Hint.vue";
+  import { defineComponent, ref } from 'vue';
+  import { XrayStreamTlsCertificateObject } from '@/modules/CommonObjects';
+  import Modal from '@main/Modal.vue';
+  import Hint from '@main/Hint.vue';
 
   export default defineComponent({
-    name: "CertificatesModal",
+    name: 'CertificatesModal',
     props: {
       certificates: Array as () => XrayStreamTlsCertificateObject[]
     },
@@ -114,7 +114,7 @@
         certificate.value = props.certificates?.[0] ?? new XrayStreamTlsCertificateObject();
       };
       const validate_usage = (usage: string) => {
-        if (usage == "issue") {
+        if (usage == 'issue') {
           certificate.value.buildChain = certificate.value.buildChain;
           return;
         }

@@ -1,17 +1,17 @@
 <template>
   <div class="formfontdesc">
-    <p>{{ $t("components.VlessOutbound.modal_desc") }}</p>
+    <p>{{ $t('components.VlessOutbound.modal_desc') }}</p>
     <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="2">{{ $t("components.VlessOutbound.modal_title") }}</td>
+          <td colspan="2">{{ $t('components.VlessOutbound.modal_title') }}</td>
         </tr>
       </thead>
       <tbody>
         <outbound-common :proxy="proxy"></outbound-common>
         <tr>
           <th>
-            {{ $t("components.VlessOutbound.label_address") }}
+            {{ $t('components.VlessOutbound.label_address') }}
             <hint v-html="$t('components.VlessOutbound.hint_address')"></hint>
           </th>
           <td>
@@ -21,7 +21,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t("components.VlessOutbound.label_port") }}
+            {{ $t('components.VlessOutbound.label_port') }}
             <hint v-html="$t('components.VlessOutbound.hint_port')"></hint>
           </th>
           <td>
@@ -34,16 +34,16 @@
   </div>
 </template>
 <script lang="ts">
-  import { defineComponent, ref, watch } from "vue";
-  import { XrayOutboundObject, XrayVlessOutboundObject } from "../../modules/OutboundObjects";
-  import { XrayProtocol } from "../../modules/CommonObjects";
-  import { XrayVlessClientObject } from "../../modules/ClientsObjects";
-  import OutboundCommon from "./OutboundCommon.vue";
-  import Clients from "./../clients/VlessClients.vue";
-  import Hint from "./../Hint.vue";
+  import { defineComponent, ref, watch } from 'vue';
+  import { XrayOutboundObject, XrayVlessOutboundObject } from '@/modules/OutboundObjects';
+  import { XrayProtocol } from '@/modules/CommonObjects';
+  import { XrayVlessClientObject } from '@/modules/ClientsObjects';
+  import OutboundCommon from './OutboundCommon.vue';
+  import Clients from '@clients/VlessClients.vue';
+  import Hint from '@main/Hint.vue';
 
   export default defineComponent({
-    name: "VlessOutbound",
+    name: 'VlessOutbound',
     components: {
       OutboundCommon,
       Clients,
@@ -57,7 +57,7 @@
 
       if (proxy.value.settings.vnext.length == 0) {
         proxy.value.settings.vnext.push({
-          address: "",
+          address: '',
           port: 443,
           users: []
         });

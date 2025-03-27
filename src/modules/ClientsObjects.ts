@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
-import { IClient } from "./Interfaces";
+import { IClient } from './Interfaces';
 
 class XrayWireguardClientObject implements IClient {
   public publicKey!: string;
@@ -18,7 +18,7 @@ class XrayShadowsocksClientObject implements IClient {
   public email!: string;
   public password!: string;
   public level?: number;
-  public method? = "aes-256-gcm";
+  public method? = 'aes-256-gcm';
   normalize = () => void 0;
 }
 
@@ -47,7 +47,7 @@ class XrayVlessClientObject implements IClient {
   public email!: string;
   public level?: number;
   public encryption?: string;
-  public flow? = "none";
+  public flow? = 'none';
   normalize = () => void 0;
 }
 

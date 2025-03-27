@@ -9,7 +9,7 @@
       <tr class="row_title">
         <th>User</th>
         <th>Password</th>
-        <th style="min-width:120px"></th>
+        <th style="min-width: 120px"></th>
       </tr>
       <tr class="row_title">
         <td>
@@ -41,85 +41,82 @@
 </template>
 
 <script lang="ts">
-import { XrayOptions } from "../../modules/Options";
-import { XrayHttpClientObject } from "../../modules/ClientsObjects";
-import xrayConfig from "../../modules/XrayConfig";
-import { defineComponent, ref } from "vue";
-import QrcodeVue from "qrcode.vue";
+  import { XrayOptions } from '@/modules/Options';
+  import { XrayHttpClientObject } from '@/modules/ClientsObjects';
+  import xrayConfig from '@/modules/XrayConfig';
+  import { defineComponent, ref } from 'vue';
+  import QrcodeVue from 'qrcode.vue';
 
-import modal from "../Modal.vue";
+  import modal from '@main/Modal.vue';
 
-export default defineComponent({
-  name: "VlessClients",
-  components: {
-    QrcodeVue,
-    modal,
-  },
-  methods: {
+  export default defineComponent({
+    name: 'VlessClients',
+    components: {
+      QrcodeVue,
+      modal
+    },
+    methods: {},
+    props: {
+      clients: Array<XrayHttpClientObject>
+    },
 
-  },
-  props: {
-    clients: Array<XrayHttpClientObject>,
-  },
+    setup(props) {
+      const editingIndex = ref<number | null>(null);
+      const clients = ref<XrayHttpClientObject[]>(props.clients ?? []);
+      const newClient = ref<XrayHttpClientObject>(new XrayHttpClientObject());
+      const modalQr = ref();
+      let qr_content = ref('');
 
-  setup(props) {
+      const resetNewForm = () => {
+        newClient.value.user = '';
+        newClient.value.pass = '';
+      };
 
-    const editingIndex = ref<number | null>(null);
-    const clients = ref<XrayHttpClientObject[]>(props.clients ?? []);
-    const newClient = ref<XrayHttpClientObject>(new XrayHttpClientObject());
-    const modalQr = ref();
-    let qr_content = ref("");
+      const showQrCode = (client: XrayHttpClientObject) => {
+        qr_content.value = JSON.stringify(xrayConfig);
+        modalQr.value?.show();
+      };
 
-    const resetNewForm = () => {
-      newClient.value.user = "";
-      newClient.value.pass = "";
-    };
+      const removeClient = (client: XrayHttpClientObject) => {
+        if (!confirm('Are you sure you want to remove this client?')) return;
+        clients.value.splice(clients.value.indexOf(client), 1);
+      };
 
-    const showQrCode = (client: XrayHttpClientObject) => {
-      qr_content.value = JSON.stringify(xrayConfig);
-      modalQr.value?.show();
+      const addClient = () => {
+        let client = new XrayHttpClientObject();
+        client.user = newClient.value.user;
+        client.pass = newClient.value.pass;
+        if (!client.user) {
+          alert('User Name is required');
+          return;
+        }
+        if (!client.pass) {
+          alert('Password is required');
+          return;
+        }
+        clients.value.push(client);
+        resetNewForm();
+      };
+
+      const editClient = (client: XrayHttpClientObject, index: number) => {
+        newClient.value.pass = client.pass;
+        newClient.value.user = client.user;
+        editingIndex.value = index;
+        clients.value.splice(clients.value.indexOf(client), 1);
+      };
+
+      return {
+        flows: XrayOptions.clientFlowOptions,
+        clients,
+        qr_content,
+        qr_size: 500,
+        newClient,
+        modalQr,
+        showQrCode,
+        editClient,
+        removeClient,
+        addClient
+      };
     }
-
-    const removeClient = (client: XrayHttpClientObject) => {
-      if (!confirm("Are you sure you want to remove this client?")) return;
-      clients.value.splice(clients.value.indexOf(client), 1);
-    }
-
-    const addClient = () => {
-      let client = new XrayHttpClientObject();
-      client.user = newClient.value.user;
-      client.pass = newClient.value.pass;
-      if (!client.user) {
-        alert("User Name is required");
-        return;
-      }
-      if (!client.pass) {
-        alert("Password is required");
-        return;
-      }
-      clients.value.push(client);
-      resetNewForm();
-    };
-
-    const editClient = (client: XrayHttpClientObject, index: number) => {
-      newClient.value.pass = client.pass;
-      newClient.value.user = client.user;
-      editingIndex.value = index;
-      clients.value.splice(clients.value.indexOf(client), 1);
-    }
-
-    return {
-      flows: XrayOptions.clientFlowOptions,
-      clients,
-      qr_content,
-      qr_size: 500,
-      newClient,
-      modalQr,
-      showQrCode,
-      editClient,
-      removeClient,
-      addClient
-    };
-  },
-});
+  });
 </script>

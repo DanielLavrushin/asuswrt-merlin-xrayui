@@ -2,7 +2,7 @@
   <tbody v-if="transport.grpcSettings">
     <tr>
       <th>
-        {{ $t("components.Grpc.label_service_name") }}
+        {{ $t('components.Grpc.label_service_name') }}
         <hint v-html="$t('components.Grpc.hint_service_name')"></hint>
       </th>
       <td>
@@ -12,7 +12,7 @@
     </tr>
     <tr v-if="isOutbound">
       <th>
-        {{ $t("components.Grpc.label_health_check") }}
+        {{ $t('components.Grpc.label_health_check') }}
         <hint v-html="$t('components.Grpc.hint_health_check')"></hint>
       </th>
       <td>
@@ -22,7 +22,7 @@
     </tr>
     <tr v-if="isOutbound">
       <th>
-        {{ $t("components.Grpc.label_health_check_timeout") }}
+        {{ $t('components.Grpc.label_health_check_timeout') }}
         <hint v-html="$t('components.Grpc.hint_health_check_timeout')"></hint>
       </th>
       <td>
@@ -32,7 +32,7 @@
     </tr>
     <tr v-if="isOutbound">
       <th>
-        {{ $t("components.Grpc.label_permit_without_stream") }}
+        {{ $t('components.Grpc.label_permit_without_stream') }}
         <hint v-html="$t('components.Grpc.hint_permit_without_stream')"></hint>
       </th>
       <td>
@@ -42,7 +42,7 @@
     </tr>
     <tr v-if="isOutbound">
       <th>
-        {{ $t("components.Grpc.label_initial_windows_size") }}
+        {{ $t('components.Grpc.label_initial_windows_size') }}
         <hint v-html="$t('components.Grpc.hint_initial_windows_size')"></hint>
       </th>
       <td>
@@ -54,12 +54,12 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref } from "vue";
-  import { XrayStreamSettingsObject } from "../../modules/CommonObjects";
-  import Hint from "../Hint.vue";
+  import { defineComponent, ref } from 'vue';
+  import { XrayStreamSettingsObject } from '@/modules/CommonObjects';
+  import Hint from '@main/Hint.vue';
 
   export default defineComponent({
-    name: "Grpc",
+    name: 'Grpc',
     components: {
       Hint
     },
@@ -72,7 +72,7 @@
       return {
         transport,
         proxyType: props.proxyType,
-        isOutbound: props.proxyType == "outbound"
+        isOutbound: props.proxyType == 'outbound'
       };
     }
   });

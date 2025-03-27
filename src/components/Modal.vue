@@ -17,7 +17,7 @@
           <span class="row-buttons">
             <slot name="footer">
               <button @click.prevent="close" class="button_gen button_gen_small">
-                {{ $t("labels.close") }}
+                {{ $t('labels.close') }}
               </button>
             </slot>
           </span>
@@ -28,19 +28,19 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, computed, onMounted, onBeforeUnmount } from "vue";
+  import { defineComponent, ref, computed, onMounted, onBeforeUnmount } from 'vue';
 
   export default defineComponent({
-    name: "Modal",
-    emits: ["close"],
+    name: 'Modal',
+    emits: ['close'],
     props: {
       title: {
         type: String,
-        default: "Modal Title"
+        default: 'Modal Title'
       },
       width: {
         type: String,
-        default: "755"
+        default: '755'
       }
     },
     setup(props, { emit }) {
@@ -51,21 +51,21 @@
         isVisible.value = true;
         if (onClose) onCloseCallback = onClose;
         // Add Escape key listener when modal is shown
-        document.addEventListener("keydown", handleKeyDown);
+        document.addEventListener('keydown', handleKeyDown);
       };
 
       const close = () => {
         isVisible.value = false;
-        emit("close");
-        if (typeof onCloseCallback === "function") {
+        emit('close');
+        if (typeof onCloseCallback === 'function') {
           onCloseCallback();
         }
         // Remove Escape key listener when modal is closed
-        document.removeEventListener("keydown", handleKeyDown);
+        document.removeEventListener('keydown', handleKeyDown);
       };
 
       const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.key === "Escape") {
+        if (event.key === 'Escape') {
           close();
         }
       };
@@ -76,7 +76,7 @@
       }));
 
       onBeforeUnmount(() => {
-        document.removeEventListener("keydown", handleKeyDown);
+        document.removeEventListener('keydown', handleKeyDown);
       });
 
       return { isVisible, show, close, modalStyle };

@@ -3,14 +3,14 @@
     <thead>
       <tr>
         <td colspan="2">
-          {{ $t("components.ClientStatus.configuration") }}
+          {{ $t('components.ClientStatus.configuration') }}
           <xray-version></xray-version>
         </td>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <th>{{ $t("components.ClientStatus.connection_status") }}</th>
+        <th>{{ $t('components.ClientStatus.connection_status') }}</th>
         <td>
           <span class="label" :class="connectionClasses" v-text="statusLabel"></span>
           <span v-if="!isRunning">
@@ -18,9 +18,9 @@
           </span>
           <span :class="[' label', 'flag', 'fi', contryCodeClass]"></span>
           <span class="row-buttons">
-            <a v-if="!isRunning" class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(connect)">{{ $t("labels.start") }} </a>
-            <a v-if="isRunning" class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(reconnect)">{{ $t("labels.restart") }} </a>
-            <a v-if="isRunning" class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(stop)">{{ $t("labels.stop") }}</a>
+            <a v-if="!isRunning" class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(connect)">{{ $t('labels.start') }} </a>
+            <a v-if="isRunning" class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(reconnect)">{{ $t('labels.restart') }} </a>
+            <a v-if="isRunning" class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(stop)">{{ $t('labels.stop') }}</a>
             <input class="button_gen button_gen_small" type="button" :value="$t('labels.show_config')" @click.prevent="show_config_modal()" />
           </span>
           <config-modal ref="configModal"></config-modal>
@@ -30,7 +30,7 @@
       <process-uptime></process-uptime>
       <import-config v-model:config="config"></import-config>
       <tr>
-        <th>{{ $t("components.ClientStatus.general_options") }}</th>
+        <th>{{ $t('components.ClientStatus.general_options') }}</th>
         <td>
           <span class="row-buttons">
             <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click.prevent="manage_general_options()" />
@@ -43,18 +43,18 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, computed, watch, inject, Ref, onMounted } from "vue";
-  import engine, { SubmtActions } from "../modules/Engine";
-  import GeneralOptionsModal from "./modals/GeneralOptionsModal.vue";
-  import ImportConfig from "./ImportConfig.vue";
-  import { XrayObject } from "@/modules/XrayConfig";
-  import { XrayProtocol, XrayRoutingRuleObject } from "@/modules/CommonObjects";
-  import ConfigModal from "./modals/ConfigModal.vue";
-  import axios from "axios";
-  import { useI18n } from "vue-i18n";
-  import ProcessUptime from "./ProcessUptime.vue";
-  import XrayVersion from "./XrayVersion.vue";
-  import Profiles from "./Profiles.vue";
+  import { defineComponent, ref, computed, watch, inject, Ref, onMounted } from 'vue';
+  import engine, { SubmtActions } from '@/modules/Engine';
+  import GeneralOptionsModal from '@modal/GeneralOptionsModal.vue';
+  import ImportConfig from './ImportConfig.vue';
+  import { XrayObject } from '@/modules/XrayConfig';
+  import { XrayProtocol, XrayRoutingRuleObject } from '@/modules/CommonObjects';
+  import ConfigModal from '@modal/ConfigModal.vue';
+  import axios from 'axios';
+  import { useI18n } from 'vue-i18n';
+  import ProcessUptime from './ProcessUptime.vue';
+  import XrayVersion from './XrayVersion.vue';
+  import Profiles from './Profiles.vue';
 
   class IpApiResponse {
     public status?: string;
@@ -65,7 +65,7 @@
     public connected?: boolean;
   }
   export default defineComponent({
-    name: "ServiceStatus",
+    name: 'ServiceStatus',
     components: {
       GeneralOptionsModal,
       ImportConfig,
@@ -82,7 +82,7 @@
     },
     computed: {
       statusLabel(): string {
-        return !this.checkConEnabled ? (this.isRunning ? this.$t("components.ClientStatus.xray_running") : this.$t("components.ClientStatus.xray_stopped")) : this.connectionStationLabel;
+        return !this.checkConEnabled ? (this.isRunning ? this.$t('components.ClientStatus.xray_running') : this.$t('components.ClientStatus.xray_stopped')) : this.connectionStationLabel;
       }
     },
     setup(props) {
@@ -90,13 +90,13 @@
       const config = ref(props.config);
       const configModal = ref();
       const generalOptionsModal = ref();
-      const contryCodeClass = ref<string>("flag-icon flag-icon-unknown");
+      const contryCodeClass = ref<string>('flag-icon flag-icon-unknown');
       const connectionStatus = ref<boolean>(false);
-      const connectionStationLabel = ref<string>(t("components.ClientStatus.xray_running"));
+      const connectionStationLabel = ref<string>(t('components.ClientStatus.xray_running'));
       const connectionClasses = computed(() => ({
-        "label-success": isRunning.value,
-        "label-error": !isRunning.value,
-        "label-warning": checkConEnabled.value && !connectionStatus.value
+        'label-success': isRunning.value,
+        'label-error': !isRunning.value,
+        'label-warning': checkConEnabled.value && !connectionStatus.value
       }));
 
       const isRunning = ref<boolean>(window.xray.server.isRunning);
@@ -110,20 +110,20 @@
         const rule = config.value.routing?.rules?.find((r) => r.name === XrayRoutingRuleObject.connectionCheckRuleName);
         checkConEnabled.value = rule !== undefined;
         if (checkConEnabled.value) {
-          const response = await axios.get<IpApiResponse>("http://ip-api.com/json/", {
+          const response = await axios.get<IpApiResponse>('http://ip-api.com/json/', {
             headers: {
-              "Cache-Control": "no-cache",
-              Pragma: "no-cache",
-              Expires: "0"
+              'Cache-Control': 'no-cache',
+              Pragma: 'no-cache',
+              Expires: '0'
             }
           });
           const status = response.data;
           //  const status = await engine.getClientConnectionStatus();
-          if (status.status === "success") {
+          if (status.status === 'success') {
             status.connected = config.value.outbounds?.find((o) => o.protocol !== XrayProtocol.BLACKHOLE && o.protocol !== XrayProtocol.FREEDOM && o.settings?.isTargetAddress?.(status.query!)) !== undefined;
             isRunning.value = window.xray.server.isRunning;
             connectionStatus.value = status.connected;
-            connectionStationLabel.value = status.connected ? t("components.ClientStatus.xray_connected") : t("components.ClientStatus.xray_connecting");
+            connectionStationLabel.value = status.connected ? t('components.ClientStatus.xray_connected') : t('components.ClientStatus.xray_connecting');
             contryCodeClass.value = `fi-${status.countryCode?.toLowerCase()}`;
             return status;
           }

@@ -4,7 +4,7 @@
       <table class="FormTable modal-form-table">
         <tbody>
           <tr>
-            <th>{{ $t("components.GeneralOptionsModal.start_xray_on_reboot") }}</th>
+            <th>{{ $t('components.GeneralOptionsModal.start_xray_on_reboot') }}</th>
             <td>
               <label class="go-option">
                 <input type="checkbox" v-model="options.startup" @click="updatestartup" />
@@ -12,7 +12,7 @@
             </td>
           </tr>
           <tr v-show="validateCheckConOption()">
-            <th>{{ $t("components.GeneralOptionsModal.check_xray_connection") }}</th>
+            <th>{{ $t('components.GeneralOptionsModal.check_xray_connection') }}</th>
             <td>
               <label class="go-option">
                 <input type="checkbox" v-model="checkconenabled" @change="setcheckconnection" />
@@ -26,17 +26,30 @@
               </modal>
             </td>
           </tr>
+          <!-- 
+          <tr>
+            <th>
+              {{ $t('components.GeneralOptionsModal.label_gh_proxy') }}
+              <hint v-html="$t('components.GeneralOptionsModal.hint_gh_proxy')"></hint>
+            </th>
+            <td>
+              <label class="go-option">
+                <input type="checkbox" v-model="options.github_proxy" />
+              </label>
+            </td>
+          </tr>
+          -->
         </tbody>
       </table>
       <table class="FormTable modal-form-table">
         <thead>
           <tr>
-            <td colspan="2">{{ $t("components.GeneralOptionsModal.geodad_header") }}</td>
+            <td colspan="2">{{ $t('components.GeneralOptionsModal.geodad_header') }}</td>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <th>{{ $t("components.GeneralOptionsModal.wellknown_geodata") }}</th>
+            <th>{{ $t('components.GeneralOptionsModal.wellknown_geodata') }}</th>
             <td>
               <select class="input_option" v-model="selected_wellknown" @change="setwellknown">
                 <option></option>
@@ -48,13 +61,13 @@
             </td>
           </tr>
           <tr>
-            <th>{{ $t("components.GeneralOptionsModal.label_geoip_url") }}</th>
+            <th>{{ $t('components.GeneralOptionsModal.label_geoip_url') }}</th>
             <td>
               <input v-model="options.geo_ip_url" type="text" class="input_32_table" />
             </td>
           </tr>
           <tr>
-            <th>{{ $t("components.GeneralOptionsModal.label_geosite_url") }}</th>
+            <th>{{ $t('components.GeneralOptionsModal.label_geosite_url') }}</th>
             <td>
               <input v-model="options.geo_site_url" type="text" class="input_32_table" />
             </td>
@@ -64,12 +77,12 @@
       <table class="FormTable modal-form-table">
         <thead>
           <tr>
-            <td colspan="2">{{ $t("components.GeneralOptionsModal.logs_header") }}</td>
+            <td colspan="2">{{ $t('components.GeneralOptionsModal.logs_header') }}</td>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <th>{{ $t("components.GeneralOptionsModal.label_logs_enable_access") }}</th>
+            <th>{{ $t('components.GeneralOptionsModal.label_logs_enable_access') }}</th>
             <td>
               <label class="go-option">
                 <input type="checkbox" v-model="options.logs_access" />
@@ -78,7 +91,7 @@
             </td>
           </tr>
           <tr>
-            <th>{{ $t("components.GeneralOptionsModal.label_logs_enable_error") }}</th>
+            <th>{{ $t('components.GeneralOptionsModal.label_logs_enable_error') }}</th>
             <td>
               <label class="go-option">
                 <input type="checkbox" v-model="options.logs_error" />
@@ -87,7 +100,7 @@
             </td>
           </tr>
           <tr v-if="options.logs_error">
-            <th>{{ $t("components.GeneralOptionsModal.label_logs_level") }}</th>
+            <th>{{ $t('components.GeneralOptionsModal.label_logs_level') }}</th>
             <td>
               <select class="input_option" v-model="options.logs_level">
                 <option v-for="level in log_levels" :value="level">{{ level }}</option>
@@ -96,7 +109,7 @@
             </td>
           </tr>
           <tr>
-            <th>{{ $t("components.GeneralOptionsModal.label_logs_enable_dns") }}</th>
+            <th>{{ $t('components.GeneralOptionsModal.label_logs_enable_dns') }}</th>
             <td>
               <label class="go-option">
                 <input type="checkbox" v-model="options.logs_dns" />
@@ -113,25 +126,25 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, inject, Ref, ref, watch } from "vue";
-  import engine, { EngineResponseConfig, SubmtActions } from "../../modules/Engine";
-  import { XrayObject } from "@/modules/XrayConfig";
-  import { XrayProtocol, XrayRoutingRuleObject } from "@/modules/CommonObjects";
-  import Hint from "@/components/Hint.vue";
-
-  import Modal from "./../Modal.vue";
-  import { XrayInboundObject, XraySocksInboundObject } from "@/modules/InboundObjects";
+  import { defineComponent, inject, Ref, ref, watch } from 'vue';
+  import engine, { EngineResponseConfig, SubmtActions } from '@/modules/Engine';
+  import { XrayObject } from '@/modules/XrayConfig';
+  import { XrayProtocol, XrayRoutingRuleObject } from '@/modules/CommonObjects';
+  import Hint from '@main/Hint.vue';
+  import Modal from '@main/Modal.vue';
+  import { XrayInboundObject, XraySocksInboundObject } from '@/modules/InboundObjects';
 
   class GeneralOptions {
     public startup = false;
+    public github_proxy = '';
     public logs_access = false;
     public logs_error = false;
-    public logs_access_path = "";
-    public logs_error_path = "";
+    public logs_access_path = '';
+    public logs_error_path = '';
     public logs_dns = false;
-    public logs_level = "warning";
-    public geo_ip_url = "";
-    public geo_site_url = "";
+    public logs_level = 'warning';
+    public geo_ip_url = '';
+    public geo_site_url = '';
   }
 
   interface WellKnownGeodatSource {
@@ -142,7 +155,7 @@
   }
 
   export default defineComponent({
-    name: "GeneralOptionsModal",
+    name: 'GeneralOptionsModal',
     components: {
       Modal,
       Hint
@@ -154,7 +167,7 @@
       }
     },
     setup(props) {
-      const uiResponse = inject<Ref<EngineResponseConfig>>("uiResponse")!;
+      const uiResponse = inject<Ref<EngineResponseConfig>>('uiResponse')!;
       const config = ref<XrayObject>(props.config);
       const modal = ref();
       const conModal = ref();
@@ -164,34 +177,34 @@
 
       const known_geodat_sources = ref<WellKnownGeodatSource[]>([
         {
-          name: "Loyalsoldier source",
-          source: "https://github.com/Loyalsoldier/v2ray-rules-dat",
-          geoip_url: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat",
-          geosite_url: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+          name: 'Loyalsoldier source',
+          source: 'https://github.com/Loyalsoldier/v2ray-rules-dat',
+          geoip_url: 'https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat',
+          geosite_url: 'https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat'
         },
         {
-          name: "RUNET Freedom source",
-          source: "https://github.com/runetfreedom/russia-v2ray-rules-dat",
-          geoip_url: "https://raw.githubusercontent.com/runetfreedom/russia-v2ray-rules-dat/release/geoip.dat",
-          geosite_url: "https://raw.githubusercontent.com/runetfreedom/russia-v2ray-rules-dat/release/geosite.dat"
+          name: 'RUNET Freedom source',
+          source: 'https://github.com/runetfreedom/russia-v2ray-rules-dat',
+          geoip_url: 'https://raw.githubusercontent.com/runetfreedom/russia-v2ray-rules-dat/release/geoip.dat',
+          geosite_url: 'https://raw.githubusercontent.com/runetfreedom/russia-v2ray-rules-dat/release/geosite.dat'
         },
         {
-          name: "Nidelon source",
-          source: "https://github.com/Nidelon/ru-block-v2ray-rules",
-          geoip_url: "https://github.com/Nidelon/ru-block-v2ray-rules/releases/latest/download/geoip.dat",
-          geosite_url: "https://github.com/Nidelon/ru-block-v2ray-rules/releases/latest/download/geosite.dat"
+          name: 'Nidelon source',
+          source: 'https://github.com/Nidelon/ru-block-v2ray-rules',
+          geoip_url: 'https://github.com/Nidelon/ru-block-v2ray-rules/releases/latest/download/geoip.dat',
+          geosite_url: 'https://github.com/Nidelon/ru-block-v2ray-rules/releases/latest/download/geosite.dat'
         },
         {
-          name: "DustinWin source",
-          source: "https://github.com/DustinWin/ruleset_geodata",
-          geoip_url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo/geoip.dat",
-          geosite_url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo/geosite.dat"
+          name: 'DustinWin source',
+          source: 'https://github.com/DustinWin/ruleset_geodata',
+          geoip_url: 'https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo/geoip.dat',
+          geosite_url: 'https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo/geosite.dat'
         },
         {
-          name: "Chocolate4U source",
-          source: "https://github.com/Chocolate4U/Iran-v2ray-rules",
-          geoip_url: "https://raw.githubusercontent.com/Chocolate4U/Iran-v2ray-rules/release/geoip.dat",
-          geosite_url: "https://raw.githubusercontent.com/Chocolate4U/Iran-v2ray-rules/release/geosite.dat"
+          name: 'Chocolate4U source',
+          source: 'https://github.com/Chocolate4U/Iran-v2ray-rules',
+          geoip_url: 'https://raw.githubusercontent.com/Chocolate4U/Iran-v2ray-rules/release/geoip.dat',
+          geosite_url: 'https://raw.githubusercontent.com/Chocolate4U/Iran-v2ray-rules/release/geosite.dat'
         }
       ]);
 
@@ -215,21 +228,21 @@
 
       const show = () => {
         options.value = new GeneralOptions();
-        options.value.startup = window.xray.custom_settings.xray_startup === "y";
-        options.value.logs_access = config.value.log?.access != "none";
-        options.value.logs_error = config.value.log?.error != "none";
+        options.value.startup = window.xray.custom_settings.xray_startup === 'y';
+        options.value.logs_access = config.value.log?.access != 'none';
+        options.value.logs_error = config.value.log?.error != 'none';
         options.value.logs_dns = config.value.log?.dnsLog ?? false;
-        options.value.logs_level = config.value.log?.loglevel ?? "warning";
-        options.value.geo_ip_url = uiResponse?.value.geodata?.geoip_url ?? "";
-        options.value.geo_site_url = uiResponse?.value.geodata?.geosite_url ?? "";
-        options.value.logs_access_path = config.value.log?.access ?? "";
-        options.value.logs_error_path = config.value.log?.error ?? "";
+        options.value.logs_level = config.value.log?.loglevel ?? 'warning';
+        options.value.geo_ip_url = uiResponse?.value.geodata?.geoip_url ?? '';
+        options.value.geo_site_url = uiResponse?.value.geodata?.geosite_url ?? '';
+        options.value.logs_access_path = config.value.log?.access ?? '';
+        options.value.logs_error_path = config.value.log?.error ?? '';
         modal.value.show();
       };
 
       const updatestartup = async () => {
         await engine.submit(SubmtActions.toggleStartupOption);
-        window.xray.custom_settings.xray_startup = window.xray.custom_settings.xray_startup === "y" ? "n" : "y";
+        window.xray.custom_settings.xray_startup = window.xray.custom_settings.xray_startup === 'y' ? 'n' : 'y';
       };
 
       const setcheckconnection = async () => {
@@ -241,7 +254,7 @@
             props.config.routing?.rules?.splice(props.config.routing?.rules?.indexOf(rule), 1);
           }
 
-          const socks = props.config.inbounds?.find((i) => i.tag === "sys:socks-in");
+          const socks = props.config.inbounds?.find((i) => i.tag === 'sys:socks-in');
           if (socks) {
             props.config.inbounds?.splice(props.config.inbounds?.indexOf(socks), 1);
             await engine.executeWithLoadingProgress(async () => {
@@ -263,15 +276,15 @@
       const concheckaccept = async () => {
         if (checkconenabled.value) {
           const socks = new XrayInboundObject<XraySocksInboundObject>(XrayProtocol.SOCKS, new XraySocksInboundObject());
-          socks.listen = "127.0.0.1";
-          socks.tag = "sys:socks-in";
+          socks.listen = '127.0.0.1';
+          socks.tag = 'sys:socks-in';
           socks.port = 1080;
           props.config.inbounds.push(socks);
 
           if (props.config.routing) {
             const rule = new XrayRoutingRuleObject();
             rule.name = XrayRoutingRuleObject.connectionCheckRuleName;
-            rule.domain = ["ip-api.com"];
+            rule.domain = ['ip-api.com'];
 
             const outbound = props.config.outbounds?.find((o) => o.protocol !== XrayProtocol.FREEDOM && o.protocol !== XrayProtocol.BLACKHOLE);
             rule.outboundTag = outbound?.tag;
@@ -295,7 +308,7 @@
         config: props.config,
         known_geodat_sources,
         selected_wellknown,
-        log_levels: ["none", "debug", "info", "warning", "error"],
+        log_levels: ['none', 'debug', 'info', 'warning', 'error'],
         show,
         save,
         setwellknown,

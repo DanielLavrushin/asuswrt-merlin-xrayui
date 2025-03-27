@@ -1,17 +1,17 @@
 <template>
   <div class="formfontdesc">
-    <p>{{ $t("components.BlackholeOutbound.modal_desc") }}</p>
+    <p>{{ $t('components.BlackholeOutbound.modal_desc') }}</p>
     <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="2">{{ $t("components.BlackholeOutbound.modal_title") }}</td>
+          <td colspan="2">{{ $t('components.BlackholeOutbound.modal_title') }}</td>
         </tr>
       </thead>
       <tbody>
         <outbound-common :proxy="proxy"></outbound-common>
         <tr v-if="proxy.settings.response">
           <th>
-            {{ $t("components.BlackholeOutbound.label_response") }}
+            {{ $t('components.BlackholeOutbound.label_response') }}
             <hint v-html="$t('components.BlackholeOutbound.hint_response')"></hint>
           </th>
           <td>
@@ -27,14 +27,14 @@
   </div>
 </template>
 <script lang="ts">
-  import { defineComponent, ref } from "vue";
-  import OutboundCommon from "./OutboundCommon.vue";
-  import { XrayProtocol } from "../../modules/CommonObjects";
-  import { XrayBlackholeOutboundObject, XrayOutboundObject } from "../../modules/OutboundObjects";
-  import Hint from "./../Hint.vue";
+  import { defineComponent, ref } from 'vue';
+  import OutboundCommon from './OutboundCommon.vue';
+  import { XrayProtocol } from '@/modules/CommonObjects';
+  import { XrayBlackholeOutboundObject, XrayOutboundObject } from '@/modules/OutboundObjects';
+  import Hint from '@main/Hint.vue';
 
   export default defineComponent({
-    name: "BlackholeOutbound",
+    name: 'BlackholeOutbound',
     components: {
       OutboundCommon,
       Hint
@@ -44,7 +44,7 @@
     },
     setup(props) {
       const proxy = ref<XrayOutboundObject<XrayBlackholeOutboundObject>>(props.proxy ?? new XrayOutboundObject<XrayBlackholeOutboundObject>(XrayProtocol.BLACKHOLE, new XrayBlackholeOutboundObject()));
-      const responses = ref(["none", "http"]);
+      const responses = ref(['none', 'http']);
 
       return {
         proxy,

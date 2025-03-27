@@ -59,7 +59,6 @@ export default defineConfig(({ mode }) => {
         },
         name: 'copy-and-sync',
         closeBundle: () => {
-          if (!process.env.VITE_WATCH) return;
           console.log('Vite finished building. Copying extra files...');
 
           try {
@@ -70,6 +69,7 @@ export default defineConfig(({ mode }) => {
             console.error('File copy error:', e);
           }
 
+          if (!process.env.VITE_WATCH) return;
           console.log('Running sync.js script...');
           exec('node sync.js', (error, stdout, stderr) => {
             if (error) {

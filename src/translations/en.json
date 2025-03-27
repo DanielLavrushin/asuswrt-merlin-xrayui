@@ -58,6 +58,8 @@
       "label_logs_enable_error": "Enable error logs",
       "label_logs_enable_dns": "Enable DNS logs",
       "label_logs_level": "Log level",
+      "label_gh_proxy": "Use GitHub Proxy",
+      "hint_gh_proxy": "Use a GitHub proxy to download files from GitHub (Xray updates, geodata files, etc.) when GitHub is blocked in your region. For now, XRAYUI will try to proxy the request via `https://ghfast.top/`.",
       "geodad_header": "GeoIP/GeoSite Metadata",
       "label_geoip_url": "GeoIP dat URL",
       "label_geosite_url": "GeoSite dat URL",

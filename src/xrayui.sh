@@ -11,6 +11,7 @@ dir_xrayui="/www/user/xrayui"
 DEFAULT_PROFILE="config.json"
 DEFAULT_GEOIP_URL="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
 DEFAULT_GEOSITE_URL="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+DEFAULT_GITHUB_PROXY="https://ghfast.top/"
 
 XRAYUI_CONFIG_FILE="/opt/etc/xrayui.conf"
 if [ -f "$XRAYUI_CONFIG_FILE" ]; then
@@ -33,6 +34,7 @@ XRAYUI_USER_SCRIPTS="/jffs/xrayui_custom"
 XRAYUI_SHARED_DIR="/opt/share/xrayui"
 
 XRAYUI_LOCKFILE="/tmp/xrayui.lock"
+
 # Color Codes
 CERR='\033[0;31m'
 CSUC='\033[0;32m'
@@ -249,7 +251,10 @@ configure_firewall_server() {
         local protocol=$(echo "$inbound" | jq -r '.protocol // empty')
 
         # Skip inbounds with tags starting with 'sys:' and 'dokodemo-door' protocol
-        if [[ "$tag" =~ ^sys: ]] || [ "$protocol" = "dokodemo-door" ]; then
+        case "$tag" in
+        sys:*) continue ;;
+        esac
+        if [ "$protocol" = "dokodemo-door" ]; then
             continue
         fi
 
@@ -279,9 +284,9 @@ configure_firewall_client_direct() {
     printlog true "Configuring Xray client firewall rules for dokodemo-door on port $dokodemo_port..."
 
     # Set up NAT-only rules for REDIRECT mode.
-    iptables -t nat -F XRAYUI 2>/dev/null
-    iptables -t nat -X XRAYUI 2>/dev/null
-    iptables -t nat -N XRAYUI || printlog true "Failed to create NAT chain." $CERR
+    iptables -t nat -F XRAYUI 2>/dev/null || printlog true "Failed to flush NAT chain. Was it already empty?" $CWARN
+    iptables -t nat -X XRAYUI 2>/dev/null || printlog true "Failed to remove NAT chain. Was it already empty?" $CWARN
+    iptables -t nat -N XRAYUI || printlog true "Failed to create NAT chain." $CWARN
 
     # --- Begin Exclusion Rules (NAT) ---
 
@@ -447,9 +452,9 @@ configure_firewall_client_tproxy() {
     fi
 
     # Set up MANGLE chain:
-    iptables -t mangle -F XRAYUI 2>/dev/null
-    iptables -t mangle -X XRAYUI 2>/dev/null
-    iptables -t mangle -N XRAYUI || printlog true "Failed to create mangle chain." $CERR
+    iptables -t mangle -F XRAYUI 2>/dev/null || printlog true "Failed to flush mangle chain. Was it already empty?" $CWARN
+    iptables -t mangle -X XRAYUI 2>/dev/null || printlog true "Failed to remove mangle chain. Was it already empty?" $CWARN
+    iptables -t mangle -N XRAYUI || printlog true "Failed to create mangle chain." $CWARN
 
     # --- Begin Exclusion Rules (both NAT and MANGLE) ---
     # Exclude local (RFC1918) subnets dynamically:
@@ -551,7 +556,7 @@ configure_firewall_client_tproxy() {
     # --- End Exclusion Rules ---
 
     # Execute custom rules for TPROXY (if any)
-    local script="$XRAYUI_USER_SCRIPTS/firewall_client"
+    local script="$XRAYUI_USER_SCRIPTS/firewall_start"
     if [ -x "$script" ]; then
         printlog true "Executing custom TPROXY firewall script: $script"
         "$script" || printlog true "Error executing $script." $CERR
@@ -976,6 +981,7 @@ apply_general_options() {
     local genopts=$(reconstruct_payload)
 
     # setting logs
+    local github_proxy=$(echo "$genopts" | jq -r '.github_proxy')
     local log_level=$(echo "$genopts" | jq -r '.logs_level')
     local logs_access=$(echo "$genopts" | jq -r '.logs_access')
     local logs_error=$(echo "$genopts" | jq -r '.logs_error')
@@ -1015,6 +1021,7 @@ apply_general_options() {
         printlog true "Logrotate configuration updated with new log paths: $logs_access_path $logs_error_path" $CSUC
     fi
 
+    update_xrayui_config "github_proxy" "$github_proxy"
     update_xrayui_config "geosite_url" "$geosite_url"
     update_xrayui_config "geoip_url" "$geoip_url"
 
@@ -1235,8 +1242,8 @@ EOF
         printlog true "Removing existing #xrayui entries from /jffs/scripts/nat-start."
         sed -i '/#xrayui/d' /jffs/scripts/nat-start
     fi
-    echo '/jffs/scripts/xrayui service_event firewall server #xrayui' >>/jffs/scripts/nat-start
-    echo '/jffs/scripts/xrayui service_event firewall client #xrayui' >>/jffs/scripts/nat-start
+
+    echo '/jffs/scripts/xrayui service_event firewall configure #xrayui' >>/jffs/scripts/nat-start
     chmod +x /jffs/scripts/nat-start
     printlog true "Updated /jffs/scripts/nat-start with XrayUI entry." $CSUC
 
@@ -1320,7 +1327,7 @@ $log_access $log_error {
     su nobody root
     daily
     missingok
-    rotate 7
+    rotate 2
     compress
     delaycompress
     notifempty
@@ -1595,14 +1602,21 @@ update_community_geodata() {
     update_loading_progress "Updating community geodata files..." 0
     init_xrayui_config
 
+    local ghproxy="${github_proxy:-false}"
     local geositeurl="${geosite_url:-$DEFAULT_GEOSITE_URL}"
     local geoipurl="${geoip_url:-$DEFAULT_GEOIP_URL}"
+
+    # If using the GitHub proxy, prepend the proxy URL to the geodata URLs.
+    if [ "$ghproxy" = "true" ]; then
+        geositeurl="${DEFAULT_GITHUB_PROXY}${geositeurl}"
+        geoipurl="${DEFAULT_GITHUB_PROXY}${geoipurl}"
+    fi
 
     local target_dir=$(dirname "$(which xray)")
 
     mkdir -p "$target_dir"
 
-    printlog true "Downloading geosite.dat..."
+    printlog true "Downloading geosite.dat from $geositeurl..."
     update_loading_progress "Downloading geosite.dat..."
     curl -L "$geositeurl" -o "$target_dir/geosite.dat"
     if [ $? -ne 0 ]; then
@@ -1610,7 +1624,7 @@ update_community_geodata() {
         return 1
     fi
 
-    printlog true "Downloading geoip.dat..."
+    printlog true "Downloading geoip.dat from $geoipurl..."
     update_loading_progress "Downloading geoip.dat..."
     curl -L "$geoipurl" -o "$target_dir/geoip.dat"
     if [ $? -ne 0 ]; then
@@ -2386,15 +2400,11 @@ service_event)
         exit 0
     elif [ "$2" = "firewall" ]; then
         case "$3" in
-        "server")
-            configure_firewall_server
+        configure)
+            configure_firewall
             exit 0
             ;;
-        "client")
-            configure_firewall_client
-            exit 0
-            ;;
-        "cleanup")
+        cleanup)
             cleanup_firewall
             exit 0
             ;;

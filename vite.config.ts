@@ -70,9 +70,9 @@ export default defineConfig(({ mode }) => {
           }
 
           console.log('Running sync.js script...');
-          exec('node sync.js', (err, stdout, stderr) => {
-            if (err) {
-              console.error(`Error running sync.js script: ${err}`);
+          exec('node sync.js', (error, stdout, stderr) => {
+            if (error) {
+              console.error('Error running sync.js script:', error);
               return;
             }
             console.log(`Sync script output: ${stdout}`);

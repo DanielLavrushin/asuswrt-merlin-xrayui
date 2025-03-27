@@ -26,6 +26,19 @@
               </modal>
             </td>
           </tr>
+          <!-- 
+          <tr>
+            <th>
+              {{ $t('components.GeneralOptionsModal.label_gh_proxy') }}
+              <hint v-html="$t('components.GeneralOptionsModal.hint_gh_proxy')"></hint>
+            </th>
+            <td>
+              <label class="go-option">
+                <input type="checkbox" v-model="options.github_proxy" />
+              </label>
+            </td>
+          </tr>
+          -->
         </tbody>
       </table>
       <table class="FormTable modal-form-table">
@@ -123,6 +136,7 @@
 
   class GeneralOptions {
     public startup = false;
+    public github_proxy = '';
     public logs_access = false;
     public logs_error = false;
     public logs_access_path = '';

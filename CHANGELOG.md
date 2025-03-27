@@ -1,5 +1,13 @@
 # XRAYUI Changelog
 
+## [0.41.4] - 2025-03-27
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- FIXED: Consolidated and fixed firewall script handling (NAT restart hook).
+- UPDATED: Migrated from `webpack` to `vite`.
+- UPDATED: Reduced `logrotate` retention period from 7 days to 2 days.
+
 ## [0.41.3] - 2025-03-23
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
@@ -8,8 +16,8 @@
 - FIXED: QR import for `REALITY` and `TLS`.
 - FIXED: When updating, the `logrotate` file is no longer overwritten if it already exists.
 - FIXED: The `logrotate` file is now updated with the new log file paths when the logs path in the `XRAY` config is changed.
-- IMPROVE: Config masking when sharing.
-- IMPROVE: Minor front-end refactoring.
+- IMPROVED: Config masking when sharing.
+- IMPROVED: Minor front-end refactoring.
 
 ## [0.41.0] - 2025-03-22
 

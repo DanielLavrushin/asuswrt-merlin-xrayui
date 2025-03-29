@@ -26,19 +26,18 @@
               </modal>
             </td>
           </tr>
-          <!-- 
           <tr>
             <th>
               {{ $t('components.GeneralOptionsModal.label_gh_proxy') }}
               <hint v-html="$t('components.GeneralOptionsModal.hint_gh_proxy')"></hint>
             </th>
             <td>
-              <label class="go-option">
-                <input type="checkbox" v-model="options.github_proxy" />
-              </label>
+              <select class="input_option" v-model="options.github_proxy">
+                <option></option>
+                <option v-for="proxy in gh_proxies" :value="proxy">{{ proxy }}</option>
+              </select>
             </td>
           </tr>
-          -->
         </tbody>
       </table>
       <table class="FormTable modal-form-table">
@@ -171,6 +170,7 @@
       const config = ref<XrayObject>(props.config);
       const modal = ref();
       const conModal = ref();
+      const gh_proxies = ref<string[]>(['https://ghfast.top/', 'https://ghproxy.net/', 'https://jiashu.1win.eu.org/', 'https://gitproxy.click/', 'https://gh-proxy.ygxz.in/', 'https://github.moeyy.xyz/', 'https://cdn.moran233.xyz/', 'https://gh-proxy.com/', 'https://git.886.be/']);
       const options = ref<GeneralOptions>(new GeneralOptions());
       const selected_wellknown = ref<WellKnownGeodatSource>();
       const checkconenabled = ref<boolean>(props.config.routing?.rules?.find((r) => r.name === XrayRoutingRuleObject.connectionCheckRuleName) !== undefined);
@@ -235,6 +235,7 @@
         options.value.logs_level = config.value.log?.loglevel ?? 'warning';
         options.value.geo_ip_url = uiResponse?.value.geodata?.geoip_url ?? '';
         options.value.geo_site_url = uiResponse?.value.geodata?.geosite_url ?? '';
+        options.value.github_proxy = uiResponse?.value.xray?.github_proxy ?? '';
         options.value.logs_access_path = config.value.log?.access ?? '';
         options.value.logs_error_path = config.value.log?.error ?? '';
         modal.value.show();
@@ -308,6 +309,7 @@
         config: props.config,
         known_geodat_sources,
         selected_wellknown,
+        gh_proxies,
         log_levels: ['none', 'debug', 'info', 'warning', 'error'],
         show,
         save,

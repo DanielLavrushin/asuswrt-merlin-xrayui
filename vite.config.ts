@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
         scss: {
           api: 'modern-compiler',
           additionalData: `
-            @use "${join(__dirname, 'src', 'App.globals.scss')}" as *;
+            @use "@/App.globals.scss" as *;
         `
         }
       }

@@ -1305,7 +1305,10 @@ EOF
     mkdir -p "$XRAYUI_SHARED_DIR" || printlog true "Failed to create $XRAYUI_SHARED_DIR." $CERR
 
     update_loading_progress "Downloading XRAYUI geodata files builder..."
-    if wget -q --show-progress --no-hsts -O "/tmp/xraydatbuilder.tar.gz" "https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/releases/latest/download/xrayui-datbuilder.tar.gz"; then
+
+    local release_url=$(github_proxy_url "https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/releases/latest/download/xrayui-datbuilder.tar.gz")
+
+    if wget -q --show-progress --no-hsts -O "/tmp/xraydatbuilder.tar.gz" "$release_url"; then
         tar -xzf /tmp/xraydatbuilder.tar.gz -C "$XRAYUI_SHARED_DIR" || printlog true "Failed to extract xraydatbuilder.tar.gz." $CERR
         rm -f /tmp/xraydatbuilder.tar.gz || printlog true "Failed to remove xraydatbuilder.tar.gz." $CERR
         chmod +x "$XRAYUI_SHARED_DIR/xraydatbuilder" || printlog true "Failed to make xraydatbuilder executable." $CERR
@@ -1598,19 +1601,22 @@ fixme() {
     printlog true "Done with fixme function." "$CSUC"
 }
 
+github_proxy_url() {
+    init_xrayui_config
+    local github_url="$1"
+    local ghproxy="${github_proxy}"
+    if [ -z "$ghproxy" ]; then
+        github_url="${ghproxy}${github_url}"
+    fi
+    echo "$github_url"
+}
+
 update_community_geodata() {
     update_loading_progress "Updating community geodata files..." 0
     init_xrayui_config
 
-    local ghproxy="${github_proxy:-false}"
-    local geositeurl="${geosite_url:-$DEFAULT_GEOSITE_URL}"
-    local geoipurl="${geoip_url:-$DEFAULT_GEOIP_URL}"
-
-    # If using the GitHub proxy, prepend the proxy URL to the geodata URLs.
-    if [ "$ghproxy" = "true" ]; then
-        geositeurl="${DEFAULT_GITHUB_PROXY}${geositeurl}"
-        geoipurl="${DEFAULT_GITHUB_PROXY}${geoipurl}"
-    fi
+    local geositeurl=$(github_proxy_url "${geosite_url:-$DEFAULT_GEOSITE_URL}")
+    local geoipurl=$(github_proxy_url "${geoip_url:-$DEFAULT_GEOIP_URL}")
 
     local target_dir=$(dirname "$(which xray)")
 
@@ -1642,7 +1648,6 @@ update_community_geodata() {
         printlog true "Failed to place geosite.dat/geoip.dat in $target_dir." $CERR
     fi
     update_loading_progress "Community geodata files updated successfully." 100
-
 }
 
 collect_initial_response() {
@@ -1677,6 +1682,11 @@ collect_initial_response() {
     local uptime_xray=$(get_proc_uptime "xray")
     json_content=$(echo "$json_content" | jq --argjson uptime "$uptime_xray" '.xray.uptime = $uptime')
     json_content=$(echo "$json_content" | jq --arg profile "$profile" '.xray.profile = $profile')
+
+    local github_proxy="${github_proxy}"
+    if [ ! -z "$github_proxy" ]; then
+        json_content=$(echo "$json_content" | jq --arg github_proxy "$github_proxy" '.xray.github_proxy = $github_proxy')
+    fi
 
     local XRAY_VERSION=$(xray version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
     json_content=$(echo "$json_content" | jq --arg xray_ver "$XRAY_VERSION" --arg xrayui_ver "$XRAYUI_VERSION" '.xray.ui_version = $xrayui_ver | .xray.core_version = $xray_ver')

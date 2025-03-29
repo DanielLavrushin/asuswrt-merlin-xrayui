@@ -1,5 +1,9 @@
 # XRAYUI Changelog
 
+## [0.42.0] - 2025-03-28
+
+- ADDED: New option `GitHub Proxy` in `General Settings`. You can now select a proxy server if `github.com` is blocked in your region.
+
 ## [0.41.4] - 2025-03-27
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

@@ -83,7 +83,6 @@
           .join('&');
 
         link.value = `${p.protocol}://${props.client.id}@${wanip}?${queryString}#${window.xray.router.name}`;
-        console.log(link.value);
         modalQr.value?.show();
       };
 

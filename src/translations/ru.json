@@ -58,6 +58,8 @@
       "label_logs_enable_error": "Включить логи ошибок",
       "label_logs_enable_dns": "Включить логи DNS",
       "label_logs_level": "Уровень логирования",
+      "label_gh_proxy": "Использовать прокси GitHub",
+      "hint_gh_proxy": "Использовать прокси-сервер GitHub для загрузки файлов с GitHub (обновления Xray, файлы геоданных и т.д.), если GitHub заблокирован в вашем регионе.",
       "geodad_header": "GeoIP/GeoSite данные",
       "label_geoip_url": "GeoIP URL",
       "label_geosite_url": "GeoSite URL",

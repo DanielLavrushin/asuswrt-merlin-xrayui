@@ -53,7 +53,7 @@ class EngineResponseConfig {
   public wireguard?: EngineWireguard;
   public reality?: EngineReality;
   public certificates?: EngineSsl;
-  public xray?: { test: string; uptime: number; ui_version: string; core_version: string; profile: string; profiles: string[] };
+  public xray?: { test: string; uptime: number; ui_version: string; core_version: string; profile: string; profiles: string[]; github_proxy: string };
   public geodata?: EngineGeodatConfig = new EngineGeodatConfig();
   public loading?: EngineLoadingProgress;
   public connection_check?: EngineClientConnectionStatus;

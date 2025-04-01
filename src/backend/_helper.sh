@@ -139,8 +139,8 @@ save_ui_response() {
 }
 
 test_xray_config() {
-    printlog true "Testing xray configuration $ADDON_TITLE..."
-    update_loading_progress "Testing xray configuration $ADDON_TITLE..."
+    printlog true "Testing Xray configuration..."
+    update_loading_progress "Testing Xray configuration..."
 
     local output
 
@@ -165,7 +165,7 @@ update_loading_progress() {
     local message=$1
     local progress=$2
 
-    if [ ! -f "$ADDON_WEB_DIR" ]; then
+    if [ ! -d "$ADDON_WEB_DIR" ]; then
         return
     fi
 
@@ -201,7 +201,7 @@ update_loading_progress() {
 remove_loading_progress() {
 
     printlog true "Removing loading progress..."
-    if [ ! -f "$ADDON_WEB_DIR" ]; then
+    if [ ! -d "$ADDON_WEB_DIR" ]; then
         return
     fi
 

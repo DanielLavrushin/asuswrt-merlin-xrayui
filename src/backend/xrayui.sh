@@ -158,15 +158,12 @@ service_event)
         case "$3" in
         "realitykeys")
             regenerate_reality_keys
-            exit 0
             ;;
         "wgkeys")
             regenerate_wireguard_keys
-            exit 0
             ;;
         "sslcertificates")
             regenerate_ssl_certificates
-            exit 0
             ;;
         esac
         exit 0
@@ -174,11 +171,9 @@ service_event)
         case "$3" in
         configure)
             configure_firewall
-            exit 0
             ;;
         cleanup)
             cleanup_firewall
-            exit 0
             ;;
         esac
         exit 0
@@ -188,19 +183,16 @@ service_event)
             update_loading_progress "Starting Xray service..." 0
             start
             update_loading_progress "Xray service started successfully." 100
-            exit 0
             ;;
         "restart")
             update_loading_progress "Restarting Xray service..." 0
             restart
             update_loading_progress "Xray service restarted successfully." 100
-            exit 0
             ;;
         "stop")
             update_loading_progress "Stopping Xray service..." 0
             stop
             update_loading_progress "Xray service stopped successfully." 100
-            exit 0
             ;;
         *)
             exit 1

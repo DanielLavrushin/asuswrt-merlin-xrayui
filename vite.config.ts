@@ -3,14 +3,14 @@ import vue from '@vitejs/plugin-vue';
 import { exec } from 'child_process';
 import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
 import fs from 'fs';
-import path, { dirname, join } from 'path';
+import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 function watchAllShFiles(pluginContext, dir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
 
   entries.forEach((entry) => {
-    const fullPath = path.join(dir, entry.name);
+    const fullPath = join(dir, entry.name);
 
     if (entry.isDirectory()) {
       watchAllShFiles(pluginContext, fullPath);
@@ -27,7 +27,7 @@ function inlineShellImports(scriptPath, visited = new Set(), isRoot = true) {
   visited.add(scriptPath);
 
   let content = fs.readFileSync(scriptPath, 'utf8');
-  const dirOfScript = path.dirname(scriptPath);
+  const dirOfScript = dirname(scriptPath);
 
   const lines = content.split('\n');
   let output = '';
@@ -38,7 +38,7 @@ function inlineShellImports(scriptPath, visited = new Set(), isRoot = true) {
     const match = line.match(/^import\s+(.+)$/);
     if (match) {
       const importedFile = match[1].trim();
-      const importAbsolutePath = path.resolve(dirOfScript, importedFile);
+      const importAbsolutePath = resolve(dirOfScript, importedFile);
 
       output += inlineShellImports(importAbsolutePath, visited, false);
     } else {
@@ -82,12 +82,12 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        '@main': path.resolve(__dirname, 'src', 'components'),
-        '@ibd': path.resolve(__dirname, 'src', 'components', 'inbounds'),
-        '@obd': path.resolve(__dirname, 'src', 'components', 'outbounds'),
-        '@modal': path.resolve(__dirname, 'src', 'components', 'modals'),
-        '@clients': path.resolve(__dirname, 'src', 'components', 'clients'),
-        '@': path.resolve(__dirname, 'src')
+        '@main': resolve(__dirname, 'src', 'components'),
+        '@ibd': resolve(__dirname, 'src', 'components', 'inbounds'),
+        '@obd': resolve(__dirname, 'src', 'components', 'outbounds'),
+        '@modal': resolve(__dirname, 'src', 'components', 'modals'),
+        '@clients': resolve(__dirname, 'src', 'components', 'clients'),
+        '@': resolve(__dirname, 'src')
       }
     },
 
@@ -100,9 +100,9 @@ export default defineConfig(({ mode }) => {
       cssInjectedByJsPlugin(),
       {
         buildStart() {
-          this.addWatchFile(path.resolve(__dirname, 'src', 'App.html'));
+          this.addWatchFile(resolve(__dirname, 'src', 'App.html'));
 
-          const backendDir = path.resolve(__dirname, 'src', 'backend');
+          const backendDir = resolve(__dirname, 'src', 'backend');
           watchAllShFiles(this, backendDir);
         },
         name: 'copy-and-sync',
@@ -110,10 +110,10 @@ export default defineConfig(({ mode }) => {
           console.log('Vite finished building. Copying extra files...');
 
           try {
-            const scriptPath = path.join(__dirname, 'src', 'backend', 'xrayui.sh');
+            const scriptPath = join(__dirname, 'src', 'backend', 'xrayui.sh');
             const mergedContent = inlineShellImports(scriptPath);
 
-            const distScript = path.join(__dirname, 'dist', 'xrayui');
+            const distScript = join(__dirname, 'dist', 'xrayui');
             fs.writeFileSync(distScript, mergedContent, { mode: 0o755 });
 
             fs.copyFileSync('src/App.html', 'dist/index.asp');

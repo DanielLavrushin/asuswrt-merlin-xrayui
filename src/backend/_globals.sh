@@ -1,5 +1,4 @@
 #!/bin/sh
-
 export PATH="/opt/bin:/opt/sbin:/sbin:/bin:/usr/sbin:/usr/bin"
 
 source /usr/sbin/helper.sh
@@ -26,7 +25,6 @@ XRAYUI_CLIENTS_FILE="$ADDON_WEB_DIR/clients-online.json"
 DEFAULT_XRAY_PROFILE_NAME="config.json"
 DEFAULT_GEOIP_URL="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
 DEFAULT_GEOSITE_URL="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
-DEFAULT_GITHUB_PROXY="https://ghfast.top/"
 
 XRAYUI_CONFIG_FILE="/opt/etc/$ADDON_TAG.conf"
 

@@ -1,4 +1,6 @@
 #!/bin/sh
+# shellcheck disable=SC2034  # codacy:Unused variables
+
 load_xrayui_config() {
     if [ -f "$XRAYUI_CONFIG_FILE" ]; then
         . "$XRAYUI_CONFIG_FILE"

@@ -1,4 +1,6 @@
 #!/bin/sh
+# shellcheck disable=SC2034  # codacy:Unused variables
+
 regenerate_reality_keys() {
     printlog true "Regenerating Reality private and public keys..."
 

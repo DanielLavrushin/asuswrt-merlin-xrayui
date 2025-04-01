@@ -1,4 +1,6 @@
 #!/bin/sh
+# shellcheck disable=SC2034  # codacy:Unused variables
+
 mount_ui() {
 
     FD=386

@@ -1,4 +1,6 @@
 #!/bin/sh
+# shellcheck disable=SC2034  # codacy:Unused variables
+
 replace_ips_with_domains() {
   file="$1"
   tmpfile="/tmp/$(basename "$file").tmp"
@@ -27,9 +29,9 @@ logs_fetch() {
   local log_access="$(jq -r '.log.access // "/tmp/xray_access.log"' "$XRAY_CONFIG_FILE")"
   local log_error="$(jq -r '.log.error // "/tmp/xray_error.log"' "$XRAY_CONFIG_FILE")"
 
-  tail -n 200 "$log_error" >/www/user/xrayui/xray_error_partial.asp
-  tail -n 200 "$log_access" >/www/user/xrayui/xray_access_partial.asp
-  replace_ips_with_domains /www/user/xrayui/xray_access_partial.asp
+  tail -n 200 "$log_error" >"$ADDON_WEB_DIR/xray_error_partial.asp"
+  tail -n 200 "$log_access" >"$ADDON_WEB_DIR/xray_access_partial.asp"
+  replace_ips_with_domains "$ADDON_WEB_DIR/xray_access_partial.asp"
   update_loading_progress "Logs fetched successfully." 100
 }
 

@@ -1,4 +1,5 @@
 #!/bin/sh
+# shellcheck disable=SC2034  # codacy:Unused variables
 
 regenerate_wireguard_keys() {
     printlog true "Regenerating WireGuard private and public keys..."

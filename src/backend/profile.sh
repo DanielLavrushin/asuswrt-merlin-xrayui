@@ -1,4 +1,6 @@
 #!/bin/sh
+# shellcheck disable=SC2034  # codacy:Unused variables
+
 change_config_profile() {
     update_loading_progress "Changing XRAY configuration profile..." 0
 

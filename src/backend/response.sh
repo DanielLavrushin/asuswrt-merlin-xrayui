@@ -1,4 +1,6 @@
 #!/bin/sh
+# shellcheck disable=SC2034  # codacy:Unused variables
+
 initial_response() {
     load_ui_response
     load_xrayui_config

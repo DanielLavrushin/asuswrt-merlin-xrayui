@@ -1,5 +1,6 @@
 #!/bin/sh
 # shellcheck disable=SC2034  # codacy:Unused variables
+
 export PATH="/opt/bin:/opt/sbin:/sbin:/bin:/usr/sbin:/usr/bin"
 
 source /usr/sbin/helper.sh

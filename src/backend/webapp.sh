@@ -1,4 +1,5 @@
 #!/bin/sh
+# shellcheck disable=SC2034  # codacy:Unused variables
 
 webapp_start() {
     printlog true "Starting XRAY UI webapp..."

@@ -1,4 +1,6 @@
 #!/bin/sh
+# shellcheck disable=SC2034  # codacy:Unused variables
+
 show_version() {
     XRAY_VERSION=$(xray version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
     printlog true "XRAYUI: $XRAYUI_VERSION, XRAY-CORE: $XRAY_VERSION" "$CSUC"

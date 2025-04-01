@@ -1,4 +1,6 @@
 #!/bin/sh
+# shellcheck disable=SC2034  # codacy:Unused variables
+
 apply_general_options() {
     update_loading_progress "Applying general settings..." 0
     printlog true "Applying general settings..."

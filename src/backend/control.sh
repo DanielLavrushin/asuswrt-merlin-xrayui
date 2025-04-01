@@ -1,3 +1,4 @@
+#!/bin/sh
 start() {
 
     test_xray_config

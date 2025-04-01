@@ -1,3 +1,5 @@
+#!/bin/sh
+
 regenerate_ssl_certificates() {
     local cert_dir="/opt/etc/xray/cert"
     local cert_file="$cert_dir/xray-cert.crt"

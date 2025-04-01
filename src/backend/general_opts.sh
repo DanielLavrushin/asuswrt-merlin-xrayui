@@ -1,3 +1,4 @@
+#!/bin/sh
 apply_general_options() {
     update_loading_progress "Applying general settings..." 0
     printlog true "Applying general settings..."

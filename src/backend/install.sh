@@ -1,3 +1,4 @@
+#!/bin/sh
 install() {
 
     update_loading_progress "Installing $ADDON_TITLE..."

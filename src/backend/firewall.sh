@@ -1,3 +1,4 @@
+#!/bin/sh
 configure_firewall() {
     printlog true "Configuring Xray firewall rules..."
     update_loading_progress "Configuring Xray firewall rules..."

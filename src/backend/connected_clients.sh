@@ -1,3 +1,4 @@
+#!/bin/sh
 get_connected_clients() {
     local temp_file="/tmp/xray_clients_online.json"
     >"$temp_file" || printlog true "Failed to create temporary file: $temp_file" $CERR

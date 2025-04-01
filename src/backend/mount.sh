@@ -1,3 +1,4 @@
+#!/bin/sh
 mount_ui() {
 
     FD=386

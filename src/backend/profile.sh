@@ -1,3 +1,4 @@
+#!/bin/sh
 change_config_profile() {
     update_loading_progress "Changing XRAY configuration profile..." 0
 

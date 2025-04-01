@@ -1,3 +1,4 @@
+#!/bin/sh
 show_version() {
     XRAY_VERSION=$(xray version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
     printlog true "XRAYUI: $XRAYUI_VERSION, XRAY-CORE: $XRAY_VERSION" "$CSUC"

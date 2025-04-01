@@ -1,3 +1,4 @@
+#!/bin/sh
 github_proxy_url() {
     load_xrayui_config
     local github_url="$1"

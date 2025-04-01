@@ -1,4 +1,4 @@
-# Color Codes
+#!/bin/sh
 CERR='\033[0;31m'
 CSUC='\033[0;32m'
 CWARN='\033[0;33m'

@@ -1,3 +1,4 @@
+#!/bin/sh
 load_xrayui_config() {
     if [ -f "$XRAYUI_CONFIG_FILE" ]; then
         . "$XRAYUI_CONFIG_FILE"

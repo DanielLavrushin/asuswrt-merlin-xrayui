@@ -1,3 +1,4 @@
+#!/bin/sh
 update_community_geodata() {
     update_loading_progress "Updating community geodata files..." 0
     load_xrayui_config

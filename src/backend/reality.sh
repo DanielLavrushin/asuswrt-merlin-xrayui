@@ -1,3 +1,4 @@
+#!/bin/sh
 regenerate_reality_keys() {
     printlog true "Regenerating Reality private and public keys..."
 

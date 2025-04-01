@@ -1,3 +1,5 @@
+#!/bin/sh
+
 webapp_start() {
     printlog true "Starting XRAY UI webapp..."
 

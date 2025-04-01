@@ -1,3 +1,4 @@
+#!/bin/sh
 update() {
 
     update_loading_progress "Updating $ADDON_TITLE..." 0

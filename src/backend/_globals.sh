@@ -1,3 +1,5 @@
+#!/bin/sh
+
 export PATH="/opt/bin:/opt/sbin:/sbin:/bin:/usr/sbin:/usr/bin"
 
 source /usr/sbin/helper.sh

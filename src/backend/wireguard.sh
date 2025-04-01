@@ -1,3 +1,5 @@
+#!/bin/sh
+
 regenerate_wireguard_keys() {
     printlog true "Regenerating WireGuard private and public keys..."
     local private_key=$(reconstruct_payload)

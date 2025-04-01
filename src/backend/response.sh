@@ -1,3 +1,4 @@
+#!/bin/sh
 initial_response() {
     load_ui_response
     load_xrayui_config

@@ -1,10 +1,55 @@
+/* eslint-disable  security/detect-non-literal-fs-filename */
+
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { exec } from 'child_process';
 import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
 import fs from 'fs';
-import path, { dirname, join } from 'path';
+import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
+
+function watchAllShFiles(pluginContext, dir) {
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+  entries.forEach((entry) => {
+    const fullPath = join(dir, entry.name);
+
+    if (entry.isDirectory()) {
+      watchAllShFiles(pluginContext, fullPath);
+    } else if (entry.isFile() && fullPath.endsWith('.sh')) {
+      pluginContext.addWatchFile(fullPath);
+    }
+  });
+}
+
+function inlineShellImports(scriptPath, visited = new Set(), isRoot = true) {
+  if (visited.has(scriptPath)) {
+    return '';
+  }
+  visited.add(scriptPath);
+
+  let content = fs.readFileSync(scriptPath, 'utf8');
+  const dirOfScript = dirname(scriptPath);
+
+  const lines = content.split('\n');
+  let output = '';
+
+  for (const line of lines) {
+    const match = line.match(/^import\s+(.+)$/);
+    if (match) {
+      const importedFile = match[1].trim();
+      const importAbsolutePath = resolve(dirOfScript, importedFile);
+      output += inlineShellImports(importAbsolutePath, visited, false);
+    } else {
+      if (!isRoot && line.match(/^#/)) {
+        continue;
+      }
+      output += line + '\n';
+    }
+  }
+
+  return output;
+}
 
 export default defineConfig(({ mode }) => {
   const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -36,12 +81,12 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        '@main': path.resolve(__dirname, 'src', 'components'),
-        '@ibd': path.resolve(__dirname, 'src', 'components', 'inbounds'),
-        '@obd': path.resolve(__dirname, 'src', 'components', 'outbounds'),
-        '@modal': path.resolve(__dirname, 'src', 'components', 'modals'),
-        '@clients': path.resolve(__dirname, 'src', 'components', 'clients'),
-        '@': path.resolve(__dirname, 'src')
+        '@main': resolve(__dirname, 'src', 'components'),
+        '@ibd': resolve(__dirname, 'src', 'components', 'inbounds'),
+        '@obd': resolve(__dirname, 'src', 'components', 'outbounds'),
+        '@modal': resolve(__dirname, 'src', 'components', 'modals'),
+        '@clients': resolve(__dirname, 'src', 'components', 'clients'),
+        '@': resolve(__dirname, 'src')
       }
     },
 
@@ -54,16 +99,23 @@ export default defineConfig(({ mode }) => {
       cssInjectedByJsPlugin(),
       {
         buildStart() {
-          this.addWatchFile(path.resolve(__dirname, 'src', 'App.html'));
-          this.addWatchFile(path.resolve(__dirname, 'src', 'xrayui.sh'));
+          this.addWatchFile(resolve(__dirname, 'src', 'App.html'));
+
+          const backendDir = resolve(__dirname, 'src', 'backend');
+          watchAllShFiles(this, backendDir);
         },
         name: 'copy-and-sync',
         closeBundle: () => {
           console.log('Vite finished building. Copying extra files...');
 
           try {
+            const scriptPath = join(__dirname, 'src', 'backend', 'xrayui.sh');
+            const mergedContent = inlineShellImports(scriptPath);
+
+            const distScript = join(__dirname, 'dist', 'xrayui');
+            fs.writeFileSync(distScript, mergedContent, { mode: 0o755 });
+
             fs.copyFileSync('src/App.html', 'dist/index.asp');
-            fs.copyFileSync('src/xrayui.sh', 'dist/xrayui');
             console.log('Files copied successfully.');
           } catch (e) {
             console.error('File copy error:', e);
@@ -71,7 +123,7 @@ export default defineConfig(({ mode }) => {
 
           if (!process.env.VITE_WATCH) return;
           console.log('Running sync.js script...');
-          exec('node sync.js', (error, stdout, stderr) => {
+          exec('node vite.sync.js', (error, stdout, stderr) => {
             if (error) {
               console.error('Error running sync.js script:', error);
               return;

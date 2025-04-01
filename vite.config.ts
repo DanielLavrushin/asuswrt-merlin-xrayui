@@ -42,7 +42,7 @@ function inlineShellImports(scriptPath, visited = new Set(), isRoot = true) {
 
       output += inlineShellImports(importAbsolutePath, visited, false);
     } else {
-      if (!isRoot && i === 0 && line.match(/^#!.*(sh|bash|zsh)/)) {
+      if (!isRoot && line.match(/^#/)) {
         continue;
       }
       output += line + '\n';

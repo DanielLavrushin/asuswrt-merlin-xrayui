@@ -1,4 +1,5 @@
 #!/bin/sh
+# shellcheck disable=SC2034  # codacy:Unused variables
 CERR='\033[0;31m'
 CSUC='\033[0;32m'
 CWARN='\033[0;33m'

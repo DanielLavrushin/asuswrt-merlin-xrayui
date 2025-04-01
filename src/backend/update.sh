@@ -1,4 +1,5 @@
 #!/bin/sh
+# shellcheck disable=SC2034  # codacy:Unused variables
 update() {
 
     update_loading_progress "Updating $ADDON_TITLE..." 0

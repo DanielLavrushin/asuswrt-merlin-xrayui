@@ -116,26 +116,38 @@ cleanup_payload() {
 }
 
 load_ui_response() {
+    FD=386
+    eval exec "$FD>$XRAYUI_LOCKFILE"
+    if ! flock -x "$FD"; then
+        printlog true "Failed to acquire lock for loading UI response." "$CERR"
+        return 1
+    fi
 
     if [ ! -f "$UI_RESPONSE_FILE" ]; then
-        printlog true "Creating $ADDON_TITLE response file: $UI_RESPONSE_FILE"
+        printlog true "Creating $ADDON_TITLE response file: $UI_RESPONSE_FILE" "$CSUC"
         echo '{}' >"$UI_RESPONSE_FILE"
         chmod 600 "$UI_RESPONSE_FILE"
     fi
 
-    if [ -f "$UI_RESPONSE_FILE" ]; then
-        UI_RESPONSE=$(cat "$UI_RESPONSE_FILE")
-    else
-        UI_RESPONSE="{}"
-    fi
-
+    UI_RESPONSE=$(cat "$UI_RESPONSE_FILE")
+    flock -u "$FD"
 }
 
 save_ui_response() {
-    echo "$UI_RESPONSE" >"$UI_RESPONSE_FILE" || {
-        printlog true "Failed to save UI response to $UI_RESPONSE_FILE" $CERR
+    FD=386
+    eval exec "$FD>$XRAYUI_LOCKFILE"
+    if ! flock -x "$FD"; then
+        printlog true "Failed to acquire lock for saving UI response." "$CERR"
         return 1
-    }
+    fi
+
+    if ! echo "$UI_RESPONSE" >"$UI_RESPONSE_FILE"; then
+        printlog true "Failed to save UI response to $UI_RESPONSE_FILE" "$CERR"
+        flock -u "$FD"
+        return 1
+    fi
+
+    flock -u "$FD"
 }
 
 test_xray_config() {

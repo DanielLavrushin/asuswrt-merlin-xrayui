@@ -25,7 +25,7 @@ update_community_geodata() {
         return 1
     fi
 
-    if [[ -f "$target_dir/geosite.dat" && -f "$target_dir/geoip.dat" ]]; then
+    if [ -f "$target_dir/geosite.dat" ] && [ -f "$target_dir/geoip.dat" ]; then
         printlog true "Files successfully placed in $target_dir." $CSUC
         if [ -f "$XRAY_PIDFILE" ]; then
             update_loading_progress "Restarting Xray service..." 60

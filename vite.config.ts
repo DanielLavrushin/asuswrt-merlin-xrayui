@@ -1,3 +1,5 @@
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { exec } from 'child_process';
@@ -32,14 +34,11 @@ function inlineShellImports(scriptPath, visited = new Set(), isRoot = true) {
   const lines = content.split('\n');
   let output = '';
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
+  for (const line of lines) {
     const match = line.match(/^import\s+(.+)$/);
     if (match) {
       const importedFile = match[1].trim();
       const importAbsolutePath = resolve(dirOfScript, importedFile);
-
       output += inlineShellImports(importAbsolutePath, visited, false);
     } else {
       if (!isRoot && line.match(/^#/)) {

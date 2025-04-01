@@ -72,10 +72,8 @@ service_event)
         exit 0
     elif [ "$2" = "cleanloadingprogress" ]; then
         remove_loading_progress
-        exit 0
     elif [ "$2" = "testconfig" ]; then
         test_xray_config
-        exit 0
     elif [ "$2" = "startup" ]; then
         get_xray_proc
         if [ "$(am_settings_get xray_startup)" = "y" ]; then
@@ -87,10 +85,8 @@ service_event)
         else
             printlog true "Xray service is disabled by XRAYUI. Xray service is not running."
         fi
-        exit 0
     elif [ "$2" = "update" ]; then
         update
-        exit 0
     elif [ "$2" = "geodata" ]; then
         if [ "$3" = "communityupdate" ]; then
             update_community_geodata
@@ -108,10 +104,8 @@ service_event)
             geodata_delete_tag
             update_loading_progress "Geodata tag deleted successfully." 100
         fi
-        exit 0
     elif [ "$2" = "connectedclients" ]; then
         get_connected_clients
-        exit 0
     elif [ "$2" = "configuration" ]; then
         case "$3" in
         "apply")
@@ -153,7 +147,6 @@ service_event)
             delete_config_profile
             ;;
         esac
-        exit 0
     elif [ "$2" = "regenerate" ]; then
         case "$3" in
         "realitykeys")
@@ -166,7 +159,6 @@ service_event)
             regenerate_ssl_certificates
             ;;
         esac
-        exit 0
     elif [ "$2" = "firewall" ]; then
         case "$3" in
         configure)
@@ -176,7 +168,6 @@ service_event)
             cleanup_firewall
             ;;
         esac
-        exit 0
     elif [ "$2" = "serverstatus" ]; then
         case "$3" in
         "start")

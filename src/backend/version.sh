@@ -1,6 +1,6 @@
 show_version() {
-    local XRAY_VERSION=$(xray version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
-    printlog true "XRAYUI: $XRAYUI_VERSION, XRAY-CORE: $XRAY_VERSION" $CSUC
+    XRAY_VERSION=$(xray version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
+    printlog true "XRAYUI: $XRAYUI_VERSION, XRAY-CORE: $XRAY_VERSION" "$CSUC"
 }
 
 switch_xray_version() {
@@ -8,9 +8,9 @@ switch_xray_version() {
 
     local xray_tmp_dir="/tmp/xray"
     local payload=$(reconstruct_payload)
-    local version_url="$(echo "$payload" | jq -r '.url')"
-    if [[ -z "$version_url" || "$version_url" == "null" ]]; then
-        printlog true "Error: no 'url' field found in payload" $CERR
+    local version_url=$(echo "$payload" | jq -r '.url')
+    if [ -z "$version_url" ] || [ "$version_url" = "null" ]; then
+        printlog true "Error: no 'url' field found in payload" "$CERR"
         return 1
     fi
 
@@ -18,14 +18,14 @@ switch_xray_version() {
     stop
 
     update_loading_progress "Downloading Xray release version..."
-    printlog true "Downloading Xray asset metadata $version_url"
+    printlog true "Downloading Xray asset metadata $version_url" "$CSUC"
 
-    local release_data="$(curl -sSL "$version_url")"
-    if [[ -z "$release_data" ]]; then
-        printlog true "Error: could not fetch release data from $version_url" $CERR
+    local release_data=$(curl -sSL "$version_url")
+    if [ -z "$release_data" ]; then
+        printlog true "Error: could not fetch release data from $version_url" "$CERR"
     fi
 
-    local arch="$(uname -m)"
+    local arch=$(uname -m)
 
     local asset_name=""
     case "$arch" in
@@ -65,32 +65,32 @@ switch_xray_version() {
         ;;
     esac
 
-    local asset_url="$(echo "$release_data" |
-        jq -r --arg NAME "$asset_name" '.[] | select(.name == $NAME) | .browser_download_url')"
+    local asset_url=$(echo "$release_data" |
+        jq -r --arg NAME "$asset_name" '.[] | select(.name == $NAME) | .browser_download_url')
 
-    if [[ -z "$asset_url" || "$asset_url" == "null" ]]; then
-        printlog true "Error: could not find asset '$asset_name' in the release data" $CERR
+    if [ -z "$asset_url" ] || [ "$asset_url" = "null" ]; then
+        printlog true "Error: could not find asset '$asset_name' in the release data" "$CERR"
     fi
 
     update_loading_progress "Downloading $asset_name ..."
     local tmp_zip="/tmp/xraycore.zip"
     rm -rf "$tmp_zip"
 
-    printlog true "Downloading Xray release version $asset_url into $tmp_zip" $CSUC
+    printlog true "Downloading Xray release version $asset_url into $tmp_zip" "$CSUC"
     curl -L "$asset_url" -o "$tmp_zip"
-    if [[ $? -ne 0 || ! -f "$tmp_zip" ]]; then
-        printlog true "Failed to download $asset_name." $CERR
+    if [ $? -ne 0 ] || [ ! -f "$tmp_zip" ]; then
+        printlog true "Failed to download $asset_name." "$CERR"
         return 1
     fi
 
     update_loading_progress "Unpacking $asset_name ..."
-    printlog true "Unpacking $asset_name..." $CSUC
+    printlog true "Unpacking $asset_name..." "$CSUC"
     mkdir -p "$xray_tmp_dir"
 
-    unzip -o "$tmp_zip" -d "$xray_tmp_dir" || {
-        printlog true "Error: failed to unzip $tmp_zip" $CERR
+    if ! unzip -o "$tmp_zip" -d "$xray_tmp_dir"; then
+        printlog true "Error: failed to unzip $tmp_zip" "$CERR"
         return 1
-    }
+    fi
 
     cp "$xray_tmp_dir/xray" "/opt/sbin/xray"
     chmod +x "/opt/sbin/xray"

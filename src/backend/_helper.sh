@@ -215,7 +215,6 @@ remove_loading_progress() {
         ')
 
     echo "$json_content" >"$UI_RESPONSE_FILE"
-    exit 0
 }
 
 fixme() {

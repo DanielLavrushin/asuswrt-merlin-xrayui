@@ -29,8 +29,6 @@ stop() {
         printlog true "PID file $XRAY_PIDFILE removed successfully."
     fi
 
-    rm -f $XRAYUI_RESPONSE_FILE
-
     cleanup_firewall
 }
 

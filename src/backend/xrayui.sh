@@ -108,15 +108,15 @@ service_event)
         get_connected_clients
     elif [ "$2" = "configuration" ]; then
         case "$3" in
-        "apply")
+        apply)
             apply_config
             ;;
-        "logs")
+        logs)
             case "$4" in
-            "fetch")
+            fetch)
                 logs_fetch
                 ;;
-            "changeloglevel")
+            changeloglevel)
                 change_log_level
                 ;;
             *)
@@ -125,10 +125,10 @@ service_event)
             esac
             exit 0
             ;;
-        "togglestartup")
+        togglestartup)
             toggle_startup
             ;;
-        "generatedefaultconfig")
+        generatedefaultconfig)
             generate_xray_config
             ;;
         initresponse)
@@ -149,13 +149,13 @@ service_event)
         esac
     elif [ "$2" = "regenerate" ]; then
         case "$3" in
-        "realitykeys")
+        realitykeys)
             regenerate_reality_keys
             ;;
-        "wgkeys")
+        wgkeys)
             regenerate_wireguard_keys
             ;;
-        "sslcertificates")
+        sslcertificates)
             regenerate_ssl_certificates
             ;;
         esac
@@ -170,17 +170,17 @@ service_event)
         esac
     elif [ "$2" = "serverstatus" ]; then
         case "$3" in
-        "start")
+        start)
             update_loading_progress "Starting Xray service..." 0
             start
             update_loading_progress "Xray service started successfully." 100
             ;;
-        "restart")
+        restart)
             update_loading_progress "Restarting Xray service..." 0
             restart
             update_loading_progress "Xray service restarted successfully." 100
             ;;
-        "stop")
+        stop)
             update_loading_progress "Stopping Xray service..." 0
             stop
             update_loading_progress "Xray service stopped successfully." 100

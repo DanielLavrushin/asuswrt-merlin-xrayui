@@ -1,7 +1,7 @@
 regenerate_reality_keys() {
     printlog true "Regenerating Reality private and public keys..."
 
-    local xray_output=$($XRAY x25519)
+    local xray_output=$(xray x25519)
     if [ $? -ne 0 ]; then
         printlog true "Failed to run xray x25519." $CERR
         return 1

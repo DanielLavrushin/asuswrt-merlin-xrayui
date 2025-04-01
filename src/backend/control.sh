@@ -1,6 +1,4 @@
 start() {
-    printlog true "Starting $ADDON_TITLE"
-    update_loading_progress "Testing xray configuration $ADDON_TITLE..."
 
     test_xray_config
 
@@ -14,7 +12,7 @@ start() {
     fi
 
     update_loading_progress "Starting $ADDON_TITLE..."
-    xray "-c $XRAY_CONFIG_FILE" >/dev/null 2>&1 &
+    xray -c "$XRAY_CONFIG_FILE" >/dev/null 2>&1 &
     echo $! >$XRAY_PIDFILE
 
     configure_firewall

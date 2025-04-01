@@ -139,6 +139,9 @@ save_ui_response() {
 }
 
 test_xray_config() {
+    printlog true "Testing xray configuration $ADDON_TITLE..."
+    update_loading_progress "Testing xray configuration $ADDON_TITLE..."
+
     local output
 
     if ! output=$(xray -c $XRAY_CONFIG_FILE -test 2>&1); then
@@ -150,6 +153,7 @@ test_xray_config() {
     else
         message="Config file appears to be fine, but the XRAY service has not started. Try to restart/reconnect it."
     fi
+    printlog true "Xray config test result: $output"
 
     load_ui_response
 

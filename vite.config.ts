@@ -6,6 +6,52 @@ import fs from 'fs';
 import path, { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
+function watchAllShFiles(pluginContext, dir) {
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+  entries.forEach((entry) => {
+    const fullPath = path.join(dir, entry.name);
+
+    if (entry.isDirectory()) {
+      watchAllShFiles(pluginContext, fullPath);
+    } else if (entry.isFile() && fullPath.endsWith('.sh')) {
+      pluginContext.addWatchFile(fullPath);
+    }
+  });
+}
+
+function inlineShellImports(scriptPath, visited = new Set(), isRoot = true) {
+  if (visited.has(scriptPath)) {
+    return '';
+  }
+  visited.add(scriptPath);
+
+  let content = fs.readFileSync(scriptPath, 'utf8');
+  const dirOfScript = path.dirname(scriptPath);
+
+  const lines = content.split('\n');
+  let output = '';
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    const match = line.match(/^import\s+(.+)$/);
+    if (match) {
+      const importedFile = match[1].trim();
+      const importAbsolutePath = path.resolve(dirOfScript, importedFile);
+
+      output += inlineShellImports(importAbsolutePath, visited, false);
+    } else {
+      if (!isRoot && i === 0 && line.match(/^#!.*(sh|bash|zsh)/)) {
+        continue;
+      }
+      output += line + '\n';
+    }
+  }
+
+  return output;
+}
+
 export default defineConfig(({ mode }) => {
   const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -55,15 +101,22 @@ export default defineConfig(({ mode }) => {
       {
         buildStart() {
           this.addWatchFile(path.resolve(__dirname, 'src', 'App.html'));
-          this.addWatchFile(path.resolve(__dirname, 'src', 'xrayui.sh'));
+
+          const backendDir = path.resolve(__dirname, 'src', 'backend');
+          watchAllShFiles(this, backendDir);
         },
         name: 'copy-and-sync',
         closeBundle: () => {
           console.log('Vite finished building. Copying extra files...');
 
           try {
+            const scriptPath = path.join(__dirname, 'src', 'backend', 'xrayui.sh');
+            const mergedContent = inlineShellImports(scriptPath);
+
+            const distScript = path.join(__dirname, 'dist', 'xrayui');
+            fs.writeFileSync(distScript, mergedContent, { mode: 0o755 });
+
             fs.copyFileSync('src/App.html', 'dist/index.asp');
-            fs.copyFileSync('src/xrayui.sh', 'dist/xrayui');
             console.log('Files copied successfully.');
           } catch (e) {
             console.error('File copy error:', e);
@@ -71,7 +124,7 @@ export default defineConfig(({ mode }) => {
 
           if (!process.env.VITE_WATCH) return;
           console.log('Running sync.js script...');
-          exec('node sync.js', (error, stdout, stderr) => {
+          exec('node vite.sync.js', (error, stdout, stderr) => {
             if (error) {
               console.error('Error running sync.js script:', error);
               return;

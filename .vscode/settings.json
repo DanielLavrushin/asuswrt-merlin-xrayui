@@ -17,6 +17,8 @@
   "explorer.fileNesting.expand": true,
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.patterns": {
-    "*.vue": "${capture}.*"
+    "vite.config.ts": "vite.*.js",
+    "*.vue": "${capture}.*",
+    "global.d.ts": "*.d.ts"
   }
 }

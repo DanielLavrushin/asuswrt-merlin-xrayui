@@ -1,7 +1,7 @@
 <template>
   <form method="post" name="form" id="ruleForm" action="/start_apply.htm" target="hidden_frame">
-    <input type="hidden" name="current_page" :value="xray_page" />
-    <input type="hidden" name="next_page" :value="xray_page" />
+    <input type="hidden" name="current_page" :value="page" />
+    <input type="hidden" name="next_page" :value="page" />
     <input type="hidden" name="group_id" value="" />
     <input type="hidden" name="modified" value="0" />
     <input type="hidden" name="action_mode" value="apply" />
@@ -135,7 +135,7 @@
         transportModal,
         sniffingModal,
         version: window.xray.custom_settings.xray_version,
-        xray_page: window.xray.custom_settings.xray_page,
+        page: window.location.pathname.substring(1),
         show_transport,
         show_sniffing,
         apply_settings

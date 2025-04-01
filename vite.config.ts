@@ -1,4 +1,4 @@
-// eslint-disable-next-line security/detect-non-literal-fs-filename
+/* eslint-disable  security/detect-non-literal-fs-filename */
 
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';

@@ -27,8 +27,8 @@ generate_xray_config() {
 {
     "log": {
         "loglevel": "warning",
-        "access": "/tmp/xray_access.log",
-        "error": "/tmp/xray_error.log"
+        "access": "$ADDON_LOGS_DIR/xray_access.log",
+        "error": "$ADDON_LOGS_DIR/xray_error.log"
     },
     "inbounds":[],
     "outbounds":[],

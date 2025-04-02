@@ -86,7 +86,6 @@
               <label class="go-option">
                 <input type="checkbox" v-model="options.logs_access" />
               </label>
-              <input v-if="options.logs_access" v-model="options.logs_access_path" class="input_25_table" placeholder="access.log path" />
             </td>
           </tr>
           <tr>
@@ -95,7 +94,6 @@
               <label class="go-option">
                 <input type="checkbox" v-model="options.logs_error" />
               </label>
-              <input v-if="options.logs_error" v-model="options.logs_error_path" class="input_25_table" placeholder="error.log path" />
             </td>
           </tr>
           <tr v-if="options.logs_error">

@@ -148,13 +148,15 @@ enable_config_logs() {
         printlog true "'log' section is missing. Adding it to the configuration."
 
         # Add the 'log' section
-        jq '. + {
-            "log": {
-                "loglevel": "warning",
-                "error": "/tmp/xray_error.log",
-                "access": "/tmp/xray_access.log"
-            }
-        }' "$XRAY_CONFIG_FILE" >"$temp_file"
+        jq --arg access "$ADDON_LOGS_DIR/xray_access.log" \
+            --arg error "$ADDON_LOGS_DIR/xray_error.log" \
+            '. + {
+              "log": {
+                  "loglevel": "warning",
+                  "error": $error,
+                  "access": $access
+              }
+           }' "$XRAY_CONFIG_FILE" >"$temp_file"
 
         if [ $? -eq 0 ]; then
             mv "$temp_file" "$XRAY_CONFIG_FILE"

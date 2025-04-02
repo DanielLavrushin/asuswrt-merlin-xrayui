@@ -14,12 +14,17 @@ apply_general_options() {
     local log_level=$(echo "$genopts" | jq -r '.logs_level')
     local logs_access=$(echo "$genopts" | jq -r '.logs_access')
     local logs_error=$(echo "$genopts" | jq -r '.logs_error')
-    local logs_access_path=$(echo "$genopts" | jq -r '.logs_access_path')
-    local logs_error_path=$(echo "$genopts" | jq -r '.logs_error_path')
     local logs_dns=$(echo "$genopts" | jq -r '.logs_dns')
 
     local geosite_url=$(echo "$genopts" | jq -r '.geo_site_url')
     local geoip_url=$(echo "$genopts" | jq -r '.geo_ip_url')
+
+    if [ ! -d "$ADDON_LOGS_DIR" ]; then
+        mkdir -p $ADDON_LOGS_DIR
+    fi
+
+    local logs_access_path="$ADDON_LOGS_DIR/access.log"
+    local logs_error_path="$ADDON_LOGS_DIR/error.log"
 
     json_content=$(echo "$json_content" | jq --arg loglevel "$log_level" '.log.loglevel = $loglevel')
 
@@ -51,6 +56,10 @@ apply_general_options() {
     update_xrayui_config "github_proxy" "$github_proxy"
     update_xrayui_config "geosite_url" "$geosite_url"
     update_xrayui_config "geoip_url" "$geoip_url"
+
+    # Update configuration with the directory part of logs_access_path
+    local logs_dir=$(dirname "$logs_access_path")
+    update_xrayui_config "logs_dir" "$logs_dir"
 
     update_loading_progress "General settings applied." 100
 

@@ -26,8 +26,8 @@ replace_ips_with_domains() {
 logs_fetch() {
   update_loading_progress "Fetching logs..." 0
 
-  local log_access="$(jq -r '.log.access // "/tmp/xray_access.log"' "$XRAY_CONFIG_FILE")"
-  local log_error="$(jq -r '.log.error // "/tmp/xray_error.log"' "$XRAY_CONFIG_FILE")"
+  local log_access=$(jq -r --arg access "$ADDON_LOGS_DIR/xray_access.log" '.log.access // $access' "$XRAY_CONFIG_FILE")
+  local log_error=$(jq -r --arg error "$ADDON_LOGS_DIR/xray_error.log" '.log.error // $error' "$XRAY_CONFIG_FILE")
 
   tail -n 200 "$log_error" >"$ADDON_WEB_DIR/xray_error_partial.asp"
   tail -n 200 "$log_access" >"$ADDON_WEB_DIR/xray_access_partial.asp"

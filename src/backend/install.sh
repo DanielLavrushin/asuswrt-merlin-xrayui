@@ -33,6 +33,7 @@ install() {
         cat <<EOF >"$XRAYUI_CONFIG_FILE"
 geoip_url=
 geosite_url=
+logs_dir=$ADDON_LOGS_DIR
 EOF
         chmod 600 "$XRAYUI_CONFIG_FILE"
 
@@ -134,10 +135,8 @@ EOF
     printlog true "Setting up logrotate for XRAY UI..."
 
     if [ ! -f /opt/etc/logrotate.d/xrayui ]; then
-        local log_access
-        local log_error
-        log_access="$(jq -r '.log.access // "/tmp/xray_access.log"' "$XRAY_CONFIG_FILE")"
-        log_error="$(jq -r '.log.error // "/tmp/xray_error.log"' "$XRAY_CONFIG_FILE")"
+        local log_access="$(jq -r --arg default "$ADDON_LOGS_DIR/xray_access.log" '.log.access // $default' "$XRAY_CONFIG_FILE")"
+        local log_error="$(jq -r --arg default "$ADDON_LOGS_DIR/xray_error.log" '.log.error // $default' "$XRAY_CONFIG_FILE")"
 
         cat >/opt/etc/logrotate.d/xrayui <<EOF
 $log_access $log_error {
@@ -167,11 +166,16 @@ EOF
 
     local json_content=$(cat "$XRAY_CONFIG_FILE")
 
-    # patch 0.33->0.34 update system connection check rule
-    json_content=$(echo "$json_content" | jq '(.routing.rules[] | select(.name=="sys:connection-check") | .domain) |= map(if .=="freeipapi.com" then "ip-api.com" else . end)') || printlog true "Failed to update connection check rule." $CERR
-
-    # patch 0.36->0.37
-    json_content=$(echo "$json_content" | jq 'del(.routing.portsPolicy)')
+    # patch 0.41->0.42 - force logs to be placed in usb storage mount
+    json_content=$(
+        echo "$json_content" | jq --arg error "$ADDON_LOGS_DIR/error.log" --arg access "$ADDON_LOGS_DIR/access.log" '
+    if ((.log.access | startswith("/tmp")) and (.log.error | startswith("/tmp"))) then
+      .log.error = $error | .log.access = $access
+    else
+      .
+    end
+  '
+    )
 
     echo "$json_content" >"$XRAY_CONFIG_FILE"
 

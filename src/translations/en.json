@@ -28,7 +28,7 @@
     "items": "items: {0}",
     "xrayui_desc": "This UI control page provides a simple interface to manage and monitor the X-ray Core's configuration and it's status."
   },
-  "components": {
+  "com": {
     "ClientStatus": {
       "configuration": "Configuration",
       "connection_status": "Connection status",
@@ -508,6 +508,12 @@
       "enable_logs": "Enable logs",
       "online": "online",
       "noone_is_online": "No one is online"
+    },
+    "Backup": {
+      "manager": "Manage Backups",
+      "backup": "backup",
+      "clear": "clear",
+      "clear_confirm": "Are you sure you want to clear all the backups?"
     }
   }
 }

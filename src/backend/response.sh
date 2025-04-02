@@ -16,14 +16,7 @@ initial_response() {
     local geoipurl="${geoip_url:-$DEFAULT_GEOIP_URL}"
     local profile="${profile:-$DEFAULT_XRAY_PROFILE_NAME}"
 
-    local json_content
-    if [ -f "$UI_RESPONSE_FILE" ]; then
-        json_content=$(cat "$UI_RESPONSE_FILE")
-    else
-        json_content="{}"
-    fi
-
-    json_content=$(echo "$json_content" | jq --arg geoip "$geoip_date" --arg geosite "$geosite_date" --arg geoipurl "$geoipurl" --arg geositeurl "$geositeurl" \
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg geoip "$geoip_date" --arg geosite "$geosite_date" --arg geoipurl "$geoipurl" --arg geositeurl "$geositeurl" \
         '.geodata.geoip_url = $geoipurl | .geodata.geosite_url = $geositeurl | .geodata.community["geoip.dat"] = $geoip | .geodata.community["geosite.dat"] = $geosite')
     if [ $? -ne 0 ]; then
         printlog true "Error: Failed to update JSON content with file dates." $CERR
@@ -31,29 +24,36 @@ initial_response() {
     fi
 
     local uptime_xray=$(get_proc_uptime "xray")
-    json_content=$(echo "$json_content" | jq --argjson uptime "$uptime_xray" '.xray.uptime = $uptime')
-    json_content=$(echo "$json_content" | jq --arg profile "$profile" '.xray.profile = $profile')
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson uptime "$uptime_xray" '.xray.uptime = $uptime')
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg profile "$profile" '.xray.profile = $profile')
 
     local github_proxy="${github_proxy}"
     if [ ! -z "$github_proxy" ]; then
-        json_content=$(echo "$json_content" | jq --arg github_proxy "$github_proxy" '.xray.github_proxy = $github_proxy')
+        UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg github_proxy "$github_proxy" '.xray.github_proxy = $github_proxy')
     fi
 
     local XRAY_VERSION=$(xray version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
-    json_content=$(echo "$json_content" | jq --arg xray_ver "$XRAY_VERSION" --arg xrayui_ver "$XRAYUI_VERSION" '.xray.ui_version = $xrayui_ver | .xray.core_version = $xray_ver')
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg xray_ver "$XRAY_VERSION" --arg xrayui_ver "$XRAYUI_VERSION" '.xray.ui_version = $xrayui_ver | .xray.core_version = $xray_ver')
 
     # Collect the names of all JSON files from /opt/etc/xray
-    local profiles
-    profiles=$(find /opt/etc/xray -maxdepth 1 -type f -name "*.json" -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
+    local profiles=$(find /opt/etc/xray -maxdepth 1 -type f -name "*.json" -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
     if [ -z "$profiles" ]; then
         profiles="[]"
     fi
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson profiles "$profiles" '.xray.profiles = $profiles')
 
-    json_content=$(echo "$json_content" | jq --argjson profiles "$profiles" '.xray.profiles = $profiles')
+    # Collect the backups
+    local backups=$(find "$ADDON_SHARE_DIR/backup" -maxdepth 1 -type f -name "*.tar.gz" -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
+    if [ -z "$backups" ]; then
+        backups="[]"
+    fi
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson backups "$backups" '.xray.backups = $backups')
+    printlog true "Backups: $backups"
 
-    echo "$json_content" >"$UI_RESPONSE_FILE"
+    save_ui_response
+
     if [ $? -eq 0 ]; then
-        printlog true "Saved file dates to $UI_RESPONSE_FILE successfully." $CSUC
+        printlog true "Saved initial response successfully." $CSUC
     else
         printlog true "Failed to save file dates to $UI_RESPONSE_FILE." $CERR
         return 1

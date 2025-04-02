@@ -27,7 +27,7 @@
     "items": "Elemente: {0}",
     "xrayui_desc": "Diese Benutzeroberfläche bietet eine einfache Möglichkeit, die Konfiguration und den Status des X‑ray Cores zu verwalten und zu überwachen."
   },
-  "components": {
+  "com": {
     "ClientStatus": {
       "configuration": "Konfiguration",
       "connection_status": "Verbindungsstatus",

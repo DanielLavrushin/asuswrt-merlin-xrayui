@@ -132,6 +132,10 @@ load_ui_response() {
     fi
 
     UI_RESPONSE=$(cat "$UI_RESPONSE_FILE")
+    if [ "$UI_RESPONSE" = "" ]; then
+        printlog true "UI response file is empty. Initializing with empty JSON." "$CWARN"
+        UI_RESPONSE="{}"
+    fi
     flock -u "$FD"
 }
 
@@ -193,7 +197,6 @@ update_loading_progress() {
     fi
 
     if [ -n "$progress" ]; then
-
         json_content=$(echo "$json_content" | jq --argjson progress "$progress" --arg message "$message" '
             .loading.message = $message |
             .loading.progress = $progress

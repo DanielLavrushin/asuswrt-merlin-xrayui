@@ -1,8 +1,17 @@
 # XRAYUI Changelog
 
-## [0.42.0] - 2025-03-xx
+## [0.42.0] - 2025-04-03
 
-- ADDED: New option `GitHub Proxy` in `General Settings`. You can now select a proxy server if `github.com` is blocked in your region.
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- ADDED: A new `GitHub Proxy` option in `General Settings`. You can now select a proxy server if access to `github.com` is restricted in your region.
+- ADDED: Automatic downloading of `geodata` files during installation.
+- ADDED: A `backup` feature that allows you to perform a full backup of all xray/xrayui user configuration files and download them.
+- IMPROVED: Eliminated storing logs in the `/tmp` folder. If you previously stored logs there, please remove the old files or reboot your router.
+- REMOVED: The ability to define a custom log path. Logs are now hardcoded to the `/opt/share/xrayui/logs` directory.
+- FIXED: Minor issues encountered during installation.
+- FIXED: Prevented saving an empty profile name.
+- REFACTORED: Backend code has been split into more readable sections.
 
 ## [0.41.4] - 2025-03-27
 

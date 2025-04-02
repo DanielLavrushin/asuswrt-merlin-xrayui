@@ -1,16 +1,16 @@
 <template>
-  <modal ref="modal" :title="$t('components.GeodatModal.modal_title')" width="700">
+  <modal ref="modal" :title="$t('com.GeodatModal.modal_title')" width="700">
     <div class="formfontdesc">
       <div style="text-align: left">
         <p>
-          {{ $t('components.GeodatModal.modal_desc') }}
+          {{ $t('com.GeodatModal.modal_desc') }}
         </p>
       </div>
       <table class="FormTable modal-form-table">
         <tbody v-if="isLoading">
           <tr>
             <th>
-              {{ $t('components.GeodatModal.loading') }}
+              {{ $t('com.GeodatModal.loading') }}
             </th>
             <td>
               <div class="loading"></div>
@@ -20,11 +20,11 @@
         <tbody v-if="geodata && !isLoading">
           <tr>
             <th>
-              {{ $t('components.GeodatModal.label_select_file') }}
+              {{ $t('com.GeodatModal.label_select_file') }}
             </th>
             <td>
               <select v-model="file.tag" class="input_option" @change="loadContent">
-                <option value>{{ $t('components.GeodatModal.option_create_new_file') }}</option>
+                <option value>{{ $t('com.GeodatModal.option_create_new_file') }}</option>
                 <option v-for="opt in geodata.tags" :key="opt" :value="opt">
                   {{ opt }}
                 </option>
@@ -36,8 +36,8 @@
         <tbody v-if="geodata && isSelected && !isLoading">
           <tr v-if="isNewFile">
             <th>
-              {{ $t('components.GeodatModal.label_tag') }}
-              <hint v-html="$t('components.GeodatModal.hint_tag')"></hint>
+              {{ $t('com.GeodatModal.label_tag') }}
+              <hint v-html="$t('com.GeodatModal.hint_tag')"></hint>
             </th>
             <td>
               <input v-model="file.tag" class="input_25_table" placeholder="tag" />
@@ -45,8 +45,8 @@
           </tr>
           <tr>
             <th>
-              {{ $t('components.GeodatModal.label_content') }}
-              <hint v-html="$t('components.GeodatModal.hint_content')"></hint>
+              {{ $t('com.GeodatModal.label_content') }}
+              <hint v-html="$t('com.GeodatModal.hint_content')"></hint>
             </th>
             <td>
               <div class="textarea-wrapper">
@@ -60,8 +60,8 @@
     <template v-slot:footer>
       <div>
         <input class="button_gen button_gen_small" type="button" :value="$t('labels.delete')" @click.prevent="deletdat" v-show="!isNewFile && isSelected" />
-        <input class="button_gen button_gen_small" type="button" :value="$t('components.GeodatModal.recompile_all')" :title="$t('components.GeodatModal.hit_recompile_all')" @click.prevent="complile_all" v-if="!isSelected" />
-        <input class="button_gen button_gen_small" type="button" :value="$t('components.GeodatModal.compile')" v-show="isSelected" :title="$t('components.GeodatModal.hit_compile')" @click.prevent="compile" />
+        <input class="button_gen button_gen_small" type="button" :value="$t('com.GeodatModal.recompile_all')" :title="$t('com.GeodatModal.hit_recompile_all')" @click.prevent="complile_all" v-if="!isSelected" />
+        <input class="button_gen button_gen_small" type="button" :value="$t('com.GeodatModal.compile')" v-show="isSelected" :title="$t('com.GeodatModal.hit_compile')" @click.prevent="compile" />
       </div>
     </template>
   </modal>
@@ -126,7 +126,7 @@
       const compile = async () => {
         await engine.executeWithLoadingProgress(async () => {
           if (!file.value.content?.length) {
-            alert(t('components.GeodatModal.alert_empty_content'));
+            alert(t('com.GeodatModal.alert_empty_content'));
             return;
           }
 
@@ -135,7 +135,7 @@
       };
 
       const deletdat = async () => {
-        if (!confirm(t('components.GeodatModal.alert_delete_confirm'))) return;
+        if (!confirm(t('com.GeodatModal.alert_delete_confirm'))) return;
 
         await engine.executeWithLoadingProgress(async () => {
           await engine.submit(SubmtActions.geoDataCustomDeleteTag, { tag: file.value.tag });

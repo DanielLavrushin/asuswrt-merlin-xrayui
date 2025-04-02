@@ -3,16 +3,16 @@
     <thead>
       <tr>
         <td colspan="2">
-          {{ $t('components.Routing.title') }}
-          <hint v-html="$t('components.Routing.hint_title')"></hint>
+          {{ $t('com.Routing.title') }}
+          <hint v-html="$t('com.Routing.hint_title')"></hint>
         </td>
       </tr>
     </thead>
     <tbody>
       <tr>
         <th>
-          {{ $t('components.Routing.label_domain_strategy') }}
-          <hint v-html="$t('components.Routing.hint_domain_strategy')"></hint>
+          {{ $t('com.Routing.label_domain_strategy') }}
+          <hint v-html="$t('com.Routing.hint_domain_strategy')"></hint>
         </th>
         <td>
           <select class="input_option" v-model="routing.domainStrategy">
@@ -25,8 +25,8 @@
       </tr>
       <tr>
         <th>
-          {{ $t('components.Routing.label_domain_matcher') }}
-          <hint v-html="$t('components.Routing.hint_domain_matcher')"></hint>
+          {{ $t('com.Routing.label_domain_matcher') }}
+          <hint v-html="$t('com.Routing.hint_domain_matcher')"></hint>
         </th>
         <td>
           <select class="input_option" v-model="routing.domainMatcher">
@@ -39,8 +39,8 @@
       </tr>
       <tr v-if="routing.policies">
         <th>
-          {{ $t('components.Routing.label_policies') }}
-          <hint v-html="$t('components.Routing.hint_policies')"></hint>
+          {{ $t('com.Routing.label_policies') }}
+          <hint v-html="$t('com.Routing.hint_policies')"></hint>
         </th>
         <td>
           {{ routing.policies.length }} item(s)
@@ -50,8 +50,8 @@
       </tr>
       <tr v-if="routing.rules">
         <th>
-          {{ $t('components.Routing.label_rules') }}
-          <hint v-html="$t('components.Routing.hint_rules')"></hint>
+          {{ $t('com.Routing.label_rules') }}
+          <hint v-html="$t('com.Routing.hint_rules')"></hint>
         </th>
         <td>
           {{ countRules() }} item(s)
@@ -61,13 +61,13 @@
       </tr>
       <tr v-if="routing.rules">
         <th>
-          {{ $t('components.Routing.label_geodat_metadata') }}
-          <hint v-html="$t('components.Routing.hint_geodat_metadata')"></hint>
+          {{ $t('com.Routing.label_geodat_metadata') }}
+          <hint v-html="$t('com.Routing.hint_geodat_metadata')"></hint>
         </th>
         <td>
-          <input class="button_gen button_gen_small" type="button" :value="$t('components.Routing.manage_local_files')" @click.prevent="manage_geodat()" />
+          <input class="button_gen button_gen_small" type="button" :value="$t('com.Routing.manage_local_files')" @click.prevent="manage_geodat()" />
           <geodat-modal ref="geodatModal"></geodat-modal>
-          <input class="button_gen button_gen_small" type="button" :value="$t('components.Routing.update_community_files')" @click.prevent="update_geodat()" />
+          <input class="button_gen button_gen_small" type="button" :value="$t('com.Routing.update_community_files')" @click.prevent="update_geodat()" />
           <span class="hint-small" v-if="daysPassed > 1"> updated {{ daysPassed }} days ago</span>
           <span class="hint-color"> [<a href="https://github.com/Loyalsoldier/v2ray-rules-dat/releases" target="_blank">source</a>, <a href="https://github.com/v2fly/domain-list-community/tree/master/data" target="_blank">geosite</a>] </span>
         </td>

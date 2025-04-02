@@ -2,12 +2,12 @@
   <table width="100%" bordercolor="#6b8fa3" class="FormTable">
     <thead>
       <tr>
-        <td colspan="2">{{ $t('components.Inbounds.title') }}</td>
+        <td colspan="2">{{ $t('com.Inbounds.title') }}</td>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <th>{{ $t('components.Inbounds.label_create_new') }}</th>
+        <th>{{ $t('com.Inbounds.label_create_new') }}</th>
         <td>
           <select class="input_option" v-model="selectedInboundType" @change="edit_proxy()">
             <option></option>
@@ -49,7 +49,7 @@
     </tbody>
   </table>
 
-  <modal ref="inboundModal" :title="$t('components.Inbounds.modal_title_inbound_settings')">
+  <modal ref="inboundModal" :title="$t('com.Inbounds.modal_title_inbound_settings')">
     <component ref="inboundComponentRef" :is="inboundComponent" :inbound="selectedInbound" />
     <template v-slot:footer>
       <input class="button_gen button_gen_small" type="button" :value="$t('labels.save')" @click.prevent="save_inbound" />
@@ -158,7 +158,7 @@
         });
       };
       const remove_proxy = async (proxy: XrayInboundObject<IProtocolType>) => {
-        if (!window.confirm(t('components.Inbounds.alert_delete_confirm'))) return;
+        if (!window.confirm(t('com.Inbounds.alert_delete_confirm'))) return;
         let index = config.value.inbounds.indexOf(proxy);
         config.value.inbounds.splice(index, 1);
       };
@@ -166,7 +166,7 @@
       const save_inbound = async () => {
         let inbound = inboundComponentRef.value.inbound;
         if (config.value.inbounds.filter((i) => i != inbound && i.tag == inbound.tag).length > 0) {
-          alert(t('components.Inbounds.alert_tag_exists'));
+          alert(t('com.Inbounds.alert_tag_exists'));
           return;
         }
 

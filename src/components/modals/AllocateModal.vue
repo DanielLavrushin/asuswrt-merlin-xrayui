@@ -1,17 +1,17 @@
 <template>
-  <modal ref="modal" :title="$t('components.AllocateModal.modal_title')" width="500">
+  <modal ref="modal" :title="$t('com.AllocateModal.modal_title')" width="500">
     <div class="formfontdesc">
       <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
         <thead>
           <tr>
-            <td colspan="2">{{ $t('components.AllocateModal.label_settings') }}</td>
+            <td colspan="2">{{ $t('com.AllocateModal.label_settings') }}</td>
           </tr>
         </thead>
         <tbody>
           <tr>
             <th>
-              {{ $t('components.AllocateModal.label_strategy') }}
-              <hint v-html="$t('components.AllocateModal.hint_strategy')"></hint>
+              {{ $t('com.AllocateModal.label_strategy') }}
+              <hint v-html="$t('com.AllocateModal.hint_strategy')"></hint>
             </th>
             <td>
               <select v-model="allocate.strategy" class="input_option">
@@ -22,8 +22,8 @@
           </tr>
           <tr v-if="allocate.strategy == 'random'">
             <th>
-              {{ $t('components.AllocateModal.label_refresh') }}
-              <hint v-html="$t('components.AllocateModal.hint_refresh')"></hint>
+              {{ $t('com.AllocateModal.label_refresh') }}
+              <hint v-html="$t('com.AllocateModal.hint_refresh')"></hint>
             </th>
             <td>
               <input type="text" maxlength="2" class="input_6_table" v-model="allocate.refresh" onkeypress="return validator.isNumber(this,event);" />
@@ -32,8 +32,8 @@
           </tr>
           <tr v-if="allocate.strategy == 'random'">
             <th>
-              {{ $t('components.AllocateModal.label_concurrency') }}
-              <hint v-html="$t('components.AllocateModal.hint_concurrency')"></hint>
+              {{ $t('com.AllocateModal.label_concurrency') }}
+              <hint v-html="$t('com.AllocateModal.hint_concurrency')"></hint>
             </th>
             <td>
               <input type="text" maxlength="2" class="input_6_table" v-model="allocate.concurrency" onkeypress="return validator.isNumber(this,event);" />

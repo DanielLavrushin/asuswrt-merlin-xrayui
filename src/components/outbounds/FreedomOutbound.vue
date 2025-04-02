@@ -1,18 +1,18 @@
 <template>
   <div class="formfontdesc">
-    <p>{{ $t('components.FreedomOutbound.modal_desc') }}</p>
+    <p>{{ $t('com.FreedomOutbound.modal_desc') }}</p>
     <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="2">{{ $t('components.FreedomOutbound.modal_title') }}</td>
+          <td colspan="2">{{ $t('com.FreedomOutbound.modal_title') }}</td>
         </tr>
       </thead>
       <tbody>
         <outbound-common :proxy="proxy"></outbound-common>
         <tr>
           <th>
-            {{ $t('components.FreedomOutbound.label_domain_strategy') }}
-            <hint v-html="$t('components.FreedomOutbound.hint_domain_strategy')"></hint>
+            {{ $t('com.FreedomOutbound.label_domain_strategy') }}
+            <hint v-html="$t('com.FreedomOutbound.hint_domain_strategy')"></hint>
           </th>
           <td>
             <select class="input_option" v-model="proxy.settings.domainStrategy">
@@ -26,8 +26,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.FreedomOutbound.label_redirect') }}
-            <hint v-html="$t('components.FreedomOutbound.hint_redirect')"></hint>
+            {{ $t('com.FreedomOutbound.label_redirect') }}
+            <hint v-html="$t('com.FreedomOutbound.hint_redirect')"></hint>
           </th>
           <td>
             <input type="text" class="input_20_table" v-model="proxy.settings.redirect" autocomplete="off" autocorrect="off" autocapitalize="off" />
@@ -36,8 +36,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.FreedomOutbound.label_proxy_protocol') }}
-            <hint v-html="$t('components.FreedomOutbound.hint_proxy_protocol')"></hint>
+            {{ $t('com.FreedomOutbound.label_proxy_protocol') }}
+            <hint v-html="$t('com.FreedomOutbound.hint_proxy_protocol')"></hint>
           </th>
           <td>
             <select class="input_option" v-model="proxy.settings.proxyProtocol">
@@ -52,8 +52,8 @@
       <tbody v-if="proxy.settings.fragment">
         <tr>
           <th>
-            {{ $t('components.FreedomOutbound.label_fragment') }}
-            <hint v-html="$t('components.FreedomOutbound.hint_fragment')"></hint>
+            {{ $t('com.FreedomOutbound.label_fragment') }}
+            <hint v-html="$t('com.FreedomOutbound.hint_fragment')"></hint>
           </th>
           <td>
             <select class="input_option" v-model="proxy.settings.fragment.packets">
@@ -67,8 +67,8 @@
         </tr>
         <tr v-if="proxy.settings.fragment.packets !== ''">
           <th>
-            {{ $t('components.FreedomOutbound.label_fragment_length') }}
-            <hint v-html="$t('components.FreedomOutbound.hint_fragment_length')"></hint>
+            {{ $t('com.FreedomOutbound.label_fragment_length') }}
+            <hint v-html="$t('com.FreedomOutbound.hint_fragment_length')"></hint>
           </th>
           <td>
             <input type="text" class="input_20_table" v-model="proxy.settings.fragment.length" autocomplete="off" autocorrect="off" autocapitalize="off" />
@@ -76,8 +76,8 @@
         </tr>
         <tr v-if="proxy.settings.fragment.packets !== ''">
           <th>
-            {{ $t('components.FreedomOutbound.label_fragment_interval') }}
-            <hint v-html="$t('components.FreedomOutbound.hint_fragment_interval')"></hint>
+            {{ $t('com.FreedomOutbound.label_fragment_interval') }}
+            <hint v-html="$t('com.FreedomOutbound.hint_fragment_interval')"></hint>
           </th>
           <td>
             <input type="text" class="input_20_table" v-model="proxy.settings.fragment.interval" autocomplete="off" autocorrect="off" autocapitalize="off" />
@@ -87,13 +87,13 @@
       <tbody v-if="proxy.settings.noises">
         <tr>
           <th>
-            {{ $t('components.FreedomOutbound.label_udp_noise') }}
-            <hint v-html="$t('components.FreedomOutbound.hint_udp_noise')"></hint>
+            {{ $t('com.FreedomOutbound.label_udp_noise') }}
+            <hint v-html="$t('com.FreedomOutbound.hint_udp_noise')"></hint>
           </th>
           <td>
             {{ $t('labels.items', [proxy.settings.noises.length]) }}
             <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click.prevent="manage_noises" />
-            <modal width="500" ref="modalNoises" :title="$t('components.FreedomOutbound.modal_udp_noise_title')">
+            <modal width="500" ref="modalNoises" :title="$t('com.FreedomOutbound.modal_udp_noise_title')">
               <table class="FormTable modal-form-table">
                 <tbody>
                   <tr v-for="(noise, index) in proxy.settings.noises" :key="index">
@@ -113,13 +113,13 @@
                 <input class="button_gen button_gen_small" type="button" :value="$t('labels.close')" @click.prevent="modal_noises_close()" />
               </template>
             </modal>
-            <modal width="400" ref="modalNoise" :title="$t('components.FreedomOutbound.modal_udp_noise_entry_title')">
+            <modal width="400" ref="modalNoise" :title="$t('com.FreedomOutbound.modal_udp_noise_entry_title')">
               <table class="FormTable modal-form-table" v-if="noiseItem">
                 <tbody>
                   <tr>
                     <th>
-                      {{ $t('components.FreedomOutbound.label_udp_noise_type') }}
-                      <hint v-html="$t('components.FreedomOutbound.hint_udp_noise_type')"></hint>
+                      {{ $t('com.FreedomOutbound.label_udp_noise_type') }}
+                      <hint v-html="$t('com.FreedomOutbound.hint_udp_noise_type')"></hint>
                     </th>
                     <td>
                       <select class="input_option" v-model="noiseItem.type">
@@ -131,8 +131,8 @@
                   </tr>
                   <tr>
                     <th>
-                      {{ $t('components.FreedomOutbound.label_udp_noise_packet') }}
-                      <hint v-html="$t('components.FreedomOutbound.hint_udp_noise_packet')"> </hint>
+                      {{ $t('com.FreedomOutbound.label_udp_noise_packet') }}
+                      <hint v-html="$t('com.FreedomOutbound.hint_udp_noise_packet')"> </hint>
                     </th>
                     <td>
                       <input type="text" class="input_20_table" v-model="noiseItem.packet" autocomplete="off" autocorrect="off" autocapitalize="off" />
@@ -140,8 +140,8 @@
                   </tr>
                   <tr>
                     <th>
-                      {{ $t('components.FreedomOutbound.label_udp_noise_delay') }}
-                      <hint v-html="$t('components.FreedomOutbound.hint_udp_noise_delay')"></hint>
+                      {{ $t('com.FreedomOutbound.label_udp_noise_delay') }}
+                      <hint v-html="$t('com.FreedomOutbound.hint_udp_noise_delay')"></hint>
                     </th>
                     <td>
                       <input type="text" class="input_20_table" v-model="noiseItem.delay" autocomplete="off" autocorrect="off" autocapitalize="off" />

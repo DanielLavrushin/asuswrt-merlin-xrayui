@@ -1,5 +1,5 @@
 <template>
-  <modal ref="modal" :title="$t('components.ConfigModal.modal_title')" width="800">
+  <modal ref="modal" :title="$t('com.ConfigModal.modal_title')" width="800">
     <div class="formfontdesc">
       <div class="configArea">
         <json-pretty :data="configJson" :deep="2" :show-line-number="true" :show-icon="true" :show-line="false" :show-length="true"> </json-pretty>
@@ -9,11 +9,11 @@
     <template v-slot:footer>
       <label>
         <input type="checkbox" v-model="hideSenseData" @change="hide_sense_data" />
-        {{ $t('components.ConfigModal.hide_sensetive_data') }}
+        {{ $t('com.ConfigModal.hide_sensetive_data') }}
       </label>
-      <input class="button_gen button_gen_small" type="button" :value="$t('components.ConfigModal.copy_to_clipboard')" @click.prevent="copy_to_clipboard" />
+      <input class="button_gen button_gen_small" type="button" :value="$t('com.ConfigModal.copy_to_clipboard')" @click.prevent="copy_to_clipboard" />
       <a class="button_gen button_gen_small" :href="configUri" target="_blank">
-        {{ $t('components.ConfigModal.open_raw') }}
+        {{ $t('com.ConfigModal.open_raw') }}
       </a>
     </template>
   </modal>
@@ -105,9 +105,9 @@
           try {
             await navigator.clipboard.writeText(configStr);
             if (hideSenseData.value) {
-              alert(t('components.ConfigModal.alert_copy_ok_hiddendata'));
+              alert(t('com.ConfigModal.alert_copy_ok_hiddendata'));
             } else {
-              alert(t('components.ConfigModal.alert_copy_ok_nohiddendata'));
+              alert(t('com.ConfigModal.alert_copy_ok_nohiddendata'));
             }
           } catch (err) {
             console.error('Clipboard API error, falling back', err);
@@ -142,9 +142,9 @@
             alert('Copying to clipboard failed. Please copy the text manually:\n\n' + text);
           } else {
             if (hideSenseData.value) {
-              alert(t('components.ConfigModal.alert_copy_ok_hiddendata'));
+              alert(t('com.ConfigModal.alert_copy_ok_hiddendata'));
             } else {
-              alert(t('components.ConfigModal.alert_copy_ok_nohiddendata'));
+              alert(t('com.ConfigModal.alert_copy_ok_nohiddendata'));
             }
           }
         } catch (err) {

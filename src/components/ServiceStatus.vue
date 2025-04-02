@@ -3,14 +3,14 @@
     <thead>
       <tr>
         <td colspan="2">
-          {{ $t('components.ClientStatus.configuration') }}
+          {{ $t('com.ClientStatus.configuration') }}
           <xray-version></xray-version>
         </td>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <th>{{ $t('components.ClientStatus.connection_status') }}</th>
+        <th>{{ $t('com.ClientStatus.connection_status') }}</th>
         <td>
           <span class="label" :class="connectionClasses" v-text="statusLabel"></span>
           <span v-if="!isRunning">
@@ -30,7 +30,7 @@
       <process-uptime></process-uptime>
       <import-config v-model:config="config"></import-config>
       <tr>
-        <th>{{ $t('components.ClientStatus.general_options') }}</th>
+        <th>{{ $t('com.ClientStatus.general_options') }}</th>
         <td>
           <span class="row-buttons">
             <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click.prevent="manage_general_options()" />
@@ -82,7 +82,7 @@
     },
     computed: {
       statusLabel(): string {
-        return !this.checkConEnabled ? (this.isRunning ? this.$t('components.ClientStatus.xray_running') : this.$t('components.ClientStatus.xray_stopped')) : this.connectionStationLabel;
+        return !this.checkConEnabled ? (this.isRunning ? this.$t('com.ClientStatus.xray_running') : this.$t('com.ClientStatus.xray_stopped')) : this.connectionStationLabel;
       }
     },
     setup(props) {
@@ -92,7 +92,7 @@
       const generalOptionsModal = ref();
       const contryCodeClass = ref<string>('flag-icon flag-icon-unknown');
       const connectionStatus = ref<boolean>(false);
-      const connectionStationLabel = ref<string>(t('components.ClientStatus.xray_running'));
+      const connectionStationLabel = ref<string>(t('com.ClientStatus.xray_running'));
       const connectionClasses = computed(() => ({
         'label-success': isRunning.value,
         'label-error': !isRunning.value,
@@ -123,7 +123,7 @@
             status.connected = config.value.outbounds?.find((o) => o.protocol !== XrayProtocol.BLACKHOLE && o.protocol !== XrayProtocol.FREEDOM && o.settings?.isTargetAddress?.(status.query!)) !== undefined;
             isRunning.value = window.xray.server.isRunning;
             connectionStatus.value = status.connected;
-            connectionStationLabel.value = status.connected ? t('components.ClientStatus.xray_connected') : t('components.ClientStatus.xray_connecting');
+            connectionStationLabel.value = status.connected ? t('com.ClientStatus.xray_connected') : t('com.ClientStatus.xray_connecting');
             contryCodeClass.value = `fi-${status.countryCode?.toLowerCase()}`;
             return status;
           }

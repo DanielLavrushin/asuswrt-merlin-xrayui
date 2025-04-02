@@ -1,10 +1,10 @@
 <template>
   <tr>
-    <th>{{ $t('components.HeadersMapping.label_headers_row') }}</th>
+    <th>{{ $t('com.HeadersMapping.label_headers_row') }}</th>
     <td>
       <div class="textarea-wrapper">
         <spot v-for="(obj, index) in headers" :key="index">
-          <input type="text" class="input_15_table" v-model="obj.key" :placeholder="$t('components.HeadersMapping.pl_header_key')" /> : <input type="text" class="input_20_table" v-model="obj.value" :placeholder="$t('components.HeadersMapping.pl_header_value')" />
+          <input type="text" class="input_15_table" v-model="obj.key" :placeholder="$t('com.HeadersMapping.pl_header_key')" /> : <input type="text" class="input_20_table" v-model="obj.value" :placeholder="$t('com.HeadersMapping.pl_header_value')" />
           <input class="button_gen button_gen_small" type="button" value="&#10005;" @click.prevent="remove_header(obj)" />
         </spot>
         <span class="row-buttons">

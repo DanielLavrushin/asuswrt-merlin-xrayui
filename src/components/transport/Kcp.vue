@@ -2,8 +2,8 @@
   <tbody v-if="transport.kcpSettings">
     <tr>
       <th>
-        {{ $t('components.Kcp.label_mtu') }}
-        <hint v-html="$t('components.Kcp.hint_mtu')"></hint>
+        {{ $t('com.Kcp.label_mtu') }}
+        <hint v-html="$t('com.Kcp.hint_mtu')"></hint>
       </th>
       <td>
         <input type="number" maxlength="4" class="input_6_table" onkeypress="return validator.isNumber(this,event);" v-model="transport.kcpSettings.mtu" />
@@ -12,8 +12,8 @@
     </tr>
     <tr>
       <th>
-        {{ $t('components.Kcp.label_tti') }}
-        <hint v-html="$t('components.Kcp.hint_tti')"></hint>
+        {{ $t('com.Kcp.label_tti') }}
+        <hint v-html="$t('com.Kcp.hint_tti')"></hint>
       </th>
       <td>
         <input type="number" maxlength="3" class="input_6_table" onkeypress="return validator.isNumber(this,event);" v-model="transport.kcpSettings.tti" />
@@ -22,8 +22,8 @@
     </tr>
     <tr>
       <th>
-        {{ $t('components.Kcp.label_uplink_capacity') }}
-        <hint v-html="$t('components.Kcp.hint_uplink_capacity')"></hint>
+        {{ $t('com.Kcp.label_uplink_capacity') }}
+        <hint v-html="$t('com.Kcp.hint_uplink_capacity')"></hint>
       </th>
       <td>
         <input type="number" maxlength="3" class="input_6_table" onkeypress="return validator.isNumber(this,event);" v-model="transport.kcpSettings.uplinkCapacity" />
@@ -32,8 +32,8 @@
     </tr>
     <tr>
       <th>
-        {{ $t('components.Kcp.label_downlink_capacity') }}
-        <hint v-html="$t('components.Kcp.hint_downlink_capacity')"></hint>
+        {{ $t('com.Kcp.label_downlink_capacity') }}
+        <hint v-html="$t('com.Kcp.hint_downlink_capacity')"></hint>
       </th>
       <td>
         <input type="number" maxlength="3" class="input_6_table" onkeypress="return validator.isNumber(this,event);" v-model="transport.kcpSettings.downlinkCapacity" />
@@ -42,8 +42,8 @@
     </tr>
     <tr>
       <th>
-        {{ $t('components.Kcp.label_congestion') }}
-        <hint v-html="$t('components.Kcp.hint_congestion')"></hint>
+        {{ $t('com.Kcp.label_congestion') }}
+        <hint v-html="$t('com.Kcp.hint_congestion')"></hint>
       </th>
       <td>
         <input type="checkbox" class="input" v-model="transport.kcpSettings.congestion" />
@@ -52,8 +52,8 @@
     </tr>
     <tr>
       <th>
-        {{ $t('components.Kcp.label_read_buffer') }}
-        <hint v-html="$t('components.Kcp.hint_read_buffer')"></hint>
+        {{ $t('com.Kcp.label_read_buffer') }}
+        <hint v-html="$t('com.Kcp.hint_read_buffer')"></hint>
       </th>
       <td>
         <input type="number" maxlength="3" class="input_6_table" onkeypress="return validator.isNumber(this,event);" v-model="transport.kcpSettings.readBufferSize" />
@@ -62,8 +62,8 @@
     </tr>
     <tr>
       <th>
-        {{ $t('components.Kcp.label_write_buffer') }}
-        <hint v-html="$t('components.Kcp.hint_write_buffer')"></hint>
+        {{ $t('com.Kcp.label_write_buffer') }}
+        <hint v-html="$t('com.Kcp.hint_write_buffer')"></hint>
       </th>
       <td>
         <input type="number" maxlength="3" class="input_6_table" onkeypress="return validator.isNumber(this,event);" v-model="transport.kcpSettings.writeBufferSize" />
@@ -72,8 +72,8 @@
     </tr>
     <tr>
       <th>
-        {{ $t('components.Kcp.label_seed') }}
-        <hint v-html="$t('components.Kcp.hint_seed')"></hint>
+        {{ $t('com.Kcp.label_seed') }}
+        <hint v-html="$t('com.Kcp.hint_seed')"></hint>
       </th>
       <td>
         <input type="text" class="input_25_table" v-model="transport.kcpSettings.seed" />
@@ -85,8 +85,8 @@
     </tr>
     <tr v-if="transport.kcpSettings.header">
       <th>
-        {{ $t('components.Kcp.label_header') }}
-        <hint v-html="$t('components.Kcp.hint_header')"></hint>
+        {{ $t('com.Kcp.label_header') }}
+        <hint v-html="$t('com.Kcp.hint_header')"></hint>
       </th>
       <td>
         <select class="input_option" v-model="transport.kcpSettings.header.type">

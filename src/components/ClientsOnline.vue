@@ -3,31 +3,31 @@
     <table class="FormTable SettingsTable tableApi_table">
       <thead>
         <tr>
-          <td colspan="3">{{ $t('components.ClientsOnline.title') }}</td>
+          <td colspan="3">{{ $t('com.ClientsOnline.title') }}</td>
         </tr>
       </thead>
       <tbody v-if="logsEnabled">
         <tr class="row_title">
-          <th>{{ $t('components.ClientsOnline.label_ip') }}</th>
-          <th>{{ $t('components.ClientsOnline.label_client') }}</th>
+          <th>{{ $t('com.ClientsOnline.label_ip') }}</th>
+          <th>{{ $t('com.ClientsOnline.label_client') }}</th>
         </tr>
         <tr v-for="client in clients" :key="client.ip" class="data_tr">
           <td>
-            <span class="label label-success">{{ $t('components.ClientsOnline.online') }}</span>
+            <span class="label label-success">{{ $t('com.ClientsOnline.online') }}</span>
             {{ client.ip }}
           </td>
           <td>{{ client.email.filter((email) => email).join(', ') }}</td>
         </tr>
         <tr v-if="!clients.length" class="data_tr">
-          <td colspan="3" style="color: #ffcc00">{{ $t('components.ClientsOnline.noone_is_online') }}</td>
+          <td colspan="3" style="color: #ffcc00">{{ $t('com.ClientsOnline.noone_is_online') }}</td>
         </tr>
       </tbody>
       <tbody v-else>
         <tr class="data_tr">
           <td colspan="3" style="color: #ffcc00">
-            {{ $t('components.ClientsOnline.message_logs') }}
+            {{ $t('com.ClientsOnline.message_logs') }}
             <br />
-            <input class="button_gen button_gen_small" type="button" :value="$t('components.ClientsOnline.enable_logs')" @click.prevent="enable_logs" />
+            <input class="button_gen button_gen_small" type="button" :value="$t('com.ClientsOnline.enable_logs')" @click.prevent="enable_logs" />
           </td>
         </tr>
       </tbody>

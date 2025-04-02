@@ -1,17 +1,17 @@
 <template>
   <div class="formfontdesc">
-    <p>{{ $t('components.Tls.modal_desc') }}</p>
+    <p>{{ $t('com.Tls.modal_desc') }}</p>
     <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="2">{{ $t('components.Tls.modal_title') }}</td>
+          <td colspan="2">{{ $t('com.Tls.modal_title') }}</td>
         </tr>
       </thead>
       <tbody v-if="transport.tlsSettings">
         <tr v-if="proxyType === 'outbound'">
           <th>
-            {{ $t('components.Tls.label_server_name') }}
-            <hint v-html="$t('components.Tls.hint_server_name')"></hint>
+            {{ $t('com.Tls.label_server_name') }}
+            <hint v-html="$t('com.Tls.hint_server_name')"></hint>
           </th>
           <td>
             <input v-model="transport.tlsSettings.serverName" type="text" class="input_20_table" />
@@ -20,8 +20,8 @@
         </tr>
         <tr v-if="proxyType === 'outbound'">
           <th>
-            {{ $t('components.Tls.label_allow_insecure') }}
-            <hint v-html="$t('components.Tls.hint_allow_insecure')"></hint>
+            {{ $t('com.Tls.label_allow_insecure') }}
+            <hint v-html="$t('com.Tls.hint_allow_insecure')"></hint>
           </th>
           <td>
             <input v-model="transport.tlsSettings.allowInsecure" type="checkbox" class="input" />
@@ -30,8 +30,8 @@
         </tr>
         <tr v-if="proxyType === 'inbound'">
           <th>
-            {{ $t('components.Tls.label_reject_unknown_sni') }}
-            <hint v-html="$t('components.Tls.hint_reject_unknown_sni')"></hint>
+            {{ $t('com.Tls.label_reject_unknown_sni') }}
+            <hint v-html="$t('com.Tls.hint_reject_unknown_sni')"></hint>
           </th>
           <td>
             <input v-model="transport.tlsSettings.rejectUnknownSni" type="checkbox" class="input" />
@@ -40,8 +40,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.Tls.label_dont_use_ca') }}
-            <hint v-html="$t('components.Tls.hint_dont_use_ca')"></hint>
+            {{ $t('com.Tls.label_dont_use_ca') }}
+            <hint v-html="$t('com.Tls.hint_dont_use_ca')"></hint>
           </th>
           <td>
             <input v-model="transport.tlsSettings.disableSystemRoot" type="checkbox" class="input" />
@@ -50,8 +50,8 @@
         </tr>
         <tr v-if="proxyType === 'outbound'">
           <th>
-            {{ $t('components.Tls.label_session_resumption') }}
-            <hint v-html="$t('components.Tls.hint_session_resumption')"></hint>
+            {{ $t('com.Tls.label_session_resumption') }}
+            <hint v-html="$t('com.Tls.hint_session_resumption')"></hint>
           </th>
           <td>
             <input v-model="transport.tlsSettings.enableSessionResumption" type="checkbox" class="input" />
@@ -60,8 +60,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.Tls.label_alpn') }}
-            <hint v-html="$t('components.Tls.hint_alpn')"></hint>
+            {{ $t('com.Tls.label_alpn') }}
+            <hint v-html="$t('com.Tls.hint_alpn')"></hint>
           </th>
           <td>
             <template v-for="(opt, index) in alpnOptions" :key="index">
@@ -73,8 +73,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.Tls.label_tls_version') }}
-            <hint v-html="$t('components.Tls.hint_tls_version')"></hint>
+            {{ $t('com.Tls.label_tls_version') }}
+            <hint v-html="$t('com.Tls.hint_tls_version')"></hint>
           </th>
           <td>
             <select v-model="transport.tlsSettings.minVersion" class="input_option">
@@ -93,8 +93,8 @@
         </tr>
         <tr v-if="proxyType === 'outbound'">
           <th>
-            {{ $t('components.Tls.label_fingerprint') }}
-            <hint v-html="$t('components.Tls.hint_fingerprint')"></hint>
+            {{ $t('com.Tls.label_fingerprint') }}
+            <hint v-html="$t('com.Tls.hint_fingerprint')"></hint>
           </th>
           <td>
             <select class="input_option" v-model="transport.tlsSettings.fingerprint">
@@ -107,8 +107,8 @@
         </tr>
         <tr v-if="proxyType === 'inbound'">
           <th>
-            {{ $t('components.Tls.label_certificate') }}
-            <hint v-html="$t('components.Tls.hint_certificate')"></hint>
+            {{ $t('com.Tls.label_certificate') }}
+            <hint v-html="$t('com.Tls.hint_certificate')"></hint>
           </th>
           <td>
             <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click.prevent="certificate_manage()" />

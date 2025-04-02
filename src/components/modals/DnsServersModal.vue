@@ -1,16 +1,16 @@
 <template>
   <modal ref="modal" title="Servers">
     <div class="formfontdesc">
-      <p>{{ $t('components.DnsServersModal.modal_desc') }}</p>
+      <p>{{ $t('com.DnsServersModal.modal_desc') }}</p>
       <table width="100%" bordercolor="#6b8fa3" class="FormTable SettingsTable tableApi_table">
         <thead>
           <tr>
-            <td colspan="2">{{ $t('components.DnsServersModal.list') }}</td>
+            <td colspan="2">{{ $t('com.DnsServersModal.list') }}</td>
           </tr>
         </thead>
         <tbody>
           <tr class="row_title">
-            <th>{{ $t('components.DnsServersModal.server') }}</th>
+            <th>{{ $t('com.DnsServersModal.server') }}</th>
             <th></th>
           </tr>
           <tr class="row_title">
@@ -18,12 +18,12 @@
               <input v-model="server.address" class="input_25_table" placeholder="address" />
             </td>
             <td>
-              <button @click.prevent="advanced()" class="button_gen button_gen_small">{{ $t('components.DnsServersModal.advanced') }}</button>
+              <button @click.prevent="advanced()" class="button_gen button_gen_small">{{ $t('com.DnsServersModal.advanced') }}</button>
               <button @click.prevent="addSimple()" class="button_gen button_gen_small">{{ $t('labels.add') }}</button>
             </td>
           </tr>
           <tr v-if="!servers.length" class="data_tr">
-            <td colspan="2" style="color: #ffcc00">{{ $t('components.DnsServersModal.no_hosts_defined') }}</td>
+            <td colspan="2" style="color: #ffcc00">{{ $t('com.DnsServersModal.no_hosts_defined') }}</td>
           </tr>
           <tr v-for="(server, index) in servers" :key="index" class="data_tr">
             <td>{{ getServer(server) }}</td>
@@ -39,18 +39,18 @@
   </modal>
 
   <!-- Advanced Modal -->
-  <modal ref="modalAdvanced" :title="$t('components.DnsServersModal.modal_server_title')" width="500px">
+  <modal ref="modalAdvanced" :title="$t('com.DnsServersModal.modal_server_title')" width="500px">
     <div class="formfontdesc">
       <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
         <thead>
           <tr>
-            <td colspan="2">{{ $t('components.DnsServersModal.modal_server_title2') }}</td>
+            <td colspan="2">{{ $t('com.DnsServersModal.modal_server_title2') }}</td>
           </tr>
         </thead>
         <tbody>
           <tr>
             <th>
-              {{ $t('components.DnsServersModal.label_address') }}
+              {{ $t('com.DnsServersModal.label_address') }}
             </th>
             <td>
               <input type="text" v-model="server.address" class="input_25_table" placeholder="address" />
@@ -58,8 +58,8 @@
           </tr>
           <tr>
             <th>
-              {{ $t('components.DnsServersModal.label_client_ip') }}
-              <hint v-html="$t('components.DnsServersModal.hint_client_ip')"></hint>
+              {{ $t('com.DnsServersModal.label_client_ip') }}
+              <hint v-html="$t('com.DnsServersModal.hint_client_ip')"></hint>
             </th>
             <td>
               <input type="text" v-model="server.clientIP" class="input_25_table" placeholder="client ip" />
@@ -67,8 +67,8 @@
           </tr>
           <tr>
             <th>
-              {{ $t('components.DnsServersModal.label_port') }}
-              <hint v-html="$t('components.DnsServersModal.hint_port')"></hint>
+              {{ $t('com.DnsServersModal.label_port') }}
+              <hint v-html="$t('com.DnsServersModal.hint_port')"></hint>
             </th>
             <td>
               <input type="number" v-model="server.port" class="input_6_table" placeholder="port" />
@@ -77,8 +77,8 @@
           </tr>
           <tr>
             <th>
-              {{ $t('components.DnsServersModal.label_domains') }}
-              <hint v-html="$t('components.DnsServersModal.hint_domains')"></hint>
+              {{ $t('com.DnsServersModal.label_domains') }}
+              <hint v-html="$t('com.DnsServersModal.hint_domains')"></hint>
             </th>
             <td>
               <div class="textarea-wrapper">
@@ -88,8 +88,8 @@
           </tr>
           <tr>
             <th>
-              {{ $t('components.DnsServersModal.label_expected_ips') }}
-              <hint v-html="$t('components.DnsServersModal.hint_expected_ips')"></hint>
+              {{ $t('com.DnsServersModal.label_expected_ips') }}
+              <hint v-html="$t('com.DnsServersModal.hint_expected_ips')"></hint>
             </th>
             <td>
               <div class="textarea-wrapper">
@@ -99,8 +99,8 @@
           </tr>
           <tr>
             <th>
-              {{ $t('components.DnsServersModal.label_skip_fallback') }}
-              <hint v-html="$t('components.DnsServersModal.hint_skip_fallback')"></hint>
+              {{ $t('com.DnsServersModal.label_skip_fallback') }}
+              <hint v-html="$t('com.DnsServersModal.hint_skip_fallback')"></hint>
             </th>
             <td>
               <input type="checkbox" v-model="server.skipFallback" />

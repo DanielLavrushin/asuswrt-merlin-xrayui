@@ -71,10 +71,10 @@ geodata_remount_to_web() {
 
     rm -f "$geodata_dir"
 
-    if [ ! -d "$ADDON_WEB_DIR/geodata" ]; then
-        mkdir -p "$ADDON_WEB_DIR/geodata"
+    if [ ! -d "$geodata_dir" ]; then
+        mkdir -p "$geodata_dir"
         if [ $? -ne 0 ]; then
-            printlog true "Error: Failed to create directory '$ADDON_WEB_DIR/geodata'." "$CERR"
+            printlog true "Error: Failed to create directory '$geodata_dir'." "$CERR"
             exit 1
         fi
     fi

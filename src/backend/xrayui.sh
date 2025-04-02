@@ -20,6 +20,7 @@ import ./github.sh
 import ./geodata.sh
 import ./profile.sh
 import ./logs.sh
+import ./backup.sh
 
 case "$1" in
 version)
@@ -54,6 +55,9 @@ remount_ui)
     ;;
 fixme)
     fixme
+    ;;
+backup)
+    backup_configuration
     ;;
 service_event)
     if [ "$2" = "webapp" ]; then
@@ -123,7 +127,6 @@ service_event)
                 enable_config_logs
                 ;;
             esac
-            exit 0
             ;;
         togglestartup)
             toggle_startup
@@ -145,6 +148,12 @@ service_event)
             ;;
         deleteprofile)
             delete_config_profile
+            ;;
+        backup)
+            backup_configuration
+            ;;
+        backupclearall)
+            backup_clearall
             ;;
         esac
     elif [ "$2" = "regenerate" ]; then

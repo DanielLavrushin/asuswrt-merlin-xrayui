@@ -23,12 +23,12 @@
             <a v-if="isRunning" class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(stop)">{{ $t('labels.stop') }}</a>
             <input class="button_gen button_gen_small" type="button" :value="$t('labels.show_config')" @click.prevent="show_config_modal()" />
           </span>
-          <config-modal ref="configModal"></config-modal>
+          <config-modal ref="configModal" />
         </td>
       </tr>
-      <profiles></profiles>
-      <process-uptime></process-uptime>
-      <import-config v-model:config="config"></import-config>
+      <profiles />
+      <process-uptime />
+      <import-config v-model:config="config" />
       <tr>
         <th>{{ $t('com.ClientStatus.general_options') }}</th>
         <td>
@@ -38,6 +38,7 @@
           <general-options-modal ref="generalOptionsModal" v-model:config="config"></general-options-modal>
         </td>
       </tr>
+      <backup />
     </tbody>
   </table>
 </template>
@@ -55,6 +56,7 @@
   import ProcessUptime from './ProcessUptime.vue';
   import XrayVersion from './XrayVersion.vue';
   import Profiles from './Profiles.vue';
+  import Backup from './Backup.vue';
 
   class IpApiResponse {
     public status?: string;
@@ -72,7 +74,8 @@
       ConfigModal,
       ProcessUptime,
       XrayVersion,
-      Profiles
+      Profiles,
+      Backup
     },
     props: {
       config: {

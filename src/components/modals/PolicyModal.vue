@@ -1,9 +1,9 @@
 <template>
-  <modal width="755" ref="modalList" :title="$t('components.PolicyModal.modal_title')">
+  <modal width="755" ref="modalList" :title="$t('com.PolicyModal.modal_title')">
     <table class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="4">{{ $t('components.PolicyModal.modal_title2') }}</td>
+          <td colspan="4">{{ $t('com.PolicyModal.modal_title2') }}</td>
         </tr>
       </thead>
       <tbody v-if="policies!.length > 0">
@@ -11,7 +11,7 @@
           <th>
             <label>
               <input type="checkbox" v-model="r.enabled" @change.prevent="on_off_rule(r, index)" />
-              {{ $t('components.PolicyModal.rule_no', [index + 1]) }}
+              {{ $t('com.PolicyModal.rule_no', [index + 1]) }}
             </label>
           </th>
           <td style="color: #ffcc00">{{ r.name }}</td>
@@ -27,7 +27,7 @@
       </tbody>
       <tbody v-else>
         <tr>
-          <td colspan="4" style="color: #ffcc00">{{ $t('components.PolicyModal.no_rules_defined') }}</td>
+          <td colspan="4" style="color: #ffcc00">{{ $t('com.PolicyModal.no_rules_defined') }}</td>
         </tr>
       </tbody>
     </table>
@@ -40,8 +40,8 @@
       <tbody>
         <tr>
           <th>
-            {{ $t('components.PolicyModal.label_friendly_name') }}
-            <hint v-html="$t('components.PolicyModal.hint_friendly_name')"></hint>
+            {{ $t('com.PolicyModal.label_friendly_name') }}
+            <hint v-html="$t('com.PolicyModal.hint_friendly_name')"></hint>
           </th>
           <td>
             <input v-model="currentRule.name" type="text" class="input_25_table" />
@@ -49,8 +49,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.PolicyModal.label_mode') }}
-            <hint v-html="$t('components.PolicyModal.hint_mode')"></hint>
+            {{ $t('com.PolicyModal.label_mode') }}
+            <hint v-html="$t('com.PolicyModal.hint_mode')"></hint>
           </th>
           <td>
             <select class="input_option" v-model="currentRule.mode">
@@ -62,20 +62,20 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.PolicyModal.label_mac') }}
-            <hint v-html="$t('components.PolicyModal.hint_mac')"></hint>
+            {{ $t('com.PolicyModal.label_mac') }}
+            <hint v-html="$t('com.PolicyModal.hint_mac')"></hint>
             <br />
             <div class="hint-color" v-show="currentRule.mode == 'redirect'">
-              {{ $t('components.PolicyModal.hint_bypass_devices') }}
+              {{ $t('com.PolicyModal.hint_bypass_devices') }}
             </div>
             <div class="hint-color" v-show="currentRule.mode == 'bypass'">
-              {{ $t('components.PolicyModal.hint_redirect_devices') }}
+              {{ $t('com.PolicyModal.hint_redirect_devices') }}
             </div>
           </th>
           <td class="flex-checkbox flex-checkbox-50 height-overflow" style="max-height: 240px">
             <label>
               <input type="checkbox" v-model="showAll" />
-              {{ $t('components.PolicyModal.label_show_all') }}
+              {{ $t('com.PolicyModal.label_show_all') }}
             </label>
             <label v-if="devices.length > 10">
               <input type="text" v-model="deviceFilter" class="input_15_table" placeholder="filter devices" @input="applyDeviceFilter" />
@@ -88,7 +88,7 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.PolicyModal.label_wellknown_ports') }}
+            {{ $t('com.PolicyModal.label_wellknown_ports') }}
           </th>
           <td>
             <select v-model="vendor" class="input_option" @change="vendorChange">
@@ -101,14 +101,14 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.PolicyModal.label_tcp_ports') }}
-            <hint v-html="$t('components.PolicyModal.hint_tcp_ports')"></hint>
+            {{ $t('com.PolicyModal.label_tcp_ports') }}
+            <hint v-html="$t('com.PolicyModal.hint_tcp_ports')"></hint>
             <br />
             <div class="hint-color" v-show="currentRule.mode == 'bypass'">
-              {{ $t('components.PolicyModal.hint_bypass') }}
+              {{ $t('com.PolicyModal.hint_bypass') }}
             </div>
             <div class="hint-color" v-show="currentRule.mode == 'redirect'">
-              {{ $t('components.PolicyModal.hint_redirect') }}
+              {{ $t('com.PolicyModal.hint_redirect') }}
             </div>
           </th>
           <td>
@@ -117,14 +117,14 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.PolicyModal.label_udp_ports') }}
-            <hint v-html="$t('components.PolicyModal.hint_udp_ports')"></hint>
+            {{ $t('com.PolicyModal.label_udp_ports') }}
+            <hint v-html="$t('com.PolicyModal.hint_udp_ports')"></hint>
             <br />
             <div class="hint-color" v-show="currentRule.mode == 'bypass'">
-              {{ $t('components.PolicyModal.hint_bypass') }}
+              {{ $t('com.PolicyModal.hint_bypass') }}
             </div>
             <div class="hint-color" v-show="currentRule.mode == 'redirect'">
-              {{ $t('components.PolicyModal.hint_redirect') }}
+              {{ $t('com.PolicyModal.hint_redirect') }}
             </div>
           </th>
           <td>

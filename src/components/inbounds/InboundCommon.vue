@@ -1,8 +1,8 @@
 <template>
   <tr>
     <th>
-      {{ $t('components.InboundCommon.label_tag') }}
-      <hint v-html="$t('components.InboundCommon.hint_tag')"></hint>
+      {{ $t('com.InboundCommon.label_tag') }}
+      <hint v-html="$t('com.InboundCommon.hint_tag')"></hint>
     </th>
     <td>
       <input type="text" class="input_20_table" v-model="inbound.tag" />
@@ -11,8 +11,8 @@
   </tr>
   <tr>
     <th>
-      {{ $t('components.InboundCommon.label_listen') }}
-      <hint v-html="$t('components.InboundCommon.hint_listen')"></hint>
+      {{ $t('com.InboundCommon.label_listen') }}
+      <hint v-html="$t('com.InboundCommon.hint_listen')"></hint>
     </th>
     <td>
       <input type="text" maxlength="15" class="input_20_table" v-model="inbound.listen" onkeypress="return validator.isIPAddr(this, event);" autocomplete="off" autocorrect="off" autocapitalize="off" />
@@ -21,13 +21,13 @@
   </tr>
   <tr>
     <th>
-      {{ $t('components.InboundCommon.label_port') }}
-      <hint v-html="$t('components.InboundCommon.hint_port')"></hint>
+      {{ $t('com.InboundCommon.label_port') }}
+      <hint v-html="$t('com.InboundCommon.hint_port')"></hint>
     </th>
     <td>
       <input type="number" id="po1" maxlength="5" class="input_6_table" v-model="inbound.port" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
       <span class="row-buttons">
-        <a class="button_gen button_gen_small" href="#" @click="show_allocate(inbound)">{{ $t('components.InboundCommon.label_port_allocate') }}</a>
+        <a class="button_gen button_gen_small" href="#" @click="show_allocate(inbound)">{{ $t('com.InboundCommon.label_port_allocate') }}</a>
       </span>
       <allocate-modal ref="allocateModal" />
     </td>

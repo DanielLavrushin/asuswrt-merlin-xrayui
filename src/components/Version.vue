@@ -1,26 +1,26 @@
 <template>
   <div class="version">
     <a href="#" @click.prevent="open_update">
-      <span class="button_gen button_gen_small button_info" :title="$t('components.Version.tooltip_update_avialable')" v-if="hasUpdate">!</span>
+      <span class="button_gen button_gen_small button_info" :title="$t('com.Version.tooltip_update_avialable')" v-if="hasUpdate">!</span>
       XRAYUI v{{ current_version }}</a
     >
   </div>
-  <modal ref="updateModal" width="600" :title="$t('components.Version.modal_title')">
+  <modal ref="updateModal" width="600" :title="$t('com.Version.modal_title')">
     <div class="modal-content">
-      <p class="current-version">{{ $t('components.Version.current_version', [current_version]) }}</p>
+      <p class="current-version">{{ $t('com.Version.current_version', [current_version]) }}</p>
       <div v-if="hasUpdate" class="update-details">
-        <p v-html="$t('components.Version.new_version', [latest_version])"></p>
+        <p v-html="$t('com.Version.new_version', [latest_version])"></p>
       </div>
-      <p v-else class="no-updates">{{ $t('components.Version.version_is_up_to_date') }}</p>
+      <p v-else class="no-updates">{{ $t('com.Version.version_is_up_to_date') }}</p>
 
       <div class="textarea-wrapper">
         <div class="changelog" v-html="changelog"></div>
-        <p v-html="$t('components.Version.open_chengelog')"></p>
+        <p v-html="$t('com.Version.open_chengelog')"></p>
       </div>
     </div>
     <template v-slot:footer v-if="hasUpdate">
-      <button class="button_gen button_gen_small" @click.prevent="dont_want_update">{{ $t('components.Version.dont_want_update', [latest_version]) }}</button>
-      <input class="button_gen button_gen_small button-primary" type="button" :value="$t('components.Version.update_now')" @click.prevent="update" />
+      <button class="button_gen button_gen_small" @click.prevent="dont_want_update">{{ $t('com.Version.dont_want_update', [latest_version]) }}</button>
+      <input class="button_gen button_gen_small button-primary" type="button" :value="$t('com.Version.update_now')" @click.prevent="update" />
     </template>
   </modal>
 </template>

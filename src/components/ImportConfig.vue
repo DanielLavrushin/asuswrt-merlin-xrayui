@@ -1,6 +1,6 @@
 <template>
   <tr>
-    <th>{{ $t('components.ImportConfig.import_config_file') }}</th>
+    <th>{{ $t('com.ImportConfig.import_config_file') }}</th>
     <td>
       <span class="row-buttons">
         <a class="button_gen button_gen_small" href="#" @click.prevent="show">{{ $t('labels.import') }}</a>

@@ -1,20 +1,20 @@
 <template>
-  <modal ref="modal" :title="$t('components.StreamSettingsModal.modal_title')">
+  <modal ref="modal" :title="$t('com.StreamSettingsModal.modal_title')">
     <div class="formfontdesc">
-      <p v-html="$t('components.StreamSettingsModal.modal_desc')"></p>
+      <p v-html="$t('com.StreamSettingsModal.modal_desc')"></p>
       <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
         <thead>
           <tr>
             <td colspan="2">
-              {{ $t('components.StreamSettingsModal.title') }}
+              {{ $t('com.StreamSettingsModal.title') }}
             </td>
           </tr>
         </thead>
         <tbody>
           <tr>
             <th>
-              {{ $t('components.StreamSettingsModal.label_security') }}
-              <hint v-html="$t('components.StreamSettingsModal.hint_security')"></hint>
+              {{ $t('com.StreamSettingsModal.label_security') }}
+              <hint v-html="$t('com.StreamSettingsModal.hint_security')"></hint>
             </th>
             <td>
               <select class="input_option" v-model="transport.security">
@@ -23,15 +23,15 @@
               <span class="row-buttons" v-if="transport.security != 'none'">
                 <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click="manage_security" />
               </span>
-              <modal ref="securityModal" :title="$t('components.StreamSettingsModal.modal_security_title')" v-if="transport.security != 'none'">
+              <modal ref="securityModal" :title="$t('com.StreamSettingsModal.modal_security_title')" v-if="transport.security != 'none'">
                 <component :is="securityComponent" :transport="transport" v-model:proxyType="proxyType" />
               </modal>
             </td>
           </tr>
           <tr>
             <th>
-              {{ $t('components.StreamSettingsModal.label_network') }}
-              <hint v-html="$t('components.StreamSettingsModal.hint_network')"></hint>
+              {{ $t('com.StreamSettingsModal.label_network') }}
+              <hint v-html="$t('com.StreamSettingsModal.hint_network')"></hint>
             </th>
             <td>
               <select class="input_option" v-model="transport.network">
@@ -42,8 +42,8 @@
           </tr>
           <tr>
             <th>
-              {{ $t('components.StreamSettingsModal.label_tproxy') }}
-              <hint v-html="$t('components.StreamSettingsModal.hint_tproxy')"></hint>
+              {{ $t('com.StreamSettingsModal.label_tproxy') }}
+              <hint v-html="$t('com.StreamSettingsModal.hint_tproxy')"></hint>
             </th>
             <td>
               <span class="row-buttons">

@@ -1,6 +1,6 @@
 <template>
   <tr v-if="isRunning">
-    <th>{{ $t('components.ProcessUptime.label') }}</th>
+    <th>{{ $t('com.ProcessUptime.label') }}</th>
     <td>{{ formattedTime }}</td>
   </tr>
 </template>
@@ -51,7 +51,7 @@
         totalSeconds -= hours * 3600;
         const minutes = Math.floor(totalSeconds / 60);
         totalSeconds -= minutes * 60;
-        return t('components.ProcessUptime.formatted_time', [days, hours, minutes, totalSeconds]);
+        return t('com.ProcessUptime.formatted_time', [days, hours, minutes, totalSeconds]);
       });
 
       return {

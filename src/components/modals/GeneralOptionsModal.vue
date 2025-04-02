@@ -1,10 +1,10 @@
 <template>
-  <modal ref="modal" :title="$t('components.GeneralOptionsModal.modal_title')" width="700">
+  <modal ref="modal" :title="$t('com.GeneralOptionsModal.modal_title')" width="700">
     <div class="formfontdesc">
       <table class="FormTable modal-form-table">
         <tbody>
           <tr>
-            <th>{{ $t('components.GeneralOptionsModal.start_xray_on_reboot') }}</th>
+            <th>{{ $t('com.GeneralOptionsModal.start_xray_on_reboot') }}</th>
             <td>
               <label class="go-option">
                 <input type="checkbox" v-model="options.startup" @click="updatestartup" />
@@ -12,13 +12,13 @@
             </td>
           </tr>
           <tr v-show="validateCheckConOption()">
-            <th>{{ $t('components.GeneralOptionsModal.check_xray_connection') }}</th>
+            <th>{{ $t('com.GeneralOptionsModal.check_xray_connection') }}</th>
             <td>
               <label class="go-option">
                 <input type="checkbox" v-model="checkconenabled" @change="setcheckconnection" />
               </label>
-              <modal ref="conModal" :title="$t('components.GeneralOptionsModal.modalConnectTitle')" width="450">
-                <div class="formfontdesc" v-html="$t('components.GeneralOptionsModal.modalConnectCheckDescription')"></div>
+              <modal ref="conModal" :title="$t('com.GeneralOptionsModal.modalConnectTitle')" width="450">
+                <div class="formfontdesc" v-html="$t('com.GeneralOptionsModal.modalConnectCheckDescription')"></div>
                 <template #footer>
                   <input class="button_gen button_gen_small" type="button" :value="$t('labels.cancel')" @click.prevent="concheckcancel" />
                   <input class="button_gen button_gen_small" type="button" :value="$t('labels.accept')" @click.prevent="concheckaccept" />
@@ -28,8 +28,8 @@
           </tr>
           <tr>
             <th>
-              {{ $t('components.GeneralOptionsModal.label_gh_proxy') }}
-              <hint v-html="$t('components.GeneralOptionsModal.hint_gh_proxy')"></hint>
+              {{ $t('com.GeneralOptionsModal.label_gh_proxy') }}
+              <hint v-html="$t('com.GeneralOptionsModal.hint_gh_proxy')"></hint>
             </th>
             <td>
               <select class="input_option" v-model="options.github_proxy">
@@ -43,12 +43,12 @@
       <table class="FormTable modal-form-table">
         <thead>
           <tr>
-            <td colspan="2">{{ $t('components.GeneralOptionsModal.geodad_header') }}</td>
+            <td colspan="2">{{ $t('com.GeneralOptionsModal.geodad_header') }}</td>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <th>{{ $t('components.GeneralOptionsModal.wellknown_geodata') }}</th>
+            <th>{{ $t('com.GeneralOptionsModal.wellknown_geodata') }}</th>
             <td>
               <select class="input_option" v-model="selected_wellknown" @change="setwellknown">
                 <option></option>
@@ -60,13 +60,13 @@
             </td>
           </tr>
           <tr>
-            <th>{{ $t('components.GeneralOptionsModal.label_geoip_url') }}</th>
+            <th>{{ $t('com.GeneralOptionsModal.label_geoip_url') }}</th>
             <td>
               <input v-model="options.geo_ip_url" type="text" class="input_32_table" />
             </td>
           </tr>
           <tr>
-            <th>{{ $t('components.GeneralOptionsModal.label_geosite_url') }}</th>
+            <th>{{ $t('com.GeneralOptionsModal.label_geosite_url') }}</th>
             <td>
               <input v-model="options.geo_site_url" type="text" class="input_32_table" />
             </td>
@@ -76,12 +76,12 @@
       <table class="FormTable modal-form-table">
         <thead>
           <tr>
-            <td colspan="2">{{ $t('components.GeneralOptionsModal.logs_header') }}</td>
+            <td colspan="2">{{ $t('com.GeneralOptionsModal.logs_header') }}</td>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <th>{{ $t('components.GeneralOptionsModal.label_logs_enable_access') }}</th>
+            <th>{{ $t('com.GeneralOptionsModal.label_logs_enable_access') }}</th>
             <td>
               <label class="go-option">
                 <input type="checkbox" v-model="options.logs_access" />
@@ -90,7 +90,7 @@
             </td>
           </tr>
           <tr>
-            <th>{{ $t('components.GeneralOptionsModal.label_logs_enable_error') }}</th>
+            <th>{{ $t('com.GeneralOptionsModal.label_logs_enable_error') }}</th>
             <td>
               <label class="go-option">
                 <input type="checkbox" v-model="options.logs_error" />
@@ -99,7 +99,7 @@
             </td>
           </tr>
           <tr v-if="options.logs_error">
-            <th>{{ $t('components.GeneralOptionsModal.label_logs_level') }}</th>
+            <th>{{ $t('com.GeneralOptionsModal.label_logs_level') }}</th>
             <td>
               <select class="input_option" v-model="options.logs_level">
                 <option v-for="level in log_levels" :value="level">{{ level }}</option>
@@ -108,7 +108,7 @@
             </td>
           </tr>
           <tr>
-            <th>{{ $t('components.GeneralOptionsModal.label_logs_enable_dns') }}</th>
+            <th>{{ $t('com.GeneralOptionsModal.label_logs_enable_dns') }}</th>
             <td>
               <label class="go-option">
                 <input type="checkbox" v-model="options.logs_dns" />

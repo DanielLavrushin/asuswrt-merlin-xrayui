@@ -2,8 +2,8 @@
   <tbody v-if="transport.httpupgradeSettings">
     <tr v-if="isInbound">
       <th>
-        {{ $t('components.HttpUpgrade.label_accept_proxy_protocol') }}
-        <hint v-html="$t('components.HttpUpgrade.hint_accept_proxy_protocol')"></hint>
+        {{ $t('com.HttpUpgrade.label_accept_proxy_protocol') }}
+        <hint v-html="$t('com.HttpUpgrade.hint_accept_proxy_protocol')"></hint>
       </th>
       <td>
         <input type="checkbox" name="xray_network_tcp_accept_proxy" class="input" v-model="transport.httpupgradeSettings.acceptProxyProtocol" />
@@ -12,8 +12,8 @@
     </tr>
     <tr>
       <th>
-        {{ $t('components.HttpUpgrade.label_path') }}
-        <hint v-html="$t('components.HttpUpgrade.hint_path')"></hint>
+        {{ $t('com.HttpUpgrade.label_path') }}
+        <hint v-html="$t('com.HttpUpgrade.hint_path')"></hint>
       </th>
       <td>
         <input type="text" maxlength="15" class="input_20_table" v-model="transport.httpupgradeSettings.path" />
@@ -22,8 +22,8 @@
     </tr>
     <tr>
       <th>
-        {{ $t('components.HttpUpgrade.label_host') }}
-        <hint v-html="$t('components.HttpUpgrade.hint_host')"></hint>
+        {{ $t('com.HttpUpgrade.label_host') }}
+        <hint v-html="$t('com.HttpUpgrade.hint_host')"></hint>
       </th>
       <td>
         <input type="text" maxlength="15" class="input_20_table" v-model="transport.httpupgradeSettings.host" />

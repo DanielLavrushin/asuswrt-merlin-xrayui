@@ -3,16 +3,16 @@
     <thead>
       <tr>
         <td colspan="2">
-          {{ $t('components.ReverseProxy.title') }}
-          <hint v-html="$t('components.ReverseProxy.hint_title')"></hint>
+          {{ $t('com.ReverseProxy.title') }}
+          <hint v-html="$t('com.ReverseProxy.hint_title')"></hint>
         </td>
       </tr>
     </thead>
     <tbody>
       <tr v-if="reverse.bridges">
         <th>
-          {{ $t('components.ReverseProxy.label_bridges') }}
-          <hint v-html="$t('components.ReverseProxy.hint_bridges')"></hint>
+          {{ $t('com.ReverseProxy.label_bridges') }}
+          <hint v-html="$t('com.ReverseProxy.hint_bridges')"></hint>
         </th>
         <td>
           {{ reverse.bridges.length }} item(s)
@@ -22,8 +22,8 @@
       </tr>
       <tr v-if="reverse.portals">
         <th>
-          {{ $t('components.ReverseProxy.label_portals') }}
-          <hint v-html="$t('components.ReverseProxy.hint_portals')"></hint>
+          {{ $t('com.ReverseProxy.label_portals') }}
+          <hint v-html="$t('com.ReverseProxy.hint_portals')"></hint>
         </th>
         <td>
           {{ reverse.portals.length }} item(s)

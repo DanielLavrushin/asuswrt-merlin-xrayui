@@ -2,8 +2,8 @@
   <tbody v-if="transport.tcpSettings">
     <tr v-if="isInbound">
       <th>
-        {{ $t('components.Tcp.label_accept_proxy_protocol') }}
-        <hint v-html="$t('components.Tcp.hint_accept_proxy_protocol')"></hint>
+        {{ $t('com.Tcp.label_accept_proxy_protocol') }}
+        <hint v-html="$t('com.Tcp.hint_accept_proxy_protocol')"></hint>
       </th>
       <td>
         <input type="checkbox" name="xray_network_tcp_accept_proxy" class="input" v-model="transport.tcpSettings.acceptProxyProtocol" />

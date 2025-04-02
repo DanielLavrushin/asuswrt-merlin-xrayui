@@ -3,16 +3,16 @@
     <thead>
       <tr>
         <td colspan="2">
-          {{ $t('components.Dns.title') }}
-          <hint v-html="$t('components.Dns.hint_title')"></hint>
+          {{ $t('com.Dns.title') }}
+          <hint v-html="$t('com.Dns.hint_title')"></hint>
         </td>
       </tr>
     </thead>
     <tbody>
       <tr>
         <th>
-          {{ $t('components.Dns.label_tag') }}
-          <hint v-html="$t('components.Dns.hint_tag')"></hint>
+          {{ $t('com.Dns.label_tag') }}
+          <hint v-html="$t('com.Dns.hint_tag')"></hint>
         </th>
         <td>
           <input type="text" class="input_20_table" v-model="dns.tag" />
@@ -21,8 +21,8 @@
       </tr>
       <tr v-if="dns.hosts">
         <th>
-          {{ $t('components.Dns.label_hosts') }}
-          <hint v-html="$t('components.Dns.hint_hosts')"></hint>
+          {{ $t('com.Dns.label_hosts') }}
+          <hint v-html="$t('com.Dns.hint_hosts')"></hint>
         </th>
         <td>
           {{ Object.getOwnPropertyNames(dns.hosts).length }} item(s)
@@ -33,8 +33,8 @@
       </tr>
       <tr v-if="dns.servers">
         <th>
-          {{ $t('components.Dns.label_servers') }}
-          <hint v-html="$t('components.Dns.hint_servers')"></hint>
+          {{ $t('com.Dns.label_servers') }}
+          <hint v-html="$t('com.Dns.hint_servers')"></hint>
         </th>
         <td>
           {{ dns.servers.length }} item(s)
@@ -45,8 +45,8 @@
       </tr>
       <tr>
         <th>
-          {{ $t('components.Dns.label_client_ip') }}
-          <hint v-html="$t('components.Dns.hint_client_ip')"></hint>
+          {{ $t('com.Dns.label_client_ip') }}
+          <hint v-html="$t('com.Dns.hint_client_ip')"></hint>
         </th>
         <td>
           <input type="text" maxlength="15" class="input_20_table" v-model="dns.clientIp" onkeypress="return validator.isIPAddr(this, event);" autocomplete="off" autocorrect="off" autocapitalize="off" />
@@ -55,8 +55,8 @@
       </tr>
       <tr>
         <th>
-          {{ $t('components.Dns.label_query_strategy') }}
-          <hint v-html="$t('components.Dns.hint_query_strategy')"></hint>
+          {{ $t('com.Dns.label_query_strategy') }}
+          <hint v-html="$t('com.Dns.hint_query_strategy')"></hint>
         </th>
         <td>
           <select class="input_option" v-model="dns.queryStrategy">
@@ -69,8 +69,8 @@
       </tr>
       <tr>
         <th>
-          {{ $t('components.Dns.label_disable_cache') }}
-          <hint v-html="$t('components.Dns.hint_disable_cache')"></hint>
+          {{ $t('com.Dns.label_disable_cache') }}
+          <hint v-html="$t('com.Dns.hint_disable_cache')"></hint>
         </th>
         <td>
           <input type="checkbox" v-model="dns.disableCache" />
@@ -79,8 +79,8 @@
       </tr>
       <tr>
         <th>
-          {{ $t('components.Dns.label_disable_fallback') }}
-          <hint v-html="$t('components.Dns.hint_disable_fallback')"></hint>
+          {{ $t('com.Dns.label_disable_fallback') }}
+          <hint v-html="$t('com.Dns.hint_disable_fallback')"></hint>
         </th>
         <td>
           <input type="checkbox" v-model="dns.disableFallback" />
@@ -89,8 +89,8 @@
       </tr>
       <tr>
         <th>
-          {{ $t('components.Dns.label_fallback_if_match') }}
-          <hint v-html="$t('components.Dns.hint_fallback_if_match')"></hint>
+          {{ $t('com.Dns.label_fallback_if_match') }}
+          <hint v-html="$t('com.Dns.hint_fallback_if_match')"></hint>
         </th>
         <td>
           <input type="checkbox" v-model="dns.disableFallbackIfMatch" />

@@ -1,18 +1,18 @@
 <template>
   <div class="formfontdesc">
-    <p>{{ $t('components.DocodemoDoorInbound.modal_desc') }}</p>
+    <p>{{ $t('com.DocodemoDoorInbound.modal_desc') }}</p>
     <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="2">{{ $t('components.DocodemoDoorInbound.modal_title') }}</td>
+          <td colspan="2">{{ $t('com.DocodemoDoorInbound.modal_title') }}</td>
         </tr>
       </thead>
       <tbody>
         <inbound-common :inbound="inbound"></inbound-common>
         <tr>
           <th>
-            {{ $t('components.DocodemoDoorInbound.label_follow_redirect') }}
-            <hint v-html="$t('components.DocodemoDoorInbound.hint_follow_redirect')"></hint>
+            {{ $t('com.DocodemoDoorInbound.label_follow_redirect') }}
+            <hint v-html="$t('com.DocodemoDoorInbound.hint_follow_redirect')"></hint>
           </th>
           <td>
             <input type="checkbox" v-model="inbound.settings.followRedirect" />
@@ -21,8 +21,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.DocodemoDoorInbound.label_address') }}
-            <hint v-html="$t('components.DocodemoDoorInbound.hint_address')"></hint>
+            {{ $t('com.DocodemoDoorInbound.label_address') }}
+            <hint v-html="$t('com.DocodemoDoorInbound.hint_address')"></hint>
           </th>
           <td>
             <input type="text" class="input_20_table" v-model="inbound.settings.address" autocomplete="off" autocorrect="off" autocapitalize="off" />
@@ -31,8 +31,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.DocodemoDoorInbound.label_port') }}
-            <hint v-html="$t('components.DocodemoDoorInbound.hint_port')"></hint>
+            {{ $t('com.DocodemoDoorInbound.label_port') }}
+            <hint v-html="$t('com.DocodemoDoorInbound.hint_port')"></hint>
           </th>
           <td>
             <input type="number" maxlength="5" class="input_6_table" v-model="inbound.settings.port" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
@@ -41,8 +41,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.DocodemoDoorInbound.label_network') }}
-            <hint v-html="$t('components.DocodemoDoorInbound.hint_network')"></hint>
+            {{ $t('com.DocodemoDoorInbound.label_network') }}
+            <hint v-html="$t('com.DocodemoDoorInbound.hint_network')"></hint>
           </th>
           <td>
             <select class="input_option" v-model="inbound.settings.network">

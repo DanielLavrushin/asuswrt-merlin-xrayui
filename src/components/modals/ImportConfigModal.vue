@@ -1,13 +1,13 @@
 <template>
-  <modal ref="importModal" :title="$t('components.ImportConfigModal.modal_title')" width="700">
+  <modal ref="importModal" :title="$t('com.ImportConfigModal.modal_title')" width="700">
     <div class="formfontdesc">
-      <p v-html="$t('components.ImportConfigModal.modal_desc')"></p>
+      <p v-html="$t('com.ImportConfigModal.modal_desc')"></p>
       <table class="FormTable modal-form-table">
         <tbody>
           <tr>
             <th>
-              {{ $t('components.ImportConfigModal.label_qr_code') }}
-              <hint v-html="$t('components.ImportConfigModal.hint_qr_code')"></hint>
+              {{ $t('com.ImportConfigModal.label_qr_code') }}
+              <hint v-html="$t('com.ImportConfigModal.hint_qr_code')"></hint>
             </th>
             <td>
               <input type="file" accept="image/*" v-on:change="selectFile" />
@@ -15,8 +15,8 @@
           </tr>
           <tr>
             <th>
-              {{ $t('components.ImportConfigModal.label_proxy_uri') }}
-              <hint v-html="$t('components.ImportConfigModal.hint_proxy_uri')"></hint>
+              {{ $t('com.ImportConfigModal.label_proxy_uri') }}
+              <hint v-html="$t('com.ImportConfigModal.hint_proxy_uri')"></hint>
             </th>
             <td>
               <div class="textarea-wrapper">
@@ -26,8 +26,8 @@
           </tr>
           <tr>
             <th>
-              {{ $t('components.ImportConfigModal.label_complete_setup') }}
-              <hint v-html="$t('components.ImportConfigModal.hint_complete_setup')"></hint>
+              {{ $t('com.ImportConfigModal.label_complete_setup') }}
+              <hint v-html="$t('com.ImportConfigModal.hint_complete_setup')"></hint>
             </th>
             <td>
               <input type="checkbox" v-model="completeSetup" />
@@ -37,8 +37,8 @@
         <tbody v-show="completeSetup">
           <tr>
             <th>
-              {{ $t('components.ImportConfigModal.label_unblock') }}
-              <hint v-html="$t('components.ImportConfigModal.hint_unblock')"></hint>
+              {{ $t('com.ImportConfigModal.label_unblock') }}
+              <hint v-html="$t('com.ImportConfigModal.hint_unblock')"></hint>
             </th>
             <td class="flex-checkbox">
               <div v-for="(opt, index) in unblockItemsList" :key="index">
@@ -49,8 +49,8 @@
           </tr>
           <tr>
             <th>
-              {{ $t('components.ImportConfigModal.label_dont_break') }}
-              <hint v-html="$t('components.ImportConfigModal.hint_dont_break')"></hint>
+              {{ $t('com.ImportConfigModal.label_dont_break') }}
+              <hint v-html="$t('com.ImportConfigModal.hint_dont_break')"></hint>
             </th>
             <td>
               <input type="checkbox" v-model="bypassMode" />

@@ -1,7 +1,7 @@
 <template>
-  <modal ref="modal" :title="$t('components.XrayCoreVersionModal.modal_title')" width="300">
+  <modal ref="modal" :title="$t('com.XrayCoreVersionModal.modal_title')" width="300">
     <div class="formfontdesc">
-      <p>{{ $t('components.XrayCoreVersionModal.modal_desc') }}</p>
+      <p>{{ $t('com.XrayCoreVersionModal.modal_desc') }}</p>
       <p>
         <select class="input_option" v-model="selected_url">
           <option v-for="(opt, index) in xray_versions" :key="index" :value="opt.url">
@@ -11,7 +11,7 @@
       </p>
     </div>
     <template #footer>
-      <input class="button_gen button_gen_small" type="button" :value="$t('components.XrayCoreVersionModal.switch')" @click.prevent="switch_version" />
+      <input class="button_gen button_gen_small" type="button" :value="$t('com.XrayCoreVersionModal.switch')" @click.prevent="switch_version" />
     </template>
   </modal>
 </template>
@@ -74,7 +74,7 @@
 
       const switch_version = async () => {
         if (!selected_url.value) {
-          alert(t('components.XrayCoreVersionModal.error_no_version_selected'));
+          alert(t('com.XrayCoreVersionModal.error_no_version_selected'));
           return;
         }
         await engine.executeWithLoadingProgress(async () => {

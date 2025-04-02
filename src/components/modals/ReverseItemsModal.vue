@@ -1,9 +1,9 @@
 <template>
-  <modal width="450" ref="modalList" :title="$t('components.ReverseItemsModal.modal_title')">
+  <modal width="450" ref="modalList" :title="$t('com.ReverseItemsModal.modal_title')">
     <table class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="3">{{ $t('components.ReverseItemsModal.modal_title2') }}</td>
+          <td colspan="3">{{ $t('com.ReverseItemsModal.modal_title2') }}</td>
         </tr>
       </thead>
       <tbody>

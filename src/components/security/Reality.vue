@@ -1,17 +1,17 @@
 <template>
   <div class="formfontdesc">
-    <p v-html="$t('components.Reality.modal_desc')"></p>
+    <p v-html="$t('com.Reality.modal_desc')"></p>
     <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="2">{{ $t('components.Reality.modal_title') }}</td>
+          <td colspan="2">{{ $t('com.Reality.modal_title') }}</td>
         </tr>
       </thead>
       <tbody v-if="transport.realitySettings">
         <tr>
           <th>
-            {{ $t('components.Reality.label_enable_logs') }}
-            <hint v-html="$t('components.Reality.hint_enable_logs')"></hint>
+            {{ $t('com.Reality.label_enable_logs') }}
+            <hint v-html="$t('com.Reality.hint_enable_logs')"></hint>
           </th>
           <td>
             <input v-model="transport.realitySettings.show" type="checkbox" class="input" />
@@ -20,8 +20,8 @@
         </tr>
         <tr v-if="proxyType === 'inbound'">
           <th>
-            {{ $t('components.Reality.label_dest') }}
-            <hint v-html="$t('components.Reality.hint_dest')"></hint>
+            {{ $t('com.Reality.label_dest') }}
+            <hint v-html="$t('com.Reality.hint_dest')"></hint>
           </th>
           <td>
             <input v-model="transport.realitySettings.dest" type="text" class="input_20_table" />
@@ -29,8 +29,8 @@
         </tr>
         <tr v-if="proxyType === 'inbound'">
           <th>
-            {{ $t('components.Reality.label_server_names') }}
-            <hint v-html="$t('components.Reality.hint_server_names')"></hint>
+            {{ $t('com.Reality.label_server_names') }}
+            <hint v-html="$t('com.Reality.hint_server_names')"></hint>
           </th>
           <td>
             <div class="textarea-wrapper">
@@ -40,8 +40,8 @@
         </tr>
         <tr v-if="proxyType === 'outbound'">
           <th>
-            {{ $t('components.Reality.label_server_name') }}
-            <hint v-html="$t('components.Reality.hint_server_name')"></hint>
+            {{ $t('com.Reality.label_server_name') }}
+            <hint v-html="$t('com.Reality.hint_server_name')"></hint>
           </th>
           <td>
             <input v-model="transport.realitySettings.serverName" type="text" class="input_20_table" />
@@ -50,8 +50,8 @@
         </tr>
         <tr v-if="proxyType === 'outbound'">
           <th>
-            {{ $t('components.Reality.label_short_id') }}
-            <hint v-html="$t('components.Reality.hint_short_id')"></hint>
+            {{ $t('com.Reality.label_short_id') }}
+            <hint v-html="$t('com.Reality.hint_short_id')"></hint>
           </th>
           <td>
             <input v-model="transport.realitySettings.shortId" type="text" class="input_20_table" />
@@ -60,8 +60,8 @@
         </tr>
         <tr v-if="proxyType === 'inbound' && transport.realitySettings.shortIds">
           <th>
-            {{ $t('components.Reality.label_short_ids') }}
-            <hint v-html="$t('components.Reality.hint_short_ids')"></hint>
+            {{ $t('com.Reality.label_short_ids') }}
+            <hint v-html="$t('com.Reality.hint_short_ids')"></hint>
           </th>
           <td>
             {{ transport.realitySettings.shortIds.length }} item(s)
@@ -71,7 +71,7 @@
                 <textarea v-model="shortIds"></textarea>
               </div>
               <template v-slot:footer>
-                <input class="button_gen button_gen_small" type="button" :value="$t('components.Reality.add_new_id')" @click.prevent="append_shortid()" />
+                <input class="button_gen button_gen_small" type="button" :value="$t('com.Reality.add_new_id')" @click.prevent="append_shortid()" />
                 <input class="button_gen button_gen_small" type="button" :value="$t('labels.save')" @click.prevent="shortIdsModal.close()" />
               </template>
             </modal>
@@ -79,8 +79,8 @@
         </tr>
         <tr v-if="proxyType === 'inbound'">
           <th>
-            {{ $t('components.Reality.label_proxy_version') }}
-            <hint v-html="$t('components.Reality.hint_proxy_version')"></hint>
+            {{ $t('com.Reality.label_proxy_version') }}
+            <hint v-html="$t('com.Reality.hint_proxy_version')"></hint>
           </th>
           <td>
             <select v-model="transport.realitySettings.xver" class="input_option">
@@ -93,8 +93,8 @@
         </tr>
         <tr v-if="proxyType === 'inbound'">
           <th>
-            {{ $t('components.Reality.label_private_key') }}
-            <hint v-html="$t('components.Reality.hintl_private_key')"></hint>
+            {{ $t('com.Reality.label_private_key') }}
+            <hint v-html="$t('com.Reality.hintl_private_key')"></hint>
           </th>
           <td>
             <input v-model="transport.realitySettings.privateKey" type="text" class="input_30_table" />
@@ -105,8 +105,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.Reality.label_public_key') }}
-            <hint v-html="$t('components.Reality.hint_public_key')"></hint>
+            {{ $t('com.Reality.label_public_key') }}
+            <hint v-html="$t('com.Reality.hint_public_key')"></hint>
           </th>
           <td>
             <input v-model="transport.realitySettings.publicKey" type="text" class="input_30_table" />
@@ -114,8 +114,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.Reality.label_spider_x') }}
-            <hint v-html="$t('components.Reality.hint_spider_x')"></hint>
+            {{ $t('com.Reality.label_spider_x') }}
+            <hint v-html="$t('com.Reality.hint_spider_x')"></hint>
           </th>
           <td>
             <input v-model="transport.realitySettings.spiderX" type="text" class="input_30_table" />
@@ -123,8 +123,8 @@
         </tr>
         <tr v-if="proxyType === 'outbound'">
           <th>
-            {{ $t('components.Reality.label_fingerprint') }}
-            <hint v-html="$t('components.Reality.hint_fingerprint')"></hint>
+            {{ $t('com.Reality.label_fingerprint') }}
+            <hint v-html="$t('com.Reality.hint_fingerprint')"></hint>
           </th>
           <td>
             <select class="input_option" v-model="transport.realitySettings.fingerprint">

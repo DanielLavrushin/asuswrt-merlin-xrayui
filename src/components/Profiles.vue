@@ -1,15 +1,15 @@
 <template>
   <tr v-if="profile">
     <th>
-      {{ $t('components.Profiles.manager') }}
-      <hint v-html="$t('components.Profiles.hint')"></hint>
+      {{ $t('com.Profiles.manager') }}
+      <hint v-html="$t('com.Profiles.hint')"></hint>
     </th>
     <td>
       <select v-model="profile" class="input_option" @change="change_profile()">
         <option v-for="p in profiles" :value="p" :key="p">{{ p.replace('.json', '') }}</option>
       </select>
       <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click.prevent="manage()" />
-      <modal ref="modal" :title="$t('components.Profiles.modal_title')" width="400">
+      <modal ref="modal" :title="$t('com.Profiles.modal_title')" width="400">
         <table class="FormTable modal-form-table">
           <tbody>
             <tr v-for="p in profiles" :key="p">

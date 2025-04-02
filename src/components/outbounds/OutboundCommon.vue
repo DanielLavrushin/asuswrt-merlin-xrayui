@@ -1,8 +1,8 @@
 <template>
   <tr>
     <th>
-      {{ $t('components.OutboundCommon.label_tag') }}
-      <hint v-html="$t('components.OutboundCommon.hint_tag')"></hint>
+      {{ $t('com.OutboundCommon.label_tag') }}
+      <hint v-html="$t('com.OutboundCommon.hint_tag')"></hint>
     </th>
     <td>
       <input type="text" class="input_20_table" v-model="proxy.tag" />
@@ -11,8 +11,8 @@
   </tr>
   <tr>
     <th>
-      {{ $t('components.OutboundCommon.label_send_through') }}
-      <hint v-html="$t('components.OutboundCommon.hint_send_through')"></hint>
+      {{ $t('com.OutboundCommon.label_send_through') }}
+      <hint v-html="$t('com.OutboundCommon.hint_send_through')"></hint>
     </th>
     <td>
       <input type="text" class="input_20_table" v-model="proxy.sendThrough" autocomplete="off" autocorrect="off" autocapitalize="off" />

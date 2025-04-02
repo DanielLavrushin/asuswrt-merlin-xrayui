@@ -1,18 +1,18 @@
 <template>
   <div class="formfontdesc">
-    <p>{{ $t('components.BlackholeOutbound.modal_desc') }}</p>
+    <p>{{ $t('com.BlackholeOutbound.modal_desc') }}</p>
     <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="2">{{ $t('components.BlackholeOutbound.modal_title') }}</td>
+          <td colspan="2">{{ $t('com.BlackholeOutbound.modal_title') }}</td>
         </tr>
       </thead>
       <tbody>
         <outbound-common :proxy="proxy"></outbound-common>
         <tr v-if="proxy.settings.response">
           <th>
-            {{ $t('components.BlackholeOutbound.label_response') }}
-            <hint v-html="$t('components.BlackholeOutbound.hint_response')"></hint>
+            {{ $t('com.BlackholeOutbound.label_response') }}
+            <hint v-html="$t('com.BlackholeOutbound.hint_response')"></hint>
           </th>
           <td>
             <select class="input_option" v-model="proxy.settings.response.type">

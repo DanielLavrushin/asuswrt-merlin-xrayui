@@ -1,9 +1,9 @@
 <template>
-  <modal width="755" ref="modalList" :title="$t('components.RulesModal.modal_title')">
+  <modal width="755" ref="modalList" :title="$t('com.RulesModal.modal_title')">
     <table class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="4">{{ $t('components.RulesModal.modal_title2') }}</td>
+          <td colspan="4">{{ $t('com.RulesModal.modal_title2') }}</td>
         </tr>
       </thead>
       <tbody v-if="allRules.length">
@@ -11,7 +11,7 @@
           <th>
             <label>
               <input type="checkbox" v-model="r.enabled" @change.prevent="on_off_rule(r, index)" />
-              {{ $t('components.RulesModal.rule_no', [index + 1]) }}
+              {{ $t('com.RulesModal.rule_no', [index + 1]) }}
             </label>
           </th>
           <td style="color: #ffcc00">{{ !r.name || r.name == '' ? getRuleName(r) : r.name }}</td>
@@ -28,12 +28,12 @@
       </tbody>
       <tbody v-else>
         <tr>
-          <td colspan="4" style="color: #ffcc00">{{ $t('components.RulesModal.no_rules_defined') }}</td>
+          <td colspan="4" style="color: #ffcc00">{{ $t('com.RulesModal.no_rules_defined') }}</td>
         </tr>
       </tbody>
     </table>
     <template v-slot:footer>
-      <input class="button_gen button_gen_small" type="button" :value="$t('components.RulesModal.add_new_rule')" @click.prevent="addRule" />
+      <input class="button_gen button_gen_small" type="button" :value="$t('com.RulesModal.add_new_rule')" @click.prevent="addRule" />
     </template>
   </modal>
   <modal width="755" ref="modalAdd" title="Rule">
@@ -41,8 +41,8 @@
       <tbody>
         <tr>
           <th>
-            {{ $t('components.RulesModal.label_friendly_name') }}
-            <hint v-html="$t('components.RulesModal.hint_friendly_name')"></hint>
+            {{ $t('com.RulesModal.label_friendly_name') }}
+            <hint v-html="$t('com.RulesModal.hint_friendly_name')"></hint>
           </th>
           <td>
             <input v-model="currentRule.name" type="text" class="input_25_table" :readonly="currentRule.isSystem()" />
@@ -51,8 +51,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.RulesModal.label_outbound_tag') }}
-            <hint v-html="$t('components.RulesModal.hint_outbound_tag')"></hint>
+            {{ $t('com.RulesModal.label_outbound_tag') }}
+            <hint v-html="$t('com.RulesModal.hint_outbound_tag')"></hint>
           </th>
           <td>
             <select class="input_option" v-model="currentRule.outboundTag">
@@ -65,8 +65,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.RulesModal.label_inbound_tags') }}
-            <hint v-html="$t('components.RulesModal.hint_inbound_tags')"></hint>
+            {{ $t('com.RulesModal.label_inbound_tags') }}
+            <hint v-html="$t('com.RulesModal.hint_inbound_tags')"></hint>
           </th>
           <td>
             <div v-for="(opt, index) in inbounds" :key="index">
@@ -79,8 +79,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.RulesModal.label_users') }}
-            <hint v-html="$t('components.RulesModal.hint_users')"></hint>
+            {{ $t('com.RulesModal.label_users') }}
+            <hint v-html="$t('com.RulesModal.hint_users')"></hint>
           </th>
           <td class="flex-checkbox">
             <div v-for="(opt, index) in users" :key="index">
@@ -93,8 +93,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.RulesModal.label_domain_matcher') }}
-            <hint v-html="$t('components.RulesModal.hint_domain_matcher')"></hint>
+            {{ $t('com.RulesModal.label_domain_matcher') }}
+            <hint v-html="$t('com.RulesModal.hint_domain_matcher')"></hint>
           </th>
           <td>
             <select class="input_option" v-model="currentRule.domainMatcher">
@@ -107,8 +107,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.RulesModal.label_network') }}
-            <hint v-html="$t('components.RulesModal.hint_network')"></hint>
+            {{ $t('com.RulesModal.label_network') }}
+            <hint v-html="$t('com.RulesModal.hint_network')"></hint>
           </th>
           <td>
             <select class="input_option" v-model="currentRule.network">
@@ -121,8 +121,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.RulesModal.label_protocols') }}
-            <hint v-html="$t('components.RulesModal.hint_protocols')"></hint>
+            {{ $t('com.RulesModal.label_protocols') }}
+            <hint v-html="$t('com.RulesModal.hint_protocols')"></hint>
           </th>
           <td>
             <div v-for="(opt, index) in protocolOptions" :key="index">
@@ -135,8 +135,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.RulesModal.label_domains') }}
-            <hint v-html="$t('components.RulesModal.hint_domains')"></hint>
+            {{ $t('com.RulesModal.label_domains') }}
+            <hint v-html="$t('com.RulesModal.hint_domains')"></hint>
           </th>
           <td>
             <div class="textarea-wrapper">
@@ -146,8 +146,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.RulesModal.label_target_ips') }}
-            <hint v-html="$t('components.RulesModal.hint_target_ips')"></hint>
+            {{ $t('com.RulesModal.label_target_ips') }}
+            <hint v-html="$t('com.RulesModal.hint_target_ips')"></hint>
           </th>
           <td>
             <div class="textarea-wrapper">
@@ -157,8 +157,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.RulesModal.label_target_ports') }}
-            <hint v-html="$t('components.RulesModal.hint_target_ports')"></hint>
+            {{ $t('com.RulesModal.label_target_ports') }}
+            <hint v-html="$t('com.RulesModal.hint_target_ports')"></hint>
           </th>
           <td>
             <input v-model="currentRule.port" type="text" class="input_25_table" />
@@ -167,8 +167,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.RulesModal.label_source_ips') }}
-            <hint v-html="$t('components.RulesModal.hint_source_ips')"></hint>
+            {{ $t('com.RulesModal.label_source_ips') }}
+            <hint v-html="$t('com.RulesModal.hint_source_ips')"></hint>
           </th>
           <td>
             <div class="textarea-wrapper">
@@ -179,8 +179,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.RulesModal.label_source_ports') }}
-            <hint v-html="$t('components.RulesModal.hint_source_ports')"></hint>
+            {{ $t('com.RulesModal.label_source_ports') }}
+            <hint v-html="$t('com.RulesModal.hint_source_ports')"></hint>
           </th>
           <td>
             <input v-model="currentRule.sourcePort" type="text" class="input_25_table" />
@@ -246,7 +246,7 @@
         const arr = rule.enabled ? rules : disabledRules;
         const index = arr.value.indexOf(rule);
 
-        if (!confirm(t('components.RulesModal.alert_delete_rule_confirm'))) return;
+        if (!confirm(t('com.RulesModal.alert_delete_rule_confirm'))) return;
 
         arr.value.splice(index, 1);
         emit('update:rules', rules.value);

@@ -1,18 +1,18 @@
 <template>
-  <modal ref="modal" :title="$t('components.SniffingModal.modal_title')" width="500">
+  <modal ref="modal" :title="$t('com.SniffingModal.modal_title')" width="500">
     <div class="formfontdesc">
-      <p>{{ $t('components.SniffingModal.modal_desc') }}</p>
+      <p>{{ $t('com.SniffingModal.modal_desc') }}</p>
       <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
         <thead>
           <tr>
-            <td colspan="2">{{ $t('components.SniffingModal.label_settings') }}</td>
+            <td colspan="2">{{ $t('com.SniffingModal.label_settings') }}</td>
           </tr>
         </thead>
         <tbody>
           <tr>
             <th>
-              {{ $t('components.SniffingModal.label_enabled') }}
-              <hint v-html="$t('components.SniffingModal.hint_enabled')"></hint>
+              {{ $t('com.SniffingModal.label_enabled') }}
+              <hint v-html="$t('com.SniffingModal.hint_enabled')"></hint>
             </th>
             <td>
               <input type="radio" v-model="sniffing.enabled" class="input" :value="true" :id="'snifon'" />
@@ -23,8 +23,8 @@
           </tr>
           <tr v-if="sniffing.enabled">
             <th>
-              {{ $t('components.SniffingModal.label_metadata_only') }}
-              <hint v-html="$t('components.SniffingModal.hint_metadata_only')"></hint>
+              {{ $t('com.SniffingModal.label_metadata_only') }}
+              <hint v-html="$t('com.SniffingModal.hint_metadata_only')"></hint>
             </th>
             <td>
               <input type="radio" v-model="sniffing.metadataOnly" class="input" :value="true" :id="'metaon'" />
@@ -35,8 +35,8 @@
           </tr>
           <tr v-if="sniffing.enabled && !sniffing.metadataOnly">
             <th>
-              {{ $t('components.SniffingModal.label_dest_override') }}
-              <hint v-html="$t('components.SniffingModal.hint_dest_override')"></hint>
+              {{ $t('com.SniffingModal.label_dest_override') }}
+              <hint v-html="$t('com.SniffingModal.hint_dest_override')"></hint>
             </th>
             <td>
               <slot v-for="(opt, index) in destOptions" :key="index">
@@ -47,8 +47,8 @@
           </tr>
           <tr v-if="sniffing.enabled && sniffing.destOverride && sniffing.destOverride.length > 0">
             <th>
-              {{ $t('components.SniffingModal.label_route_only') }}
-              <hint v-html="$t('components.SniffingModal.hint_route_only')"></hint>
+              {{ $t('com.SniffingModal.label_route_only') }}
+              <hint v-html="$t('com.SniffingModal.hint_route_only')"></hint>
             </th>
             <td>
               <input type="checkbox" v-model="sniffing.routeOnly" class="input" :id="'snifrouteonly'" />
@@ -57,15 +57,15 @@
           </tr>
           <tr v-if="sniffing.enabled">
             <th>
-              {{ $t('components.SniffingModal.label_domains_excluded') }}
-              <hint v-html="$t('components.SniffingModal.hint_domains_excluded')"></hint>
+              {{ $t('com.SniffingModal.label_domains_excluded') }}
+              <hint v-html="$t('com.SniffingModal.hint_domains_excluded')"></hint>
             </th>
             <td>
               <a v-if="sniffing.domainsExcluded">{{ $t('labels.items', [sniffing.domainsExcluded.length]) }}</a>
               <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click.prevent="manage_domains_exclude" />
-              <modal width="500" ref="modalDomains" :title="$t('components.SniffingModal.modal_domains_title')">
+              <modal width="500" ref="modalDomains" :title="$t('com.SniffingModal.modal_domains_title')">
                 <div class="formfontdesc">
-                  <p>{{ $t('components.SniffingModal.modal_domains_desc') }}</p>
+                  <p>{{ $t('com.SniffingModal.modal_domains_desc') }}</p>
                   <div class="textarea-wrapper">
                     <textarea v-model="domainsExludedContent" class="input_100" rows="8"></textarea>
                   </div>

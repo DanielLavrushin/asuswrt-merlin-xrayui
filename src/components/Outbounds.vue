@@ -2,12 +2,12 @@
   <table width="100%" bordercolor="#6b8fa3" class="FormTable">
     <thead>
       <tr>
-        <td colspan="2">{{ $t('components.Outbounds.title') }}</td>
+        <td colspan="2">{{ $t('com.Outbounds.title') }}</td>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <th>{{ $t('components.Outbounds.label_create_new') }}</th>
+        <th>{{ $t('com.Outbounds.label_create_new') }}</th>
         <td>
           <select class="input_option" v-model="selectedProxyType" @change="edit_proxy()">
             <option></option>
@@ -138,7 +138,7 @@
       };
 
       const remove_proxy = async (proxy: XrayOutboundObject<IProtocolType>) => {
-        if (!window.confirm(t('components.Outbounds.alert_delete_confirm'))) return;
+        if (!window.confirm(t('com.Outbounds.alert_delete_confirm'))) return;
         let index = config.value.outbounds.indexOf(proxy);
         config.value.outbounds.splice(index, 1);
       };
@@ -146,7 +146,7 @@
       const save_proxy = async () => {
         let proxy = proxyRef.value.proxy;
         if (config.value.outbounds.filter((i) => i != proxy && i.tag == proxy.tag).length > 0) {
-          alert(t('components.Outbounds.alert_tag_exists'));
+          alert(t('com.Outbounds.alert_tag_exists'));
           return;
         }
 

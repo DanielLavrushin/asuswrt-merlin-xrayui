@@ -1,11 +1,11 @@
 <template>
-  <modal width="755" ref="certModal" :title="$t('components.CertificatesModal.modal_title')">
+  <modal width="755" ref="certModal" :title="$t('com.CertificatesModal.modal_title')">
     <table class="FormTable modal-form-table">
       <tbody>
         <tr>
           <th>
-            {{ $t('components.CertificatesModal.label_ocsp_stapling') }}
-            <hint v-html="$t('components.CertificatesModal.hint_ocsp_stapling')"></hint>
+            {{ $t('com.CertificatesModal.label_ocsp_stapling') }}
+            <hint v-html="$t('com.CertificatesModal.hint_ocsp_stapling')"></hint>
           </th>
           <td>
             <input v-model="certificate.ocspStapling" type="number" maxlength="4" class="input_6_table" onkeypress="return validator.isNumber(this,event);" />
@@ -14,8 +14,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.CertificatesModal.label_one_time_loading') }}
-            <hint v-html="$t('components.CertificatesModal.hint_one_time_loading')"></hint>
+            {{ $t('com.CertificatesModal.label_one_time_loading') }}
+            <hint v-html="$t('com.CertificatesModal.hint_one_time_loading')"></hint>
           </th>
           <td>
             <input v-model="certificate.oneTimeLoading" type="checkbox" class="input" />
@@ -23,8 +23,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.CertificatesModal.label_usage') }}
-            <hint v-html="$t('components.CertificatesModal.hint_usage')"></hint>
+            {{ $t('com.CertificatesModal.label_usage') }}
+            <hint v-html="$t('com.CertificatesModal.hint_usage')"></hint>
           </th>
           <td>
             <template v-for="(opt, index) in usageOptions" :key="index">
@@ -36,8 +36,8 @@
         </tr>
         <tr v-if="certificate.usage == 'issue'">
           <th>
-            {{ $t('components.CertificatesModal.label_build_chain') }}
-            <hint v-html="$t('components.CertificatesModal.hint_build_chain')"></hint>
+            {{ $t('com.CertificatesModal.label_build_chain') }}
+            <hint v-html="$t('com.CertificatesModal.hint_build_chain')"></hint>
           </th>
           <td>
             <input v-model="certificate.buildChain" type="checkbox" class="input" />
@@ -45,8 +45,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.CertificatesModal.label_certificate_file') }}
-            <hint v-html="$t('components.CertificatesModal.hint_certificate_file')"></hint>
+            {{ $t('com.CertificatesModal.label_certificate_file') }}
+            <hint v-html="$t('com.CertificatesModal.hint_certificate_file')"></hint>
           </th>
           <td>
             <input v-model="certificate.certificateFile" type="text" class="input_25_table" :disabled="(certificate.certificate?.length ?? 0) > 0" />
@@ -54,8 +54,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.CertificatesModal.label_certificate_content') }}
-            <hint v-html="$t('components.CertificatesModal.hint_certificate_content')"></hint>
+            {{ $t('com.CertificatesModal.label_certificate_content') }}
+            <hint v-html="$t('com.CertificatesModal.hint_certificate_content')"></hint>
           </th>
           <td>
             <div class="textarea-wrapper">
@@ -65,8 +65,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.CertificatesModal.label_key_file') }}
-            <hint v-html="$t('components.CertificatesModal.hint_key_file')"></hint>
+            {{ $t('com.CertificatesModal.label_key_file') }}
+            <hint v-html="$t('com.CertificatesModal.hint_key_file')"></hint>
           </th>
           <td>
             <input v-model="certificate.keyFile" type="text" class="input_25_table" :disabled="(certificate.key?.length ?? 0) > 0" />
@@ -74,8 +74,8 @@
         </tr>
         <tr>
           <th>
-            {{ $t('components.CertificatesModal.label_key_content') }}
-            <hint v-html="$t('components.CertificatesModal.hint_key_content')"></hint>
+            {{ $t('com.CertificatesModal.label_key_content') }}
+            <hint v-html="$t('com.CertificatesModal.hint_key_content')"></hint>
           </th>
           <td>
             <div class="textarea-wrapper">

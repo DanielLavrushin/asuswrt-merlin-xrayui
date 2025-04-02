@@ -84,11 +84,15 @@
         }
       };
       const add = async () => {
+        if (profile_name.value === '') {
+          return;
+        }
         profile_name.value =
           profile_name.value
             .trim()
             .replace(/[^a-zA-Z0-9]/g, '_')
             .replace('.json', '') + '.json';
+
         if (profiles.value.indexOf(profile_name.value) === -1) {
           profiles.value.push(profile_name.value);
           modal.value.close();

@@ -1,3 +1,6 @@
+#!/bin/sh
+# shellcheck disable=SC2034  # codacy:Unused variables
+
 backup_clearall() {
 
     printlog true "Starting clear all..." "$CINFO"

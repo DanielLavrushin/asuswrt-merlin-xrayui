@@ -161,6 +161,8 @@ EOF
         printlog true "Logrotate configuration already exists. Skipping creation." $CWARN
     fi
 
+    update_community_geodata
+
     # ---------------------------------------------------------
     # performing version updates
 

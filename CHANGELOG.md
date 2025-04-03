@@ -1,5 +1,12 @@
 # XRAYUI Changelog
 
+## [0.42.4] - 2025-04-03
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- FIXED: unable to deselect `GitHub Proxy` option.
+- FIXED: Proxy the download link when updating the `XRAY-Core` from Github.
+
 ## [0.42.3] - 2025-04-03
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

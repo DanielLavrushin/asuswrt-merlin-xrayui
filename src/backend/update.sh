@@ -4,7 +4,7 @@
 update() {
 
     update_loading_progress "Updating $ADDON_TITLE..." 0
-    local url="https://github.com/daniellavrushin/asuswrt-merlin-xrayui/releases/latest/download/asuswrt-merlin-xrayui.tar.gz"
+    local url=$(github_proxy_url "https://github.com/daniellavrushin/asuswrt-merlin-xrayui/releases/latest/download/asuswrt-merlin-xrayui.tar.gz")
     local temp_file="/tmp/asuswrt-merlin-xrayui.tar.gz"
     local jffs_addons_path="/jffs/addons"
 

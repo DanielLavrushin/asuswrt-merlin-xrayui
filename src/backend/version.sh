@@ -70,6 +70,9 @@ switch_xray_version() {
 
     local asset_url=$(echo "$release_data" |
         jq -r --arg NAME "$asset_name" '.[] | select(.name == $NAME) | .browser_download_url')
+    asset_url=$(github_proxy_url "$asset_url")
+
+    printlog true "Xray Core Asset URL: $asset_url" "$CSUC"
 
     if [ -z "$asset_url" ] || [ "$asset_url" = "null" ]; then
         printlog true "Error: could not find asset '$asset_name' in the release data" "$CERR"

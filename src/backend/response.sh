@@ -27,10 +27,8 @@ initial_response() {
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson uptime "$uptime_xray" '.xray.uptime = $uptime')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg profile "$profile" '.xray.profile = $profile')
 
-    local github_proxy="${github_proxy}"
-    if [ ! -z "$github_proxy" ]; then
-        UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg github_proxy "$github_proxy" '.xray.github_proxy = $github_proxy')
-    fi
+    local github_proxy="${github_proxy:-""}"
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg github_proxy "$github_proxy" '.xray.github_proxy = $github_proxy')
 
     local XRAY_VERSION=$(xray version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg xray_ver "$XRAY_VERSION" --arg xrayui_ver "$XRAYUI_VERSION" '.xray.ui_version = $xrayui_ver | .xray.core_version = $xray_ver')

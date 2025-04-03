@@ -45,7 +45,10 @@ EOF
     generate_xray_config
 
     # backup config
-    cp $XRAY_CONFIG_FILE "/opt/etc/xray/config.json.bak"
+    local timestamp=$(date +%Y%m%d-%H%M%S)
+    local backup_config="/opt/etc/xray/$(basename $XRAY_CONFIG_FILE).$timestamp.bak"
+    printlog true "Backing up $XRAY_CONFIG_FILE to $backup_config" $CSUC
+    cp -f "$XRAY_CONFIG_FILE" "$backup_config"
 
     update_loading_progress "Configuring XRAY UI..."
     # Add or update nat-start
@@ -169,13 +172,14 @@ EOF
     local json_content=$(cat "$XRAY_CONFIG_FILE")
 
     # patch 0.41->0.42 - force logs to be placed in usb storage mount
+    printlog true "Applying patch 0.41->0.42 to $XRAY_CONFIG_FILE" $CSUC
     if [ ! -d "$ADDON_LOGS_DIR" ]; then
         mkdir -p $ADDON_LOGS_DIR
     fi
 
     json_content=$(
         echo "$json_content" | jq --arg error "$ADDON_LOGS_DIR/xray_error.log" --arg access "$ADDON_LOGS_DIR/xray_access.log" '
-    if ((.log.access | startswith("/tmp")) and (.log.error | startswith("/tmp"))) then
+    if ((.log.access // "" | tostring | startswith("/tmp")) and (.log.error // "" | tostring | startswith("/tmp"))) then
       .log.error = $error | .log.access = $access
     else
       .

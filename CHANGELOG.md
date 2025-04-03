@@ -1,5 +1,12 @@
 # XRAYUI Changelog
 
+## [0.42.5] - 2025-04-03
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- FIXED: Resolved an issue that sometimes caused errors when updating log file locations, ensuring your log files are stored correctly.
+- ADDED: Automatic backup of the `Xray` configuration before installation, including a timestamp.
+
 ## [0.42.4] - 2025-04-03
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

@@ -32,8 +32,7 @@ backup_configuration() {
     local backup_dir="$ADDON_SHARE_DIR/backup"
     mkdir -p "$backup_dir"
 
-    local timestamp
-    timestamp=$(date +%Y%m%d-%H%M%S)
+    local timestamp=$(date +%Y%m%d-%H%M%S)
     local backup_file="$backup_dir/xrayui-$timestamp.tar.gz"
 
     local items_list=""

@@ -131,53 +131,6 @@ apply_config() {
     exit 0
 }
 
-enable_config_logs() {
-    update_loading_progress "Enabling Xray configuration logs..." 0
-    local temp_file="/tmp/xray_config.json"
-
-    printlog true "Checking for the 'log' section in the Xray configuration."
-
-    # Check if the config file exists
-    if [ ! -f "$XRAY_CONFIG_FILE" ]; then
-        printlog true "Configuration file not found: $XRAY_CONFIG_FILE"
-        return 1
-    fi
-
-    # Check if the 'log' section is missing
-    if ! jq -e '.log' "$XRAY_CONFIG_FILE" >/dev/null 2>&1; then
-        printlog true "'log' section is missing. Adding it to the configuration."
-
-        # Add the 'log' section
-        jq --arg access "$ADDON_LOGS_DIR/xray_access.log" \
-            --arg error "$ADDON_LOGS_DIR/xray_error.log" \
-            '. + {
-              "log": {
-                  "loglevel": "warning",
-                  "error": $error,
-                  "access": $access
-              }
-           }' "$XRAY_CONFIG_FILE" >"$temp_file"
-
-        if [ $? -eq 0 ]; then
-            mv "$temp_file" "$XRAY_CONFIG_FILE"
-            printlog true "'log' section added successfully."
-        else
-            printlog true "Failed to update the configuration with 'log' section."
-            rm -f "$temp_file"
-            return 1
-        fi
-    else
-        printlog true "'log' section already exists in the configuration."
-    fi
-
-    if [ -f "$XRAY_PIDFILE" ]; then
-        restart
-    fi
-
-    update_loading_progress "Configuration logs enabled successfully." 100
-    return 0
-}
-
 toggle_startup() {
     local xray_startup=$(am_settings_get xray_startup)
     if [ -z "$xray_startup" ]; then

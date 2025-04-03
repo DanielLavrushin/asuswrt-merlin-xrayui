@@ -169,6 +169,10 @@ EOF
     local json_content=$(cat "$XRAY_CONFIG_FILE")
 
     # patch 0.41->0.42 - force logs to be placed in usb storage mount
+    if [ ! -d "$ADDON_LOGS_DIR" ]; then
+        mkdir -p $ADDON_LOGS_DIR
+    fi
+
     json_content=$(
         echo "$json_content" | jq --arg error "$ADDON_LOGS_DIR/error.log" --arg access "$ADDON_LOGS_DIR/access.log" '
     if ((.log.access | startswith("/tmp")) and (.log.error | startswith("/tmp"))) then

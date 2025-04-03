@@ -1,6 +1,6 @@
 # XRAYUI Changelog
 
-## [0.42.1] - 2025-04-03
+## [0.42.3] - 2025-04-03
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
@@ -11,6 +11,7 @@
 - REMOVED: The ability to define a custom log path. Logs are now hardcoded to the `/opt/share/xrayui/logs` directory.
 - FIXED: Minor issues encountered during installation.
 - FIXED: Prevented saving an empty profile name.
+- FIXED: Not possible to correctly select profile.
 - REFACTORED: Backend code has been split into more readable sections.
 
 ## [0.41.4] - 2025-03-27

@@ -23,8 +23,8 @@ apply_general_options() {
         mkdir -p $ADDON_LOGS_DIR
     fi
 
-    local logs_access_path="$ADDON_LOGS_DIR/access.log"
-    local logs_error_path="$ADDON_LOGS_DIR/error.log"
+    local logs_access_path="$ADDON_LOGS_DIR/xray_access.log"
+    local logs_error_path="$ADDON_LOGS_DIR/xray_error.log"
 
     json_content=$(echo "$json_content" | jq --arg loglevel "$log_level" '.log.loglevel = $loglevel')
 

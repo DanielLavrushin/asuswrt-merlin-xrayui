@@ -50,7 +50,6 @@ get_custom_geodata_tagfiles() {
     local data_dir="$ADDON_SHARE_DIR/data"
 
     local tagfiles_json=$(find "$data_dir" -type f -exec basename {} \; | \sed 's/\.[^.]*$//' | sort | jq -R -s -c 'split("\n")[:-1]')
-    printlog true "Tagfiles JSON: $tagfiles_json"
 
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson tags "$tagfiles_json" '.geodata["tags"] = $tags')
 

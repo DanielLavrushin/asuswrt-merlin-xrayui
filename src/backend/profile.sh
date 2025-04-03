@@ -17,7 +17,7 @@ change_config_profile() {
 
     update_xrayui_config "profile" "$profile"
 
-    XRAY_CONFIG="/opt/etc/xray/$profile"
+    XRAY_CONFIG_FILE="/opt/etc/xray/$profile"
 
     # Check if the configuration file exists, if not, generate a default config
     if [ ! -f "$XRAY_CONFIG_FILE" ]; then
@@ -25,7 +25,7 @@ change_config_profile() {
         generate_xray_config
     fi
 
-    ln -s -f $XRAY_CONFIG_FILE $ADDON_WEB_DIR/xray-config.json || printlog true "Failed to create symlink for xray-config.json." $CERR
+    ln -s -f "$XRAY_CONFIG_FILE" "$ADDON_WEB_DIR/xray-config.json" || printlog true "Failed to create symlink for xray-config.json." $CERR
 
     update_loading_progress "Changing configuration profile to $XRAY_CONFIG_FILE..."
     printlog true "Changing configuration profile to $XRAY_CONFIG_FILE..."

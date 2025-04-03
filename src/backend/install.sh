@@ -174,7 +174,7 @@ EOF
     fi
 
     json_content=$(
-        echo "$json_content" | jq --arg error "$ADDON_LOGS_DIR/error.log" --arg access "$ADDON_LOGS_DIR/access.log" '
+        echo "$json_content" | jq --arg error "$ADDON_LOGS_DIR/xray_error.log" --arg access "$ADDON_LOGS_DIR/xray_access.log" '
     if ((.log.access | startswith("/tmp")) and (.log.error | startswith("/tmp"))) then
       .log.error = $error | .log.access = $access
     else
@@ -209,7 +209,10 @@ uninstall() {
 
     # Remove XRAY UI files
     printlog true "Removing XRAY UI files..."
-    rm -rf /www/user/xrayui /jffs/addons/xrayui /tmp/xray_clients_online.json
+    rm -rf "$ADDON_WEB_DIR" || printlog true "Failed to remove $ADDON_WEB_DIR." $CWARN
+    rm -rf "$ADDON_JFFS_ADN_DIR" || printlog true "Failed to remove $ADDON_JFFS_ADN_DIR." $CWARN
+    rm -rf "/tmp/xray_clients_online.json" || printlog true "Failed to remove /tmp/xray_clients_online.json." $CWARN
+    rm -rf "$ADDON_SHARE_DIR/logs" || printlog true "Failed to remove $ADDON_SHARE_DIR/logs." $CWARN
 
     if [ $? -eq 0 ]; then
         printlog true "XRAY UI files removed successfully." $CSUC
@@ -272,6 +275,19 @@ uninstall() {
         rm -rf /opt/sbin/geoip.dat
     else
         printlog true "Keeping custom GEODATA."
+    fi
+    user_input=""
+
+    # Ask user if they want to remove backups
+    echo
+    printlog true "Do you want to remove BACKUPS? (yes/no)" $CWARN
+    read -r user_input
+
+    if [ "$user_input" = "yes" ] || [ "$user_input" = "y" ]; then
+        printlog true "Removing  BACKUPS..."
+        backup_clearall
+    else
+        printlog true "Keeping  BACKUPS."
     fi
     user_input=""
 

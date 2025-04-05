@@ -1,0 +1,19 @@
+# Config file for [Air](https://github.com/cosmtrek/air) in TOML format
+root = "."
+tmp_dir = "tmp"
+
+[build]
+cmd = "make build_linux"
+bin = "./../../dist/server/amd64/xrayui-server"
+full_bin = "dlv exec ./../../dist/server/amd64/xrayui-server --listen=127.0.0.1:9000 --headless=true --api-version=2 --accept-multiclient --continue --log -- --devmode"
+include_ext = ["go"]
+exclude_dir = [".vscode", ".github", "bin", "tmp", "debug"]
+exclude_unchanged = true
+args_bin = ["server"]
+
+[misc]
+clean_on_exit = true
+
+[screen]
+clear_on_rebuild = true
+keep_scroll = true

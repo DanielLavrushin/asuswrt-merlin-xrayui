@@ -20,5 +20,11 @@
     "vite.config.ts": "vite.*.js",
     "*.vue": "${capture}.*",
     "global.d.ts": "*.d.ts"
+  },
+  "[go]": {
+    "editor.defaultFormatter": "golang.go"
+  },
+  "[toml]": {
+    "editor.defaultFormatter": "tamasfe.even-better-toml"
   }
 }

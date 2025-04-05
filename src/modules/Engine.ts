@@ -142,8 +142,31 @@ class Engine {
     document.cookie = name + '=; expires=' + date.toUTCString() + '; path=/';
   };
 
-  public submit(action: string, payload: object | string | number | null | undefined = undefined, delay = 0): Promise<void> {
-    return new Promise((resolve) => {
+  submit_standalone = (action: string, payload: object | string | number | null | undefined = undefined): Promise<unknown> => {
+    console.log('submit_standalone', action, payload);
+    switch (action) {
+      case SubmtActions.initResponse:
+      case SubmtActions.clientsOnline:
+        return Promise.resolve(null);
+    }
+    if (!window.xray.backend_host) {
+      throw new Error('Backend URL is not defined');
+    }
+
+    const backend_url = `${window.xray.backend_host}/action`;
+    const headers = {
+      'Content-Type': 'application/json',
+      'XRAYUI-Action': action
+    };
+    return axios.post(backend_url, payload, { headers });
+  };
+
+  public submit(action: string, payload: object | string | number | null | undefined = undefined, delay = 0): Promise<unknown> {
+    if (window.xray.mode === 'standalone') {
+      return this.submit_standalone(action, payload);
+    }
+
+    return new Promise<void>((resolve) => {
       const iframeName = 'hidden_frame_' + Math.random().toString(36).substring(2, 9);
       const iframe = document.createElement('iframe');
       iframe.name = iframeName;

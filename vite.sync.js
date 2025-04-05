@@ -22,8 +22,7 @@ async function uploadFiles() {
     await sftp.mkdir('/jffs/scripts', true);
 
     // Upload files
-    await sftp.fastPut('dist/frontend/native.asp', '/jffs/addons/xrayui/native.asp');
-    await sftp.fastPut('dist/frontend/standalone.asp', '/jffs/addons/xrayui/standalone.asp');
+    await sftp.fastPut('dist/frontend/index.asp', '/jffs/addons/xrayui/index.asp');
     await sftp.fastPut('dist/frontend/app.js', '/jffs/addons/xrayui/app.js');
     await sftp.fastPut('dist/frontend/xrayui', '/jffs/scripts/xrayui');
 

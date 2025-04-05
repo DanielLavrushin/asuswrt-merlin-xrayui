@@ -34,13 +34,15 @@ func main() {
 
 	fmt.Printf("Starting XRAYUI Backend Server on port %d\n", port)
 
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil); err != nil {
+	handlerWithCORS := handlers.EnableCORS(http.DefaultServeMux)
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), handlerWithCORS); err != nil {
 		log.Fatalf("Could not start server: %v\n", err)
 	}
 }
 
 func registerHandlers(settings engine.XrayUiSettings) {
 	http.HandleFunc("/pulse", handlers.PulseHandler)
+	http.HandleFunc("/action", handlers.ActionHandler)
 	http.HandleFunc("/ext/xrayui/xray-config.json", handlers.ServeStaticFile(settings.XrayConfigPath, "text/json"))
 	http.HandleFunc("/index.html", handlers.ServeStaticFile(settings.StaticIndexPath, "text/html"))
 	http.HandleFunc("/app.js", handlers.ServeStaticFile(settings.StaticJsPath, "text/javascript"))

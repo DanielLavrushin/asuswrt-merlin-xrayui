@@ -1,0 +1,5 @@
+package actions
+
+func StopXrayAction() {
+
+}

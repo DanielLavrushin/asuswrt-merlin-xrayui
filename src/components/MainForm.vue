@@ -12,22 +12,22 @@
     <table class="content" align="center" cellpadding="0" cellspacing="0">
       <tbody>
         <tr>
-          <td width="17" v-if="is_native_mode">&nbsp;</td>
-          <td valign="top" width="202" v-if="is_native_mode">
+          <td width="17">&nbsp;</td>
+          <td valign="top" width="202">
             <main-menu></main-menu>
             <sub-menu></sub-menu>
           </td>
           <td valign="top">
-            <tab-menu v-if="is_native_mode"></tab-menu>
-            <table width="100%" border="0" align="left" cellpadding="0" cellspacing="0">
+            <tab-menu></tab-menu>
+            <table width="98%" border="0" align="left" cellpadding="0" cellspacing="0">
               <tbody>
                 <tr>
                   <td valign="top">
-                    <table width="100%" border="0" cellpadding="4" cellspacing="0" id="FormTitle" class="FormTitle">
+                    <table width="760px" border="0" cellpadding="4" cellspacing="0" id="FormTitle" class="FormTitle">
                       <tbody>
                         <tr bgcolor="#4D595D">
-                          <td valign="top" v-bind:class="{ 'standalone-no-padding standalone-no-margin': !is_native_mode }">
-                            <div class="formfontdesc" v-bind:class="{ 'standalone-no-padding standalone-no-margin': !is_native_mode }">
+                          <td valign="top">
+                            <div class="formfontdesc">
                               <div>&nbsp;</div>
                               <div class="formfonttitle" style="text-align: left">X-RAY UI v{{ version }}</div>
                               <div id="formfontdesc" class="formfontdesc">{{ $t('labels.xrayui_desc') }}</div>
@@ -43,7 +43,7 @@
                               <div class="apply_gen">
                                 <input class="button_gen" @click.prevent="apply_settings()" type="button" :value="$t('labels.apply')" />
                               </div>
-                              <clients-online></clients-online>
+                              <!--  <clients-online></clients-online> -->
                               <logs-manager v-if="config.log?.access != 'none' || config.log?.error != 'none'" v-model:logs="config.log!"></logs-manager>
                               <version></version>
                             </div>
@@ -109,8 +109,6 @@
     },
 
     setup() {
-      const is_native_mode = window.xray.mode === 'native';
-
       const config = ref(engine.xrayConfig);
       const transportModal = ref();
       const sniffingModal = ref();
@@ -132,7 +130,6 @@
       };
 
       return {
-        is_native_mode,
         config,
         engine,
         transportModal,

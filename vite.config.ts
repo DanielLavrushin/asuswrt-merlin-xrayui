@@ -99,9 +99,7 @@ export default defineConfig(({ mode }) => {
       cssInjectedByJsPlugin(),
       {
         buildStart() {
-          this.addWatchFile(resolve(__dirname, 'src', 'App.native.html'));
-          this.addWatchFile(resolve(__dirname, 'src', 'App.standalone.html'));
-          this.addWatchFile(resolve(__dirname, 'src', 'App.standalone.iframe.html'));
+          this.addWatchFile(resolve(__dirname, 'src', 'App.html'));
 
           const backendDir = resolve(__dirname, 'src', 'backend');
           watchAllShFiles(this, backendDir, '.sh');
@@ -117,9 +115,7 @@ export default defineConfig(({ mode }) => {
             const distScript = join(__dirname, 'dist', 'frontend', 'xrayui');
             fs.writeFileSync(distScript, mergedContent, { mode: 0o755 });
 
-            fs.copyFileSync('src/App.native.html', 'dist/frontend/native.asp');
-            fs.copyFileSync('src/App.standalone.html', 'dist/frontend/standalone.html');
-            fs.copyFileSync('src/App.standalone.iframe.html', 'dist/frontend/standalone.asp');
+            fs.copyFileSync('src/App.html', 'dist/frontend/index.asp');
 
             console.log('Files copied successfully.');
           } catch (e) {

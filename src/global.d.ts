@@ -30,6 +30,7 @@ interface XrayRouter {
 
 interface XrayUiGlobal {
   mode: string;
+  backend_host?: string;
   server: XrayUiServer;
   router: XrayRouter;
   commands: SubmtActions;

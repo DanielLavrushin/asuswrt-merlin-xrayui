@@ -7,7 +7,7 @@ install() {
 
     ADDON_MODE="${1:-"$ADDON_MODE"}"
 
-    update_xrayui_config "ADDON_MODE" "$ADDON_MODE"
+    am_settings_set "xray_mode" "$ADDON_MODE"
 
     update_loading_progress "Installing $ADDON_TITLE for mode $ADDON_MODE..."
     printlog true "Starting $ADDON_TITLE:$ADDON_MODE installation process."

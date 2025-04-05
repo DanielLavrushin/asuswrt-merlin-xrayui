@@ -23,7 +23,7 @@ mount_ui() {
     fi
 
     printlog true "Mounting XRAYUI as $ADDON_USER_PAGE"
-    ln -s -f "$ADDON_JFFS_ADN_DIR/$ADDON_MODE.asp" "/www/user/$ADDON_USER_PAGE"
+    ln -s -f "$ADDON_JFFS_ADN_DIR/index.asp" "/www/user/$ADDON_USER_PAGE"
 
     echo "xrayui" >"/www/user/$(echo $ADDON_USER_PAGE | cut -f1 -d'.').title"
 

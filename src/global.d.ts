@@ -29,6 +29,7 @@ interface XrayRouter {
 }
 
 interface XrayUiGlobal {
+  mode: string;
   server: XrayUiServer;
   router: XrayRouter;
   commands: SubmtActions;

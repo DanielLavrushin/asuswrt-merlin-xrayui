@@ -8,6 +8,7 @@ source /usr/sbin/helper.sh
 ADDON_TAG="xrayui"
 ADDON_TAG_UPPER="XRAYUI"
 ADDON_TITLE="Xray UI"
+ADDON_MODE="native"
 
 XRAYUI_VERSION="1.0.0"
 

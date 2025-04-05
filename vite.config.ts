@@ -8,15 +8,15 @@ import fs from 'fs';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
-function watchAllShFiles(pluginContext, dir) {
+function watchAllShFiles(pluginContext, dir, ext) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
 
   entries.forEach((entry) => {
     const fullPath = join(dir, entry.name);
 
     if (entry.isDirectory()) {
-      watchAllShFiles(pluginContext, fullPath);
-    } else if (entry.isFile() && fullPath.endsWith('.sh')) {
+      watchAllShFiles(pluginContext, fullPath, ext);
+    } else if (entry.isFile() && fullPath.endsWith(ext)) {
       pluginContext.addWatchFile(fullPath);
     }
   });
@@ -60,7 +60,7 @@ export default defineConfig(({ mode }) => {
   return {
     build: {
       minify: !isProduction,
-      outDir: 'dist',
+      outDir: 'dist/frontend',
       rollupOptions: {
         input: 'src/App.ts',
         output: {
@@ -99,10 +99,12 @@ export default defineConfig(({ mode }) => {
       cssInjectedByJsPlugin(),
       {
         buildStart() {
-          this.addWatchFile(resolve(__dirname, 'src', 'App.html'));
+          this.addWatchFile(resolve(__dirname, 'src', 'App.native.html'));
+          this.addWatchFile(resolve(__dirname, 'src', 'App.standalone.html'));
+          this.addWatchFile(resolve(__dirname, 'src', 'App.standalone.iframe.html'));
 
           const backendDir = resolve(__dirname, 'src', 'backend');
-          watchAllShFiles(this, backendDir);
+          watchAllShFiles(this, backendDir, '.sh');
         },
         name: 'copy-and-sync',
         closeBundle: () => {
@@ -112,10 +114,13 @@ export default defineConfig(({ mode }) => {
             const scriptPath = join(__dirname, 'src', 'backend', 'xrayui.sh');
             const mergedContent = inlineShellImports(scriptPath);
 
-            const distScript = join(__dirname, 'dist', 'xrayui');
+            const distScript = join(__dirname, 'dist', 'frontend', 'xrayui');
             fs.writeFileSync(distScript, mergedContent, { mode: 0o755 });
 
-            fs.copyFileSync('src/App.html', 'dist/index.asp');
+            fs.copyFileSync('src/App.native.html', 'dist/frontend/native.asp');
+            fs.copyFileSync('src/App.standalone.html', 'dist/frontend/standalone.html');
+            fs.copyFileSync('src/App.standalone.iframe.html', 'dist/frontend/standalone.asp');
+
             console.log('Files copied successfully.');
           } catch (e) {
             console.error('File copy error:', e);

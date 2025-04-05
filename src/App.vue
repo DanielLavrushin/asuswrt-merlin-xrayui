@@ -295,4 +295,20 @@
     padding: 5px;
     border-left: 3px solid $c_yellow;
   }
+  .xrayui-standalone {
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+    table.content {
+      width: 100%;
+    }
+    .standalone-no-margin {
+      margin: 0;
+    }
+    .standalone-no-padding {
+      padding: 0;
+    }
+  }
 </style>

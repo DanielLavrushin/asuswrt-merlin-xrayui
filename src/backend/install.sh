@@ -3,8 +3,14 @@
 
 install() {
 
-    update_loading_progress "Installing $ADDON_TITLE..."
-    printlog true "Starting $ADDON_TITLE installation process."
+    load_xrayui_config
+
+    ADDON_MODE="${1:-"$ADDON_MODE"}"
+
+    update_xrayui_config "ADDON_MODE" "$ADDON_MODE"
+
+    update_loading_progress "Installing $ADDON_TITLE for mode $ADDON_MODE..."
+    printlog true "Starting $ADDON_TITLE:$ADDON_MODE installation process."
 
     # Check for Entware
     if [ ! -x /opt/bin/opkg ]; then

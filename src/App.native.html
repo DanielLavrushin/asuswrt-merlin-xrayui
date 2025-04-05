@@ -23,6 +23,7 @@
     <script language="JavaScript" type="text/javascript" src="/validator.js"></script>
     <script>
       var xray = {
+        mode: 'native',
         router: {
           name: '<% nvram_get("productid"); %>',
           cpu: JSON.parse('<%cpu_core_num();%>'),

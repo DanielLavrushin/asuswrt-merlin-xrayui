@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" type="text/css" href="index_style.css" />
+    <link rel="stylesheet" type="text/css" href="form_style.css" />
+
+    <script>
+      var xray = {
+        mode: 'standalone',
+        router: {
+          name: '',
+          cpu: 4,
+          firmware: '',
+          language: '',
+          ip: '',
+          territory: '',
+          devices_online: [],
+          devices: [],
+          wan_ip: '',
+          wan_connected: '2' == '2'
+        },
+        server: {
+          isRunning: true
+        },
+        custom_settings: {
+          xray_version: ''
+        }
+      };
+    </script>
+  </head>
+
+  <body class="xrayui-standalone">
+    <div id="xrayui-app"></div>
+    <div id="xrayui-modals"></div>
+    <script>
+      if (xray.router.wan_connected) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css';
+        document.head.appendChild(link);
+      }
+
+      function notifyParetSite() {
+        parent.postMessage(
+          {
+            action: 'resize-iframe',
+            height: document.documentElement.scrollHeight,
+            width: document.documentElement.scrollWidth
+          },
+          '*'
+        );
+      }
+
+      window.addEventListener('load', notifyParetSite);
+      window.addEventListener('resize', notifyParetSite);
+      const observer = new MutationObserver(() => {
+        notifyParetSite();
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    </script>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

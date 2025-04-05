@@ -29,8 +29,8 @@ func main() {
 	fmt.Printf("Absolute config path: %s\n", filepath.Join(wd, engine.GetSettings().XrayConfigPath))
 
 	engine.InitEnvironment(devmode)
-
-	registerHandlers()
+	settings := engine.GetSettings()
+	registerHandlers(settings)
 
 	fmt.Printf("Starting XRAYUI Backend Server on port %d\n", port)
 
@@ -39,7 +39,12 @@ func main() {
 	}
 }
 
-func registerHandlers() {
+func registerHandlers(settings engine.XrayUiSettings) {
 	http.HandleFunc("/pulse", handlers.PulseHandler)
-	http.HandleFunc("/config.json", handlers.XrayConfigHandler)
+	http.HandleFunc("/ext/xrayui/xray-config.json", handlers.ServeStaticFile(settings.XrayConfigPath, "text/json"))
+	http.HandleFunc("/index.html", handlers.ServeStaticFile(settings.StaticIndexPath, "text/html"))
+	http.HandleFunc("/app.js", handlers.ServeStaticFile(settings.StaticJsPath, "text/javascript"))
+
+	http.HandleFunc("/index_style.css", handlers.ServeStaticFile(settings.AsusMainStylePath, "text/css"))
+	http.HandleFunc("/form_style.css", handlers.ServeStaticFile(settings.AsusFormStylePath, "text/css"))
 }

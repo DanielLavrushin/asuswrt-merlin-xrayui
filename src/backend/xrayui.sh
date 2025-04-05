@@ -27,7 +27,7 @@ version)
     show_version
     ;;
 install)
-    install
+    install $2
     ;;
 uninstall)
     uninstall

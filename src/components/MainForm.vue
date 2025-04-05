@@ -12,22 +12,22 @@
     <table class="content" align="center" cellpadding="0" cellspacing="0">
       <tbody>
         <tr>
-          <td width="17">&nbsp;</td>
-          <td valign="top" width="202">
+          <td width="17" v-if="is_native_mode">&nbsp;</td>
+          <td valign="top" width="202" v-if="is_native_mode">
             <main-menu></main-menu>
             <sub-menu></sub-menu>
           </td>
           <td valign="top">
-            <tab-menu></tab-menu>
-            <table width="98%" border="0" align="left" cellpadding="0" cellspacing="0">
+            <tab-menu v-if="is_native_mode"></tab-menu>
+            <table width="100%" border="0" align="left" cellpadding="0" cellspacing="0">
               <tbody>
                 <tr>
                   <td valign="top">
-                    <table width="760px" border="0" cellpadding="4" cellspacing="0" id="FormTitle" class="FormTitle">
+                    <table width="100%" border="0" cellpadding="4" cellspacing="0" id="FormTitle" class="FormTitle">
                       <tbody>
                         <tr bgcolor="#4D595D">
-                          <td valign="top">
-                            <div class="formfontdesc">
+                          <td valign="top" v-bind:class="{ 'standalone-no-padding standalone-no-margin': !is_native_mode }">
+                            <div class="formfontdesc" v-bind:class="{ 'standalone-no-padding standalone-no-margin': !is_native_mode }">
                               <div>&nbsp;</div>
                               <div class="formfonttitle" style="text-align: left">X-RAY UI v{{ version }}</div>
                               <div id="formfontdesc" class="formfontdesc">{{ $t('labels.xrayui_desc') }}</div>
@@ -109,6 +109,8 @@
     },
 
     setup() {
+      const is_native_mode = window.xray.mode === 'native';
+
       const config = ref(engine.xrayConfig);
       const transportModal = ref();
       const sniffingModal = ref();
@@ -130,6 +132,7 @@
       };
 
       return {
+        is_native_mode,
         config,
         engine,
         transportModal,

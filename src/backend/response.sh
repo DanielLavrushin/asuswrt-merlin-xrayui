@@ -59,7 +59,11 @@ initial_response() {
 }
 
 apply_config() {
+
     update_loading_progress "Applying new server configuration..." 0
+
+    load_xrayui_config
+
     local temp_config="/tmp/xray_server_config_new.json"
     local backup_config="/opt/etc/xray/config.json-temp.bak"
 
@@ -85,14 +89,15 @@ apply_config() {
         exit 1
     fi
 
+    printlog true "Applying new server configuration to $XRAY_CONFIG_FILE..."
     cp "$XRAY_CONFIG_FILE" "$backup_config"
     if [ $? -ne 0 ]; then
         printlog true "Failed to backup existing configuration to $backup_config." $CERR
         rm -f "$temp_config"
         exit 1
     fi
-    printlog true "Existing configuration backed up to $backup_config."
 
+    printlog true "Existing configuration backed up to $backup_config."
     cp "$temp_config" "$XRAY_CONFIG_FILE"
     if [ $? -ne 0 ]; then
         printlog true "Failed to apply new configuration to $XRAY_CONFIG_FILE." $CERR

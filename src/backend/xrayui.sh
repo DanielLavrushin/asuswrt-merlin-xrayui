@@ -3,6 +3,8 @@
 import ./_globals.sh
 import ./_helper.sh
 
+import ./lock.sh
+import ./ntp.sh
 import ./config.sh
 import ./mount.sh
 import ./version.sh

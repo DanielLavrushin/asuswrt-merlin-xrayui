@@ -1,5 +1,9 @@
 # XRAYUI Changelog
 
+## [0.4x.x] - 2025-04-xx
+
+- IMPROVED: Implement locking mechanism for `XRAYUI` operations and enhance NTP synchronization
+
 ## [0.42.5] - 2025-04-03
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

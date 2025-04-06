@@ -3,9 +3,7 @@
 
 mount_ui() {
 
-    FD=386
-    eval exec "$FD>$XRAYUI_LOCKFILE"
-    flock -x "$FD"
+    check_lock
 
     nvram get rc_support | grep -q am_addons
     if [ $? != 0 ]; then
@@ -52,14 +50,13 @@ mount_ui() {
 
     geodata_remount_to_web
 
-    flock -u "$FD"
+    clear_lock
     printlog true "XRAYUI mounted successfully as $ADDON_USER_PAGE" $CSUC
 }
 
 unmount_ui() {
-    FD=386
-    eval exec "$FD>$XRAYUI_LOCKFILE"
-    flock -x "$FD"
+
+    check_lock
 
     nvram get rc_support | grep -q am_addons
     if [ $? != 0 ]; then
@@ -95,7 +92,7 @@ unmount_ui() {
 
     rm -rf "/opt/bin/$ADDON_TAG" || printlog true "Failed to remove symlink for $ADDON_TAG." $CERR
 
-    flock -u "$FD"
+    clear_lock
 
     printlog true "Unmount completed." $CSUC
 }
@@ -107,5 +104,6 @@ remount_ui() {
     fi
 
     unmount_ui
+    sleep 1
     mount_ui
 }

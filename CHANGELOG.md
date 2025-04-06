@@ -1,9 +1,12 @@
 # XRAYUI Changelog
 
-## [0.4x.x] - 2025-04-xx
+## [0.42.6] - 2025-04-06
 
-- FIXED: Apply always save configuration to the default profile (config.json) and not active one.
-- IMPROVED: Implement locking mechanism for `XRAYUI` operations and enhance NTP synchronization.
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- FIXED: Always saved configuration changes to the default profile (`config.json`) rather than to the active profile.
+- IMPROVED: Implemented a locking mechanism for `XRAYUI` operations and enhanced `NTP` synchronization.
+- IMPROVED: The import URL parser now displays an error message if it fails to parse the input.
 
 ## [0.42.5] - 2025-04-03
 

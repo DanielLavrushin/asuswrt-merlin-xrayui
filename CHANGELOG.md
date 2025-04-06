@@ -2,7 +2,8 @@
 
 ## [0.4x.x] - 2025-04-xx
 
-- IMPROVED: Implement locking mechanism for `XRAYUI` operations and enhance NTP synchronization
+- FIXED: Apply always save configuration to the default profile (config.json) and not active one.
+- IMPROVED: Implement locking mechanism for `XRAYUI` operations and enhance NTP synchronization.
 
 ## [0.42.5] - 2025-04-03
 

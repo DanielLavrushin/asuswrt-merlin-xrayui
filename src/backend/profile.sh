@@ -4,8 +4,6 @@
 change_config_profile() {
     update_loading_progress "Changing XRAY configuration profile..." 0
 
-    load_xrayui_config
-
     local payload=$(reconstruct_payload)
     local profile=$(echo "$payload" | jq -r '.profile')
 
@@ -17,7 +15,7 @@ change_config_profile() {
 
     update_xrayui_config "profile" "$profile"
 
-    XRAY_CONFIG_FILE="/opt/etc/xray/$profile"
+    load_xrayui_config
 
     # Check if the configuration file exists, if not, generate a default config
     if [ ! -f "$XRAY_CONFIG_FILE" ]; then

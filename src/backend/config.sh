@@ -5,6 +5,10 @@ load_xrayui_config() {
     if [ -f "$XRAYUI_CONFIG_FILE" ]; then
         . "$XRAYUI_CONFIG_FILE"
     fi
+
+    # override default values with environment variables
+    XRAY_CONFIG_FILE="/opt/etc/xray/${profile:-$DEFAULT_XRAY_PROFILE_NAME}"
+
 }
 
 update_xrayui_config() {

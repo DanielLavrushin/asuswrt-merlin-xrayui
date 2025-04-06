@@ -5,8 +5,8 @@
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - FIXED: Resolved installation freeze issues in the web UI.
-- FIXED: Configuration changes are now saved to the default profile (config.json) instead of the active profile.
-- ADDED: Introduced the xrayui update x.xx.x argument to install a specific version; leaving it blank installs the latest version.
+- FIXED: Configuration changes are now saved to the default profile (`config.json`) instead of the active profile.
+- ADDED: Introduced the `xrayui update x.xx.x` argument to install a specific version; leaving it blank installs the latest version.
 - IMPROVED: Implemented a locking mechanism for `XRAYUI` operations and enhanced `NTP` synchronization.
 - IMPROVED: The import URL parser now displays an error message if it fails to parse the input.
 - IMPROVED: Only apply the GitHub proxy to URLs that begin with `github.com`.

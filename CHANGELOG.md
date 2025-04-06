@@ -7,6 +7,7 @@
 - FIXED: Always saved configuration changes to the default profile (`config.json`) rather than to the active profile.
 - IMPROVED: Implemented a locking mechanism for `XRAYUI` operations and enhanced `NTP` synchronization.
 - IMPROVED: The import URL parser now displays an error message if it fails to parse the input.
+- IMPROVED: Only apply the GitHub proxy to URLs that begin with `github.com`.
 
 ## [0.42.5] - 2025-04-03
 

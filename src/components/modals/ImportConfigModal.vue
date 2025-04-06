@@ -150,7 +150,13 @@
         }
 
         if (protocolUrl.value) {
-          const parser = new ProxyParser(protocolUrl.value);
+          let parser = null as unknown as ProxyParser;
+          try {
+            parser = new ProxyParser(protocolUrl.value);
+          } catch (e) {
+            alert('Failed to parse the proxy URI');
+            return;
+          }
           const proxy = parser.getOutbound();
           protocolUrl.value = '';
           protocolQr.value = '';

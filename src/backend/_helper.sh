@@ -85,12 +85,6 @@ remove_json_comments() {
 }
 
 reconstruct_payload() {
-    FD=386
-    eval exec "$FD>$XRAYUI_LOCKFILE"
-
-    if ! flock -x "$FD"; then
-        return 1
-    fi
 
     local idx=0
     local chunk
@@ -108,8 +102,6 @@ reconstruct_payload() {
 
     echo "$payload"
 
-    # Release the lock
-    flock -u "$FD"
 }
 
 cleanup_payload() {
@@ -118,12 +110,6 @@ cleanup_payload() {
 }
 
 load_ui_response() {
-    FD=386
-    eval exec "$FD>$XRAYUI_LOCKFILE"
-    if ! flock -x "$FD"; then
-        printlog true "Failed to acquire lock for loading UI response." "$CERR"
-        return 1
-    fi
 
     if [ ! -f "$UI_RESPONSE_FILE" ]; then
         printlog true "Creating $ADDON_TITLE response file: $UI_RESPONSE_FILE" "$CSUC"
@@ -136,24 +122,16 @@ load_ui_response() {
         printlog true "UI response file is empty. Initializing with empty JSON." "$CWARN"
         UI_RESPONSE="{}"
     fi
-    flock -u "$FD"
 }
 
 save_ui_response() {
-    FD=386
-    eval exec "$FD>$XRAYUI_LOCKFILE"
-    if ! flock -x "$FD"; then
-        printlog true "Failed to acquire lock for saving UI response." "$CERR"
-        return 1
-    fi
 
     if ! echo "$UI_RESPONSE" >"$UI_RESPONSE_FILE"; then
         printlog true "Failed to save UI response to $UI_RESPONSE_FILE" "$CERR"
-        flock -u "$FD"
+        clear_lock
         return 1
     fi
 
-    flock -u "$FD"
 }
 
 test_xray_config() {

@@ -191,9 +191,11 @@ EOF
 
     # ---------------------------------------------------------
 
-    printlog true "============================================" $CSUC
-    printlog true "Installation process completed successfully." $CSUC
-    printlog true "============================================" $CSUC
+    printlog true ""
+    printlog true "================================================" $CSUC
+    printlog true "| Installation process completed successfully. |" $CSUC
+    printlog true "================================================" $CSUC
+    printlog true ""
 
     update_loading_progress "Installation completed successfully."
 }

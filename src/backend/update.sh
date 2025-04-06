@@ -4,16 +4,26 @@
 update() {
 
     update_loading_progress "Updating $ADDON_TITLE..." 0
+
+    local specific_version=${1:-"latest"}
+
     local url=$(github_proxy_url "https://github.com/daniellavrushin/asuswrt-merlin-xrayui/releases/latest/download/asuswrt-merlin-xrayui.tar.gz")
+
+    if [ ! $specific_version = "latest" ]; then
+
+        local url=$(github_proxy_url "https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/releases/download/v$specific_version/asuswrt-merlin-xrayui.tar.gz")
+
+    fi
+
     local temp_file="/tmp/asuswrt-merlin-xrayui.tar.gz"
     local jffs_addons_path="/jffs/addons"
 
-    printlog true "Downloading the latest version..."
-    update_loading_progress "Downloading the latest version..."
+    printlog true "Downloading the version:$specific_version..."
+    update_loading_progress "Downloading the version:$specific_version..."
     if wget -q --show-progress -O "$temp_file" "$url"; then
         printlog true "Download completed successfully."
     else
-        printlog true "Failed to download the latest version. Exiting."
+        printlog true "Failed to download the $specific_version version. Exiting." $CERR
         return 1
     fi
 
@@ -21,7 +31,7 @@ update() {
     if rm -rf "$ADDON_JFFS_ADN_DIR"; then
         printlog true "Old installation removed."
     else
-        printlog true "Failed to remove the old installation. Exiting."
+        printlog true "Failed to remove the old installation. Exiting." $CERR
         return 1
     fi
 
@@ -30,7 +40,7 @@ update() {
     if tar -xzf "$temp_file" -C "$jffs_addons_path"; then
         printlog true "Extraction completed."
     else
-        printlog true "Failed to extract the package. Exiting."
+        printlog true "Failed to extract the package. Exiting." $CERR
         return 1
     fi
 
@@ -50,10 +60,6 @@ update() {
     else
         printlog true "Installation failed. Exiting." $CERR
         return 1
-    fi
-
-    if [ -f "$XRAY_PIDFILE" ]; then
-        restart
     fi
 
     printlog true "Update process completed!" $CSUC

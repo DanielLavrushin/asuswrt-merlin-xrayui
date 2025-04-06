@@ -35,7 +35,7 @@ uninstall)
     uninstall
     ;;
 update)
-    update
+    update "$2"
     ;;
 start)
     start

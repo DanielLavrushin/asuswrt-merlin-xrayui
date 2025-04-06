@@ -88,8 +88,6 @@ unmount_ui() {
         mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
     fi
 
-    rm -rf $ADDON_WEB_DIR
-
     rm -rf "/opt/bin/$ADDON_TAG" || printlog true "Failed to remove symlink for $ADDON_TAG." $CERR
 
     clear_lock

@@ -150,11 +150,11 @@
         }
 
         if (protocolUrl.value) {
-          let parser = null as unknown as ProxyParser;
+          let parser: ProxyParser;
           try {
             parser = new ProxyParser(protocolUrl.value);
           } catch (e) {
-            alert('Failed to parse the proxy URI');
+            alert('Failed to parse the proxy URI. Possible reasons: invalid format or unsupported protocol.');
             return;
           }
           const proxy = parser.getOutbound();

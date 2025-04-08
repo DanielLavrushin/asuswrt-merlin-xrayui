@@ -126,10 +126,11 @@
   import { defineComponent, inject, Ref, ref, watch } from 'vue';
   import engine, { EngineResponseConfig, SubmtActions } from '@/modules/Engine';
   import { XrayObject } from '@/modules/XrayConfig';
-  import { XrayProtocol, XrayRoutingRuleObject } from '@/modules/CommonObjects';
+  import { XrayRoutingRuleObject } from '@/modules/CommonObjects';
   import Hint from '@main/Hint.vue';
   import Modal from '@main/Modal.vue';
   import { XrayInboundObject, XraySocksInboundObject } from '@/modules/InboundObjects';
+  import { XrayProtocol } from '@/modules/Options';
 
   class GeneralOptions {
     public startup = false;

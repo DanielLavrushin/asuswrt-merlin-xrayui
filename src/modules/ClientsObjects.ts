@@ -1,20 +1,20 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { IClient } from './Interfaces';
 
-class XrayWireguardClientObject implements IClient {
+export class XrayWireguardClientObject implements IClient {
   public publicKey!: string;
   public allowedIPs: string[] = [];
 
   normalize = () => void 0;
 }
 
-class XraySocksClientObject implements IClient {
+export class XraySocksClientObject implements IClient {
   public pass!: string;
   public user!: string;
   normalize = () => void 0;
 }
 
-class XrayShadowsocksClientObject implements IClient {
+export class XrayShadowsocksClientObject implements IClient {
   public email!: string;
   public password!: string;
   public level?: number;
@@ -22,7 +22,7 @@ class XrayShadowsocksClientObject implements IClient {
   normalize = () => void 0;
 }
 
-class XrayVmessClientObject implements IClient {
+export class XrayVmessClientObject implements IClient {
   public id!: string;
   public email!: string;
   public level?: number;
@@ -30,19 +30,19 @@ class XrayVmessClientObject implements IClient {
   normalize = () => void 0;
 }
 
-class XrayHttpClientObject implements IClient {
+export class XrayHttpClientObject implements IClient {
   public pass!: string;
   public user!: string;
   normalize = () => void 0;
 }
 
-class XrayTrojanClientObject implements IClient {
+export class XrayTrojanClientObject implements IClient {
   public password!: string;
   public email!: string;
   normalize = () => void 0;
 }
 
-class XrayVlessClientObject implements IClient {
+export class XrayVlessClientObject implements IClient {
   public id!: string;
   public email!: string;
   public level?: number;
@@ -50,5 +50,3 @@ class XrayVlessClientObject implements IClient {
   public flow? = 'none';
   normalize = () => void 0;
 }
-
-export { XrayWireguardClientObject, XraySocksClientObject, XrayShadowsocksClientObject, XrayVmessClientObject, XrayHttpClientObject, XrayTrojanClientObject, XrayVlessClientObject };

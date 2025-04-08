@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/prefer-literal-enum-member */
-const XrayOptions = {
+export const XrayOptions = {
   transportOptions: ['tcp', 'kcp', 'ws', 'xhttp', 'grpc', 'httpupgrade', 'splithttp'],
   securityOptions: ['none', 'tls', 'reality'],
   logOptions: ['debug', 'info', 'warning', 'error', 'none'],
@@ -18,7 +18,7 @@ const XrayOptions = {
   encryptionOptions: ['none', 'plain', 'aes-128-gcm', 'aes-256-gcm', 'chacha20-ietf-poly1305', '2022-blake3-aes-128-gcm', '2022-blake3-aes-256-gcm', '2022-blake3-chacha20-poly1305']
 };
 
-const XrayProtocol = {
+export const XrayProtocol = {
   VLESS: 'vless',
   VMESS: 'vmess',
   SHADOWSOCKS: 'shadowsocks',
@@ -32,7 +32,7 @@ const XrayProtocol = {
   BLACKHOLE: 'blackhole',
   LOOPBACK: 'loopback'
 };
-enum XrayProtocolMode {
+export enum XrayProtocolMode {
   Inbound = 1 << 0,
   Outbound = 1 << 1,
   ServerMode = 1 << 2,
@@ -43,4 +43,3 @@ enum XrayProtocolMode {
 }
 
 export default XrayOptions;
-export { XrayOptions, XrayProtocol, XrayProtocolMode };

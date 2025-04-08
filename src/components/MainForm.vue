@@ -44,7 +44,7 @@
                                 <input class="button_gen" @click.prevent="apply_settings()" type="button" :value="$t('labels.apply')" />
                               </div>
                               <clients-online></clients-online>
-                              <logs-manager v-if="config.log?.access != 'none' || config.log?.error != 'none'" v-model:logs="config.log!"></logs-manager>
+                              <logs-manager ref="logsManager" v-if="config.log?.access != 'none' || config.log?.error != 'none'" v-model:logs="config.log!"></logs-manager>
                               <version></version>
                             </div>
                           </td>
@@ -112,6 +112,7 @@
       const config = ref(engine.xrayConfig);
       const transportModal = ref();
       const sniffingModal = ref();
+      const logsManager = ref();
 
       const show_transport = (proxy: XrayInboundObject<IProtocolType> | XrayOutboundObject<IProtocolType>, type: string) => {
         transportModal.value.show(proxy, type);
@@ -124,12 +125,17 @@
       const apply_settings = async () => {
         await engine.executeWithLoadingProgress(async () => {
           let cfg = engine.prepareServerConfig(config.value);
+          if (logsManager.value && logsManager.value.follow) {
+            logsManager.value.follow = false;
+            await engine.delay(1000);
+          }
           await engine.submit(SubmtActions.configurationApply, cfg);
           await engine.loadXrayConfig();
         });
       };
 
       return {
+        logsManager,
         config,
         engine,
         transportModal,

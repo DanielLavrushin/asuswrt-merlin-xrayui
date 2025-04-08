@@ -5,7 +5,7 @@ import { XrayInboundObject } from './InboundObjects';
 import { XrayOutboundObject } from './OutboundObjects';
 import { XrayProtocol, XrayProtocolMode } from './Options';
 
-class XrayObject {
+export class XrayObject {
   public log?: XrayLogObject = new XrayLogObject();
   public dns?: XrayDnsObject = new XrayDnsObject();
   public inbounds: XrayInboundObject<IProtocolType>[] = [];
@@ -14,7 +14,7 @@ class XrayObject {
   public reverse?: XrayReverseObject = new XrayReverseObject();
 }
 
-const xrayProtocols: XrayProtocolOption[] = [
+export const xrayProtocols: XrayProtocolOption[] = [
   {
     protocol: XrayProtocol.DOKODEMODOOR,
     modes: XrayProtocolMode.Inbound | XrayProtocolMode.BothModes
@@ -67,5 +67,4 @@ const xrayProtocols: XrayProtocolOption[] = [
 
 let xrayConfig = reactive(new XrayObject());
 export default xrayConfig;
-
-export { XrayObject, xrayConfig, xrayProtocols };
+export { xrayConfig };

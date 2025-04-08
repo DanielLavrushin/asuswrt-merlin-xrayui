@@ -9,10 +9,11 @@
 import axios, { AxiosError } from 'axios';
 import { xrayConfig, XrayObject } from './XrayConfig';
 import { XrayBlackholeOutboundObject, XrayLoopbackOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, XrayTrojanOutboundObject, XrayOutboundObject, XraySocksOutboundObject, XrayVmessOutboundObject, XrayVlessOutboundObject, XrayHttpOutboundObject, XrayShadowsocksOutboundObject } from './OutboundObjects';
-import { XrayProtocol, XrayDnsObject, XrayStreamSettingsObject, XrayRoutingObject, XrayRoutingRuleObject, XraySniffingObject, XrayRoutingPolicy, XrayAllocateObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject, XraySockoptObject, XrayLogObject, XrayStreamTlsCertificateObject, XrayReverseObject, XrayReverseItem } from './CommonObjects';
+import { XrayDnsObject, XrayStreamSettingsObject, XrayRoutingObject, XrayRoutingRuleObject, XraySniffingObject, XrayRoutingPolicy, XrayAllocateObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject, XraySockoptObject, XrayLogObject, XrayStreamTlsCertificateObject, XrayReverseObject, XrayReverseItem } from './CommonObjects';
 import { plainToInstance } from 'class-transformer';
 import { XrayDokodemoDoorInboundObject, XrayHttpInboundObject, XrayInboundObject, XrayShadowsocksInboundObject, XraySocksInboundObject, XrayTrojanInboundObject, XrayVlessInboundObject, XrayVmessInboundObject, XrayWireguardInboundObject } from './InboundObjects';
 import { XrayStreamHttpSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamKcpSettingsObject, XrayStreamTcpSettingsObject, XrayStreamWsSettingsObject } from './TransportObjects';
+import { XrayProtocol } from './Options';
 
 class EngineWireguard {
   public privateKey!: string;
@@ -119,6 +120,7 @@ class Engine {
     }
     return chunks;
   }
+  public delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
   public setCookie = (name: string, val: string): void => {
     const date = new Date();

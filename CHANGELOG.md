@@ -1,5 +1,13 @@
 # XRAYUI Changelog
 
+## [0.42.8] - 2025-04-08
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- ADDED: Support added for configuring multiple `DOKODEMO` inbounds.
+- ADDED: Inbound `DOKODEMO` proxies can now be split by processing method—either Direct (`REDIRECT`) or `TPROXY`, and by network protocol (`TCP`, `UDP`, or `both`).
+- IMPROVED: Disable log fetching during configuration updates to prevent unexpected page reloads.
+
 ## [0.42.7] - 2025-04-06
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

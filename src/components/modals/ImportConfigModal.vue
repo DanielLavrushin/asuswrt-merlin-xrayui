@@ -73,9 +73,10 @@
   import { XrayObject } from '@/modules/XrayConfig';
   import ProxyParser from '@/modules/parsers/ProxyParser';
   import Hint from '@main/Hint.vue';
-  import { XrayDnsObject, XrayLogObject, XrayRoutingPolicy, XrayProtocol, XrayRoutingObject, XraySniffingObject } from '@/modules/CommonObjects';
+  import { XrayDnsObject, XrayLogObject, XrayRoutingPolicy, XrayRoutingObject, XraySniffingObject } from '@/modules/CommonObjects';
   import { XrayDokodemoDoorInboundObject, XrayInboundObject } from '@/modules/InboundObjects';
   import { XrayBlackholeOutboundObject, XrayFreedomOutboundObject, XrayOutboundObject } from '@/modules/OutboundObjects';
+  import { XrayProtocol } from '@/modules/Options';
 
   export default defineComponent({
     name: 'ImportConfigModal',

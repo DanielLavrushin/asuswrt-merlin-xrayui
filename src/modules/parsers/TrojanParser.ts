@@ -1,7 +1,8 @@
-import { XrayParsedUrlObject, XrayProtocol, XrayStreamSettingsObject, XrayTrojanServerObject } from '../CommonObjects';
+import { XrayParsedUrlObject, XrayStreamSettingsObject, XrayTrojanServerObject } from '../CommonObjects';
+import { XrayProtocol } from '../Options';
 import { XrayOutboundObject, XrayTrojanOutboundObject } from '../OutboundObjects';
 
-const TrojanParser = (parsedObj: XrayParsedUrlObject): XrayOutboundObject<XrayTrojanOutboundObject> | null => {
+export default function TrojanParser(parsedObj: XrayParsedUrlObject): XrayOutboundObject<XrayTrojanOutboundObject> | null {
   if (parsedObj.protocol !== XrayProtocol.TROJAN) return null;
   const proxy = new XrayOutboundObject<XrayTrojanOutboundObject>();
   proxy.tag = parsedObj.tag;
@@ -20,6 +21,4 @@ const TrojanParser = (parsedObj: XrayParsedUrlObject): XrayOutboundObject<XrayTr
   server.port = parsedObj.port;
   proxy.settings.servers.push(server);
   return proxy;
-};
-
-export default TrojanParser;
+}

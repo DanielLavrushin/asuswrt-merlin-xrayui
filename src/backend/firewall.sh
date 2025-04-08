@@ -20,25 +20,9 @@ configure_firewall() {
     iptables -I INPUT -j XRAYUI
     iptables -I FORWARD -j XRAYUI
 
-    local dokodemo_inbound=$(jq -c '.inbounds[] | select(.protocol == "dokodemo-door")' "$XRAY_CONFIG_FILE")
-
     SERVER_IPS=$(jq -r '[.outbounds[] | select(.settings.vnext != null) | .settings.vnext[].address] | unique | join(" ")' "$XRAY_CONFIG_FILE")
 
-    if [ -n "$dokodemo_inbound" ]; then
-        local dokodemo_port=$(echo "$dokodemo_inbound" | jq -r '.port // empty')
-        if [ -n "$dokodemo_port" ]; then
-            TPROXY_MODE="$(echo "$dokodemo_inbound" | jq -r '.streamSettings.sockopt.tproxy // "off"')"
-            if [ "$TPROXY_MODE" = "tproxy" ]; then
-                configure_firewall_client_tproxy $dokodemo_port
-            else
-                configure_firewall_client_direct $dokodemo_port
-            fi
-        else
-            printlog true "No valid port found for dokodemo-door inbound. Skipping client firewall configuration." $CWARN
-        fi
-    else
-        printlog true "No suitable dokodemo-door inbound found. Skipping client firewall configuration." $CWARN
-    fi
+    configure_inbounds
 
     printlog true "XRAYUI firewall rules applied successfully." $CSUC
 }
@@ -78,10 +62,32 @@ configure_firewall_server() {
     done
 }
 
-configure_firewall_client_direct() {
+configure_inbounds() {
+    printlog true "Scanning for all dokodemo-door inbounds..."
+    # Get all dokodemo-door inbounds in compact JSON format.
+    local dokodemo_inbounds
+    dokodemo_inbounds=$(jq -c '.inbounds[] | select(.protocol=="dokodemo-door")' "$XRAY_CONFIG_FILE")
 
-    local dokodemo_port=$1
-    printlog true "Configuring Xray client firewall rules for dokodemo-door on port $dokodemo_port..."
+    # Split into two groups based on the tproxy flag.
+    local direct_inbounds tproxy_inbounds
+    direct_inbounds=$(echo "$dokodemo_inbounds" | jq -c 'select((.streamSettings.sockopt.tproxy // "off") != "tproxy")')
+    tproxy_inbounds=$(echo "$dokodemo_inbounds" | jq -c 'select((.streamSettings.sockopt.tproxy // "off") == "tproxy")')
+
+    # Process all direct inbounds in one go.
+    if [ -n "$direct_inbounds" ]; then
+        configure_firewall_client_direct "$direct_inbounds"
+    fi
+
+    # Process all TPROXY inbounds in one go.
+    if [ -n "$tproxy_inbounds" ]; then
+        configure_firewall_client_tproxy "$tproxy_inbounds"
+    fi
+}
+
+configure_firewall_client_direct() {
+    local inbounds inbound dokodemo_port protocols tcp_enabled udp_enabled
+    inbounds=$1
+    printlog true "Configuring aggregated DIRECT (REDIRECT) rules for dokodemo-door inbounds..."
 
     # Set up NAT-only rules for REDIRECT mode.
     iptables -t nat -F XRAYUI 2>/dev/null || printlog true "Failed to flush NAT chain. Was it already empty?" $CWARN
@@ -119,7 +125,7 @@ configure_firewall_client_direct() {
     iptables -t nat -A XRAYUI -p udp --dport 123 -j RETURN || printlog true "Failed to add NTP rule in NAT." $CERR
 
     # Exclude the WireGuard subnet 10.122.0.0/24
-    if [ "$(nvram get wgs_enable)" == "1" ]; then
+    if [ "$(nvram get wgs_enable)" = "1" ]; then
         printlog true "WireGuard enabled. Adding exclusion rules for WireGuard."
         WGS_ADDR=$(nvram get "wgs_addr")
         WGS_IP="$(echo "$WGS_ADDR" | cut -d'/' -f1)"
@@ -153,64 +159,99 @@ configure_firewall_client_direct() {
         iptables -t nat -A XRAYUI -p udp -m multiport --dports "$tcp_ports" -j RETURN
     fi
 
-    # apply policy rules
-    jq -c '(.routing.policies // []) | if length == 0 then [{mode:"redirect", enabled:true, name:"all traffic to xray"}] else . end | .[]' "$XRAY_CONFIG_FILE" | while IFS= read -r policy; do
-        enabled="$(echo "$policy" | jq -r '.enabled // "false"')"
-        [ "$enabled" != "true" ] && continue
+    echo "$inbounds" | while IFS= read -r inbound; do
+        dokodemo_port=$(echo "$inbound" | jq -r '.port // empty')
+        protocols=$(echo "$inbound" | jq -r '.settings.network // ""')
 
-        mode="$(echo "$policy" | jq -r '.mode // "bypass"')"
-        tcpPorts="$(echo "$policy" | jq -r '.tcp // ""')"
-        udpPorts="$(echo "$policy" | jq -r '.udp // ""')"
-        macCount="$(echo "$policy" | jq '.mac | length')"
+        if [ -z "$dokodemo_port" ]; then
+            printlog true "Direct inbound missing valid port. Skipping." $CWARN
+            continue
+        fi
 
-        if [ "$macCount" -eq 0 ]; then
-            # No MAC array => apply policy to ALL devices
-            if [ "$mode" = "bypass" ]; then
-                # Bypass all except the listed TCP/UDP ports -> those get redirected
-                printlog true "Ports policy bypass for ALL devices: redirect only TCP($tcpPorts), UDP($udpPorts)" $CWARN
+        # Determine protocol support
+        echo "$protocols" | grep -iq "tcp" && tcp_enabled=yes || tcp_enabled=no
+        echo "$protocols" | grep -iq "udp" && udp_enabled=yes || udp_enabled=no
 
-                [ -n "$tcpPorts" ] && iptables -t nat -A XRAYUI -p tcp -m multiport --dports "$tcpPorts" -j REDIRECT --to-port "$dokodemo_port"
-                [ -n "$udpPorts" ] && iptables -t nat -A XRAYUI -p udp -m multiport --dports "$udpPorts" -j REDIRECT --to-port "$dokodemo_port"
+        if [ "$tcp_enabled" = "no" ] && [ "$udp_enabled" = "no" ]; then
+            printlog true "Direct inbound on port $dokodemo_port has no valid protocols (tcp/udp). Skipping." $CWARN
+            continue
+        fi
 
-                iptables -t nat -A XRAYUI -j RETURN
-            else
-                # Redirect mode = redirect everything except the listed TCP/UDP ports
-                printlog true "Ports policy redirect for ALL devices: exclude TCP($tcpPorts), UDP($udpPorts)" $CWARN
+        # Apply policy rules
+        printlog true "Adding DIRECT rules for inbound on port $dokodemo_port with protocols '$protocols'."
 
-                [ -n "$tcpPorts" ] && iptables -t nat -A XRAYUI -p tcp -m multiport --dports "$tcpPorts" -j RETURN
-                [ -n "$udpPorts" ] && iptables -t nat -A XRAYUI -p udp -m multiport --dports "$udpPorts" -j RETURN
+        jq -c '(.routing.policies // []) | if length == 0 then [{mode:"redirect", enabled:true, name:"all traffic to xray"}] else . end | .[]' "$XRAY_CONFIG_FILE" | while IFS= read -r policy; do
+            enabled="$(echo "$policy" | jq -r '.enabled // "false"')"
+            [ "$enabled" != "true" ] && continue
 
-                iptables -t nat -A XRAYUI -p tcp -j REDIRECT --to-port "$dokodemo_port"
-                iptables -t nat -A XRAYUI -p udp -j REDIRECT --to-port "$dokodemo_port"
-            fi
-        else
-            # Read each MAC in the policy
-            echo "$policy" | jq -r '.mac[]?' | while IFS= read -r mac; do
+            mode="$(echo "$policy" | jq -r '.mode // "bypass"')"
+            tcpPorts="$(echo "$policy" | jq -r '.tcp // ""')"
+            udpPorts="$(echo "$policy" | jq -r '.udp // ""')"
+            macCount="$(echo "$policy" | jq '.mac | length')"
+
+            if [ "$macCount" -eq 0 ]; then
+                # No MAC array => apply policy to ALL devices
                 if [ "$mode" = "bypass" ]; then
                     # Bypass all except the listed TCP/UDP ports -> those get redirected
-                    printlog true "Ports policy bypass for $mac: redirect only TCP($tcpPorts), UDP($udpPorts)" $CWARN
+                    printlog true "Ports policy bypass for ALL devices: redirect only TCP($tcpPorts), UDP($udpPorts)" $CWARN
 
-                    [ -n "$tcpPorts" ] && iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p tcp -m multiport --dports "$tcpPorts" -j REDIRECT --to-port "$dokodemo_port"
-                    [ -n "$udpPorts" ] && iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p udp -m multiport --dports "$udpPorts" -j REDIRECT --to-port "$dokodemo_port"
+                    if echo "$protocols" | grep -iq "tcp"; then
+                        [ -n "$tcpPorts" ] && iptables -t nat -A XRAYUI -p tcp -m multiport --dports "$tcpPorts" -j REDIRECT --to-port "$dokodemo_port"
+                    fi
 
-                    # Default for bypass = return
-                    iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -j RETURN
+                    if echo "$protocols" | grep -iq "udp"; then
+                        [ -n "$udpPorts" ] && iptables -t nat -A XRAYUI -p udp -m multiport --dports "$udpPorts" -j REDIRECT --to-port "$dokodemo_port"
+                    fi
 
+                    iptables -t nat -A XRAYUI -j RETURN
                 else
                     # Redirect mode = redirect everything except the listed TCP/UDP ports
-                    printlog true "Ports policy redirect for $mac: exclude TCP($tcpPorts), UDP($udpPorts)" $CWARN
+                    printlog true "Ports policy redirect for ALL devices: exclude TCP($tcpPorts), UDP($udpPorts)" $CWARN
 
-                    [ -n "$tcpPorts" ] && iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p tcp -m multiport --dports "$tcpPorts" -j RETURN
-                    [ -n "$udpPorts" ] && iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p udp -m multiport --dports "$udpPorts" -j RETURN
+                    if echo "$protocols" | grep -iq "tcp"; then
+                        [ -n "$tcpPorts" ] && iptables -t nat -A XRAYUI -p tcp -m multiport --dports "$tcpPorts" -j RETURN
+                        iptables -t nat -A XRAYUI -p tcp -j REDIRECT --to-port "$dokodemo_port"
+                    fi
 
-                    # Default for redirect = redirect all
-                    iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p tcp -j REDIRECT --to-port "$dokodemo_port"
-                    iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p udp -j REDIRECT --to-port "$dokodemo_port"
+                    if echo "$protocols" | grep -iq "udp"; then
+                        [ -n "$udpPorts" ] && iptables -t nat -A XRAYUI -p udp -m multiport --dports "$udpPorts" -j RETURN
+                        iptables -t nat -A XRAYUI -p udp -j REDIRECT --to-port "$dokodemo_port"
+                    fi
                 fi
-            done
-        fi
-    done
+            else
+                # Read each MAC in the policy
+                echo "$policy" | jq -r '.mac[]?' | while IFS= read -r mac; do
+                    if [ "$mode" = "bypass" ]; then
+                        # Bypass all except the listed TCP/UDP ports -> those get redirected
+                        printlog true "Ports policy bypass for $mac: redirect only TCP($tcpPorts), UDP($udpPorts)" $CWARN
 
+                        if echo "$protocols" | grep -iq "tcp"; then
+                            [ -n "$tcpPorts" ] && iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p tcp -m multiport --dports "$tcpPorts" -j REDIRECT --to-port "$dokodemo_port"
+                        fi
+                        if echo "$protocols" | grep -iq "udp"; then
+                            [ -n "$udpPorts" ] && iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p udp -m multiport --dports "$udpPorts" -j REDIRECT --to-port "$dokodemo_port"
+                        fi
+
+                        # Default for bypass = return
+                        iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -j RETURN
+
+                    else
+                        # Redirect mode = redirect everything except the listed TCP/UDP ports
+                        printlog true "Ports policy redirect for $mac: exclude TCP($tcpPorts), UDP($udpPorts)" $CWARN
+
+                        if echo "$protocols" | grep -iq "tcp"; then
+                            [ -n "$tcpPorts" ] && iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p tcp -m multiport --dports "$tcpPorts" -j RETURN
+                            iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p tcp -j REDIRECT --to-port "$dokodemo_port"
+                        fi
+                        if echo "$protocols" | grep -iq "udp"; then
+                            [ -n "$udpPorts" ] && iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p udp -m multiport --dports "$udpPorts" -j RETURN
+                            iptables -t nat -A XRAYUI -m mac --mac-source "$mac" -p udp -j REDIRECT --to-port "$dokodemo_port"
+                        fi
+                    fi
+                done
+            fi
+        done
+    done
     # --- End Exclusion Rules ---
 
     # Execute custom rules for TPROXY (if any)
@@ -229,9 +270,9 @@ configure_firewall_client_direct() {
 }
 
 configure_firewall_client_tproxy() {
-
-    local dokodemo_port=$1
-    printlog true "Configuring Xray TPROXY client firewall rules for dokodemo-door on port $dokodemo_port..."
+    local inbounds inbound dokodemo_port protocols tcp_enabled udp_enabled
+    inbounds=$1
+    printlog true "Configuring aggregated TPROXY rules for dokodemo-door inbounds..."
 
     # Ensure TPROXY module is loaded
     if ! lsmod | grep -q "xt_TPROXY"; then
@@ -287,7 +328,7 @@ configure_firewall_client_tproxy() {
     iptables -t mangle -A XRAYUI -p udp --dport 123 -j RETURN || printlog true "Failed to add NTP rule in MANGLE." $CERR
 
     # Exclude the WireGuard subnet 10.122.0.0/24
-    if [ "$(nvram get wgs_enable)" == "1" ]; then
+    if [ "$(nvram get wgs_enable)" = "1" ]; then
         printlog true "WireGuard enabled. Adding exclusion rules for WireGuard."
         WGS_ADDR=$(nvram get "wgs_addr")
         WGS_IP="$(echo "$WGS_ADDR" | cut -d'/' -f1)"
@@ -310,47 +351,84 @@ configure_firewall_client_tproxy() {
         iptables -t mangle -A XRAYUI -d "$serverip" -j RETURN || printlog true "Failed to add rule to exclude Xray server in MANGLE." $CERR
     done
 
-    # bypass/redirect rules
-    jq -c '(.routing.policies // []) | if length == 0 then [{mode:"redirect", enabled:true, name:"all traffic to xray"}] else . end | .[]' "$XRAY_CONFIG_FILE" | while IFS= read -r policy; do
-        enabled="$(echo "$policy" | jq -r '.enabled // "false"')"
-        [ "$enabled" != "true" ] && continue
+    echo "$inbounds" | while IFS= read -r inbound; do
+        dokodemo_port=$(echo "$inbound" | jq -r '.port // empty')
+        protocols=$(echo "$inbound" | jq -r '.settings.network // ""')
 
-        mode="$(echo "$policy" | jq -r '.mode // "bypass"')"
-        tcpPorts="$(echo "$policy" | jq -r '.tcp // ""')"
-        udpPorts="$(echo "$policy" | jq -r '.udp // ""')"
-        macCount="$(echo "$policy" | jq '.mac | length')"
+        if [ -z "$dokodemo_port" ]; then
+            printlog true "TPROXY inbound missing valid port. Skipping." $CWARN
+            continue
+        fi
 
-        if [ "$macCount" -eq 0 ]; then
-            # No MAC => apply policy to all devices
-            if [ "$mode" = "bypass" ]; then
-                # BYPASS => TPROXY only the listed ports; everything else returns
-                [ -n "$tcpPorts" ] && iptables -t mangle -A XRAYUI -p tcp -m multiport --dports "$tcpPorts" -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
-                [ -n "$udpPorts" ] && iptables -t mangle -A XRAYUI -p udp -m multiport --dports "$udpPorts" -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
-                iptables -t mangle -A XRAYUI -j RETURN
-            else
-                # REDIRECT => TPROXY everything; listed ports are returned
-                [ -n "$tcpPorts" ] && iptables -t mangle -A XRAYUI -p tcp -m multiport --dports "$tcpPorts" -j RETURN
-                [ -n "$udpPorts" ] && iptables -t mangle -A XRAYUI -p udp -m multiport --dports "$udpPorts" -j RETURN
-                iptables -t mangle -A XRAYUI -p tcp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
-                iptables -t mangle -A XRAYUI -p udp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
-            fi
-        else
-            # Per-device logic
-            echo "$policy" | jq -r '.mac[]?' | while IFS= read -r mac; do
+        # Determine protocol support
+        echo "$protocols" | grep -iq "tcp" && tcp_enabled=yes || tcp_enabled=no
+        echo "$protocols" | grep -iq "udp" && udp_enabled=yes || udp_enabled=no
+
+        if [ "$tcp_enabled" = "no" ] && [ "$udp_enabled" = "no" ]; then
+            printlog true "TPROXY inbound on port $dokodemo_port has no valid protocols (tcp/udp). Skipping." $CWARN
+            continue
+        fi
+
+        printlog true "Adding TPROXY rules for inbound on port $dokodemo_port with protocols '$protocols'."
+
+        # bypass/redirect rules
+        jq -c '(.routing.policies // []) | if length == 0 then [{mode:"redirect", enabled:true, name:"all traffic to xray"}] else . end | .[]' "$XRAY_CONFIG_FILE" | while IFS= read -r policy; do
+            enabled="$(echo "$policy" | jq -r '.enabled // "false"')"
+            [ "$enabled" != "true" ] && continue
+
+            mode="$(echo "$policy" | jq -r '.mode // "bypass"')"
+            tcpPorts="$(echo "$policy" | jq -r '.tcp // ""')"
+            udpPorts="$(echo "$policy" | jq -r '.udp // ""')"
+            macCount="$(echo "$policy" | jq '.mac | length')"
+
+            if [ "$macCount" -eq 0 ]; then
+                # No MAC => apply policy to all devices
                 if [ "$mode" = "bypass" ]; then
                     # BYPASS => TPROXY only the listed ports; everything else returns
-                    [ -n "$tcpPorts" ] && iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p tcp -m multiport --dports "$tcpPorts" -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
-                    [ -n "$udpPorts" ] && iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p udp -m multiport --dports "$udpPorts" -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
-                    iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -j RETURN
+                    if echo "$protocols" | grep -iq "tcp"; then
+                        [ -n "$tcpPorts" ] && iptables -t mangle -A XRAYUI -p tcp -m multiport --dports "$tcpPorts" -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
+                    fi
+                    if echo "$protocols" | grep -iq "udp"; then
+                        [ -n "$udpPorts" ] && iptables -t mangle -A XRAYUI -p udp -m multiport --dports "$udpPorts" -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
+                    fi
+                    iptables -t mangle -A XRAYUI -j RETURN
                 else
                     # REDIRECT => TPROXY everything; listed ports are returned
-                    [ -n "$tcpPorts" ] && iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p tcp -m multiport --dports "$tcpPorts" -j RETURN
-                    [ -n "$udpPorts" ] && iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p udp -m multiport --dports "$udpPorts" -j RETURN
-                    iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p tcp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
-                    iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p udp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
+                    if echo "$protocols" | grep -iq "tcp"; then
+                        [ -n "$tcpPorts" ] && iptables -t mangle -A XRAYUI -p tcp -m multiport --dports "$tcpPorts" -j RETURN
+                        iptables -t mangle -A XRAYUI -p tcp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
+                    fi
+                    if echo "$protocols" | grep -iq "udp"; then
+                        [ -n "$udpPorts" ] && iptables -t mangle -A XRAYUI -p udp -m multiport --dports "$udpPorts" -j RETURN
+                        iptables -t mangle -A XRAYUI -p udp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
+                    fi
                 fi
-            done
-        fi
+            else
+                # Per-device logic
+                echo "$policy" | jq -r '.mac[]?' | while IFS= read -r mac; do
+                    if [ "$mode" = "bypass" ]; then
+                        # BYPASS => TPROXY only the listed ports; everything else returns
+                        if echo "$protocols" | grep -iq "tcp"; then
+                            [ -n "$tcpPorts" ] && iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p tcp -m multiport --dports "$tcpPorts" -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
+                        fi
+                        if echo "$protocols" | grep -iq "udp"; then
+                            [ -n "$udpPorts" ] && iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p udp -m multiport --dports "$udpPorts" -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
+                        fi
+                        iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -j RETURN
+                    else
+                        # REDIRECT => TPROXY everything; listed ports are returned
+                        if echo "$protocols" | grep -iq "tcp"; then
+                            [ -n "$tcpPorts" ] && iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p tcp -m multiport --dports "$tcpPorts" -j RETURN
+                            iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p tcp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
+                        fi
+                        if echo "$protocols" | grep -iq "udp"; then
+                            [ -n "$udpPorts" ] && iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p udp -m multiport --dports "$udpPorts" -j RETURN
+                            iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p udp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
+                        fi
+                    fi
+                done
+            fi
+        done
     done
 
     # --- End Exclusion Rules ---
@@ -362,16 +440,16 @@ configure_firewall_client_tproxy() {
         "$script" || printlog true "Error executing $script." $CERR
     fi
 
-    # Add TPROXY rules in mangle:
-    iptables -t mangle -A XRAYUI -p tcp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777 || printlog true "Failed to add TPROXY rule for TCP." $CERR
-    iptables -t mangle -A XRAYUI -p udp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777 || printlog true "Failed to add TPROXY rule for UDP." $CERR
-
     # Add routing rules for marked packets:
     ip rule list | grep -q "fwmark 0x8777" || ip rule add fwmark 0x8777 table 8777 priority 100 || printlog true "Failed to add fwmark rule." $CERR
     ip route add local 0.0.0.0/0 dev lo table 8777 || printlog true "Failed to add local route for fwmark." $CERR
 
     # Hook the mangle chain into PREROUTING:
+    printlog true "Hooking mangle chain into PREROUTING..."
     iptables -t mangle -A PREROUTING -j XRAYUI || printlog true "Failed to hook mangle chain." $CERR
+    # local ip_range=$(nvram get dhcp_start)-$(nvram get dhcp_end)
+    # printlog true "Hooking mangle chain into PREROUTING $ip_range..."
+    # iptables -t mangle -A PREROUTING -m iprange --src-range $ip_range -j XRAYUI || printlog true "Failed to hook mangle chain." $CERR
 
     printlog true "TPROXY rules applied." $CSUC
 }
@@ -380,6 +458,11 @@ cleanup_firewall() {
 
     printlog true "Cleaning up Xray Client firewall rules..."
     update_loading_progress "Cleaning up Xray Client firewall rules..."
+
+    iptables -D INPUT -j XRAYUI 2>/dev/null
+    iptables -D FORWARD -j XRAYUI 2>/dev/null
+    iptables -t nat -D PREROUTING -j XRAYUI 2>/dev/null
+    iptables -t mangle -D PREROUTING -j XRAYUI 2>/dev/null
 
     iptables -t nat -F XRAYUI 2>/dev/null || printlog true "Failed to flush NAT chain. Was it already empty?" $CWARN
     iptables -t nat -X XRAYUI 2>/dev/null || printlog true "Failed to remove NAT chain. Was it already empty?" $CWARN

@@ -58,7 +58,7 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, onMounted, onBeforeUnmount, ref, computed, watch } from 'vue';
+  import { defineComponent, onMounted, onBeforeUnmount, ref, computed } from 'vue';
   import axios from 'axios';
   import engine, { SubmtActions } from '@/modules/Engine';
   import { XrayLogObject } from '@/modules/CommonObjects';
@@ -113,12 +113,10 @@
       const file = ref<string>(FILE_ACCESS);
       const logsContent = ref<string>('');
 
-      // Wrap device mapping in a computed property.
       const devices = computed(() => {
         return Object.fromEntries(Object.entries(window.xray.router.devices_online).map(([mac, device]) => [device.ip, device]));
       });
 
-      // Use a computed property to parse logs on the fly.
       const parsedLogs = computed<AccessLogEntry[]>(() => {
         if (!logsContent.value) return [];
         return logsContent.value
@@ -132,12 +130,10 @@
           .filter((entry): entry is AccessLogEntry => entry !== null);
       });
 
-      // Refactored fetchLogs with a proper delay and error handling.
       const fetchLogs = async () => {
         if (!follow.value) return;
         try {
           await engine.submit(SubmtActions.fetchXrayLogs);
-          // Wait for 1 second before fetching the updated logs.
           await new Promise((resolve) => setTimeout(resolve, 1000));
           const response = await axios.get(file.value);
           logsContent.value = response.data;
@@ -148,7 +144,6 @@
 
       let refreshInterval: number;
       onMounted(() => {
-        // Start auto-refresh; the interval will run regardless, but fetchLogs itself returns early if follow is false.
         refreshInterval = window.setInterval(fetchLogs, 2000);
       });
 

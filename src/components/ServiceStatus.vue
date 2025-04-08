@@ -49,7 +49,7 @@
   import GeneralOptionsModal from '@modal/GeneralOptionsModal.vue';
   import ImportConfig from './ImportConfig.vue';
   import { XrayObject } from '@/modules/XrayConfig';
-  import { XrayProtocol, XrayRoutingRuleObject } from '@/modules/CommonObjects';
+  import { XrayRoutingRuleObject } from '@/modules/CommonObjects';
   import ConfigModal from '@modal/ConfigModal.vue';
   import axios from 'axios';
   import { useI18n } from 'vue-i18n';
@@ -57,6 +57,7 @@
   import XrayVersion from './XrayVersion.vue';
   import Profiles from './Profiles.vue';
   import Backup from './Backup.vue';
+  import { XrayProtocol } from '@/modules/Options';
 
   class IpApiResponse {
     public status?: string;

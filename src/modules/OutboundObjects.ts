@@ -6,7 +6,7 @@ import { XrayTrojanServerObject, XrayHttpServerObject, XrayStreamSettingsObject,
 import { XrayVlessServerObject } from './CommonObjects';
 import { plainToInstance } from 'class-transformer';
 
-class XrayOutboundObject<TProxy extends IProtocolType> {
+export class XrayOutboundObject<TProxy extends IProtocolType> {
   public protocol!: string;
   public sendThrough? = '0.0.0.0';
   public tag?: string;
@@ -36,7 +36,7 @@ class XrayOutboundObject<TProxy extends IProtocolType> {
   };
 }
 
-class XrayVlessOutboundObject implements IProtocolType {
+export class XrayVlessOutboundObject implements IProtocolType {
   public vnext: XrayVlessServerObject[] = [];
   constructor() {
     if (this.vnext.length === 0) this.vnext.push(new XrayVlessServerObject());
@@ -51,7 +51,7 @@ class XrayVlessOutboundObject implements IProtocolType {
   };
 }
 
-class XrayVmessOutboundObject implements IProtocolType {
+export class XrayVmessOutboundObject implements IProtocolType {
   public vnext: XrayVmessServerObject[] = [];
   constructor() {
     if (this.vnext.length === 0) this.vnext.push(new XrayVmessServerObject());
@@ -66,14 +66,14 @@ class XrayVmessOutboundObject implements IProtocolType {
   };
 }
 
-class XrayBlackholeOutboundObject implements IProtocolType {
+export class XrayBlackholeOutboundObject implements IProtocolType {
   public response?: { type: string } = { type: 'none' }; // none, http
   normalize = () => {
     this.response = this.response?.type === 'none' ? undefined : this.response;
   };
 }
 
-class XrayHttpOutboundObject implements IProtocolType {
+export class XrayHttpOutboundObject implements IProtocolType {
   public servers: XrayHttpServerObject[] = [];
   constructor() {
     if (this.servers.length === 0) this.servers.push(new XrayHttpServerObject());
@@ -87,7 +87,7 @@ class XrayHttpOutboundObject implements IProtocolType {
     return this.servers.flatMap((c) => c.users?.map((u) => u.user).filter((email): email is string => !!email) ?? []);
   };
 }
-class XrayShadowsocksOutboundObject implements IProtocolType {
+export class XrayShadowsocksOutboundObject implements IProtocolType {
   public servers: XrayShadowsocksServerObject[] = [];
   constructor() {
     if (this.servers.length === 0) this.servers.push(new XrayShadowsocksServerObject());
@@ -99,7 +99,7 @@ class XrayShadowsocksOutboundObject implements IProtocolType {
   };
 }
 
-class XrayTrojanOutboundObject implements IProtocolType {
+export class XrayTrojanOutboundObject implements IProtocolType {
   public servers: XrayTrojanServerObject[] = [];
   constructor() {
     if (this.servers.length === 0) this.servers.push(new XrayTrojanServerObject());
@@ -114,7 +114,7 @@ class XrayTrojanOutboundObject implements IProtocolType {
   };
 }
 
-class XrayWireguardOutboundObject implements IProtocolType {
+export class XrayWireguardOutboundObject implements IProtocolType {
   static strategyOptions = ['ForceIPv6v4', 'ForceIPv6', 'ForceIPv4v6', 'ForceIPv4', 'ForceIP'];
   public privateKey!: string;
   public address: string[] = [];
@@ -128,12 +128,12 @@ class XrayWireguardOutboundObject implements IProtocolType {
   normalize = () => void 0;
 }
 
-class XrayLoopbackOutboundObject implements IProtocolType {
+export class XrayLoopbackOutboundObject implements IProtocolType {
   public inboundTag!: string;
 
   normalize = () => void 0;
 }
-class XrayFreedomOutboundObject implements IProtocolType {
+export class XrayFreedomOutboundObject implements IProtocolType {
   static strategyOptions = ['AsIs', 'UseIP', 'UseIPv4', 'UseIPv6'];
   static fragmentOptions = ['1-3', 'tlshello'];
   public domainStrategy? = 'AsIs';
@@ -151,7 +151,7 @@ class XrayFreedomOutboundObject implements IProtocolType {
   };
 }
 
-class XrayDnsOutboundObject implements IProtocolType {
+export class XrayDnsOutboundObject implements IProtocolType {
   public address?: string;
   public port?: number;
   public network?: string = 'tcp';
@@ -165,7 +165,7 @@ class XrayDnsOutboundObject implements IProtocolType {
   };
 }
 
-class XraySocksOutboundObject implements IProtocolType {
+export class XraySocksOutboundObject implements IProtocolType {
   public servers: XraySocksServerObject[] = [];
   constructor() {
     if (this.servers.length === 0) this.servers.push(new XraySocksServerObject());
@@ -179,5 +179,3 @@ class XraySocksOutboundObject implements IProtocolType {
     return this.servers.flatMap((c) => c.users?.map((u) => u.user).filter((email): email is string => !!email) ?? []);
   };
 }
-
-export { XrayWireguardOutboundObject, XrayTrojanOutboundObject, XraySocksOutboundObject, XrayShadowsocksOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, XrayLoopbackOutboundObject, XrayBlackholeOutboundObject, XrayHttpOutboundObject, XrayVlessOutboundObject, XrayVmessOutboundObject, XrayOutboundObject };

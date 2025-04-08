@@ -3,7 +3,7 @@ import { ISecurityProtocol, IXrayServer } from './Interfaces';
 import XrayOptions, { XrayProtocol, XrayProtocolMode } from './Options';
 import { XrayStreamHttpSettingsObject, XrayStreamKcpSettingsObject, XrayStreamTcpSettingsObject, XrayStreamWsSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamSplitHttpSettingsObject } from './TransportObjects';
 
-class XraySniffingObject {
+export class XraySniffingObject {
   static destOverrideOptions = ['http', 'tls', 'quic', 'fakedns'];
   public enabled? = false;
   public metadataOnly? = false;
@@ -20,34 +20,34 @@ class XraySniffingObject {
   }
 }
 
-class XrayHeaderObject {
+export class XrayHeaderObject {
   public type = 'none';
   public request?: XrayHeaderRequestObject;
   public response?: XrayHeaderResponseObject;
 }
 
-class XrayHeaderRequestObject {
+export class XrayHeaderRequestObject {
   public version = '1.1';
   public method = 'GET';
   public path = '/';
   public headers: unknown = {};
 }
 
-class XrayHeaderResponseObject {
+export class XrayHeaderResponseObject {
   public version = '1.1';
   public status = '200';
   public reason = 'OK';
   public headers: unknown = {};
 }
 
-class XrayXmuxObject {
+export class XrayXmuxObject {
   public maxConcurrency = 0;
   public maxConnections = 0;
   public cMaxReuseTimes = 0;
   public cMaxLifetimeMs = 0;
 }
 
-class XrayAllocateObject {
+export class XrayAllocateObject {
   static defaultRefresh = 5;
   static defaultConcurrency = 3;
 
@@ -64,7 +64,7 @@ class XrayAllocateObject {
   };
 }
 
-class XrayStreamTlsCertificateObject {
+export class XrayStreamTlsCertificateObject {
   static usageOptions = XrayOptions.usageOptions;
 
   public ocspStapling? = 3600;
@@ -85,7 +85,7 @@ class XrayStreamTlsCertificateObject {
   }
 }
 
-class XrayStreamTlsSettingsObject implements ISecurityProtocol {
+export class XrayStreamTlsSettingsObject implements ISecurityProtocol {
   static alpnOptions = XrayOptions.alpnOptions;
   static fingerprintOptions = ['', 'randomized', 'random', 'chrome', 'firefox', 'ios', 'android', 'safari', 'edge', '360', 'qq'];
   static tlsVersionsOptions = ['1.0', '1.1', '1.2', '1.3'];
@@ -135,7 +135,7 @@ class XrayStreamTlsSettingsObject implements ISecurityProtocol {
   }
 }
 
-class XrayStreamRealitySettingsObject implements ISecurityProtocol {
+export class XrayStreamRealitySettingsObject implements ISecurityProtocol {
   public show = false;
   public dest?: string;
   public xver?: number;
@@ -167,7 +167,7 @@ class XrayStreamRealitySettingsObject implements ISecurityProtocol {
   }
 }
 
-class XrayLogObject {
+export class XrayLogObject {
   static levelOptions = ['debug', 'info', 'warning', 'error', 'none'];
   public access?: string;
   public error?: string;
@@ -186,7 +186,7 @@ class XrayLogObject {
   }
 }
 
-class XrayDnsObject {
+export class XrayDnsObject {
   static strategyOptions = ['UseIP', 'UseIPv4', 'UseIPv6'];
   public tag? = 'dnsQuery';
   public hosts?: Record<string, string | string[]> | undefined = {};
@@ -215,7 +215,7 @@ class XrayDnsObject {
   };
 }
 
-class XrayDnsServerObject {
+export class XrayDnsServerObject {
   public address!: string;
   public port?: number;
   public domains?: string[];
@@ -223,16 +223,17 @@ class XrayDnsServerObject {
   public skipFallback?: boolean;
   public clientIP?: string;
 }
-const XrayReverseItemType = {
+export const XrayReverseItemType = {
   BRIDGE: 'bridge',
   PORTAL: 'portal'
 };
-class XrayReverseItem {
+
+export class XrayReverseItem {
   public tag?: string;
   public domain?: string;
 }
 
-class XrayReverseObject {
+export class XrayReverseObject {
   public bridges?: XrayReverseItem[] = [];
   public portals?: XrayReverseItem[] = [];
 
@@ -255,7 +256,7 @@ class XrayReverseObject {
   }
 }
 
-class XrayRoutingObject {
+export class XrayRoutingObject {
   static domainStrategyOptions = ['AsIs', 'IPIfNonMatch', 'IPOnDemand'];
   static domainMatcherOptions = ['hybrid', 'linear'];
   public domainStrategy? = 'AsIs';
@@ -343,7 +344,7 @@ class XrayRoutingObject {
   };
 }
 
-class XrayRoutingPolicy {
+export class XrayRoutingPolicy {
   static defaultPorts = ['443', '80', '22'];
   static modes = ['redirect', 'bypass'];
   public name?: string;
@@ -393,7 +394,7 @@ class XrayRoutingPolicy {
   };
 }
 
-class XrayRoutingRuleObject {
+export class XrayRoutingRuleObject {
   static connectionCheckRuleName = 'sys:connection-check';
   static networkOptions = ['', 'tcp', 'udp', 'tcp,udp'];
   static protocolOptions = ['http', 'tls', 'bittorrent'];
@@ -435,7 +436,7 @@ class XrayRoutingRuleObject {
   };
 }
 
-class XrayStreamSettingsObject {
+export class XrayStreamSettingsObject {
   public network? = 'tcp';
   public security? = 'none';
   public tlsSettings?: XrayStreamTlsSettingsObject;
@@ -470,13 +471,13 @@ class XrayStreamSettingsObject {
   }
 }
 
-class XrayServerObject<IClient> implements IXrayServer<IClient> {
+export class XrayServerObject<IClient> implements IXrayServer<IClient> {
   public address!: string;
   public port!: number;
   public users?: IClient[] | undefined = [];
 }
 
-class XrayTrojanServerObject extends XrayServerObject<XrayHttpClientObject> {
+export class XrayTrojanServerObject extends XrayServerObject<XrayHttpClientObject> {
   public email?: string;
   public password!: string;
   public level? = 0;
@@ -486,11 +487,11 @@ class XrayTrojanServerObject extends XrayServerObject<XrayHttpClientObject> {
   }
 }
 
-class XrayHttpServerObject extends XrayServerObject<XrayHttpClientObject> {}
-class XraySocksServerObject extends XrayServerObject<XraySocksClientObject> {}
-class XrayVlessServerObject extends XrayServerObject<XrayVlessClientObject> {}
-class XrayVmessServerObject extends XrayServerObject<XrayVmessClientObject> {}
-class XrayShadowsocksServerObject extends XrayServerObject<XrayVmessClientObject> {
+export class XrayHttpServerObject extends XrayServerObject<XrayHttpClientObject> {}
+export class XraySocksServerObject extends XrayServerObject<XraySocksClientObject> {}
+export class XrayVlessServerObject extends XrayServerObject<XrayVlessClientObject> {}
+export class XrayVmessServerObject extends XrayServerObject<XrayVmessClientObject> {}
+export class XrayShadowsocksServerObject extends XrayServerObject<XrayVmessClientObject> {
   public email?: string;
   public method = '2022-blake3-aes-256-gcm';
   public password!: string;
@@ -502,19 +503,19 @@ class XrayShadowsocksServerObject extends XrayServerObject<XrayVmessClientObject
   }
 }
 
-class XrayProtocolOption {
+export class XrayProtocolOption {
   public protocol!: string;
   public modes!: XrayProtocolMode;
 }
 
-class XrayNoiseObject {
+export class XrayNoiseObject {
   static typeOptions = ['rand', 'str', 'base64'];
   public type = 'rand';
   public packet!: string;
   public delay: string | number = 0;
 }
 
-class XrayPeerObject {
+export class XrayPeerObject {
   public endpoint!: string;
   public publicKey!: string;
   public preSharedKey?: string;
@@ -522,7 +523,7 @@ class XrayPeerObject {
   public keepAlive?: number;
 }
 
-class XraySockoptObject {
+export class XraySockoptObject {
   static tproxyOptions = ['off', 'redirect', 'tproxy'];
   static domainStrategyOptions = ['AsIs', 'UseIP', 'UseIPv4', 'UseIPv6'];
 
@@ -550,7 +551,8 @@ class XraySockoptObject {
     return this;
   };
 }
-interface ParseJsonObject {
+
+export interface ParseJsonObject {
   add: string;
   id: string;
   ps: string;
@@ -560,7 +562,7 @@ interface ParseJsonObject {
   [key: string]: string;
 }
 
-class XrayParsedUrlObject {
+export class XrayParsedUrlObject {
   public server!: string;
   public port!: number;
   public protocol!: string;
@@ -619,4 +621,4 @@ class XrayParsedUrlObject {
   }
 }
 
-export { XrayReverseItemType, XrayReverseObject, XrayReverseItem, XrayRoutingPolicy, XrayParsedUrlObject, XraySockoptObject, XrayDnsObject, XrayDnsServerObject, XrayTrojanServerObject, XrayPeerObject, XrayNoiseObject, XrayShadowsocksServerObject, XrayHttpServerObject, XraySocksServerObject, XrayProtocolOption, XrayProtocol, XrayVlessServerObject, XrayVmessServerObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsCertificateObject, XrayStreamSettingsObject, XrayRoutingRuleObject, XrayRoutingObject, XrayLogObject, XrayAllocateObject, XraySniffingObject, XrayHeaderObject, XrayHeaderRequestObject, XrayHeaderResponseObject, XrayXmuxObject };
+export { XrayProtocol };

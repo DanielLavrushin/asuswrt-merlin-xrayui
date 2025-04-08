@@ -513,6 +513,7 @@
       "manager": "Manage Backups",
       "backup": "backup",
       "clear": "clear",
+      "hint": "Backup xray/xrayui configuration files.",
       "clear_confirm": "Are you sure you want to clear all the backups?"
     }
   }

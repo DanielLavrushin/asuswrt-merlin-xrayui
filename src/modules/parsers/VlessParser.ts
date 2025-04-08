@@ -2,7 +2,7 @@ import { XrayVlessClientObject } from '../ClientsObjects';
 import { XrayParsedUrlObject, XrayStreamSettingsObject } from '../CommonObjects';
 import { XrayOutboundObject, XrayVlessOutboundObject } from '../OutboundObjects';
 
-const VlessParser = (parsedObj: XrayParsedUrlObject): XrayOutboundObject<XrayVlessOutboundObject> | null => {
+export default function VlessParser(parsedObj: XrayParsedUrlObject): XrayOutboundObject<XrayVlessOutboundObject> | null {
   if (parsedObj.protocol !== 'vless') return null;
   const proxy = new XrayOutboundObject<XrayVlessOutboundObject>();
   proxy.tag = parsedObj.tag;
@@ -25,6 +25,4 @@ const VlessParser = (parsedObj: XrayParsedUrlObject): XrayOutboundObject<XrayVle
   if (proxy.settings.vnext[0].users) proxy.settings.vnext[0].users.push(user);
 
   return proxy;
-};
-
-export default VlessParser;
+}

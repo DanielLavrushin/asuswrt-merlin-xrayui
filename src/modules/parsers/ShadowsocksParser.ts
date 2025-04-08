@@ -1,7 +1,8 @@
-import { XrayParsedUrlObject, XrayProtocol, XrayShadowsocksServerObject, XrayStreamSettingsObject } from '../CommonObjects';
+import { XrayParsedUrlObject, XrayShadowsocksServerObject, XrayStreamSettingsObject } from '../CommonObjects';
+import { XrayProtocol } from '../Options';
 import { XrayOutboundObject, XrayShadowsocksOutboundObject } from '../OutboundObjects';
 
-const ShadowsocksParser = (parsedObj: XrayParsedUrlObject): XrayOutboundObject<XrayShadowsocksOutboundObject> | null => {
+export default function ShadowsocksParser(parsedObj: XrayParsedUrlObject): XrayOutboundObject<XrayShadowsocksOutboundObject> | null {
   const proxy = new XrayOutboundObject<XrayShadowsocksOutboundObject>();
   proxy.tag = parsedObj.tag;
   proxy.settings = new XrayShadowsocksOutboundObject();
@@ -20,6 +21,4 @@ const ShadowsocksParser = (parsedObj: XrayParsedUrlObject): XrayOutboundObject<X
   server.email = parsedObj.tag;
   proxy.settings.servers.push(server);
   return proxy;
-};
-
-export default ShadowsocksParser;
+}

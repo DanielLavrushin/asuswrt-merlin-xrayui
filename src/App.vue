@@ -14,9 +14,6 @@
 
   import engine, { EngineResponseConfig, SubmtActions } from './modules/Engine';
 
-  // Helper delay function
-  const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
   export default defineComponent({
     name: 'App',
     components: {
@@ -41,7 +38,7 @@
           await engine.loadXrayConfig();
           await engine.submit(SubmtActions.initResponse);
           // Use our delay helper instead of setTimeout inside an async function.
-          await delay(1000);
+          await engine.delay(1000);
           uiResponse.value = await engine.getXrayResponse();
         } catch (error) {
           console.error('Error during initialization:', error);

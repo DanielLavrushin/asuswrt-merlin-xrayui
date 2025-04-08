@@ -1,14 +1,14 @@
 import { XrayHeaderObject, XrayParsedUrlObject, XrayXmuxObject } from './CommonObjects';
 import { ITransportNetwork } from './Interfaces';
 
-class XrayStreamTcpSettingsObject implements ITransportNetwork {
+export class XrayStreamTcpSettingsObject implements ITransportNetwork {
   public acceptProxyProtocol? = false;
   normalize = () => {
     this.acceptProxyProtocol = !this.acceptProxyProtocol ? undefined : this.acceptProxyProtocol;
   };
 }
 
-class XrayStreamKcpSettingsObject implements ITransportNetwork {
+export class XrayStreamKcpSettingsObject implements ITransportNetwork {
   static headerTypes = ['none', 'srtp', 'utp', 'wechat-video', 'dtls', 'wireguard'];
 
   public mtu? = 1350;
@@ -44,7 +44,7 @@ class XrayStreamKcpSettingsObject implements ITransportNetwork {
   };
 }
 
-class XrayStreamWsSettingsObject implements ITransportNetwork {
+export class XrayStreamWsSettingsObject implements ITransportNetwork {
   public acceptProxyProtocol = false;
   public path = '/';
   public host?: string;
@@ -59,7 +59,7 @@ class XrayStreamWsSettingsObject implements ITransportNetwork {
   normalize = () => void 0;
 }
 
-class XrayStreamHttpSettingsObject implements ITransportNetwork {
+export class XrayStreamHttpSettingsObject implements ITransportNetwork {
   public host?: string[];
   public path = '/';
   public headers = {};
@@ -69,7 +69,7 @@ class XrayStreamHttpSettingsObject implements ITransportNetwork {
   normalize = () => void 0;
 }
 
-class XrayStreamGrpcSettingsObject implements ITransportNetwork {
+export class XrayStreamGrpcSettingsObject implements ITransportNetwork {
   public serviceName = '';
   public multiMode = false;
   public idle_timeout = 60;
@@ -79,7 +79,7 @@ class XrayStreamGrpcSettingsObject implements ITransportNetwork {
   normalize = () => void 0;
 }
 
-class XrayStreamHttpUpgradeSettingsObject implements ITransportNetwork {
+export class XrayStreamHttpUpgradeSettingsObject implements ITransportNetwork {
   public acceptProxyProtocol = false;
   public path = '/';
   public host?: string;
@@ -87,7 +87,7 @@ class XrayStreamHttpUpgradeSettingsObject implements ITransportNetwork {
   normalize = () => void 0;
 }
 
-class XrayStreamSplitHttpSettingsObject implements ITransportNetwork {
+export class XrayStreamSplitHttpSettingsObject implements ITransportNetwork {
   public path = '/';
   public host?: string;
   public headers = {};
@@ -98,5 +98,3 @@ class XrayStreamSplitHttpSettingsObject implements ITransportNetwork {
   public xmux: XrayXmuxObject = new XrayXmuxObject();
   normalize = () => void 0;
 }
-
-export { XrayStreamTcpSettingsObject, XrayStreamKcpSettingsObject, XrayStreamWsSettingsObject, XrayStreamHttpSettingsObject, XrayStreamSplitHttpSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject };

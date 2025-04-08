@@ -1,29 +1,27 @@
-interface IProtocolType {
+export interface IProtocolType {
   normalize?: () => void;
   //eslint-disable-next-line
   isTargetAddress?: (address: string) => boolean;
   getUserNames?: () => string[];
 }
 
-interface ITransportNetwork {
+export interface ITransportNetwork {
   normalize?: () => void;
 }
-interface ISecurityProtocol {
-  normalize?: () => void;
-}
-
-interface IClient {
+export interface ISecurityProtocol {
   normalize?: () => void;
 }
 
-interface IXrayServer<TClient> {
+export interface IClient {
+  normalize?: () => void;
+}
+
+export interface IXrayServer<TClient> {
   users?: TClient[] | undefined;
 }
 
-interface XrayRouterDeviceOnline {
+export interface XrayRouterDeviceOnline {
   name: string;
   ip: string;
   mac: string;
 }
-
-export { IXrayServer, XrayRouterDeviceOnline, ISecurityProtocol, IProtocolType, ITransportNetwork, IClient };

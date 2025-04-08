@@ -4,7 +4,7 @@ import { XrayAllocateObject, XraySniffingObject, XrayStreamSettingsObject } from
 import { XrayVlessClientObject, XrayVmessClientObject, XrayHttpClientObject, XrayShadowsocksClientObject, XrayTrojanClientObject, XraySocksClientObject, XrayWireguardClientObject } from './ClientsObjects';
 import { plainToInstance } from 'class-transformer';
 
-class XrayInboundObject<TProxy extends IProtocolType> {
+export class XrayInboundObject<TProxy extends IProtocolType> {
   public protocol!: string;
   public listen? = '0.0.0.0';
   public port!: number | string;
@@ -46,7 +46,7 @@ class XrayInboundObject<TProxy extends IProtocolType> {
   };
 }
 
-class XrayDokodemoDoorInboundObject implements IProtocolType {
+export class XrayDokodemoDoorInboundObject implements IProtocolType {
   public address?: string;
   public port?: number;
   public network?: string = 'tcp';
@@ -59,7 +59,7 @@ class XrayDokodemoDoorInboundObject implements IProtocolType {
     this.port = this.port && this.port > 0 ? this.port : undefined;
   };
 }
-class XrayVlessInboundObject implements IProtocolType {
+export class XrayVlessInboundObject implements IProtocolType {
   public decryption = 'none';
   public clients: XrayVlessClientObject[] = [];
   normalize = () => void 0;
@@ -68,7 +68,7 @@ class XrayVlessInboundObject implements IProtocolType {
   };
 }
 
-class XrayVmessInboundObject implements IProtocolType {
+export class XrayVmessInboundObject implements IProtocolType {
   public clients: XrayVmessClientObject[] = [];
   normalize = () => void 0;
   getUserNames = (): string[] => {
@@ -76,7 +76,7 @@ class XrayVmessInboundObject implements IProtocolType {
   };
 }
 
-class XrayHttpInboundObject implements IProtocolType {
+export class XrayHttpInboundObject implements IProtocolType {
   public allowTransparent? = false;
   public clients: XrayHttpClientObject[] = [];
   normalize = () => {
@@ -88,7 +88,7 @@ class XrayHttpInboundObject implements IProtocolType {
   };
 }
 
-class XrayShadowsocksInboundObject implements IProtocolType {
+export class XrayShadowsocksInboundObject implements IProtocolType {
   public network? = 'tcp';
   public clients: XrayShadowsocksClientObject[] = [];
   normalize = () => {
@@ -99,7 +99,7 @@ class XrayShadowsocksInboundObject implements IProtocolType {
   };
 }
 
-class XrayTrojanInboundObject implements IProtocolType {
+export class XrayTrojanInboundObject implements IProtocolType {
   public clients: XrayTrojanClientObject[] = [];
   normalize = () => void 0;
   getUserNames = (): string[] => {
@@ -107,7 +107,7 @@ class XrayTrojanInboundObject implements IProtocolType {
   };
 }
 
-class XraySocksInboundObject implements IProtocolType {
+export class XraySocksInboundObject implements IProtocolType {
   public ip? = '127.0.0.1';
   public auth? = 'noauth';
   public accounts?: XraySocksClientObject[] = [];
@@ -123,12 +123,10 @@ class XraySocksInboundObject implements IProtocolType {
   };
 }
 
-class XrayWireguardInboundObject implements IProtocolType {
+export class XrayWireguardInboundObject implements IProtocolType {
   public secretKey!: string;
   public kernelMode = true;
   public mtu = 1420;
   public peers: XrayWireguardClientObject[] = [];
   normalize = () => void 0;
 }
-
-export { XrayInboundObject, XrayWireguardInboundObject, XraySocksInboundObject, XrayTrojanInboundObject, XrayShadowsocksInboundObject, XrayHttpInboundObject, XrayVmessInboundObject, XrayVlessInboundObject, XrayDokodemoDoorInboundObject };

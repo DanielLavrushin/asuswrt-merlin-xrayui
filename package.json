@@ -17,7 +17,6 @@
     "jsqr": "^1.4.0",
     "markdown-it": "^14.1.0",
     "qrcode.vue": "^3.6.0",
-    "ssh2-sftp-client": "^12.0.0",
     "tslib": "^2.8.1",
     "version-clean": "^1.9.0",
     "version-compare": "^3.11.0",
@@ -36,6 +35,7 @@
     "sass": "^1.86.0",
     "typescript": "^5.6.3",
     "vite": "^6.2.3",
-    "vite-plugin-css-injected-by-js": "^3.5.2"
+    "vite-plugin-css-injected-by-js": "^3.5.2",
+    "ssh2-sftp-client": "^12.0.0"
   }
 }

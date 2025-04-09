@@ -98,6 +98,7 @@ A: you can refference this [wiki guide](https://github.com/DanielLavrushin/asusw
 
 # Contributing
 
+This article [fully describe how you can contrubte](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/wiki/Developer-Onboarding-for-XrayUI-(Asuswrt%E2%80%90Merlin)).
 If you have any problems with the XRAYUI, feel free to share them by opening an issue.
 You can also suggest/request a new feature to be created or added. Contributions are welcome and encouraged.
 

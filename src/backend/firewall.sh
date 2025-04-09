@@ -161,7 +161,7 @@ configure_firewall_client_direct() {
 
     echo "$inbounds" | while IFS= read -r inbound; do
         dokodemo_port=$(echo "$inbound" | jq -r '.port // empty')
-        protocols=$(echo "$inbound" | jq -r '.settings.network // ""')
+        protocols=$(echo "$inbound" | jq -r '.settings.network // "tcp"')
 
         if [ -z "$dokodemo_port" ]; then
             printlog true "Direct inbound missing valid port. Skipping." $CWARN
@@ -353,7 +353,7 @@ configure_firewall_client_tproxy() {
 
     echo "$inbounds" | while IFS= read -r inbound; do
         dokodemo_port=$(echo "$inbound" | jq -r '.port // empty')
-        protocols=$(echo "$inbound" | jq -r '.settings.network // ""')
+        protocols=$(echo "$inbound" | jq -r '.settings.network // "tcp"')
 
         if [ -z "$dokodemo_port" ]; then
             printlog true "TPROXY inbound missing valid port. Skipping." $CWARN

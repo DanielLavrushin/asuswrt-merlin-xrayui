@@ -1,5 +1,12 @@
 # XRAYUI Changelog
 
+## [0.42.9] - 2025-04-09
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- FIXED: potential fix to correctly remount the plugin after a router reboot.
+- FIXED: Resolved bug where the default inbound configuration value `tcp` was ignored when applying firewall rules.
+
 ## [0.42.8] - 2025-04-08
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

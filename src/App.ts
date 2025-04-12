@@ -11,6 +11,12 @@ import de from './translations/de.json';
 import ru from './translations/ru.json';
 import uk from './translations/uk.json';
 
+// Vuetify
+import 'vuetify/styles';
+import { createVuetify } from 'vuetify';
+import * as components from 'vuetify/components';
+import * as directives from 'vuetify/directives';
+
 window.hint = (message: string) => {
   window.overlib(message);
 };
@@ -106,5 +112,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  createApp(App).use(i18n).mount('#xrayui-app');
+  const vuetify = createVuetify({
+    components,
+    directives
+  });
+
+  createApp(App).use(i18n).use(vuetify).mount('#xrayui-app');
 });

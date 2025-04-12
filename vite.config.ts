@@ -59,6 +59,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     build: {
+      transpile: ['vuetify'],
       minify: !isProduction,
       outDir: 'dist',
       rollupOptions: {

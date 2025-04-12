@@ -1,4 +1,23 @@
 <template>
+  <v-container fluid no-gutters class="xray-container pa-0">
+    <v-row no-gutters>
+      <v-col class="xray-row-main pa-2" lg="4">{{ $t('com.ClientStatus.connection_status') }}</v-col>
+      <v-col class="xray-row-second pa-2" lg="8">
+        <span class="label" :class="connectionClasses" v-text="statusLabel"></span>
+        <span v-if="!isRunning">
+          <a class="button_gen button_gen_small button_info" href="#" @click.prevent="testConfig()" title="try to retrieve a server-side error">!</a>
+        </span>
+        <span :class="[' label', 'flag', 'fi', contryCodeClass]"></span>
+        <span class="row-buttons">
+          <a v-if="!isRunning" class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(connect)">{{ $t('labels.start') }} </a>
+          <a v-if="isRunning" class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(reconnect)">{{ $t('labels.restart') }} </a>
+          <a v-if="isRunning" class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(stop)">{{ $t('labels.stop') }}</a>
+          <input class="button_gen button_gen_small" type="button" :value="$t('labels.show_config')" @click.prevent="show_config_modal()" />
+        </span>
+        <config-modal ref="configModal" />
+      </v-col>
+    </v-row>
+  </v-container>
   <table width="100%" bordercolor="#6b8fa3" class="FormTable">
     <thead>
       <tr>
@@ -58,7 +77,6 @@
   import Profiles from './Profiles.vue';
   import Backup from './Backup.vue';
   import { XrayProtocol } from '@/modules/Options';
-
   class IpApiResponse {
     public status?: string;
     public countryCode?: string;
@@ -197,6 +215,13 @@
   });
 </script>
 <style scoped>
+  .xray-container {
+    background-color: #4d595d;
+    .xray-row-main {
+      background-color: #2f3a3e;
+    }
+  }
+
   .FormTable td span.label.flag {
     margin-left: 5px;
   }

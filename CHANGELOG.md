@@ -5,6 +5,7 @@
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - FIXED: Added missing `DNS` tag to the inbounds list in the routing rules form to ensure proper configuration.
+- IMPROVED: Refactored the `service_event` case statement in `xrayui` to use a more structured and readable format.
 
 ## [0.42.9] - 2025-04-09
 

@@ -69,7 +69,7 @@
           <geodat-modal ref="geodatModal"></geodat-modal>
           <input class="button_gen button_gen_small" type="button" :value="$t('com.Routing.update_community_files')" @click.prevent="update_geodat()" />
           <span class="hint-small" v-if="daysPassed > 1"> updated {{ daysPassed }} days ago</span>
-          <span class="hint-color"> [<a href="https://github.com/Loyalsoldier/v2ray-rules-dat/releases" target="_blank">source</a>, <a href="https://github.com/v2fly/domain-list-community/tree/master/data" target="_blank">geosite</a>] </span>
+          <span class="hint-color"> [<a href="https://github.com/v2fly/domain-list-community/tree/master/data" target="_blank">geosite</a>] </span>
         </td>
       </tr>
       <!-- <tr>

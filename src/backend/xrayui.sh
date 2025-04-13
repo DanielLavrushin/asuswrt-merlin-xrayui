@@ -62,7 +62,8 @@ backup)
     backup_configuration
     ;;
 service_event)
-    if [ "$2" = "webapp" ]; then
+    case "$2" in
+    webapp)
         case "$3" in
         start)
             webapp_start
@@ -76,11 +77,8 @@ service_event)
         *) ;;
         esac
         exit 0
-    elif [ "$2" = "cleanloadingprogress" ]; then
-        remove_loading_progress
-    elif [ "$2" = "testconfig" ]; then
-        test_xray_config
-    elif [ "$2" = "startup" ]; then
+        ;;
+    startup)
         get_xray_proc
         if [ "$(am_settings_get xray_startup)" = "y" ]; then
             sleep 60 # wait for network and iptable rules to be ready
@@ -91,28 +89,57 @@ service_event)
         else
             printlog true "Xray service is disabled by XRAYUI. Xray service is not running."
         fi
-    elif [ "$2" = "update" ]; then
+        ;;
+    cleanloadingprogress)
+        remove_loading_progress
+        ;;
+    testconfig)
+        test_xray_config
+        ;;
+    update)
         update
-    elif [ "$2" = "geodata" ]; then
-        if [ "$3" = "communityupdate" ]; then
+        ;;
+    geodata)
+        case "$3" in
+        communityupdate)
             update_community_geodata
             update_loading_progress "Community geodata files updated successfully." 100
-        elif [ "$3" = "customtagfiles" ]; then
+            ;;
+        customtagfiles)
             get_custom_geodata_tagfiles
             update_loading_progress "Custom tagfiles retrieved successfully." 100
-        elif [ "$3" = "customrecompileall" ]; then
+            ;;
+        customrecompileall)
             geodata_recompile_all
             update_loading_progress "Geodata recompiled successfully." 100
-        elif [ "$3" = "customrecompile" ]; then
+            ;;
+        customrecompile)
             geodata_recompile
             update_loading_progress "Geodata recompiled successfully." 100
-        elif [ "$3" = "customdeletetag" ]; then
+            ;;
+        customdeletetag)
             geodata_delete_tag
             update_loading_progress "Geodata tag deleted successfully." 100
-        fi
-    elif [ "$2" = "connectedclients" ]; then
+            ;;
+        esac
+        ;;
+    connectedclients)
         get_connected_clients
-    elif [ "$2" = "configuration" ]; then
+        ;;
+    regenerate)
+        case "$3" in
+        realitykeys)
+            regenerate_reality_keys
+            ;;
+        wgkeys)
+            regenerate_wireguard_keys
+            ;;
+        sslcertificates)
+            regenerate_ssl_certificates
+            ;;
+        esac
+        ;;
+    configuration)
         case "$3" in
         apply)
             apply_config
@@ -158,19 +185,8 @@ service_event)
             backup_clearall
             ;;
         esac
-    elif [ "$2" = "regenerate" ]; then
-        case "$3" in
-        realitykeys)
-            regenerate_reality_keys
-            ;;
-        wgkeys)
-            regenerate_wireguard_keys
-            ;;
-        sslcertificates)
-            regenerate_ssl_certificates
-            ;;
-        esac
-    elif [ "$2" = "firewall" ]; then
+        ;;
+    firewall)
         case "$3" in
         configure)
             configure_firewall
@@ -179,7 +195,8 @@ service_event)
             cleanup_firewall
             ;;
         esac
-    elif [ "$2" = "serverstatus" ]; then
+        ;;
+    serverstatus)
         case "$3" in
         start)
             update_loading_progress "Starting Xray service..." 0
@@ -200,7 +217,9 @@ service_event)
             exit 1
             ;;
         esac
-    fi
+        ;;
+    *) ;;
+    esac
     exit 0
     ;;
 *)

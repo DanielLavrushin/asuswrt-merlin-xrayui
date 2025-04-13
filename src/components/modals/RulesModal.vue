@@ -355,6 +355,10 @@
           ...reverse_bridges
         ];
 
+        if (xrayConfig.dns?.tag?.length) {
+          inbounds.value.push(xrayConfig.dns.tag);
+        }
+
         outbounds.value = [
           ...xrayConfig.outbounds
             .filter((o) => !o.isSystem())

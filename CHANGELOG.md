@@ -1,5 +1,11 @@
 # XRAYUI Changelog
 
+## [0.4x.x] - 2025-04-xx
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- FIXED: `DNS` Tag is missing from the inbounds list in the routing rules form.
+
 ## [0.42.9] - 2025-04-09
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

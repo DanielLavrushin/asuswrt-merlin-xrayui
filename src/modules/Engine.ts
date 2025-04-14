@@ -308,15 +308,18 @@ class Engine {
     });
   }
 
-  async loadXrayConfig(): Promise<XrayObject | null> {
+  async loadXrayConfig(config?: XrayObject): Promise<XrayObject | null> {
     try {
-      const response = await axios.get<XrayObject>('/ext/xrayui/xray-config.json');
-      this.xrayConfig = plainToInstance(XrayObject, response.data);
+      if (!config) {
+        const response = await axios.get<XrayObject>('/ext/xrayui/xray-config.json');
+        config = plainToInstance(XrayObject, response.data);
+      }
+      this.xrayConfig = config;
       if (this.xrayConfig.log) {
-        this.xrayConfig.log = plainToInstance(XrayLogObject, response.data.log);
+        this.xrayConfig.log = plainToInstance(XrayLogObject, config.log);
       }
 
-      this.xrayConfig.reverse = plainToInstance(XrayReverseObject, response.data.reverse);
+      this.xrayConfig.reverse = plainToInstance(XrayReverseObject, config.reverse);
       if (this.xrayConfig.reverse?.bridges) {
         this.xrayConfig.reverse.bridges.forEach((item, index) => {
           if (this.xrayConfig.reverse?.bridges) {
@@ -432,8 +435,8 @@ class Engine {
         this.xrayConfig.outbounds[index] = proxy;
       });
 
-      if (response.data.routing) {
-        this.xrayConfig.routing = plainToInstance(XrayRoutingObject, response.data.routing);
+      if (config.routing) {
+        this.xrayConfig.routing = plainToInstance(XrayRoutingObject, config.routing);
 
         if (this.xrayConfig.routing.policies) {
           this.xrayConfig.routing.policies.forEach((policy, index) => {
@@ -459,8 +462,8 @@ class Engine {
         }
       }
 
-      if (response.data.dns) {
-        this.xrayConfig.dns = plainToInstance(XrayDnsObject, response.data.dns);
+      if (config.dns) {
+        this.xrayConfig.dns = plainToInstance(XrayDnsObject, config.dns);
         if (this.xrayConfig.dns?.servers) {
           const rulesMap = new Map<number, XrayRoutingRuleObject>();
           [...(this.xrayConfig.routing?.rules ?? []), ...(this.xrayConfig.routing?.disabled_rules ?? [])].forEach((rule) => {

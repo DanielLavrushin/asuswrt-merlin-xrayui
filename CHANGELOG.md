@@ -8,6 +8,8 @@
 - FIXED: `General Settings` were not updating the current profile.
 - FIXED: Unable to enable logging when using the default import.
 - ADDED: Feature to associate `DNS` servers with specific routing rules (available in `Advanced mode`) to simplify domain management.
+- ADDED: `Import JSON` – Use this option when you have a client configuration file that you want to import into the router. The configuration will be automatically adjusted for compatibility with your router.
+- ADDED: `Restore from File` (Import) – Use this option to upload a previously working configuration file as is, without modifications.
 - IMPROVED: Refactored the `service_event` case statement in xrayui for better structure and readability.
 
 ## [0.42.9] - 2025-04-09

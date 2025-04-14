@@ -260,7 +260,14 @@
             }
             proxy = parser.getOutbound();
           } else if (protocolJson.value) {
-            const jsonConfig = plainToInstance(XrayObject, JSON.parse(protocolJson.value));
+            let jsonConfig;
+            try {
+              jsonConfig = plainToInstance(XrayObject, JSON.parse(protocolJson.value));
+            } catch (e) {
+              alert('Invalid JSON format. Please check the structure.');
+              console.error('Failed to parse JSON:', e);
+              return;
+            }
 
             if (jsonConfig?.outbounds) {
               for (const outbound of jsonConfig.outbounds) {
@@ -302,7 +309,16 @@
               return;
             }
           } else if (protocolFile.value) {
-            await engine.loadXrayConfig(JSON.parse(protocolFile.value));
+            let jsonConfig;
+            try {
+              jsonConfig = plainToInstance(XrayObject, JSON.parse(protocolFile.value));
+            } catch (e) {
+              alert('Invalid JSON format. Please check the structure.');
+              console.error('Failed to parse JSON:', e);
+              return;
+            }
+
+            await engine.loadXrayConfig(jsonConfig);
             importModal.value.close();
             alert(`Configuration imported successfully`);
             return;

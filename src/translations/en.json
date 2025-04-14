@@ -80,7 +80,16 @@
       "hint_proxy_uri": "You can paste here the URL of the protocol here. Usually they start with `vless://` or `vmess://`.",
       "hint_complete_setup": "If you select this option, xrayui will overwrite your current configuration with the most suitabledefault configuration for the imported protocol.<hr />A default Routing rule will be created to test the proxy outbound connection. After importing and applying the configuration, you can try to open the `https://ip-api.com/`. You should see the IP of the server you are connected to.<hr />After that, it is recommended to set up your your own traffic routing rules.",
       "hint_unblock": "  Select the services you want to unblock. This will automatically create a `routing rule` that channels their traffic through the proxy.<hr />It's recommended to only choose services that are blocked in your region. You'll be able to add, update, or delete these rules later in the `Routing` section.",
-      "hint_dont_break": "Check this box if you have IoT devices on your router network, like `Smart TVs`, `Xbox`, `PlayStation` or other devices you prefer not to affect with X-RAY. <hr />This option limits the rerouted traffic to X-RAY via your router, reducing the risk of disconnecting these devices. Later You can adjust this option in the Routing section (`Ports Bypass/Redirect Policy`).<hr />If you don't have any IoT devices, it's best to leave this option unchecked."
+      "hint_dont_break": "Check this box if you have IoT devices on your router network, like `Smart TVs`, `Xbox`, `PlayStation` or other devices you prefer not to affect with X-RAY. <hr />This option limits the rerouted traffic to X-RAY via your router, reducing the risk of disconnecting these devices. Later You can adjust this option in the Routing section (`Ports Bypass/Redirect Policy`).<hr />If you don't have any IoT devices, it's best to leave this option unchecked.",
+      "label_import_type": "Import type",
+      "opt_qr": "QR code",
+      "opt_url": "URL",
+      "opt_json": "JSON",
+      "opt_file": "Restore from File",
+      "label_proxy_json": "Import JSON",
+      "label_proxy_file": "Restore from File",
+      "hint_proxy_json": "You can paste the contents of a JSON file here. XRAYUI will modify the configuration to ensure compatibility with the router.",
+      "hint_proxy_file": "Select the JSON file you want to import.<hr/> Use this option only if you are re-uploading a previously working configuration and are certain it works on your router. <hr/> If you want to ensure compatibility with your router, please use the `Import JSON` option instead."
     },
     "ConfigModal": {
       "modal_title": "Show XRAY configuration file",

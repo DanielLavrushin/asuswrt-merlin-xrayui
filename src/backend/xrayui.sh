@@ -184,6 +184,9 @@ service_event)
         backupclearall)
             backup_clearall
             ;;
+        backuprestore)
+            backup_restore_configuration
+            ;;
         esac
         ;;
     firewall)

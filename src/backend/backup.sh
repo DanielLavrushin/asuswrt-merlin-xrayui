@@ -98,3 +98,43 @@ backup_remount_to_web() {
     printlog true "All symlinks created successfully in '$web_backup'." "$CSUC"
     return 0
 }
+
+backup_restore_configuration() {
+
+    printlog true "Starting restore configuration..." "$CINFO"
+    update_loading_progress "Restore configuration..."
+
+    load_xrayui_config
+
+    local share_backup="$ADDON_SHARE_DIR/backup"
+
+    local payload=$(reconstruct_payload)
+    local backup_file="$share_backup"/$(echo "$payload" | jq -r '.file')
+
+    printlog true "Backup file: $backup_file" "$CINFO"
+
+    if [ -z "$backup_file" ]; then
+        printlog true "No backup file specified. Please provide a .tar.gz file to restore." "$CERR"
+        return 1
+    fi
+
+    if [ ! -f "$backup_file" ]; then
+        printlog true "Backup file not found: $backup_file" "$CERR"
+        return 1
+    fi
+
+    printlog true "Starting restore from backup: $backup_file" "$CINFO"
+    update_loading_progress "Restoring configuration from $backup_file..."
+
+    tar -xzf "$backup_file" -C /
+    if [ $? -ne 0 ]; then
+        printlog true "Failed to extract backup archive $backup_file." "$CERR"
+        return 1
+    fi
+
+    backup_remount_to_web
+
+    printlog true "Restore completed successfully from $backup_file." "$CSUC"
+    update_loading_progress "Restore complete." 100
+
+}

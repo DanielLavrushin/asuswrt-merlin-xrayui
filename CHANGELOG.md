@@ -1,6 +1,6 @@
 # XRAYUI Changelog
 
-## [0.4x.x] - 2025-04-xx
+## [0.43.0] - 2025-04-14
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
@@ -10,7 +10,9 @@
 - ADDED: Feature to associate `DNS` servers with specific routing rules (available in `Advanced mode`) to simplify domain management.
 - ADDED: `Import JSON` – Use this option when you have a client configuration file that you want to import into the router. The configuration will be automatically adjusted for compatibility with your router.
 - ADDED: `Restore from File` (Import) – Use this option to upload a previously working configuration file as is, without modifications.
+- ADDED: Restoring from a previously created backup is now supported.
 - IMPROVED: Refactored the `service_event` case statement in xrayui for better structure and readability.
+- IMPROVED: Refactored `Backup Manager`.
 
 ## [0.42.9] - 2025-04-09
 

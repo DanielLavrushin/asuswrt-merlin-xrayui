@@ -103,7 +103,8 @@ enum SubmtActions {
   changeProfile = 'xrayui_configuration_changeprofile',
   deleteProfile = 'xrayui_configuration_deleteprofile',
   createBackup = 'xrayui_configuration_backup',
-  clearBackup = 'xrayui_configuration_backupclearall'
+  clearBackup = 'xrayui_configuration_backupclearall',
+  restoreBackup = 'xrayui_configuration_backuprestore'
 }
 
 class Engine {

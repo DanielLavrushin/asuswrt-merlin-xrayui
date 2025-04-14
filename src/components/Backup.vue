@@ -5,13 +5,30 @@
       <hint v-html="$t('com.Backup.hint')"></hint>
     </th>
     <td>
-      <select v-model="backup" class="input_option" @change="download()" v-if="backups.length">
-        <option v-for="p in backups" :value="p" :key="p">{{ p }}</option>
-      </select>
       <span class="row-buttons">
-        <input class="button_gen button_gen_small" type="button" :value="$t('com.Backup.backup')" @click.prevent="create_backup()" />
-        <input class="button_gen button_gen_small" type="button" :value="$t('com.Backup.clear')" @click.prevent="clear()" v-if="backups.length" />
+        <input class="button_gen button_gen_small" type="button" :value="$t('com.Backup.backup')" @click.prevent="show_backup_modal()" />
       </span>
+      <modal ref="modal" :title="$t('com.Backup.manager')" width="500">
+        <table class="FormTable modal-form-table">
+          <tbody>
+            <tr v-for="b in backups" :key="b">
+              <td>
+                {{ b }}
+              </td>
+              <td>
+                <span class="row-buttons">
+                  <input class="button_gen button_gen_small" type="button" :value="$t('com.Backup.download')" @click.prevent="download(b)" />
+                  <input class="button_gen button_gen_small" type="button" :value="$t('com.Backup.restore')" @click.prevent="restore(b)" />
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <template v-slot:footer>
+          <input class="button_gen button_gen_small" type="button" :value="$t('com.Backup.backup')" @click.prevent="create_backup()" />
+          <input class="button_gen button_gen_small" type="button" :value="$t('com.Backup.clear')" @click.prevent="clear()" v-if="backups.length" />
+        </template>
+      </modal>
     </td>
   </tr>
 </template>
@@ -31,16 +48,22 @@
     props: {},
     setup(props) {
       const { t } = useI18n();
-      const backup = ref<string>('');
       const modal = ref();
       const backups = ref<string[]>([]);
       const uiResponse = inject<Ref<EngineResponseConfig>>('uiResponse')!;
 
-      const download = () => {
-        if (backup.value) {
-          const url = `/ext/xrayui/backup/${backup.value}`;
+      const restore = async (backup: string) => {
+        if (!confirm(t('com.Backup.restore_confirm'))) return;
+
+        await engine.executeWithLoadingProgress(async () => {
+          await engine.submit(SubmtActions.restoreBackup, { file: backup }, 5000);
+        });
+      };
+      const download = (backup: string) => {
+        if (backup) {
+          const url = `/ext/xrayui/backup/${backup}`;
           window.location.href = url;
-          backup.value = '';
+          backup = '';
         }
       };
 
@@ -56,24 +79,20 @@
           await engine.submit(SubmtActions.clearBackup, null, 2000);
         });
       };
-      watch(
-        () => uiResponse?.value,
-        (newVal) => {
-          if (newVal) {
-            if (newVal?.xray) {
-              backups.value = newVal.xray.backups;
-            }
-          }
-        }
-      );
+
+      const show_backup_modal = () => {
+        backups.value = uiResponse.value?.xray?.backups || [];
+        modal.value.show();
+      };
 
       return {
-        backup,
         backups,
         modal,
         create_backup,
         clear,
-        download
+        restore,
+        download,
+        show_backup_modal
       };
     }
   });

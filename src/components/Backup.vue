@@ -63,7 +63,6 @@
         if (backup) {
           const url = `/ext/xrayui/backup/${backup}`;
           window.location.href = url;
-          backup = '';
         }
       };
 

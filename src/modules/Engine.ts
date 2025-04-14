@@ -461,17 +461,17 @@ class Engine {
 
       if (response.data.dns) {
         this.xrayConfig.dns = plainToInstance(XrayDnsObject, response.data.dns);
-        if (this.xrayConfig?.dns?.servers) {
+        if (this.xrayConfig.dns?.servers) {
           const rulesMap = new Map<number, XrayRoutingRuleObject>();
           [...(this.xrayConfig.routing?.rules ?? []), ...(this.xrayConfig.routing?.disabled_rules ?? [])].forEach((rule) => {
             rulesMap.set(rule.idx, rule);
           });
           this.xrayConfig.dns.servers.forEach((server, index) => {
             if (this.xrayConfig.dns?.servers) {
-              this.xrayConfig.dns.servers[index] = typeof server === 'string' ? (server as string) : plainToInstance(XrayDnsServerObject, server);
+              this.xrayConfig.dns.servers[index] = typeof server === 'string' ? server : plainToInstance(XrayDnsServerObject, server);
               server = this.xrayConfig.dns.servers[index];
               if (server instanceof XrayDnsServerObject) {
-                const serverObj = server as XrayDnsServerObject;
+                const serverObj = server;
                 if (serverObj.rules && serverObj.rules.length > 0) {
                   serverObj.domains = [];
                   const serverRules = Array<XrayRoutingRuleObject>();

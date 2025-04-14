@@ -1,4 +1,9 @@
 /* eslint-disable  security/detect-non-literal-fs-filename */
+/* eslint-disable  @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable  @typescript-eslint/no-unsafe-call */
+/* eslint-disable  @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable  @typescript-eslint/no-unsafe-return */
+/* eslint-disable  no-explicit-any */
 
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';

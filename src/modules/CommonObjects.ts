@@ -203,16 +203,17 @@ export class XrayDnsObject {
     this.disableCache = !this.disableCache ? undefined : this.disableCache;
     this.disableFallback = !this.disableFallback ? undefined : this.disableFallback;
     this.disableFallbackIfMatch = !this.disableFallbackIfMatch ? undefined : this.disableFallbackIfMatch;
-    this.servers = !this.servers || this.servers?.length == 0 ? undefined : this.servers;
     this.hosts = !this.hosts || Object.keys(this.hosts).length == 0 ? undefined : this.hosts;
 
     if (this.servers && this.servers.length > 0) {
       this.servers.forEach((server) => {
         if (server instanceof XrayDnsServerObject) {
-          server.normalize && server.normalize();
+          server.normalize?.();
         }
       });
     }
+
+    this.servers = !this.servers || this.servers.length == 0 ? undefined : this.servers;
 
     return this;
   }

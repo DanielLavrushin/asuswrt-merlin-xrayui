@@ -9,7 +9,7 @@
 import axios, { AxiosError } from 'axios';
 import { xrayConfig, XrayObject } from './XrayConfig';
 import { XrayBlackholeOutboundObject, XrayLoopbackOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, XrayTrojanOutboundObject, XrayOutboundObject, XraySocksOutboundObject, XrayVmessOutboundObject, XrayVlessOutboundObject, XrayHttpOutboundObject, XrayShadowsocksOutboundObject } from './OutboundObjects';
-import { XrayDnsObject, XrayStreamSettingsObject, XrayRoutingObject, XrayRoutingRuleObject, XraySniffingObject, XrayRoutingPolicy, XrayAllocateObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject, XraySockoptObject, XrayLogObject, XrayStreamTlsCertificateObject, XrayReverseObject, XrayReverseItem } from './CommonObjects';
+import { XrayDnsObject, XrayStreamSettingsObject, XrayRoutingObject, XrayRoutingRuleObject, XraySniffingObject, XrayRoutingPolicy, XrayAllocateObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject, XraySockoptObject, XrayLogObject, XrayStreamTlsCertificateObject, XrayReverseObject, XrayReverseItem, XrayDnsServerObject } from './CommonObjects';
 import { plainToInstance } from 'class-transformer';
 import { XrayDokodemoDoorInboundObject, XrayHttpInboundObject, XrayInboundObject, XrayShadowsocksInboundObject, XraySocksInboundObject, XrayTrojanInboundObject, XrayVlessInboundObject, XrayVmessInboundObject, XrayWireguardInboundObject } from './InboundObjects';
 import { XrayStreamHttpSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamKcpSettingsObject, XrayStreamTcpSettingsObject, XrayStreamWsSettingsObject } from './TransportObjects';
@@ -432,10 +432,6 @@ class Engine {
         this.xrayConfig.outbounds[index] = proxy;
       });
 
-      if (response.data.dns) {
-        this.xrayConfig.dns = plainToInstance(XrayDnsObject, response.data.dns);
-      }
-
       if (response.data.routing) {
         this.xrayConfig.routing = plainToInstance(XrayRoutingObject, response.data.routing);
 
@@ -458,6 +454,38 @@ class Engine {
           this.xrayConfig.routing.disabled_rules.forEach((rule, index) => {
             if (this.xrayConfig.routing?.disabled_rules) {
               this.xrayConfig.routing.disabled_rules[index] = plainToInstance(XrayRoutingRuleObject, rule);
+            }
+          });
+        }
+      }
+
+      if (response.data.dns) {
+        this.xrayConfig.dns = plainToInstance(XrayDnsObject, response.data.dns);
+        if (this.xrayConfig.dns?.servers) {
+          const rulesMap = new Map<number, XrayRoutingRuleObject>();
+          [...(this.xrayConfig.routing?.rules ?? []), ...(this.xrayConfig.routing?.disabled_rules ?? [])].forEach((rule) => {
+            rulesMap.set(rule.idx, rule);
+          });
+          this.xrayConfig.dns.servers.forEach((server, index) => {
+            if (this.xrayConfig.dns?.servers) {
+              this.xrayConfig.dns.servers[index] = typeof server === 'string' ? server : plainToInstance(XrayDnsServerObject, server);
+              server = this.xrayConfig.dns.servers[index];
+              if (server instanceof XrayDnsServerObject) {
+                const serverObj = server;
+                if (serverObj.rules && serverObj.rules.length > 0) {
+                  serverObj.domains = [];
+                  const serverRules = Array<XrayRoutingRuleObject>();
+                  serverObj.rules.forEach((rule, index) => {
+                    if (serverObj.rules && typeof rule === 'number') {
+                      const serverRule = rulesMap.get(rule);
+                      if (serverRule) {
+                        serverRules.push(serverRule);
+                      }
+                    }
+                  });
+                  server.rules = serverRules;
+                }
+              }
             }
           });
         }

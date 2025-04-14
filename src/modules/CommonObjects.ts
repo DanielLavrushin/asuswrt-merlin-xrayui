@@ -203,8 +203,17 @@ export class XrayDnsObject {
     this.disableCache = !this.disableCache ? undefined : this.disableCache;
     this.disableFallback = !this.disableFallback ? undefined : this.disableFallback;
     this.disableFallbackIfMatch = !this.disableFallbackIfMatch ? undefined : this.disableFallbackIfMatch;
-    this.servers = this.servers?.length == 0 ? undefined : this.servers;
     this.hosts = !this.hosts || Object.keys(this.hosts).length == 0 ? undefined : this.hosts;
+
+    if (this.servers && this.servers.length > 0) {
+      this.servers.forEach((server) => {
+        if (server instanceof XrayDnsServerObject) {
+          server.normalize?.();
+        }
+      });
+    }
+
+    this.servers = !this.servers || this.servers.length == 0 ? undefined : this.servers;
 
     return this;
   }
@@ -218,11 +227,35 @@ export class XrayDnsObject {
 export class XrayDnsServerObject {
   public address!: string;
   public port?: number;
-  public domains?: string[];
-  public expectIPs?: string[];
+  public rules?: XrayRoutingRuleObject[] | number[] = [];
+  public domains?: string[] = [];
+  public expectIPs?: string[] = [];
   public skipFallback?: boolean;
   public clientIP?: string;
+
+  public normalize?(): this | undefined {
+    this.domains = this.domains?.length == 0 ? undefined : this.domains;
+    this.expectIPs = this.expectIPs?.length == 0 ? undefined : this.expectIPs;
+    this.clientIP = this.clientIP == '' ? undefined : this.clientIP;
+
+    if (this.rules && this.rules.length > 0) {
+      const ruleIdxs: number[] = [];
+      this.rules.forEach((rule) => {
+        if (rule instanceof XrayRoutingRuleObject) {
+          ruleIdxs.push(rule.idx);
+        }
+      });
+      this.rules = ruleIdxs;
+    } else {
+      this.rules = undefined;
+    }
+
+    this.rules = this.rules?.length == 0 ? undefined : this.rules;
+
+    return this;
+  }
 }
+
 export const XrayReverseItemType = {
   BRIDGE: 'bridge',
   PORTAL: 'portal'

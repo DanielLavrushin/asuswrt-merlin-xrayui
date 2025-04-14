@@ -1,11 +1,11 @@
 <template>
-  <tr v-if="profile">
+  <tr>
     <th>
       {{ $t('com.Profiles.manager') }}
       <hint v-html="$t('com.Profiles.hint')"></hint>
     </th>
     <td>
-      <select v-model="profile" class="input_option" @change="change_profile()">
+      <select v-model="profile" class="input_option" @change="change_profile()" v-if="profile">
         <option v-for="p in profiles" :value="p" :key="p">{{ p.replace('.json', '') }}</option>
       </select>
       <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click.prevent="manage()" />

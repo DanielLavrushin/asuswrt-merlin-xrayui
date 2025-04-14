@@ -169,8 +169,8 @@ export class XrayStreamRealitySettingsObject implements ISecurityProtocol {
 
 export class XrayLogObject {
   static levelOptions = ['debug', 'info', 'warning', 'error', 'none'];
-  public access?: string;
-  public error?: string;
+  public access?: string = 'none';
+  public error?: string = 'none';
   public loglevel? = 'warning';
   public dnsLog? = false;
   public maskAddress? = '';

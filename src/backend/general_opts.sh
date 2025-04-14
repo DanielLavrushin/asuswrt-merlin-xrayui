@@ -5,6 +5,8 @@ apply_general_options() {
     update_loading_progress "Applying general settings..." 0
     printlog true "Applying general settings..."
 
+    load_xrayui_config
+
     local json_content=$(cat "$XRAY_CONFIG_FILE")
 
     local genopts=$(reconstruct_payload)

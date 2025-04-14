@@ -137,8 +137,6 @@
     public github_proxy = '';
     public logs_access = false;
     public logs_error = false;
-    public logs_access_path = '';
-    public logs_error_path = '';
     public logs_dns = false;
     public logs_level = 'warning';
     public geo_ip_url = '';
@@ -235,8 +233,6 @@
         options.value.geo_ip_url = uiResponse?.value.geodata?.geoip_url ?? '';
         options.value.geo_site_url = uiResponse?.value.geodata?.geosite_url ?? '';
         options.value.github_proxy = uiResponse?.value.xray?.github_proxy ?? '';
-        options.value.logs_access_path = config.value.log?.access ?? '';
-        options.value.logs_error_path = config.value.log?.error ?? '';
         modal.value.show();
       };
 

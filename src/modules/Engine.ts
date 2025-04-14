@@ -476,7 +476,7 @@ class Engine {
                   serverObj.domains = [];
                   const serverRules = Array<XrayRoutingRuleObject>();
                   serverObj.rules.forEach((rule, index) => {
-                    if (serverObj?.rules && typeof rule === 'number') {
+                    if (serverObj.rules && typeof rule === 'number') {
                       const serverRule = rulesMap.get(rule);
                       if (serverRule) {
                         serverRules.push(serverRule);

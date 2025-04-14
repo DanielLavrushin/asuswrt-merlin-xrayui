@@ -76,6 +76,9 @@ apply_config() {
         exit 1
     fi
 
+    printlog true "Setting up DNS rules for incoming configuration..."
+    incoming_config=$(rules_to_dns_domains "$incoming_config")
+
     echo "$incoming_config" >"$temp_config"
     if [ $? -ne 0 ]; then
         printlog true "Failed to write incoming configuration to $temp_config." $CERR
@@ -132,6 +135,58 @@ apply_config() {
     update_loading_progress "Configuration applied successfully." 100
 
     exit 0
+}
+
+rules_to_dns_domains() {
+    local configcontent="$1"
+
+    local just_parsed
+    just_parsed="$(echo "$configcontent" | jq . 2>/dev/null)"
+    if [ -z "$just_parsed" ]; then
+        echo "$configcontent"
+        return 0
+    fi
+
+    local updated="$(echo "$just_parsed" | jq '
+    # Safely ensure .routing, .routing.rules, .dns, and .dns.servers exist
+    if .routing == null then .routing = {} else . end
+    | if .routing.rules == null then .routing.rules = [] else . end
+    | if .dns == null then .dns = {} else . end
+    | if .dns.servers == null then (.dns.servers = []) else . end
+
+    # Grab the array of all rules for reference
+    | .routing.rules as $allRules
+
+    # Rewrite .dns.servers
+    | .dns.servers |= (
+        map(
+          if ( .rules? | length ) > 0 then
+            .domains = (
+              [
+                .rules[] as $ruleId
+                | $allRules[]
+                | select(.idx == $ruleId)
+                | ( .domain // [] )
+              ]
+              | flatten
+            )
+            | .
+          else
+            .
+          end
+        )
+      )
+      # --- Final cleanup ---
+      | if (.dns.servers | length) == 0 then del(.dns.servers) else . end
+      | if (.dns | keys | length) == 0 then del(.dns) else . end
+    ')"
+
+    if [ -z "$updated" ]; then
+        echo "$configcontent"
+        return 0
+    fi
+
+    echo "$updated"
 }
 
 toggle_startup() {

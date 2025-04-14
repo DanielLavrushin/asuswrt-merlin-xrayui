@@ -199,7 +199,7 @@
   import { defineComponent, ref, computed } from 'vue';
   import Modal from '@main/Modal.vue';
   import xrayConfig from '@/modules/XrayConfig';
-  import { XrayRoutingRuleObject, XrayRoutingObject } from '@/modules/CommonObjects';
+  import { XrayRoutingRuleObject, XrayRoutingObject, XrayDnsServerObject } from '@/modules/CommonObjects';
   import Hint from '@main/Hint.vue';
 
   import { useI18n } from 'vue-i18n';
@@ -213,11 +213,11 @@
     props: {
       rules: {
         type: Array as () => XrayRoutingRuleObject[],
-        default: () => []
+        default: () => [] as XrayRoutingRuleObject[]
       },
       disabled_rules: {
         type: Array as () => XrayRoutingRuleObject[],
-        default: () => []
+        default: () => [] as XrayRoutingRuleObject[]
       }
     },
     setup(props, { emit }) {
@@ -249,8 +249,7 @@
         if (!confirm(t('com.RulesModal.alert_delete_rule_confirm'))) return;
 
         arr.value.splice(index, 1);
-        emit('update:rules', rules.value);
-        emit('update:disabled_rules', disabledRules.value);
+        reindexRules();
       };
 
       const addRule = () => {
@@ -314,8 +313,6 @@
 
         reindexRules();
 
-        emit('update:rules', rules.value);
-        emit('update:disabled_rules', disabledRules.value);
         modalAdd.value?.close();
       };
 
@@ -337,8 +334,6 @@
         allRules.value.splice(index, 1);
         allRules.value.splice(index - 1, 0, rule);
         reindexRules();
-        emit('update:rules', rules.value);
-        emit('update:disabled_rules', disabledRules.value);
       };
 
       const show = (onCloseAction: (rules: XrayRoutingRuleObject[], disabledRules: XrayRoutingRuleObject[]) => void) => {
@@ -405,8 +400,6 @@
         disabledRules.value = nowDisabled;
 
         reindexRules();
-        emit('update:rules', rules.value);
-        emit('update:disabled_rules', disabledRules.value);
       };
 
       const reindexRules = () => {
@@ -415,8 +408,11 @@
         });
         rules.value = rules.value.sort((a, b) => (a.idx || 0) - (b.idx || 0));
         disabledRules.value = disabledRules.value.sort((a, b) => (a.idx || 0) - (b.idx || 0));
+
+        emit('update:rules', rules.value);
+        emit('update:disabled_rules', disabledRules.value);
       };
-      // Expose to template
+
       return {
         rules,
         allRules,

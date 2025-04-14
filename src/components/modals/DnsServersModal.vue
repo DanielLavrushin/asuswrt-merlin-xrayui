@@ -18,7 +18,7 @@
               <input v-model="server.address" class="input_25_table" placeholder="address" />
             </td>
             <td>
-              <button @click.prevent="advanced()" class="button_gen button_gen_small">{{ $t('com.DnsServersModal.advanced') }}</button>
+              <button @click.prevent="show_advanced()" class="button_gen button_gen_small">{{ $t('com.DnsServersModal.advanced') }}</button>
               <button @click.prevent="addSimple()" class="button_gen button_gen_small">{{ $t('labels.add') }}</button>
             </td>
           </tr>
@@ -39,7 +39,7 @@
   </modal>
 
   <!-- Advanced Modal -->
-  <modal ref="modalAdvanced" :title="$t('com.DnsServersModal.modal_server_title')" width="500px">
+  <modal ref="modalAdvanced" :title="$t('com.DnsServersModal.modal_server_title')">
     <div class="formfontdesc">
       <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
         <thead>
@@ -77,13 +77,41 @@
           </tr>
           <tr>
             <th>
+              {{ $t('com.DnsServersModal.label_domain_rules') }}
+              <hint v-html="$t('com.DnsServersModal.hint_domain_rules')"></hint>
+            </th>
+            <td>
+              {{ server.rules?.length ?? 0 }} item(s)
+              <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click.prevent="manage_rules()" />
+              <modal ref="modalRules" :title="$t('com.DnsServersModal.modal_rules_list')" width="400">
+                <table class="FormTable modal-form-table">
+                  <tbody>
+                    <tr v-for="r in rules" :key="r.idx">
+                      <td>
+                        <input type="checkbox" v-model="server.rules" :value="r" />
+                      </td>
+                      <td>
+                        {{ r.name }}
+                        <hint v-html="r.domain?.join('<br/>')" />
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </modal>
+            </td>
+          </tr>
+          <tr>
+            <th>
               {{ $t('com.DnsServersModal.label_domains') }}
               <hint v-html="$t('com.DnsServersModal.hint_domains')"></hint>
             </th>
             <td>
-              <div class="textarea-wrapper">
+              <div class="textarea-wrapper" v-if="server.rules?.length == 0">
                 <textarea v-model="domains" rows="10"></textarea>
               </div>
+              <span class="hint-color" v-if="server.rules && server.rules.length > 0">
+                {{ $t('com.DnsServersModal.hint_domains_disabled') }}
+              </span>
             </td>
           </tr>
           <tr>
@@ -117,9 +145,11 @@
 </template>
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import { XrayDnsServerObject } from '@/modules/CommonObjects';
+  import { XrayDnsServerObject, XrayRoutingRuleObject } from '@/modules/CommonObjects';
   import Modal from '@main/Modal.vue';
   import Hint from '@main/Hint.vue';
+  import xrayConfig from '@/modules/XrayConfig';
+  import { plainToInstance } from 'class-transformer';
 
   export default defineComponent({
     name: 'DnsServersModal',
@@ -133,79 +163,104 @@
         required: true
       }
     },
-    methods: {
-      addSimple() {
-        if (!this.server?.address) return;
-        if (this.server.address.trim()) {
-          this.servers.push(this.server.address.trim());
-          this.server.address = '';
-        }
-      },
-      reorder(server: string | XrayDnsServerObject, index: number) {
-        this.servers.splice(index, 1);
-        this.servers.splice(index - 1, 0, server);
-      },
-      addOrUpdateComplex() {
-        this.server.domains = this.domains.split('\n').filter(Boolean);
-        this.server.expectIPs = this.ips.split('\n').filter(Boolean);
-
-        if (this.editIndex !== null) {
-          this.servers[this.editIndex] = { ...this.server };
-        } else {
-          this.servers.push({ ...this.server });
-        }
-
-        this.server = new XrayDnsServerObject();
-        this.domains = '';
-        this.ips = '';
-        this.editIndex = null;
-        this.modalAdvanced.close();
-      },
-      advanced() {
-        this.modalAdvanced.show();
-      },
-      manage(server: string | XrayDnsServerObject, index: number) {
-        if (typeof server === 'string') {
-          this.server = new XrayDnsServerObject();
-          this.server.address = server;
-        } else {
-          this.server = { ...server };
-          this.domains = (server.domains ?? []).join('\n');
-          this.ips = (server.expectIPs ?? []).join('\n');
-        }
-        this.editIndex = index;
-        this.modalAdvanced.show();
-      },
-      remove(server: string | XrayDnsServerObject) {
-        if (!confirm('Are you sure you want to remove this server?')) return;
-        this.servers.splice(this.servers.indexOf(server), 1);
-      },
-      show() {
-        this.modal.show();
-      }
-    },
     setup(props) {
       const modal = ref();
       const modalAdvanced = ref();
+      const modalRules = ref();
       const server = ref<XrayDnsServerObject>(new XrayDnsServerObject());
       const domains = ref<string>(server.value.domains?.join('\n') ?? '');
       const ips = ref<string>(server.value.expectIPs?.join('\n') ?? '');
       const editIndex = ref<number | null>(null);
-
+      const rules = ref<XrayRoutingRuleObject[]>([]);
       const getServer = (server: string | XrayDnsServerObject) => {
         if (typeof server === 'string') {
           return server;
         }
         return server.address;
       };
+
+      const addSimple = () => {
+        if (!server.value?.address) return;
+        if (server.value.address.trim()) {
+          props.servers.push(server.value.address.trim());
+          server.value.address = '';
+        }
+      };
+
+      const reorder = (server: string | XrayDnsServerObject, index: number) => {
+        props.servers.splice(index, 1);
+        props.servers.splice(index - 1, 0, server);
+      };
+
+      const remove = (server: string | XrayDnsServerObject) => {
+        if (!confirm('Are you sure you want to remove this server?')) return;
+        props.servers.splice(props.servers.indexOf(server), 1);
+      };
+      const show = () => {
+        modal.value.show();
+      };
+
+      const show_advanced = (s?: XrayDnsServerObject) => {
+        if (!s) {
+          server.value = new XrayDnsServerObject();
+        }
+        rules.value = xrayConfig.routing?.rules?.filter((r) => !r.isSystem() && r.domain) ?? [];
+        modalAdvanced.value.show();
+      };
+
+      const manage = (s: string | XrayDnsServerObject, index: number) => {
+        server.value = new XrayDnsServerObject();
+        if (typeof s === 'string') {
+          server.value.address = s;
+        } else {
+          server.value = { ...s };
+          domains.value = (server.value.domains ?? []).join('\n');
+          ips.value = (server.value.expectIPs ?? []).join('\n');
+        }
+        editIndex.value = index;
+        show_advanced(server.value);
+      };
+
+      const addOrUpdateComplex = () => {
+        server.value.domains = domains.value.split('\n').filter(Boolean);
+        server.value.expectIPs = ips.value.split('\n').filter(Boolean);
+        const serverInstance = plainToInstance(XrayDnsServerObject, { ...server.value });
+        if (editIndex.value !== null) {
+          props.servers[editIndex.value] = serverInstance;
+        } else {
+          props.servers.push(serverInstance);
+        }
+
+        server.value = new XrayDnsServerObject();
+        domains.value = '';
+        ips.value = '';
+        editIndex.value = null;
+
+        modalAdvanced.value.close();
+      };
+
+      const manage_rules = () => {
+        modalRules.value.show();
+      };
+
       return {
         modal,
         modalAdvanced,
+        modalRules,
         server,
         domains,
         ips,
         editIndex,
+        rules,
+        manage,
+        reorder,
+        remove,
+        show,
+        addSimple,
+        manage_rules,
         getServer,
+        addOrUpdateComplex,
+        show_advanced,
         XrayDnsServerObject
       };
     }

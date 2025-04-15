@@ -96,6 +96,10 @@ A: you can refference this [wiki guide](https://github.com/DanielLavrushin/asusw
 
 A: you can refference this [wiki guide](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/wiki/Xray-Server-Configuration-Guide)
 
+**Q:How to Create a custom geosite file (similar to the community geosite.dat) in XrayUI?**
+
+A: you can refference this [wiki guide](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/wiki/How-to-Create-a-Custom-Tag-File-in-XrayUI)
+
 # Contributing
 
 This article [fully describe how you can contrubte](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/wiki/Developer-Onboarding-for-XrayUI-(Asuswrt%E2%80%90Merlin)).

@@ -160,7 +160,7 @@ rules_to_dns_domains() {
     # Rewrite .dns.servers
     | .dns.servers |= (
         map(
-          if ( .rules? | length ) > 0 then
+          if ( (type == "object") and (.rules? | length) > 0 ) then
             .domains = (
               [
                 .rules[] as $ruleId

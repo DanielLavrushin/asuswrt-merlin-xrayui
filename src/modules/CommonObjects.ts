@@ -347,7 +347,7 @@ export class XrayRoutingObject {
 
         switch (gs) {
           case 'kinopub':
-            rule.domain = [`kino.pub`, `kinopub.online`, `gfw.ovh`, `vjs.zencdn.net`, `m.pushbr.com`, `mos-gorsud.co`, `zamerka.com`, `regexp:(\w+)-static-[0-9]+\.cdntogo\.net$`];
+            rule.domain = [`kino.pub`, `kinopub.online`, `gfw.ovh`, `vjs.zencdn.net`, `m.pushbr.com`, `mos-gorsud.co`, `zamerka.com`, `"regexp:(\\w+)-static-[0-9]+\\.cdntogo\\.net$"`];
             break;
           case 'envato':
             rule.domain = [`domain:envato.com`, `domain:envato.net`, `domain:envatoelements.com`, `domain:envatousercontent.com`];

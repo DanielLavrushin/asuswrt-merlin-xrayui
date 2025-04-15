@@ -1,5 +1,11 @@
 # XRAYUI Changelog
 
+## [0.43.1] - 2025-04-16
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- FIXED: an issue where non-object `DNS server entries` (like string addresses) were being dropped from the configuration.
+
 ## [0.43.0] - 2025-04-14
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

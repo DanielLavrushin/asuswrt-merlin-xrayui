@@ -351,7 +351,7 @@
         protocolQr,
         bypassMode,
         completeSetup,
-        unblockItemsList: ['Youtube', 'Telegram', 'TikTok', 'Reddit', 'LinkedIn', 'DeviantArt', 'Flibusta', 'Wikipedia', 'Twitch', 'Disney', 'Netflix', 'Discord', 'Instagram', 'Twitter', 'Patreon', 'Metacritic', 'Envato', 'SoundCloud', 'Kinopub', 'Facebook'].sort(),
+        unblockItemsList: ['Github', 'Google', 'Youtube', 'Telegram', 'TikTok', 'Reddit', 'LinkedIn', 'DeviantArt', 'Flibusta', 'Wikipedia', 'Twitch', 'Disney', 'Netflix', 'Discord', 'Instagram', 'Twitter', 'Patreon', 'Metacritic', 'Envato', 'SoundCloud', 'Kinopub', 'Facebook'].sort(),
         unblockItems,
         select_json_file,
         select_qr,

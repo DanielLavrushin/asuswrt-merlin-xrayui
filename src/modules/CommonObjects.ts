@@ -347,7 +347,7 @@ export class XrayRoutingObject {
 
         switch (gs) {
           case 'kinopub':
-            rule.ip = [`89.34.0.0/16`, `31.40.0.0/16`, `93.189.57.0/24`, `93.189.61.0/24`, `194.59.142.0/24`];
+            rule.domain = [`kino.pub`, `kinopub.online`, `gfw.ovh`, `vjs.zencdn.net`, `m.pushbr.com`, `mos-gorsud.co`, `zamerka.com`, `regexp:(\w+)-static-[0-9]+\.cdntogo\.net$`];
             break;
           case 'envato':
             rule.domain = [`domain:envato.com`, `domain:envato.net`, `domain:envatoelements.com`, `domain:envatousercontent.com`];
@@ -360,6 +360,9 @@ export class XrayRoutingObject {
             break;
           case 'wikipedia':
             rule.domain = [`geosite:wikimedia`];
+            break;
+          case 'google':
+            rule.domain = [`geosite:google`, `geosite:google-play`, `geosite:google-registry`, `geosite:google-ads`, `geosite:google-trust-services`, `geosite:google-scholar`];
             break;
           default: {
             rule.domain = [`geosite:${gs}`];

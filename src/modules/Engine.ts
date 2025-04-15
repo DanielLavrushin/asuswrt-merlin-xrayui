@@ -54,7 +54,7 @@ class EngineResponseConfig {
   public wireguard?: EngineWireguard;
   public reality?: EngineReality;
   public certificates?: EngineSsl;
-  public xray?: { test: string; uptime: number; ui_version: string; core_version: string; profile: string; profiles: string[]; backups: string[]; github_proxy: string };
+  public xray?: { test: string; uptime: number; ui_version: string; core_version: string; profile: string; profiles: string[]; backups: string[]; github_proxy: string; dnsmasq: boolean };
   public geodata?: EngineGeodatConfig = new EngineGeodatConfig();
   public loading?: EngineLoadingProgress;
   public connection_check?: EngineClientConnectionStatus;

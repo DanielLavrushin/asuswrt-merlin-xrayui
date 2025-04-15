@@ -6,6 +6,15 @@ replace_ips_with_domains() {
   tmpfile="/tmp/$(basename "$file").tmp"
   sed_script="/tmp/xrayui_sed_replace.sed"
 
+  load_xrayui_config
+  if [ "$dnsmasq" != "true" ]; then
+    return
+  fi
+
+  [ ! -f "/opt/var/log/dnsmasq.log" ] && {
+    return
+  }
+
   tail -n 1000 /opt/var/log/dnsmasq.log | awk '{
       for(i=1; i<=NF; i++){
         if($i=="is" && (i+1)<=NF){

@@ -81,6 +81,17 @@
         </thead>
         <tbody>
           <tr>
+            <th>
+              {{ $t('com.GeneralOptionsModal.label_logs_enable_dnsmasqlog') }}
+              <hint v-html="$t('com.GeneralOptionsModal.hint_logs_enable_dnsmasqlog')"></hint>
+            </th>
+            <td>
+              <label class="go-option">
+                <input type="checkbox" v-model="options.logs_dnsmasq" />
+              </label>
+            </td>
+          </tr>
+          <tr>
             <th>{{ $t('com.GeneralOptionsModal.label_logs_enable_access') }}</th>
             <td>
               <label class="go-option">
@@ -136,6 +147,7 @@
     public startup = false;
     public github_proxy = '';
     public logs_access = false;
+    public logs_dnsmasq = false;
     public logs_error = false;
     public logs_dns = false;
     public logs_level = 'warning';
@@ -233,6 +245,7 @@
         options.value.geo_ip_url = uiResponse?.value.geodata?.geoip_url ?? '';
         options.value.geo_site_url = uiResponse?.value.geodata?.geosite_url ?? '';
         options.value.github_proxy = uiResponse?.value.xray?.github_proxy ?? '';
+        options.value.logs_dnsmasq = uiResponse?.value.xray?.dnsmasq ?? false;
         modal.value.show();
       };
 

@@ -63,7 +63,9 @@
       "geodad_header": "GeoIP/GeoSite метадані",
       "label_geoip_url": "URL GeoIP",
       "label_geosite_url": "URL GeoSite",
-      "wellknown_geodata": "Використовувати загальновідомі геодані"
+      "wellknown_geodata": "Використовувати загальновідомі геодані",
+      "label_logs_enable_dnsmasqlog": "Увімкнути логи dnsmasq",
+      "hint_logs_enable_dnsmasqlog": "Увімкнення цієї опції дозволить логам показувати доменні імена замість IP-адрес."
     },
     "ImportConfig": {
       "import_config_file": "Імпортувати файл конфігурації"

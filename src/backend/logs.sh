@@ -25,6 +25,7 @@ replace_ips_with_domains() {
 
 logs_fetch() {
   update_loading_progress "Fetching logs..." 0
+  load_xrayui_config
 
   local log_access=$(jq -r --arg access "$ADDON_LOGS_DIR/xray_access.log" '.log.access // $access' "$XRAY_CONFIG_FILE")
   local log_error=$(jq -r --arg error "$ADDON_LOGS_DIR/xray_error.log" '.log.error // $error' "$XRAY_CONFIG_FILE")
@@ -37,6 +38,8 @@ logs_fetch() {
 
 change_log_level() {
   update_loading_progress "Changing log level..." 0
+  load_xrayui_config
+
   local payload=$(reconstruct_payload)
   local log_level=$(echo "$payload" | jq -r '.log_level')
 
@@ -64,6 +67,9 @@ change_log_level() {
 
 enable_config_logs() {
   update_loading_progress "Enabling Xray configuration logs..." 0
+
+  load_xrayui_config
+
   local temp_file="/tmp/xray_config.json"
 
   printlog true "Checking for the 'log' section in the Xray configuration."

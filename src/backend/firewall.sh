@@ -5,6 +5,8 @@ configure_firewall() {
     printlog true "Configuring Xray firewall rules..."
     update_loading_progress "Configuring Xray firewall rules..."
 
+    load_xrayui_config
+
     # Check if 'xray' process is running
     local xray_pid=$(get_proc "xray")
     if [ -z "$xray_pid" ]; then
@@ -458,6 +460,8 @@ cleanup_firewall() {
 
     printlog true "Cleaning up Xray Client firewall rules..."
     update_loading_progress "Cleaning up Xray Client firewall rules..."
+
+    load_xrayui_config
 
     iptables -D INPUT -j XRAYUI 2>/dev/null
     iptables -D FORWARD -j XRAYUI 2>/dev/null

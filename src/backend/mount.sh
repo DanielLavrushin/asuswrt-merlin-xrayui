@@ -5,6 +5,8 @@ mount_ui() {
 
     check_lock
 
+    load_xrayui_config
+
     nvram get rc_support | grep -q am_addons
     if [ $? != 0 ]; then
         printlog true "This firmware does not support addons!" $CERR

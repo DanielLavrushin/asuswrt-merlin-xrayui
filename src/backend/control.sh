@@ -3,6 +3,7 @@
 
 start() {
 
+    load_xrayui_config
     test_xray_config
 
     printlog true "Starting $ADDON_TITLE"

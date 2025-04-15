@@ -17,6 +17,7 @@ apply_general_options() {
     local logs_access=$(echo "$genopts" | jq -r '.logs_access')
     local logs_error=$(echo "$genopts" | jq -r '.logs_error')
     local logs_dns=$(echo "$genopts" | jq -r '.logs_dns')
+    local logs_dnsmasq=$(echo "$genopts" | jq -r '.logs_dnsmasq')
 
     local geosite_url=$(echo "$genopts" | jq -r '.geo_site_url')
     local geoip_url=$(echo "$genopts" | jq -r '.geo_ip_url')
@@ -48,6 +49,22 @@ apply_general_options() {
         json_content=$(echo "$json_content" | jq 'del(.log.dnsLog)')
     fi
 
+    if [ "$logs_dnsmasq" = "true" ]; then
+        mkdir -p /opt/var/log
+        cat <<EOF >/jffs/configs/dnsmasq.conf.add
+log-queries
+log-facility=/opt/var/log/dnsmasq.log
+EOF
+        printlog true "Enabled dnsmasq logging (queries and log-facility set) on Asus Merlin."
+    else
+        if [ -f /jffs/configs/dnsmasq.conf.add ]; then
+            rm /jffs/configs/dnsmasq.conf.add
+            printlog true "Disabled dnsmasq logging by removing /jffs/configs/dnsmasq.conf.add."
+        fi
+    fi
+
+    service restart_dnsmasq
+
     echo "$json_content" >"$XRAY_CONFIG_FILE"
 
     if [ -f /opt/etc/logrotate.d/xrayui ]; then
@@ -55,6 +72,7 @@ apply_general_options() {
         printlog true "Logrotate configuration updated with new log paths: $logs_access_path $logs_error_path" $CSUC
     fi
 
+    update_xrayui_config "dnsmasq" "$logs_dnsmasq"
     update_xrayui_config "github_proxy" "$github_proxy"
     update_xrayui_config "geosite_url" "$geosite_url"
     update_xrayui_config "geoip_url" "$geoip_url"

@@ -63,7 +63,8 @@
       "geodad_header": "GeoIP/GeoSite Metadata",
       "label_geoip_url": "GeoIP dat URL",
       "label_geosite_url": "GeoSite dat URL",
-      "wellknown_geodata": "Use well-known geodata"
+      "label_logs_enable_dnsmasqlog": "Enable dnsmasq logs",
+      "hint_logs_enable_dnsmasqlog": "Enabling this will make the logs show domain names rather than IP addresses."
     },
     "ImportConfig": {
       "import_config_file": "Import config file"

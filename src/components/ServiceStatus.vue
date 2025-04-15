@@ -33,7 +33,7 @@
         <th>{{ $t('com.ClientStatus.general_options') }}</th>
         <td>
           <span class="row-buttons">
-            <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click.prevent="manage_general_options()" />
+            <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click.prevent="manage_general_options()" v-show="uiResponse?.xray" />
           </span>
           <general-options-modal ref="generalOptionsModal" v-model:config="config"></general-options-modal>
         </td>
@@ -45,7 +45,7 @@
 
 <script lang="ts">
   import { defineComponent, ref, computed, watch, inject, Ref, onMounted } from 'vue';
-  import engine, { SubmtActions } from '@/modules/Engine';
+  import engine, { EngineResponseConfig, SubmtActions } from '@/modules/Engine';
   import GeneralOptionsModal from '@modal/GeneralOptionsModal.vue';
   import ImportConfig from './ImportConfig.vue';
   import { XrayObject } from '@/modules/XrayConfig';
@@ -102,6 +102,8 @@
         'label-error': !isRunning.value,
         'label-warning': checkConEnabled.value && !connectionStatus.value
       }));
+
+      const uiResponse = inject<Ref<EngineResponseConfig>>('uiResponse')!;
 
       const isRunning = ref<boolean>(window.xray.server.isRunning);
       const checkConEnabled = ref(false);
@@ -187,6 +189,7 @@
         reconnect: SubmtActions.serverRestart,
         stop: SubmtActions.serverStop,
         checkConEnabled,
+        uiResponse,
         checkConnection,
         show_config_modal,
         manage_general_options,

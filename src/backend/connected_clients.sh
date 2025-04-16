@@ -35,7 +35,7 @@ get_connected_clients() {
 
     for ip in $ips; do
         if [ -n "$ip" ]; then
-            emails=$(grep "$ip" "$access_log" | awk -F'email: ' '{print $2}' | sort | uniq | sed 's/^/"/; s/$/"/' | tr '\n' ',' | sed 's/,$//')
+            emails=$(grep -a "$ip" "$access_log" | awk -F'email: ' '{print $2}' | sort | uniq | sed 's/^/"/; s/$/"/' | tr '\n' ',' | sed 's/,$//')
             if [ -n "$emails" ]; then
                 echo "{\"ip\": \"$ip\", \"email\": [$emails]}," >>"$temp_file"
                 # else

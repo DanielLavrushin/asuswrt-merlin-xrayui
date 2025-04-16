@@ -55,10 +55,13 @@ apply_general_options() {
 log-queries
 log-facility=/opt/var/log/dnsmasq.log
 EOF
+
+        service restart_dnsmasq >/dev/null 2>&1 && printlog true "DNS service restarted successfully." $CSUC
         printlog true "Enabled dnsmasq logging (queries and log-facility set) on Asus Merlin."
     else
         if [ -f /jffs/configs/dnsmasq.conf.add ]; then
             rm /jffs/configs/dnsmasq.conf.add
+            service restart_dnsmasq >/dev/null 2>&1 && printlog true "DNS service restarted successfully." $CSUC
             printlog true "Disabled dnsmasq logging by removing /jffs/configs/dnsmasq.conf.add."
         fi
     fi

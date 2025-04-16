@@ -1,5 +1,11 @@
 # XRAYUI Changelog
 
+## [0.4x.x] - 2025-0x-xx
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- FIXED: Connected clients were not displayed correctly due to improper parsing of the access log.
+
 ## [0.43.1] - 2025-04-16
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

@@ -25,7 +25,6 @@ async function uploadFiles() {
     await sftp.fastPut('dist/index.asp', '/jffs/addons/xrayui/index.asp');
     await sftp.fastPut('dist/app.js', '/jffs/addons/xrayui/app.js');
     await sftp.fastPut('dist/xrayui', '/jffs/scripts/xrayui');
-    await sftp.fastPut('tools/adsblock/adsblock.sh', '/jffs/addons/xrayui/adsblock');
 
     // Set executable permissions
     await sftp.chmod('/jffs/scripts/xrayui', '755');

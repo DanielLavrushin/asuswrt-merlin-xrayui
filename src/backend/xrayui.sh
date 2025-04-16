@@ -23,6 +23,7 @@ import ./geodata.sh
 import ./profile.sh
 import ./logs.sh
 import ./backup.sh
+import ./adsblock.sh
 
 case "$1" in
 version)
@@ -101,9 +102,9 @@ service_event)
         ;;
     geodata)
         case "$3" in
-        communityupdate)
-            update_community_geodata
-            update_loading_progress "Community geodata files updated successfully." 100
+        listupdate)
+            adsblock_reload
+            update_loading_progress "Adsblock items reloaded successfully." 100
             ;;
         customtagfiles)
             get_custom_geodata_tagfiles
@@ -122,6 +123,7 @@ service_event)
             update_loading_progress "Geodata tag deleted successfully." 100
             ;;
         esac
+        exit 0
         ;;
     connectedclients)
         get_connected_clients

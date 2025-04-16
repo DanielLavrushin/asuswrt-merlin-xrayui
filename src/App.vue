@@ -230,6 +230,7 @@
   }
 
   .formfontdesc {
+    margin-left: 0;
     p {
       text-align: left;
       margin-bottom: 10px;

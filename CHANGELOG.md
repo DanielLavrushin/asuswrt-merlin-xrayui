@@ -1,9 +1,10 @@
 # XRAYUI Changelog
 
-## [0.43.2] - 2025-04-17
+## [0.43.3] - 2025-04-17
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
+- FIXED: Connected clients were not displayed correctly due to improper parsing of the access log.
 - FIXED: Connected clients were not displayed correctly due to improper parsing of the access log.
 - IMPROVED: Added calls to restart the `dnsmasq` service after enabling or disabling logging, ensuring the changes take effect immediately.
 - IMPROVED: Enhanced log output.

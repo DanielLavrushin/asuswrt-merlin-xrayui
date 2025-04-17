@@ -299,6 +299,6 @@
   }
   .online {
     font-weight: bold;
-    color: greenyellow;
+    color: #00ff7f;
   }
 </style>

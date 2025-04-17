@@ -123,17 +123,17 @@
       };
 
       const apply_settings = async () => {
+        if (logsManager.value?.follow) {
+          logsManager.value.follow = false;
+          window.showLoading(60000);
+        }
+
         await engine.executeWithLoadingProgress(async () => {
-          let cfg = engine.prepareServerConfig(config.value);
-          if (logsManager.value && logsManager.value.follow) {
-            logsManager.value.follow = false;
-            await engine.delay(1000);
-          }
+          const cfg = engine.prepareServerConfig(config.value);
           await engine.submit(SubmtActions.configurationApply, cfg);
           await engine.loadXrayConfig();
         });
       };
-
       return {
         logsManager,
         config,

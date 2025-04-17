@@ -33,7 +33,6 @@ replace_ips_with_domains() {
 }
 
 logs_fetch() {
-  update_loading_progress "Fetching logs..." 0
   load_xrayui_config
 
   local log_access=$(jq -r --arg access "$ADDON_LOGS_DIR/xray_access.log" '.log.access // $access' "$XRAY_CONFIG_FILE")
@@ -42,7 +41,6 @@ logs_fetch() {
   tail -n 200 "$log_error" >"$ADDON_WEB_DIR/xray_error_partial.asp"
   tail -n 200 "$log_access" >"$ADDON_WEB_DIR/xray_access_partial.asp"
   replace_ips_with_domains "$ADDON_WEB_DIR/xray_access_partial.asp"
-  update_loading_progress "Logs fetched successfully." 100
 }
 
 change_log_level() {

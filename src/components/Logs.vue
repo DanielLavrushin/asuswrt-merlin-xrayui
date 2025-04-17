@@ -43,9 +43,15 @@
                       <span v-if="!log.source_device">{{ log.source }}</span>
                       <a class="device" v-else :title="log.source">{{ log.source_device }}</a>
                     </td>
-                    <td>{{ log.target }}:{{ log.target_port }}</td>
+                    <td>
+                      <span :class="['log-label', log.type]">{{ log.type }} </span>
+                      {{ log.target }}:{{ log.target_port }}
+                    </td>
                     <td>{{ log.inbound }}</td>
-                    <td>{{ log.outbound }}</td>
+                    <td>
+                      <span v-if="log.routing" :class="['log-label', log.routing]">{{ log.routing[0] }} </span>
+                      {{ log.outbound }}
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -67,9 +73,11 @@
     public time?: string;
     public source?: string;
     public source_device?: string;
+    public type?: string;
     public target?: string;
     public target_port?: string;
     public inbound?: string;
+    public routing?: string;
     public outbound?: string;
 
     constructor(match: RegExpMatchArray, devices: Record<string, any>) {
@@ -88,10 +96,12 @@
         second: '2-digit'
       });
       this.source = match[2];
-      this.target = match[3];
-      this.target_port = match[4];
-      this.inbound = match[5];
-      this.outbound = match[6];
+      this.type = match[3];
+      this.target = match[4];
+      this.target_port = match[5];
+      this.inbound = match[6];
+      this.routing = match[7] == '>>' ? 'direct' : 'rule';
+      this.outbound = match[8];
       if (this.source) {
         this.source_device = devices[this.source]?.name;
       }
@@ -123,7 +133,7 @@
           .split('\n')
           .map((line) => {
             // Example log format: "2025/02/19 17:06:49 from 192.168.1.100:61132 accepted tcp:target:443 [outbound -> inbound]"
-            const regex = /^(\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2})(?:\.\d+)? from (\d{1,3}(?:\.\d{1,3}){3})(?::\d+)? accepted (tcp|udp):([^:]+):(\d+) \[([^\]]+)\]$/;
+            const regex = /^(\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2})(?:\.\d+)? from (\d{1,3}(?:\.\d{1,3}){3})(?::\d+)? accepted (tcp|udp):([^:]+):(\d+) \[([^\s]+)\s*(->|>>)\s*([^\]]+)\]$/;
             const match = line.match(regex);
             return match ? new AccessLogEntry(match, devices.value) : null;
           })
@@ -165,6 +175,22 @@
 </script>
 
 <style lang="scss" scoped>
+  .log-label {
+    font-weight: bold;
+    &.tcp {
+      color: #4cc2ff;
+    }
+    &.udp {
+      color: #ffd166;
+    }
+    &.direct {
+      color: #00ff7f;
+    }
+    &.rule {
+      color: #ff6bd6;
+    }
+  }
+
   .scrollable-table {
     max-height: 200px;
     overflow-y: auto;
@@ -185,7 +211,7 @@
 
   .device {
     font-weight: bold;
-    color: greenyellow;
+    color: #00ff7f;
   }
 
   .logs-area-row {

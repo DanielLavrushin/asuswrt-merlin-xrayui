@@ -2,6 +2,8 @@
 
 ## [0.44.0] - 2025-04-18
 
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
 - ADDED: Option to automatically clear logs on `XRAY` service restart.
 - ADDED: Configurable log size limit in general settings. When the file exceeds the defined size, it will be rotated automatically.
 - ADDED: Automatic geosite update toggle in general settings. When enabled, the job will update geodata files nightly.

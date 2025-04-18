@@ -125,3 +125,30 @@ enable_config_logs() {
   update_loading_progress "Configuration logs enabled successfully." 100
   return 0
 }
+
+logrotate_setup() {
+  # setup logrotate
+  printlog true "Setting up logrotate for XRAY UI..."
+
+  load_xrayui_config
+  local logs_max_size=${logs_max_size:-10}
+
+  local log_access="$(jq -r --arg default "$ADDON_LOGS_DIR/xray_access.log" '.log.access // $default' "$XRAY_CONFIG_FILE")"
+  local log_error="$(jq -r --arg default "$ADDON_LOGS_DIR/xray_error.log" '.log.error // $default' "$XRAY_CONFIG_FILE")"
+
+  cat >/opt/etc/logrotate.d/xrayui <<EOF
+$log_access $log_error {
+    su nobody root
+    size ${logs_max_size}M
+    rotate 2
+    notifempty
+    copytruncate
+    create 640 nobody root
+    missingok
+}
+EOF
+
+  chmod 0644 /opt/etc/logrotate.d/xrayui || printlog true "Failed to make logrotate executable." $CERR
+  printlog true "Logrotate configuration created successfully." $CSUC
+
+}

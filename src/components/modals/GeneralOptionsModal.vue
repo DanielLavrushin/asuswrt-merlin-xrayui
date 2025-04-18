@@ -124,6 +124,26 @@
               </label>
             </td>
           </tr>
+          <tr>
+            <th>
+              {{ $t('com.GeneralOptionsModal.label_logs_max_size') }}
+              <hint v-html="$t('com.GeneralOptionsModal.hint_logs_max_size')"></hint>
+            </th>
+            <td>
+              <label class="go-option">
+                <input v-model="options.logs_max_size" type="number" class="input_6_table" />
+              </label>
+              <span class="hint-color">MB</span>
+            </td>
+          </tr>
+          <tr>
+            <th>{{ $t('com.GeneralOptionsModal.label_logs_dor') }}</th>
+            <td>
+              <label class="go-option">
+                <input type="checkbox" v-model="options.logs_dor" />
+              </label>
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -150,6 +170,8 @@
     public logs_dnsmasq = false;
     public logs_error = false;
     public logs_dns = false;
+    public logs_dor = false;
+    public logs_max_size = 10;
     public logs_level = 'warning';
     public geo_ip_url = '';
     public geo_site_url = '';
@@ -246,6 +268,8 @@
         options.value.geo_site_url = uiResponse?.value.geodata?.geosite_url ?? '';
         options.value.github_proxy = uiResponse?.value.xray?.github_proxy ?? '';
         options.value.logs_dnsmasq = uiResponse?.value.xray?.dnsmasq ?? false;
+        options.value.logs_max_size = uiResponse?.value.xray?.logs_max_size ?? 10;
+        options.value.logs_dor = uiResponse?.value.xray?.logs_dor ?? false;
         modal.value.show();
       };
 

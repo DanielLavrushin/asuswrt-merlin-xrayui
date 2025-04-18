@@ -9,6 +9,7 @@ import ./config.sh
 import ./mount.sh
 import ./version.sh
 import ./control.sh
+import ./startup.sh
 import ./install.sh
 import ./update.sh
 import ./firewall.sh
@@ -23,6 +24,7 @@ import ./geodata.sh
 import ./profile.sh
 import ./logs.sh
 import ./backup.sh
+import ./cron.sh
 
 case "$1" in
 version)
@@ -61,6 +63,15 @@ fixme)
 backup)
     backup_configuration
     ;;
+cron)
+    case "$2" in
+    logrotate)
+        cron_logrotate_run
+        ;;
+    *) ;;
+    esac
+    exit 0
+    ;;
 service_event)
     case "$2" in
     webapp)
@@ -79,16 +90,7 @@ service_event)
         exit 0
         ;;
     startup)
-        get_xray_proc
-        if [ "$(am_settings_get xray_startup)" = "y" ]; then
-            sleep 60 # wait for network and iptable rules to be ready
-            restart
-        elif [ -n "$xray_pid" ]; then
-            printlog true "Xray service is disabled by XRAYUI. Stopping Xray service..."
-            stop
-        else
-            printlog true "Xray service is disabled by XRAYUI. Xray service is not running."
-        fi
+        startup
         ;;
     cleanloadingprogress)
         remove_loading_progress

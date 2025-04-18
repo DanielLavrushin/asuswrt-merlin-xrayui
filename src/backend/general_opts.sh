@@ -18,6 +18,8 @@ apply_general_options() {
     local logs_error=$(echo "$genopts" | jq -r '.logs_error')
     local logs_dns=$(echo "$genopts" | jq -r '.logs_dns')
     local logs_dnsmasq=$(echo "$genopts" | jq -r '.logs_dnsmasq')
+    local logs_dor=$(echo "$genopts" | jq -r '.logs_dor')
+    local logs_max_size=$(echo "$genopts" | jq -r '.logs_max_size')
 
     local geosite_url=$(echo "$genopts" | jq -r '.geo_site_url')
     local geoip_url=$(echo "$genopts" | jq -r '.geo_ip_url')
@@ -79,10 +81,17 @@ EOF
     update_xrayui_config "github_proxy" "$github_proxy"
     update_xrayui_config "geosite_url" "$geosite_url"
     update_xrayui_config "geoip_url" "$geoip_url"
+    update_xrayui_config "logs_max_size" "$logs_max_size"
+    update_xrayui_config "logs_dor" "$logs_dor"
 
     # Update configuration with the directory part of logs_access_path
     local logs_dir=$(dirname "$logs_access_path")
     update_xrayui_config "logs_dir" "$logs_dir"
+
+    # Update the logrotate configuration with the new max size
+    logrotate_setup
+
+    restart
 
     update_loading_progress "General settings applied." 100
 

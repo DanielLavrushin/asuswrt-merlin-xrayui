@@ -65,7 +65,10 @@
       "label_geosite_url": "GeoSite URL",
       "wellknown_geodata": "Использовать общедоступные геоданные",
       "label_logs_enable_dnsmasqlog": "Включить логи dnsmasq",
-      "hint_logs_enable_dnsmasqlog": "Включение этой опции позволит логам отображать доменные имена вместо IP-адресов."
+      "hint_logs_enable_dnsmasqlog": "Включение этой опции позволит логам отображать доменные имена вместо IP-адресов.",
+      "label_logs_max_size": "Максимальный размер лога",
+      "hint_logs_max_size": "Максимальный размер файла лога (в мегабайтах). Когда размер превышает это значение, лог будет автоматически ротирован.",
+      "label_logs_dor": "Очищать логи при перезапуске Xray"
     },
     "ImportConfig": {
       "import_config_file": "Импорт файла конфигурации"

@@ -100,8 +100,7 @@ change_dnsmasq() {
             sed -i '/^\s*log-queries/d; /^\s*log-facility=.*dnsmasq\.log/d' "$conf_add"
             [ ! -s "$conf_add" ] && rm -f "$conf_add"
 
-            service restart_dnsmasq >/dev/null 2>&1 &&
-                log_ok "DNS service restarted successfully." ||
+            { service restart_dnsmasq >/dev/null 2>&1 && log_ok "DNS service restarted successfully."; } ||
                 log_error "Failed to restart DNS service."
         fi
     fi

@@ -483,8 +483,11 @@ cleanup_firewall() {
     log_info "Restarting firewall and DNS services..."
     update_loading_progress "Restarting firewall and DNS services..."
 
-    service restart_firewall >/dev/null 2>&1 && log_ok "Firewall service restarted successfully." || log_error "Failed to restart firewall service."
-    service restart_dnsmasq >/dev/null 2>&1 && log_ok "DNS service restarted successfully." || log_error "Failed to restart DNS service."
+    { service restart_firewall >/dev/null 2>&1 && log_ok "Firewall service restarted successfully."; } ||
+        log_error "Failed to restart firewall service."
+
+    { service restart_dnsmasq >/dev/null 2>&1 && log_ok "DNS service restarted successfully."; } ||
+        log_error "Failed to restart DNS service."
 
     log_ok "Xray Client firewall rules cleaned up successfully."
 }

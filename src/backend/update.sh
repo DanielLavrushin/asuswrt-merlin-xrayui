@@ -18,50 +18,50 @@ update() {
     local temp_file="/tmp/asuswrt-merlin-xrayui.tar.gz"
     local jffs_addons_path="/jffs/addons"
 
-    printlog true "Downloading the version:$specific_version..."
+    log_info "Downloading the version:$specific_version..."
     update_loading_progress "Downloading the version:$specific_version..."
     if wget -q --show-progress -O "$temp_file" "$url"; then
-        printlog true "Download completed successfully."
+        log_info "Download completed successfully."
     else
-        printlog true "Failed to download the $specific_version version. Exiting." $CERR
+        log_error "Failed to download the $specific_version version. Exiting."
         return 1
     fi
 
-    printlog true "Cleaning up existing installation..."
+    log_info "Cleaning up existing installation..."
     if rm -rf "$ADDON_JFFS_ADN_DIR"; then
-        printlog true "Old installation removed."
+        log_info "Old installation removed."
     else
-        printlog true "Failed to remove the old installation. Exiting." $CERR
+        log_error "Failed to remove the old installation. Exiting."
         return 1
     fi
 
-    printlog true "Extracting the package..."
+    log_info "Extracting the package..."
     update_loading_progress "Extracting the package..."
     if tar -xzf "$temp_file" -C "$jffs_addons_path"; then
-        printlog true "Extraction completed."
+        log_info "Extraction completed."
     else
-        printlog true "Failed to extract the package. Exiting." $CERR
+        log_error "Failed to extract the package. Exiting."
         return 1
     fi
 
-    printlog true "Setting up the script..."
+    log_info "Setting up the script..."
     update_loading_progress "Setting up the script..."
     if mv "$ADDON_JFFS_ADN_DIR/xrayui" "$ADDON_SCRIPT" && chmod 0777 "$ADDON_SCRIPT"; then
-        printlog true "Script set up successfully." $CSUC
+        log_ok "Script set up successfully."
     else
-        printlog true "Failed to set up the script. Exiting." $CERR
+        log_error "Failed to set up the script. Exiting."
         return 1
     fi
 
-    printlog true "Running the installation..."
+    log_info "Running the installation..."
     update_loading_progress "Running the installation..."
     if sh "$ADDON_SCRIPT" install; then
-        printlog true "Installation completed successfully." $CSUC
+        log_ok "Installation completed successfully."
     else
-        printlog true "Installation failed. Exiting." $CERR
+        log_error "Installation failed. Exiting."
         return 1
     fi
 
-    printlog true "Update process completed!" $CSUC
+    log_ok "Update process completed!"
     update_loading_progress "Update process completed!" 100
 }

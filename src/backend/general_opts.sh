@@ -2,8 +2,8 @@
 # shellcheck disable=SC2034  # codacy:Unused variables
 
 apply_general_options() {
-    update_loading_progress "Applying general settings..." 0
-    printlog true "Applying general settings..."
+    log_info "Applying general settings..."
+    update_loading_progress "Applying general settings..."
 
     load_xrayui_config
 
@@ -60,14 +60,12 @@ log-facility=/opt/var/log/dnsmasq.log
 EOF
 
         update_loading_progress "Enabling dnsmasq logging..."
-        service restart_dnsmasq >/dev/null 2>&1 && printlog true "DNS service restarted successfully." $CSUC
-        printlog true "Enabled dnsmasq logging (queries and log-facility set) on Asus Merlin."
+        service restart_dnsmasq >/dev/null 2>&1 && log_ok "DNS service restarted successfully." || log_error "Failed to restart DNS service."
     else
         if [ -f /jffs/configs/dnsmasq.conf.add ]; then
             update_loading_progress "Disabling dnsmasq logging..."
             rm /jffs/configs/dnsmasq.conf.add
-            service restart_dnsmasq >/dev/null 2>&1 && printlog true "DNS service restarted successfully." $CSUC
-            printlog true "Disabled dnsmasq logging by removing /jffs/configs/dnsmasq.conf.add."
+            service restart_dnsmasq >/dev/null 2>&1 && log_ok "DNS service restarted successfully." || log_error "Failed to restart DNS service."
         fi
     fi
 
@@ -75,7 +73,7 @@ EOF
 
     if [ -f /opt/etc/logrotate.d/xrayui ]; then
         sed -i "1s@^.*{@$logs_access_path $logs_error_path {@" /opt/etc/logrotate.d/xrayui
-        printlog true "Logrotate configuration updated with new log paths: $logs_access_path $logs_error_path" $CSUC
+        log_ok "Logrotate configuration updated with new log paths: $logs_access_path $logs_error_path"
     fi
 
     update_xrayui_config "dnsmasq" "$logs_dnsmasq"

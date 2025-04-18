@@ -12,38 +12,38 @@ update_community_geodata() {
 
     mkdir -p "$target_dir"
 
-    printlog true "Downloading geosite.dat from $geositeurl..."
+    log_info "Downloading geosite.dat from $geositeurl..."
     update_loading_progress "Downloading geosite.dat..."
     curl -L "$geositeurl" -o "$target_dir/geosite.dat"
     if [ $? -ne 0 ]; then
-        printlog true "Failed to download geosite.dat." $CERR
+        log_error "Failed to download geosite.dat."
         return 1
     fi
 
-    printlog true "Downloading geoip.dat from $geoipurl..."
+    log_info "Downloading geoip.dat from $geoipurl..."
     update_loading_progress "Downloading geoip.dat..."
     curl -L "$geoipurl" -o "$target_dir/geoip.dat"
     if [ $? -ne 0 ]; then
-        printlog true "Failed to download geoip.dat." $CERR
+        log_error "Failed to download geoip.dat."
         return 1
     fi
 
     if [ -f "$target_dir/geosite.dat" ] && [ -f "$target_dir/geoip.dat" ]; then
-        printlog true "Files successfully placed in $target_dir." $CSUC
+        log_ok "Files successfully placed in $target_dir."
         if [ -f "$XRAY_PIDFILE" ]; then
-            update_loading_progress "Restarting Xray service..." 60
+            update_loading_progress "Restarting Xray service..."
             restart
         fi
     else
-        printlog true "Failed to place geosite.dat/geoip.dat in $target_dir." $CERR
+        log_error "Failed to place geosite.dat/geoip.dat in $target_dir."
     fi
     update_loading_progress "Community geodata files updated successfully." 100
 }
 
 get_custom_geodata_tagfiles() {
 
-    printlog true "Starting geodata tagfiles retrieval process..."
-    update_loading_progress "Retrieving geodata tagfiles..." 0
+    log_info "Starting geodata tagfiles retrieval process..."
+    update_loading_progress "Retrieving geodata tagfiles..."
 
     load_ui_response
 
@@ -56,11 +56,11 @@ get_custom_geodata_tagfiles() {
     save_ui_response
 
     if [ $? -ne 0 ]; then
-        printlog true "Error: Failed to update JSON content with tags." "$CERR"
+        log_error "Error: Failed to update JSON content with tags."
         return 1
     fi
 
-    printlog true "Saved tagfiles to $UI_RESPONSE_FILE successfully." "$CSUC"
+    log_ok "Saved tagfiles to $UI_RESPONSE_FILE successfully."
     return 0
 }
 
@@ -73,7 +73,7 @@ geodata_remount_to_web() {
     if [ ! -d "$geodata_dir" ]; then
         mkdir -p "$geodata_dir"
         if [ $? -ne 0 ]; then
-            printlog true "Error: Failed to create directory '$geodata_dir'." "$CERR"
+            log_error "Error: Failed to create directory '$geodata_dir'."
             exit 1
         fi
     fi
@@ -92,27 +92,28 @@ geodata_remount_to_web() {
             # Create the symlink (using absolute paths)
             ln -s -f "$tagfile" "$symlink"
             if [ $? -ne 0 ]; then
-                printlog true "Error: Failed to create symlink '$symlink' -> '$tagfile'." "$CERR"
+                log_error "Error: Failed to create symlink '$symlink' -> '$tagfile'."
                 return 1
             fi
 
-            printlog true "Created symlink '$symlink' -> '$tagfile'." "$CSUC"
+            log_ok "Created symlink '$symlink' -> '$tagfile'."
         fi
     done
 
     get_custom_geodata_tagfiles
 
-    printlog true "All symlinks created successfully in '$geodata_dir'." "$CSUC"
+    log_ok "All symlinks created successfully in '$geodata_dir'."
     return 0
 }
 
 geodata_recompile_all() {
-    printlog true "Recompiling ALL custom geodata files..." 0
+    log_info "Recompiling ALL custom geodata files..."
+    update_loading_progress "Recompiling geodata files..."
 
     local builder="$ADDON_SHARE_DIR/xraydatbuilder"
 
     if [ ! -f "$builder" ] || [ ! -x "$builder" ]; then
-        printlog true "Error: Builder not found or not executable at $builder" $CERR
+        log_error "Error: Builder not found or not executable at $builder"
         return 1
     fi
 
@@ -121,9 +122,8 @@ geodata_recompile_all() {
 
     rm -f "$outdir/xrayui"
 
-    update_loading_progress "Recompiling geodata files..." 50
     "$builder" --datapath "$datadir" --outputdir "$outdir" --outputname "xrayui" || {
-        printlog true "Failed to recompile geodata files." $CERR
+        log_error "Failed to recompile geodata files."
         return 1
     }
 
@@ -133,42 +133,42 @@ geodata_recompile_all() {
     geodata_remount_to_web
 
     if [ -f "$XRAY_PIDFILE" ]; then
-        update_loading_progress "Restarting Xray service..." 60
+        update_loading_progress "Restarting Xray service..."
         restart
     fi
 
-    printlog true "Recompiled all custom geodata files successfully." $CSUC
+    log_ok "Recompiled all custom geodata files successfully."
     return 0
 }
 
 geodata_recompile() {
-    update_loading_progress "Recompiling geodata files..." 0
-    printlog true "Starting geodata recompilation process..." "$CSUC"
+    log_info "Starting geodata recompilation process..."
+    update_loading_progress "Recompiling geodata files..."
 
     local datadir="$ADDON_SHARE_DIR/data"
 
     if [ ! -d "$datadir" ]; then
-        printlog true "Error: Data directory '$datadir' does not exist." "$CERR"
+        log_error "Error: Data directory '$datadir' does not exist."
         return 1
     fi
 
     # Reconstruct the payload
     local datfile=$(reconstruct_payload)
     if [ $? -ne 0 ] || [ -z "$datfile" ]; then
-        printlog true "Error: Failed to reconstruct payload." "$CERR"
+        log_error "Error: Failed to reconstruct payload."
         return 1
     fi
 
     # Extract 'tag' and 'content' from the payload using jq
     local filename=$(echo "$datfile" | jq -r '.tag')
     if [ $? -ne 0 ] || [ -z "$filename" ] || [ "$filename" == "null" ]; then
-        printlog true "Error: Invalid or missing 'tag' in payload." "$CERR"
+        log_error "Error: Invalid or missing 'tag' in payload."
         return 1
     fi
 
     local filecontent=$(echo "$datfile" | jq -r '.content')
     if [ $? -ne 0 ] || [ -z "$filecontent" ] || [ "$filecontent" == "null" ]; then
-        printlog true "Error: Invalid or missing 'content' in payload." "$CERR"
+        log_error "Error: Invalid or missing 'content' in payload."
         return 1
     fi
 
@@ -176,48 +176,47 @@ geodata_recompile() {
 
     echo "$filecontent" >"$filepath"
     if [ $? -ne 0 ]; then
-        printlog true "Error: Failed to write content to '$filepath'." "$CERR"
+        log_error "Error: Failed to write content to '$filepath'."
         return 1
     fi
 
-    printlog true "Successfully wrote content to '$filepath'." "$CSUC"
+    log_ok "Successfully wrote content to '$filepath'."
 
     geodata_recompile_all
 
     if [ $? -ne 0 ]; then
-        printlog true "Error: Recompiling geodata files failed." "$CERR"
+        log_error "Error: Recompiling geodata files failed."
         return 1
     fi
 
-    printlog true "Geodata recompilation process completed successfully." "$CSUC"
-
+    log_ok "Geodata recompilation process completed successfully."
     return 0
 }
 
 geodata_delete_tag() {
-    update_loading_progress "Deleting geodata tag..." 0
-    printlog true "Starting geodata tag deletion process..." "$CSUC"
+    log_info "Starting geodata tag deletion process..."
+    update_loading_progress "Deleting geodata tag..."
 
     local datadir="$ADDON_SHARE_DIR/data"
     local geodata_dir="$ADDON_SHARE_DIR/geodata"
 
     # Check if the data directory exists
     if [ ! -d "$datadir" ]; then
-        printlog true "Error: Data directory '$datadir' does not exist." "$CERR"
+        log_error "Error: Data directory '$datadir' does not exist."
         return 1
     fi
 
     # Reconstruct the payload
     local datfile=$(reconstruct_payload)
     if [ $? -ne 0 ] || [ -z "$datfile" ]; then
-        printlog true "Error: Failed to reconstruct payload." "$CERR"
+        log_error "Error: Failed to reconstruct payload."
         return 1
     fi
 
     # Extract 'tag' from the payload using jq
     local filename=$(echo "$datfile" | jq -r '.tag')
     if [ $? -ne 0 ] || [ -z "$filename" ] || [ "$filename" == "null" ]; then
-        printlog true "Error: Invalid or missing 'tag' in payload." "$CERR"
+        log_error "Error: Invalid or missing 'tag' in payload."
         return 1
     fi
 
@@ -229,35 +228,35 @@ geodata_delete_tag() {
     if [ -f "$filepath" ]; then
         rm "$filepath"
         if [ $? -ne 0 ]; then
-            printlog true "Error: Failed to delete file '$filepath'." "$CERR"
+            log_error "Error: Failed to delete file '$filepath'."
             return 1
         fi
-        printlog true "Successfully deleted file '$filepath'." "$CSUC"
+        log_ok "Successfully deleted file '$filepath'."
     else
-        printlog true "Warning: File '$filepath' does not exist. Skipping deletion." "$CSUC"
+        log_warn "Warning: File '$filepath' does not exist. Skipping deletion."
     fi
 
     # Remove the symlink from the geodata directory
     if [ -L "$symlinkpath" ]; then
         rm "$symlinkpath"
         if [ $? -ne 0 ]; then
-            printlog true "Error: Failed to delete symlink '$symlinkpath'." "$CERR"
+            log_error "Error: Failed to delete symlink '$symlinkpath'."
             return 1
         fi
-        printlog true "Successfully deleted symlink '$symlinkpath'." "$CSUC"
+        log_ok "Successfully deleted symlink '$symlinkpath'."
     else
-        printlog true "Warning: Symlink '$symlinkpath' does not exist. Skipping deletion." "$CSUC"
+        log_warn "Warning: Symlink '$symlinkpath' does not exist. Skipping deletion."
     fi
 
     geodata_recompile_all
 
     if [ $? -ne 0 ]; then
-        printlog true "Error: Recompiling geodata files failed." "$CERR"
+        log_error "Error: Recompiling geodata files failed."
         return 1
     fi
 
     # Log the successful deletion process
-    printlog true "Geodata tag deletion process completed successfully." "$CSUC"
+    log_ok "Geodata tag deletion process completed successfully."
 
     return 0
 }

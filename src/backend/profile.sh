@@ -19,14 +19,14 @@ change_config_profile() {
 
     # Check if the configuration file exists, if not, generate a default config
     if [ ! -f "$XRAY_CONFIG_FILE" ]; then
-        printlog true "Profile file $XRAY_CONFIG_FILE does not exist. Generating default configuration." $CWARN
+        log_warn "Profile file $XRAY_CONFIG_FILE does not exist. Generating default configuration."
         generate_xray_config
     fi
 
-    ln -s -f "$XRAY_CONFIG_FILE" "$ADDON_WEB_DIR/xray-config.json" || printlog true "Failed to create symlink for xray-config.json." $CERR
+    ln -s -f "$XRAY_CONFIG_FILE" "$ADDON_WEB_DIR/xray-config.json" || log_error "Failed to create symlink for xray-config.json."
 
     update_loading_progress "Changing configuration profile to $XRAY_CONFIG_FILE..."
-    printlog true "Changing configuration profile to $XRAY_CONFIG_FILE..."
+    log_info "Changing configuration profile to $XRAY_CONFIG_FILE..."
 
     restart
 
@@ -53,13 +53,13 @@ delete_config_profile() {
     if [ -f "$profile_path" ]; then
         rm -f "$profile_path"
         if [ $? -eq 0 ]; then
-            printlog true "Profile $profile deleted successfully." $CSUC
+            log_ok "Profile $profile deleted successfully."
         else
-            printlog true "Failed to delete profile $profile." $CERR
+            log_error "Failed to delete profile $profile."
             return 1
         fi
     else
-        printlog true "Profile $profile does not exist." $CWARN
+        log_warn "Profile $profile does not exist."
     fi
 
     update_loading_progress "Configuration profile deleted successfully." 100

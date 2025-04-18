@@ -25,7 +25,7 @@ update_xrayui_config() {
 generate_xray_config() {
     # Validate base configuration
     if [ ! -f "$XRAY_CONFIG_FILE" ]; then
-        printlog true "Base configuration file not found. Creating a default config..." $CWARN
+        log_warn "Base configuration file not found. Creating a default config..."
         mkdir -p /opt/etc/xray
         cat >$XRAY_CONFIG_FILE <<EOF
 {
@@ -45,12 +45,12 @@ generate_xray_config() {
 }
 EOF
         if [ $? -eq 0 ]; then
-            printlog true "Default configuration created successfully." $CSUC
+            log_ok "Default configuration created successfully."
         else
-            printlog true "Failed to create default configuration." $CERR
+            log_error "Failed to create default configuration."
             exit 1
         fi
     else
-        printlog true "Base configuration file already exists." $CWARN
+        log_warn "Base configuration file already exists."
     fi
 }

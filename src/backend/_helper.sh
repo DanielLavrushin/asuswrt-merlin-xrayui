@@ -1,18 +1,79 @@
 #!/bin/sh
 # shellcheck disable=SC2034  # codacy:Unused variables
 
-CERR='\033[0;31m'
-CSUC='\033[0;32m'
-CWARN='\033[0;33m'
-CINFO='\033[0;36m'
+# ANSI color codes (only used if stdout is a terminal)
+CDBG='\033[0;90m'  # gray
+CERR='\033[0;31m'  # red
+CWARN='\033[0;33m' # yellow
+CINFO='\033[0;36m' # cyan
+CSUC='\033[0;32m'  # green
 CRESET='\033[0m'
+LOG_FACILITY='user'
+
+if [ -t 1 ]; then
+    USE_COLOR=1
+else
+    USE_COLOR=0
+fi
 
 printlog() {
-    if [ "$1" = "true" ]; then
-        logger -t "XRAYUI" "$2"
+    level=$1
+    shift
+    msg=$*
+
+    # Map LEVEL → syslog priority & console color
+    case "$level" in
+    ALERT | CRIT)
+        priority='crit'
+        color=$CERR
+        ;;
+    ERROR)
+        priority='err'
+        color=$CERR
+        ;;
+    WARN | WARNING)
+        priority='warning'
+        color=$CWARN
+        ;;
+    NOTICE)
+        priority='notice'
+        color=$CINFO
+        ;;
+    INFO)
+        priority='info'
+        color=$CINFO
+        ;;
+    DEBUG)
+        priority='debug'
+        color=$CDBG
+        ;;
+    SUCCESS | OK)
+        priority='info'
+        color=$CSUC
+        ;;
+    *)
+        priority='info'
+        color=$CINFO
+        ;;
+    esac
+
+    logger -t "XRAYUI" -p "${LOG_FACILITY}.${priority}" -- "$msg"
+
+    if [ "$USE_COLOR" -eq 1 ]; then
+        printf '%b%s%b\n' "$color" "$msg" "$CRESET"
+    else
+        printf '%s\n' "$msg"
     fi
-    printf "${CINFO}${3}%s${CRESET}\\n" "$2"
 }
+
+log_alert() { printlog ALERT "$@"; }
+log_crit() { printlog CRIT "$@"; }
+log_error() { printlog ERROR "$@"; }
+log_warn() { printlog WARN "$@"; }
+log_notice() { printlog NOTICE "$@"; }
+log_info() { printlog INFO "$@"; }
+log_ok() { printlog OK "$@"; }
+log_debug() { printlog DEBUG "$@"; }
 
 get_proc() {
     local proc_name="$1"
@@ -42,7 +103,7 @@ get_webui_page() {
         if [ -f "$page" ]; then
             if grep -q "page:$ADDON_TAG" "$page"; then
                 ADDON_USER_PAGE=$(basename "$page")
-                printlog true "Found existing $ADDON_TAG_UPPER page: $ADDON_USER_PAGE" $CSUC
+                log_ok "Found existing $ADDON_TAG_UPPER page: $ADDON_USER_PAGE"
                 return
             fi
 
@@ -56,7 +117,7 @@ get_webui_page() {
     done
 
     if [ "$ADDON_USER_PAGE" != "none" ]; then
-        printlog true "Found existing $ADDON_TAG_UPPER page: $ADDON_USER_PAGE" $CSUC
+        log_ok "Found existing $ADDON_TAG_UPPER page: $ADDON_USER_PAGE"
         return
     fi
 
@@ -65,7 +126,7 @@ get_webui_page() {
         while true; do
             if ! echo "$used_pages" | grep -qw "$i"; then
                 ADDON_USER_PAGE="user$i.asp"
-                printlog true "Assigning new $ADDON_TAG_UPPER page: $ADDON_USER_PAGE" $CSUC
+                log_ok "Assigning new $ADDON_TAG_UPPER page: $ADDON_USER_PAGE"
                 return
             fi
             i=$((i + 1))
@@ -112,14 +173,14 @@ cleanup_payload() {
 load_ui_response() {
 
     if [ ! -f "$UI_RESPONSE_FILE" ]; then
-        printlog true "Creating $ADDON_TITLE response file: $UI_RESPONSE_FILE" "$CSUC"
+        log_ok "Creating $ADDON_TITLE response file: $UI_RESPONSE_FILE"
         echo '{}' >"$UI_RESPONSE_FILE"
         chmod 600 "$UI_RESPONSE_FILE"
     fi
 
     UI_RESPONSE=$(cat "$UI_RESPONSE_FILE")
     if [ "$UI_RESPONSE" = "" ]; then
-        printlog true "UI response file is empty. Initializing with empty JSON." "$CWARN"
+        log_warn "UI response file is empty. Initializing with empty JSON."
         UI_RESPONSE="{}"
     fi
 }
@@ -127,7 +188,7 @@ load_ui_response() {
 save_ui_response() {
 
     if ! echo "$UI_RESPONSE" >"$UI_RESPONSE_FILE"; then
-        printlog true "Failed to save UI response to $UI_RESPONSE_FILE" "$CERR"
+        log_error "Failed to save UI response to $UI_RESPONSE_FILE"
         clear_lock
         return 1
     fi
@@ -135,7 +196,7 @@ save_ui_response() {
 }
 
 test_xray_config() {
-    printlog true "Testing Xray configuration..."
+    log_info "Testing Xray configuration..."
     update_loading_progress "Testing Xray configuration..."
 
     local output
@@ -149,7 +210,8 @@ test_xray_config() {
     else
         message="Config file appears to be fine, but the XRAY service has not started. Try to restart/reconnect it."
     fi
-    printlog true "Xray config test result: $output"
+
+    log_info "Xray config test result: $output"
 
     load_ui_response
 
@@ -195,7 +257,7 @@ update_loading_progress() {
 
 remove_loading_progress() {
 
-    printlog true "Removing loading progress..."
+    log_info "Removing loading progress..."
     if [ ! -d "$ADDON_WEB_DIR" ]; then
         return
     fi
@@ -213,17 +275,16 @@ remove_loading_progress() {
 }
 
 fixme() {
-    printlog true "Attempting to fix XRAY UI issues..."
+    log_info "Attempting to fix XRAY UI issues..."
 
-    printlog true "Removing XRAY broken payload settings..."
+    log_info "Removing XRAY broken payload settings..."
+    sed -i '/^xray_payload/d' /jffs/addons/custom_settings.txt || log_warn "Failed to remove broken payload settings"
 
-    sed -i '/^xray_payload/d' /jffs/addons/custom_settings.txt
+    log_info "Removing file $UI_RESPONSE_FILE..."
+    rm -f $UI_RESPONSE_FILE || log_warn "Failed to remove $UI_RESPONSE_FILE"
 
-    printlog true "Removing file $UI_RESPONSE_FILE..."
-    rm -f $UI_RESPONSE_FILE
+    log_info "Removing file $XRAYUI_CLIENTS_FILE..."
+    rm -f $XRAYUI_CLIENTS_FILE || log_warn "Failed to remove $XRAYUI_CLIENTS_FILE"
 
-    printlog true "Removing file $XRAYUI_CLIENTS_FILE..."
-    rm -f $XRAYUI_CLIENTS_FILE
-
-    printlog true "Done with fixme function." "$CSUC"
+    log_ok "Done with fixme function."
 }

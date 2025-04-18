@@ -20,11 +20,11 @@ initial_response() {
     local logs_dor="${logs_dor:-false}"
     local logs_max_size="${logs_max_size:-10}"
 
-    printlog true "dnsmaq: $dnsmasq"
+    log_info "dnsmaq: $dnsmasq"
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg geoip "$geoip_date" --arg geosite "$geosite_date" --arg geoipurl "$geoipurl" --arg geositeurl "$geositeurl" \
         '.geodata.geoip_url = $geoipurl | .geodata.geosite_url = $geositeurl | .geodata.community["geoip.dat"] = $geoip | .geodata.community["geosite.dat"] = $geosite')
     if [ $? -ne 0 ]; then
-        printlog true "Error: Failed to update JSON content with file dates." $CERR
+        log_error "Error: Failed to update JSON content with file dates."
         return 1
     fi
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson geo_auto_update "$geo_auto_update" '.geodata.auto_update = $geo_auto_update')
@@ -56,14 +56,14 @@ initial_response() {
         backups="[]"
     fi
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson backups "$backups" '.xray.backups = $backups')
-    printlog true "Backups: $backups"
+    log_info "Backups: $backups"
 
     save_ui_response
 
     if [ $? -eq 0 ]; then
-        printlog true "Saved initial response successfully." $CSUC
+        log_ok "Saved initial response successfully."
     else
-        printlog true "Failed to save file dates to $UI_RESPONSE_FILE." $CERR
+        log_error "Failed to save file dates to $UI_RESPONSE_FILE."
         return 1
     fi
 }
@@ -82,46 +82,46 @@ apply_config() {
     update_loading_progress "Checking incoming configuration..." 5
 
     if [ -z "$incoming_config" ]; then
-        printlog true "No new server configuration provided."
+        log_info "No new server configuration provided."
         exit 1
     fi
 
-    printlog true "Setting up DNS rules for incoming configuration..."
+    log_info "Setting up DNS rules for incoming configuration..."
     incoming_config=$(rules_to_dns_domains "$incoming_config")
 
     echo "$incoming_config" >"$temp_config"
     if [ $? -ne 0 ]; then
-        printlog true "Failed to write incoming configuration to $temp_config." $CERR
+        log_error "Failed to write incoming configuration to $temp_config."
         exit 1
     fi
 
     jq empty "$temp_config" >/dev/null 2>&1
     if [ $? -ne 0 ]; then
-        printlog true "Invalid JSON format in incoming server configuration." $CERR
+        log_error "Invalid JSON format in incoming server configuration."
         rm -f "$temp_config"
         exit 1
     fi
 
-    printlog true "Applying new server configuration to $XRAY_CONFIG_FILE..."
+    log_info "Applying new server configuration to $XRAY_CONFIG_FILE..."
     cp "$XRAY_CONFIG_FILE" "$backup_config"
     if [ $? -ne 0 ]; then
-        printlog true "Failed to backup existing configuration to $backup_config." $CERR
+        log_error "Failed to backup existing configuration to $backup_config."
         rm -f "$temp_config"
         exit 1
     fi
 
-    printlog true "Existing configuration backed up to $backup_config."
+    log_info "Existing configuration backed up to $backup_config."
     cp "$temp_config" "$XRAY_CONFIG_FILE"
     if [ $? -ne 0 ]; then
-        printlog true "Failed to apply new configuration to $XRAY_CONFIG_FILE." $CERR
+        log_error "Failed to apply new configuration to $XRAY_CONFIG_FILE."
         cp "$backup_config" "$XRAY_CONFIG_FILE"
         if [ $? -ne 0 ]; then
-            printlog true "Critical: Failed to restore configuration from backup." $CERR
+            log_error "Critical: Failed to restore configuration from backup."
         fi
         rm -f "$temp_config"
         exit 1
     fi
-    printlog true "New server configuration applied successfully." $CSUC
+    log_ok "New server configuration applied successfully."
 
     rm -f "$temp_config"
 
@@ -132,13 +132,13 @@ apply_config() {
     fi
 
     if [ $? -ne 0 ]; then
-        printlog true "Failed to restart Xray service after applying new configuration." $CERR
+        log_error "Failed to restart Xray service after applying new configuration."
         cp "$backup_config" "$XRAY_CONFIG_FILE"
         restart
         exit 1
     fi
 
-    printlog true "Xray service restarted successfully with the new configuration." $CSUC
+    log_ok "Xray service restarted successfully with the new configuration."
 
     rm -f "$backup_config"
 
@@ -203,14 +203,14 @@ toggle_startup() {
     local xray_startup=$(am_settings_get xray_startup)
     if [ -z "$xray_startup" ]; then
         am_settings_set xray_startup "y"
-        printlog true "xray_startup was empty. Set to 'enabled'." $CWARN
+        log_warn "xray_startup was empty. Set to 'enabled'."
     else
         if [ "$xray_startup" = "y" ]; then
             am_settings_set xray_startup "n"
-            printlog true "xray_startup was 'enabled'. Set to 'disabled'." $CSUC
+            log_ok "xray_startup was 'enabled'. Set to 'disabled'."
         else
             am_settings_set xray_startup "y"
-            printlog true "xray_startup was 'disabled'. Set to 'enabled'." $CSUC
+            log_ok "xray_startup was 'disabled'. Set to 'enabled'."
         fi
     fi
 }

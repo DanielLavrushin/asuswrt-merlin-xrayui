@@ -12,50 +12,50 @@ LR_STANZA="/opt/etc/logrotate.d/xrayui"
 # Add or refresh the CRU job (every 5 min by default)
 #
 cron_logrotate_add() {
-    printlog true "Configuring $CRU_LR_ID cron job for $ADDON_TITLE"
+    log_info "Configuring $CRU_LR_ID cron job for $ADDON_TITLE"
 
     [ -f "$LR_STANZA" ] || {
-        printlog true "No $LR_STANZA found – skipping CRU job creation." $CWARN
+        log_warn "No $LR_STANZA found – skipping CRU job creation."
         return
     }
 
     cron_job_delete "$CRU_LR_ID"
     cru a "$CRU_LR_ID" "*/15 * * * * flock -n /tmp/${CRU_LR_ID}.lock $ADDON_SCRIPT cron logrotate" || {
-        printlog true "Failed to add CRU job for $ADDON_TITLE" $CERR
+        log_error "Failed to add CRU job for $ADDON_TITLE"
         return
     }
-    printlog true "CRON job $CRU_LR_ID for $ADDON_TITLE added successfully" $CSUC
+    log_ok "CRON job $CRU_LR_ID for $ADDON_TITLE added successfully"
 }
 
 #
 # Run logrotate once (called by CRU)
 #
 cron_logrotate_run() {
-    printlog true "Running logrotate for $ADDON_TITLE"
+    log_info "Running logrotate for $ADDON_TITLE"
 
     [ -f "$LR_CONF" ] || {
-        printlog true "No $LR_CONF found – skipping logrotate." $CWARN
+        log_warn "No $LR_CONF found – skipping logrotate."
         return
     }
 
     [ -f "$LR_STANZA" ] || {
-        printlog true "No $LR_STANZA found – skipping logrotate." $CWARN
+        log_warn "No $LR_STANZA found – skipping logrotate."
         return
     }
     if [ ! -x "$LR_BIN" ]; then
-        printlog true "logrotate binary not found – aborting rotation." $CERR
+        log_error "logrotate binary not found – aborting rotation."
         exit 1
     fi
 
     exec "$LR_BIN" -s "$LR_STATUS" "$LR_CONF" || {
-        printlog true "logrotate failed with exit code $?" $CERR
+        log_error "logrotate failed with exit code $?"
         exit 1
     }
-    printlog true "logrotate completed successfully" $CSUC
+    log_ok "logrotate completed successfully"
 }
 
 cron_geodata_add() {
-    printlog true "Configuring $CRU_GEOUPD_ID cron job for $ADDON_TITLE"
+    log_info "Configuring $CRU_GEOUPD_ID cron job for $ADDON_TITLE"
 
     load_xrayui_config
     local geo_auto_update="${geo_auto_update:-false}"
@@ -63,12 +63,12 @@ cron_geodata_add() {
 
     if [ "$geo_auto_update" = "true" ]; then
         cru a "$CRU_GEOUPD_ID" "0 3 */1 * * flock -n /tmp/${CRU_GEOUPD_ID}.lock $ADDON_SCRIPT cron geodata" || {
-            printlog true "Failed to add CRU job for $ADDON_TITLE" $CERR
+            log_error "Failed to add CRU job for $ADDON_TITLE"
             return
         }
-        printlog true "CRON job $CRU_GEOUPD_ID for $ADDON_TITLE added successfully" $CSUC
+        log_ok "CRON job $CRU_GEOUPD_ID for $ADDON_TITLE added successfully"
     else
-        printlog true "CRON job $CRU_GEOUPD_ID for $ADDON_TITLE not added (geo_auto_update is false)" $CWARN
+        log_warn "CRON job $CRU_GEOUPD_ID for $ADDON_TITLE not added (geo_auto_update is false)"
     fi
 
 }
@@ -79,18 +79,18 @@ cron_job_delete() {
 }
 
 cron_jobs_clear() {
-    printlog true "Clearing cron jobs for $ADDON_TITLE"
+    log_info "Clearing cron jobs for $ADDON_TITLE"
     # Delete all cru jobs whose name starts with xrayui
     cru l | awk -F'#' 'NF>=2 {print $(NF-1)}' | grep '^xrayui' |
         while read -r id; do
-            printlog true " - Deleting cron job $id" $CWARN
+            log_warn " - Deleting cron job $id"
             cru d "$id"
         done
 }
 
 cron_jobs_add() {
 
-    printlog true "Adding cron jobs for $ADDON_TITLE"
+    log_info "Adding cron jobs for $ADDON_TITLE"
     cron_logrotate_add
     cron_geodata_add
 }

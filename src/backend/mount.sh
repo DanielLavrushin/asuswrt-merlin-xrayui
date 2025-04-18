@@ -9,18 +9,18 @@ mount_ui() {
 
     nvram get rc_support | grep -q am_addons
     if [ $? != 0 ]; then
-        printlog true "This firmware does not support addons!" $CERR
+        log_error "This firmware does not support addons!"
         exit 5
     fi
 
     get_webui_page true
 
     if [ "$ADDON_USER_PAGE" = "none" ]; then
-        printlog true "Unable to install XRAYUI" $CERR
+        log_error "Unable to install XRAYUI"
         exit 5
     fi
 
-    printlog true "Mounting XRAYUI as $ADDON_USER_PAGE"
+    log_info "Mounting XRAYUI as $ADDON_USER_PAGE"
 
     ln -s -f "$ADDON_JFFS_ADN_DIR/index.asp" "/www/user/$ADDON_USER_PAGE"
     echo "xrayui" >"/www/user/$(echo $ADDON_USER_PAGE | cut -f1 -d'.').title"
@@ -45,15 +45,15 @@ mount_ui() {
         mkdir -p "$ADDON_SHARE_DIR/data"
     fi
 
-    ln -s -f "$ADDON_SCRIPT" "/opt/bin/$ADDON_TAG" || printlog true "Failed to create symlink for $ADDON_TAG." $CERR
+    ln -s -f "$ADDON_SCRIPT" "/opt/bin/$ADDON_TAG" || log_error "Failed to create symlink for $ADDON_TAG."
 
-    ln -s -f "$ADDON_JFFS_ADN_DIR/app.js" $ADDON_WEB_DIR/app.js || printlog true "Failed to create symlink for app.js." $CERR
-    ln -s -f "$XRAY_CONFIG_FILE" "$ADDON_WEB_DIR/xray-config.json" || printlog true "Failed to create symlink for xray-config.json." $CERR
+    ln -s -f "$ADDON_JFFS_ADN_DIR/app.js" $ADDON_WEB_DIR/app.js || log_error "Failed to create symlink for app.js."
+    ln -s -f "$XRAY_CONFIG_FILE" "$ADDON_WEB_DIR/xray-config.json" || log_error "Failed to create symlink for xray-config.json."
 
     geodata_remount_to_web
 
     clear_lock
-    printlog true "XRAYUI mounted successfully as $ADDON_USER_PAGE" $CSUC
+    log_ok "XRAYUI mounted successfully as $ADDON_USER_PAGE"
 }
 
 unmount_ui() {
@@ -62,7 +62,7 @@ unmount_ui() {
 
     nvram get rc_support | grep -q am_addons
     if [ $? != 0 ]; then
-        printlog true "This firmware does not support addons!" $CERR
+        log_error "This firmware does not support addons!"
         exit 5
     fi
 
@@ -71,17 +71,17 @@ unmount_ui() {
     local base_user_page="${ADDON_USER_PAGE%.asp}"
 
     if [ -z "$ADDON_USER_PAGE" ] || [ "$ADDON_USER_PAGE" = "none" ]; then
-        printlog true "No XRAYUI page found to unmount. Continuing to clean up..." $CWARN
+        log_warn "No XRAYUI page found to unmount. Continuing to clean up..."
     else
-        printlog true "Unmounting XRAYUI $ADDON_USER_PAGE"
+        log_info "Unmounting XRAYUI $ADDON_USER_PAGE"
         rm -fr /www/user/$ADDON_USER_PAGE
         rm -fr /www/user/$base_user_page.title
     fi
 
     if [ ! -f /tmp/menuTree.js ]; then
-        printlog true "menuTree.js not found, skipping unmount." $CWARN
+        log_warn "menuTree.js not found, skipping unmount."
     else
-        printlog true "Removing any X-RAY menu entry from menuTree.js."
+        log_info "Removing any X-RAY menu entry from menuTree.js."
         # Safely remove entries with tabName: "X-RAY"
         grep -v "tabName: \"X-RAY\"" /tmp/menuTree.js >/tmp/menuTree_temp.js
         mv /tmp/menuTree_temp.js /tmp/menuTree.js
@@ -90,16 +90,16 @@ unmount_ui() {
         mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
     fi
 
-    rm -rf "/opt/bin/$ADDON_TAG" || printlog true "Failed to remove symlink for $ADDON_TAG." $CERR
+    rm -rf "/opt/bin/$ADDON_TAG" || log_error "Failed to remove symlink for $ADDON_TAG."
 
     clear_lock
 
-    printlog true "Unmount completed." $CSUC
+    log_ok "Unmount completed."
 }
 
 remount_ui() {
     if [ "$1" != "skipwait" ]; then
-        printlog true "sleeping for 10 seconds..." $CWARN
+        log_warn "sleeping for 10 seconds..."
         # sleep 10
     fi
 

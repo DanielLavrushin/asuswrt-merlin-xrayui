@@ -3,7 +3,7 @@
 
 show_version() {
     XRAY_VERSION=$(xray version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
-    printlog true "XRAYUI: $XRAYUI_VERSION, XRAY-CORE: $XRAY_VERSION" "$CSUC"
+    log_ok "XRAYUI: $XRAYUI_VERSION, XRAY-CORE: $XRAY_VERSION"
 }
 
 switch_xray_version() {
@@ -13,7 +13,7 @@ switch_xray_version() {
     local payload=$(reconstruct_payload)
     local version_url=$(echo "$payload" | jq -r '.url')
     if [ -z "$version_url" ] || [ "$version_url" = "null" ]; then
-        printlog true "Error: no 'url' field found in payload" "$CERR"
+        log_error "Error: no 'url' field found in payload"
         return 1
     fi
 
@@ -21,11 +21,11 @@ switch_xray_version() {
     stop
 
     update_loading_progress "Downloading Xray release version..."
-    printlog true "Downloading Xray asset metadata $version_url" "$CSUC"
+    log_ok "Downloading Xray asset metadata $version_url"
 
     local release_data=$(curl -sSL "$version_url")
     if [ -z "$release_data" ]; then
-        printlog true "Error: could not fetch release data from $version_url" "$CERR"
+        log_error "Error: could not fetch release data from $version_url"
     fi
 
     local arch=$(uname -m)
@@ -72,29 +72,29 @@ switch_xray_version() {
         jq -r --arg NAME "$asset_name" '.[] | select(.name == $NAME) | .browser_download_url')
     asset_url=$(github_proxy_url "$asset_url")
 
-    printlog true "Xray Core Asset URL: $asset_url" "$CSUC"
+    log_ok "Xray Core Asset URL: $asset_url"
 
     if [ -z "$asset_url" ] || [ "$asset_url" = "null" ]; then
-        printlog true "Error: could not find asset '$asset_name' in the release data" "$CERR"
+        log_error "Error: could not find asset '$asset_name' in the release data"
     fi
 
     update_loading_progress "Downloading $asset_name ..."
     local tmp_zip="/tmp/xraycore.zip"
     rm -rf "$tmp_zip"
 
-    printlog true "Downloading Xray release version $asset_url into $tmp_zip" "$CSUC"
+    log_ok "Downloading Xray release version $asset_url into $tmp_zip"
     curl -L "$asset_url" -o "$tmp_zip"
     if [ $? -ne 0 ] || [ ! -f "$tmp_zip" ]; then
-        printlog true "Failed to download $asset_name." "$CERR"
+        log_error "Failed to download $asset_name."
         return 1
     fi
 
     update_loading_progress "Unpacking $asset_name ..."
-    printlog true "Unpacking $asset_name..." "$CSUC"
+    log_ok "Unpacking $asset_name..."
     mkdir -p "$xray_tmp_dir"
 
     if ! unzip -o "$tmp_zip" -d "$xray_tmp_dir"; then
-        printlog true "Error: failed to unzip $tmp_zip" "$CERR"
+        log_error "Error: failed to unzip $tmp_zip"
         return 1
     fi
 

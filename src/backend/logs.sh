@@ -50,7 +50,7 @@ change_log_level() {
   local payload=$(reconstruct_payload)
   local log_level=$(echo "$payload" | jq -r '.log_level')
 
-  printlog true "Changing log level to $log_level..."
+  log_info "Changing log level to $log_level..."
 
   local updated_json=$(jq --arg log_level "$log_level" '
         if .log.loglevel then del(.log.loglevel) else . end |
@@ -58,7 +58,7 @@ change_log_level() {
     ' "$XRAY_CONFIG_FILE")
 
   if [ $? -ne 0 ]; then
-    printlog true "Error: Failed to update JSON content with log level." "$CERR"
+    log_error "Error: Failed to update JSON content with log level."
     return 1
   fi
 
@@ -79,11 +79,11 @@ enable_config_logs() {
 
   local temp_file="/tmp/xray_config.json"
 
-  printlog true "Checking for the 'log' section in the Xray configuration."
+  log_info "Checking for the 'log' section in the Xray configuration."
 
   # Check if the config file exists
   if [ ! -f "$XRAY_CONFIG_FILE" ]; then
-    printlog true "Configuration file not found: $XRAY_CONFIG_FILE"
+    log_info "Configuration file not found: $XRAY_CONFIG_FILE"
     return 1
   fi
 
@@ -93,7 +93,7 @@ enable_config_logs() {
 
   # Check if the 'log' section is missing
   if ! jq -e '.log' "$XRAY_CONFIG_FILE" >/dev/null 2>&1; then
-    printlog true "'log' section is missing. Adding it to the configuration."
+    log_info "'log' section is missing. Adding it to the configuration."
 
     # Add the 'log' section
     jq --arg access "$ADDON_LOGS_DIR/xray_access.log" \
@@ -108,14 +108,14 @@ enable_config_logs() {
 
     if [ $? -eq 0 ]; then
       mv "$temp_file" "$XRAY_CONFIG_FILE"
-      printlog true "'log' section added successfully."
+      log_info "'log' section added successfully."
     else
-      printlog true "Failed to update the configuration with 'log' section."
+      log_info "Failed to update the configuration with 'log' section."
       rm -f "$temp_file"
       return 1
     fi
   else
-    printlog true "'log' section already exists in the configuration."
+    log_info "'log' section already exists in the configuration."
   fi
 
   if [ -f "$XRAY_PIDFILE" ]; then
@@ -128,7 +128,7 @@ enable_config_logs() {
 
 logrotate_setup() {
   # setup logrotate
-  printlog true "Setting up logrotate for XRAY UI..."
+  log_info "Setting up logrotate for XRAY UI..."
 
   load_xrayui_config
   local logs_max_size=${logs_max_size:-10}
@@ -148,7 +148,7 @@ $log_access $log_error {
 }
 EOF
 
-  chmod 0644 /opt/etc/logrotate.d/xrayui || printlog true "Failed to make logrotate executable." $CERR
-  printlog true "Logrotate configuration created successfully." $CSUC
+  chmod 0644 /opt/etc/logrotate.d/xrayui || log_error "Failed to make logrotate executable."
+  log_ok "Logrotate configuration created successfully."
 
 }

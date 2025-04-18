@@ -6,7 +6,7 @@ get_connected_clients() {
     load_xrayui_config
 
     local temp_file="/tmp/xray_clients_online.json"
-    >"$temp_file" || printlog true "Failed to create temporary file: $temp_file" $CERR
+    >"$temp_file" || log_error "Failed to create temporary file: $temp_file"
 
     local ports_list=""
     local inbounds_ports=$(jq -r '.inbounds[]
@@ -25,7 +25,7 @@ get_connected_clients() {
         fi
     done
 
-    printlog true "Checking connected clients for ports: $ports_list"
+    log_debug "Checking connected clients for ports: $ports_list"
 
     local pattern=$(echo "$ports_list" | tr ' ' '\n' | grep -E '^[0-9]+$' | sort -n -u | awk '{printf "%s|", $0}' | sed 's/|$//')
 

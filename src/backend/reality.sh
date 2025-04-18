@@ -2,11 +2,11 @@
 # shellcheck disable=SC2034  # codacy:Unused variables
 
 regenerate_reality_keys() {
-    printlog true "Regenerating Reality private and public keys..."
+    log_info "Regenerating Reality private and public keys..."
 
     local xray_output=$(xray x25519)
     if [ $? -ne 0 ]; then
-        printlog true "Failed to run xray x25519." $CERR
+        log_error "Failed to run xray x25519."
         return 1
     fi
 
@@ -14,7 +14,7 @@ regenerate_reality_keys() {
     local public_key=$(echo "$xray_output" | grep 'Public key:' | awk -F'Public key: ' '{print $2}')
 
     if [ -z "$private_key" ] || [ -z "$public_key" ]; then
-        printlog true "Failed to extract Reality keys from xray x25519 output." $CERR
+        log_error "Failed to extract Reality keys from xray x25519 output."
         return 1
     fi
 
@@ -23,16 +23,16 @@ regenerate_reality_keys() {
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg pk "$private_key" --arg pub "$public_key" '.reality.privateKey = $pk | .reality.publicKey = $pub')
 
     if [ $? -ne 0 ]; then
-        printlog true "Error: Failed to update JSON content." $CERR
+        log_error "Error: Failed to update JSON content."
         return 1
     fi
 
     save_ui_response
 
     if [ $? -eq 0 ]; then
-        printlog true "Saved TLS certificates to $UI_RESPONSE_FILE successfully." $CSUC
+        log_ok "Saved TLS certificates to $UI_RESPONSE_FILE successfully."
     else
-        printlog true "Failed to save TLS certificates to $UI_RESPONSE_FILE." $CERR
+        log_error "Failed to save TLS certificates to $UI_RESPONSE_FILE."
         return 1
     fi
 }

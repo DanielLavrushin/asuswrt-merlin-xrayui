@@ -3,7 +3,7 @@
 
 backup_clearall() {
 
-    printlog true "Starting clear all..." "$CINFO"
+    log_info "Starting clear all..."
     update_loading_progress "Clear all backups..."
 
     local backup_dir="$ADDON_SHARE_DIR/backup"
@@ -11,12 +11,12 @@ backup_clearall() {
     if [ -d "$backup_dir" ]; then
         rm -rf "$backup_dir"
         if [ $? -ne 0 ]; then
-            printlog true "Failed to remove backup directory $backup_dir." "$CERR"
+            log_error "Failed to remove backup directory $backup_dir."
             return 1
         fi
-        printlog true "Backup directory $backup_dir removed successfully." "$CSUC"
+        log_ok "Backup directory $backup_dir removed successfully."
     else
-        printlog true "Backup directory $backup_dir does not exist." "$CERR"
+        log_error "Backup directory $backup_dir does not exist."
     fi
 
     backup_remount_to_web
@@ -26,7 +26,7 @@ backup_clearall() {
 }
 
 backup_configuration() {
-    printlog true "Starting backup configuration..." "$CINFO"
+    log_info "Starting backup configuration..."
     update_loading_progress "Backup configuration..."
 
     local backup_dir="$ADDON_SHARE_DIR/backup"
@@ -40,31 +40,31 @@ backup_configuration() {
         if [ -e "$item" ]; then
             items_list="$items_list $item"
         else
-            printlog true "Item not found: $item" "$CERR"
+            log_error "Item not found: $item"
         fi
     done
 
     if [ -z "$items_list" ]; then
-        printlog true "No configuration items found to backup." "$CERR"
+        log_error "No configuration items found to backup."
         return 1
     fi
 
     update_loading_progress "Creating backup archive $backup_file..."
-    printlog true "Creating backup archive $backup_file..." "$CINFO"
+    log_info "Creating backup archive $backup_file..."
     tar -czf "$backup_file" $items_list ||
         {
-            printlog true "Failed to create backup." "$CERR"
+            log_error "Failed to create backup."
             return 1
         }
 
     if [ $? -ne 0 ]; then
-        printlog true "Failed to create backup archive." "$CERR"
+        log_error "Failed to create backup archive."
         return 1
     fi
 
     backup_remount_to_web
 
-    printlog true "Backup created successfully: $backup_file" "$CSUC"
+    log_ok "Backup created successfully: $backup_file"
     update_loading_progress "Backup created successfully: $backup_file" 100
 }
 
@@ -77,31 +77,31 @@ backup_remount_to_web() {
     if [ ! -d "$web_backup" ]; then
         mkdir -p "$web_backup"
         if [ $? -ne 0 ]; then
-            printlog true "Error: Failed to create directory '$web_backup'." "$CERR"
+            log_error "Error: Failed to create directory '$web_backup'."
             exit 1
         fi
     fi
 
     for file in "$share_backup"/*; do
-        printlog true "Processing file: $file" "$CINFO"
+        log_info "Processing file: $file"
         if [ -f "$file" ]; then
             local symlink="$web_backup/$(basename "$file")"
             ln -s -f "$file" "$symlink"
             if [ $? -ne 0 ]; then
-                printlog true "Error: Failed to create symlink '$symlink' -> '$file'." "$CERR"
+                log_error "Error: Failed to create symlink '$symlink' -> '$file'."
                 return 1
             fi
-            printlog true "Created symlink '$symlink' -> '$file'." "$CSUC"
+            log_ok "Created symlink '$symlink' -> '$file'."
         fi
     done
 
-    printlog true "All symlinks created successfully in '$web_backup'." "$CSUC"
+    log_ok "All symlinks created successfully in '$web_backup'."
     return 0
 }
 
 backup_restore_configuration() {
 
-    printlog true "Starting restore configuration..." "$CINFO"
+    log_info "Starting restore configuration..."
     update_loading_progress "Restore configuration..."
 
     load_xrayui_config
@@ -111,30 +111,30 @@ backup_restore_configuration() {
     local payload=$(reconstruct_payload)
     local backup_file="$share_backup"/$(echo "$payload" | jq -r '.file')
 
-    printlog true "Backup file: $backup_file" "$CINFO"
+    log_info "Backup file: $backup_file"
 
     if [ -z "$backup_file" ]; then
-        printlog true "No backup file specified. Please provide a .tar.gz file to restore." "$CERR"
+        log_error "No backup file specified. Please provide a .tar.gz file to restore."
         return 1
     fi
 
     if [ ! -f "$backup_file" ]; then
-        printlog true "Backup file not found: $backup_file" "$CERR"
+        log_error "Backup file not found: $backup_file"
         return 1
     fi
 
-    printlog true "Starting restore from backup: $backup_file" "$CINFO"
+    log_info "Starting restore from backup: $backup_file"
     update_loading_progress "Restoring configuration from $backup_file..."
 
     tar -xzf "$backup_file" -C /
     if [ $? -ne 0 ]; then
-        printlog true "Failed to extract backup archive $backup_file." "$CERR"
+        log_error "Failed to extract backup archive $backup_file."
         return 1
     fi
 
     backup_remount_to_web
 
-    printlog true "Restore completed successfully from $backup_file." "$CSUC"
+    log_ok "Restore completed successfully from $backup_file."
     update_loading_progress "Restore complete." 100
 
 }

@@ -4,17 +4,17 @@
 install() {
 
     update_loading_progress "Installing $ADDON_TITLE..."
-    printlog true "Starting $ADDON_TITLE installation process."
+    log_info "Starting $ADDON_TITLE installation process."
 
     load_xrayui_config
 
     # Check for Entware
     if [ ! -x /opt/bin/opkg ]; then
-        printlog true "Entware is not installed or opkg binary is not accessible." $CERR
-        printlog true "Please install Entware first: https://github.com/Entware/Entware/wiki/Install-on-ASUSWRT" $CERR
+        log_error "Entware is not installed or opkg binary is not accessible."
+        log_error "Please install Entware first: https://github.com/Entware/Entware/wiki/Install-on-ASUSWRT"
         exit 1
     fi
-    printlog true "Entware is installed." $CSUC
+    log_info "Entware is installed."
 
     update_loading_progress "Installing dependencies..."
     install_opkg_package sed true
@@ -30,7 +30,7 @@ install() {
     # xrayui config
     if [ ! -f "$XRAYUI_CONFIG_FILE" ]; then
 
-        printlog true "XRAYUI config file not found. Creating default config."
+        log_info "XRAYUI config file not found. Creating default config."
 
         cat <<EOF >"$XRAYUI_CONFIG_FILE"
 geoip_url=
@@ -39,9 +39,9 @@ logs_dir=$ADDON_LOGS_DIR
 EOF
         chmod 600 "$XRAYUI_CONFIG_FILE"
 
-        printlog true "Default XRAYUI config created successfully." $CSUC
+        log_info "Default XRAYUI config created successfully."
     else
-        printlog true "XRAYUI config file $XRAYUI_CONFIG_FILE found."
+        log_info "XRAYUI config file $XRAYUI_CONFIG_FILE found."
     fi
 
     generate_xray_config
@@ -49,50 +49,50 @@ EOF
     # backup config
     local timestamp=$(date +%Y%m%d-%H%M%S)
     local backup_config="/opt/etc/xray/$(basename $XRAY_CONFIG_FILE).$timestamp.bak"
-    printlog true "Backing up $XRAY_CONFIG_FILE to $backup_config" $CSUC
+    log_info "Backing up $XRAY_CONFIG_FILE to $backup_config"
     cp -f "$XRAY_CONFIG_FILE" "$backup_config"
 
     update_loading_progress "Configuring XRAY UI..."
     # Add or update nat-start
-    printlog true "Ensuring /jffs/scripts/nat-start contains required entry."
+    log_info "Ensuring /jffs/scripts/nat-start contains required entry."
     mkdir -p /jffs/scripts
     if [ ! -f /jffs/scripts/nat-start ]; then
         echo "#!/bin/sh" >/jffs/scripts/nat-start
     else
-        printlog true "Removing existing #xrayui entries from /jffs/scripts/nat-start."
+        log_info "Removing existing #xrayui entries from /jffs/scripts/nat-start."
         sed -i '/#xrayui/d' /jffs/scripts/nat-start
     fi
 
     echo '/jffs/scripts/xrayui service_event firewall configure #xrayui' >>/jffs/scripts/nat-start
     chmod +x /jffs/scripts/nat-start
-    printlog true "Updated /jffs/scripts/nat-start with XrayUI entry." $CSUC
+    log_info "Updated /jffs/scripts/nat-start with XrayUI entry."
 
     # Add or update post-mount
-    printlog true "Ensuring /jffs/scripts/post-mount contains required entry."
+    log_info "Ensuring /jffs/scripts/post-mount contains required entry."
     mkdir -p /jffs/scripts
     if [ ! -f /jffs/scripts/post-mount ]; then
         echo "#!/bin/sh" >/jffs/scripts/post-mount
     else
-        printlog true "Removing existing #xrayui entries from /jffs/scripts/post-mount."
+        log_info "Removing existing #xrayui entries from /jffs/scripts/post-mount."
         sed -i '/#xrayui/d' /jffs/scripts/post-mount
     fi
     chmod +x /jffs/scripts/post-mount
     echo "/jffs/scripts/xrayui service_event startup & #xrayui" >>/jffs/scripts/post-mount
-    printlog true "Updated /jffs/scripts/post-mount with XrayUI entry." $CSUC
+    log_info "Updated /jffs/scripts/post-mount with XrayUI entry."
 
     # Add or update service-event
-    printlog true "Ensuring /jffs/scripts/service-event contains required entry."
+    log_info "Ensuring /jffs/scripts/service-event contains required entry."
     if [ ! -f /jffs/scripts/service-event ]; then
         echo "#!/bin/sh" >/jffs/scripts/service-event
     else
-        printlog true "Removing existing #xrayui entries from /jffs/scripts/service-event."
+        log_info "Removing existing #xrayui entries from /jffs/scripts/service-event."
         sed -i '/#xrayui/d' /jffs/scripts/service-event
     fi
     chmod +x /jffs/scripts/service-event
     echo "echo \"\$2\" | grep -q \"^xrayui\" && /jffs/scripts/xrayui service_event \$(echo \"\$2\" | cut -d'_' -f2- | tr '_' ' ') & #xrayui" >>/jffs/scripts/service-event
-    printlog true "Updated /jffs/scripts/service-event with XrayUI entry." $CSUC
+    log_info "Updated /jffs/scripts/service-event with XrayUI entry."
 
-    printlog true "Mounting web page..."
+    log_info "Mounting web page..."
     remount_ui "skipwait"
 
     am_settings_set xray_version $XRAYUI_VERSION
@@ -100,35 +100,35 @@ EOF
     xray_startup=$(am_settings_get xray_startup)
     if [ -z "$xray_startup" ]; then
         am_settings_set xray_startup "y"
-        printlog true "xray_startup was empty. Set to 'enabled'." $CWARN
+        log_warn "xray_startup was empty. Set to 'enabled'."
     else
-        printlog true "xray_startup already set. Skipping."
+        log_info "xray_startup already set. Skipping."
     fi
 
     mkdir -p $ADDON_USER_SCRIPTS_DIR
 
     # Install and setup geodata builder
-    printlog true "Installing XRAY UI geodata files builder..."
+    log_info "Installing XRAY UI geodata files builder..."
 
-    mkdir -p "$ADDON_SHARE_DIR" || printlog true "Failed to create $ADDON_SHARE_DIR." $CERR
+    mkdir -p "$ADDON_SHARE_DIR" || log_error "Failed to create $ADDON_SHARE_DIR."
 
     update_loading_progress "Downloading XRAYUI geodata files builder..."
 
     local release_url=$(github_proxy_url "https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/releases/latest/download/xrayui-datbuilder.tar.gz")
 
     if wget -q --show-progress --no-hsts -O "/tmp/xraydatbuilder.tar.gz" "$release_url"; then
-        tar -xzf /tmp/xraydatbuilder.tar.gz -C "$ADDON_SHARE_DIR" || printlog true "Failed to extract xraydatbuilder.tar.gz." $CERR
-        rm -f /tmp/xraydatbuilder.tar.gz || printlog true "Failed to remove xraydatbuilder.tar.gz." $CERR
-        chmod +x "$ADDON_SHARE_DIR/xraydatbuilder" || printlog true "Failed to make xraydatbuilder executable." $CERR
+        tar -xzf /tmp/xraydatbuilder.tar.gz -C "$ADDON_SHARE_DIR" || log_error "Failed to extract xraydatbuilder.tar.gz."
+        rm -f /tmp/xraydatbuilder.tar.gz || log_error "Failed to remove xraydatbuilder.tar.gz."
+        chmod +x "$ADDON_SHARE_DIR/xraydatbuilder" || log_error "Failed to make xraydatbuilder executable."
     else
-        printlog true "Failed to download XRAYUI geodata files builder." $CERR
+        log_error "Failed to download XRAYUI geodata files builder."
     fi
 
     # setup logrotate
     logrotate_setup
 
     # setup cron jobs
-    printlog true "Configuring cron jobs for $ADDON_TITLE"
+    log_info "Configuring cron jobs for $ADDON_TITLE"
     cron_jobs_add
 
     update_community_geodata
@@ -139,7 +139,7 @@ EOF
     local json_content=$(cat "$XRAY_CONFIG_FILE")
 
     # patch 0.41->0.42 - force logs to be placed in usb storage mount
-    printlog true "Applying patch 0.41->0.42 to $XRAY_CONFIG_FILE" $CSUC
+    log_info "Applying patch 0.41->0.42 to $XRAY_CONFIG_FILE"
     if [ ! -d "$ADDON_LOGS_DIR" ]; then
         mkdir -p $ADDON_LOGS_DIR
     fi
@@ -158,88 +158,88 @@ EOF
 
     # ---------------------------------------------------------
 
-    printlog true ""
-    printlog true "================================================" $CSUC
-    printlog true "| Installation process completed successfully. |" $CSUC
-    printlog true "================================================" $CSUC
-    printlog true ""
+    log_info ""
+    log_info "================================================"
+    log_info "| Installation process completed successfully. |"
+    log_info "================================================"
+    log_info ""
 
     update_loading_progress "Installation completed successfully."
 }
 
 uninstall() {
-    printlog true "Starting XRAY UI uninstallation process."
+    log_info "Starting XRAY UI uninstallation process."
 
     # Stop XRAY service if running
     if [ -f "$XRAY_PIDFILE" ]; then
-        printlog true "Stopping XRAY service..."
+        log_info "Stopping XRAY service..."
         stop
         rm -f $XRAY_PIDFILE
-        printlog true "XRAY service stopped." $CSUC
+        log_info "XRAY service stopped."
     else
-        printlog true "XRAY service is not running." $CWARN
+        log_warn "XRAY service is not running."
     fi
 
     # Remove XRAY UI files
-    printlog true "Removing XRAY UI files..."
-    rm -rf "$ADDON_WEB_DIR" || printlog true "Failed to remove $ADDON_WEB_DIR." $CWARN
-    rm -rf "$ADDON_JFFS_ADN_DIR" || printlog true "Failed to remove $ADDON_JFFS_ADN_DIR." $CWARN
-    rm -rf "/tmp/xray_clients_online.json" || printlog true "Failed to remove /tmp/xray_clients_online.json." $CWARN
-    rm -rf "$ADDON_SHARE_DIR/logs" || printlog true "Failed to remove $ADDON_SHARE_DIR/logs." $CWARN
+    log_info "Removing XRAY UI files..."
+    rm -rf "$ADDON_WEB_DIR" || log_warn "Failed to remove $ADDON_WEB_DIR."
+    rm -rf "$ADDON_JFFS_ADN_DIR" || log_warn "Failed to remove $ADDON_JFFS_ADN_DIR."
+    rm -rf "/tmp/xray_clients_online.json" || log_warn "Failed to remove /tmp/xray_clients_online.json."
+    rm -rf "$ADDON_SHARE_DIR/logs" || log_warn "Failed to remove $ADDON_SHARE_DIR/logs."
 
     if [ $? -eq 0 ]; then
-        printlog true "XRAY UI files removed successfully." $CSUC
+        log_info "XRAY UI files removed successfully."
     else
-        printlog true "Failed to remove XRAY UI files." $CERR
+        log_error "Failed to remove XRAY UI files."
         exit 1
     fi
 
     # clean up services-start
-    printlog true "Removing existing #xrayui entries from /jffs/scripts/services-start."
+    log_info "Removing existing #xrayui entries from /jffs/scripts/services-start."
     sed -i '/#xrayui/d' /jffs/scripts/services-start
 
     # clean up nat-start
-    printlog true "Removing existing #xrayui entries from /jffs/scripts/nat-start."
+    log_info "Removing existing #xrayui entries from /jffs/scripts/nat-start."
     sed -i '/#xrayui/d' /jffs/scripts/nat-start
 
     # clean up post-mount
-    printlog true "Removing existing #xrayui entries from /jffs/scripts/post-mount."
+    log_info "Removing existing #xrayui entries from /jffs/scripts/post-mount."
     sed -i '/#xrayui/d' /jffs/scripts/post-mount
 
     # clean up service-event
-    printlog true "Removing existing #xrayui entries from /jffs/scripts/service-event."
+    log_info "Removing existing #xrayui entries from /jffs/scripts/service-event."
     sed -i '/#xrayui/d' /jffs/scripts/service-event
 
     # Unmount UI
-    printlog true "Unmounting XRAY UI..."
+    log_info "Unmounting XRAY UI..."
     unmount_ui
 
     if [ $? -eq 0 ]; then
-        printlog true "XRAY UI unmounted successfully." $CSUC
+        log_info "XRAY UI unmounted successfully."
     else
-        printlog true "Failed to unmount XRAY UI." $CERR
+        log_error "Failed to unmount XRAY UI."
         exit 1
     fi
 
     # Remove XRAY custom settings
-    printlog true "Removing XRAY custom settings..."
+    log_info "Removing XRAY custom settings..."
 
     grep '^xray_' /jffs/addons/custom_settings.txt | while IFS='=' read -r var_name _; do
         [ -n "$var_name" ] && am_settings_del "$var_name"
     done
 
-    printlog true "Custom settings removed successfully." $CSUC
+    log_info "Custom settings removed successfully."
 
     # Remove XRAY UI shared files
-    printlog true "Removing XRAY UI geodata files builder..."
+    log_info "Removing XRAY UI geodata files builder..."
     rm -rf /opt/share/xrayui/xraydatbuilder
 
     echo
-    printlog true "Do you want to remove custom GEODATA? (yes/no)" $CWARN
+    log_warn "Do you want to remove custom GEODATA? (yes/no)"
     read -r user_input
 
     if [ "$user_input" = "yes" ] || [ "$user_input" = "y" ]; then
-        printlog true "Removing custom GEODATA..."
+        log_info "Removing custom GEODATA..."
         rm -rf /opt/share/xrayui
 
         #Remove XRAY custom geodata
@@ -247,53 +247,53 @@ uninstall() {
         rm -rf /opt/sbin/geosite.dat
         rm -rf /opt/sbin/geoip.dat
     else
-        printlog true "Keeping custom GEODATA."
+        log_info "Keeping custom GEODATA."
     fi
     user_input=""
 
     # Ask user if they want to remove backups
     echo
-    printlog true "Do you want to remove BACKUPS? (yes/no)" $CWARN
+    log_warn "Do you want to remove BACKUPS? (yes/no)"
     read -r user_input
 
     if [ "$user_input" = "yes" ] || [ "$user_input" = "y" ]; then
-        printlog true "Removing  BACKUPS..."
+        log_info "Removing  BACKUPS..."
         backup_clearall
     else
-        printlog true "Keeping  BACKUPS."
+        log_info "Keeping  BACKUPS."
     fi
     user_input=""
 
     # Ask user if they want to remove XRAY (opkg) and its configs
     echo
-    printlog true "Do you want to remove XRAY (installed via opkg) and its configurations? (yes/no)" $CWARN
+    log_warn "Do you want to remove XRAY (installed via opkg) and its configurations? (yes/no)"
     read -r user_input
 
     if [ "$user_input" = "yes" ] || [ "$user_input" = "y" ]; then
         # Remove XRAY from Entware if installed
         if opkg list-installed | grep -q '^xray$'; then
-            printlog true "Removing XRAY from Entware..."
+            log_info "Removing XRAY from Entware..."
             if opkg remove xray; then
-                printlog true "XRAY removed successfully." $CSUC
+                log_info "XRAY removed successfully."
             else
-                printlog true "Failed to remove XRAY." $CERR
+                log_error "Failed to remove XRAY."
                 exit 1
             fi
         else
-            printlog true "XRAY is not installed."
+            log_info "XRAY is not installed."
         fi
 
         # Remove XRAY configuration files
-        printlog true "Removing XRAY configuration files..."
+        log_info "Removing XRAY configuration files..."
         rm -rf /opt/etc/xray
         if [ $? -eq 0 ]; then
-            printlog true "XRAY configuration files removed successfully." $CSUC
+            log_info "XRAY configuration files removed successfully."
         else
-            printlog true "Failed to remove XRAY configuration files." $CERR
+            log_error "Failed to remove XRAY configuration files."
             exit 1
         fi
     else
-        printlog true "Keeping XRAY and its configuration files."
+        log_info "Keeping XRAY and its configuration files."
     fi
 
     cron_jobs_clear
@@ -301,9 +301,9 @@ uninstall() {
     rm -rf /opt/etc/logrotate.d/xrayui
     rm -rf /jffs/scripts/xrayui
 
-    printlog true "==============================================" $CSUC
-    printlog true "Uninstallation process completed successfully." $CSUC
-    printlog true "==============================================" $CSUC
+    log_info "=============================================="
+    log_info "Uninstallation process completed successfully."
+    log_info "=============================================="
 }
 
 install_opkg_package() {
@@ -311,19 +311,19 @@ install_opkg_package() {
     local critical=$2
     # Check for jq
     if ! opkg list-installed | grep "$package -"; then
-        printlog true "$package is not installed. Installing $package..."
+        log_info "$package is not installed. Installing $package..."
         opkg update
         if opkg install $package; then
-            printlog true "$package installed successfully." $CSUC
+            log_info "$package installed successfully."
         else
             if [ "$critical" = true ]; then
-                printlog true "Critical package $package failed to install. Exiting." $CERR
+                log_error "Critical package $package failed to install. Exiting."
                 exit 1
             else
-                printlog true "Non-critical package $package failed to install. Continuing." $CERR
+                log_error "Non-critical package $package failed to install. Continuing."
             fi
         fi
     else
-        printlog true "$package is already installed."
+        log_info "$package is already installed."
     fi
 }

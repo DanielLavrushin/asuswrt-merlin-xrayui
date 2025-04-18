@@ -6,7 +6,7 @@ start() {
     load_xrayui_config
     test_xray_config
 
-    printlog true "Starting $ADDON_TITLE"
+    log_info "Starting $ADDON_TITLE"
 
     local TPROXY_MODE=$(
         jq -r '
@@ -17,14 +17,14 @@ start() {
     )
 
     if [ "$TPROXY_MODE" = "on" ]; then
-        printlog true "TPROXY mode is $TPROXY_MODE. Increasing max open files to 65535."
+        log_info "TPROXY mode is $TPROXY_MODE. Increasing max open files to 65535."
         ulimit -Hn 65535
         ulimit -Sn 65535
     fi
 
     local xray_clear_logs=${logs_dor:-false}
     if [ "$xray_clear_logs" = "true" ]; then
-        printlog true "Clearing Xray logs..."
+        log_info "Clearing Xray logs..."
         rm -f "$ADDON_LOGS_DIR/xray_access.log"
         rm -f "$ADDON_LOGS_DIR/xray_error.log"
     fi
@@ -37,21 +37,21 @@ start() {
 }
 
 stop() {
-    printlog true "Stopping $ADDON_TITLE"
+    log_info "Stopping $ADDON_TITLE"
 
     update_loading_progress "Stopping $ADDON_TITLE"
 
     killall xray
     if [ -f "$XRAY_PIDFILE" ]; then
         rm -f "$XRAY_PIDFILE"
-        printlog true "PID file $XRAY_PIDFILE removed successfully."
+        log_info "PID file $XRAY_PIDFILE removed successfully."
     fi
 
     cleanup_firewall
 }
 
 restart() {
-    printlog true "Restarting $ADDON_TITLE"
+    log_info "Restarting $ADDON_TITLE"
     stop
     sleep 4
     start

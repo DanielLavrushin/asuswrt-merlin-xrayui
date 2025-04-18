@@ -26,7 +26,7 @@ apply_general_options() {
     local geo_auto_update=$(echo "$genopts" | jq -r '.geo_auto_update')
 
     if [ ! -d "$ADDON_LOGS_DIR" ]; then
-        mkdir -p $ADDON_LOGS_DIR
+        mkdir -p "$ADDON_LOGS_DIR"
     fi
 
     local logs_access_path="$ADDON_LOGS_DIR/xray_access.log"
@@ -35,13 +35,13 @@ apply_general_options() {
     json_content=$(echo "$json_content" | jq --arg loglevel "$log_level" '.log.loglevel = $loglevel')
 
     if [ "$logs_access" = "true" ]; then
-        json_content=$(echo "$json_content" | jq --arg logs_access_path $logs_access_path '.log.access = $logs_access_path')
+        json_content=$(echo "$json_content" | jq --arg logs_access_path "$logs_access_path" '.log.access = $logs_access_path')
     else
         json_content=$(echo "$json_content" | jq '.log.access = "none"')
     fi
 
     if [ "$logs_error" = "true" ]; then
-        json_content=$(echo "$json_content" | jq --arg logs_error_path $logs_error_path '.log.error = $logs_error_path')
+        json_content=$(echo "$json_content" | jq --arg logs_error_path "$logs_error_path" '.log.error = $logs_error_path')
     else
         json_content=$(echo "$json_content" | jq '.log.error = "none"')
     fi
@@ -52,7 +52,9 @@ apply_general_options() {
         json_content=$(echo "$json_content" | jq 'del(.log.dnsLog)')
     fi
 
-    change_dnsmasq $logs_dnsmasq
+    change_dnsmasq "$logs_dnsmasq"
+
+    echo "$json_content" >"$XRAY_CONFIG_FILE"
 
     update_xrayui_config "dnsmasq" "$logs_dnsmasq"
     update_xrayui_config "github_proxy" "$github_proxy"
@@ -61,10 +63,6 @@ apply_general_options() {
     update_xrayui_config "logs_max_size" "$logs_max_size"
     update_xrayui_config "logs_dor" "$logs_dor"
     update_xrayui_config "geo_auto_update" "$geo_auto_update"
-
-    # Update configuration with the directory part of logs_access_path
-    local logs_dir=$(dirname "$logs_access_path")
-    update_xrayui_config "logs_dir" "$logs_dir"
 
     # Update the logrotate configuration with the new max size
     logrotate_setup

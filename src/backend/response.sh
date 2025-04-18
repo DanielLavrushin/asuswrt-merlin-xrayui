@@ -9,8 +9,19 @@ initial_response() {
     local geosite_file="/opt/sbin/geosite.dat"
 
     local geoip_date geosite_date
-    geoip_date=$(date -r "$geoip_file" "+%Y-%m-%d %H:%M:%S")
-    geosite_date=$(date -r "$geosite_file" "+%Y-%m-%d %H:%M:%S")
+    if [ -r "$geoip_file" ]; then
+        geoip_date=$(date -r "$geoip_file" "+%Y-%m-%d %H:%M:%S")
+    else
+        geoip_date="(missing)"
+        log_warn "GeoIP file not found at $geoip_file"
+    fi
+
+    if [ -r "$geosite_file" ]; then
+        geosite_date=$(date -r "$geosite_file" "+%Y-%m-%d %H:%M:%S")
+    else
+        geosite_date="(missing)"
+        log_warn "GeoSite file not found at $geosite_file"
+    fi
 
     local geositeurl="${geosite_url:-$DEFAULT_GEOSITE_URL}"
     local geoipurl="${geoip_url:-$DEFAULT_GEOIP_URL}"
@@ -40,12 +51,14 @@ initial_response() {
         [ -f "$f" ] || continue
         grep -qE '^\s*log-queries' "$f" &&
             grep -qE '^\s*log-facility=.*dnsmasq\.log' "$f" && dnsmasq_enabled=true
-        $dnsmasq_enabled && break
+        if [ "$dnsmasq_enabled" = true ]; then
+            break
+        fi
     done
 
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson dnsmasq "$dnsmasq_enabled" '.xray.dnsmasq = $dnsmasq') || log_error "Error: Failed to update JSON content with dnsmasq status."
 
-    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson logs_dor "$dnsmasq" '.xray.logs_dor = $logs_dor')
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson logs_dor "$logs_dor" '.xray.logs_dor = $logs_dor')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson logs_max_size "$logs_max_size" '.xray.logs_max_size = $logs_max_size')
 
     local XRAY_VERSION=$(xray version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1) || log_error "Error: Failed to get Xray version."

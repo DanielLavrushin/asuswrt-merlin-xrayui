@@ -65,8 +65,14 @@ backup)
     ;;
 cron)
     case "$2" in
+    addjobs)
+        cron_jobs_add
+        ;;
     logrotate)
         cron_logrotate_run
+        ;;
+    geodata)
+        update_community_geodata
         ;;
     *) ;;
     esac

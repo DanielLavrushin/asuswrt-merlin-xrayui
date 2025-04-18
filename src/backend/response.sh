@@ -14,6 +14,7 @@ initial_response() {
 
     local geositeurl="${geosite_url:-$DEFAULT_GEOSITE_URL}"
     local geoipurl="${geoip_url:-$DEFAULT_GEOIP_URL}"
+    local geo_auto_update="${geo_auto_update:-false}"
     local profile="${profile:-$DEFAULT_XRAY_PROFILE_NAME}"
     local dnsmasq="${dnsmasq:-false}"
     local logs_dor="${logs_dor:-false}"
@@ -26,6 +27,7 @@ initial_response() {
         printlog true "Error: Failed to update JSON content with file dates." $CERR
         return 1
     fi
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson geo_auto_update "$geo_auto_update" '.geodata.auto_update = $geo_auto_update')
 
     local uptime_xray=$(get_proc_uptime "xray")
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson uptime "$uptime_xray" '.xray.uptime = $uptime')

@@ -2,11 +2,14 @@
 
 ## [0.44.0] - 2025-04-18
 
-- ADDED: A new option to enable logs cleanup when restarting `XRAY`.
-- ADDED: A log size control field in the general settings. When the log file exceeds this size, it will be automatically rotated.
-- IMPROVED: Enhance log parsing.
-- FIXED: `Logrotate` cron job added.
-- REMOVED: `daily` run and `compression` flags from the logrotate config.
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- ADDED: Option to automatically clear logs on `XRAY` service restart.
+- ADDED: Configurable log size limit in general settings. When the file exceeds the defined size, it will be rotated automatically.
+- ADDED: Automatic geosite update toggle in general settings. When enabled, the job will update geodata files nightly.
+- IMPROVED: Log parsing logic for better accuracy.
+- FIXED: `Logrotate` cron job now reliably created during installation.
+- REMOVED: `daily` and `compress` directives from logrotate configuration to prevent unnecessary log rotation and reduce overhead.
 
 ## [0.43.3] - 2025-04-17
 

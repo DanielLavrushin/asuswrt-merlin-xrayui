@@ -71,6 +71,14 @@
               <input v-model="options.geo_site_url" type="text" class="input_32_table" />
             </td>
           </tr>
+          <tr>
+            <th>{{ $t('com.GeneralOptionsModal.label_geosite_autoupdate') }}</th>
+            <td>
+              <label class="go-option">
+                <input type="checkbox" v-model="options.geo_auto_update" />
+              </label>
+            </td>
+          </tr>
         </tbody>
       </table>
       <table class="FormTable modal-form-table">
@@ -175,6 +183,7 @@
     public logs_level = 'warning';
     public geo_ip_url = '';
     public geo_site_url = '';
+    public geo_auto_update = false;
   }
 
   interface WellKnownGeodatSource {
@@ -266,6 +275,7 @@
         options.value.logs_level = config.value.log?.loglevel ?? 'warning';
         options.value.geo_ip_url = uiResponse?.value.geodata?.geoip_url ?? '';
         options.value.geo_site_url = uiResponse?.value.geodata?.geosite_url ?? '';
+        options.value.geo_auto_update = uiResponse?.value.geodata?.auto_update ?? false;
         options.value.github_proxy = uiResponse?.value.xray?.github_proxy ?? '';
         options.value.logs_dnsmasq = uiResponse?.value.xray?.dnsmasq ?? false;
         options.value.logs_max_size = uiResponse?.value.xray?.logs_max_size ?? 10;

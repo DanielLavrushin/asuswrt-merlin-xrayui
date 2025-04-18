@@ -23,6 +23,7 @@ apply_general_options() {
 
     local geosite_url=$(echo "$genopts" | jq -r '.geo_site_url')
     local geoip_url=$(echo "$genopts" | jq -r '.geo_ip_url')
+    local geo_auto_update=$(echo "$genopts" | jq -r '.geo_auto_update')
 
     if [ ! -d "$ADDON_LOGS_DIR" ]; then
         mkdir -p $ADDON_LOGS_DIR
@@ -58,17 +59,17 @@ log-queries
 log-facility=/opt/var/log/dnsmasq.log
 EOF
 
+        update_loading_progress "Enabling dnsmasq logging..."
         service restart_dnsmasq >/dev/null 2>&1 && printlog true "DNS service restarted successfully." $CSUC
         printlog true "Enabled dnsmasq logging (queries and log-facility set) on Asus Merlin."
     else
         if [ -f /jffs/configs/dnsmasq.conf.add ]; then
+            update_loading_progress "Disabling dnsmasq logging..."
             rm /jffs/configs/dnsmasq.conf.add
             service restart_dnsmasq >/dev/null 2>&1 && printlog true "DNS service restarted successfully." $CSUC
             printlog true "Disabled dnsmasq logging by removing /jffs/configs/dnsmasq.conf.add."
         fi
     fi
-
-    service restart_dnsmasq
 
     echo "$json_content" >"$XRAY_CONFIG_FILE"
 
@@ -83,6 +84,7 @@ EOF
     update_xrayui_config "geoip_url" "$geoip_url"
     update_xrayui_config "logs_max_size" "$logs_max_size"
     update_xrayui_config "logs_dor" "$logs_dor"
+    update_xrayui_config "geo_auto_update" "$geo_auto_update"
 
     # Update configuration with the directory part of logs_access_path
     local logs_dir=$(dirname "$logs_access_path")
@@ -90,6 +92,9 @@ EOF
 
     # Update the logrotate configuration with the new max size
     logrotate_setup
+
+    # Update the cron job for geodata update
+    cron_geodata_add
 
     restart
 

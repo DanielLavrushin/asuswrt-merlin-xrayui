@@ -8,8 +8,15 @@ start() {
 
     printlog true "Starting $ADDON_TITLE"
 
-    local TPROXY_MODE="$(jq -r '.inbounds[0].streamSettings.sockopt.tproxy // "off"' "$XRAY_CONFIG_FILE")"
-    if [ "$TPROXY_MODE" != "off" ]; then
+    local TPROXY_MODE=$(
+        jq -r '
+    .inbounds? // []
+    | map(.streamSettings.sockopt.tproxy? // "off")
+    | if any(. != "off") then "on" else "off" end
+  ' "$XRAY_CONFIG_FILE"
+    )
+
+    if [ "$TPROXY_MODE" = "on" ]; then
         printlog true "TPROXY mode is $TPROXY_MODE. Increasing max open files to 65535."
         ulimit -Hn 65535
         ulimit -Sn 65535

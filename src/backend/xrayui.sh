@@ -68,6 +68,9 @@ cron)
     addjobs)
         cron_jobs_add
         ;;
+    deletejobs)
+        cron_jobs_clear
+        ;;
     logrotate)
         cron_logrotate_run
         ;;

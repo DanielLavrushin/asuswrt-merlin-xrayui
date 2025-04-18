@@ -77,20 +77,8 @@ EOF
         sed -i '/#xrayui/d' /jffs/scripts/post-mount
     fi
     chmod +x /jffs/scripts/post-mount
-    echo "/jffs/scripts/xrayui remount_ui"' "$@" & #'"xrayui" >>/jffs/scripts/post-mount
+    echo "/jffs/scripts/xrayui service_event startup & #xrayui" >>/jffs/scripts/post-mount
     printlog true "Updated /jffs/scripts/post-mount with XrayUI entry." $CSUC
-
-    # Add or update services-start
-    printlog true "Ensuring /jffs/scripts/services-start contains required entry."
-    if [ ! -f /jffs/scripts/services-start ]; then
-        echo "#!/bin/sh" >/jffs/scripts/services-start
-    else
-        printlog true "Removing existing #xrayui entries from /jffs/scripts/services-start."
-        sed -i '/#xrayui/d' /jffs/scripts/services-start
-    fi
-    chmod +x /jffs/scripts/services-start
-    echo "/jffs/scripts/xrayui service_event startup & #xrayui" >>/jffs/scripts/services-start
-    printlog true "Updated /jffs/scripts/services-start with XrayUI entry." $CSUC
 
     # Add or update service-event
     printlog true "Ensuring /jffs/scripts/service-event contains required entry."
@@ -307,6 +295,8 @@ uninstall() {
     else
         printlog true "Keeping XRAY and its configuration files."
     fi
+
+    cron_jobs_clear
 
     rm -rf /opt/etc/logrotate.d/xrayui
     rm -rf /jffs/scripts/xrayui

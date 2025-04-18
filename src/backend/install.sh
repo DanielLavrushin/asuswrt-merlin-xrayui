@@ -6,6 +6,8 @@ install() {
     update_loading_progress "Installing $ADDON_TITLE..."
     printlog true "Starting $ADDON_TITLE installation process."
 
+    load_xrayui_config
+
     # Check for Entware
     if [ ! -x /opt/bin/opkg ]; then
         printlog true "Entware is not installed or opkg binary is not accessible." $CERR
@@ -135,34 +137,11 @@ EOF
     fi
 
     # setup logrotate
-    printlog true "Setting up logrotate for XRAY UI..."
+    logrotate_setup
 
-    if [ ! -f /opt/etc/logrotate.d/xrayui ]; then
-        local log_access="$(jq -r --arg default "$ADDON_LOGS_DIR/xray_access.log" '.log.access // $default' "$XRAY_CONFIG_FILE")"
-        local log_error="$(jq -r --arg default "$ADDON_LOGS_DIR/xray_error.log" '.log.error // $default' "$XRAY_CONFIG_FILE")"
-
-        cat >/opt/etc/logrotate.d/xrayui <<EOF
-$log_access $log_error {
-    su nobody root
-    daily
-    missingok
-    rotate 2
-    compress
-    delaycompress
-    notifempty
-    create 640 nobody root
-    sharedscripts
-    postrotate
-        /jffs/scripts/xrayui restart
-    endscript
-}
-EOF
-
-        chmod 0644 /opt/etc/logrotate.d/xrayui || printlog true "Failed to make logrotate executable." $CERR
-        printlog true "Logrotate configuration created successfully." $CSUC
-    else
-        printlog true "Logrotate configuration already exists. Skipping creation." $CWARN
-    fi
+    # setup cron jobs
+    printlog true "Configuring cron jobs for $ADDON_TITLE"
+    cron_jobs_add
 
     update_community_geodata
 

@@ -63,8 +63,12 @@
       "geodad_header": "GeoIP/GeoSite Metadata",
       "label_geoip_url": "GeoIP dat URL",
       "label_geosite_url": "GeoSite dat URL",
+      "wellknown_geodata": "Use well-known geodata",
       "label_logs_enable_dnsmasqlog": "Enable dnsmasq logs",
-      "hint_logs_enable_dnsmasqlog": "Enabling this will make the logs show domain names rather than IP addresses."
+      "hint_logs_enable_dnsmasqlog": "Enabling this will make the logs show domain names rather than IP addresses.",
+      "label_logs_max_size": "Max log size",
+      "hint_logs_max_size": "The maximum size of the log file (in megabytes). When the log file exceeds this size, it will be automatically rotated.",
+      "label_logs_dor": "Clear logs on xray restart"
     },
     "ImportConfig": {
       "import_config_file": "Import config file"

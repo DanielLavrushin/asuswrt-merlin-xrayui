@@ -15,6 +15,13 @@ start() {
         ulimit -Sn 65535
     fi
 
+    local xray_clear_logs=${logs_dor:-false}
+    if [ "$xray_clear_logs" = "true" ]; then
+        printlog true "Clearing Xray logs..."
+        rm -f "$ADDON_LOGS_DIR/xray_access.log"
+        rm -f "$ADDON_LOGS_DIR/xray_error.log"
+    fi
+
     update_loading_progress "Starting $ADDON_TITLE..."
     xray -c "$XRAY_CONFIG_FILE" >/dev/null 2>&1 &
     echo $! >$XRAY_PIDFILE

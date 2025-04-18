@@ -1,5 +1,13 @@
 # XRAYUI Changelog
 
+## [0.44.0] - 2025-04-18
+
+- ADDED: A new option to enable logs cleanup when restarting `XRAY`.
+- ADDED: A log size control field in the general settings. When the log file exceeds this size, it will be automatically rotated.
+- IMPROVED: Enhance log parsing.
+- FIXED: `Logrotate` cron job added.
+- REMOVED: `daily` run and `compression` flags from the logrotate config.
+
 ## [0.43.3] - 2025-04-17
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

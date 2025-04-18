@@ -37,21 +37,29 @@
                   </tr>
                 </thead>
                 <tbody class="logs-area-content">
-                  <tr v-for="(log, index) in parsedLogs" :key="index">
-                    <td>{{ log.time }}</td>
-                    <td>
-                      <span v-if="!log.source_device">{{ log.source }}</span>
-                      <a class="device" v-else :title="log.source">{{ log.source_device }}</a>
-                    </td>
-                    <td>
-                      <span :class="['log-label', log.type]">{{ log.type }} </span>
-                      {{ log.target }}:{{ log.target_port }}
-                    </td>
-                    <td>{{ log.inbound }}</td>
-                    <td>
-                      <span v-if="log.routing" :class="['log-label', log.routing]">{{ log.routing[0] }} </span>
-                      {{ log.outbound }}
-                    </td>
+                  <tr v-for="(log, index) in parsedLogs" :key="index" :class="[log.parsed ? 'parsed' : 'unparsed']">
+                    <!-- Parsed entry (normal layout) -->
+                    <template v-if="log.parsed">
+                      <td>{{ log.time }}</td>
+                      <td>
+                        <span v-if="!log.source_device">{{ log.source }}</span>
+                        <a class="device" v-else :title="log.source">{{ log.source_device }}</a>
+                      </td>
+                      <td>
+                        <span :class="['log-label', log.type]">{{ log.type }} </span>
+                        {{ log.target }}:{{ log.target_port }}
+                      </td>
+                      <td>{{ log.inbound }}</td>
+                      <td>
+                        <span v-if="log.routing" :class="['log-label', log.routing]">{{ log.routing[0] }} </span>
+                        {{ log.outbound }}
+                      </td>
+                    </template>
+
+                    <!-- Raw / unparsed line -->
+                    <template v-else>
+                      <td :colspan="5" v-if="log.line && log.line.length > 0">{{ log.line }}</td>
+                    </template>
                   </tr>
                 </tbody>
               </table>
@@ -79,31 +87,47 @@
     public inbound?: string;
     public routing?: string;
     public outbound?: string;
+    public line?: string;
+    public parsed: boolean = false;
 
-    constructor(match: RegExpMatchArray, devices: Record<string, any>) {
-      // match[1] contains the full datetime string (e.g., "2025/02/19 17:06:49")
-      const utcDateTimeStr = match[1];
+    constructor(match?: RegExpMatchArray, devices?: Record<string, any>, line?: string) {
+      if (line) {
+        this.line = line;
+        return;
+      }
+      if (!match || !devices) return;
+      try {
+        // match[1] contains the full datetime string (e.g., "2025/02/19 17:06:49")
+        const utcDateTimeStr = match[1];
 
-      // Convert "YYYY/MM/DD HH:mm:ss" to ISO format "YYYY-MM-DDTHH:mm:ssZ"
-      const isoDateTime = utcDateTimeStr.replace(/\//g, '-').replace(' ', 'T') + 'Z';
-      const localDate = new Date(isoDateTime);
+        // Convert "YYYY/MM/DD HH:mm:ss" to ISO format "YYYY-MM-DDTHH:mm:ssZ"
+        const isoDateTime = utcDateTimeStr.replace(/\//g, '-').replace(' ', 'T') + 'Z';
+        const localDate = new Date(isoDateTime);
 
-      // Format time as 24-hour clock
-      this.time = localDate.toLocaleTimeString([], {
-        hour12: false,
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
-      this.source = match[2];
-      this.type = match[3];
-      this.target = match[4];
-      this.target_port = match[5];
-      this.inbound = match[6];
-      this.routing = match[7] == '>>' ? 'direct' : 'rule';
-      this.outbound = match[8];
-      if (this.source) {
-        this.source_device = devices[this.source]?.name;
+        // Format time as 24-hour clock
+        this.time = localDate.toLocaleTimeString([], {
+          hour12: false,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+        this.source = match[2];
+        this.type = match[3];
+        this.target = match[4];
+        this.target_port = match[5];
+        this.inbound = match[6];
+        this.routing = match[7] == '>>' ? 'direct' : 'rule';
+        this.outbound = match[8];
+        if (this.source) {
+          this.source_device = devices[this.source]?.name;
+        }
+        if (match[9]) {
+          this.source_device = match[9];
+        }
+        this.parsed = true;
+      } catch (error) {
+        console.error('Error parsing log entry:', error);
+        this.parsed = false;
       }
     }
   }
@@ -133,9 +157,9 @@
           .split('\n')
           .map((line) => {
             // Example log format: "2025/02/19 17:06:49 from 192.168.1.100:61132 accepted tcp:target:443 [outbound -> inbound]"
-            const regex = /^(\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2})(?:\.\d+)? from (\d{1,3}(?:\.\d{1,3}){3})(?::\d+)? accepted (tcp|udp):([^:]+):(\d+) \[([^\s]+)\s*(->|>>)\s*([^\]]+)\]$/;
+            const regex = /^(\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2})(?:\.\d+)?\s+from\s+(\d{1,3}(?:\.\d{1,3}){3})(?::\d+)?\s+accepted\s+(tcp|udp):(\[[^\]]+\]|[^:]+):(\d+) \[([^\s]+)\s*(->|>>)\s*([^\]]+)\](?: email: (.+))?$/;
             const match = line.match(regex);
-            return match ? new AccessLogEntry(match, devices.value) : null;
+            return match ? new AccessLogEntry(match, devices.value) : new AccessLogEntry(undefined, undefined, line);
           })
           .filter((entry): entry is AccessLogEntry => entry !== null);
       });
@@ -239,6 +263,9 @@
       overflow: hidden;
       text-wrap: none;
       white-space: nowrap;
+    }
+    tr.unparsed td {
+      color: #888;
     }
   }
 </style>

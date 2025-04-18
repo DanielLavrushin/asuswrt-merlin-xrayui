@@ -16,6 +16,9 @@ initial_response() {
     local geoipurl="${geoip_url:-$DEFAULT_GEOIP_URL}"
     local profile="${profile:-$DEFAULT_XRAY_PROFILE_NAME}"
     local dnsmasq="${dnsmasq:-false}"
+    local logs_dor="${logs_dor:-false}"
+    local logs_max_size="${logs_max_size:-10}"
+
     printlog true "dnsmaq: $dnsmasq"
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg geoip "$geoip_date" --arg geosite "$geosite_date" --arg geoipurl "$geoipurl" --arg geositeurl "$geositeurl" \
         '.geodata.geoip_url = $geoipurl | .geodata.geosite_url = $geositeurl | .geodata.community["geoip.dat"] = $geoip | .geodata.community["geosite.dat"] = $geosite')
@@ -32,6 +35,8 @@ initial_response() {
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg github_proxy "$github_proxy" '.xray.github_proxy = $github_proxy')
 
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson dnsmasq "$dnsmasq" '.xray.dnsmasq = $dnsmasq')
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson logs_dor "$dnsmasq" '.xray.logs_dor = $logs_dor')
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson logs_max_size "$logs_max_size" '.xray.logs_max_size = $logs_max_size')
 
     local XRAY_VERSION=$(xray version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg xray_ver "$XRAY_VERSION" --arg xrayui_ver "$XRAYUI_VERSION" '.xray.ui_version = $xrayui_ver | .xray.core_version = $xray_ver')

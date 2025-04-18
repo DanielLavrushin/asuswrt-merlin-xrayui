@@ -68,7 +68,8 @@
       "hint_logs_enable_dnsmasqlog": "Enabling this will make the logs show domain names rather than IP addresses.",
       "label_logs_max_size": "Max log size",
       "hint_logs_max_size": "The maximum size of the log file (in megabytes). When the log file exceeds this size, it will be automatically rotated.",
-      "label_logs_dor": "Clear logs on xray restart"
+      "label_logs_dor": "Clear logs on xray restart",
+      "label_geosite_autoupdate": "Auto-update geodata files"
     },
     "ImportConfig": {
       "import_config_file": "Import config file"

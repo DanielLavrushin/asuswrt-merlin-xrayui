@@ -63,6 +63,7 @@ class EngineGeodatConfig {
   public community?: Record<string, string>;
   public geoip_url?: string;
   public geosite_url?: string;
+  public auto_update?: boolean;
   public tags?: string[] = [];
 }
 

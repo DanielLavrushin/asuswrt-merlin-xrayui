@@ -6,6 +6,7 @@ startup() {
 
     local skipwait=${skipwait:-false}
 
+    remount_ui
     cron_jobs_add
 
     local xray_pid=$(get_proc "xray")

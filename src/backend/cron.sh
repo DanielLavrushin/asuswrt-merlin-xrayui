@@ -78,6 +78,16 @@ cron_job_delete() {
     cru d "$cru_id"
 }
 
+cron_jobs_clear() {
+    printlog true "Clearing cron jobs for $ADDON_TITLE"
+    # Delete all cru jobs whose name starts with xrayui
+    cru l | awk -F'#' 'NF>=2 {print $(NF-1)}' | grep '^xrayui' |
+        while read -r id; do
+            printlog true " - Deleting cron job $id" $CWARN
+            cru d "$id"
+        done
+}
+
 cron_jobs_add() {
 
     printlog true "Adding cron jobs for $ADDON_TITLE"

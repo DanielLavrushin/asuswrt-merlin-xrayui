@@ -68,7 +68,7 @@ geodata_remount_to_web() {
     local datadir="$ADDON_SHARE_DIR/data"
     local geodata_dir="$ADDON_WEB_DIR/geodata"
 
-    rm -f "$geodata_dir"
+    rm -rf "$geodata_dir"
 
     if [ ! -d "$geodata_dir" ]; then
         mkdir -p "$geodata_dir"

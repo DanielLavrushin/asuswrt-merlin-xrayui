@@ -1,5 +1,14 @@
 # XRAYUI Changelog
 
+## [0.44.1] - 2025-04-18
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- FIXED: A critical compatibility issue with the `Diversion` module. `XrayUI` and `Diversion` now correctly detect and synchronize the `dnsmasq` logging state, preventing duplicate or conflicting log entries when you enable or disable dnsmasq logging in either module.
+  > _Note: If you’ve already turned on `dnsmasq` logging in `Diversion`, enabling it afterward in XrayUI works perfectly; the modules will detect the existing settings and avoid duplicates. However, if you first enable `dnsmasq` logging in `XrayUI` and then go into `Diversion` and enable it there, you will end up with conflicting log directives and potential DNS service failures. To prevent this, only manage dnsmasq logging from one module—either Diversion or XrayUI—but not both._
+- IMPROVED: Refactored the internal logging system for better maintainability and clarity.
+- IMPROVED: Added checks for any inbound `TProxy` flags when increasing the maximum file descriptor limit.
+
 ## [0.44.0] - 2025-04-18
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

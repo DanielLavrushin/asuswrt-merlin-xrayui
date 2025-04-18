@@ -9,18 +9,27 @@ initial_response() {
     local geosite_file="/opt/sbin/geosite.dat"
 
     local geoip_date geosite_date
-    geoip_date=$(date -r "$geoip_file" "+%Y-%m-%d %H:%M:%S")
-    geosite_date=$(date -r "$geosite_file" "+%Y-%m-%d %H:%M:%S")
+    if [ -r "$geoip_file" ]; then
+        geoip_date=$(date -r "$geoip_file" "+%Y-%m-%d %H:%M:%S")
+    else
+        geoip_date="(missing)"
+        log_warn "GeoIP file not found at $geoip_file"
+    fi
+
+    if [ -r "$geosite_file" ]; then
+        geosite_date=$(date -r "$geosite_file" "+%Y-%m-%d %H:%M:%S")
+    else
+        geosite_date="(missing)"
+        log_warn "GeoSite file not found at $geosite_file"
+    fi
 
     local geositeurl="${geosite_url:-$DEFAULT_GEOSITE_URL}"
     local geoipurl="${geoip_url:-$DEFAULT_GEOIP_URL}"
     local geo_auto_update="${geo_auto_update:-false}"
     local profile="${profile:-$DEFAULT_XRAY_PROFILE_NAME}"
-    local dnsmasq="${dnsmasq:-false}"
     local logs_dor="${logs_dor:-false}"
     local logs_max_size="${logs_max_size:-10}"
 
-    log_info "dnsmaq: $dnsmasq"
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg geoip "$geoip_date" --arg geosite "$geosite_date" --arg geoipurl "$geoipurl" --arg geositeurl "$geositeurl" \
         '.geodata.geoip_url = $geoipurl | .geodata.geosite_url = $geositeurl | .geodata.community["geoip.dat"] = $geoip | .geodata.community["geosite.dat"] = $geosite')
     if [ $? -ne 0 ]; then
@@ -36,11 +45,23 @@ initial_response() {
     local github_proxy="${github_proxy:-""}"
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg github_proxy "$github_proxy" '.xray.github_proxy = $github_proxy')
 
-    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson dnsmasq "$dnsmasq" '.xray.dnsmasq = $dnsmasq')
-    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson logs_dor "$dnsmasq" '.xray.logs_dor = $logs_dor')
+    local dnsmasq_enabled=false
+    # look in both the main conf _and_ any .add file
+    for f in /etc/dnsmasq.conf /jffs/configs/dnsmasq.conf.add; do
+        [ -f "$f" ] || continue
+        grep -qE '^\s*log-queries' "$f" &&
+            grep -qE '^\s*log-facility=.*dnsmasq\.log' "$f" && dnsmasq_enabled=true
+        if [ "$dnsmasq_enabled" = true ]; then
+            break
+        fi
+    done
+
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson dnsmasq "$dnsmasq_enabled" '.xray.dnsmasq = $dnsmasq') || log_error "Error: Failed to update JSON content with dnsmasq status."
+
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson logs_dor "$logs_dor" '.xray.logs_dor = $logs_dor')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson logs_max_size "$logs_max_size" '.xray.logs_max_size = $logs_max_size')
 
-    local XRAY_VERSION=$(xray version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
+    local XRAY_VERSION=$(xray version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1) || log_error "Error: Failed to get Xray version."
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg xray_ver "$XRAY_VERSION" --arg xrayui_ver "$XRAYUI_VERSION" '.xray.ui_version = $xrayui_ver | .xray.core_version = $xray_ver')
 
     # Collect the names of all JSON files from /opt/etc/xray
@@ -48,7 +69,7 @@ initial_response() {
     if [ -z "$profiles" ]; then
         profiles="[]"
     fi
-    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson profiles "$profiles" '.xray.profiles = $profiles')
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson profiles "$profiles" '.xray.profiles = $profiles') || log_error "Error: Failed to update JSON content with profiles."
 
     # Collect the backups
     local backups=$(find "$ADDON_SHARE_DIR/backup" -maxdepth 1 -type f -name "*.tar.gz" -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')

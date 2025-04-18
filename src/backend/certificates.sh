@@ -5,7 +5,6 @@ regenerate_ssl_certificates() {
     local cert_dir="/opt/etc/xray/cert"
     local cert_file="$cert_dir/xray-cert.crt"
     local key_file="$cert_dir/xray-key.pem"
-    local tempconfig=$(remove_json_comments)
 
     if [ ! -d "$cert_dir" ]; then
         log_info "Directory $cert_dir does not exist. Creating it."
@@ -21,7 +20,8 @@ regenerate_ssl_certificates() {
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
         -keyout "$key_file" \
         -out "$cert_file" \
-        -subj "/CN=xray/O=Local Xray/C=US"
+        -subj "/CN=xray/O=Local Xray/C=US" \
+        -addext "subjectAltName=DNS:xray,IP:127.0.0.1"
 
     if [ $? -eq 0 ]; then
         log_info "Certificate and key successfully generated:"

@@ -68,8 +68,6 @@ change_log_level() {
     restart
   fi
 
-  update_loading_progress "Log level changed successfully." 100
-  return 0
 }
 
 enable_config_logs() {
@@ -122,8 +120,6 @@ enable_config_logs() {
     restart
   fi
 
-  update_loading_progress "Configuration logs enabled successfully." 100
-  return 0
 }
 
 logrotate_setup() {

@@ -15,12 +15,12 @@ configure_firewall() {
     fi
 
     # Create a custom chain for Xray rules
-    iptables -N XRAYUI 2>/dev/null
+    iptables -N XRAYUI 2>/dev/null || log_debug "Failed to create XRAYUI chain. It may already exist."
 
     configure_firewall_server
 
-    iptables -I INPUT -j XRAYUI
-    iptables -I FORWARD -j XRAYUI
+    iptables -I INPUT -j XRAYUI || log_debug "Failed to insert XRAYUI chain into INPUT. It may already exist."
+    iptables -I FORWARD -j XRAYUI || log_debug "Failed to insert XRAYUI chain into FORWARD. It may already exist."
 
     SERVER_IPS=$(jq -r '[.outbounds[] | select(.settings.vnext != null) | .settings.vnext[].address] | unique | join(" ")' "$XRAY_CONFIG_FILE")
 
@@ -57,8 +57,8 @@ configure_firewall_server() {
         fi
 
         # Add rules to the XRAYUI chain
-        iptables -A XRAYUI -p tcp --dport "$port" -j ACCEPT
-        iptables -A XRAYUI -p udp --dport "$port" -j ACCEPT
+        iptables -A XRAYUI -p tcp --dport "$port" -j ACCEPT || log_debug "Failed to add TCP rule for port $port."
+        iptables -A XRAYUI -p udp --dport "$port" -j ACCEPT || log_debug "Failed to add UDP rule for port $port."
 
         log_ok "Firewall SERVER rules applied for port $port."
     done
@@ -72,8 +72,8 @@ configure_inbounds() {
 
     # Split into two groups based on the tproxy flag.
     local direct_inbounds tproxy_inbounds
-    direct_inbounds=$(echo "$dokodemo_inbounds" | jq -c 'select((.streamSettings.sockopt.tproxy // "off") != "tproxy")')
-    tproxy_inbounds=$(echo "$dokodemo_inbounds" | jq -c 'select((.streamSettings.sockopt.tproxy // "off") == "tproxy")')
+    direct_inbounds=$(echo "$dokodemo_inbounds" | jq -c 'select((.streamSettings.sockopt.tproxy // "off") != "tproxy")') || log_debug "Failed to filter direct inbounds."
+    tproxy_inbounds=$(echo "$dokodemo_inbounds" | jq -c 'select((.streamSettings.sockopt.tproxy // "off") == "tproxy")') || log_debug "Failed to filter tproxy inbounds."
 
     # Process all direct inbounds in one go.
     if [ -n "$direct_inbounds" ]; then
@@ -92,17 +92,17 @@ configure_firewall_client_direct() {
     log_info "Configuring aggregated DIRECT (REDIRECT) rules for dokodemo-door inbounds..."
 
     # Set up NAT-only rules for REDIRECT mode.
-    iptables -t nat -F XRAYUI 2>/dev/null || log_warn "Failed to flush NAT chain. Was it already empty?"
-    iptables -t nat -X XRAYUI 2>/dev/null || log_warn "Failed to remove NAT chain. Was it already empty?"
-    iptables -t nat -N XRAYUI || log_warn "Failed to create NAT chain."
-
+    iptables -t nat -F XRAYUI 2>/dev/null || log_debug "Failed to flush NAT chain. Was it already empty?"
+    iptables -t nat -X XRAYUI 2>/dev/null || log_debug "Failed to remove NAT chain. Was it already empty?"
+    iptables -t nat -N XRAYUI || log_debug "Failed to create NAT chain."
     # --- Begin Exclusion Rules (NAT) ---
 
     # Exclude local (RFC1918) subnets dynamically:
     local local_networks=$(
         ip -4 route show |
             awk '/src/ && ($1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/) { print $1 }'
-    )
+    ) || log_debug "Failed to get local networks."
+
     for net in $local_networks; do
         iptables -t nat -A XRAYUI -d "$net" -j RETURN || log_error "Failed to add local subnet $net rule in NAT."
     done
@@ -158,8 +158,8 @@ configure_firewall_client_direct() {
 
     if [ -n "$server_ports" ]; then
         tcp_ports=$(echo "$server_ports" | tr '\n' ',' | sed 's/,$//')
-        iptables -t nat -A XRAYUI -p tcp -m multiport --dports "$tcp_ports" -j RETURN
-        iptables -t nat -A XRAYUI -p udp -m multiport --dports "$tcp_ports" -j RETURN
+        iptables -t nat -A XRAYUI -p tcp -m multiport --dports "$tcp_ports" -j RETURN || log_error "Failed to add server ports rule in NAT."
+        iptables -t nat -A XRAYUI -p udp -m multiport --dports "$tcp_ports" -j RETURN || log_error "Failed to add server ports rule in NAT."
     fi
 
     echo "$inbounds" | while IFS= read -r inbound; do
@@ -296,9 +296,9 @@ configure_firewall_client_tproxy() {
     fi
 
     # Set up MANGLE chain:
-    iptables -t mangle -F XRAYUI 2>/dev/null || log_warn "Failed to flush mangle chain. Was it already empty?"
-    iptables -t mangle -X XRAYUI 2>/dev/null || log_warn "Failed to remove mangle chain. Was it already empty?"
-    iptables -t mangle -N XRAYUI || log_warn "Failed to create mangle chain."
+    iptables -t mangle -F XRAYUI 2>/dev/null || log_debug "Failed to flush mangle chain. Was it already empty?"
+    iptables -t mangle -X XRAYUI 2>/dev/null || log_debug "Failed to remove mangle chain. Was it already empty?"
+    iptables -t mangle -N XRAYUI || log_debug "Failed to create mangle chain."
 
     # --- Begin Exclusion Rules (both NAT and MANGLE) ---
     # Exclude local (RFC1918) subnets dynamically:
@@ -399,11 +399,11 @@ configure_firewall_client_tproxy() {
                     # REDIRECT => TPROXY everything; listed ports are returned
                     if echo "$protocols" | grep -iq "tcp"; then
                         [ -n "$tcpPorts" ] && iptables -t mangle -A XRAYUI -p tcp -m multiport --dports "$tcpPorts" -j RETURN
-                        iptables -t mangle -A XRAYUI -p tcp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
+                        iptables -t mangle -A XRAYUI -p tcp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777 || log_error "Failed to add TPROXY rule for TCP in MANGLE."
                     fi
                     if echo "$protocols" | grep -iq "udp"; then
                         [ -n "$udpPorts" ] && iptables -t mangle -A XRAYUI -p udp -m multiport --dports "$udpPorts" -j RETURN
-                        iptables -t mangle -A XRAYUI -p udp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
+                        iptables -t mangle -A XRAYUI -p udp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777 || log_error "Failed to add TPROXY rule for UDP in MANGLE."
                     fi
                 fi
             else
@@ -417,16 +417,16 @@ configure_firewall_client_tproxy() {
                         if echo "$protocols" | grep -iq "udp"; then
                             [ -n "$udpPorts" ] && iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p udp -m multiport --dports "$udpPorts" -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
                         fi
-                        iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -j RETURN
+                        iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -j RETURN || log_error "Failed to add RETURN rule for MAC $mac in MANGLE."
                     else
                         # REDIRECT => TPROXY everything; listed ports are returned
                         if echo "$protocols" | grep -iq "tcp"; then
                             [ -n "$tcpPorts" ] && iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p tcp -m multiport --dports "$tcpPorts" -j RETURN
-                            iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p tcp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
+                            iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p tcp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777 || log_error "Failed to add TPROXY rule for TCP in MANGLE."
                         fi
                         if echo "$protocols" | grep -iq "udp"; then
                             [ -n "$udpPorts" ] && iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p udp -m multiport --dports "$udpPorts" -j RETURN
-                            iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p udp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777
+                            iptables -t mangle -A XRAYUI -m mac --mac-source "$mac" -p udp -j TPROXY --on-port "$dokodemo_port" --tproxy-mark 0x8777 || log_error "Failed to add TPROXY rule for UDP in MANGLE."
                         fi
                     fi
                 done
@@ -461,18 +461,18 @@ cleanup_firewall() {
 
     load_xrayui_config
 
-    iptables -D INPUT -j XRAYUI 2>/dev/null
-    iptables -D FORWARD -j XRAYUI 2>/dev/null
-    iptables -t nat -D PREROUTING -j XRAYUI 2>/dev/null
-    iptables -t mangle -D PREROUTING -j XRAYUI 2>/dev/null
+    iptables -D INPUT -j XRAYUI 2>/dev/null || log_debug "Failed to remove XRAYUI chain from INPUT. Was it already empty?"
+    iptables -D FORWARD -j XRAYUI 2>/dev/null || log_debug "Failed to remove XRAYUI chain from FORWARD. Was it already empty?"
+    iptables -t nat -D PREROUTING -j XRAYUI 2>/dev/null || log_debug "Failed to remove NAT chain from PREROUTING. Was it already empty?"
+    iptables -t mangle -D PREROUTING -j XRAYUI 2>/dev/null || log_debug "Failed to remove mangle chain from PREROUTING. Was it already empty?"
 
-    iptables -t nat -F XRAYUI 2>/dev/null || log_warn "Failed to flush NAT chain. Was it already empty?"
-    iptables -t nat -X XRAYUI 2>/dev/null || log_warn "Failed to remove NAT chain. Was it already empty?"
-    iptables -t mangle -F XRAYUI 2>/dev/null || log_warn "Failed to flush mangle chain. Was it already empty?"
-    iptables -t mangle -X XRAYUI 2>/dev/null || log_warn "Failed to remove mangle chain. Was it already empty?"
+    iptables -t nat -F XRAYUI 2>/dev/null || log_debug "Failed to flush NAT chain. Was it already empty?"
+    iptables -t nat -X XRAYUI 2>/dev/null || log_debug "Failed to remove NAT chain. Was it already empty?"
+    iptables -t mangle -F XRAYUI 2>/dev/null || log_debug "Failed to flush mangle chain. Was it already empty?"
+    iptables -t mangle -X XRAYUI 2>/dev/null || log_debug "Failed to remove mangle chain. Was it already empty?"
 
-    ip rule del fwmark 0x8777 table 8777 priority 100 2>/dev/null || log_warn "Failed to delete fwmark rule. Was it already empty?"
-    ip route flush table 8777 2>/dev/null || log_warn "Failed to flush table 8777. Was it already empty?"
+    ip rule del fwmark 0x8777 table 8777 priority 100 2>/dev/null || log_debug "Failed to delete fwmark rule. Was it already empty?"
+    ip route flush table 8777 2>/dev/null || log_debug "Failed to flush table 8777. Was it already empty?"
 
     local script="$ADDON_USER_SCRIPTS_DIR/firewall_cleanup"
     if [ -x "$script" ]; then

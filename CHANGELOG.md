@@ -1,5 +1,10 @@
 # XRAYUI Changelog
 
+## [0.44.2] - 2025-04-20
+
+- IMPROVED: Fine-tuned dnsmasq configuration handling for better log management. The XRAYUI now conditionally appends logging directives (`log-queries`, `log-async`, and `log-facility`) only if they are not already present, ensuring idempotent and non-intrusive updates. This prevents duplicate entries and respects existing user settings while enabling useful diagnostic logging when the dnsmasq option is enabled.
+- ADDED: `ADDON_DEBUG` flag (values: 0 or 1) to xrayui.conf, enabling optional diagnostic output for advanced debugging. Can be set manually by editing the file.
+
 ## [0.44.1] - 2025-04-18
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

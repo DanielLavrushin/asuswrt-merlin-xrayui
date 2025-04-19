@@ -52,8 +52,6 @@ apply_general_options() {
         json_content=$(echo "$json_content" | jq 'del(.log.dnsLog)')
     fi
 
-    change_dnsmasq "$logs_dnsmasq"
-
     echo "$json_content" >"$XRAY_CONFIG_FILE"
 
     update_xrayui_config "dnsmasq" "$logs_dnsmasq"
@@ -70,38 +68,9 @@ apply_general_options() {
     # Update the cron job for geodata update
     cron_geodata_add
 
+    service restart_dnsmasq >/dev/null 2>&1 &&
+        log_ok "DNS service restarted successfully." ||
+        log_error "Failed to restart DNS service."
+
     restart
-
-    update_loading_progress "General settings applied." 100
-
-    exit 0
-
-}
-
-change_dnsmasq() {
-    local logs_dnsmasq="$1"
-    local conf_add="/jffs/configs/dnsmasq.conf.add"
-
-    if [ "$logs_dnsmasq" = "true" ]; then
-        mkdir -p "$(dirname "$conf_add")"
-        touch "$conf_add"
-
-        grep -qxF 'log-queries' "$conf_add" || echo 'log-queries' >>"$conf_add"
-        grep -qxF 'log-facility=/opt/var/log/dnsmasq.log' "$conf_add" || echo 'log-facility=/opt/var/log/dnsmasq.log' >>"$conf_add"
-
-        update_loading_progress "Enabling dnsmasq logging..."
-        service restart_dnsmasq >/dev/null 2>&1 &&
-            log_ok "DNS service restarted successfully." ||
-            log_error "Failed to restart DNS service."
-
-    else
-        if [ -f "$conf_add" ]; then
-            update_loading_progress "Disabling dnsmasq logging…"
-            sed -i '/^\s*log-queries/d; /^\s*log-facility=.*dnsmasq\.log/d' "$conf_add"
-            [ ! -s "$conf_add" ] && rm -f "$conf_add"
-
-            { service restart_dnsmasq >/dev/null 2>&1 && log_ok "DNS service restarted successfully."; } ||
-                log_error "Failed to restart DNS service."
-        fi
-    fi
 }

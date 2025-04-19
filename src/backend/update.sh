@@ -63,5 +63,4 @@ update() {
     fi
 
     log_ok "Update process completed!"
-    update_loading_progress "Update process completed!" 100
 }

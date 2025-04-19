@@ -50,7 +50,7 @@ initial_response() {
     for f in /etc/dnsmasq.conf /jffs/configs/dnsmasq.conf.add; do
         [ -f "$f" ] || continue
         grep -qE '^\s*log-queries' "$f" &&
-            grep -qE '^\s*log-facility=.*dnsmasq\.log' "$f" && dnsmasq_enabled=true
+            grep -qE '^\s*log-facility=.*dnsmasq\.log' "$f" && dnsmasq_enabled=true && log_debug "dnsmasq enabled in $f"
         if [ "$dnsmasq_enabled" = true ]; then
             break
         fi
@@ -77,10 +77,11 @@ initial_response() {
         backups="[]"
     fi
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson backups "$backups" '.xray.backups = $backups')
-    log_info "Backups: $backups"
+    log_debug "Backups: $backups"
 
     save_ui_response
 
+    log_debug "UI_RESPONSE: $UI_RESPONSE"
     if [ $? -eq 0 ]; then
         log_ok "Saved initial response successfully."
     else
@@ -162,10 +163,6 @@ apply_config() {
     log_ok "Xray service restarted successfully with the new configuration."
 
     rm -f "$backup_config"
-
-    update_loading_progress "Configuration applied successfully." 100
-
-    exit 0
 }
 
 rules_to_dns_domains() {

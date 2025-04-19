@@ -21,8 +21,6 @@ backup_clearall() {
 
     backup_remount_to_web
 
-    update_loading_progress "Clear all completed." 100
-
 }
 
 backup_configuration() {
@@ -65,7 +63,6 @@ backup_configuration() {
     backup_remount_to_web
 
     log_ok "Backup created successfully: $backup_file"
-    update_loading_progress "Backup created successfully: $backup_file" 100
 }
 
 backup_remount_to_web() {
@@ -86,7 +83,7 @@ backup_remount_to_web() {
         log_info "Processing file: $file"
         if [ -f "$file" ]; then
             local symlink="$web_backup/$(basename "$file")"
-            ln -s -f "$file" "$symlink"
+            ln -s -f "$file" "$symlink" || log_debug "Failed to create symlink: $symlink -> $file"
             if [ $? -ne 0 ]; then
                 log_error "Error: Failed to create symlink '$symlink' -> '$file'."
                 return 1
@@ -135,6 +132,5 @@ backup_restore_configuration() {
     backup_remount_to_web
 
     log_ok "Restore completed successfully from $backup_file."
-    update_loading_progress "Restore complete." 100
 
 }

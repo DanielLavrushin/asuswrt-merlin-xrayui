@@ -105,6 +105,4 @@ switch_xray_version() {
 
     update_loading_progress "Starting Xray with new version..."
     start
-
-    update_loading_progress "Switched Xray version successfully!" 100
 }

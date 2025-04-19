@@ -71,7 +71,7 @@
       "label_logs_dor": "Clear logs on xray restart",
       "label_geosite_autoupdate": "Auto-update geodata files",
       "label_skip_test": "Skip testing  XRAY",
-      "hint_skip_test": "If you don't want to test the connection to the XRAY server, you can skip this step. However, it's recommended to keep it enabled to ensure the configuration file is valid.<hr/> This option is useful when you have a low performance router.<hr/> If you disable this option, the configuration test will be skipped, and the configuration file will be applied directly."
+      "hint_skip_test": "If you don't want to validate the XRAY configuration file, you can skip this step. However, it's recommended to keep it enabled to ensure the configuration file is valid.<hr/>This option can consume some resources, so it may be advisable to disable it if you're using a low-performance router.<hr/> If you disable this option, the configuration test will be skipped and the configuration file will be applied directly."
     },
     "ImportConfig": {
       "import_config_file": "Import config file"

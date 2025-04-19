@@ -29,6 +29,10 @@ start() {
         rm -f "$ADDON_LOGS_DIR/xray_error.log"
     fi
 
+    if [ ! -d "$ADDON_LOGS_DIR" ]; then
+        mkdir -p "$ADDON_LOGS_DIR"
+    fi
+
     update_loading_progress "Starting $ADDON_TITLE..."
     xray -c "$XRAY_CONFIG_FILE" >/dev/null 2>&1 &
     echo $! >$XRAY_PIDFILE

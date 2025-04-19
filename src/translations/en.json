@@ -69,7 +69,9 @@
       "label_logs_max_size": "Max log size",
       "hint_logs_max_size": "The maximum size of the log file (in megabytes). When the log file exceeds this size, it will be automatically rotated.",
       "label_logs_dor": "Clear logs on xray restart",
-      "label_geosite_autoupdate": "Auto-update geodata files"
+      "label_geosite_autoupdate": "Auto-update geodata files",
+      "label_skip_test": "Skip testing  XRAY",
+      "hint_skip_test": "If you don't want to test the connection to the XRAY server, you can skip this step. However, it's recommended to keep it enabled to ensure the configuration file is valid.<hr/> This option is useful when you have a low performance router.<hr/> If you disable this option, the configuration test will be skipped, and the configuration file will be applied directly."
     },
     "ImportConfig": {
       "import_config_file": "Import config file"

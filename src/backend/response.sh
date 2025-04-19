@@ -29,6 +29,7 @@ initial_response() {
     local profile="${profile:-$DEFAULT_XRAY_PROFILE_NAME}"
     local logs_dor="${logs_dor:-false}"
     local logs_max_size="${logs_max_size:-10}"
+    local skip_test="${skip_test:-false}"
 
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg geoip "$geoip_date" --arg geosite "$geosite_date" --arg geoipurl "$geoipurl" --arg geositeurl "$geositeurl" \
         '.geodata.geoip_url = $geoipurl | .geodata.geosite_url = $geositeurl | .geodata.community["geoip.dat"] = $geoip | .geodata.community["geosite.dat"] = $geosite')
@@ -41,6 +42,7 @@ initial_response() {
     local uptime_xray=$(get_proc_uptime "xray")
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson uptime "$uptime_xray" '.xray.uptime = $uptime')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg profile "$profile" '.xray.profile = $profile')
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson skip_test "$skip_test" '.xray.skip_test = $skip_test')
 
     local github_proxy="${github_proxy:-""}"
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg github_proxy "$github_proxy" '.xray.github_proxy = $github_proxy')

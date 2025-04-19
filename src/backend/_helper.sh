@@ -223,6 +223,14 @@ test_xray_config() {
     log_info "Testing Xray configuration..."
     update_loading_progress "Testing Xray configuration..."
 
+    load_xrayui_config
+    local skip_test="${skip_test:-false}"
+
+    if [ "$skip_test" = "true" ]; then
+        log_info "Skipping Xray configuration test as per user settings."
+        return
+    fi
+
     local output
 
     if ! output=$(xray -c $XRAY_CONFIG_FILE -test 2>&1); then

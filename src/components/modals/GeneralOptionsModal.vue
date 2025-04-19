@@ -38,6 +38,17 @@
               </select>
             </td>
           </tr>
+          <tr>
+            <th>
+              {{ $t('com.GeneralOptionsModal.label_skip_test') }}
+              <hint v-html="$t('com.GeneralOptionsModal.hint_skip_test')"></hint>
+            </th>
+            <td>
+              <label class="go-option">
+                <input type="checkbox" v-model="options.skip_test" />
+              </label>
+            </td>
+          </tr>
         </tbody>
       </table>
       <table class="FormTable modal-form-table">
@@ -179,6 +190,7 @@
     public logs_error = false;
     public logs_dns = false;
     public logs_dor = false;
+    public skip_test = false;
     public logs_max_size = 10;
     public logs_level = 'warning';
     public geo_ip_url = '';
@@ -280,6 +292,7 @@
         options.value.logs_dnsmasq = uiResponse?.value.xray?.dnsmasq ?? false;
         options.value.logs_max_size = uiResponse?.value.xray?.logs_max_size ?? 10;
         options.value.logs_dor = uiResponse?.value.xray?.logs_dor ?? false;
+        options.value.skip_test = uiResponse?.value.xray?.skip_test ?? false;
         modal.value.show();
       };
 

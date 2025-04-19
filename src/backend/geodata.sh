@@ -2,7 +2,7 @@
 # shellcheck disable=SC2034  # codacy:Unused variables
 
 update_community_geodata() {
-    update_loading_progress "Updating community geodata files..." 0
+    update_loading_progress "Updating community geodata files..."
     load_xrayui_config
 
     local geositeurl=$(github_proxy_url "${geosite_url:-$DEFAULT_GEOSITE_URL}")
@@ -37,7 +37,6 @@ update_community_geodata() {
     else
         log_error "Failed to place geosite.dat/geoip.dat in $target_dir."
     fi
-    update_loading_progress "Community geodata files updated successfully." 100
 }
 
 get_custom_geodata_tagfiles() {
@@ -68,7 +67,7 @@ geodata_remount_to_web() {
     local datadir="$ADDON_SHARE_DIR/data"
     local geodata_dir="$ADDON_WEB_DIR/geodata"
 
-    rm -rf "$geodata_dir"
+    rm -rf "$geodata_dir" || log_debug "Failed to remove existing geodata directory: $geodata_dir"
 
     if [ ! -d "$geodata_dir" ]; then
         mkdir -p "$geodata_dir"
@@ -90,7 +89,7 @@ geodata_remount_to_web() {
             symlink="$geodata_dir/$tagname.asp"
 
             # Create the symlink (using absolute paths)
-            ln -s -f "$tagfile" "$symlink"
+            ln -s -f "$tagfile" "$symlink" || log_debug "Failed to create symlink: $symlink -> $tagfile"
             if [ $? -ne 0 ]; then
                 log_error "Error: Failed to create symlink '$symlink' -> '$tagfile'."
                 return 1
@@ -120,14 +119,14 @@ geodata_recompile_all() {
     local outdir=$(dirname "$(which xray)")
     local datadir="$ADDON_SHARE_DIR/data"
 
-    rm -f "$outdir/xrayui"
+    rm -f "$outdir/xrayui" || log_debug "Failed to remove existing xrayui file: $outdir/xrayui"
 
     "$builder" --datapath "$datadir" --outputdir "$outdir" --outputname "xrayui" || {
         log_error "Failed to recompile geodata files."
         return 1
     }
 
-    chmod -x "$datadir/xrayui"
+    chmod -x "$datadir/xrayui" || log_debug "Failed to set executable permission for $datadir/xrayui"
 
     cleanup_payload
     geodata_remount_to_web

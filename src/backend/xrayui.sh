@@ -25,6 +25,7 @@ import ./profile.sh
 import ./logs.sh
 import ./backup.sh
 import ./cron.sh
+import ./dnsmasq.sh
 
 case "$1" in
 version)
@@ -62,6 +63,9 @@ fixme)
     ;;
 backup)
     backup_configuration
+    ;;
+dnsmasq)
+    dnsmasq_configure "$2"
     ;;
 cron)
     case "$2" in
@@ -109,6 +113,8 @@ service_event)
         ;;
     update)
         update
+        update_loading_progress "Update process completed!" 100
+        exit 0
         ;;
     geodata)
         case "$3" in
@@ -154,6 +160,8 @@ service_event)
         case "$3" in
         apply)
             apply_config
+            update_loading_progress "Configuration applied successfully." 100
+            exit 0
             ;;
         logs)
             case "$4" in
@@ -162,11 +170,14 @@ service_event)
                 ;;
             changeloglevel)
                 change_log_level
+                update_loading_progress "Log level changed successfully." 100
                 ;;
             *)
                 enable_config_logs
+                update_loading_progress "Configuration logs enabled successfully." 100
                 ;;
             esac
+            exit 0
             ;;
         togglestartup)
             toggle_startup
@@ -179,26 +190,34 @@ service_event)
             ;;
         applygeneraloptions)
             apply_general_options
+            update_loading_progress "General settings applied." 100
             ;;
         xrayversionswitch)
             switch_xray_version
+            update_loading_progress "Switched Xray version successfully!" 100
             ;;
         changeprofile)
             change_config_profile
+            update_loading_progress "Configuration profile changed successfully." 100
             ;;
         deleteprofile)
             delete_config_profile
+            update_loading_progress "Configuration profile deleted successfully." 100
             ;;
         backup)
             backup_configuration
+            update_loading_progress "Backup created successfully" 100
             ;;
         backupclearall)
             backup_clearall
+            update_loading_progress "Clear all completed." 100
             ;;
         backuprestore)
             backup_restore_configuration
+            update_loading_progress "Restore complete." 100
             ;;
         esac
+        exit 0
         ;;
     firewall)
         case "$3" in

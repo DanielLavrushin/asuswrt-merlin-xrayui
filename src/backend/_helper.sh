@@ -59,6 +59,10 @@ printlog() {
 
     logger -t "XRAYUI" -p "${LOG_FACILITY}.${priority}" -- "$msg"
 
+    if [ "$ADDON_DEBUG" -eq "0" ] && [ "$level" = "DEBUG" ]; then
+        return
+    fi
+
     if [ "$USE_COLOR" -eq 1 ]; then
         printf '%b%s%b\n' "$color" "$msg" "$CRESET"
     else
@@ -74,6 +78,27 @@ log_notice() { printlog NOTICE "$@"; }
 log_info() { printlog INFO "$@"; }
 log_ok() { printlog OK "$@"; }
 log_debug() { printlog DEBUG "$@"; }
+
+log_box() {
+    msg="$1"
+    padding=2
+    len=$(printf '%s' "$msg" | wc -c)
+    width=$((len + padding * 2))
+    color="${2:-$CSUC}"
+
+    border=''
+    i=0
+    while [ "$i" -lt "$width" ]; do
+        border="${border}═"
+        i=$((i + 1))
+    done
+
+    printf '%b╔%s╗\n' "$color" "$border"
+    printf '%b║%*s║\n' "$color" "$width" ''
+    printf '%b║%*s%s%*s║\n' "$color" "$padding" '' "$msg" "$padding" ''
+    printf '%b║%*s║\n' "$color" "$width" ''
+    printf '%b╚%s╝%b\n' "$color" "$border" "$CRESET"
+}
 
 get_proc() {
     local proc_name="$1"
@@ -180,7 +205,6 @@ load_ui_response() {
 
     UI_RESPONSE=$(cat "$UI_RESPONSE_FILE")
     if [ "$UI_RESPONSE" = "" ]; then
-        log_warn "UI response file is empty. Initializing with empty JSON."
         UI_RESPONSE="{}"
     fi
 }
@@ -250,7 +274,7 @@ update_loading_progress() {
     echo "$json_content" >"$UI_RESPONSE_FILE"
 
     if [ "$progress" = "100" ]; then
-        /jffs/scripts/xrayui service_event cleanloadingprogress &
+        /jffs/scripts/xrayui service_event cleanloadingprogress >/dev/null 2>&1 &
     fi
 
 }

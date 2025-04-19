@@ -53,44 +53,20 @@ EOF
     cp -f "$XRAY_CONFIG_FILE" "$backup_config"
 
     update_loading_progress "Configuring XRAY UI..."
-    # Add or update nat-start
-    log_info "Ensuring /jffs/scripts/nat-start contains required entry."
-    mkdir -p /jffs/scripts
-    if [ ! -f /jffs/scripts/nat-start ]; then
-        echo "#!/bin/sh" >/jffs/scripts/nat-start
-    else
-        log_info "Removing existing #xrayui entries from /jffs/scripts/nat-start."
-        sed -i '/#xrayui/d' /jffs/scripts/nat-start
-    fi
 
-    echo '/jffs/scripts/xrayui service_event firewall configure #xrayui' >>/jffs/scripts/nat-start
-    chmod +x /jffs/scripts/nat-start
-    log_info "Updated /jffs/scripts/nat-start with XrayUI entry."
+    clear_script_entries
+
+    # Add or update nat-start
+    setup_script_file "/jffs/scripts/nat-start" "/jffs/scripts/xrayui service_event firewall configure #xrayui"
 
     # Add or update post-mount
-    log_info "Ensuring /jffs/scripts/post-mount contains required entry."
-    mkdir -p /jffs/scripts
-    if [ ! -f /jffs/scripts/post-mount ]; then
-        echo "#!/bin/sh" >/jffs/scripts/post-mount
-    else
-        log_info "Removing existing #xrayui entries from /jffs/scripts/post-mount."
-        sed -i '/#xrayui/d' /jffs/scripts/post-mount
-    fi
-    chmod +x /jffs/scripts/post-mount
-    echo "/jffs/scripts/xrayui service_event startup & #xrayui" >>/jffs/scripts/post-mount
-    log_info "Updated /jffs/scripts/post-mount with XrayUI entry."
+    setup_script_file "/jffs/scripts/services-start" "/jffs/scripts/xrayui service_event startup & #xrayui"
 
     # Add or update service-event
-    log_info "Ensuring /jffs/scripts/service-event contains required entry."
-    if [ ! -f /jffs/scripts/service-event ]; then
-        echo "#!/bin/sh" >/jffs/scripts/service-event
-    else
-        log_info "Removing existing #xrayui entries from /jffs/scripts/service-event."
-        sed -i '/#xrayui/d' /jffs/scripts/service-event
-    fi
-    chmod +x /jffs/scripts/service-event
-    echo "echo \"\$2\" | grep -q \"^xrayui\" && /jffs/scripts/xrayui service_event \$(echo \"\$2\" | cut -d'_' -f2- | tr '_' ' ') & #xrayui" >>/jffs/scripts/service-event
-    log_info "Updated /jffs/scripts/service-event with XrayUI entry."
+    setup_script_file "/jffs/scripts/service-event" "echo \"\$2\" | grep -q \"^xrayui\" && /jffs/scripts/xrayui service_event \$(echo \"\$2\" | cut -d'_' -f2- | tr '_' ' ') & #xrayui"
+
+    # Add or update dnsmasq.postconf
+    setup_script_file "/jffs/scripts/dnsmasq.postconf" "/jffs/scripts/xrayui dnsmasq \"\$1\" & #xrayui"
 
     log_info "Mounting web page..."
     remount_ui "skipwait"
@@ -138,31 +114,10 @@ EOF
 
     local json_content=$(cat "$XRAY_CONFIG_FILE")
 
-    # patch 0.41->0.42 - force logs to be placed in usb storage mount
-    log_info "Applying patch 0.41->0.42 to $XRAY_CONFIG_FILE"
-    if [ ! -d "$ADDON_LOGS_DIR" ]; then
-        mkdir -p $ADDON_LOGS_DIR
-    fi
+    # patch 0.44.1 -> 0.44.2
+    rm -f /jffs/configs/dnsmasq.conf.add
 
-    json_content=$(
-        echo "$json_content" | jq --arg error "$ADDON_LOGS_DIR/xray_error.log" --arg access "$ADDON_LOGS_DIR/xray_access.log" '
-    if ((.log.access // "" | tostring | startswith("/tmp")) and (.log.error // "" | tostring | startswith("/tmp"))) then
-      .log.error = $error | .log.access = $access
-    else
-      .
-    end
-  '
-    )
-
-    echo "$json_content" >"$XRAY_CONFIG_FILE"
-
-    # ---------------------------------------------------------
-
-    log_info ""
-    log_info "================================================"
-    log_info "| Installation process completed successfully. |"
-    log_info "================================================"
-    log_info ""
+    log_box "Installation process completed successfully."
 
     update_loading_progress "Installation completed successfully."
 }
@@ -194,21 +149,7 @@ uninstall() {
         exit 1
     fi
 
-    # clean up services-start
-    log_info "Removing existing #xrayui entries from /jffs/scripts/services-start."
-    sed -i '/#xrayui/d' /jffs/scripts/services-start
-
-    # clean up nat-start
-    log_info "Removing existing #xrayui entries from /jffs/scripts/nat-start."
-    sed -i '/#xrayui/d' /jffs/scripts/nat-start
-
-    # clean up post-mount
-    log_info "Removing existing #xrayui entries from /jffs/scripts/post-mount."
-    sed -i '/#xrayui/d' /jffs/scripts/post-mount
-
-    # clean up service-event
-    log_info "Removing existing #xrayui entries from /jffs/scripts/service-event."
-    sed -i '/#xrayui/d' /jffs/scripts/service-event
+    clear_script_entries
 
     # Unmount UI
     log_info "Unmounting XRAY UI..."
@@ -232,7 +173,7 @@ uninstall() {
 
     # Remove XRAY UI shared files
     log_info "Removing XRAY UI geodata files builder..."
-    rm -rf /opt/share/xrayui/xraydatbuilder
+    rm -rf /opt/share/xrayui/xraydatbuilder || log_debug "Failed to remove /opt/share/xrayui/xraydatbuilder."
 
     echo
     log_warn "Do you want to remove custom GEODATA? (yes/no)"
@@ -240,12 +181,12 @@ uninstall() {
 
     if [ "$user_input" = "yes" ] || [ "$user_input" = "y" ]; then
         log_info "Removing custom GEODATA..."
-        rm -rf /opt/share/xrayui
+        rm -rf /opt/share/xrayui || log_debug "Failed to remove /opt/share/xrayui."
 
         #Remove XRAY custom geodata
-        rm -rf /opt/sbin/xrayui
-        rm -rf /opt/sbin/geosite.dat
-        rm -rf /opt/sbin/geoip.dat
+        rm -rf /opt/sbin/xrayui || log_debug "Failed to remove /opt/sbin/xrayui."
+        rm -rf /opt/sbin/geosite.dat || log_debug "Failed to remove /opt/sbin/geosite.dat."
+        rm -rf /opt/sbin/geoip.dat || log_debug "Failed to remove /opt/sbin/geoip.dat."
     else
         log_info "Keeping custom GEODATA."
     fi
@@ -285,7 +226,7 @@ uninstall() {
 
         # Remove XRAY configuration files
         log_info "Removing XRAY configuration files..."
-        rm -rf /opt/etc/xray
+        rm -rf /opt/etc/xray || log_debug "Failed to remove /opt/etc/xray."
         if [ $? -eq 0 ]; then
             log_info "XRAY configuration files removed successfully."
         else
@@ -298,12 +239,10 @@ uninstall() {
 
     cron_jobs_clear
 
-    rm -rf /opt/etc/logrotate.d/xrayui
-    rm -rf /jffs/scripts/xrayui
+    rm -rf /opt/etc/logrotate.d/xrayui || log_debug "Failed to remove /opt/etc/logrotate.d/xrayui."
+    rm -rf /jffs/scripts/xrayui || log_debug "Failed to remove /jffs/scripts/xrayui."
 
-    log_info "=============================================="
-    log_info "Uninstallation process completed successfully."
-    log_info "=============================================="
+    log_box "Uninstallation process completed successfully."
 }
 
 install_opkg_package() {
@@ -320,10 +259,35 @@ install_opkg_package() {
                 log_error "Critical package $package failed to install. Exiting."
                 exit 1
             else
-                log_error "Non-critical package $package failed to install. Continuing."
+                log_warn "Non-critical package $package failed to install. Continuing."
             fi
         fi
     else
         log_info "$package is already installed."
     fi
+}
+
+setup_script_file() {
+
+    local script_file="$1"
+    local command_entry="$2"
+    log_info "Ensuring $script_file contains required entry..."
+
+    log_debug "Scritpt file: $script_file"
+    log_debug "Command entry: $command_entry"
+
+    echo "$command_entry" >>"$script_file" || log_error "Failed to add entry to $script_file."
+    chmod +x "$script_file"
+    log_info "Updated $script_file with $ADDON_TITLE command entry."
+}
+
+clear_script_entries() {
+
+    log_info "Removing existing $ADDON_TITLE entries from scripts."
+    sed -i '/#xrayui/d' /jffs/scripts/services-start >/dev/null 2>&1 || log_debug "Failed to remove entry from /jffs/scripts/services-start."
+    sed -i '/#xrayui/d' /jffs/scripts/nat-start >/dev/null 2>&1 || log_debug "Failed to remove entry from /jffs/scripts/nat-start."
+    sed -i '/#xrayui/d' /jffs/scripts/post-mount >/dev/null 2>&1 || log_debug "Failed to remove entry from /jffs/scripts/post-mount."
+    sed -i '/#xrayui/d' /jffs/scripts/service-event >/dev/null 2>&1 || log_debug "Failed to remove entry from /jffs/scripts/service-event."
+    sed -i '/#xrayui/d' /jffs/scripts/dnsmasq.postconf >/dev/null 2>&1 || log_debug "Failed to remove entry from /jffs/scripts/dnsmasq.postconf."
+    sed -i '/#xrayui/d' /jffs/scripts/wan-start >/dev/null 2>&1 || log_debug "Failed to remove entry from /jffs/scripts/wan-start."
 }

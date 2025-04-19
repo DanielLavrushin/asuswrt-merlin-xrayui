@@ -30,8 +30,6 @@ change_config_profile() {
 
     restart
 
-    update_loading_progress "Configuration profile changed successfully." 100
-    return 0
 }
 
 delete_config_profile() {
@@ -62,6 +60,4 @@ delete_config_profile() {
         log_warn "Profile $profile does not exist."
     fi
 
-    update_loading_progress "Configuration profile deleted successfully." 100
-    return 0
 }

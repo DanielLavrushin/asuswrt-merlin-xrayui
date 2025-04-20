@@ -274,7 +274,7 @@
       };
       const save = async () => {
         await engine.executeWithLoadingProgress(async () => {
-          await engine.submit(SubmtActions.generalOptionsApply, options.value, 3000);
+          await engine.submit(SubmtActions.generalOptionsApply, options.value);
         });
       };
 

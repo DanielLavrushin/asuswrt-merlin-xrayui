@@ -146,7 +146,7 @@ class Engine {
     document.cookie = name + '=; expires=' + date.toUTCString() + '; path=/';
   };
 
-  public submit(action: string, payload: object | string | number | null | undefined = undefined, delay = 0): Promise<void> {
+  public submit(action: string, payload: object | string | number | null | undefined = undefined, delay = 1000): Promise<void> {
     return new Promise((resolve) => {
       const iframeName = 'hidden_frame_' + Math.random().toString(36).substring(2, 9);
       const iframe = document.createElement('iframe');
@@ -279,10 +279,8 @@ class Engine {
     let loadingProgress = new EngineLoadingProgress(0, 'Please, wait');
     window.showLoading(null, loadingProgress);
 
-    const progressPromise = this.checkLoadingProgress(loadingProgress, windowReload);
-
-    const actionPromise = action();
-    await Promise.all([actionPromise, progressPromise]);
+    await action();
+    await this.checkLoadingProgress(loadingProgress, windowReload);
   }
 
   async checkLoadingProgress(loadingProgress: EngineLoadingProgress, windowReload = true): Promise<void> {
@@ -298,7 +296,9 @@ class Engine {
             window.hideLoading();
             resolve();
             if (windowReload) {
-              window.location.reload();
+              setTimeout(() => {
+                window.location.reload();
+              }, 1000);
             }
           }
         } catch (error) {

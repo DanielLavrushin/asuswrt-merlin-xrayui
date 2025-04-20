@@ -247,8 +247,8 @@ test_xray_config() {
 
     load_ui_response
 
-    local updated_json=$(jq --arg msg "$message" '.xray.test = $msg' "$UI_RESPONSE_FILE")
-    echo "$updated_json" >"$UI_RESPONSE_FILE"
+    local json_content=$(jq --arg msg "$message" '.xray.test = $msg' "$UI_RESPONSE_FILE")
+    echo "$json_content" >"/tmp/xray-response.tmp" && mv -f "/tmp/xray-response.tmp" "$UI_RESPONSE_FILE"
 }
 
 update_loading_progress() {
@@ -279,7 +279,7 @@ update_loading_progress() {
         ')
     fi
 
-    echo "$json_content" >"$UI_RESPONSE_FILE"
+    echo "$json_content" >"/tmp/xray-response.tmp" && mv -f "/tmp/xray-response.tmp" "$UI_RESPONSE_FILE"
 
     if [ "$progress" = "100" ]; then
         /jffs/scripts/xrayui service_event cleanloadingprogress >/dev/null 2>&1 &
@@ -303,7 +303,7 @@ remove_loading_progress() {
             del(.loading)
         ')
 
-    echo "$json_content" >"$UI_RESPONSE_FILE"
+    echo "$json_content" >"/tmp/xray-response.tmp" && mv -f "/tmp/xray-response.tmp" "$UI_RESPONSE_FILE"
 }
 
 fixme() {

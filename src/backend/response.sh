@@ -81,6 +81,8 @@ initial_response() {
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson backups "$backups" '.xray.backups = $backups')
     log_debug "Backups: $backups"
 
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq 'del(.loading)')
+
     save_ui_response
 
     log_debug "UI_RESPONSE: $UI_RESPONSE"

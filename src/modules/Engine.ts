@@ -74,7 +74,7 @@ class GeodatTagRequest {
 }
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
-enum SubmtActions {
+enum SubmitActions {
   configurationSetMode = 'xrayui_configuration_mode',
   configurationApply = 'xrayui_configuration_apply',
   clientsOnline = 'xrayui_connectedclients',
@@ -84,7 +84,7 @@ enum SubmtActions {
   serverStop = 'xrayui_serverstatus_stop',
   serverTestConfig = 'xrayui_testconfig',
   regenerateRealityKeys = 'xrayui_regenerate_realitykeys',
-  regenerateWireguardyKeys = 'xrayui_regenerate_wgkeys',
+  regenerateWireguardKeys = 'xrayui_regenerate_wgkeys',
   regenerateSslCertificates = 'xrayui_regenerate_sslcertificates',
   enableLogs = 'xrayui_configuration_logs',
   performUpdate = 'xrayui_update',
@@ -146,7 +146,7 @@ class Engine {
     document.cookie = name + '=; expires=' + date.toUTCString() + '; path=/';
   };
 
-  public submit(action: string, payload: object | string | number | null | undefined = undefined, delay = 0): Promise<void> {
+  public submit(action: string, payload: object | string | number | null | undefined = undefined, delay = 1000): Promise<void> {
     return new Promise((resolve) => {
       const iframeName = 'hidden_frame_' + Math.random().toString(36).substring(2, 9);
       const iframe = document.createElement('iframe');
@@ -279,10 +279,8 @@ class Engine {
     let loadingProgress = new EngineLoadingProgress(0, 'Please, wait');
     window.showLoading(null, loadingProgress);
 
-    const progressPromise = this.checkLoadingProgress(loadingProgress, windowReload);
-
-    const actionPromise = action();
-    await Promise.all([actionPromise, progressPromise]);
+    await action();
+    await this.checkLoadingProgress(loadingProgress, windowReload);
   }
 
   async checkLoadingProgress(loadingProgress: EngineLoadingProgress, windowReload = true): Promise<void> {
@@ -298,7 +296,9 @@ class Engine {
             window.hideLoading();
             resolve();
             if (windowReload) {
-              window.location.reload();
+              setTimeout(() => {
+                window.location.reload();
+              }, 1000);
             }
           }
         } catch (error) {
@@ -522,7 +522,7 @@ class Engine {
       var axiosError = e as AxiosError;
       if (axiosError.status === 404) {
         if (confirm('XRAY Configuration file not found in the /opt/etc/xray directory. Please check your configuration file. If you want to generate an empty configuration file, press OK.')) {
-          await this.submit(SubmtActions.configurationGenerateDefaultConfig);
+          await this.submit(SubmitActions.configurationGenerateDefaultConfig);
         }
       }
     }
@@ -566,4 +566,4 @@ function transformStreamSettings(streamSettings: XrayStreamSettingsObject | unde
 let engine = new Engine();
 export default engine;
 
-export { EngineResponseConfig, EngineClientConnectionStatus, EngineLoadingProgress, EngineGeodatConfig, GeodatTagRequest, SubmtActions, Engine, engine };
+export { EngineResponseConfig, EngineClientConnectionStatus, EngineLoadingProgress, EngineGeodatConfig, GeodatTagRequest, SubmitActions, Engine, engine };

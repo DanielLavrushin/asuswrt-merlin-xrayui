@@ -70,9 +70,12 @@ apply_general_options() {
     # Update the cron job for geodata update
     cron_geodata_add
 
-    service restart_dnsmasq >/dev/null 2>&1 &&
-        log_ok "DNS service restarted successfully." ||
+    update_loading_progress "Restarting DNS service..."
+    if service restart_dnsmasq >/dev/null 2>&1; then
+        log_ok "DNS service restarted successfully."
+    else
         log_error "Failed to restart DNS service."
+    fi
 
     restart
 }

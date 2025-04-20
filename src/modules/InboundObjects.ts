@@ -90,9 +90,11 @@ export class XrayHttpInboundObject implements IProtocolType {
 
 export class XrayShadowsocksInboundObject implements IProtocolType {
   public network? = 'tcp';
+  public password? = '';
   public clients: XrayShadowsocksClientObject[] = [];
   normalize = () => {
     this.network = this.network && this.network !== 'tcp' ? this.network : undefined;
+    this.password = this.password && this.password !== '' ? this.password : undefined;
   };
   getUserNames = (): string[] => {
     return this.clients.map((c) => c.email);

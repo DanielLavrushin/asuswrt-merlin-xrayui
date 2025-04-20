@@ -71,7 +71,7 @@
   import { defineComponent, ref } from 'vue';
   import Modal from '@main/Modal.vue';
   import Hint from '@main/Hint.vue';
-  import engine, { EngineGeodatConfig, GeodatTagRequest, SubmtActions } from '@/modules/Engine';
+  import engine, { EngineGeodatConfig, GeodatTagRequest, SubmitActions } from '@/modules/Engine';
   import axios from 'axios';
   import { useI18n } from 'vue-i18n';
 
@@ -98,7 +98,7 @@
         isNewFile.value = true;
         isSelected.value = false;
         await engine.executeWithLoadingProgress(async () => {
-          await engine.submit(SubmtActions.geoDataCustomGetTags);
+          await engine.submit(SubmitActions.geoDataCustomGetTags);
         }, false);
         geodata.value = await engine.getGeodata();
         isLoading.value = false;
@@ -130,7 +130,7 @@
             return;
           }
 
-          await engine.submit(SubmtActions.geoDataRecompile, file.value);
+          await engine.submit(SubmitActions.geoDataRecompile, file.value);
         });
       };
 
@@ -138,14 +138,14 @@
         if (!confirm(t('com.GeodatModal.alert_delete_confirm'))) return;
 
         await engine.executeWithLoadingProgress(async () => {
-          await engine.submit(SubmtActions.geoDataCustomDeleteTag, { tag: file.value.tag });
+          await engine.submit(SubmitActions.geoDataCustomDeleteTag, { tag: file.value.tag });
           file.value = new GeodatTagRequest();
         });
       };
 
       const complile_all = async () => {
         await engine.executeWithLoadingProgress(async () => {
-          await engine.submit(SubmtActions.geoDataRecompileAll, file.value);
+          await engine.submit(SubmitActions.geoDataRecompileAll, file.value);
         });
       };
 

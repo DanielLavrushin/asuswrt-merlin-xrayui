@@ -100,7 +100,7 @@
 
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import engine, { SubmtActions } from '@/modules/Engine';
+  import engine, { SubmitActions } from '@/modules/Engine';
   import Modal from '@main/Modal.vue';
   import jsQR from 'jsqr';
   import { XrayObject } from '@/modules/XrayConfig';
@@ -235,7 +235,7 @@
 
           // if (unblockItems.value?.length > 0) {
           //   await engine.executeWithLoadingProgress(async () => {
-          //     await engine.submit(SubmtActions.geodataCommunityUpdate);
+          //     await engine.submit(SubmitActions.geodataCommunityUpdate);
           //   }, false);
           // }
         }

@@ -123,7 +123,7 @@
 
 <script lang="ts">
   import { defineComponent, ref, watch } from 'vue';
-  import engine, { SubmtActions } from '@/modules/Engine';
+  import engine, { SubmitActions } from '@/modules/Engine';
   import CertificatesModal from '@modal/CertificatesModal.vue';
   import { XrayStreamSettingsObject, XrayStreamTlsSettingsObject, XrayStreamTlsCertificateObject } from '@/modules/CommonObjects';
   import { XrayOptions } from '@/modules/Options';
@@ -154,7 +154,7 @@
       const certificate_renew = async () => {
         const delay = 5000;
         window.showLoading(delay);
-        await engine.submit(SubmtActions.regenerateSslCertificates, null, delay);
+        await engine.submit(SubmitActions.regenerateSslCertificates, null, delay);
         const result = await engine.getSslCertificates();
         if (result && transport.value.tlsSettings) {
           transport.value.tlsSettings.certificates = [];

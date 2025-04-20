@@ -31,7 +31,7 @@
   import axios from 'axios';
   import vClean from 'version-clean';
   import vCompare from 'version-compare';
-  import engine, { SubmtActions } from '@/modules/Engine';
+  import engine, { SubmitActions } from '@/modules/Engine';
   import markdownit from 'markdown-it';
 
   export default defineComponent({
@@ -79,7 +79,7 @@
 
       const update = async () => {
         await engine.executeWithLoadingProgress(async () => {
-          await engine.submit(SubmtActions.performUpdate);
+          await engine.submit(SubmitActions.performUpdate);
         });
       };
 

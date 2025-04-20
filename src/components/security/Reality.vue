@@ -144,7 +144,7 @@
   import { defineComponent, ref, watch } from 'vue';
   import Modal from '@main/Modal.vue';
   import Hint from '@/components/Hint.vue';
-  import engine, { SubmtActions } from '@/modules/Engine';
+  import engine, { SubmitActions } from '@/modules/Engine';
   import { XrayStreamRealitySettingsObject, XrayStreamSettingsObject } from '@/modules/CommonObjects';
   import XrayOptions from '@/modules/Options';
 
@@ -187,7 +187,7 @@
       const regenerate_keys = async () => {
         window.showLoading();
         if (transport.value.realitySettings) {
-          await engine.submit(SubmtActions.regenerateRealityKeys, null, 1000);
+          await engine.submit(SubmitActions.regenerateRealityKeys, null, 1000);
           let result = await engine.getRealityKeys();
           if (result) {
             transport.value.realitySettings.privateKey = result.privateKey;

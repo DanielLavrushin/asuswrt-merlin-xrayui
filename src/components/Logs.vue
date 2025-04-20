@@ -74,7 +74,7 @@
 <script lang="ts">
   import { defineComponent, onMounted, onBeforeUnmount, ref, computed } from 'vue';
   import axios from 'axios';
-  import engine, { SubmtActions } from '@/modules/Engine';
+  import engine, { SubmitActions } from '@/modules/Engine';
   import { XrayLogObject } from '@/modules/CommonObjects';
 
   class AccessLogEntry {
@@ -167,7 +167,7 @@
       const fetchLogs = async () => {
         if (!follow.value) return;
         try {
-          await engine.submit(SubmtActions.fetchXrayLogs);
+          await engine.submit(SubmitActions.fetchXrayLogs);
           await new Promise((resolve) => setTimeout(resolve, 1000));
           const response = await axios.get(file.value);
           logsContent.value = response.data;

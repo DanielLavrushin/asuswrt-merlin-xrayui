@@ -36,7 +36,7 @@
   import { defineComponent, ref, watch, inject, Ref } from 'vue';
   import Modal from '@main/Modal.vue';
   import Hint from '@main/Hint.vue';
-  import engine, { EngineResponseConfig, SubmtActions } from '@/modules/Engine';
+  import engine, { EngineResponseConfig, SubmitActions } from '@/modules/Engine';
   import { useI18n } from 'vue-i18n';
 
   export default defineComponent({
@@ -56,7 +56,7 @@
         if (!confirm(t('com.Backup.restore_confirm'))) return;
 
         await engine.executeWithLoadingProgress(async () => {
-          await engine.submit(SubmtActions.restoreBackup, { file: backup }, 5000);
+          await engine.submit(SubmitActions.restoreBackup, { file: backup }, 5000);
         });
       };
       const download = (backup: string) => {
@@ -68,14 +68,14 @@
 
       const create_backup = async () => {
         await engine.executeWithLoadingProgress(async () => {
-          await engine.submit(SubmtActions.createBackup, null, 2000);
+          await engine.submit(SubmitActions.createBackup, null, 2000);
         });
       };
       const clear = async () => {
         if (!confirm(t('com.Backup.clear_confirm'))) return;
 
         await engine.executeWithLoadingProgress(async () => {
-          await engine.submit(SubmtActions.clearBackup, null, 2000);
+          await engine.submit(SubmitActions.clearBackup, null, 2000);
         });
       };
 

@@ -64,7 +64,7 @@
 
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import engine, { SubmtActions } from '@/modules/Engine';
+  import engine, { SubmitActions } from '@/modules/Engine';
 
   import Modal from '@main/Modal.vue';
 
@@ -130,7 +130,7 @@
 
         await engine.executeWithLoadingProgress(async () => {
           const cfg = engine.prepareServerConfig(config.value);
-          await engine.submit(SubmtActions.configurationApply, cfg);
+          await engine.submit(SubmitActions.configurationApply, cfg);
           await engine.loadXrayConfig();
         });
       };

@@ -38,14 +38,8 @@ switch_xray_version() {
     i686 | i386)
         asset_name="Xray-linux-32.zip"
         ;;
-    armv5*)
+    armv5* | armv6* | armv7*)
         asset_name="Xray-linux-arm32-v5.zip"
-        ;;
-    armv6*)
-        asset_name="Xray-linux-arm32-v6.zip"
-        ;;
-    armv7*)
-        asset_name="Xray-linux-arm32-v7a.zip"
         ;;
     aarch64 | arm64)
         asset_name="Xray-linux-arm64-v8a.zip"

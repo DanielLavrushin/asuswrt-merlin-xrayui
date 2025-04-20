@@ -18,7 +18,7 @@
     },
     setup() {
       const uiResponse = inject<Ref<EngineResponseConfig>>('uiResponse')!;
-      const xray_version = ref('');
+      const xray_version = ref('0.0.0');
       const modal = ref();
 
       const show = async () => {

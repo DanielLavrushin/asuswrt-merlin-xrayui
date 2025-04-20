@@ -38,7 +38,7 @@
 <script lang="ts">
   import { defineComponent, ref, onMounted, onBeforeUnmount, watch } from 'vue';
   import axios from 'axios';
-  import engine, { SubmtActions } from '@/modules/Engine';
+  import engine, { SubmitActions } from '@/modules/Engine';
   import xrayConfig from '@/modules/XrayConfig';
   import { XrayProtocol } from '@/modules/Options';
 
@@ -71,7 +71,7 @@
       const enable_logs = async () => {
         try {
           await engine.executeWithLoadingProgress(async () => {
-            await engine.submit(SubmtActions.enableLogs);
+            await engine.submit(SubmitActions.enableLogs);
           });
         } catch (error) {
           console.error('Error enabling logs:', error);
@@ -85,7 +85,7 @@
         }
 
         try {
-          await engine.submit(SubmtActions.clientsOnline);
+          await engine.submit(SubmitActions.clientsOnline);
           await fetchClients();
         } catch (error) {
           console.error('Error during polling:', error);
@@ -96,7 +96,7 @@
 
       onMounted(async () => {
         try {
-          await engine.submit(SubmtActions.clientsOnline);
+          await engine.submit(SubmitActions.clientsOnline);
           await fetchClients();
         } catch (error) {
           console.error('Error during initial fetch:', error);

@@ -61,7 +61,8 @@
               profiles.value = newVal.xray.profiles;
             }
           }
-        }
+        },
+        { immediate: true }
       );
       const change_profile = async () => {
         await engine.executeWithLoadingProgress(async () => {

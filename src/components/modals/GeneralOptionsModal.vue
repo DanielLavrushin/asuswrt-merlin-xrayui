@@ -49,6 +49,17 @@
               </label>
             </td>
           </tr>
+          <tr>
+            <th>
+              {{ $t('com.GeneralOptionsModal.label_clients_check') }}
+              <hint v-html="$t('com.GeneralOptionsModal.hint_clients_check')"></hint>
+            </th>
+            <td>
+              <label class="go-option">
+                <input type="checkbox" v-model="options.clients_check" />
+              </label>
+            </td>
+          </tr>
         </tbody>
       </table>
       <table class="FormTable modal-form-table">
@@ -191,6 +202,7 @@
     public logs_dns = false;
     public logs_dor = false;
     public skip_test = false;
+    public clients_check = false;
     public logs_max_size = 10;
     public logs_level = 'warning';
     public geo_ip_url = '';
@@ -293,6 +305,7 @@
         options.value.logs_max_size = uiResponse?.value.xray?.logs_max_size ?? 10;
         options.value.logs_dor = uiResponse?.value.xray?.logs_dor ?? false;
         options.value.skip_test = uiResponse?.value.xray?.skip_test ?? false;
+        options.value.clients_check = uiResponse?.value.xray?.clients_check ?? false;
         modal.value.show();
       };
 

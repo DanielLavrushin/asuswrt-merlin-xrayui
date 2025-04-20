@@ -10,11 +10,39 @@ switch_xray_version() {
     update_loading_progress "Switching Xray version..." 0
 
     local xray_tmp_dir="/tmp/xray"
-    local payload=$(reconstruct_payload)
-    local version_url=$(echo "$payload" | jq -r '.url')
-    if [ -z "$version_url" ] || [ "$version_url" = "null" ]; then
-        log_error "Error: no 'url' field found in payload"
-        return 1
+
+    local xray_version="$1"
+
+    if [ -z "$xray_version" ]; then
+
+        log_info "Switching Xray version with url from payload"
+        local payload=$(reconstruct_payload)
+        local version_url=$(echo "$payload" | jq -r '.url')
+        if [ -z "$version_url" ] || [ "$version_url" = "null" ]; then
+            log_error "Error: version URL is empty"
+            return 1
+        fi
+    else
+        log_info "Switching Xray version to $xray_version"
+        if [ "$xray_version" = "latest" ]; then
+            local release_url="https://api.github.com/repos/XTLS/Xray-core/releases/latest"
+        else
+            local release_url="https://api.github.com/repos/XTLS/Xray-core/releases/tags/$xray_version"
+        fi
+        if [ -z "$release_url" ]; then
+            log_error "Error: release URL is empty"
+            return 1
+        fi
+
+        log_debug "Xray release URL: $release_url"
+        local version_url=$(curl -sSL "$release_url" | jq -r '.assets_url')
+        if [ -z "$version_url" ] || [ "$version_url" = "null" ]; then
+            log_error "Error: could not fetch version URL from $release_url"
+            return 1
+        fi
+
+        log_debug "Xray version URL: $version_url"
+
     fi
 
     update_loading_progress "Stopping Xray service..."
@@ -93,10 +121,14 @@ switch_xray_version() {
     fi
 
     cp "$xray_tmp_dir/xray" "/opt/sbin/xray"
+    [ ! -f "/opt/sbin/geosite.dat" ] && cp "$xray_tmp_dir/geosite.dat" "/opt/sbin/geosite.dat"
+    [ ! -f "/opt/sbin/geoip.dat" ] && cp "$xray_tmp_dir/geoip.dat" "/opt/sbin/geoip.dat"
+
     chmod +x "/opt/sbin/xray"
     rm -rf "$xray_tmp_dir"
     rm -f "$tmp_zip"
 
-    update_loading_progress "Starting Xray with new version..."
-    start
+    log_ok "Xray version updated!"
+    log_ok $(show_version)
+
 }

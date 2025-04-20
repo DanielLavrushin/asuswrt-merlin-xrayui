@@ -4,8 +4,11 @@
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
-- IMPROVED: Update response handling and improve loading progress management.
 - ADDED: A `password` field and generation functionality to `Shadowsocks` inbound form.
+- ADDED: New option under General Settings — `Clients Online Status Check`. This feature is disabled by default. When enabled, XRAYUI will actively check which clients are currently connected to Xray.
+- REMOVED: XRAYUI no longer relies on Xray installed via Entware. It now fetches the latest version directly from the official [Xray-core repository](https://github.com/XTLS/Xray-core/releases) on GitHub.
+- IMPROVED: Prerelease and draft versions of `Xray Core` are now excluded from the update list.
+- IMPROVED: Update response handling and improve loading progress management.
 
 ## [0.44.3] - 2025-04-20
 

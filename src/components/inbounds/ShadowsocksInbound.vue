@@ -20,6 +20,16 @@
             </select>
           </td>
         </tr>
+        <tr>
+          <th>
+            Password
+            <hint>The password parameter can be specified for the server at all, but also in the ClientObject being dedicated to the given user. Server-level password is not guaranteed to override the client-specific one.</hint>
+          </th>
+          <td>
+            <input type="text" class="input_20_table" v-model="inbound.settings.password" autocomplete="off" autocorrect="off" autocapitalize="off" />
+            <button @click.prevent="generate_password()" class="button_gen button_gen_small">generate</button>
+          </td>
+        </tr>
       </tbody>
     </table>
     <clients :clients="inbound.settings.clients"></clients>
@@ -35,6 +45,7 @@
   import { XrayOptions } from '@/modules/Options';
   import { XrayShadowsocksInboundObject } from '@/modules/InboundObjects';
   import Hint from '@main/Hint.vue';
+  import engine from '@/modules/Engine';
 
   export default defineComponent({
     name: 'ShadowsocksInbound',
@@ -48,9 +59,14 @@
     },
     setup(props) {
       const inbound = ref<XrayInboundObject<XrayShadowsocksInboundObject>>(props.inbound ?? new XrayInboundObject<XrayShadowsocksInboundObject>(XrayProtocol.SHADOWSOCKS, new XrayShadowsocksInboundObject()));
+
+      const generate_password = () => {
+        inbound.value.settings.password = engine.generateRandomBase64();
+      };
       return {
         inbound,
-        networks: XrayOptions.networkOptions
+        networks: XrayOptions.networkOptions,
+        generate_password
       };
     }
   });

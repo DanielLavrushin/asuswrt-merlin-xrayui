@@ -5,6 +5,7 @@
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - IMPROVED: Update response handling and improve loading progress management.
+- ADDED: A `password` field and generation functionality to `Shadowsocks` inbound form.
 
 ## [0.44.3] - 2025-04-20
 

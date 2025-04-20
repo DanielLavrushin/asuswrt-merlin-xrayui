@@ -10,6 +10,7 @@
 - IMPROVED: Prerelease and draft versions of `Xray Core` are now excluded from the update list.
 - IMPROVED: Update response handling and improve loading progress management.
 - IMPROVED: Enhanced the Xray version switch module to support switching to a specific version or the latest release. Use `xrayui update xray xx.xx.xx` or `xrayui update xray latest` to switch Xray-core versions directly from the CLI.
+- IMPROVED: Enhance response handling with cache-busting and improve service restart logic.
 
 ## [0.44.3] - 2025-04-20
 

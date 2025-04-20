@@ -4,6 +4,7 @@
 initial_response() {
     load_ui_response
     load_xrayui_config
+    log_debug "Initial response started."
 
     local geoip_file="/opt/sbin/geoip.dat"
     local geosite_file="/opt/sbin/geosite.dat"
@@ -87,11 +88,10 @@ initial_response() {
 
     save_ui_response
 
-    log_debug "UI_RESPONSE: $UI_RESPONSE"
     if [ $? -eq 0 ]; then
         log_ok "Saved initial response successfully."
     else
-        log_error "Failed to save file dates to $UI_RESPONSE_FILE."
+        log_error "Failed to save file to $UI_RESPONSE_FILE."
         return 1
     fi
 }

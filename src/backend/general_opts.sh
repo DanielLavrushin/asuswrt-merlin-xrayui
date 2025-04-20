@@ -72,12 +72,8 @@ apply_general_options() {
     # Update the cron job for geodata update
     cron_geodata_add
 
-    update_loading_progress "Restarting DNS service..."
-    if service restart_dnsmasq >/dev/null 2>&1; then
-        log_ok "DNS service restarted successfully."
-    else
-        log_error "Failed to restart DNS service."
+    if [ -f "$XRAY_PIDFILE" ]; then
+        update_loading_progress "Restarting Xray service..."
+        restart
     fi
-
-    restart
 }

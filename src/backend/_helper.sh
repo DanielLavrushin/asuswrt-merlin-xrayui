@@ -211,6 +211,8 @@ load_ui_response() {
 
 save_ui_response() {
 
+    log_debug "Saving UI response to $UI_RESPONSE_FILE"
+
     if ! echo "$UI_RESPONSE" >"$UI_RESPONSE_FILE"; then
         log_error "Failed to save UI response to $UI_RESPONSE_FILE"
         clear_lock

@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { SubmtActions, EngineLoadingProgress } from './modules/Engine';
+import { SubmitActions, EngineLoadingProgress } from './modules/Engine';
 import { XrayRouterDeviceOnline } from './modules/Interfaces';
 
 export {};
@@ -31,7 +31,7 @@ interface XrayRouter {
 interface XrayUiGlobal {
   server: XrayUiServer;
   router: XrayRouter;
-  commands: SubmtActions;
+  commands: SubmitActions;
   custom_settings: XrayUiCustomSettings;
 }
 

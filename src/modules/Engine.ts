@@ -74,7 +74,7 @@ class GeodatTagRequest {
 }
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
-enum SubmtActions {
+enum SubmitActions {
   configurationSetMode = 'xrayui_configuration_mode',
   configurationApply = 'xrayui_configuration_apply',
   clientsOnline = 'xrayui_connectedclients',
@@ -522,7 +522,7 @@ class Engine {
       var axiosError = e as AxiosError;
       if (axiosError.status === 404) {
         if (confirm('XRAY Configuration file not found in the /opt/etc/xray directory. Please check your configuration file. If you want to generate an empty configuration file, press OK.')) {
-          await this.submit(SubmtActions.configurationGenerateDefaultConfig);
+          await this.submit(SubmitActions.configurationGenerateDefaultConfig);
         }
       }
     }
@@ -566,4 +566,4 @@ function transformStreamSettings(streamSettings: XrayStreamSettingsObject | unde
 let engine = new Engine();
 export default engine;
 
-export { EngineResponseConfig, EngineClientConnectionStatus, EngineLoadingProgress, EngineGeodatConfig, GeodatTagRequest, SubmtActions, Engine, engine };
+export { EngineResponseConfig, EngineClientConnectionStatus, EngineLoadingProgress, EngineGeodatConfig, GeodatTagRequest, SubmitActions, Engine, engine };

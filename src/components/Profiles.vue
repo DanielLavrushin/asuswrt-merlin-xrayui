@@ -36,7 +36,7 @@
   import { defineComponent, ref, watch, inject, Ref } from 'vue';
   import Modal from '@main/Modal.vue';
   import Hint from '@main/Hint.vue';
-  import engine, { EngineResponseConfig, SubmtActions } from '@/modules/Engine';
+  import engine, { EngineResponseConfig, SubmitActions } from '@/modules/Engine';
 
   export default defineComponent({
     name: 'Profiles',
@@ -65,12 +65,12 @@
       );
       const change_profile = async () => {
         await engine.executeWithLoadingProgress(async () => {
-          await engine.submit(SubmtActions.changeProfile, { profile: profile.value }, 3000);
+          await engine.submit(SubmitActions.changeProfile, { profile: profile.value }, 3000);
         });
       };
       const delete_profile = async (p: string) => {
         await engine.executeWithLoadingProgress(async () => {
-          await engine.submit(SubmtActions.deleteProfile, { profile: p }, 1000);
+          await engine.submit(SubmitActions.deleteProfile, { profile: p }, 1000);
         }, false);
       };
       const manage = () => {

@@ -50,7 +50,7 @@
 
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import engine, { SubmtActions } from '@/modules/Engine';
+  import engine, { SubmitActions } from '@/modules/Engine';
   import Clients from '@clients/WireguardClients.vue';
   import InboundCommon from './InboundCommon.vue';
   import { XrayInboundObject } from '@/modules/InboundObjects';
@@ -77,7 +77,7 @@
       const regen = async (privatekey: string | undefined = undefined) => {
         const delay = 2000;
         window.showLoading(delay);
-        await engine.submit(SubmtActions.regenerateWireguardyKeys, privatekey, delay);
+        await engine.submit(SubmitActions.regenerateWireguardyKeys, privatekey, delay);
         let result = await engine.getXrayResponse();
         if (inbound.value.settings) {
           privatekey = result.wireguard?.privateKey!;

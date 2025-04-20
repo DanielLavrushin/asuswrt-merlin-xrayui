@@ -91,7 +91,7 @@
 
   import { XrayRoutingObject, XrayRoutingRuleObject } from '@/modules/CommonObjects';
   import xrayConfig from '@/modules/XrayConfig';
-  import engine, { EngineResponseConfig, SubmtActions } from '@/modules/Engine';
+  import engine, { EngineResponseConfig, SubmitActions } from '@/modules/Engine';
   import PolicyModal from '@modal/PolicyModal.vue';
   import RulesModal from '@modal/RulesModal.vue';
   import Hint from '@main/Hint.vue';
@@ -117,7 +117,7 @@
       };
       const update_geodat = async () => {
         await engine.executeWithLoadingProgress(async () => {
-          await engine.submit(SubmtActions.geodataCommunityUpdate, null, 1000);
+          await engine.submit(SubmitActions.geodataCommunityUpdate, null, 1000);
         });
       };
 

@@ -63,7 +63,7 @@
   import QrcodeVue from 'qrcode.vue';
 
   import modal from '@main/Modal.vue';
-  import engine, { SubmtActions } from '@/modules/Engine';
+  import engine, { SubmitActions } from '@/modules/Engine';
 
   export default defineComponent({
     name: 'WireguardClients',
@@ -75,7 +75,7 @@
       async regen() {
         const delay = 2000;
         window.showLoading(delay);
-        await engine.submit(SubmtActions.regenerateWireguardyKeys, this.privateKey, delay);
+        await engine.submit(SubmitActions.regenerateWireguardyKeys, this.privateKey, delay);
         let result = await engine.getXrayResponse();
         if (result.wireguard) {
           this.newClient.publicKey = result.wireguard.publicKey;

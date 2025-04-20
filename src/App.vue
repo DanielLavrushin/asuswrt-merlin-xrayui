@@ -12,7 +12,7 @@
   import AsusFooter from './components/asus/Footer.vue';
   import MainForm from './components/MainForm.vue';
 
-  import engine, { EngineResponseConfig, SubmtActions } from './modules/Engine';
+  import engine, { EngineResponseConfig, SubmitActions } from './modules/Engine';
 
   export default defineComponent({
     name: 'App',
@@ -36,7 +36,7 @@
             window.show_menu();
           }
           await engine.loadXrayConfig();
-          await engine.submit(SubmtActions.initResponse);
+          await engine.submit(SubmitActions.initResponse);
           // Use our delay helper instead of setTimeout inside an async function.
           await engine.delay(1000);
           uiResponse.value = await engine.getXrayResponse();

@@ -45,7 +45,7 @@
 
 <script lang="ts">
   import { defineComponent, ref, computed, watch, inject, Ref, onMounted } from 'vue';
-  import engine, { EngineResponseConfig, SubmtActions } from '@/modules/Engine';
+  import engine, { EngineResponseConfig, SubmitActions } from '@/modules/Engine';
   import GeneralOptionsModal from '@modal/GeneralOptionsModal.vue';
   import ImportConfig from './ImportConfig.vue';
   import { XrayObject } from '@/modules/XrayConfig';
@@ -144,7 +144,7 @@
       const testConfig = async () => {
         let delay = 1000;
         window.showLoading(delay);
-        await engine.submit(SubmtActions.serverTestConfig, null, delay);
+        await engine.submit(SubmitActions.serverTestConfig, null, delay);
         let users = await engine.getXrayResponse();
         window.hideLoading();
         alert(users.xray?.test.replace(/\\"/g, '"'));
@@ -185,9 +185,9 @@
         contryCodeClass,
         connectionStationLabel,
         generalOptionsModal,
-        connect: SubmtActions.serverStart,
-        reconnect: SubmtActions.serverRestart,
-        stop: SubmtActions.serverStop,
+        connect: SubmitActions.serverStart,
+        reconnect: SubmitActions.serverRestart,
+        stop: SubmitActions.serverStop,
         checkConEnabled,
         uiResponse,
         checkConnection,

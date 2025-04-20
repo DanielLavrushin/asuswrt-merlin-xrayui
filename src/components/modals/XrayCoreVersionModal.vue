@@ -21,7 +21,7 @@
   import axios from 'axios';
   import Modal from '@main/Modal.vue';
   import Hint from '@main/Hint.vue';
-  import engine, { SubmtActions } from '@/modules/Engine';
+  import engine, { SubmitActions } from '@/modules/Engine';
   import { useI18n } from 'vue-i18n';
 
   interface XrayVersion {
@@ -78,7 +78,7 @@
           return;
         }
         await engine.executeWithLoadingProgress(async () => {
-          await engine.submit(SubmtActions.xrayVersionSwitch, { url: selected_url.value });
+          await engine.submit(SubmitActions.xrayVersionSwitch, { url: selected_url.value });
         });
       };
 

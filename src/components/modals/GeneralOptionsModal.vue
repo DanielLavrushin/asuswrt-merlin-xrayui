@@ -174,7 +174,7 @@
 
 <script lang="ts">
   import { defineComponent, inject, Ref, ref, watch } from 'vue';
-  import engine, { EngineResponseConfig, SubmtActions } from '@/modules/Engine';
+  import engine, { EngineResponseConfig, SubmitActions } from '@/modules/Engine';
   import { XrayObject } from '@/modules/XrayConfig';
   import { XrayRoutingRuleObject } from '@/modules/CommonObjects';
   import Hint from '@main/Hint.vue';
@@ -274,7 +274,7 @@
       };
       const save = async () => {
         await engine.executeWithLoadingProgress(async () => {
-          await engine.submit(SubmtActions.generalOptionsApply, options.value);
+          await engine.submit(SubmitActions.generalOptionsApply, options.value);
         });
       };
 
@@ -297,7 +297,7 @@
       };
 
       const updatestartup = async () => {
-        await engine.submit(SubmtActions.toggleStartupOption);
+        await engine.submit(SubmitActions.toggleStartupOption);
         window.xray.custom_settings.xray_startup = window.xray.custom_settings.xray_startup === 'y' ? 'n' : 'y';
       };
 
@@ -315,7 +315,7 @@
             props.config.inbounds?.splice(props.config.inbounds?.indexOf(socks), 1);
             await engine.executeWithLoadingProgress(async () => {
               let cfg = engine.prepareServerConfig(props.config);
-              await engine.submit(SubmtActions.configurationApply, cfg);
+              await engine.submit(SubmitActions.configurationApply, cfg);
             });
           }
         }
@@ -350,7 +350,7 @@
           conModal.value.close();
           await engine.executeWithLoadingProgress(async () => {
             let cfg = engine.prepareServerConfig(props.config);
-            await engine.submit(SubmtActions.configurationApply, cfg);
+            await engine.submit(SubmitActions.configurationApply, cfg);
             await engine.loadXrayConfig();
           });
         }

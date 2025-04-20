@@ -1,6 +1,6 @@
 # XRAYUI Changelog
 
-## [0.45.0] - 2025-0x-xx
+## [0.45.0] - 2025-04-21
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
@@ -9,6 +9,7 @@
 - REMOVED: XRAYUI no longer relies on Xray installed via Entware. It now fetches the latest version directly from the official [Xray-core repository](https://github.com/XTLS/Xray-core/releases) on GitHub.
 - IMPROVED: Prerelease and draft versions of `Xray Core` are now excluded from the update list.
 - IMPROVED: Update response handling and improve loading progress management.
+- IMPROVED: Enhanced the Xray version switch module to support switching to a specific version or the latest release. Use `xrayui update xray xx.xx.xx` or `xrayui update xray latest` to switch Xray-core versions directly from the CLI.
 
 ## [0.44.3] - 2025-04-20
 

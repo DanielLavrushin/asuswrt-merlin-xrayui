@@ -36,7 +36,7 @@
             window.show_menu();
           }
           await engine.loadXrayConfig();
-          await engine.submit(SubmitActions.initResponse);
+          await engine.submit(SubmitActions.initResponse, null, 0);
           // Use our delay helper instead of setTimeout inside an async function.
           await engine.delay(1000);
           uiResponse.value = await engine.getXrayResponse();

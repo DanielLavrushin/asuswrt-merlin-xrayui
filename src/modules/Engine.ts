@@ -270,7 +270,13 @@ class Engine {
     return response.connection_check;
   }
   async getXrayResponse(): Promise<EngineResponseConfig> {
-    const response = await axios.get<EngineResponseConfig>('/ext/xrayui/xray-ui-response.json');
+    const response = await axios.get<EngineResponseConfig>(`/ext/xrayui/xray-ui-response.json?_=${Date.now()}`, {
+      headers: {
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache',
+        Expires: '0'
+      }
+    });
     let responseConfig = response.data;
     return responseConfig;
   }
@@ -313,7 +319,13 @@ class Engine {
   async loadXrayConfig(config?: XrayObject): Promise<XrayObject | null> {
     try {
       if (!config) {
-        const response = await axios.get<XrayObject>('/ext/xrayui/xray-config.json');
+        const response = await axios.get<XrayObject>(`/ext/xrayui/xray-config.json?_=${Date.now()}`, {
+          headers: {
+            'Cache-Control': 'no-cache',
+            Pragma: 'no-cache',
+            Expires: '0'
+          }
+        });
         config = plainToInstance(XrayObject, response.data);
       }
       this.xrayConfig = config;

@@ -77,7 +77,7 @@
       const regen = async (privatekey: string | undefined = undefined) => {
         const delay = 2000;
         window.showLoading(delay);
-        await engine.submit(SubmitActions.regenerateWireguardyKeys, privatekey, delay);
+        await engine.submit(SubmitActions.regenerateWireguardKeys, privatekey, delay);
         let result = await engine.getXrayResponse();
         if (inbound.value.settings) {
           privatekey = result.wireguard?.privateKey!;

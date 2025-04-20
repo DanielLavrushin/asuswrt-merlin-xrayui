@@ -75,7 +75,7 @@
       async regen() {
         const delay = 2000;
         window.showLoading(delay);
-        await engine.submit(SubmitActions.regenerateWireguardyKeys, this.privateKey, delay);
+        await engine.submit(SubmitActions.regenerateWireguardKeys, this.privateKey, delay);
         let result = await engine.getXrayResponse();
         if (result.wireguard) {
           this.newClient.publicKey = result.wireguard.publicKey;

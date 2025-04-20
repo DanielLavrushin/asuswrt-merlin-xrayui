@@ -84,7 +84,7 @@ enum SubmitActions {
   serverStop = 'xrayui_serverstatus_stop',
   serverTestConfig = 'xrayui_testconfig',
   regenerateRealityKeys = 'xrayui_regenerate_realitykeys',
-  regenerateWireguardyKeys = 'xrayui_regenerate_wgkeys',
+  regenerateWireguardKeys = 'xrayui_regenerate_wgkeys',
   regenerateSslCertificates = 'xrayui_regenerate_sslcertificates',
   enableLogs = 'xrayui_configuration_logs',
   performUpdate = 'xrayui_update',

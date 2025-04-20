@@ -38,7 +38,15 @@ uninstall)
     uninstall
     ;;
 update)
-    update "$2"
+    case "$2" in
+    xray)
+        switch_xray_version $3
+        ;;
+    *)
+        update "$2"
+        ;;
+    esac
+    exit 0
     ;;
 start)
     start
@@ -194,6 +202,7 @@ service_event)
             ;;
         xrayversionswitch)
             switch_xray_version
+            restart
             update_loading_progress "Switched Xray version successfully!" 100
             ;;
         changeprofile)

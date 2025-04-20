@@ -4,7 +4,7 @@
       <p>{{ $t('com.XrayCoreVersionModal.modal_desc') }}</p>
       <p>
         <select class="input_option" v-model="selected_url">
-          <option v-for="(opt, index) in xray_versions" :key="index" :value="opt.url">
+          <option v-for="opt in xray_versions" :key="opt.version" :value="opt.url">
             {{ opt.version }}
           </option>
         </select>
@@ -50,11 +50,14 @@
 
       const load_xray_versions = async () => {
         try {
-          const response = await axios.get('https://api.github.com/repos/XTLS/Xray-core/releases');
-          xray_versions.value = response.data.slice(0, 6).map((release: any) => ({
-            version: release.tag_name.replace(/[^\d\.]/g, ''),
-            url: release.assets_url
-          }));
+          const response = await axios.get('https://api.github.com/repos/XTLS/Xray-core/releases', { params: { per_page: 10 } });
+
+          xray_versions.value = response.data
+            .filter((release: any) => !release.draft && !release.prerelease)
+            .map((release: any) => ({
+              version: release.tag_name.replace(/[^\d.]/g, ''),
+              url: release.assets_url
+            }));
         } catch (error) {
           console.error('Error loading xray versions:', error);
         }

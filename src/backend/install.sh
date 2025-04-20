@@ -25,7 +25,13 @@ install() {
     install_opkg_package libopenssl false
     install_opkg_package flock false
     install_opkg_package logrotate false
-    install_opkg_package xray true
+
+    if which xray >/dev/null 2>&1; then
+        log_info "Xray is already installed. Skipping xray-core installation."
+    else
+        log_warn "Xray is not installed. Installing xray-core..."
+        switch_xray_version "latest"
+    fi
 
     # xrayui config
     if [ ! -f "$XRAYUI_CONFIG_FILE" ]; then
@@ -223,6 +229,10 @@ uninstall() {
         else
             log_info "XRAY is not installed."
         fi
+
+        rm -f /opt/sbin/xray || log_debug "Failed to remove /opt/sbin/xray."
+        rm -f /opt/sbin/geoip.dat || log_debug "Failed to remove /opt/sbin/geoip.dat."
+        rm -f /opt/sbin/geosite.dat || log_debug "Failed to remove /opt/sbin/geosite.dat."
 
         # Remove XRAY configuration files
         log_info "Removing XRAY configuration files..."

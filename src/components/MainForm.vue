@@ -43,7 +43,7 @@
                               <div class="apply_gen">
                                 <input class="button_gen" @click.prevent="apply_settings()" type="button" :value="$t('labels.apply')" />
                               </div>
-                              <clients-online></clients-online>
+                              <clients-online v-if="enableClientsCheck"></clients-online>
                               <logs-manager ref="logsManager" v-if="config.log?.access != 'none' || config.log?.error != 'none'" v-model:logs="config.log!"></logs-manager>
                               <version></version>
                             </div>
@@ -63,8 +63,8 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref } from 'vue';
-  import engine, { SubmitActions } from '@/modules/Engine';
+  import { defineComponent, inject, Ref, ref, watch } from 'vue';
+  import engine, { EngineResponseConfig, SubmitActions } from '@/modules/Engine';
 
   import Modal from '@main/Modal.vue';
 
@@ -113,6 +113,19 @@
       const transportModal = ref();
       const sniffingModal = ref();
       const logsManager = ref();
+      const enableClientsCheck = ref<boolean>(false);
+
+      const uiResponse = inject<Ref<EngineResponseConfig>>('uiResponse')!;
+      watch(
+        () => uiResponse?.value,
+        (newVal) => {
+          if (!newVal) return;
+          if (newVal?.xray) {
+            enableClientsCheck.value = newVal.xray.clients_check;
+          }
+        },
+        { immediate: true }
+      );
 
       const show_transport = (proxy: XrayInboundObject<IProtocolType> | XrayOutboundObject<IProtocolType>, type: string) => {
         transportModal.value.show(proxy, type);
@@ -125,7 +138,7 @@
       const apply_settings = async () => {
         if (logsManager.value?.follow) {
           logsManager.value.follow = false;
-          window.showLoading(60000);
+          window.showLoading(6000);
         }
 
         await engine.executeWithLoadingProgress(async () => {
@@ -136,6 +149,7 @@
       };
       return {
         logsManager,
+        enableClientsCheck,
         config,
         engine,
         transportModal,

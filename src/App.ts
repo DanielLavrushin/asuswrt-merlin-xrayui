@@ -2,6 +2,7 @@
 
 import { createApp } from 'vue';
 import { createI18n } from 'vue-i18n';
+import 'reflect-metadata';
 
 import App from './App.vue';
 import { EngineLoadingProgress } from './modules/Engine';

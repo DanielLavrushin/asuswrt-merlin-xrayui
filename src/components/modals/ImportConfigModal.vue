@@ -196,7 +196,7 @@
 
       const set_default_config = (outboundTag: string) => {
         if (props.config) {
-          props.config.outbounds = [];
+          props.config.outbounds = props.config.outbounds || [];
           props.config.inbounds = [];
 
           props.config.log = new XrayLogObject().normalize();
@@ -212,21 +212,24 @@
           in_doko.sniffing = new XraySniffingObject();
           in_doko.sniffing.enabled = true;
           in_doko.sniffing.destOverride = ['http', 'tls', 'quic'];
-
           props.config.inbounds.push(in_doko);
 
-          const out_free = new XrayOutboundObject<XrayFreedomOutboundObject>();
-          out_free.tag = 'direct';
-          out_free.settings = new XrayFreedomOutboundObject();
-          out_free.protocol = XrayProtocol.FREEDOM;
-          out_free.settings.domainStrategy = 'UseIP';
-          props.config.outbounds.push(out_free);
+          if (props.config.outbounds.filter((outbound) => outbound.protocol === XrayProtocol.FREEDOM).length === 0) {
+            const out_free = new XrayOutboundObject<XrayFreedomOutboundObject>();
+            out_free.tag = 'direct';
+            out_free.settings = new XrayFreedomOutboundObject();
+            out_free.protocol = XrayProtocol.FREEDOM;
+            out_free.settings.domainStrategy = 'UseIP';
+            props.config.outbounds.splice(0, 0, out_free);
+          }
 
-          const out_block = new XrayOutboundObject<XrayBlackholeOutboundObject>();
-          out_block.tag = 'block';
-          out_block.settings = new XrayBlackholeOutboundObject();
-          out_block.protocol = XrayProtocol.BLACKHOLE;
-          props.config.outbounds.push(out_block);
+          if (props.config.outbounds.filter((outbound) => outbound.protocol === XrayProtocol.BLACKHOLE).length === 0) {
+            const out_block = new XrayOutboundObject<XrayBlackholeOutboundObject>();
+            out_block.tag = 'block';
+            out_block.settings = new XrayBlackholeOutboundObject();
+            out_block.protocol = XrayProtocol.BLACKHOLE;
+            props.config.outbounds.splice(props.config.outbounds.length, 0, out_block);
+          }
 
           props.config.routing = new XrayRoutingObject().default(outboundTag, unblockItems.value).normalize();
           if (bypassMode.value) {
@@ -247,8 +250,6 @@
         }
 
         if (props.config) {
-          let proxy: XrayOutboundObject<IProtocolType> | null = null;
-
           if (protocolUrl.value) {
             let parser: ProxyParser;
             try {
@@ -258,7 +259,10 @@
               console.error(e);
               return;
             }
-            proxy = parser.getOutbound();
+            const proxy: XrayOutboundObject<IProtocolType> | null = parser.getOutbound();
+            if (proxy) {
+              props.config.outbounds.push(proxy);
+            }
           } else if (protocolJson.value) {
             let jsonConfig;
             try {
@@ -271,38 +275,42 @@
 
             if (jsonConfig?.outbounds) {
               for (const outbound of jsonConfig.outbounds) {
+                let outProxy: XrayOutboundObject<IProtocolType> | null = null;
                 switch (outbound.protocol) {
                   case XrayProtocol.VMESS:
-                    proxy = plainToInstance(XrayOutboundObject<XrayVmessOutboundObject>, outbound);
+                    outProxy = plainToInstance(XrayOutboundObject<XrayVmessOutboundObject>, outbound);
                     break;
                   case XrayProtocol.VLESS:
-                    proxy = plainToInstance(XrayOutboundObject<XrayVlessOutboundObject>, outbound);
+                    outProxy = plainToInstance(XrayOutboundObject<XrayVlessOutboundObject>, outbound, { enableImplicitConversion: true });
                     break;
                   case XrayProtocol.SHADOWSOCKS:
-                    proxy = plainToInstance(XrayOutboundObject<XrayShadowsocksOutboundObject>, outbound);
+                    outProxy = plainToInstance(XrayOutboundObject<XrayShadowsocksOutboundObject>, outbound);
                     break;
                   case XrayProtocol.TROJAN:
-                    proxy = plainToInstance(XrayOutboundObject<XrayTrojanOutboundObject>, outbound);
+                    outProxy = plainToInstance(XrayOutboundObject<XrayTrojanOutboundObject>, outbound);
                     break;
                   case XrayProtocol.WIREGUARD:
-                    proxy = plainToInstance(XrayOutboundObject<XrayWireguardOutboundObject>, outbound);
+                    outProxy = plainToInstance(XrayOutboundObject<XrayWireguardOutboundObject>, outbound);
                     break;
                   case XrayProtocol.LOOPBACK:
-                    proxy = plainToInstance(XrayOutboundObject<XrayLoopbackOutboundObject>, outbound);
+                    outProxy = plainToInstance(XrayOutboundObject<XrayLoopbackOutboundObject>, outbound);
                     break;
                   case XrayProtocol.HTTP:
-                    proxy = plainToInstance(XrayOutboundObject<XrayHttpOutboundObject>, outbound);
+                    outProxy = plainToInstance(XrayOutboundObject<XrayHttpOutboundObject>, outbound);
                     break;
                   case XrayProtocol.DNS:
-                    proxy = plainToInstance(XrayOutboundObject<XrayFreedomOutboundObject>, outbound);
+                    outProxy = plainToInstance(XrayOutboundObject<XrayFreedomOutboundObject>, outbound);
                     break;
                   case XrayProtocol.SOCKS:
-                    proxy = plainToInstance(XrayOutboundObject<XraySocksOutboundObject>, outbound);
+                    outProxy = plainToInstance(XrayOutboundObject<XraySocksOutboundObject>, outbound);
                     break;
+                  case XrayProtocol.FREEDOM:
+                  case XrayProtocol.BLACKHOLE:
                   default:
-                    alert(`Unsupported protocol: ${outbound.protocol}`);
-                    return;
+                    continue;
                 }
+                outProxy.tag = outbound.tag ?? `out-${outbound.protocol.toLowerCase()}`;
+                props.config.outbounds.push(outProxy);
               }
             } else {
               alert('Invalid JSON format. Please check the structure.');
@@ -324,21 +332,17 @@
             return;
           }
 
-          if (proxy) {
-            proxy.tag = proxy.tag || 'proxy';
+          const proxyTag = props.config.outbounds.find((o) => o.tag && o.protocol != XrayProtocol.FREEDOM && o.protocol != XrayProtocol.BLACKHOLE)?.tag ?? 'proxy';
 
-            if (completeSetup.value) {
-              set_default_config(proxy.tag!);
-            }
-
-            props.config.outbounds.push(proxy);
-
-            emit('update:config', props.config);
-            importModal.value.close();
-            alert(`Configuration ${proxy.protocol}:${proxy.tag} imported successfully`);
-          } else {
-            alert(`Parse of this protocol is not supported yet`);
+          if (completeSetup.value) {
+            set_default_config(proxyTag);
           }
+
+          emit('update:config', props.config);
+          importModal.value.close();
+          alert(`Configuration imported successfully`);
+        } else {
+          alert(`Parse of this protocol is not supported yet`);
         }
       };
 

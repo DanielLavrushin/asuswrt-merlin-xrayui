@@ -245,7 +245,7 @@ configure_firewall_client() {
         fi
 
         if [ "$IPT_TYPE" = "TPROXY" ]; then
-            local IPT_JOURNAL_FLAGS="-j TPROXY --on-port $dokodemo_port --tproxy-mark 0x8777"
+            local IPT_JOURNAL_FLAGS="-j TPROXY --on-port $dokodemo_port --tproxy-mark 0x77"
             log_debug "TPROXY  inbound address: $dokodemo_addr:$dokodemo_port"
         else
             if [ "$dokodemo_addr" != "0.0.0.0" ]; then
@@ -350,9 +350,12 @@ configure_firewall_client() {
 
     if [ "$IPT_TYPE" = "TPROXY" ]; then
         # Add rules to mark packets for TPROXY:
-        ip rule list | grep -q "fwmark 0x8777" || ip rule add fwmark 0x8777 table 8777 priority 100 || log_error "Failed to add fwmark rule."
-        ip route add local 0.0.0.0/0 dev lo table 8777 || log_error "Failed to add local route for fwmark."
-
+        ip rule list | grep -q "fwmark 0x77" ||
+            ip rule add fwmark 0x77 lookup 77 priority 100 ||
+            log_error "Failed to add fwmark rule."
+        ip route list table 77 | grep -q '^local default' ||
+            ip route add local default dev lo table 77 ||
+            log_error "Failed to add local route for fwmark."
     else
         iptables $IPT_BASE_FLAGS -j RETURN || log_error "Failed to add default rule in $IPT_TABLE chain."
     fi
@@ -383,8 +386,8 @@ cleanup_firewall() {
     iptables -t mangle -F XRAYUI 2>/dev/null || log_debug "Failed to flush mangle chain. Was it already empty?"
     iptables -t mangle -X XRAYUI 2>/dev/null || log_debug "Failed to remove mangle chain. Was it already empty?"
 
-    ip rule del fwmark 0x8777 table 8777 priority 100 2>/dev/null || log_debug "Failed to delete fwmark rule. Was it already empty?"
-    ip route flush table 8777 2>/dev/null || log_debug "Failed to flush table 8777. Was it already empty?"
+    ip rule del fwmark 0x77 table 77 priority 100 2>/dev/null || log_debug "Failed to delete fwmark rule. Was it already empty?"
+    ip route flush table 77 2>/dev/null || log_debug "Failed to flush table 77. Was it already empty?"
 
     if jq -e '
     .inbounds[]

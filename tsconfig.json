@@ -9,7 +9,8 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
-    "types": ["webpack-env"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "lib": ["esnext", "dom"],
     "baseUrl": ".",
     "paths": {

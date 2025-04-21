@@ -4,6 +4,7 @@
   "main": "index.js",
   "scripts": {
     "build": "cross-env NODE_ENV=production vite build",
+    "tar": "cross-env NODE_ENV=production vite build && tar --transform 's|^|xrayui/|' -czf asuswrt-merlin-xrayui.tar.gz -C dist .",
     "watch": "cross-env NODE_ENV=development VITE_WATCH=1 vite build --watch --mode development",
     "watch-prod": "cross-env NODE_ENV=production VITE_WATCH=1 vite build --watch --mode production"
   },

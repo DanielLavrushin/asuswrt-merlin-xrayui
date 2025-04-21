@@ -311,7 +311,6 @@
                 }
                 outProxy.tag = outbound.tag ?? `out-${outbound.protocol.toLowerCase()}`;
                 props.config.outbounds.push(outProxy);
-                console.log(outProxy);
               }
             } else {
               alert('Invalid JSON format. Please check the structure.');

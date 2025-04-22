@@ -162,8 +162,7 @@ configure_firewall_client() {
 
     # Exclude local (RFC1918) subnets dynamically:
     local source_nets
-    source_nets=$(ip -4 route show |
-        awk '/src/ && ($1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/) { print $1 }' | grep -v '^$') || log_debug "Failed to get local networks."
+    source_nets=$(ip -4 route show | awk '/src/ && ($1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/) { print $1 }' | grep -v '^$') || log_debug "Failed to get local networks."
 
     if [ -n "$source_nets" ]; then
         for source_net in $source_nets; do
@@ -220,6 +219,28 @@ configure_firewall_client() {
         iptables $IPT_BASE_FLAGS -d "$serverip" -j RETURN || log_error "Failed to add rule to exclude Xray server IP in $IPT_TABLE."
     done
 
+    # TPROXY excludes:
+    if [ "$IPT_TYPE" = "TPROXY" ]; then
+
+        # Exclude traffic to  own WAN address
+        local wan_ip=$(nvram get wan0_realip_ip)
+        log_info "$IPT_TYPE: Excluding WAN IP ($wan_ip) from $IPT_TABLE."
+        iptables $IPT_BASE_FLAGS -d "$wan_ip" -j RETURN || log_error "Failed to exclude WAN IP from $IPT_TABLE."
+
+        # Exclude any non‑default “via” routes (i.e. static host routes)
+        for net in $(ip -4 route show | awk '$2=="via" && $1!="default" { print $1 }'); do
+            log_info "$IPT_TYPE: Excluding static-route destination $net from $IPT_TABLE"
+            iptables $IPT_BASE_FLAGS -d "$net" -j RETURN ||
+                log_error "Failed to exclude route $net from $IPT_TABLE."
+        done
+
+        # Exclude any static routes
+        for route in $(nvram get lan_route); do
+            log_info "$IPT_TYPE: Excluding static-route destination $route from $IPT_TABLE"
+            iptables -t mangle -I XRAYUI -d $(echo $route | awk -F':' '{print $1 "/" $2}') -j RETURN
+        done
+    fi
+
     # Exclude server ports
     server_ports=$(jq -r '.inbounds[]
     | select(.protocol != "dokodemo-door")
@@ -242,7 +263,11 @@ configure_firewall_client() {
         fi
 
         if [ "$IPT_TYPE" = "TPROXY" ]; then
-            local IPT_JOURNAL_FLAGS="-j TPROXY --on-port $dokodemo_port --tproxy-mark 0x77"
+            if [ "$dokodemo_addr" != "0.0.0.0" ]; then
+                local IPT_JOURNAL_FLAGS="-j TPROXY --on-port $dokodemo_port --on-ip $dokodemo_addr --tproxy-mark 0x77"
+            else
+                local IPT_JOURNAL_FLAGS="-j TPROXY --on-port $dokodemo_port --tproxy-mark 0x77"
+            fi
             log_debug "TPROXY  inbound address: $dokodemo_addr:$dokodemo_port"
         else
             if [ "$dokodemo_addr" != "0.0.0.0" ]; then

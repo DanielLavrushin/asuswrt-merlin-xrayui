@@ -222,23 +222,18 @@ configure_firewall_client() {
     # TPROXY excludes:
     if [ "$IPT_TYPE" = "TPROXY" ]; then
 
-        # Exclude traffic to  own WAN address
         local wan_ip=$(nvram get wan0_realip_ip)
-        log_info "$IPT_TYPE: Excluding WAN IP ($wan_ip) from $IPT_TABLE."
-        iptables $IPT_BASE_FLAGS -d "$wan_ip" -j RETURN || log_error "Failed to exclude WAN IP from $IPT_TABLE."
+        local via_routes=$(ip -4 route show | awk '$2=="via" && $1!="default" { print $1 }')
+        local static_routes=$(nvram get lan_route)
 
-        # Exclude any non‑default “via” routes (i.e. static host routes)
-        for net in $(ip -4 route show | awk '$2=="via" && $1!="default" { print $1 }'); do
-            log_info "$IPT_TYPE: Excluding static-route destination $net from $IPT_TABLE"
-            iptables $IPT_BASE_FLAGS -d "$net" -j RETURN ||
-                log_error "Failed to exclude route $net from $IPT_TABLE."
-        done
-
-        # Exclude any static routes
-        for route in $(nvram get lan_route); do
-            log_info "$IPT_TYPE: Excluding static-route destination $route from $IPT_TABLE"
-            iptables -t mangle -I XRAYUI -d $(echo $route | awk -F':' '{print $1 "/" $2}') -j RETURN
-        done
+        if [ "$IPT_TYPE" = "TPROXY" ]; then
+            # unified exclusion: WAN IP, any “via” routes, and your nvram static list
+            for dst in $wan_ip $via_routes $static_routes; do
+                log_debug "TPROXY: excluding $dst from $IPT_TABLE"
+                iptables $IPT_BASE_FLAGS -d "$dst" -j RETURN ||
+                    log_error "Failed to exclude $dst from $IPT_TABLE."
+            done
+        fi
     fi
 
     # Exclude server ports

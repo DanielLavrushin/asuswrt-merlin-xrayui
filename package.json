@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "build": "cross-env NODE_ENV=production vite build",
-    "tar": "cross-env NODE_ENV=production vite build && VERSION=${npm_config_version:-latest} && echo \"› XRAYUI_VERSION=$VERSION\" && sed -i \"s|^XRAYUI_VERSION=.*|XRAYUI_VERSION=\\\"$VERSION\\\"|\" dist/xrayui && set -- && tar --transform 's|^|xrayui/|' -czf \"asuswrt-merlin-xrayui-$VERSION.tar.gz\" -C dist .",
+    "watch": "cross-env NODE_ENV=development VITE_WATCH=1 vite build --watch --mode development",
     "watch-prod": "cross-env NODE_ENV=production VITE_WATCH=1 vite build --watch --mode production"
   },
   "keywords": [],

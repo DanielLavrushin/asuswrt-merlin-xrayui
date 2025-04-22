@@ -160,13 +160,16 @@ configure_firewall_client() {
 
     # --- Begin Exclusion Rules ---
 
-    # Exclude local (RFC1918) subnets dynamically:
+    # Exclude traffic in ESTABLISHED and RELATED states:
+    iptables -t $IPT_TABLE -I XRAYUI 1 -p udp -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN || log_error "Failed to add UDP ESTABLISHED,RELATED bypass"
+
     local source_nets
     source_nets=$(ip -4 route show | awk '/src/ && ($1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/) { print $1 }' | grep -v '^$') || log_debug "Failed to get local networks."
 
     if [ -n "$source_nets" ]; then
         for source_net in $source_nets; do
             log_debug "Adding local subnet $source_net to $IPT_TABLE."
+            # Exclude local subnets from interception
             iptables $IPT_BASE_FLAGS -d "$source_net" -j RETURN || log_debug "Failed to add local subnet $source_net rule in $IPT_TABLE."
         done
     fi

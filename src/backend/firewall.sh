@@ -88,10 +88,7 @@ configure_firewall_server() {
         local protocol=$(echo "$inbound" | jq -r '.protocol // empty')
         local listen_addr=$(echo "$inbound" | jq -r '.listen // "0.0.0.0"')
 
-        # Skip inbounds with tags starting with 'sys:' and 'dokodemo-door' protocol
-        case "$tag" in
-        sys:*) continue ;;
-        esac
+        # Skip inbounds with tags starting with 'dokodemo-door' protocol
         if [ "$protocol" = "dokodemo-door" ]; then
             continue
         fi
@@ -109,19 +106,19 @@ configure_firewall_server() {
         fi
 
         # Add rules to the XRAYUI chain
-        if [ "$listen_addr" = "0.0.0.0" ]; then
-            # accept everywhere on that port
-            log_debug "Adding rules for inbound with tag $tag on port $port to all addresses."
-            iptables -A XRAYUI -p tcp --dport "$port" -j ACCEPT || log_debug "Failed to add TCP rule for port $port."
-            iptables -A XRAYUI -p udp --dport "$port" -j ACCEPT || log_debug "Failed to add UDP rule for port $port."
+        if [ "$listen_addr" != "0.0.0.0" ]; then
+            local IPT_LISTEN_ADDR_FLAGS="-d $listen_addr"
         else
-            # only accept to that specific IP
-            log_debug "Adding rules for inbound with tag $tag on port $port to address $listen_addr."
-            iptables -A XRAYUI -p tcp -d "$listen_addr" --dport "$port" -j ACCEPT || log_debug "Failed to add TCP rule for port $port."
-            iptables -A XRAYUI -p udp -d "$listen_addr" --dport "$port" -j ACCEPT || log_debug "Failed to add UDP rule for port $port."
+            local IPT_LISTEN_ADDR_FLAGS=""
         fi
 
-        log_ok "Firewall SERVER rules applied for port $port."
+        local IPT_LISTEN_FLAGS="$IPT_LISTEN_ADDR_FLAGS --dport $port -j ACCEPT"
+
+        log_debug "Adding rules for inbound:$tag $listen_addr $port $IPT_LISTEN_FLAGS"
+        iptables -A XRAYUI -p tcp $IPT_LISTEN_FLAGS || log_debug "Failed to add TCP rule for port $port."
+        iptables -A XRAYUI -p udp $IPT_LISTEN_FLAGS || log_debug "Failed to add UDP rule for port $port."
+
+        log_ok "Firewall SERVER rules applied for inbound:$tag $listen_addr $port"
     done
 }
 
@@ -165,8 +162,7 @@ configure_firewall_client() {
 
     # Exclude local (RFC1918) subnets dynamically:
     local source_nets
-    source_nets=$(ip -4 route show |
-        awk '/src/ && ($1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/) { print $1 }' | grep -v '^$') || log_debug "Failed to get local networks."
+    source_nets=$(ip -4 route show | awk '/src/ && ($1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/) { print $1 }' | grep -v '^$') || log_debug "Failed to get local networks."
 
     if [ -n "$source_nets" ]; then
         for source_net in $source_nets; do
@@ -223,9 +219,26 @@ configure_firewall_client() {
         iptables $IPT_BASE_FLAGS -d "$serverip" -j RETURN || log_error "Failed to add rule to exclude Xray server IP in $IPT_TABLE."
     done
 
+    # TPROXY excludes:
+    if [ "$IPT_TYPE" = "TPROXY" ]; then
+
+        local wan_ip=$(nvram get wan0_realip_ip)
+        local via_routes=$(ip -4 route show | awk '$2=="via" && $1!="default" { print $1 }')
+        local static_routes=$(nvram get lan_route)
+
+        if [ "$IPT_TYPE" = "TPROXY" ]; then
+            # unified exclusion: WAN IP, any “via” routes, and your nvram static list
+            for dst in $wan_ip $via_routes $static_routes; do
+                log_debug "TPROXY: excluding $dst from $IPT_TABLE"
+                iptables $IPT_BASE_FLAGS -d "$dst" -j RETURN ||
+                    log_error "Failed to exclude $dst from $IPT_TABLE."
+            done
+        fi
+    fi
+
     # Exclude server ports
     server_ports=$(jq -r '.inbounds[]
-    | select(.protocol != "dokodemo-door" and (.tag | startswith("sys:") | not))
+    | select(.protocol != "dokodemo-door")
     | .port' "$XRAY_CONFIG_FILE" | sort -u)
 
     if [ -n "$server_ports" ]; then
@@ -235,9 +248,9 @@ configure_firewall_client() {
     fi
 
     echo "$inbounds" | while IFS= read -r inbound; do
-        dokodemo_port=$(echo "$inbound" | jq -r '.port // empty')
-        dokodemo_addr=$(echo "$inbound" | jq -r '.listen // "0.0.0.0"')
-        protocols=$(echo "$inbound" | jq -r '.settings.network // "tcp"')
+        local dokodemo_port=$(echo "$inbound" | jq -r '.port // empty')
+        local dokodemo_addr=$(echo "$inbound" | jq -r '.listen // "0.0.0.0"')
+        local protocols=$(echo "$inbound" | jq -r '.settings.network // "tcp"')
 
         if [ -z "$dokodemo_port" ]; then
             log_warn "$IPT_TYPE inbound missing valid port. Skipping."
@@ -245,7 +258,11 @@ configure_firewall_client() {
         fi
 
         if [ "$IPT_TYPE" = "TPROXY" ]; then
-            local IPT_JOURNAL_FLAGS="-j TPROXY --on-port $dokodemo_port --tproxy-mark 0x77"
+            if [ "$dokodemo_addr" != "0.0.0.0" ]; then
+                local IPT_JOURNAL_FLAGS="-j TPROXY --on-port $dokodemo_port --on-ip $dokodemo_addr --tproxy-mark 0x77"
+            else
+                local IPT_JOURNAL_FLAGS="-j TPROXY --on-port $dokodemo_port --tproxy-mark 0x77"
+            fi
             log_debug "TPROXY  inbound address: $dokodemo_addr:$dokodemo_port"
         else
             if [ "$dokodemo_addr" != "0.0.0.0" ]; then
@@ -323,7 +340,9 @@ configure_firewall_client() {
                             fi
 
                             # Default for bypass = return
-                            iptables $IPT_MAC_FLAGS -j RETURN
+                            if [ "$IPT_TYPE" = "DIRECT" ]; then
+                                iptables $IPT_MAC_FLAGS -j RETURN
+                            fi
 
                         else
                             # Redirect mode = redirect everything except the listed TCP/UDP ports

@@ -52,7 +52,7 @@ initial_response() {
 
     local dnsmasq_enabled=false
     # look in both the main conf _and_ any .add file
-    for f in /etc/dnsmasq.conf /jffs/configs/dnsmasq.conf.add; do
+    for f in /etc/dnsmasq.conf; do
         [ -f "$f" ] || continue
         grep -qE '^\s*log-queries' "$f" &&
             grep -qE '^\s*log-facility=.*dnsmasq\.log' "$f" && dnsmasq_enabled=true && log_debug "dnsmasq enabled in $f"

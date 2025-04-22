@@ -120,9 +120,7 @@ EOF
 
     local json_content=$(cat "$XRAY_CONFIG_FILE")
 
-    # patch 0.44.1 -> 0.44.2
-    rm -f /jffs/configs/dnsmasq.conf.add
-
+    log_ok "Installed $(show_version)"
     log_box "Installation process completed successfully."
 
     update_loading_progress "Installation completed successfully."

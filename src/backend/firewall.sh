@@ -27,16 +27,12 @@ configure_firewall() {
     SERVER_IPS=$(jq -r '[.outbounds[] | select(.settings.vnext != null) | .settings.vnext[].address] | unique | join(" ")' "$XRAY_CONFIG_FILE")
 
     if jq -e '
-    .inbounds[]
-    | select(.protocol=="dokodemo-door")
-    | .listen // "0.0.0.0"
-    | select(. != "0.0.0.0")
-  ' "$XRAY_CONFIG_FILE" >/dev/null; then
-        local lan_bridge=$(nvram get lan_ifname)
-        echo 1 >/proc/sys/net/ipv4/conf/all/route_localnet || log_error "route_localnet(all) failed"
-        echo 1 >/proc/sys/net/ipv4/conf/$lan_bridge/route_localnet || log_error "route_localnet($lan_bridge) failed"
-
-        log_debug "route_localnet set to 1 for all and $lan_bridge"
+  .inbounds[]
+  | select(.protocol=="dokodemo-door")
+  | (.listen // "")
+  | startswith("127.")
+' "$XRAY_CONFIG_FILE" >/dev/null; then
+        set_route_localnet 1
     fi
 
     # Execute custom scripts for firewall rules before start
@@ -289,14 +285,21 @@ configure_firewall_client() {
         # Apply policy rules
         log_info "Apply $IPT_TYPE rules for inbound on port $dokodemo_port with protocols '$protocols'."
 
-        jq -c '(.routing.policies // []) | if length == 0 then [{mode:"redirect", enabled:true, name:"all traffic to xray"}] else . end | .[]' "$XRAY_CONFIG_FILE" | while IFS= read -r policy; do
-            enabled="$(echo "$policy" | jq -r '.enabled // "false"')"
-            [ "$enabled" != "true" ] && continue
-
+        jq -c '
+  (.routing.policies // []) 
+  | map(select(.enabled == true)) 
+  as $enabled
+  | (if ($enabled | length) == 0 
+       then [{ mode: "redirect", enabled: true, name: "all traffic to xray" }] 
+       else $enabled 
+     end)
+  | .[]
+' "$XRAY_CONFIG_FILE" | while IFS= read -r policy; do
             policy_mode="$(echo "$policy" | jq -r '.mode // "bypass"')"
             tcpPorts="$(echo "$policy" | jq -r '.tcp // ""')"
             udpPorts="$(echo "$policy" | jq -r '.udp // ""')"
             macCount="$(echo "$policy" | jq '.mac | length')"
+            log_debug "Policy mode: $policy_mode, TCP ports: $tcpPorts, UDP ports: $udpPorts, MAC count: $macCount"
             for source_net in $source_nets; do
 
                 local IPT_SOURCE_FLAGS="$IPT_BASE_FLAGS -s $source_net"
@@ -385,7 +388,7 @@ configure_firewall_client() {
     # Hook chain into $IPT_TABLE PREROUTING:
     iptables -t $IPT_TABLE -C PREROUTING -j XRAYUI 2>/dev/null || iptables -t $IPT_TABLE -A PREROUTING -j XRAYUI
 
-    log_ok "$IPT_TABLE rules applied."
+    log_ok "$IPT_TYPE rules applied."
 }
 
 cleanup_firewall() {
@@ -412,16 +415,12 @@ cleanup_firewall() {
     ip route flush table 77 2>/dev/null || log_debug "Failed to flush table 77. Was it already empty?"
 
     if jq -e '
-    .inbounds[]
-    | select(.protocol=="dokodemo-door")
-    | .settings.address // "0.0.0.0"
-    | select(. != "0.0.0.0")
-  ' "$XRAY_CONFIG_FILE" >/dev/null; then
-        local lan_bridge=$(nvram get lan_ifname)
-        echo 0 >/proc/sys/net/ipv4/conf/all/route_localnet || log_error "route_localnet(all) failed"
-        echo 0 >/proc/sys/net/ipv4/conf/$lan_bridge/route_localnet || log_error "route_localnet($lan_bridge) failed"
-
-        log_debug "route_localnet set to 0 for all and $lan_bridge"
+  .inbounds[]
+  | select(.protocol=="dokodemo-door")
+  | (.listen // "")
+  | startswith("127.")
+' "$XRAY_CONFIG_FILE" >/dev/null; then
+        set_route_localnet 0
     fi
 
     local script="$ADDON_USER_SCRIPTS_DIR/firewall_cleanup"
@@ -440,4 +439,17 @@ cleanup_firewall() {
         log_error "Failed to restart DNS service."
 
     log_ok "Xray Client firewall rules cleaned up successfully."
+}
+
+set_route_localnet() {
+    local val="$1"
+    local lan_if=$(nvram get lan_ifname)
+
+    # only enable on lan bridge and tun* interfaces
+    for itf in "$lan_if" $(ls /proc/sys/net/ipv4/conf | grep '^tun'); do
+        if [ -e "/proc/sys/net/ipv4/conf/$itf/route_localnet" ]; then
+            echo "$val" >"/proc/sys/net/ipv4/conf/$itf/route_localnet" &&
+                log_debug "Set route_localnet to $val for interface $itf"
+        fi
+    done
 }

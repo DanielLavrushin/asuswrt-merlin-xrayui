@@ -4,7 +4,14 @@
 start() {
 
     load_xrayui_config
-    test_xray_config
+
+    local skip_test="${skip_test:-false}"
+
+    if [ "$skip_test" = "true" ]; then
+        log_info "Skipping Xray configuration test as per user settings."
+    else
+        test_xray_config
+    fi
 
     log_info "Starting $ADDON_TITLE"
 

@@ -541,6 +541,11 @@
       "restore_confirm": "Are you sure  you want to restore this backup?\nWarning: This will overwrite the current configuration.\n\nIt is recommended to create a backup before restoring.",
       "download": "download",
       "restore": "restore"
+    },
+    "Logs": {
+      "title": "Xray Logs",
+      "display": "view logs",
+      "type": "Log type to load"
     }
   }
 }

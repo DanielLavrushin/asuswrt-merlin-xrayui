@@ -125,9 +125,11 @@ configure_firewall_client() {
 
     log_info "Configuring aggregated $IPT_TYPE rules for dokodemo-door inbounds..."
 
+    local wan0_ip=$(nvram get wan0_realip_ip)
+    local wan1_ip=$(nvram get wan1_realip_ip)
+
     if [ "$IPT_TYPE" = "DIRECT" ]; then
         local IPT_TABLE="nat"
-
     else
         local IPT_TABLE="mangle"
         # Ensure TPROXY module is loaded
@@ -155,9 +157,9 @@ configure_firewall_client() {
     iptables -t $IPT_TABLE -N XRAYUI || log_debug "Failed to create $IPT_TABLE chain."
 
     # --- Begin Exclusion Rules ---
-
-    # Exclude traffic in ESTABLISHED and RELATED states:
-    iptables -t $IPT_TABLE -I XRAYUI 1 -p udp -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN || log_error "Failed to add UDP ESTABLISHED,RELATED bypass"
+    if [ "$IPT_TYPE" = "DIRECT" ]; then
+        iptables -t "$IPT_TABLE" -I XRAYUI 1 -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN || log_error "Failed to add ESTABLISHED/RELATED bypass in $IPT_TABLE"
+    fi
 
     local source_nets
     source_nets=$(ip -4 route show | awk '/src/ && ($1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/) { print $1 }' | grep -v '^$') || log_debug "Failed to get local networks."
@@ -196,18 +198,25 @@ configure_firewall_client() {
     # Exclude the WireGuard subnet 10.122.0.0/24
     if [ "$(nvram get wgs_enable)" = "1" ]; then
         log_info "WireGuard enabled. Adding exclusion rules for WireGuard."
-        local WGS_ADDR=$(nvram get "wgs_addr")
-        local WGS_IP="$(echo "$WGS_ADDR" | cut -d'/' -f1)"
-        local OCT1="$(echo "$WGS_IP" | cut -d'.' -f1)"
-        local OCT2="$(echo "$WGS_IP" | cut -d'.' -f2)"
-        local OCT3="$(echo "$WGS_IP" | cut -d'.' -f3)"
 
-        # Use the first three octets of the WGS_IP to create the subnet
-        local WGS_SUBNET="$OCT1.$OCT2.$OCT3.0/24"
-        local WGS_PORT=$(nvram get "wgs_port")
+        local WGS_ADDR="$(nvram get wgs_addr)" # например 10.122.0.1/24
+        local WGS_PORT="$(nvram get wgs_port)"
 
-        iptables $IPT_BASE_FLAGS -p udp --dport "$WGS_PORT" -j RETURN || log_error "Failed to add WireGuard port rule in $IPT_TABLE."
-        iptables $IPT_BASE_FLAGS -d "$WGS_SUBNET" -j RETURN || log_error "Failed to add WireGuard subnet rule in $IPT_TABLE."
+        local WGS_IP=$(printf '%s' "$WGS_ADDR" | cut -d'/' -f1)
+        local oct1=$(printf '%s' "$WGS_IP" | cut -d'.' -f1)
+        local oct2=$(printf '%s' "$WGS_IP" | cut -d'.' -f2)
+        local oct3=$(printf '%s' "$WGS_IP" | cut -d'.' -f3)
+        local WGS_SUBNET="$oct1.$oct2.$oct3.0/24"
+
+        log_debug "WireGuard subnet: $WGS_SUBNET"
+        [ -n "$wan0_ip" ] &&
+            iptables -w $IPT_BASE_FLAGS -p udp -d "$wan0_ip" --dport "$WGS_PORT" -j RETURN || log_error "Failed to add WG rule for $wan0_ip"
+
+        [ -n "$wan1_ip" ] &&
+            iptables -w $IPT_BASE_FLAGS -p udp -d "$wan1_ip" --dport "$WGS_PORT" -j RETURN || log_error "Failed to add WG rule for $wan1_ip"
+
+        # Exclude WireGuard subnet
+        iptables -w $IPT_BASE_FLAGS -d "$WGS_SUBNET" -j RETURN || log_error "Failed to add WG subnet rule"
     else
         log_debug "WireGuard not enabled. Skipping WireGuard exclusion rules."
     fi

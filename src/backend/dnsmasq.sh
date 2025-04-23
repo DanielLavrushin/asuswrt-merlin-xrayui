@@ -4,10 +4,12 @@
 dnsmasq_configure() {
     local CONFIG=$1
     load_ui_response
+    load_xrayui_config
 
     log_debug "Configuring dnsmasq..."
 
     log_debug "config: $CONFIG"
+    log_debug "XRAY_CONFIG_FILE: $XRAY_CONFIG_FILE"
     log_debug "dnsmasq flag: $dnsmasq"
 
     pc_append "" "$CONFIG"
@@ -19,6 +21,15 @@ dnsmasq_configure() {
         grep -qE '^log-async' "$CONFIG" || pc_append "log-async=25" "$CONFIG" >/dev/null && log_debug "log-async enabled"
         grep -qE '^log-facility' "$CONFIG" || pc_append "log-facility=/opt/var/log/dnsmasq.log" "$CONFIG" >/dev/null && log_debug "log-facility enabled"
     fi
+
+    jq -r '
+    .inbounds[]
+  | select((.tag // "" | ascii_downcase) | contains("dns"))
+  | "\(.listen // "127.0.0.1")#\(.port)"
+  ' "$XRAY_CONFIG_FILE" |
+        while IFS= read -r srv; do
+            pc_append "server=$srv" "$CONFIG" && log_debug "dnsmasq: added inbound DNS server=$srv"
+        done
 
     pc_append "#$ADDON_TAG end" "$CONFIG"
 

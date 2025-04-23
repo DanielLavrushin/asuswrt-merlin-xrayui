@@ -31,6 +31,23 @@
           </td>
         </tr>
       </tbody>
+      <tbody>
+        <tr class="data_filter">
+          <td></td>
+          <td>
+            <input type="text" class="input_option" placeholder="device" />
+          </td>
+          <td>
+            <input type="text" class="input_option" placeholder="target" />
+          </td>
+          <td>
+            <input type="text" class="input_option" placeholder="inbound" />
+          </td>
+          <td>
+            <input type="text" class="input_option" placeholder="outbound" />
+          </td>
+        </tr>
+      </tbody>
     </table>
   </div>
 </template>

@@ -26,7 +26,7 @@
                 {{ proxy.protocol }}
               </span>
             </a>
-            <span v-show="proxy.streamSettings?.network" :class="['proxy-label', proxy.streamSettings?.network]">
+            <span v-show="proxy.streamSettings?.network && proxy.streamSettings?.network != 'tcp'" :class="['proxy-label', proxy.streamSettings?.network]">
               {{ proxy.streamSettings?.network }}
             </span>
             <span v-show="proxy.streamSettings?.security" :class="['proxy-label', proxy.streamSettings?.security]">

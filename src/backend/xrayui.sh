@@ -117,7 +117,7 @@ service_event)
         remove_loading_progress
         ;;
     testconfig)
-        test_xray_config
+        test_xray_config true
         ;;
     update)
         update

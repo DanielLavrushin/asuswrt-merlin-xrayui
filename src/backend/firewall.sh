@@ -443,13 +443,19 @@ cleanup_firewall() {
 
 set_route_localnet() {
     local val="$1"
-    local lan_if=$(nvram get lan_ifname)
+    local wan0="$(nvram get wan0_ifname)"
+    local wan1="$(nvram get wan1_ifname)"
 
-    # only enable on lan bridge and tun* interfaces
-    for itf in "$lan_if" $(ls /proc/sys/net/ipv4/conf | grep '^tun'); do
-        if [ -e "/proc/sys/net/ipv4/conf/$itf/route_localnet" ]; then
-            echo "$val" >"/proc/sys/net/ipv4/conf/$itf/route_localnet" &&
-                log_debug "Set route_localnet to $val for interface $itf"
+    for itf in "$lan_if" $(ip addr | grep -Po '^\d+:\s+\K[^:|@]+'); do
+        if [ "$itf" = "lo" ] ||
+            [ "$itf" = "$wan0" ] ||
+            [ -z "$itf" ] ||
+            { [ -n "$wan1" ] && [ "$itf" = "$wan1" ]; }; then
+            continue
         fi
+
+        echo "$val" >"/proc/sys/net/ipv4/conf/$itf/route_localnet" 2>/dev/null ||
+            log_debug "Failed to set route_localnet to $val for interface $itf. It may not exist."
+        log_debug "Set route_localnet to $val for interface $itf"
     done
 }

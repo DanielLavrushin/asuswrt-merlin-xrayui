@@ -1,7 +1,7 @@
 <template>
   <Teleport to="#xrayui-modals">
     <div class="xray-modal-overlay" v-if="isVisible" @mousedown.self="close" role="dialog" aria-modal="true">
-      <div class="xray-modal-content" @click.stop :style="modalStyle">
+      <div class="xray-modal-content" @click.stop :style="{ width: `${width}px` }">
         <header class="xray-modal-header">
           <h2>
             <slot name="title">
@@ -70,16 +70,11 @@
         }
       };
 
-      // Computed style for the modal content
-      const modalStyle = computed(() => ({
-        width: `${props.width!}px`
-      }));
-
       onBeforeUnmount(() => {
         document.removeEventListener('keydown', handleKeyDown);
       });
 
-      return { isVisible, show, close, modalStyle };
+      return { isVisible, show, close, width: props.width };
     }
   });
 </script>

@@ -31,7 +31,7 @@
                         </tr>
                       </thead>
                       <tbody class="logs-area-content">
-                        <tr v-for="(log, index) in parsedLogs" :key="index" :class="[log.parsed ? 'parsed' : 'unparsed']">
+                        <tr v-for="log in filteredLogs" :key="log.line" :class="[log.parsed ? 'parsed' : 'unparsed']">
                           <!-- Parsed entry (normal layout) -->
                           <template v-if="log.parsed">
                             <td>{{ log.time }}</td>
@@ -57,6 +57,23 @@
                           <td colspan="5">No logs available</td>
                         </tr>
                       </tbody>
+                      <tbody>
+                        <tr class="filter-row">
+                          <td></td>
+                          <td>
+                            <input v-model.trim="filters.source" placeholder="🔎 source" class="input_20_table" />
+                          </td>
+                          <td>
+                            <input v-model.trim="filters.target" placeholder="🔎 target" class="input_20_table" />
+                          </td>
+                          <td>
+                            <input v-model.trim="filters.inbound" placeholder="🔎 inbound" class="input_20_table" />
+                          </td>
+                          <td>
+                            <input v-model.trim="filters.outbound" placeholder="🔎 outbound" class="input_20_table" />
+                          </td>
+                        </tr>
+                      </tbody>
                     </table>
                   </div>
                 </div>
@@ -70,7 +87,7 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, onMounted, onBeforeUnmount, ref, computed } from 'vue';
+  import { defineComponent, onMounted, onBeforeUnmount, ref, computed, reactive } from 'vue';
   import axios from 'axios';
   import engine, { SubmitActions } from '@/modules/Engine';
   import { XrayLogObject } from '@/modules/CommonObjects';
@@ -148,6 +165,25 @@
       const FILE_ERROR = '/ext/xrayui/xray_error_partial.asp';
       const file = ref<string>(FILE_ACCESS);
       const logsContent = ref<string>('');
+      const filters = reactive({
+        source: '',
+        target: '',
+        inbound: '',
+        outbound: ''
+      });
+
+      const filteredLogs = computed<AccessLogEntry[]>(() => {
+        return parsedLogs.value.filter((l) => {
+          if (!l.parsed) return true;
+
+          const s = filters.source.toLowerCase();
+          const t = filters.target.toLowerCase();
+          const i = filters.inbound.toLowerCase();
+          const o = filters.outbound.toLowerCase();
+
+          return (!s || l.source?.toLowerCase().includes(s) || l.source_device?.toLowerCase().includes(s)) && (!t || `${l.target}:${l.target_port}`.toLowerCase().includes(t)) && (!i || l.inbound?.toLowerCase().includes(i)) && (!o || l.outbound?.toLowerCase().includes(o));
+        });
+      });
 
       const devices = computed(() => {
         return Object.fromEntries(Object.entries(window.xray.router.devices_online).map(([mac, device]) => [device.ip, device]));
@@ -202,7 +238,9 @@
         parsedLogs,
         FILE_ACCESS,
         FILE_ERROR,
-        display
+        filters,
+        display,
+        filteredLogs
       };
     }
   });
@@ -275,6 +313,10 @@
     }
     tr.unparsed td {
       color: #888;
+    }
+
+    .filter-row {
+      background: #2b3538;
     }
   }
 </style>

@@ -421,8 +421,15 @@ configure_firewall_client() {
         iptables $IPT_BASE_FLAGS -j RETURN 2>/dev/null || log_error "Failed to add default rule in $IPT_TABLE chain."
     fi
 
-    # Hook chain into $IPT_TABLE PREROUTING:
+    # Hook chain into  PREROUTING:
     iptables -t $IPT_TABLE -C PREROUTING -j XRAYUI 2>/dev/null 2>/dev/null || iptables -t $IPT_TABLE -A PREROUTING -j XRAYUI 2>/dev/null
+
+    # if [ "$IPT_TYPE" = "TPROXY" ]; then
+    #     # capture router-originated traffic, spare UID 0 (root/Xray)
+    #     #   log_debug "Adding OUTPUT rule for TPROXY."
+    #     #  iptables -t mangle -C OUTPUT -m owner ! --uid-owner 0 -m conntrack ! --ctstate INVALID -j XRAYUI 2>/dev/null ||
+    #     #     iptables -t mangle -I OUTPUT 1 -m owner ! --uid-owner 0 -m conntrack ! --ctstate INVALID -j XRAYUI
+    # fi
 
     log_ok "$IPT_TYPE rules applied."
 }

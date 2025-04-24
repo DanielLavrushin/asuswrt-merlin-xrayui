@@ -36,6 +36,11 @@ diagnostics_iptables() {
     log_info "--------------------------------------------------------"
     log_info
 
+    log_info "iptables -t mangle -L XRAYUI --line-numbers:"
+    iptables -t mangle -L XRAYUI --line-numbers 2>&1
+    log_info "--------------------------------------------------------"
+    log_info
+
     log_info "ip rule show:"
     ip rule show 2>&1
     log_info "--------------------------------------------------------"

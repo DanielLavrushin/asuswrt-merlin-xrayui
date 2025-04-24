@@ -164,6 +164,11 @@ configure_firewall_client() {
     iptables -t $IPT_TABLE -F XRAYUI 2>/dev/null || log_debug "Failed to flush $IPT_TABLE chain. Was it already empty?"
     iptables -t $IPT_TABLE -X XRAYUI 2>/dev/null || log_debug "Failed to remove $IPT_TABLE chain. Was it already empty?"
     iptables -t $IPT_TABLE -N XRAYUI 2>/dev/null || log_debug "Failed to create $IPT_TABLE chain."
+    if [ "$IPT_TYPE" = "TPROXY" ]; then
+        modprobe xt_socket 2>/dev/null
+        iptables -t "$IPT_TABLE" -C XRAYUI -p udp -m socket --transparent -j RETURN 2>/dev/null ||
+            iptables -t "$IPT_TABLE" -I XRAYUI 1 -p udp -m socket --transparent -j RETURN
+    fi
 
     # --- Begin Exclusion Rules ---
     if [ "$IPT_TYPE" = "DIRECT" ]; then
@@ -405,12 +410,26 @@ configure_firewall_client() {
         ip route list table 77 | grep -q '^local default' ||
             ip route add local default dev lo table 77 ||
             log_error "Failed to add local route for fwmark."
+
+        # Avoids black-holing packets to LAN/VPN/static nets after TPROXY
+        ip -4 route show table main | grep -v '^default' |
+            while read -r route; do
+                ip route add table 77 $route 2>/dev/null
+                log_debug "Added route to table 77: $route"
+            done
     else
         iptables $IPT_BASE_FLAGS -j RETURN 2>/dev/null || log_error "Failed to add default rule in $IPT_TABLE chain."
     fi
 
-    # Hook chain into $IPT_TABLE PREROUTING:
+    # Hook chain into  PREROUTING:
     iptables -t $IPT_TABLE -C PREROUTING -j XRAYUI 2>/dev/null 2>/dev/null || iptables -t $IPT_TABLE -A PREROUTING -j XRAYUI 2>/dev/null
+
+    # if [ "$IPT_TYPE" = "TPROXY" ]; then
+    #     # capture router-originated traffic, spare UID 0 (root/Xray)
+    #     #   log_debug "Adding OUTPUT rule for TPROXY."
+    #     #  iptables -t mangle -C OUTPUT -m owner ! --uid-owner 0 -m conntrack ! --ctstate INVALID -j XRAYUI 2>/dev/null ||
+    #     #     iptables -t mangle -I OUTPUT 1 -m owner ! --uid-owner 0 -m conntrack ! --ctstate INVALID -j XRAYUI
+    # fi
 
     log_ok "$IPT_TYPE rules applied."
 }

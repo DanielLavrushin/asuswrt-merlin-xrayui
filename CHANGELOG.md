@@ -5,6 +5,7 @@
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - FIXED: `Json` configuration import.
+- FIXED: Front-end styles for `ROG` and `TUF` design.
 - ADDED: `DNAT` support for `dokodemo‑door` inbounds bound to a specific listen address (anything other than `0.0.0.0`)—those rules now use `-j DNAT --to-destination` instead of a generic `REDIRECT`.
 - ADDED: Source‑subnet filtering in client mode—all `dokodemo-door` REDIRECT/TPROXY rules are now prefixed with `-s <local_lan_subnet>`, so only LAN traffic is captured.
 - ADDED: listen‑address restriction for server inbounds—ACCEPT rules for `non‑0.0.0.0` binds now include `-d <listen_ip>`, limiting them to the configured interface.

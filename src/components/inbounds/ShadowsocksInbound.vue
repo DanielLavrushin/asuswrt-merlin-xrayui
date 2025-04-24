@@ -1,7 +1,7 @@
 <template>
   <div class="formfontdesc">
     <p>The Shadowsocks protocol is compatible with most other implementations of Shadowsocks. The server supports TCP and UDP packet forwarding, with an option to selectively disable UDP.</p>
-    <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
+    <table width="100%" class="FormTable modal-form-table">
       <thead>
         <tr>
           <td colspan="2">Shadowsocks</td>

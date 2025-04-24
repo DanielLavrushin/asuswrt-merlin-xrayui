@@ -1,7 +1,7 @@
 <template>
   <modal ref="modal" title="Hosts List">
     <div class="formfontdesc">
-      <table width="100%" bordercolor="#6b8fa3" class="FormTable SettingsTable tableApi_table">
+      <table width="100%" class="FormTable SettingsTable tableApi_table">
         <thead>
           <tr>
             <td colspan="3">Addresses</td>

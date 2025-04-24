@@ -56,6 +56,10 @@
 </script>
 
 <style lang="scss">
+  * {
+    font-family: Arial, Helvetica, sans-serif !important;
+  }
+
   #Loading,
   #overDiv {
     z-index: 9999;
@@ -170,6 +174,10 @@
         &.splithttp {
           background-color: rgb(94, 10, 59);
         }
+
+        &.tproxy {
+          background: rgb(207, 78, 2);
+        }
       }
 
       &.height-overflow {
@@ -204,7 +212,7 @@
     margin: 2px;
     font-weight: normal;
     height: 20px;
-    font-size: 10px;
+    font-size: 11px;
     color: white !important;
     text-decoration: none !important;
   }
@@ -292,5 +300,109 @@
     margin: 10px 0;
     padding: 5px;
     border-left: 3px solid $c_yellow;
+  }
+
+  /* ROG OVERRIDES  */
+  .xrayui-rog {
+    textarea {
+      background: rgb(62, 3, 13) !important;
+      border-color: rgb(145, 7, 31) !important;
+    }
+    .button_gen_small:hover {
+      height: 20px !important;
+      width: auto !important;
+      min-width: auto !important;
+      border-radius: 4px !important;
+      padding: 3px 5px 5px 5px !important;
+      margin: 2px !important;
+      font-weight: normal !important;
+      font-size: 12px !important;
+    }
+    .xray-modal-content {
+      background-color: #000 !important;
+    }
+    .logs-area-content {
+      background-color: #000 !important;
+      scrollbar-color: #ffffff rgb(145, 7, 31) !important;
+    }
+
+    .FormTable {
+      tr:hover th {
+        text-shadow: 2px 2px 25px rgb(145, 7, 31) !important;
+      }
+
+      tr:hover > * {
+        border-left-color: rgb(145, 7, 31) !important;
+      }
+
+      tr:hover > :last-child {
+        border-right-color: rgb(145, 7, 31) !important;
+      }
+    }
+
+    .configArea {
+      background-color: rgb(62, 3, 13) !important;
+      text-align: left;
+      height: 500px;
+      overflow: scroll;
+      scrollbar-width: thin;
+      scrollbar-color: #ffffff rgb(145, 7, 31) !important;
+    }
+  }
+
+  /* TUF OVERRIDES  */
+  .xrayui-tuf {
+    textarea {
+      color: #ffffff !important;
+      background-color: rgb(55, 55, 55) !important;
+      border-color: rgb(76, 76, 76) !important;
+    }
+    .button_gen_small {
+      width: initial !important;
+      &:hover {
+        height: 20px !important;
+        width: auto !important;
+        min-width: auto !important;
+        border-radius: 4px !important;
+        padding: 3px 5px 5px 5px !important;
+        margin: 2px !important;
+        font-weight: normal !important;
+        font-size: 12px !important;
+      }
+    }
+    .xray-modal-content {
+      background-color: rgba(38, 38, 38, 0.9) !important;
+    }
+    .logs-area-content {
+      background-color: rgba(38, 38, 38, 0.9) !important;
+      scrollbar-color: #ffffff rgb(17, 17, 17) !important;
+    }
+
+    .FormTable {
+      font-family: Arial, Helvetica, sans-serif !important;
+      tr:hover th {
+        text-shadow: 2px 2px 25px rgb(255, 165, 35) !important;
+      }
+
+      tr:hover > * {
+        border-left-color: rgb(255, 165, 35) !important;
+      }
+
+      tr:hover > :last-child {
+        border-right-color: rgb(255, 165, 35) !important;
+      }
+    }
+
+    .configArea {
+      background-color: rgba(68, 79, 83, 0.9) !important;
+      text-align: left;
+      height: 500px;
+      overflow: scroll;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(68, 79, 83, 0.9) rgba(38, 38, 38, 0.9) !important;
+    }
+    .hint-color {
+      color: rgb(8, 255, 240) !important;
+    }
   }
 </style>

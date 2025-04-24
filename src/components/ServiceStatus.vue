@@ -1,5 +1,5 @@
 <template>
-  <table width="100%" bordercolor="#6b8fa3" class="FormTable">
+  <table width="100%" class="FormTable">
     <thead>
       <tr>
         <td colspan="2">

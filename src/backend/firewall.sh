@@ -221,10 +221,10 @@ configure_firewall_client() {
 
             log_debug "WireGuard subnet: $WGS_SUBNET"
             [ -n "$wan0_ip" ] &&
-                iptables -w $IPT_BASE_FLAGS -p udp -d "$wan0_ip" --dport "$WGS_PORT" -j RETURN 2>/dev/null || log_error "Failed to add WG rule for $wan0_ip"
+                iptables -w $IPT_BASE_FLAGS -p udp -d "$wan0_ip" --dport "$WGS_PORT" -j RETURN 2>/dev/null
 
             [ -n "$wan1_ip" ] &&
-                iptables -w $IPT_BASE_FLAGS -p udp -d "$wan1_ip" --dport "$WGS_PORT" -j RETURN 2>/dev/null || log_error "Failed to add WG rule for $wan1_ip"
+                iptables -w $IPT_BASE_FLAGS -p udp -d "$wan1_ip" --dport "$WGS_PORT" -j RETURN 2>/dev/null
 
             # Exclude WireGuard subnet
             iptables -w $IPT_BASE_FLAGS -d "$WGS_SUBNET" -j RETURN 2>/dev/null || log_error "Failed to add WG subnet rule"

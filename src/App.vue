@@ -316,7 +316,6 @@
       padding: 3px 5px 5px 5px !important;
       margin: 2px !important;
       font-weight: normal !important;
-      height: 20px !important;
       font-size: 12px !important;
     }
     .xray-modal-content {
@@ -368,7 +367,6 @@
         padding: 3px 5px 5px 5px !important;
         margin: 2px !important;
         font-weight: normal !important;
-        height: 20px !important;
         font-size: 12px !important;
       }
     }

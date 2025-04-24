@@ -1,6 +1,6 @@
 {
   "vueIndentScriptAndStyle": true,
-  "printWidth": 2000,
+  "printWidth": 500,
   "endOfLine": "lf",
   "semi": true,
   "singleQuote": true,

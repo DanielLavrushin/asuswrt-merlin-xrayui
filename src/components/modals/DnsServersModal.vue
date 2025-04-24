@@ -2,7 +2,7 @@
   <modal ref="modal" title="Servers">
     <div class="formfontdesc">
       <p>{{ $t('com.DnsServersModal.modal_desc') }}</p>
-      <table width="100%" bordercolor="#6b8fa3" class="FormTable SettingsTable tableApi_table">
+      <table width="100%" class="FormTable SettingsTable tableApi_table">
         <thead>
           <tr>
             <td colspan="2">{{ $t('com.DnsServersModal.list') }}</td>
@@ -41,7 +41,7 @@
   <!-- Advanced Modal -->
   <modal ref="modalAdvanced" :title="$t('com.DnsServersModal.modal_server_title')">
     <div class="formfontdesc">
-      <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
+      <table width="100%" class="FormTable modal-form-table">
         <thead>
           <tr>
             <td colspan="2">{{ $t('com.DnsServersModal.modal_server_title2') }}</td>

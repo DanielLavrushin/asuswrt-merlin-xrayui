@@ -1,5 +1,5 @@
 <template>
-  <table width="100%" bordercolor="#6b8fa3" class="FormTable">
+  <table width="100%" class="FormTable">
     <thead>
       <tr>
         <td colspan="2">{{ $t('com.Inbounds.title') }}</td>
@@ -29,9 +29,10 @@
             <span v-show="proxy.streamSettings?.network && proxy.streamSettings?.network != 'tcp'" :class="['proxy-label', proxy.streamSettings?.network]">
               {{ proxy.streamSettings?.network }}
             </span>
-            <span v-show="proxy.streamSettings?.security" :class="['proxy-label', proxy.streamSettings?.security]">
+            <span v-show="proxy.streamSettings?.security && proxy.streamSettings?.security != 'none'" :class="['proxy-label', proxy.streamSettings?.security]">
               {{ proxy.streamSettings?.security }}
             </span>
+            <span v-show="proxy.streamSettings?.sockopt?.tproxy === 'tproxy'" :class="['proxy-label', proxy.streamSettings?.sockopt?.tproxy]">{{ proxy.streamSettings?.sockopt?.tproxy }}</span>
             <span class="row-buttons">
               <a class="button_gen button_gen_small" href="#" @click.prevent="show_transport(proxy)">
                 {{ $t('labels.transport') }}
@@ -198,5 +199,3 @@
     }
   });
 </script>
-
-<style scoped></style>

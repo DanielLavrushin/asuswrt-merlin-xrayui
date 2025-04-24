@@ -79,6 +79,18 @@ log_info() { printlog INFO "$@"; }
 log_ok() { printlog OK "$@"; }
 log_debug() { printlog DEBUG "$@"; }
 
+log_info_box() {
+    log_box "$1" "$CINFO"
+}
+
+log_warn_box() {
+    log_box "$1" "$CWARN"
+}
+
+log_error_box() {
+    log_box "$1" "$CERR"
+}
+
 log_box() {
     msg="$1"
     padding=2

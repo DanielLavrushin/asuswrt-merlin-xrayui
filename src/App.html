@@ -33,7 +33,8 @@
           devices_online: JSON.parse(`<% get_clientlist(); %>`),
           devices: JSON.parse(`<% get_all_basic_clientlist(); %>`),
           wan_ip: '<% nvram_get("wan_ipaddr"); %>',
-          wan_connected: '<% nvram_get("link_internet"); %>' == '2'
+          wan_connected: '<% nvram_get("link_internet"); %>' == '2',
+          features: '<% nvram_get("rc_support"); %>'
         },
         server: {
           isRunning: parseInt('<% sysinfo("pid.xray"); %>') > 0
@@ -60,6 +61,13 @@
         link.rel = 'stylesheet';
         link.href = 'https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css';
         document.head.appendChild(link);
+      }
+      if (xray.router.features) {
+        if (xray.router.features.indexOf('rog') !== -1) {
+          document.body.classList.add('xrayui-rog');
+        } else if (xray.router.features.indexOf('tuf') !== -1) {
+          document.body.classList.add('xrayui-tuf');
+        }
       }
     </script>
     <script type="module" src="/ext/xrayui/app.js"></script>

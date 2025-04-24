@@ -1,7 +1,7 @@
 <template>
   <div class="formfontdesc">
     <p v-html="$t('com.Reality.modal_desc')"></p>
-    <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
+    <table width="100%" class="FormTable modal-form-table">
       <thead>
         <tr>
           <td colspan="2">{{ $t('com.Reality.modal_title') }}</td>

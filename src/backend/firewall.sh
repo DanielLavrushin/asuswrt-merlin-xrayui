@@ -14,15 +14,24 @@ configure_firewall() {
         return
     fi
 
-    # Create a custom chain for Xray rules
-    iptables -F XRAYUI 2>/dev/null || log_debug "Failed to flush XRAYUI chain. It may not exist."
-    iptables -X XRAYUI 2>/dev/null || log_debug "Failed to remove XRAYUI chain. It may not exist."
-    iptables -N XRAYUI 2>/dev/null || log_debug "Failed to create XRAYUI chain. It may already exist."
+    # Create a custom chain for XRAYUI rules
+    for tbl in filter nat mangle; do
+        iptables -t "$tbl" -F XRAYUI 2>/dev/null
+        iptables -t "$tbl" -X XRAYUI 2>/dev/null
+    done
+
+    iptables -t filter -N XRAYUI 2>/dev/null
+    iptables -t filter -F XRAYUI
+    iptables -t filter -C XRAYUI -j RETURN 2>/dev/null || iptables -t filter -A XRAYUI -j RETURN
 
     configure_firewall_server
 
-    iptables -I INPUT -j XRAYUI || log_debug "Failed to insert XRAYUI chain into INPUT. It may already exist."
-    iptables -I FORWARD -j XRAYUI || log_debug "Failed to insert XRAYUI chain into FORWARD. It may already exist."
+    # Hook filter-table XRAYUI
+    iptables -t filter -C INPUT -j XRAYUI 2>/dev/null || iptables -t filter -I INPUT 1 -j XRAYUI
+    iptables -t filter -C FORWARD -j XRAYUI 2>/dev/null || iptables -t filter -I FORWARD 1 -j XRAYUI
+
+    iptables -t nat -N XRAYUI 2>/dev/null
+    iptables -t nat -F XRAYUI
 
     SERVER_IPS=$(jq -r '[.outbounds[] | select(.settings.vnext != null) | .settings.vnext[].address] | unique | join(" ")' "$XRAY_CONFIG_FILE")
 
@@ -111,8 +120,8 @@ configure_firewall_server() {
         local IPT_LISTEN_FLAGS="$IPT_LISTEN_ADDR_FLAGS --dport $port -j ACCEPT"
 
         log_debug "Adding rules for inbound:$tag $listen_addr $port $IPT_LISTEN_FLAGS"
-        iptables -A XRAYUI -p tcp $IPT_LISTEN_FLAGS || log_debug "Failed to add TCP rule for port $port."
-        iptables -A XRAYUI -p udp $IPT_LISTEN_FLAGS || log_debug "Failed to add UDP rule for port $port."
+        iptables -I XRAYUI 1 -p tcp $IPT_LISTEN_FLAGS 2>/dev/null || log_debug "Failed to add TCP rule for port $port."
+        iptables -I XRAYUI 1 -p udp $IPT_LISTEN_FLAGS 2>/dev/null || log_debug "Failed to add UDP rule for port $port."
 
         log_ok "Firewall SERVER rules applied for inbound:$tag $listen_addr $port"
     done
@@ -154,11 +163,11 @@ configure_firewall_client() {
 
     iptables -t $IPT_TABLE -F XRAYUI 2>/dev/null || log_debug "Failed to flush $IPT_TABLE chain. Was it already empty?"
     iptables -t $IPT_TABLE -X XRAYUI 2>/dev/null || log_debug "Failed to remove $IPT_TABLE chain. Was it already empty?"
-    iptables -t $IPT_TABLE -N XRAYUI || log_debug "Failed to create $IPT_TABLE chain."
+    iptables -t $IPT_TABLE -N XRAYUI 2>/dev/null || log_debug "Failed to create $IPT_TABLE chain."
 
     # --- Begin Exclusion Rules ---
     if [ "$IPT_TYPE" = "DIRECT" ]; then
-        iptables -t "$IPT_TABLE" -I XRAYUI 1 -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN || log_error "Failed to add ESTABLISHED/RELATED bypass in $IPT_TABLE"
+        iptables -t "$IPT_TABLE" -I XRAYUI 1 -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN 2>/dev/null || log_error "Failed to add ESTABLISHED/RELATED bypass in $IPT_TABLE"
     fi
 
     local source_nets
@@ -168,7 +177,7 @@ configure_firewall_client() {
         for source_net in $source_nets; do
             log_debug "Adding local subnet $source_net to $IPT_TABLE."
             # Exclude local subnets from interception
-            iptables $IPT_BASE_FLAGS -d "$source_net" -j RETURN || log_debug "Failed to add local subnet $source_net rule in $IPT_TABLE."
+            iptables $IPT_BASE_FLAGS -d "$source_net" -j RETURN 2>/dev/null || log_debug "Failed to add local subnet $source_net rule in $IPT_TABLE."
         done
     fi
 
@@ -176,24 +185,24 @@ configure_firewall_client() {
     log_info "Configuring firewall Exclusion rules..."
 
     # Always exclude loopback:
-    iptables $IPT_BASE_FLAGS -d 127.0.0.1/32 -j RETURN || log_error "Failed to add loopback rule in $IPT_TABLE."
+    iptables $IPT_BASE_FLAGS -d 127.0.0.1/32 -j RETURN 2>/dev/null || log_error "Failed to add loopback rule in $IPT_TABLE."
 
     # Exclude DHCP (UDP ports 67 and 68):
-    iptables $IPT_BASE_FLAGS -p udp --dport 67 -j RETURN || log_error "Failed to add DHCP rule for UDP 67 in $IPT_TABLE."
-    iptables $IPT_BASE_FLAGS -p udp --dport 68 -j RETURN || log_error "Failed to add DHCP rule for UDP 68 in $IPT_TABLE."
+    iptables $IPT_BASE_FLAGS -p udp --dport 67 -j RETURN 2>/dev/null || log_error "Failed to add DHCP rule for UDP 67 in $IPT_TABLE."
+    iptables $IPT_BASE_FLAGS -p udp --dport 68 -j RETURN 2>/dev/null || log_error "Failed to add DHCP rule for UDP 68 in $IPT_TABLE."
 
     # Exclude multicast addresses:
-    iptables $IPT_BASE_FLAGS -d 224.0.0.0/4 -j RETURN || log_error "Failed to add multicast rule (224.0.0.0/4) in $IPT_TABLE."
-    iptables $IPT_BASE_FLAGS -d 239.0.0.0/8 -j RETURN || log_error "Failed to add multicast rule (239.0.0.0/8) in $IPT_TABLE."
+    iptables $IPT_BASE_FLAGS -d 224.0.0.0/4 -j RETURN 2>/dev/null || log_error "Failed to add multicast rule (224.0.0.0/4) in $IPT_TABLE."
+    iptables $IPT_BASE_FLAGS -d 239.0.0.0/8 -j RETURN 2>/dev/null || log_error "Failed to add multicast rule (239.0.0.0/8) in $IPT_TABLE."
 
     # Exclude STUN (WebRTC)
-    iptables $IPT_BASE_FLAGS -p udp -m u32 --u32 "32=0x2112A442" -j RETURN || log_error "Failed to add STUN in $IPT_TABLE."
+    iptables $IPT_BASE_FLAGS -p udp -m u32 --u32 "32=0x2112A442" -j RETURN 2>/dev/null || log_error "Failed to add STUN in $IPT_TABLE."
 
     # Exclude traffic in DNAT state (covers inbound port-forwards):
-    iptables $IPT_BASE_FLAGS -m conntrack --ctstate DNAT -j RETURN || log_error "Failed to add DNAT rule in $IPT_TABLE."
+    iptables $IPT_BASE_FLAGS -m conntrack --ctstate DNAT -j RETURN 2>/dev/null || log_error "Failed to add DNAT rule in $IPT_TABLE."
 
     # Exclude NTP (UDP port 123)
-    iptables $IPT_BASE_FLAGS -p udp --dport 123 -j RETURN || log_error "Failed to add NTP rule in $IPT_TABLE."
+    iptables $IPT_BASE_FLAGS -p udp --dport 123 -j RETURN 2>/dev/null || log_error "Failed to add NTP rule in $IPT_TABLE."
 
     # Exclude the WireGuard subnet 10.122.0.0/24
     if [ "$(nvram get wgs_enable)" = "1" ]; then
@@ -201,22 +210,25 @@ configure_firewall_client() {
 
         local WGS_ADDR="$(nvram get wgs_addr)" # например 10.122.0.1/24
         local WGS_PORT="$(nvram get wgs_port)"
+        if [ -z "$WGS_PORT" ]; then
+            log_warn "WireGuard port unknown – skipping WG exclusions"
+        else
+            local WGS_IP=$(printf '%s' "$WGS_ADDR" | cut -d'/' -f1)
+            local oct1=$(printf '%s' "$WGS_IP" | cut -d'.' -f1)
+            local oct2=$(printf '%s' "$WGS_IP" | cut -d'.' -f2)
+            local oct3=$(printf '%s' "$WGS_IP" | cut -d'.' -f3)
+            local WGS_SUBNET="$oct1.$oct2.$oct3.0/24"
 
-        local WGS_IP=$(printf '%s' "$WGS_ADDR" | cut -d'/' -f1)
-        local oct1=$(printf '%s' "$WGS_IP" | cut -d'.' -f1)
-        local oct2=$(printf '%s' "$WGS_IP" | cut -d'.' -f2)
-        local oct3=$(printf '%s' "$WGS_IP" | cut -d'.' -f3)
-        local WGS_SUBNET="$oct1.$oct2.$oct3.0/24"
+            log_debug "WireGuard subnet: $WGS_SUBNET"
+            [ -n "$wan0_ip" ] &&
+                iptables -w $IPT_BASE_FLAGS -p udp -d "$wan0_ip" --dport "$WGS_PORT" -j RETURN 2>/dev/null || log_error "Failed to add WG rule for $wan0_ip"
 
-        log_debug "WireGuard subnet: $WGS_SUBNET"
-        [ -n "$wan0_ip" ] &&
-            iptables -w $IPT_BASE_FLAGS -p udp -d "$wan0_ip" --dport "$WGS_PORT" -j RETURN || log_error "Failed to add WG rule for $wan0_ip"
+            [ -n "$wan1_ip" ] &&
+                iptables -w $IPT_BASE_FLAGS -p udp -d "$wan1_ip" --dport "$WGS_PORT" -j RETURN 2>/dev/null || log_error "Failed to add WG rule for $wan1_ip"
 
-        [ -n "$wan1_ip" ] &&
-            iptables -w $IPT_BASE_FLAGS -p udp -d "$wan1_ip" --dport "$WGS_PORT" -j RETURN || log_error "Failed to add WG rule for $wan1_ip"
-
-        # Exclude WireGuard subnet
-        iptables -w $IPT_BASE_FLAGS -d "$WGS_SUBNET" -j RETURN || log_error "Failed to add WG subnet rule"
+            # Exclude WireGuard subnet
+            iptables -w $IPT_BASE_FLAGS -d "$WGS_SUBNET" -j RETURN 2>/dev/null || log_error "Failed to add WG subnet rule"
+        fi
     else
         log_debug "WireGuard not enabled. Skipping WireGuard exclusion rules."
     fi
@@ -224,7 +236,7 @@ configure_firewall_client() {
     # Exclude traffic destined to the Xray server:
     for serverip in $SERVER_IPS; do
         log_info "Excluding Xray server IP from $IPT_TABLE."
-        iptables $IPT_BASE_FLAGS -d "$serverip" -j RETURN || log_error "Failed to add rule to exclude Xray server IP in $IPT_TABLE."
+        iptables $IPT_BASE_FLAGS -d "$serverip" -j RETURN 2>/dev/null || log_error "Failed to add rule to exclude Xray server IP in $IPT_TABLE."
     done
 
     # TPROXY excludes:
@@ -238,7 +250,7 @@ configure_firewall_client() {
             # unified exclusion: WAN IP, any “via” routes, and your nvram static list
             for dst in $wan_ip $via_routes $static_routes; do
                 log_debug "TPROXY: excluding $dst from $IPT_TABLE"
-                iptables $IPT_BASE_FLAGS -d "$dst" -j RETURN ||
+                iptables $IPT_BASE_FLAGS -d "$dst" -j RETURN 2>/dev/null ||
                     log_error "Failed to exclude $dst from $IPT_TABLE."
             done
         fi
@@ -251,8 +263,11 @@ configure_firewall_client() {
 
     if [ -n "$server_ports" ]; then
         tcp_ports=$(echo "$server_ports" | tr '\n' ',' | sed 's/,$//')
-        iptables $IPT_BASE_FLAGS -p tcp -m multiport --dports "$tcp_ports" -j RETURN || log_error "Failed to add server port rule in $IPT_TABLE."
-        iptables $IPT_BASE_FLAGS -p udp -m multiport --dports "$tcp_ports" -j RETURN || log_error "Failed to add server port rule in $IPT_TABLE."
+        for chunk in $(split_ports "$tcp_ports"); do
+            iptables $IPT_BASE_FLAGS -p tcp -m multiport --dports "$chunk" -j RETURN
+            iptables $IPT_BASE_FLAGS -p udp -m multiport --dports "$chunk" -j RETURN
+        done
+
     fi
 
     echo "$inbounds" | while IFS= read -r inbound; do
@@ -320,20 +335,20 @@ configure_firewall_client() {
                     if [ "$policy_mode" = "bypass" ]; then
                         # Bypass all except the listed TCP/UDP ports -> those get redirected
                         log_debug "Ports policy BYPASS for ALL devices subnet: $source_net, redirect only TCP($tcpPorts), UDP($udpPorts)"
-                        [ "$tcp_enabled" = "yes" ] && [ -n "$tcpPorts" ] && iptables $IPT_SOURCE_FLAGS $IPT_TCP_PORTS_FLAGS $IPT_JOURNAL_FLAGS
-                        [ "$udp_enabled" = "yes" ] && [ -n "$udpPorts" ] && iptables $IPT_SOURCE_FLAGS $IPT_UDP_PORTS_FLAGS $IPT_JOURNAL_FLAGS
+                        [ "$tcp_enabled" = "yes" ] && [ -n "$tcpPorts" ] && iptables $IPT_SOURCE_FLAGS $IPT_TCP_PORTS_FLAGS $IPT_JOURNAL_FLAGS 2>/dev/null
+                        [ "$udp_enabled" = "yes" ] && [ -n "$udpPorts" ] && iptables $IPT_SOURCE_FLAGS $IPT_UDP_PORTS_FLAGS $IPT_JOURNAL_FLAGS 2>/dev/null
                     else
                         # Redirect mode = redirect everything except the listed TCP/UDP ports
                         log_debug "Ports policy REDIRECT for ALL devices subnet: $source_net, exclude TCP($tcpPorts), UDP($udpPorts)"
 
                         if [ "$tcp_enabled" = "yes" ]; then
-                            [ -n "$tcpPorts" ] && iptables $IPT_SOURCE_FLAGS $IPT_TCP_PORTS_FLAGS -j RETURN
-                            iptables $IPT_SOURCE_FLAGS -p tcp $IPT_JOURNAL_FLAGS
+                            [ -n "$tcpPorts" ] && iptables $IPT_SOURCE_FLAGS $IPT_TCP_PORTS_FLAGS -j RETURN 2>/dev/null
+                            iptables $IPT_SOURCE_FLAGS -p tcp $IPT_JOURNAL_FLAGS 2>/dev/null
                         fi
 
                         if [ "$udp_enabled" = "yes" ]; then
-                            [ -n "$udpPorts" ] && iptables $IPT_SOURCE_FLAGS $IPT_UDP_PORTS_FLAGS -j RETURN
-                            iptables $IPT_SOURCE_FLAGS -p udp $IPT_JOURNAL_FLAGS
+                            [ -n "$udpPorts" ] && iptables $IPT_SOURCE_FLAGS $IPT_UDP_PORTS_FLAGS -j RETURN 2>/dev/null
+                            iptables $IPT_SOURCE_FLAGS -p udp $IPT_JOURNAL_FLAGS 2>/dev/null
                         fi
                     fi
                 else
@@ -347,16 +362,16 @@ configure_firewall_client() {
                             log_debug "Ports policy BYPASS for $mac subnet: $source_net: REDIRECT only TCP($tcpPorts), UDP($udpPorts)"
 
                             if [ "$tcp_enabled" = "yes" ]; then
-                                [ -n "$tcpPorts" ] && iptables $IPT_MAC_FLAGS $IPT_TCP_PORTS_FLAGS $IPT_JOURNAL_FLAGS
+                                [ -n "$tcpPorts" ] && iptables $IPT_MAC_FLAGS $IPT_TCP_PORTS_FLAGS $IPT_JOURNAL_FLAGS 2>/dev/null
                             fi
 
                             if [ "$udp_enabled" = "yes" ]; then
-                                [ -n "$udpPorts" ] && iptables $IPT_MAC_FLAGS $IPT_UDP_PORTS_FLAGS $IPT_JOURNAL_FLAGS
+                                [ -n "$udpPorts" ] && iptables $IPT_MAC_FLAGS $IPT_UDP_PORTS_FLAGS $IPT_JOURNAL_FLAGS 2>/dev/null
                             fi
 
                             # Default for bypass = return
                             if [ "$IPT_TYPE" = "DIRECT" ]; then
-                                iptables $IPT_MAC_FLAGS -j RETURN
+                                iptables $IPT_MAC_FLAGS -j RETURN 2>/dev/null
                             fi
 
                         else
@@ -364,13 +379,13 @@ configure_firewall_client() {
                             log_debug "Ports policy REDIRECT for $mac subnet: $source_net: exclude TCP($tcpPorts), UDP($udpPorts)"
 
                             if [ "$tcp_enabled" = "yes" ]; then
-                                [ -n "$tcpPorts" ] && iptables $IPT_MAC_FLAGS $IPT_TCP_PORTS_FLAGS -j RETURN
+                                [ -n "$tcpPorts" ] && iptables $IPT_MAC_FLAGS $IPT_TCP_PORTS_FLAGS -j RETURN 2>/dev/null
                                 iptables $IPT_MAC_FLAGS -p tcp $IPT_JOURNAL_FLAGS
                             fi
 
                             if [ "$udp_enabled" = "yes" ]; then
-                                [ -n "$udpPorts" ] && iptables $IPT_MAC_FLAGS $IPT_UDP_PORTS_FLAGS -j RETURN
-                                iptables $IPT_MAC_FLAGS -p udp $IPT_JOURNAL_FLAGS
+                                [ -n "$udpPorts" ] && iptables $IPT_MAC_FLAGS $IPT_UDP_PORTS_FLAGS -j RETURN 2>/dev/null
+                                iptables $IPT_MAC_FLAGS -p udp $IPT_JOURNAL_FLAGS 2>/dev/null
                             fi
                         fi
                     done
@@ -391,11 +406,11 @@ configure_firewall_client() {
             ip route add local default dev lo table 77 ||
             log_error "Failed to add local route for fwmark."
     else
-        iptables $IPT_BASE_FLAGS -j RETURN || log_error "Failed to add default rule in $IPT_TABLE chain."
+        iptables $IPT_BASE_FLAGS -j RETURN 2>/dev/null || log_error "Failed to add default rule in $IPT_TABLE chain."
     fi
 
     # Hook chain into $IPT_TABLE PREROUTING:
-    iptables -t $IPT_TABLE -C PREROUTING -j XRAYUI 2>/dev/null || iptables -t $IPT_TABLE -A PREROUTING -j XRAYUI
+    iptables -t $IPT_TABLE -C PREROUTING -j XRAYUI 2>/dev/null 2>/dev/null || iptables -t $IPT_TABLE -A PREROUTING -j XRAYUI 2>/dev/null
 
     log_ok "$IPT_TYPE rules applied."
 }
@@ -451,20 +466,28 @@ cleanup_firewall() {
 }
 
 set_route_localnet() {
-    local val="$1"
+    local val="$1" # 0 = off, 1 = on
     local wan0="$(nvram get wan0_ifname)"
     local wan1="$(nvram get wan1_ifname)"
 
-    for itf in "$lan_if" $(ip addr | grep -Po '^\d+:\s+\K[^:|@]+'); do
-        if [ "$itf" = "lo" ] ||
-            [ "$itf" = "$wan0" ] ||
-            [ -z "$itf" ] ||
-            { [ -n "$wan1" ] && [ "$itf" = "$wan1" ]; }; then
-            continue
-        fi
+    local if_list="br0 $lan_if wl0 wl1"
 
-        echo "$val" >"/proc/sys/net/ipv4/conf/$itf/route_localnet" 2>/dev/null ||
-            log_debug "Failed to set route_localnet to $val for interface $itf. It may not exist."
-        log_debug "Set route_localnet to $val for interface $itf"
+    # Dynamically add all OpenVPN-server (tunNN) and WireGuard (wgN) interfaces
+    for itf in $(ip -o link show | awk -F': ' '{print $2}' | grep -E '^(tun[0-9]+|wg[0-9]+)$'); do
+        if_list="$if_list $itf"
     done
+
+    for itf in $if_list; do
+        # Skip empty tokens or WAN interfaces
+        [ -z "$itf" ] && continue
+        [ "$itf" = "$wan0" ] && continue
+        [ -n "$wan1" ] && [ "$itf" = "$wan1" ] && continue
+
+        echo "$val" >"/proc/sys/net/ipv4/conf/$itf/route_localnet" 2>/dev/null
+        log_debug "Set route_localnet=$val on $itf"
+    done
+}
+
+split_ports() {
+    printf '%s\n' "$1" | tr ',' '\n' | xargs -n15 | sed 's/ /,/g'
 }

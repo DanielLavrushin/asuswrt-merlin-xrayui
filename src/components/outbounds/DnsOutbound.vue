@@ -1,7 +1,7 @@
 <template>
   <div class="formfontdesc">
     <p>DNS is an outbound protocol used for intercepting and forwarding DNS queries. This outbound protocol can only handle DNS traffic, including queries based on UDP and TCP protocols. Other types of traffic will result in an error.</p>
-    <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
+    <table width="100%" class="FormTable modal-form-table">
       <thead>
         <tr>
           <td colspan="2">DNS</td>

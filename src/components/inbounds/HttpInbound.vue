@@ -1,7 +1,7 @@
 <template>
   <div class="formfontdesc">
     <p>The more meaningful use of http inbound is to listen in a local network or on the local machine to provide local services for other programs. The HTTP proxy can only proxy the TCP protocol and cannot handle protocols based on UDP.</p>
-    <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
+    <table width="100%" class="FormTable modal-form-table">
       <thead>
         <tr>
           <td colspan="2">HTTP protocol</td>

@@ -1,7 +1,7 @@
 <template>
   <div class="formfontdesc">
     <p>User-space implementation of the Wireguard protocol. The Wireguard protocol is not specifically designed for circumvention purposes. If used as the outer layer for circumvention, its characteristics may lead to server blocking.</p>
-    <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
+    <table width="100%" class="FormTable modal-form-table">
       <thead>
         <tr>
           <td colspan="2">Wireguard</td>

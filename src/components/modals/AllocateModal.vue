@@ -1,7 +1,7 @@
 <template>
   <modal ref="modal" :title="$t('com.AllocateModal.modal_title')" width="500">
     <div class="formfontdesc">
-      <table width="100%" bordercolor="#6b8fa3" class="FormTable modal-form-table">
+      <table width="100%" class="FormTable modal-form-table">
         <thead>
           <tr>
             <td colspan="2">{{ $t('com.AllocateModal.label_settings') }}</td>

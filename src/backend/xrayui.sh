@@ -26,6 +26,7 @@ import ./logs.sh
 import ./backup.sh
 import ./cron.sh
 import ./dnsmasq.sh
+import ./diagnostics.sh
 
 case "$1" in
 version)
@@ -74,6 +75,15 @@ backup)
     ;;
 dnsmasq)
     dnsmasq_configure "$2"
+    ;;
+diagnostics)
+    case "$2" in
+    iptables)
+        diagnostics_iptables
+        ;;
+    *) ;;
+    esac
+    exit 0
     ;;
 cron)
     case "$2" in

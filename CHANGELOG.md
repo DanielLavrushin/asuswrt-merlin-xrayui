@@ -9,6 +9,7 @@
 - ADDED: Source‑subnet filtering in client mode—all `dokodemo-door` REDIRECT/TPROXY rules are now prefixed with `-s <local_lan_subnet>`, so only LAN traffic is captured.
 - ADDED: listen‑address restriction for server inbounds—ACCEPT rules for `non‑0.0.0.0` binds now include `-d <listen_ip>`, limiting them to the configured interface.
 - ADDED: Filtering options for logs by source, target, inbound, and outbound in Logs component.
+- ADDED: a new CLI command `xrayui diagnostics iptables` to display diagnostics routing information.
 - IMPROVED: Moved logs window to a modal.
 
 ## [0.45.0] - 2025-04-21

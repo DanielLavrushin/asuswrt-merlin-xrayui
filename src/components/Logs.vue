@@ -31,7 +31,7 @@
                         </tr>
                       </thead>
                       <tbody class="logs-area-content">
-                        <tr v-for="(log, index) in filteredLogs" :key="index" :class="[log.parsed ? 'parsed' : 'unparsed']">
+                        <tr v-for="log in filteredLogs" :key="log.line" :class="[log.parsed ? 'parsed' : 'unparsed']">
                           <!-- Parsed entry (normal layout) -->
                           <template v-if="log.parsed">
                             <td>{{ log.time }}</td>
@@ -317,21 +317,6 @@
 
     .filter-row {
       background: #2b3538;
-
-      .filter-input {
-        width: 100%;
-        padding: 2px 4px;
-        border: 1px solid #555;
-        border-radius: 4px;
-        background: #414d51;
-        color: #fff;
-        font-size: 11px;
-
-        &:focus {
-          outline: none;
-          border-color: #00ff7f;
-        }
-      }
     }
   }
 </style>

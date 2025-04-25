@@ -87,10 +87,13 @@
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(6px);
+    z-index: 400;
+
     display: flex;
     justify-content: center;
+    overflow-y: auto;
+    padding: 2rem 1rem;
     align-items: center;
-    z-index: 400;
 
     &:not(:last-child) {
       background-color: rgba(0, 0, 0, 0) !important;
@@ -104,6 +107,10 @@
       padding: 5px;
       position: relative;
       border: 1px solid #222;
+
+      width: clamp(320px, var(--modal-width, 755px), 90vw);
+      max-height: calc(100vh - 4rem);
+      overflow-y: auto;
 
       .xray-modal-header {
         display: flex;

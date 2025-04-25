@@ -6,6 +6,7 @@
 
 - ADDED: Added a safety check that blocks deletion of a proxy while it is still referenced by any firewall/routing rule.
 - IMPROVED: Re-factored the iptables module: local-subnet exclusion rules are now generated in a single, cleaner block for easier maintenance and faster rule-matching.
+- IMPROVED: Small resolution support for modals.
 
 ## [0.46.1] - 2025-04-24
 

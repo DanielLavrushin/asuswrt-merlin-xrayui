@@ -176,21 +176,20 @@ configure_firewall_client() {
     fi
 
     local source_nets
-    source_nets=$(ip -4 route show | awk '/src/ && ($1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/) { print $1 }' | grep -v '^$') || log_debug "Failed to get local networks."
+    source_nets=$(ip -4 route show scope link | awk '$1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/ {print $1}') || log_debug "Failed to get local networks."
 
-    if [ -n "$source_nets" ]; then
-        for source_net in $source_nets; do
-            log_debug "Adding local subnet $source_net to $IPT_TABLE."
-            # Exclude local subnets from interception
-            iptables $IPT_BASE_FLAGS -d "$source_net" -j RETURN 2>/dev/null || log_debug "Failed to add local subnet $source_net rule in $IPT_TABLE."
-        done
-    fi
+    for net in \
+        127.0.0.0/8 \
+        192.168.0.0/16 \
+        10.0.0.0/8 \
+        172.16.0.0/12 \
+        169.254.0.0/16 \
+        100.64.0.0/10; do
+        iptables -t "$IPT_TABLE" -I XRAYUI 1 -d "$net" -j RETURN
+    done
 
     update_loading_progress "Configuring firewall Exclusion rules..."
     log_info "Configuring firewall Exclusion rules..."
-
-    # Always exclude loopback:
-    iptables $IPT_BASE_FLAGS -d 127.0.0.1/32 -j RETURN 2>/dev/null || log_error "Failed to add loopback rule in $IPT_TABLE."
 
     # Exclude DHCP (UDP ports 67 and 68):
     iptables $IPT_BASE_FLAGS -p udp --dport 67 -j RETURN 2>/dev/null || log_error "Failed to add DHCP rule for UDP 67 in $IPT_TABLE."
@@ -209,35 +208,6 @@ configure_firewall_client() {
     # Exclude NTP (UDP port 123)
     iptables $IPT_BASE_FLAGS -p udp --dport 123 -j RETURN 2>/dev/null || log_error "Failed to add NTP rule in $IPT_TABLE."
 
-    # Exclude the WireGuard subnet 10.122.0.0/24
-    if [ "$(nvram get wgs_enable)" = "1" ]; then
-        log_info "WireGuard enabled. Adding exclusion rules for WireGuard."
-
-        local WGS_ADDR="$(nvram get wgs_addr)" # например 10.122.0.1/24
-        local WGS_PORT="$(nvram get wgs_port)"
-        if [ -z "$WGS_PORT" ]; then
-            log_warn "WireGuard port unknown – skipping WG exclusions"
-        else
-            local WGS_IP=$(printf '%s' "$WGS_ADDR" | cut -d'/' -f1)
-            local oct1=$(printf '%s' "$WGS_IP" | cut -d'.' -f1)
-            local oct2=$(printf '%s' "$WGS_IP" | cut -d'.' -f2)
-            local oct3=$(printf '%s' "$WGS_IP" | cut -d'.' -f3)
-            local WGS_SUBNET="$oct1.$oct2.$oct3.0/24"
-
-            log_debug "WireGuard subnet: $WGS_SUBNET"
-            [ -n "$wan0_ip" ] &&
-                iptables -w $IPT_BASE_FLAGS -p udp -d "$wan0_ip" --dport "$WGS_PORT" -j RETURN 2>/dev/null
-
-            [ -n "$wan1_ip" ] &&
-                iptables -w $IPT_BASE_FLAGS -p udp -d "$wan1_ip" --dport "$WGS_PORT" -j RETURN 2>/dev/null
-
-            # Exclude WireGuard subnet
-            iptables -w $IPT_BASE_FLAGS -d "$WGS_SUBNET" -j RETURN 2>/dev/null || log_error "Failed to add WG subnet rule"
-        fi
-    else
-        log_debug "WireGuard not enabled. Skipping WireGuard exclusion rules."
-    fi
-
     # Exclude traffic destined to the Xray server:
     for serverip in $SERVER_IPS; do
         log_info "Excluding Xray server IP from $IPT_TABLE."
@@ -251,14 +221,12 @@ configure_firewall_client() {
         local via_routes=$(ip -4 route show | awk '$2=="via" && $1!="default" { print $1 }')
         local static_routes=$(nvram get lan_route)
 
-        if [ "$IPT_TYPE" = "TPROXY" ]; then
-            # unified exclusion: WAN IP, any “via” routes, and your nvram static list
-            for dst in $wan_ip $via_routes $static_routes; do
-                log_debug "TPROXY: excluding $dst from $IPT_TABLE"
-                iptables $IPT_BASE_FLAGS -d "$dst" -j RETURN 2>/dev/null ||
-                    log_error "Failed to exclude $dst from $IPT_TABLE."
-            done
-        fi
+        # unified exclusion: WAN IP, any “via” routes, and your nvram static list
+        for dst in $wan_ip $via_routes $static_routes; do
+            log_debug "TPROXY: excluding $dst from $IPT_TABLE"
+            iptables $IPT_BASE_FLAGS -d "$dst" -j RETURN 2>/dev/null ||
+                log_error "Failed to exclude $dst from $IPT_TABLE."
+        done
     fi
 
     # Exclude server ports
@@ -441,13 +409,13 @@ cleanup_firewall() {
 
     load_xrayui_config
 
-    iptables -F XRAYUI 2>/dev/null
-    iptables -X XRAYUI 2>/dev/null
-
     iptables -D INPUT -j XRAYUI 2>/dev/null || log_debug "Failed to remove XRAYUI chain from INPUT. Was it already empty?"
     iptables -D FORWARD -j XRAYUI 2>/dev/null || log_debug "Failed to remove XRAYUI chain from FORWARD. Was it already empty?"
     iptables -t nat -D PREROUTING -j XRAYUI 2>/dev/null || log_debug "Failed to remove NAT chain from PREROUTING. Was it already empty?"
     iptables -t mangle -D PREROUTING -j XRAYUI 2>/dev/null || log_debug "Failed to remove mangle chain from PREROUTING. Was it already empty?"
+
+    iptables -F XRAYUI 2>/dev/null
+    iptables -X XRAYUI 2>/dev/null
 
     iptables -t nat -F XRAYUI 2>/dev/null || log_debug "Failed to flush NAT chain. Was it already empty?"
     iptables -t nat -X XRAYUI 2>/dev/null || log_debug "Failed to remove NAT chain. Was it already empty?"

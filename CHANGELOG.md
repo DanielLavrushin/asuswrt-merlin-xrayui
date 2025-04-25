@@ -1,5 +1,12 @@
 # XRAYUI Changelog
 
+## [0.46.4] - 2025-04-25
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- ADDED: Prevent deliting proxy if any rule is assigned to it.
+- IMPROVED: Refactor local subnet rules exclusion from the iptables module.
+
 ## [0.46.1] - 2025-04-24
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

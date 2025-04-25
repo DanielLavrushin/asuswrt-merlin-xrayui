@@ -206,13 +206,15 @@
       "label_create_new": "Create new",
       "modal_title_inbound_settings": "Inbound settings",
       "alert_tag_exists": "Tag  already exists, please choose another one.",
-      "alert_delete_confirm": "Are you sure you want to delete this inbound?"
+      "alert_delete_confirm": "Are you sure you want to delete this inbound?",
+      "alert_delete_tag_in_rules_use": "This tag ({1}) is used in the routing rules ({0}). Please remove it from the rules before deleting the inbound."
     },
     "Outbounds": {
       "title": "Outbounds",
       "label_create_new": "Create new",
       "alert_tag_exists": "Tag  already exists, please choose another one.",
-      "alert_delete_confirm": "Are you sure you want to delete this outbound?"
+      "alert_delete_confirm": "Are you sure you want to delete this outbound?",
+      "alert_delete_tag_in_rules_use": "This tag ({1}) is used in the routing rules ({0}). Please remove it from the rules before deleting the outbound."
     },
     "StreamSettingsModal": {
       "title": "Transport settings",

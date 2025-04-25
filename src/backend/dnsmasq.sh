@@ -22,15 +22,22 @@ dnsmasq_configure() {
         grep -qE '^log-facility' "$CONFIG" || pc_append "log-facility=/opt/var/log/dnsmasq.log" "$CONFIG" >/dev/null && log_debug "log-facility enabled"
     fi
 
-    jq -r '
+    if jq -e '
+    .inbounds[]
+  | select((.tag // "" | ascii_downcase) | contains("dns"))
+  | "\(.listen // "127.0.0.1")#\(.port)"
+  ' "$XRAY_CONFIG_FILE" >/dev/null; then
+        log_debug "dnsmasq: found inbound DNS server"
+        pc_append "no-resolv" "$CONFIG" && log_debug "dnsmasq: no-resolv enabled"
+        jq -r '
     .inbounds[]
   | select((.tag // "" | ascii_downcase) | contains("dns"))
   | "\(.listen // "127.0.0.1")#\(.port)"
   ' "$XRAY_CONFIG_FILE" |
-        while IFS= read -r srv; do
-            pc_append "server=$srv" "$CONFIG" && log_debug "dnsmasq: added inbound DNS server=$srv"
-        done
-
+            while IFS= read -r srv; do
+                pc_append "server=$srv" "$CONFIG" && log_debug "dnsmasq: added inbound DNS server=$srv"
+            done
+    fi
     pc_append "#$ADDON_TAG end" "$CONFIG"
 
     log_debug "dnsmasq configured"

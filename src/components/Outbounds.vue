@@ -140,6 +140,16 @@
 
       const remove_proxy = async (proxy: XrayOutboundObject<IProtocolType>) => {
         if (!window.confirm(t('com.Outbounds.alert_delete_confirm'))) return;
+
+        if (proxy.tag) {
+          const allRules = [...(config.value.routing?.rules || []), ...(config.value.routing?.disabled_rules || [])].filter((rule) => rule.outboundTag);
+          const rulesWithTag = allRules.filter((rule) => rule.outboundTag && proxy.tag && rule.outboundTag === proxy.tag);
+          if (rulesWithTag && rulesWithTag.length > 0) {
+            alert(t('com.Outbounds.alert_delete_tag_in_rules_use', [rulesWithTag.map((rule) => rule.name).join(', '), proxy.tag]));
+            return;
+          }
+        }
+
         let index = config.value.outbounds.indexOf(proxy);
         config.value.outbounds.splice(index, 1);
       };

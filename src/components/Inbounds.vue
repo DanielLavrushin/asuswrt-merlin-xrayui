@@ -160,6 +160,16 @@
       };
       const remove_proxy = async (proxy: XrayInboundObject<IProtocolType>) => {
         if (!window.confirm(t('com.Inbounds.alert_delete_confirm'))) return;
+
+        if (proxy.tag) {
+          const allRules = [...(config.value.routing?.rules || []), ...(config.value.routing?.disabled_rules || [])].filter((rule) => rule.inboundTag);
+          const rulesWithTag = allRules.filter((rule) => rule.inboundTag && proxy.tag && rule.inboundTag.includes(proxy.tag));
+          if (rulesWithTag && rulesWithTag.length > 0) {
+            alert(t('com.Inbounds.alert_delete_tag_in_rules_use', [rulesWithTag.map((rule) => rule.name).join(', '), proxy.tag]));
+            return;
+          }
+        }
+
         let index = config.value.inbounds.indexOf(proxy);
         config.value.inbounds.splice(index, 1);
       };

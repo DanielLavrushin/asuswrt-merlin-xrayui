@@ -1,6 +1,10 @@
 #!/bin/sh
 # shellcheck disable=SC2034  # codacy:Unused variables
 
+tproxy_mark=0x10000
+tproxy_mask=0x10000
+tproxy_table=77
+
 configure_firewall() {
     log_info "Configuring Xray firewall rules..."
     update_loading_progress "Configuring Xray firewall rules..."
@@ -176,21 +180,20 @@ configure_firewall_client() {
     fi
 
     local source_nets
-    source_nets=$(ip -4 route show | awk '/src/ && ($1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/) { print $1 }' | grep -v '^$') || log_debug "Failed to get local networks."
+    source_nets=$(ip -4 route show scope link | awk '$1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/ {print $1}') || log_debug "Failed to get local networks."
 
-    if [ -n "$source_nets" ]; then
-        for source_net in $source_nets; do
-            log_debug "Adding local subnet $source_net to $IPT_TABLE."
-            # Exclude local subnets from interception
-            iptables $IPT_BASE_FLAGS -d "$source_net" -j RETURN 2>/dev/null || log_debug "Failed to add local subnet $source_net rule in $IPT_TABLE."
-        done
-    fi
+    for net in \
+        127.0.0.0/8 \
+        192.168.0.0/16 \
+        10.0.0.0/8 \
+        172.16.0.0/12 \
+        169.254.0.0/16 \
+        100.64.0.0/10; do
+        iptables -t "$IPT_TABLE" -I XRAYUI 1 -d "$net" -j RETURN
+    done
 
     update_loading_progress "Configuring firewall Exclusion rules..."
     log_info "Configuring firewall Exclusion rules..."
-
-    # Always exclude loopback:
-    iptables $IPT_BASE_FLAGS -d 127.0.0.1/32 -j RETURN 2>/dev/null || log_error "Failed to add loopback rule in $IPT_TABLE."
 
     # Exclude DHCP (UDP ports 67 and 68):
     iptables $IPT_BASE_FLAGS -p udp --dport 67 -j RETURN 2>/dev/null || log_error "Failed to add DHCP rule for UDP 67 in $IPT_TABLE."
@@ -209,35 +212,6 @@ configure_firewall_client() {
     # Exclude NTP (UDP port 123)
     iptables $IPT_BASE_FLAGS -p udp --dport 123 -j RETURN 2>/dev/null || log_error "Failed to add NTP rule in $IPT_TABLE."
 
-    # Exclude the WireGuard subnet 10.122.0.0/24
-    if [ "$(nvram get wgs_enable)" = "1" ]; then
-        log_info "WireGuard enabled. Adding exclusion rules for WireGuard."
-
-        local WGS_ADDR="$(nvram get wgs_addr)" # например 10.122.0.1/24
-        local WGS_PORT="$(nvram get wgs_port)"
-        if [ -z "$WGS_PORT" ]; then
-            log_warn "WireGuard port unknown – skipping WG exclusions"
-        else
-            local WGS_IP=$(printf '%s' "$WGS_ADDR" | cut -d'/' -f1)
-            local oct1=$(printf '%s' "$WGS_IP" | cut -d'.' -f1)
-            local oct2=$(printf '%s' "$WGS_IP" | cut -d'.' -f2)
-            local oct3=$(printf '%s' "$WGS_IP" | cut -d'.' -f3)
-            local WGS_SUBNET="$oct1.$oct2.$oct3.0/24"
-
-            log_debug "WireGuard subnet: $WGS_SUBNET"
-            [ -n "$wan0_ip" ] &&
-                iptables -w $IPT_BASE_FLAGS -p udp -d "$wan0_ip" --dport "$WGS_PORT" -j RETURN 2>/dev/null
-
-            [ -n "$wan1_ip" ] &&
-                iptables -w $IPT_BASE_FLAGS -p udp -d "$wan1_ip" --dport "$WGS_PORT" -j RETURN 2>/dev/null
-
-            # Exclude WireGuard subnet
-            iptables -w $IPT_BASE_FLAGS -d "$WGS_SUBNET" -j RETURN 2>/dev/null || log_error "Failed to add WG subnet rule"
-        fi
-    else
-        log_debug "WireGuard not enabled. Skipping WireGuard exclusion rules."
-    fi
-
     # Exclude traffic destined to the Xray server:
     for serverip in $SERVER_IPS; do
         log_info "Excluding Xray server IP from $IPT_TABLE."
@@ -251,14 +225,12 @@ configure_firewall_client() {
         local via_routes=$(ip -4 route show | awk '$2=="via" && $1!="default" { print $1 }')
         local static_routes=$(nvram get lan_route)
 
-        if [ "$IPT_TYPE" = "TPROXY" ]; then
-            # unified exclusion: WAN IP, any “via” routes, and your nvram static list
-            for dst in $wan_ip $via_routes $static_routes; do
-                log_debug "TPROXY: excluding $dst from $IPT_TABLE"
-                iptables $IPT_BASE_FLAGS -d "$dst" -j RETURN 2>/dev/null ||
-                    log_error "Failed to exclude $dst from $IPT_TABLE."
-            done
-        fi
+        # unified exclusion: WAN IP, any “via” routes, and your nvram static list
+        for dst in $wan_ip $via_routes $static_routes; do
+            log_debug "TPROXY: excluding $dst from $IPT_TABLE"
+            iptables $IPT_BASE_FLAGS -d "$dst" -j RETURN 2>/dev/null ||
+                log_error "Failed to exclude $dst from $IPT_TABLE."
+        done
     fi
 
     # Exclude server ports
@@ -287,9 +259,9 @@ configure_firewall_client() {
 
         if [ "$IPT_TYPE" = "TPROXY" ]; then
             if [ "$dokodemo_addr" != "0.0.0.0" ]; then
-                local IPT_JOURNAL_FLAGS="-j TPROXY --on-port $dokodemo_port --on-ip $dokodemo_addr --tproxy-mark 0x77"
+                local IPT_JOURNAL_FLAGS="-j TPROXY --on-port $dokodemo_port --on-ip $dokodemo_addr --tproxy-mark $tproxy_mark/$tproxy_mask"
             else
-                local IPT_JOURNAL_FLAGS="-j TPROXY --on-port $dokodemo_port --tproxy-mark 0x77"
+                local IPT_JOURNAL_FLAGS="-j TPROXY --on-port $dokodemo_port --tproxy-mark $tproxy_mark/$tproxy_mask"
             fi
             log_debug "TPROXY  inbound address: $dokodemo_addr:$dokodemo_port"
         else
@@ -404,18 +376,18 @@ configure_firewall_client() {
 
     if [ "$IPT_TYPE" = "TPROXY" ]; then
         # Add rules to mark packets for TPROXY:
-        ip rule list | grep -q "fwmark 0x77" ||
-            ip rule add fwmark 0x77 lookup 77 priority 100 ||
+        ip rule list | grep -q "fwmark $tproxy_mark/$tproxy_mask" ||
+            ip rule add fwmark $tproxy_mark/$tproxy_mask lookup $tproxy_table priority 100 ||
             log_error "Failed to add fwmark rule."
-        ip route list table 77 | grep -q '^local default' ||
-            ip route add local default dev lo table 77 ||
+        ip route list table $tproxy_table | grep -q '^local default' ||
+            ip route add local default dev lo table $tproxy_table ||
             log_error "Failed to add local route for fwmark."
 
         # Avoids black-holing packets to LAN/VPN/static nets after TPROXY
         ip -4 route show table main | grep -v '^default' |
             while read -r route; do
-                ip route add table 77 $route 2>/dev/null
-                log_debug "Added route to table 77: $route"
+                ip route add table $tproxy_table $route 2>/dev/null
+                log_debug "Added route to table $tproxy_table: $route"
             done
     else
         iptables $IPT_BASE_FLAGS -j RETURN 2>/dev/null || log_error "Failed to add default rule in $IPT_TABLE chain."
@@ -441,21 +413,32 @@ cleanup_firewall() {
 
     load_xrayui_config
 
-    iptables -F XRAYUI 2>/dev/null
-    iptables -X XRAYUI 2>/dev/null
-
     iptables -D INPUT -j XRAYUI 2>/dev/null || log_debug "Failed to remove XRAYUI chain from INPUT. Was it already empty?"
     iptables -D FORWARD -j XRAYUI 2>/dev/null || log_debug "Failed to remove XRAYUI chain from FORWARD. Was it already empty?"
     iptables -t nat -D PREROUTING -j XRAYUI 2>/dev/null || log_debug "Failed to remove NAT chain from PREROUTING. Was it already empty?"
     iptables -t mangle -D PREROUTING -j XRAYUI 2>/dev/null || log_debug "Failed to remove mangle chain from PREROUTING. Was it already empty?"
+
+    iptables -F XRAYUI 2>/dev/null
+    iptables -X XRAYUI 2>/dev/null
 
     iptables -t nat -F XRAYUI 2>/dev/null || log_debug "Failed to flush NAT chain. Was it already empty?"
     iptables -t nat -X XRAYUI 2>/dev/null || log_debug "Failed to remove NAT chain. Was it already empty?"
     iptables -t mangle -F XRAYUI 2>/dev/null || log_debug "Failed to flush mangle chain. Was it already empty?"
     iptables -t mangle -X XRAYUI 2>/dev/null || log_debug "Failed to remove mangle chain. Was it already empty?"
 
-    ip rule del fwmark 0x77 table 77 priority 100 2>/dev/null || log_debug "Failed to delete fwmark rule. Was it already empty?"
-    ip route flush table 77 2>/dev/null || log_debug "Failed to flush table 77. Was it already empty?"
+    # 0.46.: temportary workaround for iptables-legacy
+    for m in 0x10000/0x10000 0x8777 0x77; do
+        # grab matching ip rules (there may be several with different pref)
+        ip -4 rule | awk -v mark="$m" '$0 ~ "fwmark " mark {print $1}' |
+            while read -r pref; do
+                ip -4 rule del pref "$pref" 2>/dev/null
+            done
+    done
+
+    # flush both possible tables
+    for tbl in 77 8777; do
+        ip route flush table "$tbl" 2>/dev/null
+    done
 
     if jq -e '
   .inbounds[]
@@ -491,19 +474,35 @@ set_route_localnet() {
 
     local if_list="br0 $lan_if wl0 wl1"
 
-    # Dynamically add all OpenVPN-server (tunNN) and WireGuard (wgN) interfaces
+    # Add tun*/wg* interfaces created by VPN servers
     for itf in $(ip -o link show | awk -F': ' '{print $2}' | grep -E '^(tun[0-9]+|wg[0-9]+)$'); do
         if_list="$if_list $itf"
     done
 
+    # Disable/enable global reverse-path filtering
+    if [ "$val" = "1" ]; then
+        echo 0 >/proc/sys/net/ipv4/conf/all/rp_filter
+    else
+        echo 1 >/proc/sys/net/ipv4/conf/all/rp_filter
+    fi
+
     for itf in $if_list; do
-        # Skip empty tokens or WAN interfaces
+        # Skip empty tokens or WAN phys-ifaces
         [ -z "$itf" ] && continue
         [ "$itf" = "$wan0" ] && continue
         [ -n "$wan1" ] && [ "$itf" = "$wan1" ] && continue
 
         echo "$val" >"/proc/sys/net/ipv4/conf/$itf/route_localnet" 2>/dev/null
-        log_debug "Set route_localnet=$val on $itf"
+
+        # Disable/restore RPF on this iface
+        if [ "$val" = "1" ]; then
+            # Disable strict reverse-path checks (needed for UDP TPROXY replies)
+            echo 0 >"/proc/sys/net/ipv4/conf/$itf/rp_filter"
+        else
+            echo 1 >"/proc/sys/net/ipv4/conf/$itf/rp_filter"
+        fi
+
+        log_debug "route_localnet=$val, rp_filter=$(cat /proc/sys/net/ipv4/conf/$itf/rp_filter) on $itf"
     done
 }
 

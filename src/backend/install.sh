@@ -17,6 +17,12 @@ install() {
     log_info "Entware is installed."
 
     update_loading_progress "Installing dependencies..."
+
+    opkg update || {
+        log_error "opkg update failed"
+        exit 1
+    }
+
     install_opkg_package sed true
     install_opkg_package curl false
     install_opkg_package jq true
@@ -259,7 +265,6 @@ install_opkg_package() {
     # Check for jq
     if ! opkg list-installed | grep "$package -"; then
         log_info "$package is not installed. Installing $package..."
-        opkg update
         if opkg install $package; then
             log_info "$package installed successfully."
         else

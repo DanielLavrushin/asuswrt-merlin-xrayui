@@ -498,17 +498,17 @@ add_tproxy_routes() { # $1 = fwmark, $2 = table
 
         # 1. policy-rule
         ip $fam rule list | grep -q "fwmark $mark" ||
-            ip $fam rule add fwmark $mark lookup "$tbl" priority 101 2>/dev/null || true
+            ip $fam rule add fwmark $mark lookup "$tbl" priority 101 2>/dev/null || ip $fam rule replace fwmark $mark lookup "$tbl" priority 101
 
         # 2. ensure “local all-/::0” route in mark table
         local local_dst
         [ "$fam" = "-4" ] && local_dst="0.0.0.0/0" || local_dst="::/0"
         ip $fam route list table "$tbl" | grep -q "^local $local_dst" ||
-            ip $fam route add local $local_dst dev lo table "$tbl"
+            ip $fam route add local $local_dst dev lo table "$tbl" proto static exist 2>/dev/null || ip $fam route replace local $local_dst dev lo table "$tbl" proto static
 
         # 3. copy non-default routes from main
         ip $fam route show table main | grep -v '^default' | while read -r r; do
-            ip $fam route add table "$tbl" $r 2>/dev/null || true
+            ip $fam route add table "$tbl" $r 2>/dev/null || ip $fam route replace table "$tbl" $r 2>/dev/null
         done
     done
 }

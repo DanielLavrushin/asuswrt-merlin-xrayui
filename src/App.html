@@ -49,7 +49,7 @@
           language: '<% nvram_get("preferred_lang"); %>',
           ip: '<% nvram_get("lan_ipaddr"); %>',
           territory: '<% nvram_get("territory_code"); %>',
-          devices_online: JSON.parse(`<% get_clientlist(); %>sssssss`),
+          devices_online: JSON.parse(`<% get_clientlist(); %>`),
           devices: JSON.parse(`<% get_all_basic_clientlist(); %>`),
           wan_ip: '<% nvram_get("wan_ipaddr"); %>',
           wan_connected: '<% nvram_get("link_internet"); %>' == '2',

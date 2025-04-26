@@ -81,7 +81,17 @@ diagnostics)
     iptables)
         diagnostics_iptables
         ;;
-    *) ;;
+    env)
+        diagnostics_env
+        ;;
+    xrayui)
+        diagnostics_xrayui
+        ;;
+    *)
+        diagnostics_env
+        diagnostics_xrayui
+        diagnostics_iptables
+        ;;
     esac
     exit 0
     ;;

@@ -22,6 +22,25 @@
     <script language="JavaScript" type="text/javascript" src="/help.js"></script>
     <script language="JavaScript" type="text/javascript" src="/validator.js"></script>
     <script>
+      let custom_settings = JSON.parse(`<% get_custom_settings(); %>`);
+
+      // Hook JSON.parse to capture the bad payload
+      (() => {
+        const real = JSON.parse;
+        JSON.parse = function (s, rev) {
+          try {
+            return real.call(this, s, rev);
+          } catch (e) {
+            console.error('⛔️ BAD JSON', e);
+            console.log('—— first 120 chars ——\n' + s.slice(0, 120));
+            console.log('—— last 120  chars ——\n' + s.slice(-120));
+
+            console.error(`XRAYUI UPDATE HELP. try to run xrayui update ${custom_settings.xray_version} on your router`);
+            throw e;
+          }
+        };
+      })();
+
       var xray = {
         router: {
           name: '<% nvram_get("productid"); %>',
@@ -30,7 +49,7 @@
           language: '<% nvram_get("preferred_lang"); %>',
           ip: '<% nvram_get("lan_ipaddr"); %>',
           territory: '<% nvram_get("territory_code"); %>',
-          devices_online: JSON.parse(`<% get_clientlist(); %>`),
+          devices_online: JSON.parse(`<% get_clientlist(); %>sssssss`),
           devices: JSON.parse(`<% get_all_basic_clientlist(); %>`),
           wan_ip: '<% nvram_get("wan_ipaddr"); %>',
           wan_connected: '<% nvram_get("link_internet"); %>' == '2',
@@ -40,10 +59,9 @@
           isRunning: parseInt('<% sysinfo("pid.xray"); %>') > 0
         }
       };
-      let custom_settings = `<% get_custom_settings(); %>`;
 
       try {
-        xray.custom_settings = JSON.parse(custom_settings);
+        xray.custom_settings = custom_settings;
       } catch (e) {
         if (custom_settings.indexOf('xray_payload') !== -1) {
           console.error("Invalid custom settings: xray_payload detected. Please  run '/jffs/scripts/xrayui fixme'. This is unexpected, please report.");

@@ -1,5 +1,12 @@
 # XRAYUI Changelog
 
+## [0.47.0] - 2025-04-27
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- ADDED: IP6 support.
+- IMPROVED: Diangostics provides more useful information.
+
 ## [0.46.6] - 2025-04-25
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

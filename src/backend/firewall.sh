@@ -14,12 +14,17 @@ ipt() { # ipt <table> <args…>
 apply_rule() { # $@ = ipt args INCLUDING the -t TABLE part
     local tbl=$1
     shift
+    local rc=0 did=0
     for IPT in $IPT_LIST; do
         # skip nat for ip6tables
         [ "$IPT" = "ip6tables" ] && [ "$tbl" = "nat" ] && continue
         [ "$IPT" = "ip6tables" ] && echo "$*" | grep -q '\.' && continue
         $IPT -t "$tbl" "$@" 2>/dev/null
+        rc=$?
+        did=1
     done
+    [ $did -eq 1 ] && return $rc # propagate real exit-code
+    return 0
 }
 
 is_ipv6_enabled() {
@@ -425,7 +430,9 @@ configure_firewall_client() {
     fi
 
     # Hook chain into  PREROUTING:
-    ipt $IPT_TABLE -C PREROUTING -j XRAYUI 2>/dev/null || ipt $IPT_TABLE -A PREROUTING -j XRAYUI
+    if ! iptables -t "$IPT_TABLE" -C PREROUTING -j XRAYUI 2>/dev/null; then
+        iptables -t "$IPT_TABLE" -A PREROUTING -j XRAYUI
+    fi
 
     log_ok "$IPT_TYPE rules applied."
 }

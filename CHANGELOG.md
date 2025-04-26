@@ -1,10 +1,11 @@
 # XRAYUI Changelog
 
-## [0.47.0] - 2025-04-27
+## [0.47.1] - 2025-04-27
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - ADDED: `IPv6` support.
+- ADDED: Added a rule to clamp the `TCP MSS` to the path `MTU` for all forwarded SYN packets in both `IPv4` and `IPv6`. This improves TCP performance by avoiding fragmentation.
 - IMPROVED: Diagnostics provides more useful information.
 
 ## [0.46.6] - 2025-04-25

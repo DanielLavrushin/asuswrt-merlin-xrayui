@@ -56,6 +56,10 @@ configure_firewall() {
         log_debug "IPv6 enabled: no"
     fi
 
+    # Clamp TCP MSS to path-MTU for every forwarded SYN (v4 + v6)
+    ipt mangle -C FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null ||
+        ipt mangle -I FORWARD 1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+
     # create / flush chains (filter + mangle for both families)
     for tbl in filter mangle; do
         ipt "$tbl" -F XRAYUI # flush; ignores “No chain” errors
@@ -182,6 +186,7 @@ configure_firewall_client() {
         local IPT_TABLE="nat"
     else
         local IPT_TABLE="mangle"
+
         # Ensure TPROXY module is loaded
         if ! lsmod | grep -q "xt_TPROXY"; then
             log_debug "xt_TPROXY kernel module not loaded. Attempting to load..."
@@ -447,6 +452,8 @@ cleanup_firewall() {
     ipt nat -X XRAYUI 2>/dev/null || log_debug "Failed to remove NAT chain. Was it already empty?"
     ipt mangle -F XRAYUI 2>/dev/null || log_debug "Failed to flush mangle chain. Was it already empty?"
     ipt mangle -X XRAYUI 2>/dev/null || log_debug "Failed to remove mangle chain. Was it already empty?"
+
+    ipt mangle -D FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null || true
 
     # 0.46.: temportary workaround for iptables-legacy
     for fam in -4 -6; do

@@ -7,6 +7,7 @@ CERR='\033[0;31m'  # red
 CWARN='\033[0;33m' # yellow
 CINFO='\033[0;36m' # cyan
 CSUC='\033[0;32m'  # green
+CLOG='\033[0;37m'  # white
 CRESET='\033[0m'
 LOG_FACILITY='user'
 
@@ -38,6 +39,11 @@ printlog() {
     NOTICE)
         priority='notice'
         color=$CINFO
+        ;;
+
+    LOG)
+        priority='info'
+        color=$CLOG
         ;;
     INFO)
         priority='info'
@@ -76,6 +82,7 @@ log_error() { printlog ERROR "$@"; }
 log_warn() { printlog WARN "$@"; }
 log_notice() { printlog NOTICE "$@"; }
 log_info() { printlog INFO "$@"; }
+log_log() { printlog LOG "$@"; }
 log_ok() { printlog OK "$@"; }
 log_debug() { printlog DEBUG "$@"; }
 

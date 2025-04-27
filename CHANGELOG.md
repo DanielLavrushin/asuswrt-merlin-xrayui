@@ -1,5 +1,14 @@
 # XRAYUI Changelog
 
+## [0.47.12] - 2025-04-27
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- ADDED: debug logging option in `General Settings`.
+- IMPROVED: Diagnostics output.
+- FIXED: `IPSEC` routing rules bypassed xray.
+- FIXED: `bypass` policies were ignored in `TPROXY` mode.
+
 ## [0.47.2] - 2025-04-27
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

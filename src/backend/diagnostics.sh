@@ -43,9 +43,14 @@ diagnostics_env() {
     log_info "--------------------------------------------------------"
     log_info
 
-    log_info "/jffs/addons/custom_settings.txt:"
+    log_info $(diagnostics_hdr "/jffs/addons/custom_settings.txt:")
     cat "/jffs/addons/custom_settings.txt" 2>&1
     log_info "--------------------------------------------------------"
+
+    log_info $(diagnostics_hdr "relevant kernel modules:")
+    lsmod | grep -E 'xt_(TPROXY|socket|mark)' || true
+    log_info "--------------------------------------------------------"
+    log_info
 
 }
 
@@ -167,11 +172,6 @@ diagnostics_iptables() {
     log_info --------------------------------------------------------
     log_info
 
-    log_info $(diagnostics_hdr "relevant kernel modules:")
-    lsmod | grep -E 'xt_(TPROXY|socket|mark)' || true
-    log_info --------------------------------------------------------
-    log_info
-
     if is_ipv6_enabled; then
         log_info $(diagnostics_hdr "ip6tables -t filter -nvL XRAYUI:")
         ip6tables -t filter -nvL XRAYUI 2>&1
@@ -182,8 +182,8 @@ diagnostics_iptables() {
         ip6tables -t mangle -nvL XRAYUI 2>&1
         log_info "--------------------------------------------------------"
         log_info
-
     fi
+
     log_info $(diagnostics_hdr "ip rule show:")
     ip rule show 2>&1
     log_info "--------------------------------------------------------"

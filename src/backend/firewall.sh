@@ -4,6 +4,7 @@
 tproxy_mark=0x10000
 tproxy_mask=0x10000
 tproxy_table=77
+IP6NAT_LOADED="0"
 
 ipt() { # ipt <table> <args…>
     local tbl=$1
@@ -14,15 +15,35 @@ ipt() { # ipt <table> <args…>
 apply_rule() { # $@ = ipt args INCLUDING the -t TABLE part
     local tbl=$1
     shift
+    local rc=0 did=0
+
     for IPT in $IPT_LIST; do
-        # skip nat for ip6tables
-        [ "$IPT" = "ip6tables" ] && [ "$tbl" = "nat" ] && continue
-        [ "$IPT" = "ip6tables" ] && echo "$*" | grep -q '\.' && continue
-        $IPT -t "$tbl" "$@" 2>/dev/null
+        if [ "$IPT" = "ip6tables" ] && [ "$tbl" = "nat" ]; then
+            if [ "$IP6NAT_LOADED" = "0" ]; then
+                modprobe -q ip6table_nat 2>/dev/null && IP6NAT_LOADED=1 || IP6NAT_LOADED=-1
+            fi
+            [ "$IP6NAT_LOADED" != "1" ] && continue
+            $IPT -w -t nat -L -n >/dev/null 2>&1 || continue
+        fi
+
+        [ "$IPT" = "ip6tables" ] && contains_ipv4 "$*" && continue
+
+        $IPT -w -t "$tbl" "$@" 2>/dev/null
+        rc=$?
+        did=1
     done
+
+    [ $did -eq 1 ] && return $rc || return 0
+}
+
+contains_ipv4() {
+    [ -z "$1" ] && return 1
+    printf '%s\n' "$1" |
+        grep -Eq '(^|[[:space:]])([0-9]{1,3}\.){3}[0-9]{1,3}([[:space:]/]|$)'
 }
 
 is_ipv6_enabled() {
+
     # 1) kernel has it
     [ -f /proc/net/if_inet6 ] || return 1
 
@@ -58,13 +79,12 @@ configure_firewall() {
 
     # create / flush chains (filter + mangle for both families)
     for tbl in filter mangle; do
-        ipt "$tbl" -F XRAYUI # flush; ignores “No chain” errors
-        ipt "$tbl" -N XRAYUI # create if missing
+        ipt "$tbl" -N XRAYUI 2>/dev/null || ipt "$tbl" -F XRAYUI
     done
 
     # IPv4 nat chain
-    iptables -t nat -N XRAYUI 2>/dev/null || true
-    iptables -t nat -F XRAYUI 2>/dev/null
+    ipt nat -N XRAYUI 2>/dev/null || true
+    ipt nat -F XRAYUI 2>/dev/null
 
     ipt filter -C XRAYUI -j RETURN 2>/dev/null || ipt filter -A XRAYUI -j RETURN
 
@@ -206,7 +226,9 @@ configure_firewall_client() {
     ipt $IPT_TABLE -X XRAYUI 2>/dev/null || log_debug "Failed to remove $IPT_TABLE chain. Was it already empty?"
     ipt $IPT_TABLE -N XRAYUI 2>/dev/null || log_debug "Failed to create $IPT_TABLE chain."
     if [ "$IPT_TYPE" = "TPROXY" ]; then
-        modprobe xt_socket 2>/dev/null
+        if ! lsmod | grep -q "xt_socket"; then
+            modprobe xt_socket 2>/dev/null
+        fi
         ipt $IPT_TABLE -C XRAYUI -p udp -m socket --transparent -j RETURN 2>/dev/null ||
             ipt $IPT_TABLE -I XRAYUI 1 -p udp -m socket --transparent -j RETURN
     fi
@@ -230,6 +252,7 @@ configure_firewall_client() {
     static_v6="::1/128 fe80::/10 fc00::/7"
     for net in $static_v4 $static_v6; do
         ipt "$IPT_TABLE" -I XRAYUI 1 -d "$net" -j RETURN 2>/dev/null
+        log_debug "Excluding static network $net from $IPT_TABLE."
     done
 
     update_loading_progress "Configuring firewall Exclusion rules..."
@@ -268,8 +291,7 @@ configure_firewall_client() {
         # unified exclusion: WAN IP, any “via” routes, and your nvram static list
         for dst in $wan_ip $via_routes $static_routes; do
             log_debug "TPROXY: excluding $dst from $IPT_TABLE"
-            ipt $IPT_BASE_FLAGS -d "$dst" -j RETURN 2>/dev/null ||
-                log_error "Failed to exclude $dst from $IPT_TABLE."
+            ipt $IPT_BASE_FLAGS -d "$dst" -j RETURN 2>/dev/null || log_error "Failed to exclude $dst from $IPT_TABLE."
         done
     fi
 
@@ -283,6 +305,7 @@ configure_firewall_client() {
         for chunk in $(split_ports "$tcp_ports"); do
             ipt $IPT_BASE_FLAGS -p tcp -m multiport --dports "$chunk" -j RETURN
             ipt $IPT_BASE_FLAGS -p udp -m multiport --dports "$chunk" -j RETURN
+            log_debug "Excluding server ports $chunk from $IPT_TABLE."
         done
 
     fi
@@ -554,5 +577,6 @@ set_route_localnet() {
 }
 
 split_ports() {
+    [ -z "$1" ] && return 0
     printf '%s\n' "$1" | tr ',' '\n' | xargs -n15 | sed 's/ /,/g'
 }

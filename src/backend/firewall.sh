@@ -448,8 +448,8 @@ configure_firewall_client() {
     fi
 
     # Hook chain into  PREROUTING:
-    if ! iptables -t "$IPT_TABLE" -C PREROUTING -j XRAYUI 2>/dev/null; then
-        iptables -t "$IPT_TABLE" -A PREROUTING -j XRAYUI
+    if ! ipt "$IPT_TABLE" -C PREROUTING -j XRAYUI 2>/dev/null; then
+        ipt "$IPT_TABLE" -A PREROUTING -j XRAYUI
     fi
 
     log_ok "$IPT_TYPE rules applied."

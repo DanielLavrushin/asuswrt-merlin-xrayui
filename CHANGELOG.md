@@ -1,5 +1,11 @@
 # XRAYUI Changelog
 
+## [0.47.2] - 2025-04-27
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- IMPROVED: `IPv6` rules handling.
+
 ## [0.47.1] - 2025-04-27
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

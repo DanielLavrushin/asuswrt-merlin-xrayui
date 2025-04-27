@@ -98,6 +98,12 @@ configure_firewall() {
     ipt filter -C INPUT -j XRAYUI 2>/dev/null || ipt filter -I INPUT 1 -j XRAYUI
     ipt filter -C FORWARD -j XRAYUI 2>/dev/null || ipt filter -I FORWARD 1 -j XRAYUI
 
+    # Clamp MSS for Xray-originated flows as well
+    for IPT in $IPT_LIST; do
+        $IPT -t mangle -C OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null ||
+            $IPT -t mangle -I OUTPUT 1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+    done
+
     SERVER_IPS=$(jq -r '[.outbounds[] | select(.settings.vnext != null) | .settings.vnext[].address] | unique | join(" ")' "$XRAY_CONFIG_FILE")
 
     if jq -e '
@@ -231,19 +237,15 @@ configure_firewall_client() {
     ipt $IPT_TABLE -X XRAYUI 2>/dev/null || log_debug "Failed to remove $IPT_TABLE chain. Was it already empty?"
     ipt $IPT_TABLE -N XRAYUI 2>/dev/null || log_debug "Failed to create $IPT_TABLE chain."
     if [ "$IPT_TYPE" = "TPROXY" ]; then
-        if ! lsmod | grep -q "xt_socket"; then
-            modprobe xt_socket 2>/dev/null
-        fi
+        lsmod | grep -q '^xt_socket ' || modprobe xt_socket 2>/dev/null
+        # 1. recognise packets for locally-owned UDP sockets (dnsmasq → Xray)
         ipt $IPT_TABLE -C XRAYUI -p udp -m socket --transparent -j RETURN 2>/dev/null ||
             ipt $IPT_TABLE -I XRAYUI 1 -p udp -m socket --transparent -j RETURN
-    fi
 
+    fi
     # --- Begin Exclusion Rules ---
-    if [ "$IPT_TYPE" = "DIRECT" ]; then
-        ipt $IPT_TABLE -I XRAYUI 1 -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN 2>/dev/null || log_error "Failed to add ESTABLISHED/RELATED bypass in $IPT_TABLE"
-    fi
 
-    local source_nets_v4 source_nets_v6 static_v4 static_v6
+    local source_nets_v4 source_nets_v6 static_v6
     source_nets_v4=$(ip -4 route show scope link | awk '$1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/ {print $1}')
 
     source_nets_v6=""
@@ -253,10 +255,8 @@ configure_firewall_client() {
 
     source_nets="$source_nets_v4 $source_nets_v6"
 
-    static_v4="169.254.0.0/16 100.64.0.0/10 172.16.0.0/12 10.0.0.0/8 127.0.0.0/8 192.168.0.0/16"
-    static_v6="::1/128 fe80::/10 fc00::/7"
-    for net in $static_v4 $static_v6; do
-        ipt "$IPT_TABLE" -I XRAYUI 1 -d "$net" -j RETURN 2>/dev/null
+    for net in $(echo "$source_nets"); do
+        ipt $IPT_TABLE -A XRAYUI -d "$net" -j RETURN 2>/dev/null || log_debug "Failed to add exclusion rule for $net in $IPT_TABLE."
         log_debug "Excluding static network $net from $IPT_TABLE."
     done
 
@@ -272,13 +272,38 @@ configure_firewall_client() {
     ipt $IPT_BASE_FLAGS -d 239.0.0.0/8 -j RETURN 2>/dev/null || log_error "Failed to add multicast rule (239.0.0.0/8) in $IPT_TABLE."
 
     # Exclude STUN (WebRTC)
-    ipt $IPT_BASE_FLAGS -p udp -m u32 --u32 "32=0x2112A442" -j RETURN 2>/dev/null || log_error "Failed to add STUN in $IPT_TABLE."
+    if [ "$IPT_TYPE" = "DIRECT" ]; then
+        ipt $IPT_BASE_FLAGS -p udp -m u32 --u32 "32=0x2112A442" -j RETURN 2>/dev/null || log_error "Failed to add STUN in $IPT_TABLE."
+    fi
+
+    # IP-sec IKE / NAT-T
+    ipt $IPT_BASE_FLAGS -p udp -m multiport --dports 500,4500 -j RETURN 2>/dev/null || log_error "Failed to add IPsec IKE/NAT-T rule in $IPT_TABLE."
 
     # Exclude traffic in DNAT state (covers inbound port-forwards):
     ipt $IPT_BASE_FLAGS -m conntrack --ctstate DNAT -j RETURN 2>/dev/null || log_error "Failed to add DNAT rule in $IPT_TABLE."
 
     # Exclude NTP (UDP port 123)
     ipt $IPT_BASE_FLAGS -p udp --dport 123 -j RETURN 2>/dev/null || log_error "Failed to add NTP rule in $IPT_TABLE."
+
+    # # --- QUIC SIZE-GATE (auto-detect WAN MTU) --------------------------
+    # wan_if="$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="dev"){print $(i+1); exit}}')"
+    # [ -z "$wan_if" ] && wan_if="$(nvram get wan0_ifname || echo eth0)"
+
+    # log_debug "QUIC - WAN interface: $wan_if"
+
+    # # Grab the first number that follows the word “mtu”
+    # wan_mtu="$(ip link show "$wan_if" 2>/dev/null | awk '/\ mtu\ /{for(i=1;i<=NF;i++) if($i=="mtu"){print $(i+1); exit}}')"
+    # # If ip(8) fails or returns junk, assume PPPoE = 1492
+    # case "$wan_mtu" in
+    # "" | *[!0-9]*) wan_mtu=1492 ;;
+    # esac
+    # log_debug "QUIC - WAN MTU: $wan_mtu"
+
+    # safe_len=$((wan_mtu - 60))
+    # [ "$safe_len" -lt 1200 ] && safe_len=1200 # never go below IPv6 minimum
+    # log_debug "QUIC - safe length: $safe_len"
+    # ipt $IPT_BASE_FLAGS -p udp --dport 443 -m length --length $((safe_len + 1)):65535 -j DROP
+    # # ------------------------------------------------------------------
 
     # Exclude traffic destined to the Xray server:
     [ -n "$SERVER_IPS" ] && for serverip in $SERVER_IPS; do
@@ -415,9 +440,7 @@ configure_firewall_client() {
                             fi
 
                             # Default for bypass = return
-                            if [ "$IPT_TYPE" = "DIRECT" ]; then
-                                ipt $IPT_MAC_FLAGS -j RETURN 2>/dev/null
-                            fi
+                            ipt $IPT_MAC_FLAGS -j RETURN 2>/dev/null || log_error "Failed to add RETURN rule for $mac subnet: $source_net in $IPT_TABLE."
 
                         else
                             # Redirect mode = redirect everything except the listed TCP/UDP ports
@@ -444,6 +467,7 @@ configure_firewall_client() {
     if [ "$IPT_TYPE" = "TPROXY" ]; then
         add_tproxy_routes "$tproxy_mark/$tproxy_mask" "$tproxy_table"
     else
+        ipt $IPT_TABLE -A XRAYUI -p tcp -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN
         ipt $IPT_BASE_FLAGS -j RETURN 2>/dev/null || log_error "Failed to add default rule in $IPT_TABLE chain."
     fi
 
@@ -479,6 +503,7 @@ cleanup_firewall() {
     ipt mangle -X XRAYUI 2>/dev/null || log_debug "Failed to remove mangle chain. Was it already empty?"
 
     ipt mangle -D FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null || true
+    ipt mangle -D OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null || true
 
     # 0.46.: temportary workaround for iptables-legacy
     for fam in -4 -6; do
@@ -495,13 +520,15 @@ cleanup_firewall() {
         ip route flush table "$tbl" 2>/dev/null
     done
 
-    if jq -e '
+    if [ -f "$XRAYUI_CONFIG_FILE" ]; then
+        if jq -e '
   .inbounds[]
   | select(.protocol=="dokodemo-door")
   | (.listen // "")
   | startswith("127.")
 ' "$XRAY_CONFIG_FILE" >/dev/null; then
-        set_route_localnet 0
+            set_route_localnet 0
+        fi
     fi
 
     local script="$ADDON_USER_SCRIPTS_DIR/firewall_cleanup"

@@ -65,7 +65,7 @@ printlog() {
 
     logger -t "XRAYUI" -p "${LOG_FACILITY}.${priority}" -- "$msg"
 
-    if [ "$ADDON_DEBUG" -eq "0" ] && [ "$level" = "DEBUG" ]; then
+    if [ "$ADDON_DEBUG" = "false" ] && [ "$level" = "DEBUG" ]; then
         return
     fi
 

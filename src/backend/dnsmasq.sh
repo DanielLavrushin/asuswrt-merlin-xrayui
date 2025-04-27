@@ -23,16 +23,18 @@ dnsmasq_configure() {
     fi
 
     if jq -e '
-    .inbounds[]
-  | select((.tag // "" | ascii_downcase) | contains("dns"))
-  | "\(.listen // "127.0.0.1")#\(.port)"
+       .inbounds[]
+        | select(.protocol == "dokodemo-door")
+        | select((.listen // "127.0.0.1") != "0.0.0.0")
+        | "\(.listen // "127.0.0.1")#\(.port)"
   ' "$XRAY_CONFIG_FILE" >/dev/null; then
         log_debug "dnsmasq: found inbound DNS server"
-        pc_append "no-resolv" "$CONFIG" && log_debug "dnsmasq: no-resolv enabled"
+        #  pc_append "no-resolv" "$CONFIG" && log_debug "dnsmasq: no-resolv enabled"
         jq -r '
-    .inbounds[]
-  | select((.tag // "" | ascii_downcase) | contains("dns"))
-  | "\(.listen // "127.0.0.1")#\(.port)"
+       .inbounds[]
+        | select(.protocol == "dokodemo-door")
+        | select((.listen // "127.0.0.1") != "0.0.0.0")
+        | "\(.listen // "127.0.0.1")#\(.port)"
   ' "$XRAY_CONFIG_FILE" |
             while IFS= read -r srv; do
                 pc_append "server=$srv" "$CONFIG" && log_debug "dnsmasq: added inbound DNS server=$srv"

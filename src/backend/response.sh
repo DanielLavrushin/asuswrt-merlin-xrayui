@@ -32,6 +32,7 @@ initial_response() {
     local logs_max_size="${logs_max_size:-10}"
     local skip_test="${skip_test:-false}"
     local clients_check="${clients_check:-false}"
+    local debug="${ADDON_DEBUG:-false}"
 
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg geoip "$geoip_date" --arg geosite "$geosite_date" --arg geoipurl "$geoipurl" --arg geositeurl "$geositeurl" \
         '.geodata.geoip_url = $geoipurl | .geodata.geosite_url = $geositeurl | .geodata.community["geoip.dat"] = $geoip | .geodata.community["geosite.dat"] = $geosite')
@@ -82,9 +83,10 @@ initial_response() {
         backups="[]"
     fi
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson backups "$backups" '.xray.backups = $backups')
-    log_debug "Backups: $backups"
 
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq 'del(.loading)')
+
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson debug "$debug" '.xray.debug = $debug')
 
     save_ui_response
 

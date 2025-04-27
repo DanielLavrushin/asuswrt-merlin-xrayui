@@ -4,6 +4,16 @@
       <table class="FormTable modal-form-table">
         <tbody>
           <tr>
+            <th>
+              {{ $t('com.GeneralOptionsModal.label_enable_debug') }}
+            </th>
+            <td>
+              <label class="go-option">
+                <input type="checkbox" v-model="options.debug" />
+              </label>
+            </td>
+          </tr>
+          <tr>
             <th>{{ $t('com.GeneralOptionsModal.start_xray_on_reboot') }}</th>
             <td>
               <label class="go-option">
@@ -195,6 +205,7 @@
 
   class GeneralOptions {
     public startup = false;
+    public debug = false;
     public github_proxy = '';
     public logs_access = false;
     public logs_dnsmasq = false;
@@ -306,6 +317,7 @@
         options.value.logs_dor = uiResponse?.value.xray?.logs_dor ?? false;
         options.value.skip_test = uiResponse?.value.xray?.skip_test ?? false;
         options.value.clients_check = uiResponse?.value.xray?.clients_check ?? false;
+        options.value.debug = uiResponse?.value.xray?.debug ?? false;
         modal.value.show();
       };
 

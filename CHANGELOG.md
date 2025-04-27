@@ -1,5 +1,14 @@
 # XRAYUI Changelog
 
+## [0.47.12] - 2025-04-27
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- ADDED: A new `Enable debug logs` option in the `General Settings`, allowing users to toggle debug logging.
+- IMPROVED: Enhanced diagnostics output by adding kernel module checks and improving log formatting.
+- FIXED: Firewall rules by clamping MSS for Xray-originated TCP flows and adding new rules for `IPsec` IKE/NAT-T traffic
+- FIXED: `bypass` policies were ignored in `TPROXY` mode.
+
 ## [0.47.2] - 2025-04-27
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

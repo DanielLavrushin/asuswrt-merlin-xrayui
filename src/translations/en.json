@@ -540,7 +540,8 @@
       "backup": "backup",
       "clear": "clear",
       "hint": "Backup xray/xrayui configuration files.",
-      "clear_confirm": "Are you sure you want to clear all the backups?",
+      "clear_confirm": "Are you sure you want to delete {0}?",
+      "clear_all_confirm": "Are you sure you want to clear all the backups?",
       "restore_confirm": "Are you sure  you want to restore this backup?\nWarning: This will overwrite the current configuration.\n\nIt is recommended to create a backup before restoring.",
       "download": "download",
       "restore": "restore"

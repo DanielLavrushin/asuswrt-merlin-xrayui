@@ -246,10 +246,10 @@ service_event)
             initial_response
             update_loading_progress "Backup created successfully" 100
             ;;
-        backupclearall)
-            backup_clearall
+        backupclear)
+            backup_clear
             initial_response
-            update_loading_progress "Clear all completed." 100
+            update_loading_progress "Clearing backup complete." 100
             ;;
         backuprestore)
             backup_restore_configuration

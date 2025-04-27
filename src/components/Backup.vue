@@ -19,6 +19,7 @@
                 <span class="row-buttons">
                   <input class="button_gen button_gen_small" type="button" :value="$t('com.Backup.download')" @click.prevent="download(b)" />
                   <input class="button_gen button_gen_small" type="button" :value="$t('com.Backup.restore')" @click.prevent="restore(b)" />
+                  <a class="button_gen button_gen_small" href="#" @click.prevent="clear(b)" title="delete">&#10005;</a>
                 </span>
               </td>
             </tr>
@@ -71,11 +72,17 @@
           await engine.submit(SubmitActions.createBackup, null, 2000);
         });
       };
-      const clear = async () => {
-        if (!confirm(t('com.Backup.clear_confirm'))) return;
+      const clear = async (backup?: string) => {
+        let backup_payload = null;
+        if (backup) {
+          backup_payload = { backup: backup };
+          if (!confirm(t('com.Backup.clear_confirm', [backup]))) return;
+        } else {
+          if (!confirm(t('com.Backup.clear_all_confirm'))) return;
+        }
 
         await engine.executeWithLoadingProgress(async () => {
-          await engine.submit(SubmitActions.clearBackup, null, 2000);
+          await engine.submit(SubmitActions.clearBackup, backup_payload, 2000);
         });
       };
 

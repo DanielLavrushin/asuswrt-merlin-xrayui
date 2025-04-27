@@ -28,7 +28,7 @@
         </hint>
       </th>
       <td>
-        <input type="text" maxlength="15" class="input_20_table" v-model="transport.wsSettings.path" />
+        <input type="text" maxlength="256" class="input_20_table" v-model="transport.wsSettings.path" />
         <span class="hint-color"></span>
       </td>
     </tr>
@@ -44,7 +44,7 @@
         </hint>
       </th>
       <td>
-        <input type="text" maxlength="15" class="input_20_table" v-model="transport.wsSettings.host" />
+        <input type="text" maxlength="256" class="input_20_table" v-model="transport.wsSettings.host" />
         <span class="hint-color"></span>
       </td>
     </tr>

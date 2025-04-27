@@ -1,26 +1,28 @@
 #!/bin/sh
 # shellcheck disable=SC2034  # codacy:Unused variables
 
-backup_clearall() {
-
+backup_clear() {
     log_info "Starting clear all..."
     update_loading_progress "Clear all backups..."
 
+    local payload=$(reconstruct_payload)
+    local backup_file=$(echo "$payload" | jq -r '.backup')
     local backup_dir="$ADDON_SHARE_DIR/backup"
 
-    if [ -d "$backup_dir" ]; then
-        rm -rf "$backup_dir"
-        if [ $? -ne 0 ]; then
-            log_error "Failed to remove backup directory $backup_dir."
-            return 1
-        fi
-        log_ok "Backup directory $backup_dir removed successfully."
-    else
-        log_error "Backup directory $backup_dir does not exist."
+    # If backup_file is provided, delete the specific backup, else delete all backups
+    if [ -n "$backup_file" ]; then
+        backup_dir="$backup_dir/$backup_file"
     fi
 
-    backup_remount_to_web
+    # Delete the backup (whether it's a specific file or all backups)
+    rm -rf "$backup_dir"
+    if [ $? -ne 0 ]; then
+        log_error "Failed to remove backup $backup_dir."
+        return 1
+    fi
+    log_ok "Backup $backup_dir removed successfully."
 
+    backup_remount_to_web
 }
 
 backup_configuration() {

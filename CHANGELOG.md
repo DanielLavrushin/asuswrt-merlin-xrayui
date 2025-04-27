@@ -7,6 +7,7 @@
 - ADDED: A new `Enable debug logs` option in the `General Settings`, allowing users to toggle debug logging.
 - ADDED: Backup management by adding specific backup deletion option.
 - IMPROVED: Enhanced diagnostics output by adding kernel module checks and improving log formatting.
+- IMPROVED: Increase maxlength for web socket transport `path` and `host` inputs to allow longer values (up to 256 characters).
 - FIXED: Firewall rules by clamping MSS for Xray-originated TCP flows and adding new rules for `IPsec` IKE/NAT-T traffic
 - FIXED: `bypass` policies were ignored in `TPROXY` mode.
 

@@ -4,11 +4,11 @@
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
-- ADDED: Check `JFFS` partition check during the installation.
+- ADDED: Verify the readiness of the router's `JFFS` partition during installation, ensuring that required configurations are enabled.
 - IMPROVED: Enhance `TPROXY` rules and improve exclusion handling in firewall configuration.
 - ADDED: Added rules to exclude traffic destined for the router's IP on `UDP` port `53`.
-- ADDED: Introduced connection marking rules to handle locally-owned `UDP` sockets more effectively.
-- ADDED: Added a rule to exclude traffic in the DNAT state, covering inbound port forwards.
+- ADDED: Enhanced `TPROXY` rules by introducing connection marking for locally-owned `UDP` sockets and saving marks to improve traffic handling.
+- ADDED: Added rules to exclude traffic for specific tunnel UDP ports (`500`, `4500`, `51820`).
 
 ## [0.47.11] - 2025-04-27
 

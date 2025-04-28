@@ -239,17 +239,17 @@ configure_firewall_client() {
     if [ "$IPT_TYPE" = "TPROXY" ]; then
         lsmod | grep -q '^xt_socket ' || modprobe xt_socket 2>/dev/null
 
+        ipt $IPT_TABLE -I XRAYUI 1 -m connmark --mark $tproxy_mark/$tproxy_mask -j RETURN
+
         router_ip="$(nvram get lan_ipaddr)"
         ipt $IPT_TABLE -C XRAYUI -d "$router_ip" -p udp --dport 53 -j RETURN 2>/dev/null ||
-            ipt $IPT_TABLE -I XRAYUI 1 -d "$router_ip" -p udp --dport 53 -j RETURN
-
-        ipt $IPT_TABLE -I XRAYUI 1 -m connmark --mark $tproxy_mark/$tproxy_mask -j RETURN
+            ipt $IPT_TABLE -I XRAYUI 2 -d "$router_ip" -p udp --dport 53 -j RETURN
 
         # 1. recognise packets for locally-owned UDP sockets (dnsmasq → Xray)
         ipt $IPT_TABLE -C XRAYUI -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask 2>/dev/null ||
-            ipt $IPT_TABLE -I XRAYUI 2 -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
+            ipt $IPT_TABLE -I XRAYUI 3 -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
 
-        ipt $IPT_TABLE -I XRAYUI 3 -m connmark --save-mark
+        ipt $IPT_TABLE -A XRAYUI -j CONNMARK --save-mark --mask $tproxy_mask
     fi
 
     # --- Begin Exclusion Rules ---
@@ -268,7 +268,7 @@ configure_firewall_client() {
         log_debug "Excluding static network $net from $IPT_TABLE."
 
         if [ "$IPT_TABLE" = "mangle" ]; then
-            ipt $IPT_TABLE -A XRAYUI -d "$net" -p tcp ! --dport 53 -j RETURN 2>/dev/null || log_error "Failed to add RETURN rule for $net in $IPT_TABLE."
+            ipt $IPT_TABLE -A XRAYUI -d "$net" -p tcp -j RETURN 2>/dev/null || log_error "Failed to add RETURN rule for $net in $IPT_TABLE."
             ipt $IPT_TABLE -A XRAYUI -d "$net" -p udp ! --dport 53 -j RETURN 2>/dev/null || log_error "Failed to add RETURN rule for $net in $IPT_TABLE."
         else
             ipt $IPT_TABLE -A XRAYUI -d "$net" -j RETURN 2>/dev/null || log_error "Failed to add RETURN rule for $net in $IPT_TABLE."
@@ -291,7 +291,7 @@ configure_firewall_client() {
 
     # Exclude STUN (WebRTC)
     if [ "$IPT_TYPE" = "DIRECT" ]; then
-        ipt $IPT_BASE_FLAGS -p udp -m u32 --u32 "32=0x2112A442" -j RETURN 2>/dev/null || log_error "Failed to add STUN in $IPT_TABLE."
+        ipt $IPT_BASE_FLAGS -p udp -m u32 --u32 "32=0x2112A442" -j RETURN
     fi
 
     # Exclude NTP (UDP port 123)
@@ -302,6 +302,9 @@ configure_firewall_client() {
         log_info "Excluding Xray server IP from $IPT_TABLE."
         ipt $IPT_BASE_FLAGS -d "$serverip" -j RETURN 2>/dev/null || log_error "Failed to add rule to exclude Xray server IP in $IPT_TABLE."
     done
+
+    # Exclude tunnel UDP ports
+    ipt $IPT_BASE_FLAGS -p udp -m multiport --dports 500,4500,51820 -j RETURN 2>/dev/null || log_error "Failed to add tunnel UDP ports rule in $IPT_TABLE."
 
     # TPROXY excludes:
     if [ "$IPT_TYPE" = "TPROXY" ]; then

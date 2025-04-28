@@ -1,8 +1,14 @@
 # XRAYUI Changelog
 
-## [0.47.14] - 2025-04-29
+## [0.48.0] - 2025-04-29
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- ADDED: Check `JFFS` partition check during the installation.
+- IMPROVED: Enhance `TPROXY` rules and improve exclusion handling in firewall configuration.
+- ADDED: Added rules to exclude traffic destined for the router's IP on `UDP` port `53`.
+- ADDED: Introduced connection marking rules to handle locally-owned `UDP` sockets more effectively.
+- ADDED: Added a rule to exclude traffic in the DNAT state, covering inbound port forwards.
 
 ## [0.47.11] - 2025-04-27
 

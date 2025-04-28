@@ -1,10 +1,33 @@
 #!/bin/sh
 # shellcheck disable=SC2034  # codacy:Unused variables
 
+check_jffs_ready() {
+
+    if [ "$(nvram get jffs2_on 2>/dev/null)" != "1" ]; then
+        log_error "JFFS partition is DISABLED (nvram jffs2_on=0)."
+        log_error "Enable it under Administration ▸ System, or run:"
+        log_error "    nvram set jffs2_on=1 && nvram commit && reboot"
+        exit 1
+    else
+        log_info "JFFS partition is ENABLED."
+    fi
+
+    if [ "$(nvram get jffs2_scripts 2>/dev/null)" != "1" ]; then
+        log_error "JFFS custom scripts and configs are DISABLED."
+        log_error "Enable it in the router UI (Administration ▸ System) or run:"
+        log_error "    nvram set jffs2_scripts=1 && nvram commit && reboot"
+        exit 1
+    else
+        log_info "JFFS custom scripts and configs are ENABLED."
+    fi
+}
+
 install() {
 
     update_loading_progress "Installing $ADDON_TITLE..."
     log_info "Starting $ADDON_TITLE installation process."
+
+    check_jffs_ready
 
     load_xrayui_config
 

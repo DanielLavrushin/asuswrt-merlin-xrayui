@@ -245,7 +245,6 @@ configure_firewall_client() {
         ipt $IPT_TABLE -C XRAYUI -d "$router_ip" -p udp --dport 53 -j RETURN 2>/dev/null ||
             ipt $IPT_TABLE -I XRAYUI 2 -d "$router_ip" -p udp --dport 53 -j RETURN
 
-        # 1. recognise packets for locally-owned UDP sockets (dnsmasq → Xray)
         ipt $IPT_TABLE -C XRAYUI -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask 2>/dev/null ||
             ipt $IPT_TABLE -I XRAYUI 3 -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
 
@@ -288,11 +287,6 @@ configure_firewall_client() {
 
     # Exclude traffic in DNAT state (covers inbound port-forwards):
     ipt $IPT_BASE_FLAGS -m conntrack --ctstate DNAT -j RETURN 2>/dev/null || log_error "Failed to add DNAT rule in $IPT_TABLE."
-
-    # Exclude STUN (WebRTC)
-    if [ "$IPT_TYPE" = "DIRECT" ]; then
-        ipt $IPT_BASE_FLAGS -p udp -m u32 --u32 "32=0x2112A442" -j RETURN
-    fi
 
     # Exclude NTP (UDP port 123)
     ipt $IPT_BASE_FLAGS -p udp --dport 123 -j RETURN 2>/dev/null || log_error "Failed to add NTP rule in $IPT_TABLE."
@@ -555,7 +549,7 @@ add_tproxy_routes() { # $1 = fwmark, $2 = table
 
         # 1. policy-rule
         ip $fam rule list | grep -q "fwmark $mark" ||
-            ip $fam rule add fwmark $mark lookup "$tbl" priority 101 2>/dev/null || ip $fam rule replace fwmark $mark lookup "$tbl" priority 101
+            ip $fam rule add fwmark $mark lookup "$tbl" 2>/dev/null || ip $fam rule replace fwmark $mark lookup "$tbl"
 
         # 2. ensure “local all-/::0” route in mark table
         local local_dst

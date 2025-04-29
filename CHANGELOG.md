@@ -1,6 +1,6 @@
 # XRAYUI Changelog
 
-## [0.48.1] - 2025-04-29
+## [0.48.5] - 2025-04-29
 
 - REMOVED: rules excluding `STUN` (WebRTC) traffic.
 - REMOVED: the priority `101` parameter in the `ip rule add` command for policy rules.

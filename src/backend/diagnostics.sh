@@ -156,7 +156,9 @@ diagnostics_iptables() {
     log_info
 
     log_info $(diagnostics_hdr "policy rules (all families):")
-    ip -4 rule show
+    log_info "ip -4 rule show:"
+    ip -4 rule show 2>/dev/null
+    log_info "ip -6 rule show:"
     ip -6 rule show 2>/dev/null
     log_info --------------------------------------------------------
     log_info
@@ -183,11 +185,6 @@ diagnostics_iptables() {
         log_info "--------------------------------------------------------"
         log_info
     fi
-
-    log_info $(diagnostics_hdr "ip rule show:")
-    ip rule show 2>&1
-    log_info "--------------------------------------------------------"
-    log_info
 
     log_info $(diagnostics_hdr "ip route show table main:")
     ip route show table main 2 >&1

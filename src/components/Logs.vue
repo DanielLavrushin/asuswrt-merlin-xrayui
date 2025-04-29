@@ -31,25 +31,43 @@
                         </tr>
                       </thead>
                       <tbody class="logs-area-content">
-                        <tr v-for="log in filteredLogs" :key="log.line" :class="[log.parsed ? 'parsed' : 'unparsed']">
-                          <!-- Parsed entry (normal layout) -->
-                          <template v-if="log.parsed">
+                        <tr v-for="log in filteredLogs" :key="log.line" :class="[{ parsed: log.parsed, unparsed: !log.parsed }, log.kind]">
+                          <!-- ① Unparsed lines: grey, full-width -->
+                          <td v-if="!log.parsed" colspan="5">{{ log.line }}</td>
+
+                          <!-- ② Parsed ACCESS entry: your current five-cell layout -->
+                          <template v-else-if="log.kind === 'access'">
                             <td>{{ log.time }}</td>
                             <td>
                               <span v-if="!log.source_device">{{ log.source }}</span>
-                              <a class="device" v-else :title="log.source">{{ log.source_device }}</a>
+                              <a v-else class="device" :title="log.source">{{ log.source_device }}</a>
                             </td>
                             <td>
-                              <span :class="['log-label', log.type]">{{ log.type }} </span>
+                              <span :class="['log-label', log.type]">{{ log.type }}</span>
                               {{ log.target }}:{{ log.target_port }}
                             </td>
                             <td>{{ log.inbound }}</td>
                             <td>
-                              <span v-if="log.routing" :class="['log-label', log.routing]">{{ log.routing[0] }} </span>
+                              <span v-if="log.routing" :class="['log-label', log.routing]">
+                                {{ log.routing[0] }}
+                              </span>
                               {{ log.outbound }}
                             </td>
                           </template>
-                          <td :colspan="5" v-else>{{ log.line }}</td>
+
+                          <!-- ③ Parsed DNS entry: reuse columns, collapse where it makes sense -->
+                          <template v-else>
+                            <!-- here log.kind === 'dns' -->
+                            <td>{{ log.time }}</td>
+                            <td colspan="2">
+                              <span class="log-label dns">DNS</span>
+                              {{ log.host }}
+                            </td>
+                            <td class="dns-answers ellipsis" :title="log.answers.join(', ')" colspan="2">
+                              <span v-for="(ip, idx) in log.answers" :key="ip"> {{ ip }}<span v-if="idx < log.answers.length - 1">, </span> </span>
+                              – {{ log.latency }} ms
+                            </td>
+                          </template>
                         </tr>
                       </tbody>
                       <tbody v-if="parsedLogs.length === 0">
@@ -87,13 +105,47 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, onMounted, onBeforeUnmount, ref, computed, reactive } from 'vue';
+  import { defineComponent, ref, computed, reactive } from 'vue';
   import axios from 'axios';
   import engine, { SubmitActions } from '@/modules/Engine';
   import { XrayLogObject } from '@/modules/CommonObjects';
   import Modal from '@main/Modal.vue';
+  class DnsLogEntry {
+    public kind = 'dns' as const;
+    public parsed = false;
+    public time?: string;
+    public host?: string;
+    public answers: string[] = [];
+    public latency?: number;
+    public line?: string;
 
+    constructor(match?: RegExpMatchArray, line?: string) {
+      this.line = line;
+      if (!match) return;
+
+      try {
+        const [, utcDateTimeStr, host, ips, latency] = match;
+
+        // normalise timestamp to local time (same util code as AccessLogEntry)
+        const iso = utcDateTimeStr.replace(/\//g, '-').replace(' ', 'T') + 'Z';
+        this.time = new Date(iso).toLocaleTimeString([], {
+          hour12: false,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+
+        this.host = host;
+        this.answers = ips.split(/\s*,\s*/);
+        this.latency = Number(latency);
+        this.parsed = true;
+      } catch (err) {
+        console.error('Error parsing DNS entry:', err);
+      }
+    }
+  }
   class AccessLogEntry {
+    public kind = 'access' as const;
     public time?: string;
     public source?: string;
     public source_device?: string;
@@ -144,7 +196,7 @@
       }
     }
   }
-
+  type LogEntry = AccessLogEntry | DnsLogEntry;
   export default defineComponent({
     name: 'Logs',
     components: {
@@ -165,6 +217,12 @@
       const FILE_ERROR = '/ext/xrayui/xray_error_partial.asp';
       const file = ref<string>(FILE_ACCESS);
       const logsContent = ref<string>('');
+      // Access log
+      const ACCESS_RE = /^(\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2})(?:\.\d+)?\s+from\s+(\d{1,3}(?:\.\d{1,3}){3})(?::\d+)?\s+accepted\s+(tcp|udp):(\[[^\]]+\]|[^:]+):(\d+)\s+\[([^\s]+)\s*(->|>>)\s*([^\]]+)\](?:\s+email:\s+(.+))?$/;
+
+      // DNS “got answer” line
+      const DNS_RE = /^(\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2})(?:\.\d+)?\s+localhost got answer:\s+([^\s]+)\s+->\s+\[([^\]]+)\]\s+(\d+(?:\.\d+)?)ms$/;
+
       const filters = reactive({
         source: '',
         target: '',
@@ -172,7 +230,7 @@
         outbound: ''
       });
 
-      const filteredLogs = computed<AccessLogEntry[]>(() => {
+      const filteredLogs = computed<LogEntry[]>(() => {
         return parsedLogs.value.filter((l) => {
           if (!l.parsed) return true;
 
@@ -181,7 +239,7 @@
           const i = filters.inbound.toLowerCase();
           const o = filters.outbound.toLowerCase();
 
-          return (!s || l.source?.toLowerCase().includes(s) || l.source_device?.toLowerCase().includes(s)) && (!t || `${l.target}:${l.target_port}`.toLowerCase().includes(t)) && (!i || l.inbound?.toLowerCase().includes(i)) && (!o || l.outbound?.toLowerCase().includes(o));
+          return !s || (l instanceof AccessLogEntry && (l.source?.toLowerCase().includes(s) || l.source_device?.toLowerCase().includes(s)) && (!t || `${l.target}:${l.target_port}`.toLowerCase().includes(t)) && (!i || l.inbound?.toLowerCase().includes(i)) && (!o || l.outbound?.toLowerCase().includes(o)));
         });
       });
 
@@ -189,15 +247,15 @@
         return Object.fromEntries(Object.entries(window.xray.router.devices_online).map(([mac, device]) => [device.ip, device]));
       });
 
-      const parsedLogs = computed<AccessLogEntry[]>(() => {
+      const parsedLogs = computed<LogEntry[]>(() => {
         if (!logsContent.value) return [];
         return logsContent.value
           .split('\n')
           .map((line) => {
-            // Example log format: "2025/02/19 17:06:49 from 192.168.1.100:61132 accepted tcp:target:443 [outbound -> inbound]"
-            const regex = /^(\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2})(?:\.\d+)?\s+from\s+(\d{1,3}(?:\.\d{1,3}){3})(?::\d+)?\s+accepted\s+(tcp|udp):(\[[^\]]+\]|[^:]+):(\d+) \[([^\s]+)\s*(->|>>)\s*([^\]]+)\](?: email: (.+))?$/;
-            const match = line.match(regex);
-            return match ? new AccessLogEntry(match, devices.value) : new AccessLogEntry(undefined, undefined, line);
+            let m;
+            if ((m = line.match(ACCESS_RE))) return new AccessLogEntry(m, devices.value);
+            if ((m = line.match(DNS_RE))) return new DnsLogEntry(m, line);
+            return new AccessLogEntry(undefined, undefined, line);
           })
           .filter((entry): entry is AccessLogEntry => entry !== null);
       });
@@ -310,6 +368,13 @@
       overflow: hidden;
       text-wrap: none;
       white-space: nowrap;
+
+      &.ellipsis {
+        max-width: 350px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
     }
     tr.unparsed td {
       color: #888;

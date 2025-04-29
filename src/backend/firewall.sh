@@ -86,6 +86,13 @@ configure_firewall() {
         ipt "$tbl" -N XRAYUI 2>/dev/null || ipt "$tbl" -F XRAYUI
     done
 
+    ipt mangle -N DIVERT 2>/dev/null || ipt mangle -F DIVERT
+    ipt mangle -A DIVERT -j MARK --set-mark $tproxy_mark/$tproxy_mask
+    ipt mangle -A DIVERT -j CONNMARK --save-mark --mask $tproxy_mask
+    ipt mangle -A DIVERT -j ACCEPT
+    ipt mangle -C PREROUTING -p tcp -m socket --transparent -j DIVERT 2>/dev/null ||
+        ipt mangle -I PREROUTING 1 -p tcp -m socket --transparent -j DIVERT
+
     # IPv4 nat chain
     ipt nat -N XRAYUI 2>/dev/null || true
     ipt nat -F XRAYUI 2>/dev/null
@@ -239,16 +246,14 @@ configure_firewall_client() {
     if [ "$IPT_TYPE" = "TPROXY" ]; then
         lsmod | grep -q '^xt_socket ' || modprobe xt_socket 2>/dev/null
 
-        ipt $IPT_TABLE -I XRAYUI 1 -m connmark --mark $tproxy_mark/$tproxy_mask -j RETURN
-
-        router_ip="$(nvram get lan_ipaddr)"
-        ipt $IPT_TABLE -C XRAYUI -d "$router_ip" -p udp --dport 53 -j RETURN 2>/dev/null ||
-            ipt $IPT_TABLE -I XRAYUI 2 -d "$router_ip" -p udp --dport 53 -j RETURN
+        for lan_dns_net in 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16; do
+            ipt $IPT_TABLE -C XRAYUI -d "$lan_dns_net" -p udp --dport 53 -j RETURN 2>/dev/null ||
+                ipt $IPT_TABLE -I XRAYUI 1 -d "$lan_dns_net" -p udp --dport 53 -j RETURN
+        done
 
         ipt $IPT_TABLE -C XRAYUI -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask 2>/dev/null ||
-            ipt $IPT_TABLE -I XRAYUI 3 -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
+            ipt $IPT_TABLE -I XRAYUI 2 -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
 
-        ipt $IPT_TABLE -A XRAYUI -j CONNMARK --save-mark --mask $tproxy_mask
     fi
 
     # --- Begin Exclusion Rules ---

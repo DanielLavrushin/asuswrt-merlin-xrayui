@@ -2,6 +2,11 @@
 
 ## [0.48.1] - 2025-04-29
 
+- REMOVED: rules excluding `STUN` (WebRTC) traffic.
+- REMOVED: the priority `101` parameter in the `ip rule add` command for policy rules.
+
+## [0.48.0] - 2025-04-29
+
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - ADDED: Verify the readiness of the router's `JFFS` partition during installation, ensuring that required configurations are enabled.

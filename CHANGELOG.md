@@ -1,5 +1,16 @@
 # XRAYUI Changelog
 
+## [0.49.0] - 2025-05-04
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- FIXED: Missing shebang when `/jffs/scripts/file` is initially empty.
+- FIXED: Bug when updating a specific _xray-core_ version from the CLI.
+- FIXED: Made the `dnsmasq` config-update task synchronous.
+- FIXED: Complete rework of the `xhttp` transport ([#121](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/121)).
+- ADDED: Ability to update to **pre-release** and **draft** versions.
+- ADDED: **Enable DNS bypass (ipset)** — adds a `dnsmasq` + `ipset` layer in front of Xray; domains routed via `FREEDOM` are resolved into an ipset and hit an early `RETURN` rule, so the router handles them directly and Xray stays idle for that traffic.
+
 ## [0.48.5] - 2025-04-29
 
 - REMOVED: rules excluding `STUN` (WebRTC) traffic.

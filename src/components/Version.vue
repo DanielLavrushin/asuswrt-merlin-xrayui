@@ -55,12 +55,12 @@
       const refusedToUpdateVersion = ref(engine.getCookie(COOKIE_NAME));
 
       setTimeout(async () => {
-        const gh_releases_url = 'https://api.github.com/repos/daniellavrushin/asuswrt-merlin-xrayui/releases';
+        const gh_releases_url = 'https://api.github.com/repos/daniellavrushin/asuswrt-merlin-xrayui/releases/latest';
 
         const response = await axios.get(gh_releases_url);
-
-        if (response.data.length > 0) {
-          latest_version.value = vClean(response.data[0].tag_name)!;
+        const latestRelease = response.data;
+        if (latestRelease) {
+          latest_version.value = vClean(latestRelease.tag_name)!;
           hasUpdate.value = vCompare(latest_version.value, current_version.value) === 1;
           if (hasUpdate.value === true) {
             window.xray.server.xray_version_latest = latest_version.value;
@@ -69,7 +69,7 @@
             }
           }
 
-          changelog.value = md.render(response.data[0].body);
+          changelog.value = md.render(latestRelease.body);
         }
       }, 2000);
 

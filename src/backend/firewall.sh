@@ -77,12 +77,17 @@ configure_firewall() {
         log_debug "IPv6 enabled: no"
     fi
 
+    ipset list -n 2>/dev/null | grep -qx "$IPSEC_BYPASS_V4" || ipset create "$IPSEC_BYPASS_V4" hash:ip family inet timeout 86400
+    if is_ipv6_enabled; then
+        ipset list -n 2>/dev/null | grep -qx "$IPSEC_BYPASS_V6" || ipset create "$IPSEC_BYPASS_V6" hash:ip family inet6 timeout 86400
+    fi
+
     # Clamp TCP MSS to path-MTU for every forwarded SYN (v4 + v6)
     ipt mangle -C FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null ||
         ipt mangle -I FORWARD 1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 
     # create / flush chains (filter + mangle for both families)
-    for tbl in filter mangle; do
+    for tbl in filter mangle nat; do
         ipt "$tbl" -N XRAYUI 2>/dev/null || ipt "$tbl" -F XRAYUI
     done
 
@@ -212,9 +217,6 @@ configure_firewall_client() {
 
     log_info "Configuring aggregated $IPT_TYPE rules for dokodemo-door inbounds..."
 
-    local wan0_ip=$(nvram get wan0_realip_ip)
-    local wan1_ip=$(nvram get wan1_realip_ip)
-
     if [ "$IPT_TYPE" = "DIRECT" ]; then
         local IPT_TABLE="nat"
     else
@@ -258,6 +260,9 @@ configure_firewall_client() {
 
     # --- Begin Exclusion Rules ---
 
+    update_loading_progress "Configuring firewall Exclusion rules..."
+    log_info "Configuring firewall Exclusion rules..."
+
     local source_nets_v4 source_nets_v6 static_v6
     source_nets_v4=$(ip -4 route show scope link | awk '$1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/ {print $1}')
 
@@ -279,8 +284,14 @@ configure_firewall_client() {
         fi
     done
 
-    update_loading_progress "Configuring firewall Exclusion rules..."
-    log_info "Configuring firewall Exclusion rules..."
+    # IPSET FREEDOM eraly return rules
+    iptables -w -t "$IPT_TABLE" -C XRAYUI -m set --match-set "$IPSEC_BYPASS_V4" dst -j RETURN 2>/dev/null ||
+        iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set --match-set "$IPSEC_BYPASS_V4" dst -j RETURN
+
+    if is_ipv6_enabled && ipset list -n | grep -qx "$IPSEC_BYPASS_V6"; then
+        ip6tables -w -t "$IPT_TABLE" -C XRAYUI -m set --match-set "$IPSEC_BYPASS_V6" dst -j RETURN 2>/dev/null ||
+            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set --match-set "$IPSEC_BYPASS_V6" dst -j RETURN
+    fi
 
     # Exclude DHCP (UDP ports 67 and 68):
     ipt $IPT_BASE_FLAGS -p udp --dport 67 -j RETURN 2>/dev/null || log_error "Failed to add DHCP rule for UDP 67 in $IPT_TABLE."
@@ -308,14 +319,35 @@ configure_firewall_client() {
     # TPROXY excludes:
     if [ "$IPT_TYPE" = "TPROXY" ]; then
 
-        local wan_ip=$(nvram get wan0_realip_ip)
-        local via_routes=$(ip -4 route show | awk '$2=="via" && $1!="default" { print $1 }')
-        local static_routes=$(nvram get lan_route)
+        # Collect all WANx real-IP variables that actually contain an address
+        local wan_v4_list=""
+        for idx in 0 1 2 3; do
+            ip_val=$(nvram get "wan${idx}_realip_ip" 2>/dev/null)
+            [ -n "$ip_val" ] && wan_v4_list="$wan_v4_list $ip_val"
+        done
 
+        local wan_v6_list=""
+        if is_ipv6_enabled; then
+            for idx in 0 1 2 3; do
+                ifname="$(nvram get "wan${idx}_ifname")"
+                [ -z "$ifname" ] && continue
+                addrs=$(ip -6 addr show dev "$ifname" scope global |
+                    awk '{print $2}' | cut -d/ -f1)
+                wan_v6_list="$wan_v6_list $addrs"
+            done
+            wan_v6_list=$(printf '%s\n' $wan_v6_list | sort -u)
+        fi
+
+        local via_routes
+        via_routes=$(ip -4 route show | awk '$2=="via" && $1!="default" {print $1}')
+        local static_routes
+        static_routes=$(nvram get lan_route)
+
+        log_debug "TPROXY v4 exclude: $wan_v4_list ; v6 exclude: $wan_v6_list"
         # unified exclusion: WAN IP, any “via” routes, and your nvram static list
-        for dst in $wan_ip $via_routes $static_routes; do
+        for dst in $wan_v4_list $wan_v6_list $via_routes $static_routes; do
             log_debug "TPROXY: excluding $dst from $IPT_TABLE"
-            ipt $IPT_BASE_FLAGS -d "$dst" -j RETURN 2>/dev/null || log_error "Failed to exclude $dst from $IPT_TABLE."
+            ipt $IPT_BASE_FLAGS -d "$dst" -j RETURN 2>/dev/null || log_error "Failed to exclude $dst in $IPT_TABLE."
         done
     fi
 
@@ -607,6 +639,16 @@ set_route_localnet() {
 
         log_debug "route_localnet=$val, rp_filter=$(cat /proc/sys/net/ipv4/conf/$itf/rp_filter) on $itf"
     done
+}
+
+ensure_bypass_ipset() {
+    ipset list XRAYUI_BYPASS >/dev/null 2>&1 ||
+        ipset create XRAYUI_BYPASS hash:ip family inet hashsize 1024 maxelem 65536 timeout 86400
+
+    if is_ipv6_enabled; then
+        ipset list XRAYUI_BYPASS6 >/dev/null 2>&1 ||
+            ipset create XRAYUI_BYPASS6 hash:ip family inet6 hashsize 1024 maxelem 65536 timeout 86400
+    fi
 }
 
 split_ports() {

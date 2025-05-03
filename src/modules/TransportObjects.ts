@@ -60,13 +60,33 @@ export class XrayStreamWsSettingsObject implements ITransportNetwork {
 }
 
 export class XrayStreamHttpSettingsObject implements ITransportNetwork {
-  public host?: string[];
-  public path = '/';
-  public headers = {};
-  public read_idle_timeout?: number;
-  public health_check_timeout?: number;
-  public method = 'PUT';
-  normalize = () => void 0;
+  static modes = ['auto', 'stream-up', 'stream-one'];
+  public host?: string;
+  public path? = '/';
+  public mode? = 'auto';
+  public extra?: XrayXhttpExtraObject = new XrayXhttpExtraObject();
+
+  normalize = () => {
+    this.path = this.path === '/' ? undefined : this.path;
+    this.host = !this.host ? undefined : this.host;
+
+    this.extra?.normalize();
+  };
+}
+
+export class XrayXhttpExtraObject {
+  xPaddingBytes? = '100-1000';
+  noGRPCHeader? = false;
+  noSSEHeader? = false;
+  scMaxEachPostBytes? = 1000000;
+  scMinPostsIntervalMs? = 30;
+  scMaxBufferedPosts? = 30;
+  scStreamUpServerSecs? = '20-80';
+  xmux?: XrayXmuxObject = new XrayXmuxObject();
+
+  normalize = () => {
+    this.xmux = this.xmux?.normalize();
+  };
 }
 
 export class XrayStreamGrpcSettingsObject implements ITransportNetwork {

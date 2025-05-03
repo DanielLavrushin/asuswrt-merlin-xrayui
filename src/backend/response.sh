@@ -32,6 +32,7 @@ initial_response() {
     local logs_max_size="${logs_max_size:-10}"
     local skip_test="${skip_test:-false}"
     local clients_check="${clients_check:-false}"
+    local ipsec="${ipsec:-false}"
     local debug="${ADDON_DEBUG:-false}"
 
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg geoip "$geoip_date" --arg geosite "$geosite_date" --arg geoipurl "$geoipurl" --arg geositeurl "$geositeurl" \
@@ -66,6 +67,7 @@ initial_response() {
 
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson logs_dor "$logs_dor" '.xray.logs_dor = $logs_dor')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson logs_max_size "$logs_max_size" '.xray.logs_max_size = $logs_max_size')
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson ipsec "$ipsec" '.xray.ipsec = $ipsec')
 
     local XRAY_VERSION=$(xray version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1) || log_error "Error: Failed to get Xray version."
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg xray_ver "$XRAY_VERSION" --arg xrayui_ver "$XRAYUI_VERSION" '.xray.ui_version = $xrayui_ver | .xray.core_version = $xray_ver')

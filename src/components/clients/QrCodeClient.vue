@@ -10,10 +10,11 @@
   import Modal from '@main/Modal.vue';
   import QrcodeVue from 'qrcode.vue';
   import { XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject } from '@/modules/CommonObjects';
+  import XrayOptions from '@/modules/Options';
 
   interface Client {
     id: string;
-    flow: string;
+    flow?: string;
   }
 
   interface Proxy {
@@ -63,7 +64,7 @@
         };
 
         addQueryParam('security', security);
-        addQueryParam('flow', props.client.flow);
+        addQueryParam('flow', props.client.flow ?? XrayOptions.clientFlowOptions[1]);
         addQueryParam('type', 'tcp');
         if (security === 'reality' && p.streamSettings.realitySettings) {
           addQueryParam('sni', p.streamSettings.realitySettings.serverNames?.[0]!);

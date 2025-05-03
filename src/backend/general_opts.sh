@@ -23,6 +23,7 @@ apply_general_options() {
     local skip_test=$(echo "$genopts" | jq -r '.skip_test')
     local clients_check=$(echo "$genopts" | jq -r '.clients_check')
     local debug=$(echo "$genopts" | jq -r '.debug')
+    local ipsec=$(echo "$genopts" | jq -r '.ipsec')
 
     local geosite_url=$(echo "$genopts" | jq -r '.geo_site_url')
     local geoip_url=$(echo "$genopts" | jq -r '.geo_ip_url')
@@ -66,6 +67,7 @@ apply_general_options() {
     update_xrayui_config "geo_auto_update" "$geo_auto_update"
     update_xrayui_config "skip_test" "$skip_test"
     update_xrayui_config "clients_check" "$clients_check"
+    update_xrayui_config "ipsec" "$ipsec"
     update_xrayui_config "ADDON_DEBUG" "$debug"
 
     # Update the logrotate configuration with the new max size

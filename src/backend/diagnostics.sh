@@ -175,6 +175,17 @@ diagnostics_iptables() {
     log_info
 
     if is_ipv6_enabled; then
+
+        log_info $(diagnostics_hdr "ip6tables -t mangle -nvL PREROUTING:")
+        ip6tables -t mangle -nvL PREROUTING 2>&1
+        log_info "--------------------------------------------------------"
+        log_info
+
+        log_info $(diagnostics_hdr "ip6tables -t nat -nvL XRAYUI:")
+        ip6tables -t nat -nvL XRAYUI 2>&1
+        log_info "--------------------------------------------------------"
+        log_info
+
         log_info $(diagnostics_hdr "ip6tables -t filter -nvL XRAYUI:")
         ip6tables -t filter -nvL XRAYUI 2>&1
         log_info "--------------------------------------------------------"
@@ -182,6 +193,11 @@ diagnostics_iptables() {
 
         log_info $(diagnostics_hdr "ip6tables -t mangle -nvL XRAYUI:")
         ip6tables -t mangle -nvL XRAYUI 2>&1
+        log_info "--------------------------------------------------------"
+        log_info
+
+        log_info $(diagnostics_hdr "ip6tables -t mangle -L XRAYUI --line-numbers:")
+        ip6tables -t mangle -L XRAYUI --line-numbers 2>&1
         log_info "--------------------------------------------------------"
         log_info
     fi

@@ -61,7 +61,10 @@
       Qr
     },
     props: {
-      proxy: Object,
+      proxy: {
+        type: Object as () => any,
+        required: true
+      },
       clients: Array<XrayVlessClientObject>,
       mode: String
     },
@@ -99,11 +102,8 @@
         let client = new XrayVlessClientObject();
         client.id = newClient.value.id;
         client.email = newClient.value.email;
-        client.flow = newClient.value.flow;
-        if (!client.email) {
-          alert('Email is required');
-          return;
-        }
+        client.flow = newClient.value.flow || XrayOptions.clientFlowOptions[0];
+
         if (!client.id) {
           alert('Id is required');
           return;
@@ -120,7 +120,7 @@
       const editClient = (client: XrayVlessClientObject, index: number) => {
         newClient.value.id = client.id;
         newClient.value.email = client.email;
-        newClient.value.flow = client.flow;
+        newClient.value.flow = client.flow || XrayOptions.clientFlowOptions[0];
         editingIndex.value = index;
         clients.value.splice(clients.value.indexOf(client), 1);
       };

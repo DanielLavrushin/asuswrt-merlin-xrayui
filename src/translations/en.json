@@ -74,7 +74,9 @@
       "hint_skip_test": "If you don't want to validate the XRAY configuration file, you can skip this step. However, it's recommended to keep it enabled to ensure the configuration file is valid.<hr/>The test step can consume some resources, so it may be advisable to disable it if you're using a low-performance router.",
       "label_clients_check": "Check clients online status",
       "hint_clients_check": "If you enable this option, XRAYUI will check the connected clients online status.<hr/>This option is useful for keeping track of which clients are currently connected to the xray.<hr/> However, it may consume some resources, so it may be advisable to disable it if you're using a low-performance router.",
-      "label_enable_debug": "Enable debug logs"
+      "label_enable_debug": "Enable debug logs",
+      "label_ipsec": "Enable DNS bypass (ipset)",
+      "hint_ipsec": "When enabled, Xray-UI scans every routing rule that exits through the `FREEDOM` outbound, collects the direct host or `geosite:` lists, and feeds them to `dnsmasq`.  Dnsmasq pushes the resolved IPs into the `ipset` rules, and an early `RETURN` rule in the `XRAYUI` chain lets the router kernel forward those packets directly, without waking Xray.  Use this to off-load big CDNs (e.g. YouTube, Steam) to the router and keep Xray’s connection table small."
     },
     "ImportConfig": {
       "import_config_file": "Import config file"

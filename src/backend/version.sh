@@ -13,6 +13,13 @@ switch_xray_version() {
 
     local xray_version="$1"
 
+    if [ -n "$xray_version" ] && [ "$xray_version" != "latest" ]; then
+        case $xray_version in
+        v*) : ;;
+        *) xray_version="v$xray_version" ;;
+        esac
+    fi
+
     if [ -z "$xray_version" ]; then
 
         log_info "Switching Xray version with url from payload"

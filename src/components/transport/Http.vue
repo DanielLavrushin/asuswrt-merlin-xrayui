@@ -1,54 +1,121 @@
 <template>
   <tbody v-if="transport.xhttpSettings">
     <tr>
-      <th>HTTP request method</th>
+      <th>CDN Host / Virtual Host</th>
       <td>
-        <select class="input_option" v-model="transport.xhttpSettings.method">
-          <option v-for="opt in methods" :key="opt" :value="opt">
+        <input type="text" class="input_20_table" v-model="transport.xhttpSettings.host" />
+      </td>
+    </tr>
+    <tr>
+      <th>Transfer Mode</th>
+      <td>
+        <select class="input_option" v-model="transport.xhttpSettings.mode">
+          <option v-for="opt in modes" :key="opt" :value="opt">
             {{ opt }}
           </option>
         </select>
-        <span class="hint-color">default: PUT</span>
+        <span class="hint-color">default: auto</span>
       </td>
     </tr>
     <tr>
-      <th>Domain Names</th>
+      <th>Request Path</th>
       <td>
-        <div class="textarea-wrapper">
-          <textarea v-model="hosts" rows="25"></textarea>
-        </div>
+        <input type="text" class="input_20_table" v-model="transport.xhttpSettings.path" />
       </td>
     </tr>
     <tr>
-      <th>The HTTP path</th>
+      <th>Header-padding bytes (range)</th>
       <td>
-        <input type="text" maxlength="15" class="input_20_table" v-model="transport.xhttpSettings.path" />
-        <span class="hint-color"></span>
+        <input type="text" placeholder="100-1000" class="input_20_table" v-model="extra.xPaddingBytes" />
+      </td>
+    </tr>
+
+    <tr>
+      <th>Disable gRPC disguise</th>
+      <td><input type="checkbox" v-model="extra.noGRPCHeader" /></td>
+    </tr>
+
+    <tr>
+      <th>Disable SSE disguise</th>
+      <td><input type="checkbox" v-model="extra.noSSEHeader" /></td>
+    </tr>
+
+    <tr>
+      <th>Max POST size (bytes)</th>
+      <td>
+        <input type="number" min="1" class="input_20_table" v-model.number="extra.scMaxEachPostBytes" />
+      </td>
+    </tr>
+
+    <tr>
+      <th>Min interval between POSTs (ms)</th>
+      <td>
+        <input type="number" min="0" class="input_20_table" v-model.number="extra.scMinPostsIntervalMs" />
+      </td>
+    </tr>
+
+    <tr>
+      <th>Max buffered POSTs (server)</th>
+      <td>
+        <input type="number" min="1" class="input_20_table" v-model.number="extra.scMaxBufferedPosts" />
+      </td>
+    </tr>
+
+    <tr>
+      <th>Keep-alive interval for stream-up (s)</th>
+      <td>
+        <input type="text" placeholder="20-80" class="input_20_table" v-model="extra.scStreamUpServerSecs" />
       </td>
     </tr>
     <tr>
-      <th>The connection health check</th>
+      <th>XMUX · Max concurrent streams</th>
       <td>
-        <input type="number" maxlength="4" class="input_6_table" v-model="transport.xhttpSettings.read_idle_timeout" onkeypress="return validator.isNumber(this,event);" />
-        <span class="hint-color">default: unset</span>
+        <input type="text" placeholder="16-32" class="input_20_table" v-model="xmux.maxConcurrency" />
       </td>
     </tr>
+
     <tr>
-      <th>The timeout for the health check</th>
+      <th>XMUX · Max base connections</th>
       <td>
-        <input type="number" maxlength="4" class="input_6_table" v-model="transport.xhttpSettings.health_check_timeout" onkeypress="return validator.isNumber(this,event);" />
-        <span class="hint-color">default: 15</span>
+        <input type="number" min="0" class="input_20_table" v-model.number="xmux.maxConnections" />
       </td>
     </tr>
-    <headers-mapping :headersMap="transport.xhttpSettings.headers" @on:header:update="onheaderapupdate" />
+
+    <tr>
+      <th>XMUX · Max reuses per connection</th>
+      <td>
+        <input type="number" min="0" class="input_20_table" v-model.number="xmux.cMaxReuseTimes" />
+      </td>
+    </tr>
+
+    <tr>
+      <th>XMUX · Max HTTP requests per connection</th>
+      <td>
+        <input type="text" placeholder="600-900" class="input_20_table" v-model="xmux.hMaxRequestTimes" />
+      </td>
+    </tr>
+
+    <tr>
+      <th>XMUX · Max connection age (s)</th>
+      <td>
+        <input type="text" placeholder="1800-3000" class="input_20_table" v-model="xmux.hMaxReusableSecs" />
+      </td>
+    </tr>
+
+    <tr>
+      <th>XMUX · Keep-alive period (s)</th>
+      <td>
+        <input type="number" min="-1" class="input_20_table" v-model.number="xmux.hKeepAlivePeriod" />
+      </td>
+    </tr>
   </tbody>
 </template>
-
 <script lang="ts">
-  import { defineComponent, ref, watch } from 'vue';
-  import { XrayStreamSettingsObject } from '@/modules/CommonObjects';
+  import { computed, defineComponent, ref, watch } from 'vue';
+  import { XrayStreamSettingsObject, XrayXmuxObject } from '@/modules/CommonObjects';
   import { XrayOptions } from '@/modules/Options';
   import HeadersMapping from './HeadersMapping.vue';
+  import { XrayStreamHttpSettingsObject, XrayXhttpExtraObject } from '@/modules/TransportObjects';
 
   export default defineComponent({
     name: 'Http',
@@ -60,21 +127,16 @@
     },
     setup(props) {
       const transport = ref<XrayStreamSettingsObject>(props.transport ?? new XrayStreamSettingsObject());
-      const hosts = ref<string>(transport.value.xhttpSettings?.host?.join('\n') ?? '');
-      const onheaderapupdate = (headers: any) => {
-        if (transport.value.xhttpSettings) transport.value.xhttpSettings.headers = headers;
-      };
-      watch(
-        () => hosts.value,
-        (newObj) => {
-          if (newObj && transport.value.xhttpSettings) {
-            transport.value.xhttpSettings.host = newObj.split('\n').filter((x) => x);
-          }
-        },
-        { immediate: true }
-      );
+      const extra = computed(() => transport.value.xhttpSettings!.extra ?? (transport.value.xhttpSettings!.extra = new XrayXhttpExtraObject()));
+      const xmux = computed(() => extra.value.xmux ?? (extra.value.xmux = new XrayXmuxObject()));
 
-      return { transport, methods: XrayOptions.httpMethods, hosts, onheaderapupdate };
+      return {
+        transport,
+        modes: XrayStreamHttpSettingsObject.modes,
+        methods: XrayOptions.httpMethods,
+        extra,
+        xmux
+      };
     }
   });
 </script>

@@ -54,6 +54,7 @@ install() {
     install_opkg_package libopenssl false
     install_opkg_package flock false
     install_opkg_package logrotate false
+    install_opkg_package ipset false
 
     if which xray >/dev/null 2>&1; then
         log_info "Xray is already installed. Skipping xray-core installation."
@@ -101,7 +102,7 @@ EOF
     setup_script_file "/jffs/scripts/service-event" "echo \"\$2\" | grep -q \"^xrayui\" && /jffs/scripts/xrayui service_event \$(echo \"\$2\" | cut -d'_' -f2- | tr '_' ' ') & #xrayui"
 
     # Add or update dnsmasq.postconf
-    setup_script_file "/jffs/scripts/dnsmasq.postconf" "/jffs/scripts/xrayui dnsmasq \"\$1\" & #xrayui"
+    setup_script_file "/jffs/scripts/dnsmasq.postconf" "/jffs/scripts/xrayui dnsmasq \"\$1\" #xrayui"
 
     log_info "Mounting web page..."
     remount_ui "skipwait"
@@ -133,6 +134,18 @@ EOF
         chmod +x "$ADDON_SHARE_DIR/xraydatbuilder" || log_error "Failed to make xraydatbuilder executable."
     else
         log_error "Failed to download XRAYUI geodata files builder."
+    fi
+
+    # Install and setup v2dat (reverse geofile data extractor)
+    log_info "Installing v2dat (reverse geofile data extractor)..."
+    update_loading_progress "Downloading v2dat..."
+    local v2dat_url=$(github_proxy_url "https://github.com/DanielLavrushin/v2dat/releases/latest/download/v2dat.tar.gz")
+    if wget -q --show-progress --no-hsts -O "/tmp/v2dat.tar.gz" "$v2dat_url"; then
+        tar -xzf /tmp/v2dat.tar.gz -C "$ADDON_SHARE_DIR" || log_error "Failed to extract v2dat.tar.gz."
+        rm -f /tmp/v2dat.tar.gz || log_error "Failed to remove v2dat.tar.gz."
+        chmod +x "$ADDON_SHARE_DIR/v2dat" || log_error "Failed to make v2dat executable."
+    else
+        log_error "Failed to download v2dat."
     fi
 
     # setup logrotate
@@ -307,12 +320,25 @@ setup_script_file() {
 
     local script_file="$1"
     local command_entry="$2"
-    log_info "Ensuring $script_file contains required entry..."
 
     log_debug "Scritpt file: $script_file"
     log_debug "Command entry: $command_entry"
 
-    echo "$command_entry" >>"$script_file" || log_error "Failed to add entry to $script_file."
+    if [ ! -f "$script_file" ]; then
+        printf '#!/bin/sh\n\n' >"$script_file"
+    else
+        if ! head -n1 "$script_file" | grep -qx '#!/bin/sh'; then
+            log_error "$script_file is missing the she-bang (#!/bin/sh)"
+        fi
+    fi
+
+    if ! grep -Fqx -- "$command_entry" "$script_file"; then
+        echo "$command_entry" >>"$script_file" || {
+            log_error "Failed to add command entry to $script_file"
+            return 1
+        }
+    fi
+
     chmod +x "$script_file"
     log_info "Updated $script_file with $ADDON_TITLE command entry."
 }

@@ -4,9 +4,20 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Release version"
+        description: 'Release version'
         required: true
-        default: "0.1"
+        default: '0.1'
+      draft:
+        description: 'Save the release as a draft first?'
+        required: false
+        default: false
+        type: boolean
+
+      prerelease:
+        description: 'Mark this build as a pre-release?'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -77,9 +88,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: v${{ github.event.inputs.version }}
-          release_name: "Release ${{ github.event.inputs.version }}"
-          draft: false
-          prerelease: false
+          release_name: 'Release ${{ github.event.inputs.version }}'
+          draft: ${{ github.event.inputs.draft == 'true' }}
+          prerelease: ${{ github.event.inputs.prerelease == 'true' }}
           body: ${{ env.changelog }}
 
       - name: Upload Release Asset

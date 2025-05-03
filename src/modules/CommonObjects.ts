@@ -41,10 +41,27 @@ export class XrayHeaderResponseObject {
 }
 
 export class XrayXmuxObject {
-  public maxConcurrency = 0;
-  public maxConnections = 0;
-  public cMaxReuseTimes = 0;
-  public cMaxLifetimeMs = 0;
+  maxConcurrency? = '16-32';
+  maxConnections? = 0;
+  cMaxReuseTimes? = 0;
+  hMaxRequestTimes? = '600-900';
+  hMaxReusableSecs? = '1800-3000';
+  hKeepAlivePeriod? = 0;
+
+  normalize = (): XrayXmuxObject | undefined => {
+    const defModel = new XrayXmuxObject();
+    this.maxConcurrency = this.maxConcurrency === defModel.maxConcurrency ? undefined : this.maxConcurrency;
+    this.maxConnections = this.maxConnections === 0 ? undefined : this.maxConnections;
+    this.cMaxReuseTimes = this.cMaxReuseTimes === 0 ? undefined : this.cMaxReuseTimes;
+    this.hMaxRequestTimes = this.hMaxRequestTimes === defModel.hMaxReusableSecs ? undefined : this.hMaxRequestTimes;
+    this.hMaxReusableSecs = this.hMaxReusableSecs === defModel.hMaxReusableSecs ? undefined : this.hMaxReusableSecs;
+    this.hKeepAlivePeriod = this.hKeepAlivePeriod === 0 ? undefined : this.hKeepAlivePeriod;
+
+    if (this.maxConcurrency == undefined && this.maxConnections == undefined && this.cMaxReuseTimes == undefined && this.hMaxRequestTimes == undefined && this.hMaxReusableSecs == undefined && this.hKeepAlivePeriod == undefined) {
+      return undefined;
+    }
+    return this;
+  };
 }
 
 export class XrayAllocateObject {

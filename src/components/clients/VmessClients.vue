@@ -48,7 +48,6 @@
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
   import engine from '@/modules/Engine';
-  import xrayConfig from '@/modules/XrayConfig';
   import { XrayVmessClientObject } from '@/modules/ClientsObjects';
   import Qr from './QrCodeClient.vue';
 
@@ -77,10 +76,7 @@
         client.id = this.newClient.id;
         client.email = this.newClient.email;
         client.security = this.newClient.security;
-        if (!client.email) {
-          alert('Email is required');
-          return;
-        }
+
         if (!client.id) {
           alert('Id is required');
           return;
@@ -90,7 +86,10 @@
       }
     },
     props: {
-      proxy: Object,
+      proxy: {
+        type: Object as () => any,
+        required: true
+      },
       clients: Array<XrayVmessClientObject>,
       mode: String
     },
@@ -149,7 +148,6 @@
       };
 
       return {
-        proxy: props.proxy,
         securities: mode.value == 'outbound' ? ['aes-128-gcm', 'chacha20-poly1305', 'auto', 'none', 'zero'] : [],
         span,
         clients,

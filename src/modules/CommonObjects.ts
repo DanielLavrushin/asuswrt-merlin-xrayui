@@ -53,7 +53,7 @@ export class XrayXmuxObject {
     this.maxConcurrency = this.maxConcurrency === defModel.maxConcurrency ? undefined : this.maxConcurrency;
     this.maxConnections = this.maxConnections === 0 ? undefined : this.maxConnections;
     this.cMaxReuseTimes = this.cMaxReuseTimes === 0 ? undefined : this.cMaxReuseTimes;
-    this.hMaxRequestTimes = this.hMaxRequestTimes === defModel.hMaxReusableSecs ? undefined : this.hMaxRequestTimes;
+    this.hMaxRequestTimes = this.hMaxRequestTimes === defModel.hMaxRequestTimes ? undefined : this.hMaxRequestTimes;
     this.hMaxReusableSecs = this.hMaxReusableSecs === defModel.hMaxReusableSecs ? undefined : this.hMaxReusableSecs;
     this.hKeepAlivePeriod = this.hKeepAlivePeriod === 0 ? undefined : this.hKeepAlivePeriod;
 

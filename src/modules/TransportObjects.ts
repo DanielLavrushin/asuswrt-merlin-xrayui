@@ -70,7 +70,7 @@ export class XrayStreamHttpSettingsObject implements ITransportNetwork {
     this.path = this.path === '/' ? undefined : this.path;
     this.host = !this.host ? undefined : this.host;
 
-    this.extra?.normalize?.();
+    this.extra?.normalize();
   };
 }
 
@@ -85,7 +85,7 @@ export class XrayXhttpExtraObject {
   xmux?: XrayXmuxObject = new XrayXmuxObject();
 
   normalize = () => {
-    this.xmux = this.xmux?.normalize?.();
+    this.xmux = this.xmux?.normalize();
   };
 }
 

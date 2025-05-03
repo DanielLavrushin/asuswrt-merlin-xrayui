@@ -48,7 +48,7 @@ export class XrayXmuxObject {
   hMaxReusableSecs? = '1800-3000';
   hKeepAlivePeriod? = 0;
 
-  normalize = (): XrayXmuxObject | undefined => {
+  normalize = (): this | undefined => {
     const defModel = new XrayXmuxObject();
     this.maxConcurrency = this.maxConcurrency === defModel.maxConcurrency ? undefined : this.maxConcurrency;
     this.maxConnections = this.maxConnections === 0 ? undefined : this.maxConnections;

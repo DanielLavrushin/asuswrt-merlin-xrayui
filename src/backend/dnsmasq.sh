@@ -9,6 +9,13 @@ dnsmasq_configure() {
 
     log_debug "Configuring dnsmasq..."
 
+    # Check if 'xray' process is running
+    local xray_pid=$(get_proc "xray")
+    if [ -z "$xray_pid" ]; then
+        log_warn "Xray process not found. Skipping client firewall configuration."
+        return
+    fi
+
     log_debug "config: $CONFIG"
     log_debug "XRAY_CONFIG_FILE: $XRAY_CONFIG_FILE"
     log_debug "dnsmasq flag: $dnsmasq"
@@ -160,4 +167,11 @@ dnsmasq_domain_to_ipset_bulk() {
             printf 'ipset=/%s/%s\n' "$d" "$set_v4"
         done >&3
     fi
+}
+
+dnsmasq_restart() {
+    log_info "Restarting dnsmasq"
+    update_loading_progress "Restarting dnsmasq..."
+
+    { service restart_dnsmasq >/dev/null 2>&1 && log_ok "DNS service restarted successfully."; } || log_error "Failed to restart DNS service."
 }

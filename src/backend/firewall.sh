@@ -519,6 +519,10 @@ configure_firewall_client() {
         ipt "$IPT_TABLE" -A PREROUTING -j XRAYUI
     fi
 
+    if [ "$POST_RESTART_DNSMASQ" = "false" ]; then
+        dnsmasq_restart
+    fi
+
     log_ok "$IPT_TYPE rules applied."
 }
 
@@ -586,8 +590,9 @@ cleanup_firewall() {
     { service restart_firewall >/dev/null 2>&1 && log_ok "Firewall service restarted successfully."; } ||
         log_error "Failed to restart firewall service."
 
-    { service restart_dnsmasq >/dev/null 2>&1 && log_ok "DNS service restarted successfully."; } ||
-        log_error "Failed to restart DNS service."
+    if [ "$POST_RESTART_DNSMASQ" = "false" ]; then
+        dnsmasq_restart
+    fi
 
     log_ok "Xray Client firewall rules cleaned up successfully."
 }

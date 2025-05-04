@@ -63,7 +63,16 @@ stop() {
 
 restart() {
     log_info "Restarting $ADDON_TITLE"
+
+    POST_RESTART_DNSMASQ="true"
+
     stop
     sleep 4
     start
+
+    if [ "$POST_RESTART_DNSMASQ" = "true" ]; then
+        dnsmasq_restart
+    fi
+
+    POST_RESTART_DNSMASQ="false"
 }

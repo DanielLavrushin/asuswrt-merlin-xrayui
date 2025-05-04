@@ -1,5 +1,9 @@
 # XRAYUI Changelog
 
+## [0.49.2] - 2025-05-04
+
+- FIXED: Ensure xray proc is running to apply heavy `bypass`/`redirect` ipsec configurations during the `dnsmasq` restarts.
+
 ## [0.49.1] - 2025-05-04
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

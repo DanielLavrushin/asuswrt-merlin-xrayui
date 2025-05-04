@@ -76,7 +76,7 @@
       "hint_clients_check": "If you enable this option, XRAYUI will check the connected clients online status.<hr/>This option is useful for keeping track of which clients are currently connected to the xray.<hr/> However, it may consume some resources, so it may be advisable to disable it if you're using a low-performance router.",
       "label_enable_debug": "Enable debug logs",
       "label_ipsec": "Enable DNS bypass (ipset)",
-      "hint_ipsec": "When enabled, Xray-UI scans every routing rule that exits through the `FREEDOM` outbound, collects the direct host or `geosite:` lists, and feeds them to `dnsmasq`.  Dnsmasq pushes the resolved IPs into the `ipset` rules, and an early `RETURN` rule in the `XRAYUI` chain lets the router kernel forward those packets directly, without waking Xray.  Use this to off-load big CDNs (e.g. YouTube, Steam) to the router and keep Xray’s connection table small."
+      "hint_ipsec": "*OFF* - turns off the DNS → ipset feature; routing behaves exactly as if the option didn’t exist.<hr />*BYPASS* - domains you mapped to the `FREEDOM` outbound go straight to the internet, skipping Xray; every other domain is still proxied.<hr/>*REDIRECT* – the inverse: only domains not mapped to `FREEDOM` are proxied; all other traffic leaves the router directly.<blockquote>Important: `regexp`-based domains can’t be pushed into an ipset, so they’re ignored here.</blockquote>"
     },
     "ImportConfig": {
       "import_config_file": "Import config file"

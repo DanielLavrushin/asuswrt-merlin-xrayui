@@ -78,8 +78,10 @@ configure_firewall() {
     fi
 
     ipset list -n 2>/dev/null | grep -qx "$IPSEC_BYPASS_V4" || ipset create "$IPSEC_BYPASS_V4" hash:ip family inet timeout 86400
+    ipset list -n 2>/dev/null | grep -qx "$IPSEC_PROXY_V4" || ipset create "$IPSEC_PROXY_V4" hash:ip family inet timeout 86400
     if is_ipv6_enabled; then
         ipset list -n 2>/dev/null | grep -qx "$IPSEC_BYPASS_V6" || ipset create "$IPSEC_BYPASS_V6" hash:ip family inet6 timeout 86400
+        ipset list -n 2>/dev/null | grep -qx "$IPSEC_PROXY_V6" || ipset create "$IPSEC_PROXY_V6" hash:ip family inet6 timeout 86400
     fi
 
     # Clamp TCP MSS to path-MTU for every forwarded SYN (v4 + v6)
@@ -293,6 +295,16 @@ configure_firewall_client() {
             ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set --match-set "$IPSEC_BYPASS_V6" dst -j RETURN
     fi
 
+    if [ "$ipsec" = "redirect" ]; then
+        iptables -w -t "$IPT_TABLE" -C XRAYUI -m set ! --match-set "$IPSEC_PROXY_V4" dst -j RETURN 2>/dev/null ||
+            iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set ! --match-set "$IPSEC_PROXY_V4" dst -j RETURN
+
+        if is_ipv6_enabled && ipset list -n | grep -qx "$IPSEC_PROXY_V6"; then
+            ip6tables -w -t "$IPT_TABLE" -C XRAYUI -m set ! --match-set "$IPSEC_PROXY_V6" dst -j RETURN 2>/dev/null ||
+                ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set ! --match-set "$IPSEC_PROXY_V6" dst -j RETURN
+        fi
+    fi
+
     # Exclude DHCP (UDP ports 67 and 68):
     ipt $IPT_BASE_FLAGS -p udp --dport 67 -j RETURN 2>/dev/null || log_error "Failed to add DHCP rule for UDP 67 in $IPT_TABLE."
     ipt $IPT_BASE_FLAGS -p udp --dport 68 -j RETURN 2>/dev/null || log_error "Failed to add DHCP rule for UDP 68 in $IPT_TABLE."
@@ -384,6 +396,7 @@ configure_firewall_client() {
             else
                 local IPT_JOURNAL_FLAGS="-j TPROXY --on-port $dokodemo_port --tproxy-mark $tproxy_mark/$tproxy_mask"
             fi
+
             log_debug "TPROXY  inbound address: $dokodemo_addr:$dokodemo_port"
         else
             if [ "$dokodemo_addr" != "0.0.0.0" ]; then
@@ -489,6 +502,7 @@ configure_firewall_client() {
             done
         done
     done
+
     # --- End Exclusion Rules ---
 
     if [ "$IPT_TYPE" = "TPROXY" ]; then
@@ -580,6 +594,7 @@ cleanup_firewall() {
 
 add_tproxy_routes() { # $1 = fwmark, $2 = table
     local mark="$1" tbl="$2" fam
+
     for fam in -4 -6; do
         # Skip IPv6 loop if the stack is disabled
         [ "$fam" = "-6" ] && ! is_ipv6_enabled && continue

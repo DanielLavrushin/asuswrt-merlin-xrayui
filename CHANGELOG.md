@@ -1,5 +1,12 @@
 # XRAYUI Changelog
 
+## [0.49.1] - 2025-05-04
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- IMPROVED: `DNS → ipset` engine updated with a clear three-mode switch. Modes `off`, `bypass`, and `redirect` provide, respectively, no ipset handling, whitelist-style bypassing, or smart-proxy redirection. Early-return and TPROXY rules are generated dynamically, ensuring that only traffic matching the selected mode is processed by Xray.
+- IMPROVED: The process that generates the `dnsmasq` configuration and populates it with domain entries now completes significantly faster, reducing overall dnsmasq service restart time.
+
 ## [0.49.0] - 2025-05-04
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

@@ -85,9 +85,9 @@
               <hint v-html="$t('com.GeneralOptionsModal.hint_ipsec')"></hint>
             </th>
             <td>
-              <label class="go-option">
-                <input type="checkbox" v-model="options.ipsec" />
-              </label>
+              <select class="input_option" v-model="options.ipsec">
+                <option v-for="opt in ipsec_options" :value="opt">{{ opt }}</option>
+              </select>
             </td>
           </tr>
           <tr>
@@ -225,7 +225,7 @@
     public logs_dor = false;
     public skip_test = false;
     public clients_check = false;
-    public ipsec = false;
+    public ipsec = 'off';
     public logs_max_size = 10;
     public logs_level = 'warning';
     public geo_ip_url = '';
@@ -330,7 +330,7 @@
         options.value.skip_test = uiResponse?.value.xray?.skip_test ?? false;
         options.value.clients_check = uiResponse?.value.xray?.clients_check ?? false;
         options.value.debug = uiResponse?.value.xray?.debug ?? false;
-        options.value.ipsec = uiResponse?.value.xray?.ipsec ?? false;
+        options.value.ipsec = uiResponse?.value.xray?.ipsec ?? 'off';
         modal.value.show();
       };
 
@@ -404,6 +404,7 @@
         selected_wellknown,
         gh_proxies,
         log_levels: ['none', 'debug', 'info', 'warning', 'error'],
+        ipsec_options: ['off', 'bypass', 'redirect'],
         show,
         save,
         setwellknown,

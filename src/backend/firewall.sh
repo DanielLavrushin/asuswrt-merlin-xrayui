@@ -334,9 +334,13 @@ configure_firewall_client() {
         # Collect all WANx real-IP variables that actually contain an address
         local wan_v4_list=""
         for idx in 0 1 2 3; do
-            ip_val=$(nvram get "wan${idx}_realip_ip" 2>/dev/null)
-            [ -n "$ip_val" ] && wan_v4_list="$wan_v4_list $ip_val"
+            ip_val="$(nvram get "wan${idx}_realip_ip" 2>/dev/null)"
+            [ -z "$ip_val" ] && ip_val="$(nvram get "wan${idx}_ipaddr" 2>/dev/null)"
+            if echo "$ip_val" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'; then
+                wan_v4_list="$wan_v4_list $ip_val"
+            fi
         done
+        wan_v4_list=$(printf '%s\n' $wan_v4_list | sort -u)
 
         local wan_v6_list=""
         if is_ipv6_enabled; then

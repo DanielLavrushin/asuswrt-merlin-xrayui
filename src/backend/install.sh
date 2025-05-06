@@ -82,12 +82,6 @@ EOF
 
     generate_xray_config
 
-    # backup config
-    local timestamp=$(date +%Y%m%d-%H%M%S)
-    local backup_config="/opt/etc/xray/$(basename $XRAY_CONFIG_FILE).$timestamp.bak"
-    log_info "Backing up $XRAY_CONFIG_FILE to $backup_config"
-    cp -f "$XRAY_CONFIG_FILE" "$backup_config"
-
     update_loading_progress "Configuring XRAY UI..."
 
     clear_script_entries

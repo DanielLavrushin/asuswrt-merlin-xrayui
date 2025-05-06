@@ -136,3 +136,28 @@ backup_restore_configuration() {
     log_ok "Restore completed successfully from $backup_file."
 
 }
+
+backup_xray_config() {
+
+    log_info "Starting backup xray configuration $XRAY_CONFIG_FILE..."
+
+    local timestamp=$(date +%Y%m%d-%H%M%S)
+    local base_cfg=$(basename "$XRAY_CONFIG_FILE")
+    local backup_dir=/opt/etc/xray
+    local backup_file="${backup_dir}/${base_cfg}.${timestamp}.bak"
+
+    log_info "Backing up $XRAY_CONFIG_FILE to $backup_file"
+    cp -f "$XRAY_CONFIG_FILE" "$backup_file"
+
+    local keep=3
+    set -- "${backup_dir}/${base_cfg}".*.bak
+    [ -e "$1" ] || return 0
+
+    ls -1t "${backup_dir}/${base_cfg}".*.bak 2>/dev/null |
+        tail -n +"$((keep + 1))" |
+        while IFS= read -r old; do
+            rm -f -- "$old"
+            log_debug "Removed old backup $old"
+        done
+
+}

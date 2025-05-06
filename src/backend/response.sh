@@ -107,7 +107,7 @@ apply_config() {
     load_xrayui_config
 
     local temp_config="/tmp/xray_server_config_new.json"
-    local backup_config="/opt/etc/xray/config.json-temp.bak"
+    local backup_config="/opt/etc/xray/$(basename $XRAY_CONFIG_FILE)-temp.bak"
 
     local incoming_config=$(reconstruct_payload)
 
@@ -135,6 +135,7 @@ apply_config() {
     fi
 
     log_info "Applying new server configuration to $XRAY_CONFIG_FILE..."
+    backup_xray_config
     cp "$XRAY_CONFIG_FILE" "$backup_config"
     if [ $? -ne 0 ]; then
         log_error "Failed to backup existing configuration to $backup_config."

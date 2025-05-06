@@ -1,5 +1,13 @@
 # XRAYUI Changelog
 
+## [0.49.3] - 2025-05-06
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- IMPROVED: Settings page could fail to open when hidden formatting codes were present in the stored data. These codes are now removed before the page processes the information, ensuring reliable loading.
+- IMPROVED: Backup configuration file on saving. Now XRAYUI stores 3 last backups in the `/opt/etc/xray/` directory. Just in case :).
+- FIXED: Secondary WAN IPv4 addresses are now detected correctly, even on firmware versions that store them under the older wanX_ipaddr variable. This ensures both WAN links are taken into account when creating exclusion rules for the firewall.
+
 ## [0.49.2] - 2025-05-04
 
 - FIXED: Ensure xray proc is running to apply heavy `bypass`/`redirect` ipsec configurations during the `dnsmasq` restarts.

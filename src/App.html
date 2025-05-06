@@ -22,7 +22,10 @@
     <script language="JavaScript" type="text/javascript" src="/help.js"></script>
     <script language="JavaScript" type="text/javascript" src="/validator.js"></script>
     <script>
-      let custom_settings = JSON.parse(`<% get_custom_settings(); %>`);
+      const custom_settings_raw = '<% get_custom_settings(); %>';
+      const stripAnsi = /\u001b\[[0-9;]*m/g;
+      const stripControls = /[\u0000-\u001F]+/g;
+      const custom_settings = JSON.parse(custom_settings_raw.replace(stripAnsi, '').replace(stripControls, ''));
 
       var xray = {
         router: {

@@ -1,5 +1,9 @@
 # XRAYUI Changelog
 
+## [0.49.4] - 2025-05-07
+
+- IMPROVED: Removed explicit restart of the `firewall` and `dnsmasq` services.
+
 ## [0.49.3] - 2025-05-06
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

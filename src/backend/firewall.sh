@@ -561,7 +561,7 @@ cleanup_firewall() {
         [ "$fam" = "-6" ] && ! is_ipv6_enabled && continue
         for m in 0x10000/0x10000 0x8777 0x77; do
             while ip $fam rule show | grep -q "fwmark $tproxy_mark"; do
-                ip $fam rule del fwmark $tproxy_mark/$tproxy_mask lookup $tproxy_table 2>/dev/null
+                ip $fam rule del lookup $tproxy_table 2>/dev/null
             done
         done
     done
@@ -587,12 +587,6 @@ cleanup_firewall() {
         log_info "Executing user firewall script: $script"
         "$script" "$XRAY_CONFIG_FILE" || log_error "Error executing $script."
     fi
-
-    log_info "Restarting firewall and DNS services..."
-    update_loading_progress "Restarting firewall and DNS services..."
-
-    { service restart_firewall >/dev/null 2>&1 && log_ok "Firewall service restarted successfully."; } ||
-        log_error "Failed to restart firewall service."
 
     if [ "$POST_RESTART_DNSMASQ" = "false" ]; then
         dnsmasq_restart

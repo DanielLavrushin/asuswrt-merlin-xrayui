@@ -30,21 +30,26 @@
                             <div class="formfontdesc">
                               <div>&nbsp;</div>
                               <div class="formfonttitle" style="text-align: left">X-RAY UI v{{ version }}</div>
+                              <div class="mode-group">
+                                <div @click="set_mode('simple')" :class="{ active: mode === 'simple' }">simple</div>
+                                <div @click="set_mode('advanced')" :class="{ active: mode === 'advanced' }">advanced</div>
+                              </div>
                               <div id="formfontdesc" class="formfontdesc">{{ $t('labels.xrayui_desc') }}</div>
                               <div style="margin: 10px 0 10px 5px" class="splitLine"></div>
                               <service-status v-model:config="config"></service-status>
-                              <inbounds @show-transport="show_transport" @show-sniffing="show_sniffing"></inbounds>
-                              <outbounds @show-transport="show_transport"></outbounds>
-                              <dns></dns>
-                              <reverse-proxy></reverse-proxy>
-                              <routing></routing>
+                              <simple-mode v-if="isSimple" :config="config"></simple-mode>
+                              <inbounds v-if="isAdvanced" @show-transport="show_transport" @show-sniffing="show_sniffing"></inbounds>
+                              <outbounds v-if="isAdvanced" @show-transport="show_transport"></outbounds>
+                              <dns v-if="isAdvanced"></dns>
+                              <reverse-proxy v-if="isAdvanced"></reverse-proxy>
+                              <routing v-if="isAdvanced"></routing>
                               <sniffing-modal ref="sniffingModal" />
                               <stream-settings-modal ref="transportModal" />
                               <div class="apply_gen">
                                 <input class="button_gen" @click.prevent="apply_settings()" type="button" :value="$t('labels.apply')" />
                               </div>
-                              <clients-online v-if="enableClientsCheck"></clients-online>
-                              <logs-manager ref="logsManager" v-if="config.log?.access != 'none' || config.log?.error != 'none'" v-model:logs="config.log!"></logs-manager>
+                              <clients-online v-if="isAdvanced && enableClientsCheck"></clients-online>
+                              <logs-manager ref="logsManager" v-if="isAdvanced && (config.log?.access != 'none' || config.log?.error != 'none')" v-model:logs="config.log!"></logs-manager>
                               <version></version>
                             </div>
                           </td>
@@ -63,7 +68,7 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, inject, Ref, ref, watch } from 'vue';
+  import { computed, defineComponent, inject, reactive, Ref, ref, watch } from 'vue';
   import engine, { EngineResponseConfig, SubmitActions } from '@/modules/Engine';
 
   import Modal from '@main/Modal.vue';
@@ -87,6 +92,7 @@
   import MainMenu from './asus/MainMenu.vue';
   import TabMenu from './asus/TabMenu.vue';
   import SubMenu from './asus/SubMenu.vue';
+  import SimpleMode from './SimpleMode.vue';
 
   export default defineComponent({
     name: 'MainForm',
@@ -105,7 +111,8 @@
       ClientsOnline,
       StreamSettingsModal,
       LogsManager,
-      ReverseProxy
+      ReverseProxy,
+      SimpleMode
     },
 
     setup() {
@@ -114,7 +121,9 @@
       const sniffingModal = ref();
       const logsManager = ref();
       const enableClientsCheck = ref<boolean>(false);
-
+      const mode = ref<string>(engine.getCookie('xrayui_mode') || 'advanced');
+      const isAdvanced = computed(() => mode.value === 'advanced');
+      const isSimple = computed(() => mode.value === 'simple');
       const uiResponse = inject<Ref<EngineResponseConfig>>('uiResponse')!;
       watch(
         () => uiResponse?.value,
@@ -147,6 +156,12 @@
           await engine.loadXrayConfig();
         });
       };
+
+      const set_mode = (newMode: string) => {
+        engine.setCookie('xrayui_mode', newMode);
+        mode.value = newMode;
+      };
+
       return {
         logsManager,
         enableClientsCheck,
@@ -156,9 +171,13 @@
         sniffingModal,
         version: window.xray.custom_settings.xray_version,
         page: window.location.pathname.substring(1),
+        mode,
+        isAdvanced,
+        isSimple,
         show_transport,
         show_sniffing,
-        apply_settings
+        apply_settings,
+        set_mode
       };
     }
   });
@@ -182,6 +201,44 @@
 
     tr.proxy-row:hover > * {
       border-left-color: $c_yellow;
+    }
+  }
+  .mode-group {
+    margin-top: -40px;
+    float: right;
+    & > div {
+      cursor: pointer;
+      background: linear-gradient(to bottom, #758084 0%, #546166 36%, #394245 100%);
+      border-color: #222728;
+      border-width: 1px;
+      border-style: solid;
+      text-align: center;
+      color: #cccccc;
+      font-size: 14px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    & > div:first-child {
+      width: 110px;
+      height: 30px;
+      float: left;
+      border-top-left-radius: 8px;
+      border-bottom-left-radius: 8px;
+    }
+    & > div:last-child {
+      width: 110px;
+      height: 30px;
+      float: left;
+      border-top-right-radius: 8px;
+      border-bottom-right-radius: 8px;
+    }
+
+    & > div.active {
+      background: unset;
+      background-color: #353d40;
+      color: white;
     }
   }
 </style>

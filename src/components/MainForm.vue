@@ -37,7 +37,7 @@
                               <div id="formfontdesc" class="formfontdesc">{{ $t('labels.xrayui_desc') }}</div>
                               <div style="margin: 10px 0 10px 5px" class="splitLine"></div>
                               <service-status v-model:config="config"></service-status>
-                              <simple-mode v-if="isSimple" :config="config"></simple-mode>
+                              <simple-mode v-if="isSimple" :config="config" @show-sniffing="show_sniffing"></simple-mode>
                               <inbounds v-if="isAdvanced" @show-transport="show_transport" @show-sniffing="show_sniffing"></inbounds>
                               <outbounds v-if="isAdvanced" @show-transport="show_transport"></outbounds>
                               <dns v-if="isAdvanced"></dns>

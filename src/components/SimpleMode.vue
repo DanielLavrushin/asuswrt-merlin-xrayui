@@ -1,88 +1,279 @@
 <template>
   <div class="simple-mode">
-    <h2>Simple XRAYUI Mode</h2>
-    <div class="form-row">
-      <label for="simple-port">Listening Port</label>
-      <input class="input_32_table" type="number" v-model.number="port" min="1" max="5" required />
-    </div>
-    <div class="form-row">
-      <label for="simple-port">Enable Transparent Proxy</label>
-      <input type="checkbox" v-model="tproxy" />
-    </div>
-    <rule-group title="To Proxy" v-model:domains="rules.proxy.domains" v-model:ips="rules.proxy.ips" />
-    <rule-group title="To Direct" v-model:domains="rules.direct.domains" v-model:ips="rules.direct.ips" />
-    <rule-group title="To Block" v-model:domains="rules.block.domains" v-model:ips="rules.block.ips" />
+    <fieldset v-if="inbound">
+      <legend>Inbound Settings</legend>
+      <div class="form-row">
+        {{ $t('com.InboundCommon.label_listen') }}
+        <hint v-html="$t('com.InboundCommon.hint_listen')"></hint>
+        <input type="text" maxlength="15" class="input_20_table" v-model="inbound.listen" onkeypress="return validator.isIPAddr(this, event);" autocomplete="off" autocorrect="off" autocapitalize="off" />
+      </div>
+      <div class="form-row">
+        {{ $t('com.InboundCommon.label_port') }}
+        <hint v-html="$t('com.InboundCommon.hint_port')"></hint>
+        <input type="number" maxlength="5" class="input_6_table" v-model="inbound.port" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
+      </div>
+      <div class="form-row" v-if="inbound.streamSettings && inbound.streamSettings.sockopt">
+        <label for="simple-port">Enable Transparent Proxy</label>
+        <input type="checkbox" v-model="tproxy" />
+      </div>
+      <div class="form-row" v-if="inbound.streamSettings && inbound.streamSettings.sockopt">
+        <span class="row-buttons">
+          <a class="button_gen button_gen_small" href="#" @click.prevent="show_sniffing(inbound)">
+            {{ $t('labels.sniffing') }}
+          </a>
+        </span>
+      </div>
+    </fieldset>
+    <fieldset v-if="proxy">
+      <legend>Outbound Settings</legend>
+
+      <div class="form-row">
+        {{ $t(`com.${proxyTransCode}.label_address`) }}
+        <hint v-html="$t(`com.${proxyTransCode}.hint_address`)"></hint>
+        <input type="text" maxlength="255" class="input_20_table" v-model="proxyAddress" autocomplete="off" autocorrect="off" autocapitalize="off" />
+      </div>
+
+      <div class="form-row">
+        {{ $t(`com.${proxyTransCode}.label_port`) }}
+        <hint v-html="$t(`com.${proxyTransCode}.hint_port`)"></hint>
+        <input type="number" maxlength="5" class="input_6_table" v-model="proxyPort" onkeypress="return validator.isNumber(this,event);" autocorrect="off" autocapitalize="off" />
+      </div>
+
+      <div class="form-row">
+        User Id
+        <input type="text" maxlength="255" class="input_20_table" v-model="proxyUserId" autocomplete="off" autocorrect="off" autocapitalize="off" />
+      </div>
+
+      <div class="form-row">
+        User Flow
+        <select v-model="proxyUserFlow" class="input_12_table">
+          <option v-for="flow in flows" :value="flow" :key="flow">{{ flow }}</option>
+        </select>
+      </div>
+    </fieldset>
   </div>
 </template>
 <script lang="ts">
-  import { defineComponent } from 'vue';
-
-  const RuleGroup = defineComponent({
-    name: 'RuleGroup',
-    props: {
-      title: { type: String, required: true },
-      domains: { type: String, default: '' },
-      ips: { type: String, default: '' }
-    },
-    emits: ['update:domains', 'update:ips'],
-    setup(props, { emit }) {
-      const update = (key: 'domains' | 'ips', value: string) => emit(`update:${key}`, value);
-      return { update };
-    },
-    template: `
-    <fieldset class="rule-group">
-      <legend>{{ title }}</legend>
-      <div class="double-textarea">
-        <textarea
-          :placeholder="\`\${title} – Domains (one per line)\`"
-          rows="12"
-          :value="domains"
-          @input="update('domains', $event.target.value)"
-        ></textarea>
-        <textarea
-          :placeholder="\`\${title} – IPs (one per line)\`"
-          rows="12"
-          :value="ips"
-          @input="update('ips', $event.target.value)"
-        ></textarea>
-      </div>
-    </fieldset>
-  `
-  });
+  import engine from '@/modules/Engine';
+  import { XrayDokodemoDoorInboundObject, XrayInboundObject } from '@/modules/InboundObjects';
+  import { XrayProtocol } from '@/modules/Options';
+  import { computed, defineComponent, ref, watch } from 'vue';
+  import Hint from '@main/Hint.vue';
+  import { XrayOutboundObject, XrayVlessOutboundObject } from '@/modules/OutboundObjects';
+  import { XrayVmessClientObject } from '@/modules/ClientsObjects';
+  import { IProtocolType } from '@/modules/Interfaces';
 
   export default defineComponent({
     name: 'SimpleMode',
+    components: {
+      Hint
+    },
+    setup(props, { emit }) {
+      const show_sniffing = async (inbound: XrayInboundObject<IProtocolType>) => {
+        emit('show-sniffing', inbound);
+      };
 
-    components: { RuleGroup },
-    setup() {
-      return {};
+      const config = ref(engine.xrayConfig);
+
+      const inbound = computed(() => config.value.inbounds.find((i) => i.protocol === XrayProtocol.DOKODEMODOOR) as XrayInboundObject<XrayDokodemoDoorInboundObject> | undefined);
+      const proxy = computed(() => config.value.outbounds.find((i) => i.protocol === XrayProtocol.VLESS || i.protocol === XrayProtocol.VMESS) as XrayOutboundObject<XrayVlessOutboundObject | XrayVmessClientObject> | undefined);
+
+      const tproxy = computed({
+        get: () => inbound.value?.streamSettings?.sockopt?.tproxy === 'tproxy',
+
+        set: (val: boolean) => {
+          if (!inbound.value?.streamSettings?.sockopt) return;
+          inbound.value.streamSettings.sockopt.tproxy = val ? 'tproxy' : undefined;
+        }
+      });
+
+      const firstVnext = computed(() => {
+        const settings = proxy.value?.settings as any;
+        return settings && Array.isArray(settings.vnext) ? settings.vnext[0] : undefined;
+      });
+
+      const proxyAddress = computed({
+        get: () => firstVnext.value?.address ?? '',
+        set: (val: string) => {
+          if (firstVnext.value) firstVnext.value.address = val.trim();
+        }
+      });
+
+      const proxyPort = computed({
+        get: () => firstVnext.value?.port ?? 0,
+        set: (val: number | string) => {
+          if (firstVnext.value) firstVnext.value.port = Number(val) || 0;
+        }
+      });
+
+      const proxyUserId = computed({
+        get: () => firstVnext.value?.users?.[0]?.id ?? '',
+        set: (val: string) => {
+          if (firstVnext.value && firstVnext.value.users && firstVnext.value.users.length > 0) {
+            firstVnext.value.users[0].id = val.trim();
+          }
+        }
+      });
+
+      const proxyUserFlow = computed({
+        get: () => firstVnext.value?.users?.[0]?.flow ?? '',
+        set: (val: string) => {
+          if (firstVnext.value && firstVnext.value.users && firstVnext.value.users.length > 0) {
+            firstVnext.value.users[0].flow = val.trim();
+          }
+        }
+      });
+
+      const proxyTransCode = computed(() => {
+        if (!proxy.value) return '';
+        const proto = proxy.value.protocol;
+        switch (proto) {
+          case XrayProtocol.VLESS:
+            return 'VlessOutbound';
+          case XrayProtocol.VMESS:
+            return 'VmessOutbound';
+          default:
+            return '';
+        }
+      });
+
+      return { inbound, tproxy, proxy, proxyAddress, proxyPort, proxyTransCode, proxyUserId, proxyUserFlow, flows: ['xtls-rprx-vision', 'xtls-rprx-vision-udp443'], show_sniffing };
     }
   });
 </script>
-<style scoped>
+<style lang="scss">
+  :root {
+    --c-bg: #2f3a3e;
+    --c-panel: #475a5f;
+    --c-border: #374045;
+    --c-accent: #4fc08d;
+    --c-text: #e5e7eb;
+    --c-dark: #1f2a30;
+  }
+</style>
+<style scoped lang="scss">
   .simple-mode {
-    background-color: #475a5f;
+    background: var(--c-panel);
+    padding: 1rem;
+    border: 1px solid var(--c-border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    color: var(--c-text);
+    font-size: 0.95rem;
 
-    padding: 8px;
-    border-radius: 5px;
-    border: 1px solid #222;
+    fieldset {
+      /* kill the UA styles first */
+      border: 0;
+      padding: 1.25rem 1rem 1rem;
+      margin: 0;
+
+      /* new look */
+      position: relative;
+      background: var(--c-bg);
+      border-radius: 0.5rem;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25); // subtle bevel
+
+      /* keep spacing harmony inside the grid */
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    legend {
+      position: relative;
+      padding: 0 0.5rem; // pulls text off the edge
+      margin-left: 0; // centers label on the line
+
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--c-text);
+      letter-spacing: 0.2px;
+    }
 
     .form-row {
-      display: flex;
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 0.25rem 0.75rem;
       align-items: center;
-      margin-bottom: 8px;
-    }
+      margin-bottom: 0.75rem;
 
-    .form-row label {
-      flex: 0 0 200px;
-    }
+      @media (max-width: 600px) {
+        grid-template-columns: 1fr;
+      }
 
-    .hint {
-      font-size: 0.8rem;
-      color: #cbd5e1;
-    }
-    textarea {
-      width: 100%;
+      label {
+        user-select: none;
+      }
+
+      input[type='text'] {
+        width: 100%;
+        max-width: 24rem;
+        padding: 0.35rem 0.5rem;
+        border-radius: 0.3rem;
+        border: 1px solid var(--c-border);
+        background: var(--c-dark);
+        color: var(--c-text);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+        &:focus {
+          outline: none;
+          border-color: var(--c-accent);
+          box-shadow: 0 0 0 1px var(--c-accent);
+        }
+      }
+
+      input[type='number'] {
+        width: 100%;
+        max-width: 8rem;
+        padding: 0.35rem 0.5rem;
+        border-radius: 0.3rem;
+        border: 1px solid var(--c-border);
+        background: var(--c-dark);
+        color: var(--c-text);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+        &:focus {
+          outline: none;
+          border-color: var(--c-accent);
+          box-shadow: 0 0 0 1px var(--c-accent);
+        }
+      }
+
+      input[type='checkbox'] {
+        appearance: none;
+        width: 2.5rem;
+        height: 1.25rem;
+        outline: 1px solid var(--c-panel);
+        border-radius: 1.25rem;
+        position: relative;
+        cursor: pointer;
+        transition: background 0.2s ease;
+
+        &::before {
+          content: '';
+          position: absolute;
+          top: 2px;
+          left: 2px;
+          width: 1rem;
+          height: 1rem;
+          background: var(--c-text);
+          border-radius: 50%;
+          transition: transform 0.2s ease;
+        }
+
+        &:checked {
+          background: var(--c-dark);
+
+          &::before {
+            transform: translateX(1.25rem);
+          }
+        }
+
+        &:focus-visible {
+          outline: 1px solid var(--c-accent);
+          outline-offset: 2px;
+        }
+      }
     }
   }
 </style>

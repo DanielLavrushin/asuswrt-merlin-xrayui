@@ -190,7 +190,6 @@
           config.value.routing?.rules?.push(rule);
         }
         rule.outboundTag = outboundTag || '';
-        reindexRules();
         return rule;
       };
 
@@ -215,19 +214,6 @@
           routingBlockRule.value.domain = val.split('\n').map((line) => line.trimEnd());
         }
       });
-
-      const reindexRules = () => {
-        if (config.value.routing) {
-          const allRules = [...(config.value.routing.rules ?? []), ...(config.value.routing.disabled_rules ?? [])].sort((a, b) => (a.idx || 0) - (b.idx || 0));
-
-          allRules.forEach((rule, index) => {
-            console.log(`Reindexing rule: ${rule.name} to index ${index}`);
-          });
-
-          config.value.routing.rules = config.value.routing?.rules?.sort((a, b) => (a.idx || 0) - (b.idx || 0));
-          config.value.routing.disabled_rules = config.value.routing.disabled_rules?.sort((a, b) => (a.idx || 0) - (b.idx || 0));
-        }
-      };
 
       return {
         routingProxyRule,

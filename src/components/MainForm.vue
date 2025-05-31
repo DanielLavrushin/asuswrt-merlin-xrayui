@@ -49,7 +49,11 @@
                                 <input class="button_gen" @click.prevent="apply_settings()" type="button" :value="$t('labels.apply')" />
                               </div>
                               <clients-online v-if="isAdvanced && enableClientsCheck"></clients-online>
-                              <logs-manager ref="logsManager" v-if="isAdvanced && (config.log?.access != 'none' || config.log?.error != 'none')" v-model:logs="config.log!"></logs-manager>
+                              <logs-manager
+                                ref="logsManager"
+                                v-if="isAdvanced && (config.log?.access != 'none' || config.log?.error != 'none')"
+                                v-model:logs="config.log!"
+                              ></logs-manager>
                               <version></version>
                             </div>
                           </td>
@@ -68,7 +72,7 @@
 </template>
 
 <script lang="ts">
-  import { computed, defineComponent, inject, reactive, Ref, ref, watch } from 'vue';
+  import { computed, defineComponent, inject, Ref, ref, watch } from 'vue';
   import engine, { EngineResponseConfig, SubmitActions } from '@/modules/Engine';
 
   import Modal from '@main/Modal.vue';

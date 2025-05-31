@@ -31,8 +31,8 @@
                               <div>&nbsp;</div>
                               <div class="formfonttitle" style="text-align: left">X-RAY UI v{{ version }}</div>
                               <div class="mode-group">
-                                <div @click="set_mode('simple')" :class="{ active: mode === 'simple' }">simple</div>
                                 <div @click="set_mode('advanced')" :class="{ active: mode === 'advanced' }">advanced</div>
+                                <div @click="set_mode('simple')" :class="{ active: mode === 'simple' }">simple</div>
                               </div>
                               <div id="formfontdesc" class="formfontdesc">{{ $t('labels.xrayui_desc') }}</div>
                               <div style="margin: 10px 0 10px 5px" class="splitLine"></div>

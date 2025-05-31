@@ -5,12 +5,29 @@
       <div class="form-row">
         {{ $t('com.InboundCommon.label_listen') }}
         <hint v-html="$t('com.InboundCommon.hint_listen')"></hint>
-        <input type="text" maxlength="15" class="input_20_table" v-model="inbound.listen" onkeypress="return validator.isIPAddr(this, event);" autocomplete="off" autocorrect="off" autocapitalize="off" />
+        <input
+          type="text"
+          maxlength="15"
+          class="input_20_table"
+          v-model="inbound.listen"
+          onkeypress="return validator.isIPAddr(this, event);"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+        />
       </div>
       <div class="form-row">
         {{ $t('com.InboundCommon.label_port') }}
         <hint v-html="$t('com.InboundCommon.hint_port')"></hint>
-        <input type="number" maxlength="5" class="input_6_table" v-model="inbound.port" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
+        <input
+          type="number"
+          maxlength="5"
+          class="input_6_table"
+          v-model="inbound.port"
+          autocorrect="off"
+          autocapitalize="off"
+          onkeypress="return validator.isNumber(this,event);"
+        />
       </div>
       <div class="form-row" v-if="inbound.streamSettings && inbound.streamSettings.sockopt">
         <label for="simple-port">Enable Transparent Proxy</label>
@@ -51,6 +68,19 @@
         </select>
       </div>
     </fieldset>
+    <fieldset v-if="proxy">
+      <legend>{{ $t('com.Routing.title') }}</legend>
+      <div class="form-row">
+        Proxy
+        <textarea v-model="routingProxyDomain"></textarea>
+      </div>
+      <div class="form-row">
+        Block
+        <textarea v-model="routingBlockDomain"></textarea>
+      </div>
+
+      <span class="hint-color"><a href="https://github.com/v2fly/domain-list-community/tree/master/data" target="_blank">community geosite database</a></span>
+    </fieldset>
   </div>
 </template>
 <script lang="ts">
@@ -59,9 +89,10 @@
   import { XrayProtocol } from '@/modules/Options';
   import { computed, defineComponent, ref, watch } from 'vue';
   import Hint from '@main/Hint.vue';
-  import { XrayOutboundObject, XrayVlessOutboundObject } from '@/modules/OutboundObjects';
+  import { XrayBlackholeOutboundObject, XrayFreedomOutboundObject, XrayOutboundObject, XrayVlessOutboundObject } from '@/modules/OutboundObjects';
   import { XrayVmessClientObject } from '@/modules/ClientsObjects';
   import { IProtocolType } from '@/modules/Interfaces';
+  import { XrayRoutingRuleObject } from '@/modules/CommonObjects';
 
   export default defineComponent({
     name: 'SimpleMode',
@@ -76,7 +107,17 @@
       const config = ref(engine.xrayConfig);
 
       const inbound = computed(() => config.value.inbounds.find((i) => i.protocol === XrayProtocol.DOKODEMODOOR) as XrayInboundObject<XrayDokodemoDoorInboundObject> | undefined);
-      const proxy = computed(() => config.value.outbounds.find((i) => i.protocol === XrayProtocol.VLESS || i.protocol === XrayProtocol.VMESS) as XrayOutboundObject<XrayVlessOutboundObject | XrayVmessClientObject> | undefined);
+
+      const proxy = computed(
+        () =>
+          config.value.outbounds.find((i) => i.protocol === XrayProtocol.VLESS || i.protocol === XrayProtocol.VMESS) as
+            | XrayOutboundObject<XrayVlessOutboundObject | XrayVmessClientObject>
+            | undefined
+      );
+
+      const blackhole = computed(() => config.value.outbounds.find((i) => i.protocol === XrayProtocol.BLACKHOLE) as XrayOutboundObject<XrayBlackholeOutboundObject> | undefined);
+
+      const freedom = computed(() => config.value.outbounds.find((i) => i.protocol === XrayProtocol.FREEDOM) as XrayOutboundObject<XrayFreedomOutboundObject> | undefined);
 
       const tproxy = computed({
         get: () => inbound.value?.streamSettings?.sockopt?.tproxy === 'tproxy',
@@ -137,16 +178,82 @@
         }
       });
 
-      return { inbound, tproxy, proxy, proxyAddress, proxyPort, proxyTransCode, proxyUserId, proxyUserFlow, flows: ['xtls-rprx-vision', 'xtls-rprx-vision-udp443'], show_sniffing };
+      const getOrCreateRoutingRule = (ruleName: string, outboundTag: string) => {
+        if (!config.value.routing) config.value.routing = { domainStrategy: 'AsIs', rules: [] } as any;
+        let rule = config.value.routing?.rules?.find((r) => r.name === ruleName) as XrayRoutingRuleObject | undefined;
+        if (!rule) {
+          rule = new XrayRoutingRuleObject();
+          rule.name = ruleName;
+          rule.type = 'field';
+          rule.outboundTag = outboundTag || '';
+          rule.domain = [];
+          config.value.routing?.rules?.push(rule);
+        }
+        rule.outboundTag = outboundTag || '';
+        reindexRules();
+        return rule;
+      };
+
+      const routingProxyRule = computed(() => {
+        return getOrCreateRoutingRule('sys:simple.proxy', proxy.value?.tag!);
+      });
+
+      const routingBlockRule = computed(() => {
+        return getOrCreateRoutingRule('sys:simple.block', blackhole.value?.tag!);
+      });
+
+      const routingProxyDomain = computed({
+        get: () => (routingProxyRule.value.domain ?? []).join('\n'),
+        set: (val: string) => {
+          routingProxyRule.value.domain = val.split('\n').map((line) => line.trimEnd());
+        }
+      });
+
+      const routingBlockDomain = computed({
+        get: () => (routingBlockRule.value.domain ?? []).join('\n'),
+        set: (val: string) => {
+          routingBlockRule.value.domain = val.split('\n').map((line) => line.trimEnd());
+        }
+      });
+
+      const reindexRules = () => {
+        if (config.value.routing) {
+          const allRules = [...(config.value.routing.rules ?? []), ...(config.value.routing.disabled_rules ?? [])].sort((a, b) => (a.idx || 0) - (b.idx || 0));
+
+          allRules.forEach((rule, index) => {
+            console.log(`Reindexing rule: ${rule.name} to index ${index}`);
+          });
+
+          config.value.routing.rules = config.value.routing?.rules?.sort((a, b) => (a.idx || 0) - (b.idx || 0));
+          config.value.routing.disabled_rules = config.value.routing.disabled_rules?.sort((a, b) => (a.idx || 0) - (b.idx || 0));
+        }
+      };
+
+      return {
+        routingProxyRule,
+        routingBlockRule,
+        routingProxyDomain,
+        routingBlockDomain,
+        inbound,
+        tproxy,
+        proxy,
+        proxyAddress,
+        proxyPort,
+        proxyTransCode,
+        proxyUserId,
+        proxyUserFlow,
+        flows: ['xtls-rprx-vision', 'xtls-rprx-vision-udp443'],
+        show_sniffing
+      };
     }
   });
 </script>
 <style lang="scss">
   :root {
-    --c-bg: #2f3a3e;
+    --c-bg: rgb(40, 58, 70);
     --c-panel: #475a5f;
     --c-border: #374045;
-    --c-accent: #4fc08d;
+    --c-accent: rgb(0, 114, 0);
     --c-text: #e5e7eb;
     --c-dark: #1f2a30;
   }
@@ -161,18 +268,14 @@
     font-size: 0.95rem;
 
     fieldset {
-      /* kill the UA styles first */
       border: 0;
       padding: 1.25rem 1rem 1rem;
       margin: 0;
 
-      /* new look */
       position: relative;
       background: var(--c-bg);
       border-radius: 0.5rem;
-      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25); // subtle bevel
-
-      /* keep spacing harmony inside the grid */
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
@@ -181,8 +284,8 @@
 
     legend {
       position: relative;
-      padding: 0 0.5rem; // pulls text off the edge
-      margin-left: 0; // centers label on the line
+      padding: 0 0.5rem;
+      margin-left: 0;
 
       font-size: 1.05rem;
       font-weight: 600;
@@ -195,7 +298,6 @@
       grid-template-columns: 200px 1fr;
       gap: 0.25rem 0.75rem;
       align-items: center;
-      margin-bottom: 0.75rem;
 
       @media (max-width: 600px) {
         grid-template-columns: 1fr;
@@ -217,8 +319,8 @@
 
         &:focus {
           outline: none;
-          border-color: var(--c-accent);
-          box-shadow: 0 0 0 1px var(--c-accent);
+          border-color: var(--c-border);
+          box-shadow: 0 0 0 1px var(--c-border);
         }
       }
 
@@ -234,8 +336,8 @@
 
         &:focus {
           outline: none;
-          border-color: var(--c-accent);
-          box-shadow: 0 0 0 1px var(--c-accent);
+          border-color: var(--c-border);
+          box-shadow: 0 0 0 1px var(--c-border);
         }
       }
 
@@ -262,7 +364,7 @@
         }
 
         &:checked {
-          background: var(--c-dark);
+          background: var(--c-accent);
 
           &::before {
             transform: translateX(1.25rem);
@@ -270,8 +372,25 @@
         }
 
         &:focus-visible {
-          outline: 1px solid var(--c-accent);
+          outline: 1px solid var(--c-border);
           outline-offset: 2px;
+        }
+      }
+      select {
+        width: 100%;
+        max-width: 12rem;
+        border-radius: 0.3rem;
+        border: 1px solid var(--c-border);
+        background: var(--c-dark);
+        height: 30px;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        &:focus {
+          outline: none;
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
         }
       }
     }

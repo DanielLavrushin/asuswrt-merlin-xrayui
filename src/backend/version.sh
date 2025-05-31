@@ -135,6 +135,8 @@ switch_xray_version() {
     rm -rf "$xray_tmp_dir"
     rm -f "$tmp_zip"
 
+    restart
+
     log_ok "Xray version updated!"
     log_ok $(show_version)
 

@@ -8,13 +8,13 @@ on:
         required: true
         default: '0.1'
       draft:
-        description: 'Save the release as a draft first?'
+        description: 'mark as draft?'
         required: false
         default: false
         type: boolean
 
       prerelease:
-        description: 'Mark this build as a pre-release?'
+        description: 'mark as pre-release?'
         required: false
         default: false
         type: boolean

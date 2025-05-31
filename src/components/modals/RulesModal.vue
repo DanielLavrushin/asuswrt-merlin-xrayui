@@ -6,26 +6,32 @@
           <td colspan="4">{{ $t('com.RulesModal.modal_title2') }}</td>
         </tr>
       </thead>
-      <tbody v-if="allRules.length">
-        <tr v-for="(r, index) in allRules.filter((r) => !r.isSystem())" :key="index">
-          <th>
-            <label>
-              <input type="checkbox" v-model="r.enabled" @change.prevent="on_off_rule(r, index)" />
-              {{ $t('com.RulesModal.rule_no', [index + 1]) }}
-            </label>
-          </th>
-          <td style="color: #ffcc00">{{ !r.name || r.name == '' ? getRuleName(r) : r.name }}</td>
-          <td>{{ r.outboundTag }}</td>
-          <td>
-            <text v-show="r.isSystem()">system rule</text>
-            <span class="row-buttons">
-              <input class="button_gen button_gen_small" type="button" value="&#8593;" :title="$t('labels.redorder')" @click="reorderRule(r)" v-if="index > 0" />
-              <input class="button_gen button_gen_small" type="button" :value="$t('labels.edit')" @click.prevent="editRule(r)" />
-              <input class="button_gen button_gen_small" type="button" value="&#10005;" :title="$t('labels.delete')" @click.prevent="deleteRule(r)" />
-            </span>
-          </td>
-        </tr>
-      </tbody>
+      <draggable v-if="allRules.length" tag="tbody" :list="allRules" item-key="idx" handle=".drag-handle" @end="reindexRules">
+        <template #item="{ element: r, index }">
+          <tr v-if="!r.isSystem()">
+            <th class="drag-handle" aria-label="Drag to reorder">
+              <span class="grip" aria-hidden="true"></span>
+              <label>
+                <input type="checkbox" v-model="r.enabled" @change.prevent="on_off_rule(r, index)" />
+                {{ $t('com.RulesModal.rule_no', [index + 1]) }}
+              </label>
+            </th>
+
+            <td style="color: #ffcc00">
+              {{ !r.name ? getRuleName(r) : r.name }}
+            </td>
+            <td>{{ r.outboundTag }}</td>
+            <td>
+              <text v-show="r.isSystem()">system rule</text>
+              <span class="row-buttons">
+                <input v-if="index > 0" class="button_gen button_gen_small" type="button" value="&#8593;" :title="$t('labels.redorder')" @click="reorderRule(r)" />
+                <input class="button_gen button_gen_small" type="button" :value="$t('labels.edit')" @click.prevent="editRule(r)" />
+                <input class="button_gen button_gen_small" type="button" value="&#10005;" :title="$t('labels.delete')" @click.prevent="deleteRule(r)" />
+              </span>
+            </td>
+          </tr>
+        </template>
+      </draggable>
       <tbody v-else>
         <tr>
           <td colspan="4" style="color: #ffcc00">{{ $t('com.RulesModal.no_rules_defined') }}</td>
@@ -201,14 +207,15 @@
   import xrayConfig from '@/modules/XrayConfig';
   import { XrayRoutingRuleObject, XrayRoutingObject, XrayDnsServerObject } from '@/modules/CommonObjects';
   import Hint from '@main/Hint.vue';
-
+  import draggable from 'vuedraggable';
   import { useI18n } from 'vue-i18n';
 
   export default defineComponent({
     name: 'RulesModal',
     components: {
       Hint,
-      Modal
+      Modal,
+      draggable
     },
     props: {
       rules: {
@@ -433,6 +440,7 @@
         reorderRule,
         getRuleName,
         on_off_rule,
+        reindexRules,
         domainMatcherOptions: XrayRoutingObject.domainMatcherOptions,
         networkOptions: XrayRoutingRuleObject.networkOptions,
         protocolOptions: XrayRoutingRuleObject.protocolOptions
@@ -443,6 +451,42 @@
 
 <style scoped lang="scss">
   .FormTable {
+    .drag-handle {
+      cursor: grab;
+      user-select: none;
+      padding-left: 0.25rem;
+
+      .grip {
+        display: inline-block;
+        width: 0.8rem;
+        height: 1rem;
+        margin-right: 0.35rem;
+        background-image: radial-gradient(currentColor 1px, transparent 1px);
+        background-size: 4px 4px;
+        background-repeat: repeat-y;
+        opacity: 0.55;
+        transition: opacity 0.15s ease-in-out;
+      }
+
+      &:hover .grip {
+        opacity: 0.85;
+      }
+      &:active,
+      &.dragging {
+        cursor: grabbing;
+      }
+    }
+    .sortable-chosen {
+      td,
+      th {
+        background: #2e2e2e;
+        color: #fc0;
+      }
+    }
+
+    .vuedraggable-ghost {
+      opacity: 0.4 !important;
+    }
     tr th {
       width: auto;
     }

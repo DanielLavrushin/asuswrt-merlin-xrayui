@@ -56,10 +56,6 @@
 </script>
 
 <style lang="scss">
-  * {
-    font-family: Arial, Helvetica, sans-serif !important;
-  }
-
   #Loading,
   #overDiv {
     z-index: 9999;

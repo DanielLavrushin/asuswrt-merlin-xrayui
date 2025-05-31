@@ -4,6 +4,7 @@
 
 - IMPROVED: Removed explicit restart of the `firewall` and `dnsmasq` services.
 - IMPROVED: Move startup to the post-mount event.
+- ADDED: Introduce a new feature: `Advanced/Simple` toggle. A new button in the top-right corner lets you switch between Advanced and Simple modes. `Advanced mode` retains full access to every option (default). `Simple mode` surfaces only the most common Xray settings for VLESS/VMess proxies, making quick edits easier. `Heads-up`: If your configuration depends on less-common settings, stay in Advanced mode — hanging them in Simple mode may trigger unexpected errors.
 
 ## [0.49.4] - 2025-05-07
 

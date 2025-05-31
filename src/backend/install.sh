@@ -90,7 +90,7 @@ EOF
     setup_script_file "/jffs/scripts/nat-start" "/jffs/scripts/xrayui service_event firewall configure #xrayui"
 
     # Add or update post-mount
-    setup_script_file "/jffs/scripts/services-start" "/jffs/scripts/xrayui service_event startup & #xrayui"
+    setup_script_file "/jffs/scripts/post-mount" "/jffs/scripts/xrayui service_event startup & #xrayui"
 
     # Add or update service-event
     setup_script_file "/jffs/scripts/service-event" "echo \"\$2\" | grep -q \"^xrayui\" && /jffs/scripts/xrayui service_event \$(echo \"\$2\" | cut -d'_' -f2- | tr '_' ' ') & #xrayui"

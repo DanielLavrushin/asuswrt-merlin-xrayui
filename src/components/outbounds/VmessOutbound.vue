@@ -12,7 +12,7 @@
         <tr>
           <th>
             {{ $t('com.VmessOutbound.label_address') }}
-            <hint v-html="$t('com.VlessOutbound.hint_address')"></hint>
+            <hint v-html="$t('com.VmessOutbound.hint_address')"></hint>
           </th>
           <td>
             <input type="text" class="input_20_table" v-model="proxy.settings.vnext[0].address" autocomplete="off" autocorrect="off" autocapitalize="off" />
@@ -30,7 +30,7 @@
         </tr>
       </tbody>
     </table>
-    <clients :clients="users" mode="outbound"></clients>
+    <clients :clients="users" :proxy="proxy" mode="outbound"></clients>
   </div>
 </template>
 <script lang="ts">

@@ -25,7 +25,7 @@
       <hint v-html="$t('com.InboundCommon.hint_port')"></hint>
     </th>
     <td>
-      <input type="number" id="po1" maxlength="5" class="input_6_table" v-model="inbound.port" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
+      <input type="number" maxlength="5" class="input_6_table" v-model="inbound.port" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
       <span class="row-buttons">
         <a class="button_gen button_gen_small" href="#" @click="show_allocate(inbound)">{{ $t('com.InboundCommon.label_port_allocate') }}</a>
       </span>

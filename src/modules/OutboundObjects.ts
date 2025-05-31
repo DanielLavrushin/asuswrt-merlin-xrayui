@@ -2,7 +2,16 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable security/detect-object-injection */
 import { IProtocolType } from './Interfaces';
-import { XrayTrojanServerObject, XrayHttpServerObject, XrayStreamSettingsObject, XraySocksServerObject, XrayVmessServerObject, XrayNoiseObject, XrayShadowsocksServerObject, XrayPeerObject } from './CommonObjects';
+import {
+  XrayTrojanServerObject,
+  XrayHttpServerObject,
+  XrayStreamSettingsObject,
+  XraySocksServerObject,
+  XrayVmessServerObject,
+  XrayNoiseObject,
+  XrayShadowsocksServerObject,
+  XrayPeerObject
+} from './CommonObjects';
 import { XrayVlessServerObject } from './CommonObjects';
 import { plainToInstance } from 'class-transformer';
 

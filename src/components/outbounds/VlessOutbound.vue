@@ -30,7 +30,7 @@
         </tr>
       </tbody>
     </table>
-    <clients :clients="users" mode="outbound"></clients>
+    <clients :clients="users" :proxy="proxy" mode="outbound"></clients>
   </div>
 </template>
 <script lang="ts">

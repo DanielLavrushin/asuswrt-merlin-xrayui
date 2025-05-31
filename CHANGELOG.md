@@ -1,6 +1,6 @@
 # XRAYUI Changelog
 
-## [0.50.0] - 2025-05-xx
+## [0.50.0] - 2025-05-31
 
 - IMPROVED: Removed explicit restart of the `firewall` and `dnsmasq` services.
 - IMPROVED: Move startup to the post-mount event.

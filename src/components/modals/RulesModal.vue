@@ -6,9 +6,9 @@
           <td colspan="4">{{ $t('com.RulesModal.modal_title2') }}</td>
         </tr>
       </thead>
-      <draggable v-if="allRules.length" tag="tbody" :list="allRules.filter((r) => !r.isSystem())" item-key="idx" handle=".drag-handle" @end="reindexRules">
+      <draggable v-if="allRules.length" tag="tbody" :list="allRules" item-key="idx" handle=".drag-handle" @end="reindexRules">
         <template #item="{ element: r, index }">
-          <tr>
+          <tr v-if="!r.isSystem()">
             <th class="drag-handle" aria-label="Drag to reorder">
               <span class="grip" aria-hidden="true"></span>
               <label>
@@ -476,8 +476,7 @@
         cursor: grabbing;
       }
     }
-
-    .vuedraggable-dragging {
+    .sortable-chosen {
       td,
       th {
         background: #2e2e2e;

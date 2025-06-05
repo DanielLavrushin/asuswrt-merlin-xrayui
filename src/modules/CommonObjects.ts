@@ -350,22 +350,19 @@ export class XrayRoutingObject {
     }
 
     if (Array.isArray(this.rules) && this.rules.length) {
-      for (let i = this.rules.length - 1; i >= 0; i--) {
-        const rule = this.rules[i];
-        rule.normalize();
+      this.rules = this.rules
+        .map((r) => {
+          r.normalize();
+          return r;
+        })
+        .filter((r) => {
+          if (!r.isSystem()) return true;
+          const d = r.domain ?? [];
+          return !(d.length === 0 || d.every((s) => s.trim() === ''));
+        })
+        .sort((a, b) => a.idx - b.idx);
 
-        if (rule.isSystem()) {
-          const domain = rule.domain ?? [];
-          const noDomains = domain.length === 0;
-          const blankDomain = domain.every((d) => d.trim() === '');
-
-          if (noDomains || blankDomain) {
-            this.rules.splice(i, 1);
-          }
-        }
-      }
-
-      this.rules = this.rules.length ? this.rules.sort((a, b) => a.idx - b.idx) : undefined;
+      if (!this.rules.length) this.rules = undefined;
     } else {
       this.rules = undefined;
     }

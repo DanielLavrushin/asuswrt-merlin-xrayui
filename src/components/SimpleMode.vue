@@ -89,7 +89,7 @@
   import { XrayProtocol } from '@/modules/Options';
   import { computed, defineComponent, ref, watch } from 'vue';
   import Hint from '@main/Hint.vue';
-  import { XrayBlackholeOutboundObject, XrayFreedomOutboundObject, XrayOutboundObject, XrayVlessOutboundObject } from '@/modules/OutboundObjects';
+  import { XrayBlackholeOutboundObject, XrayOutboundObject, XrayVlessOutboundObject } from '@/modules/OutboundObjects';
   import { XrayVmessClientObject } from '@/modules/ClientsObjects';
   import { IProtocolType } from '@/modules/Interfaces';
   import { XrayRoutingRuleObject } from '@/modules/CommonObjects';
@@ -100,11 +100,37 @@
       Hint
     },
     setup(props, { emit }) {
+      const RULE_NAME_PROXY = 'sys:simple.proxy';
+      const RULE_NAME_BLOCK = 'sys:simple.block';
+
       const show_sniffing = async (inbound: XrayInboundObject<IProtocolType>) => {
         emit('show-sniffing', inbound);
       };
-
       const config = ref(engine.xrayConfig);
+
+      const findRule = (name: string) => config.value.routing?.rules?.find((r) => r.name === name) as XrayRoutingRuleObject | undefined;
+
+      function upsertRule(name: string, outboundTag: string | undefined, domains: string[]) {
+        if (domains.length === 0) {
+          const routing = config.value.routing;
+          if (routing?.rules) {
+            routing.rules = routing.rules.filter((r) => r.name !== name);
+            if (routing.rules.length === 0) delete config.value.routing;
+          }
+          return;
+        }
+
+        let rule = findRule(name);
+        if (!rule) {
+          rule = new XrayRoutingRuleObject();
+          rule.name = name;
+          rule.type = 'field';
+          config.value.routing!.rules!.push(rule);
+        }
+
+        rule.outboundTag = outboundTag ?? '';
+        rule.domain = domains;
+      }
 
       const inbound = computed(() => config.value.inbounds.find((i) => i.protocol === XrayProtocol.DOKODEMODOOR) as XrayInboundObject<XrayDokodemoDoorInboundObject> | undefined);
 
@@ -116,8 +142,6 @@
       );
 
       const blackhole = computed(() => config.value.outbounds.find((i) => i.protocol === XrayProtocol.BLACKHOLE) as XrayOutboundObject<XrayBlackholeOutboundObject> | undefined);
-
-      const freedom = computed(() => config.value.outbounds.find((i) => i.protocol === XrayProtocol.FREEDOM) as XrayOutboundObject<XrayFreedomOutboundObject> | undefined);
 
       const tproxy = computed({
         get: () => inbound.value?.streamSettings?.sockopt?.tproxy === 'tproxy',
@@ -178,46 +202,32 @@
         }
       });
 
-      const getOrCreateRoutingRule = (ruleName: string, outboundTag: string) => {
-        if (!config.value.routing) config.value.routing = { domainStrategy: 'AsIs', rules: [] } as any;
-        let rule = config.value.routing?.rules?.find((r) => r.name === ruleName) as XrayRoutingRuleObject | undefined;
-        if (!rule) {
-          rule = new XrayRoutingRuleObject();
-          rule.name = ruleName;
-          rule.type = 'field';
-          rule.outboundTag = outboundTag || '';
-          rule.domain = [];
-          config.value.routing?.rules?.push(rule);
-        }
-        rule.outboundTag = outboundTag || '';
-        return rule;
-      };
-
-      const routingProxyRule = computed(() => {
-        return getOrCreateRoutingRule('sys:simple.proxy', proxy.value?.tag!);
-      });
-
-      const routingBlockRule = computed(() => {
-        return getOrCreateRoutingRule('sys:simple.block', blackhole.value?.tag!);
-      });
-
       const routingProxyDomain = computed({
-        get: () => (routingProxyRule.value.domain ?? []).join('\n'),
+        get: () => (findRule(RULE_NAME_PROXY)?.domain ?? []).join('\n'),
         set: (val: string) => {
-          routingProxyRule.value.domain = val.split('\n').map((line) => line.trimEnd());
+          const domains = val
+            .split('\n')
+            .map((l) => l.trim())
+            .filter(Boolean);
+          upsertRule(RULE_NAME_PROXY, proxy.value?.tag, domains);
         }
       });
 
       const routingBlockDomain = computed({
-        get: () => (routingBlockRule.value.domain ?? []).join('\n'),
+        get: () => (findRule(RULE_NAME_BLOCK)?.domain ?? []).join('\n'),
         set: (val: string) => {
-          routingBlockRule.value.domain = val.split('\n').map((line) => line.trimEnd());
+          const domains = val
+            .split('\n')
+            .map((l) => l.trim())
+            .filter(Boolean);
+          upsertRule(RULE_NAME_BLOCK, blackhole.value?.tag, domains);
         }
       });
 
+      watch(proxy, (nv) => upsertRule(RULE_NAME_PROXY, nv?.tag, findRule(RULE_NAME_PROXY)?.domain ?? []));
+      watch(blackhole, (nv) => upsertRule(RULE_NAME_BLOCK, nv?.tag, findRule(RULE_NAME_BLOCK)?.domain ?? []));
+
       return {
-        routingProxyRule,
-        routingBlockRule,
         routingProxyDomain,
         routingBlockDomain,
         inbound,

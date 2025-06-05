@@ -1,7 +1,15 @@
 import { XrayHttpClientObject, XraySocksClientObject, XrayVlessClientObject, XrayVmessClientObject } from './ClientsObjects';
 import { ISecurityProtocol, IXrayServer } from './Interfaces';
 import XrayOptions, { XrayProtocol, XrayProtocolMode } from './Options';
-import { XrayStreamHttpSettingsObject, XrayStreamKcpSettingsObject, XrayStreamTcpSettingsObject, XrayStreamWsSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamSplitHttpSettingsObject } from './TransportObjects';
+import {
+  XrayStreamHttpSettingsObject,
+  XrayStreamKcpSettingsObject,
+  XrayStreamTcpSettingsObject,
+  XrayStreamWsSettingsObject,
+  XrayStreamGrpcSettingsObject,
+  XrayStreamHttpUpgradeSettingsObject,
+  XrayStreamSplitHttpSettingsObject
+} from './TransportObjects';
 
 export class XraySniffingObject {
   static destOverrideOptions = ['http', 'tls', 'quic', 'fakedns'];
@@ -57,7 +65,14 @@ export class XrayXmuxObject {
     this.hMaxReusableSecs = this.hMaxReusableSecs === defModel.hMaxReusableSecs ? undefined : this.hMaxReusableSecs;
     this.hKeepAlivePeriod = this.hKeepAlivePeriod === 0 ? undefined : this.hKeepAlivePeriod;
 
-    if (this.maxConcurrency == undefined && this.maxConnections == undefined && this.cMaxReuseTimes == undefined && this.hMaxRequestTimes == undefined && this.hMaxReusableSecs == undefined && this.hKeepAlivePeriod == undefined) {
+    if (
+      this.maxConcurrency == undefined &&
+      this.maxConnections == undefined &&
+      this.cMaxReuseTimes == undefined &&
+      this.hMaxRequestTimes == undefined &&
+      this.hMaxReusableSecs == undefined &&
+      this.hKeepAlivePeriod == undefined
+    ) {
       return undefined;
     }
     return this;
@@ -334,11 +349,20 @@ export class XrayRoutingObject {
       this.disabled_rules = undefined;
     }
 
-    if (this.rules && this.rules.length > 0) {
-      this.rules.forEach((rule) => {
-        rule.normalize();
-      });
-      this.rules = this.rules.sort((a, b) => a.idx - b.idx);
+    if (Array.isArray(this.rules) && this.rules.length) {
+      this.rules = this.rules
+        .map((r) => {
+          r.normalize();
+          return r;
+        })
+        .filter((r) => {
+          if (!r.isSystem()) return true;
+          const d = r.domain ?? [];
+          return !(d.length === 0 || d.every((s) => s.trim() === ''));
+        })
+        .sort((a, b) => a.idx - b.idx);
+
+      if (!this.rules.length) this.rules = undefined;
     } else {
       this.rules = undefined;
     }
@@ -364,7 +388,16 @@ export class XrayRoutingObject {
 
         switch (gs) {
           case 'kinopub':
-            rule.domain = [`kino.pub`, `kinopub.online`, `gfw.ovh`, `vjs.zencdn.net`, `m.pushbr.com`, `mos-gorsud.co`, `zamerka.com`, `"regexp:(\\w+)-static-[0-9]+\\.cdntogo\\.net$"`];
+            rule.domain = [
+              `kino.pub`,
+              `kinopub.online`,
+              `gfw.ovh`,
+              `vjs.zencdn.net`,
+              `m.pushbr.com`,
+              `mos-gorsud.co`,
+              `zamerka.com`,
+              `"regexp:(\\w+)-static-[0-9]+\\.cdntogo\\.net$"`
+            ];
             break;
           case 'envato':
             rule.domain = [`domain:envato.com`, `domain:envato.net`, `domain:envatoelements.com`, `domain:envatousercontent.com`];

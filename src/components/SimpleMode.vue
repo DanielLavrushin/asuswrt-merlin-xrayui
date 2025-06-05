@@ -103,8 +103,6 @@
       const RULE_NAME_PROXY = 'sys:simple.proxy';
       const RULE_NAME_BLOCK = 'sys:simple.block';
 
-      const isDomainBlank = (d?: string[]) => !d || d.every((x) => x.trim() === '');
-
       const show_sniffing = async (inbound: XrayInboundObject<IProtocolType>) => {
         emit('show-sniffing', inbound);
       };

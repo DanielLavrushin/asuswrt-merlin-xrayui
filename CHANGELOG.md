@@ -1,5 +1,9 @@
 # XRAYUI Changelog
 
+## [0.50.1] - 2025-06-05
+
+- FIXED: Simple routing rules that have no domains are now automatically removed from the configuration, so Xray no longer routes all traffic through them.
+
 ## [0.50.0] - 2025-05-31
 
 - IMPROVED: Removed explicit restart of the `firewall` and `dnsmasq` services.

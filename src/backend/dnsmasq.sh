@@ -134,6 +134,13 @@ EOF
     fi
 
     exec 3>&- # close FD 3
+
+    {
+        head -n1 "$TMP"
+        tail -n +2 "$TMP" | sort -u
+    } >"${TMP}.uniq" &&
+        mv -f "${TMP}.uniq" "$TMP"
+
     chmod 644 "$TMP"
     mv -f "$TMP" "$DIRECT_CONF"
 

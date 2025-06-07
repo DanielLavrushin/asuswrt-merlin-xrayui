@@ -625,7 +625,12 @@ set_route_localnet() {
     local wan1="$(nvram get wan1_ifname)"
     local lan_if="$(nvram get lan_ifname)"
 
-    local if_list="$lan_if wl0 wl1"
+    local wl_ifs="$(nvram get wl0_ifname) $(nvram get wl1_ifname)"
+    [ -z "$wl_ifs" ] && wl_ifs="$(ls /sys/class/net | grep -E '^(eth[4-9]|dpsta|ra[0-9]+)$')"
+
+    wl_ifs="$(printf '%s\n' $wl_ifs | sed '/^$/d' | sort -u)"
+
+    local if_list="$lan_if $wl_ifs"
 
     # Add tun*/wg* interfaces created by VPN servers
     for itf in $(ip -o link show | awk -F': ' '{print $2}' | grep -E '^(tun[0-9]+|wg[0-9]+)$'); do
@@ -644,6 +649,11 @@ set_route_localnet() {
         [ -z "$itf" ] && continue
         [ "$itf" = "$wan0" ] && continue
         [ -n "$wan1" ] && [ "$itf" = "$wan1" ] && continue
+
+        [ -e "/proc/sys/net/ipv4/conf/$itf" ] || {
+            log_warn "Interface $itf does not exist. Skipping."
+            continue
+        }
 
         echo "$val" >"/proc/sys/net/ipv4/conf/$itf/route_localnet" 2>/dev/null
 

@@ -1,5 +1,10 @@
 # XRAYUI Changelog
 
+## [0.50.2] - 2025-06-07
+
+- IMPROVED: Sort `ipset` rules and remove duplicate entries.
+- FIXED: Enhance interface list generation in set_route_localnet function for improved handling of wireless interfaces
+
 ## [0.50.1] - 2025-06-05
 
 - FIXED: Simple routing rules that have no domains are now automatically removed from the configuration, so Xray no longer routes all traffic through them.

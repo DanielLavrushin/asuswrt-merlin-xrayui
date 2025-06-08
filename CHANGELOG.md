@@ -10,6 +10,7 @@
 - ADDED: Drag-and-drop reordering for `outbounds`.
 - ADDED: Drag-and-drop reordering for `device policies`.
 - REMOVED: Old sort buttons on inbounds and outbounds (replaced by drag-and-drop).
+- REMOVED: 60 seconds delay on router reboot (experemental).
 
 ## [0.50.3] - 2025-06-07
 

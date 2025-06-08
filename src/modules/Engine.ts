@@ -585,11 +585,9 @@ class Engine {
         }
       }
 
-      if (config.fakedns) {
-        const fakedns: XrayFakeDnsObject[] = [];
-        for (const fakeDns of config.fakedns) {
-          fakedns.push(plainToInstance(XrayFakeDnsObject, fakeDns));
-        }
+      if (Array.isArray(config.fakedns)) {
+        const rawFakeDns = config.fakedns as unknown[];
+        const fakedns: XrayFakeDnsObject[] = rawFakeDns.map((entry) => plainToInstance(XrayFakeDnsObject, entry as object));
         this.xrayConfig.fakedns = fakedns;
       }
 

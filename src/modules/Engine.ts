@@ -8,11 +8,57 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import axios, { AxiosError } from 'axios';
 import { xrayConfig, XrayObject } from './XrayConfig';
-import { XrayBlackholeOutboundObject, XrayLoopbackOutboundObject, XrayDnsOutboundObject, XrayFreedomOutboundObject, XrayTrojanOutboundObject, XrayOutboundObject, XraySocksOutboundObject, XrayVmessOutboundObject, XrayVlessOutboundObject, XrayHttpOutboundObject, XrayShadowsocksOutboundObject } from './OutboundObjects';
-import { XrayDnsObject, XrayStreamSettingsObject, XrayRoutingObject, XrayRoutingRuleObject, XraySniffingObject, XrayRoutingPolicy, XrayAllocateObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject, XraySockoptObject, XrayLogObject, XrayStreamTlsCertificateObject, XrayReverseObject, XrayReverseItem, XrayDnsServerObject } from './CommonObjects';
+import {
+  XrayBlackholeOutboundObject,
+  XrayLoopbackOutboundObject,
+  XrayDnsOutboundObject,
+  XrayFreedomOutboundObject,
+  XrayTrojanOutboundObject,
+  XrayOutboundObject,
+  XraySocksOutboundObject,
+  XrayVmessOutboundObject,
+  XrayVlessOutboundObject,
+  XrayHttpOutboundObject,
+  XrayShadowsocksOutboundObject
+} from './OutboundObjects';
+import {
+  XrayDnsObject,
+  XrayStreamSettingsObject,
+  XrayRoutingObject,
+  XrayRoutingRuleObject,
+  XraySniffingObject,
+  XrayRoutingPolicy,
+  XrayAllocateObject,
+  XrayStreamRealitySettingsObject,
+  XrayStreamTlsSettingsObject,
+  XraySockoptObject,
+  XrayLogObject,
+  XrayStreamTlsCertificateObject,
+  XrayReverseObject,
+  XrayReverseItem,
+  XrayDnsServerObject,
+  XrayFakeDnsObject
+} from './CommonObjects';
 import { plainToInstance } from 'class-transformer';
-import { XrayDokodemoDoorInboundObject, XrayHttpInboundObject, XrayInboundObject, XrayShadowsocksInboundObject, XraySocksInboundObject, XrayTrojanInboundObject, XrayVlessInboundObject, XrayVmessInboundObject, XrayWireguardInboundObject } from './InboundObjects';
-import { XrayStreamHttpSettingsObject, XrayStreamGrpcSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamKcpSettingsObject, XrayStreamTcpSettingsObject, XrayStreamWsSettingsObject } from './TransportObjects';
+import {
+  XrayDokodemoDoorInboundObject,
+  XrayHttpInboundObject,
+  XrayInboundObject,
+  XrayShadowsocksInboundObject,
+  XraySocksInboundObject,
+  XrayTrojanInboundObject,
+  XrayVlessInboundObject,
+  XrayVmessInboundObject,
+  XrayWireguardInboundObject
+} from './InboundObjects';
+import {
+  XrayStreamHttpSettingsObject,
+  XrayStreamGrpcSettingsObject,
+  XrayStreamHttpUpgradeSettingsObject,
+  XrayStreamKcpSettingsObject,
+  XrayStreamTcpSettingsObject,
+  XrayStreamWsSettingsObject
+} from './TransportObjects';
 import { XrayProtocol } from './Options';
 
 class EngineWireguard {
@@ -54,7 +100,23 @@ class EngineResponseConfig {
   public wireguard?: EngineWireguard;
   public reality?: EngineReality;
   public certificates?: EngineSsl;
-  public xray?: { ipsec: string; debug: boolean; clients_check: boolean; test: string; uptime: number; ui_version: string; core_version: string; profile: string; profiles: string[]; backups: string[]; github_proxy: string; dnsmasq: boolean; logs_max_size: number; logs_dor: boolean; skip_test: boolean };
+  public xray?: {
+    ipsec: string;
+    debug: boolean;
+    clients_check: boolean;
+    test: string;
+    uptime: number;
+    ui_version: string;
+    core_version: string;
+    profile: string;
+    profiles: string[];
+    backups: string[];
+    github_proxy: string;
+    dnsmasq: boolean;
+    logs_max_size: number;
+    logs_dor: boolean;
+    skip_test: boolean;
+  };
   public geodata?: EngineGeodatConfig = new EngineGeodatConfig();
   public loading?: EngineLoadingProgress;
   public connection_check?: EngineClientConnectionStatus;
@@ -243,8 +305,23 @@ class Engine {
     if (config.log) {
       config.log.normalize();
     }
+
     if (config.reverse) {
       config.reverse = config.reverse.normalize();
+    }
+
+    if (config.fakedns) {
+      config.fakedns.forEach((fake: XrayFakeDnsObject) => {
+        if (!(fake instanceof XrayFakeDnsObject)) {
+          const instance = plainToInstance(XrayFakeDnsObject, fake);
+          fake = Array.isArray(instance) ? instance[0] : instance;
+        }
+
+        fake.normalize();
+      });
+      if (config.fakedns.length === 0) {
+        config.fakedns = undefined;
+      }
     }
 
     return config;
@@ -508,6 +585,14 @@ class Engine {
         }
       }
 
+      if (config.fakedns) {
+        const fakedns: XrayFakeDnsObject[] = [];
+        for (const fakeDns of config.fakedns) {
+          fakedns.push(plainToInstance(XrayFakeDnsObject, fakeDns));
+        }
+        this.xrayConfig.fakedns = fakedns;
+      }
+
       this.xrayConfig.inbounds.forEach((proxy) => {
         if (proxy.streamSettings?.tlsSettings?.certificates) {
           proxy.streamSettings.tlsSettings.certificates = plainToInstance(XrayStreamTlsSettingsObject, proxy.streamSettings.tlsSettings.certificates);
@@ -533,7 +618,11 @@ class Engine {
     } catch (e) {
       var axiosError = e as AxiosError;
       if (axiosError.status === 404) {
-        if (confirm('XRAY Configuration file not found in the /opt/etc/xray directory. Please check your configuration file. If you want to generate an empty configuration file, press OK.')) {
+        if (
+          confirm(
+            'XRAY Configuration file not found in the /opt/etc/xray directory. Please check your configuration file. If you want to generate an empty configuration file, press OK.'
+          )
+        ) {
           await this.submit(SubmitActions.configurationGenerateDefaultConfig);
         }
       }

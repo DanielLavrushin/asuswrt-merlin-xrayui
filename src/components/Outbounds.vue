@@ -17,33 +17,39 @@
           </select>
         </td>
       </tr>
-      <slot v-for="(proxy, index) in config.outbounds" :key="index">
-        <tr v-show="!proxy.isSystem()" class="proxy-row">
-          <th>{{ proxy.tag == '' ? 'no tag' : proxy.tag! }}</th>
-          <td>
-            <a class="hint" href="#" @click.prevent="edit_proxy(proxy)">
-              <span v-show="proxy.streamSettings?.network" :class="['proxy-label', 'tag']">
-                {{ proxy.protocol }}
-              </span>
-            </a>
-            <span v-show="proxy.streamSettings?.network && proxy.streamSettings?.network != 'tcp'" :class="['proxy-label', proxy.streamSettings?.network]">
-              {{ proxy.streamSettings?.network }}
-            </span>
-            <span v-show="proxy.streamSettings?.security && proxy.streamSettings?.security != 'none'" :class="['proxy-label', proxy.streamSettings?.security]">
-              {{ proxy.streamSettings?.security }}
-            </span>
-            <span v-show="proxy.streamSettings?.sockopt?.tproxy === 'tproxy'" :class="['proxy-label', proxy.streamSettings?.sockopt?.tproxy]">{{ proxy.streamSettings?.sockopt?.tproxy }}</span>
-            <span class="row-buttons">
-              <a class="button_gen button_gen_small" href="#" @click.prevent="show_transport(proxy)">
-                {{ $t('labels.transport') }}
+      <draggable v-if="config.outbounds.length" tag="slot" :list="config.outbounds" item-key="index" handle=".drag-handle">
+        <template #item="{ element: proxy, index }">
+          <tr v-show="!proxy.isSystem()" class="proxy-row">
+            <th class="drag-handle" aria-label="Drag to reorder">
+              <span class="grip" aria-hidden="true"></span>
+              {{ proxy.tag == '' ? 'no tag' : proxy.tag! }}
+            </th>
+            <td>
+              <a class="hint" href="#" @click.prevent="edit_proxy(proxy)">
+                <span v-show="proxy.streamSettings?.network" :class="['proxy-label', 'tag']">
+                  {{ proxy.protocol }}
+                </span>
               </a>
-              <a class="button_gen button_gen_small" href="#" @click.prevent="reorder_proxy(proxy)" v-if="index > 0" :title="$t('labels.redorder')">&#8593;</a>
-              <a class="button_gen button_gen_small" href="#" @click.prevent="edit_proxy(proxy)" :title="$t('labels.edit')">&#8494;</a>
-              <a class="button_gen button_gen_small" href="#" @click.prevent="remove_proxy(proxy)" :title="$t('labels.delete')"> &#10005; </a>
-            </span>
-          </td>
-        </tr>
-      </slot>
+              <span v-show="proxy.streamSettings?.network && proxy.streamSettings?.network != 'tcp'" :class="['proxy-label', proxy.streamSettings?.network]">
+                {{ proxy.streamSettings?.network }}
+              </span>
+              <span v-show="proxy.streamSettings?.security && proxy.streamSettings?.security != 'none'" :class="['proxy-label', proxy.streamSettings?.security]">
+                {{ proxy.streamSettings?.security }}
+              </span>
+              <span v-show="proxy.streamSettings?.sockopt?.tproxy === 'tproxy'" :class="['proxy-label', proxy.streamSettings?.sockopt?.tproxy]">{{
+                proxy.streamSettings?.sockopt?.tproxy
+              }}</span>
+              <span class="row-buttons">
+                <a class="button_gen button_gen_small" href="#" @click.prevent="show_transport(proxy)">
+                  {{ $t('labels.transport') }}
+                </a>
+                <a class="button_gen button_gen_small" href="#" @click.prevent="edit_proxy(proxy)" :title="$t('labels.edit')">&#8494;</a>
+                <a class="button_gen button_gen_small" href="#" @click.prevent="remove_proxy(proxy)" :title="$t('labels.delete')"> &#10005; </a>
+              </span>
+            </td>
+          </tr>
+        </template>
+      </draggable>
     </tbody>
   </table>
 
@@ -78,6 +84,7 @@
   import ShadowsocksOutbound from '@obd/ShadowsocksOutbound.vue';
   import TrojanOutbound from '@obd/TrojanOutbound.vue';
   import WireguardOutbound from '@obd/WireguardOutbound.vue';
+  import draggable from 'vuedraggable';
 
   import { useI18n } from 'vue-i18n';
 
@@ -85,7 +92,8 @@
     name: 'Outbounds',
     emits: ['show-transport', 'show-sniffing'],
     components: {
-      Modal
+      Modal,
+      draggable
     },
     methods: {},
 
@@ -105,12 +113,6 @@
 
       const show_transport = async (proxy: XrayOutboundObject<IProtocolType>) => {
         emit('show-transport', proxy, 'outbound');
-      };
-
-      const reorder_proxy = (proxy: XrayOutboundObject<IProtocolType>) => {
-        const index = config.value.outbounds.indexOf(proxy);
-        config.value.outbounds.splice(index, 1);
-        config.value.outbounds.splice(index - 1, 0, proxy);
       };
 
       const edit_proxy = async (proxy: XrayOutboundObject<IProtocolType> | undefined = undefined) => {
@@ -211,7 +213,6 @@
         parserModal,
         showImportModal,
         show_transport,
-        reorder_proxy,
         edit_proxy,
         remove_proxy,
         save_proxy

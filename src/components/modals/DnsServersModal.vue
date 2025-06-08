@@ -2,38 +2,42 @@
   <modal ref="modal" title="Servers">
     <div class="formfontdesc">
       <p>{{ $t('com.DnsServersModal.modal_desc') }}</p>
-      <table width="100%" class="FormTable SettingsTable tableApi_table">
+      <table class="FormTable modal-form-table">
         <thead>
           <tr>
             <td colspan="2">{{ $t('com.DnsServersModal.list') }}</td>
           </tr>
         </thead>
         <tbody>
-          <tr class="row_title">
-            <th>{{ $t('com.DnsServersModal.server') }}</th>
-            <th></th>
-          </tr>
-          <tr class="row_title">
+          <tr class="data_tr">
             <td>
-              <input v-model="server.address" class="input_25_table" placeholder="address" />
+              <input v-model="server.address" class="input_25_table" placeholder="address" v-show="server.address != 'fakedns'" />
+              <a href="#" v-show="server.address == 'fakedns'" style="color: #ffcc00" @click.prevent="set_fakedns()">{{ server.address }}</a>
             </td>
             <td>
               <button @click.prevent="show_advanced()" class="button_gen button_gen_small">{{ $t('com.DnsServersModal.advanced') }}</button>
               <button @click.prevent="addSimple()" class="button_gen button_gen_small">{{ $t('labels.add') }}</button>
+              <button v-if="hasFakeDns && server.address !== 'fakedns'" @click.prevent="set_fakedns(true)" class="button_gen button_gen_small">
+                {{ $t('com.FakeDns.fakedns') }}
+              </button>
             </td>
           </tr>
           <tr v-if="!servers.length" class="data_tr">
             <td colspan="2" style="color: #ffcc00">{{ $t('com.DnsServersModal.no_hosts_defined') }}</td>
           </tr>
-          <tr v-for="(server, index) in servers" :key="index" class="data_tr">
-            <td>{{ getServer(server) }}</td>
-            <td>
-              <button v-if="(typeof server === 'string') == false" @click.prevent="manage(server, index)" class="button_gen button_gen_small">{{ $t('labels.edit') }}</button>
-              <button @click.prevent="remove(server)" class="button_gen button_gen_small">&#10005;</button>
-              <a class="button_gen button_gen_small" href="#" @click="reorder(server, index)" v-if="index > 0">&#8593;</a>
-            </td>
-          </tr>
         </tbody>
+        <draggable v-if="servers.length" tag="tbody" :list="servers" item-key="idx" handle=".drag-handle">
+          <template #item="{ element: server, index }">
+            <tr class="data_tr">
+              <td class="drag-handle" aria-label="Drag to reorder"><span class="grip" aria-hidden="true"></span>{{ getServer(server) }}</td>
+              <td>
+                <button v-if="(typeof server === 'string') == false" @click.prevent="manage(server, index)" class="button_gen button_gen_small">{{ $t('labels.edit') }}</button>
+                <button @click.prevent="remove(server)" class="button_gen button_gen_small">&#10005;</button>
+                <a class="button_gen button_gen_small" href="#" @click="reorder(server, index)" v-if="index > 0">&#8593;</a>
+              </td>
+            </tr>
+          </template>
+        </draggable>
       </table>
     </div>
   </modal>
@@ -53,7 +57,11 @@
               {{ $t('com.DnsServersModal.label_address') }}
             </th>
             <td>
-              <input type="text" v-model="server.address" class="input_25_table" placeholder="address" />
+              <input v-model="server.address" class="input_25_table" placeholder="address" v-show="server.address != 'fakedns'" />
+              <a href="#" v-show="server.address == 'fakedns'" style="color: #ffcc00" @click.prevent="set_fakedns()">{{ server.address }}</a>
+              <button v-if="hasFakeDns && server.address !== 'fakedns'" @click.prevent="set_fakedns()" class="button_gen button_gen_small">
+                {{ $t('com.FakeDns.fakedns') }}
+              </button>
             </td>
           </tr>
           <tr>
@@ -120,9 +128,12 @@
               <hint v-html="$t('com.DnsServersModal.hint_expected_ips')"></hint>
             </th>
             <td>
-              <div class="textarea-wrapper">
+              <div class="textarea-wrapper" v-if="server.rules?.length == 0">
                 <textarea v-model="ips" rows="10"></textarea>
               </div>
+              <span class="hint-color" v-if="server.rules && server.rules.length > 0">
+                {{ $t('com.DnsServersModal.hint_ips_disabled') }}
+              </span>
             </td>
           </tr>
           <tr>
@@ -144,18 +155,20 @@
   </modal>
 </template>
 <script lang="ts">
-  import { defineComponent, ref } from 'vue';
+  import { computed, defineComponent, ref } from 'vue';
   import { XrayDnsServerObject, XrayRoutingRuleObject } from '@/modules/CommonObjects';
   import Modal from '@main/Modal.vue';
   import Hint from '@main/Hint.vue';
   import xrayConfig from '@/modules/XrayConfig';
   import { plainToInstance } from 'class-transformer';
+  import draggable from 'vuedraggable';
 
   export default defineComponent({
     name: 'DnsServersModal',
     components: {
       Modal,
-      Hint
+      Hint,
+      draggable
     },
     props: {
       servers: {
@@ -204,7 +217,7 @@
         if (!s) {
           server.value = new XrayDnsServerObject();
         }
-        rules.value = xrayConfig.routing?.rules?.filter((r) => !r.isSystem() && r.domain) ?? [];
+        rules.value = xrayConfig.routing?.rules?.filter((r) => !r.isSystem() && (r.domain || r.ip)) ?? [];
         modalAdvanced.value.show();
       };
 
@@ -243,6 +256,15 @@
         modalRules.value.show();
       };
 
+      const hasFakeDns = computed(() => {
+        return xrayConfig.fakedns && xrayConfig.fakedns.length > 0 && !props.servers.some((s) => typeof s === 'string' && s === 'fakedns');
+      });
+      const set_fakedns = (isSimple?: boolean) => {
+        server.value.address = server.value.address === 'fakedns' ? '' : 'fakedns';
+        if (isSimple) {
+          addSimple();
+        }
+      };
       return {
         modal,
         modalAdvanced,
@@ -252,6 +274,7 @@
         ips,
         editIndex,
         rules,
+        hasFakeDns,
         manage,
         reorder,
         remove,
@@ -261,6 +284,7 @@
         getServer,
         addOrUpdateComplex,
         show_advanced,
+        set_fakedns,
         XrayDnsServerObject
       };
     }

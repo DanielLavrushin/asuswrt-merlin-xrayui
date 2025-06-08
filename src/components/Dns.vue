@@ -43,13 +43,34 @@
           <dns-servers-modal ref="modalServers" v-model:servers="dns.servers"></dns-servers-modal>
         </td>
       </tr>
+      <tr v-if="hasTproxy">
+        <th>
+          {{ $t('com.FakeDns.label') }}
+          <hint v-html="$t('com.FakeDns.hint')"></hint>
+        </th>
+        <td>
+          {{ fakeDns.length }} item(s)
+          <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click.prevent="manage_fakes()" />
+          <span class="hint-color"></span>
+          <fake-dns-modal ref="modalFakeDns" v-model:servers="fakeDns"></fake-dns-modal>
+        </td>
+      </tr>
       <tr>
         <th>
           {{ $t('com.Dns.label_client_ip') }}
           <hint v-html="$t('com.Dns.hint_client_ip')"></hint>
         </th>
         <td>
-          <input type="text" maxlength="15" class="input_20_table" v-model="dns.clientIp" onkeypress="return validator.isIPAddr(this, event);" autocomplete="off" autocorrect="off" autocapitalize="off" />
+          <input
+            type="text"
+            maxlength="15"
+            class="input_20_table"
+            v-model="dns.clientIp"
+            onkeypress="return validator.isIPAddr(this, event);"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+          />
           <span class="hint-color"></span>
         </td>
       </tr>
@@ -102,12 +123,13 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, watch } from 'vue';
+  import { computed, defineComponent, ref, watch } from 'vue';
   import engine from '@/modules/Engine';
   import { XrayDnsObject } from '@/modules/CommonObjects';
   import xrayConfig from '@/modules/XrayConfig';
   import DnsHostsModal from '@modal/DnsHostsModal.vue';
   import DnsServersModal from '@modal/DnsServersModal.vue';
+  import FakeDnsModal from '@modal/FakeDnsModal.vue';
   import Hint from '@main/Hint.vue';
 
   export default defineComponent({
@@ -115,7 +137,8 @@
     components: {
       Hint,
       DnsHostsModal,
-      DnsServersModal
+      DnsServersModal,
+      FakeDnsModal
     },
 
     setup() {
@@ -123,12 +146,31 @@
       const dns = ref<XrayDnsObject>(config.value.dns ?? new XrayDnsObject());
       const modalHosts = ref();
       const modalServers = ref();
+      const modalFakeDns = ref();
+
       const manage_hosts = () => {
         modalHosts.value.show();
       };
       const manage_servers = () => {
         modalServers.value.show();
       };
+      const manage_fakes = () => {
+        modalFakeDns.value.show();
+      };
+
+      const hasTproxy = computed(() => {
+        return config.value.inbounds.some((inbound) => inbound.streamSettings?.sockopt?.tproxy === 'tproxy');
+      });
+
+      const fakeDns = computed({
+        get: () => {
+          return config.value.fakedns ?? [];
+        },
+        set: (value) => {
+          config.value.fakedns = value;
+        }
+      });
+
       watch(
         () => config.value.dns,
         (newObj) => {
@@ -145,9 +187,13 @@
         dns,
         modalHosts,
         modalServers,
+        modalFakeDns,
         strategyOptions: XrayDnsObject.strategyOptions,
+        hasTproxy,
+        fakeDns,
         manage_hosts,
-        manage_servers
+        manage_servers,
+        manage_fakes
       };
     }
   });

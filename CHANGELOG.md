@@ -1,15 +1,32 @@
 # XRAYUI Changelog
 
-## [0.50.2] - 2025-06-07
+## [0.51.0] - 2025-06-08
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- ADDED: `FakeDNS` support — create and manage xray-core FakeDNS objects. _Visible only when at least one inbound is in **tproxy** mode; shows up as a “Fake DNS” row in **DNS**._
+- ADDED: Feature to associate `DNS` servers with specific routing rules (available in `Advanced mode`) to simplify domain management - this include now the IPs from the rules.
+- ADDED: Drag-and-drop reordering for `inbounds`.
+- ADDED: Drag-and-drop reordering for `outbounds`.
+- ADDED: Drag-and-drop reordering for `device policies`.
+- REMOVED: Old sort buttons on inbounds and outbounds (replaced by drag-and-drop).
+
+## [0.50.3] - 2025-06-07
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - IMPROVED: Sort `ipset` rules and remove duplicate entries.
 - FIXED: Enhance interface list generation in set_route_localnet function for improved handling of wireless interfaces
 
 ## [0.50.1] - 2025-06-05
 
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
 - FIXED: Simple routing rules that have no domains are now automatically removed from the configuration, so Xray no longer routes all traffic through them.
 
 ## [0.50.0] - 2025-05-31
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - IMPROVED: Removed explicit restart of the `firewall` and `dnsmasq` services.
 - IMPROVED: Move startup to the post-mount event.
@@ -18,6 +35,8 @@
 - FIXED: Don't interfere with global fonts. [#130](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/130)
 
 ## [0.49.4] - 2025-05-07
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - IMPROVED: Removed explicit restart of the `firewall` and `dnsmasq` services.
 

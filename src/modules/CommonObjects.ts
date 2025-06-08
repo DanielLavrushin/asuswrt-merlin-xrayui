@@ -707,4 +707,19 @@ export class XrayParsedUrlObject {
   }
 }
 
+export class XrayFakeDnsObject {
+  public ipPool?: string;
+  public poolSize = 65535;
+
+  public normalize(): this | undefined {
+    this.ipPool = this.ipPool == '' ? undefined : this.ipPool;
+    this.poolSize = this.poolSize <= 0 || this.poolSize > 65535 ? 65535 : this.poolSize;
+
+    if (!this.ipPool) {
+      return undefined;
+    }
+    return this;
+  }
+}
+
 export { XrayProtocol };

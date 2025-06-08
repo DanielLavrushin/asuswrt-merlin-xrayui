@@ -451,42 +451,6 @@
 
 <style scoped lang="scss">
   .FormTable {
-    .drag-handle {
-      cursor: grab;
-      user-select: none;
-      padding-left: 0.25rem;
-
-      .grip {
-        display: inline-block;
-        width: 0.8rem;
-        height: 1rem;
-        margin-right: 0.35rem;
-        background-image: radial-gradient(currentColor 1px, transparent 1px);
-        background-size: 4px 4px;
-        background-repeat: repeat-y;
-        opacity: 0.55;
-        transition: opacity 0.15s ease-in-out;
-      }
-
-      &:hover .grip {
-        opacity: 0.85;
-      }
-      &:active,
-      &.dragging {
-        cursor: grabbing;
-      }
-    }
-    .sortable-chosen {
-      td,
-      th {
-        background: #2e2e2e;
-        color: #fc0;
-      }
-    }
-
-    .vuedraggable-ghost {
-      opacity: 0.4 !important;
-    }
     tr th {
       width: auto;
     }

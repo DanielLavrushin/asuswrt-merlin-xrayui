@@ -16,7 +16,7 @@ startup() {
 
         if [ "$skipwait" = "false" ]; then
             log_ok "Waiting for network and iptable rules to be ready..."
-            sleep 60 # wait for network and iptable rules to be ready
+            #  sleep 60 # wait for network and iptable rules to be ready
         fi
         restart
     elif [ -n "$xray_pid" ]; then

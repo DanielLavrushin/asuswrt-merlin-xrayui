@@ -15,6 +15,7 @@
     "axios": "^1.9.0",
     "class-transformer": "^0.5.1",
     "jsqr": "^1.4.0",
+    "lodash-es": "^4.17.21",
     "markdown-it": "^14.1.0",
     "qrcode.vue": "^3.6.0",
     "reflect-metadata": "^0.2.2",
@@ -28,6 +29,7 @@
     "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
+    "@types/lodash-es": "^4.17.12",
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^22.13.13",
     "@types/webpack-env": "^1.18.5",

@@ -1,6 +1,6 @@
 import { reactive } from 'vue';
 import { IProtocolType } from './Interfaces';
-import { XrayDnsObject, XrayRoutingObject, XrayLogObject, XrayProtocolOption, XrayReverseObject } from './CommonObjects';
+import { XrayDnsObject, XrayRoutingObject, XrayLogObject, XrayProtocolOption, XrayReverseObject, XrayFakeDnsObject } from './CommonObjects';
 import { XrayInboundObject } from './InboundObjects';
 import { XrayOutboundObject } from './OutboundObjects';
 import { XrayProtocol, XrayProtocolMode } from './Options';
@@ -8,6 +8,7 @@ import { XrayProtocol, XrayProtocolMode } from './Options';
 export class XrayObject {
   public log?: XrayLogObject = new XrayLogObject();
   public dns?: XrayDnsObject = new XrayDnsObject();
+  public fakedns?: XrayFakeDnsObject[] = [];
   public inbounds: XrayInboundObject<IProtocolType>[] = [];
   public outbounds: XrayOutboundObject<IProtocolType>[] = [];
   public routing?: XrayRoutingObject = new XrayRoutingObject();

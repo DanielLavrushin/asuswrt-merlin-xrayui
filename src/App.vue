@@ -73,7 +73,7 @@
 
   input[type='checkbox'],
   input[type='radio'] {
-    vertical-align: top;
+    vertical-align: bottom;
   }
 
   input::placeholder {
@@ -100,6 +100,10 @@
 
   .FormTable {
     margin-bottom: 14px;
+    td,
+    th {
+      vertical-align: middle;
+    }
 
     td {
       span.label {
@@ -189,6 +193,43 @@
         margin-left: 5px;
         vertical-align: middle;
       }
+    }
+
+    .drag-handle {
+      cursor: grab;
+      user-select: none;
+      padding-left: 0.25rem;
+
+      .grip {
+        display: inline-block;
+        width: 0.8rem;
+        height: 1rem;
+        background-image: radial-gradient(white 1px, transparent 1px);
+        background-size: 4px 4px;
+        background-repeat: repeat-y;
+        opacity: 0.55;
+        transition: opacity 0.15s ease-in-out;
+        vertical-align: text-top;
+      }
+
+      &:hover .grip {
+        opacity: 0.85;
+      }
+      &:active,
+      &.dragging {
+        cursor: grabbing;
+      }
+    }
+    .sortable-chosen {
+      td,
+      th {
+        background: #2e2e2e;
+        color: #fc0;
+      }
+    }
+
+    .vuedraggable-ghost {
+      opacity: 0.4 !important;
     }
   }
 

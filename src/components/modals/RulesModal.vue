@@ -6,7 +6,7 @@
           <td colspan="4">{{ $t('com.RulesModal.modal_title2') }}</td>
         </tr>
       </thead>
-      <draggable v-if="allRules.length" tag="tbody" :list="allRules" item-key="idx" handle=".drag-handle" @end="reindexRules">
+      <draggable v-if="allRules.length" tag="tbody" :list="allRules" handle=".drag-handle" @end="reindexRules">
         <template #item="{ element: r, index }">
           <tr v-if="!r.isSystem()">
             <th class="drag-handle" aria-label="Drag to reorder">
@@ -451,42 +451,6 @@
 
 <style scoped lang="scss">
   .FormTable {
-    .drag-handle {
-      cursor: grab;
-      user-select: none;
-      padding-left: 0.25rem;
-
-      .grip {
-        display: inline-block;
-        width: 0.8rem;
-        height: 1rem;
-        margin-right: 0.35rem;
-        background-image: radial-gradient(currentColor 1px, transparent 1px);
-        background-size: 4px 4px;
-        background-repeat: repeat-y;
-        opacity: 0.55;
-        transition: opacity 0.15s ease-in-out;
-      }
-
-      &:hover .grip {
-        opacity: 0.85;
-      }
-      &:active,
-      &.dragging {
-        cursor: grabbing;
-      }
-    }
-    .sortable-chosen {
-      td,
-      th {
-        background: #2e2e2e;
-        color: #fc0;
-      }
-    }
-
-    .vuedraggable-ghost {
-      opacity: 0.4 !important;
-    }
     tr th {
       width: auto;
     }

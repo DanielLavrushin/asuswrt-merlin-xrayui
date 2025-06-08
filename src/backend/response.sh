@@ -187,38 +187,41 @@ rules_to_dns_domains() {
     fi
 
     local updated="$(echo "$just_parsed" | jq '
-    # Safely ensure .routing, .routing.rules, .dns, and .dns.servers exist
-    if .routing == null then .routing = {} else . end
-    | if .routing.rules == null then .routing.rules = [] else . end
-    | if .dns == null then .dns = {} else . end
-    | if .dns.servers == null then (.dns.servers = []) else . end
+  if .routing == null then .routing = {} else . end
+  | if .routing.rules == null then .routing.rules = [] else . end
+  | if .dns == null then .dns = {} else . end
+  | if .dns.servers == null then (.dns.servers = []) else . end
 
-    # Grab the array of all rules for reference
-    | .routing.rules as $allRules
+  | .routing.rules as $allRules
 
-    # Rewrite .dns.servers
-    | .dns.servers |= (
-        map(
-          if ( (type == "object") and (.rules? | length) > 0 ) then
-            .domains = (
-              [
-                .rules[] as $ruleId
+  | .dns.servers |= (
+      map(
+        if ( (type == "object") and (.rules? | length) > 0 ) then
+          .domains = (
+            [ .rules[] as $ruleId
+              | $allRules[]
+              | select(.idx == $ruleId)
+              | ( .domain // [] )
+            ]
+            | flatten
+          )
+          | .expectIPs = (
+              [ .rules[] as $ruleId
                 | $allRules[]
                 | select(.idx == $ruleId)
-                | ( .domain // [] )
+                | ( .ip // [] )
               ]
               | flatten
             )
-            | .
-          else
-            .
-          end
-        )
+          | .
+        else
+          .
+        end
       )
-      # --- Final cleanup ---
-      | if (.dns.servers | length) == 0 then del(.dns.servers) else . end
-      | if (.dns | keys | length) == 0 then del(.dns) else . end
-    ')"
+    )
+    | if (.dns.servers | length) == 0 then del(.dns.servers) else . end
+    | if (.dns | keys | length) == 0 then del(.dns) else . end
+')"
 
     if [ -z "$updated" ]; then
         echo "$configcontent"

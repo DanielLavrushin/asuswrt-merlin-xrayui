@@ -6,25 +6,28 @@
           <td colspan="4">{{ $t('com.PolicyModal.modal_title2') }}</td>
         </tr>
       </thead>
-      <tbody v-if="policies!.length > 0">
-        <tr v-for="(r, index) in policies" :key="index">
-          <th>
-            <label>
-              <input type="checkbox" v-model="r.enabled" @change.prevent="on_off_rule(r, index)" />
-              {{ $t('com.PolicyModal.rule_no', [index + 1]) }}
-            </label>
-          </th>
-          <td style="color: #ffcc00">{{ r.name }}</td>
-          <td>{{ r.mode }}</td>
-          <td>
-            <span class="row-buttons">
-              <input class="button_gen button_gen_small" type="button" value="&#8593;" :title="$t('labels.redorder')" @click="reorderRule(r)" v-if="index > 0" />
-              <input class="button_gen button_gen_small" type="button" :value="$t('labels.edit')" @click.prevent="editRule(r)" />
-              <input class="button_gen button_gen_small" type="button" value="&#10005;" :title="$t('labels.delete')" @click.prevent="deleteRule(r)" />
-            </span>
-          </td>
-        </tr>
-      </tbody>
+      <draggable v-if="policies.length" tag="tbody" :list="policies" handle=".drag-handle" @end="syncOrder">
+        <template #item="{ element: r, index }">
+          <tr>
+            <th class="drag-handle" aria-label="Drag to reorder">
+              <span class="grip" aria-hidden="true"></span>
+              <label>
+                <input type="checkbox" v-model="r.enabled" @change.prevent="on_off_rule(r, index)" />
+                {{ $t('com.PolicyModal.rule_no', [index + 1]) }}
+              </label>
+            </th>
+            <td style="color: #ffcc00">{{ r.name }}</td>
+            <td>{{ r.mode }}</td>
+            <td>
+              <span class="row-buttons">
+                <input class="button_gen button_gen_small" type="button" value="&#8593;" :title="$t('labels.redorder')" @click="reorderRule(r)" v-if="index > 0" />
+                <input class="button_gen button_gen_small" type="button" :value="$t('labels.edit')" @click.prevent="editRule(r)" />
+                <input class="button_gen button_gen_small" type="button" value="&#10005;" :title="$t('labels.delete')" @click.prevent="deleteRule(r)" />
+              </span>
+            </td>
+          </tr>
+        </template>
+      </draggable>
       <tbody v-else>
         <tr>
           <td colspan="4" style="color: #ffcc00">{{ $t('com.PolicyModal.no_rules_defined') }}</td>
@@ -80,7 +83,13 @@
             <label v-if="devices.length > 10">
               <input type="text" v-model="deviceFilter" class="input_15_table" placeholder="filter devices" @input="applyDeviceFilter" />
             </label>
-            <label v-for="device in devices" :key="device.mac" v-show="(showAll || device.isOnline) && device.isVisible" :class="{ online: showAll && device.isOnline }" :title="device.mac">
+            <label
+              v-for="device in devices"
+              :key="device.mac"
+              v-show="(showAll || device.isOnline) && device.isVisible"
+              :class="{ online: showAll && device.isOnline }"
+              :title="device.mac"
+            >
               <input type="checkbox" :value="device.mac" v-model="currentRule.mac" />
               {{ device.name || device.mac }}
             </label>
@@ -96,7 +105,13 @@
                 {{ opt.name }}
               </option>
             </select>
-            <span class="hint-color"> [<a href="https://www.speedguide.net/ports.php" target="_blank">search1</a>] [<a href="https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml" target="_blank">search2</a>] </span>
+            <span class="hint-color">
+              [<a href="https://www.speedguide.net/ports.php" target="_blank">search1</a>] [<a
+                href="https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml"
+                target="_blank"
+                >search2</a
+              >]
+            </span>
           </td>
         </tr>
         <tr>
@@ -144,6 +159,7 @@
   import Modal from '@main/Modal.vue';
   import { XrayRoutingPolicy } from '@/modules/CommonObjects';
   import Hint from '@main/Hint.vue';
+  import draggable from 'vuedraggable';
 
   class MacDevice {
     public mac!: string;
@@ -156,7 +172,8 @@
     name: 'PolicyModal',
     components: {
       Modal,
-      Hint
+      Hint,
+      draggable
     },
 
     props: {
@@ -268,7 +285,9 @@
           device.isVisible = deviceFilter.value && deviceFilter.value != '' ? (device.name || device.mac).toLowerCase().includes(deviceFilter.value.toLowerCase()) : true;
         });
       };
-
+      const syncOrder = () => {
+        emit('update:policies', policies.value);
+      };
       return {
         policies,
         currentRule,
@@ -279,6 +298,7 @@
         vendor,
         modes: XrayRoutingPolicy.modes,
         vendors: XrayRoutingPolicy.vendors,
+        deviceFilter,
         show,
         vendorChange,
         on_off_rule,
@@ -287,8 +307,8 @@
         addRule,
         editRule,
         saveRule,
-        deviceFilter,
-        applyDeviceFilter
+        applyDeviceFilter,
+        syncOrder
       };
     }
   });

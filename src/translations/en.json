@@ -500,6 +500,7 @@
       "label_domain_rules": "Associated rules",
       "modal_rules_list": "Associated rules",
       "hint_domains_disabled": "The domains for this server are managed based on the associated rules.",
+      "hint_ips_disabled": "The IPs for this server are managed based on the associated rules.",
       "hint_domain_rules": "It is possible to link specific rules to this server. When a rule is linked, its domains will be used."
     },
     "ProcessUptime": {
@@ -552,6 +553,15 @@
       "title": "Xray Logs",
       "display": "view logs",
       "type": "Log type to load"
+    },
+    "FakeDns": {
+      "label": "Fake DNS Settings",
+      "hint": "FakeDNS is used to obtain target domain names by forging DNS, which can reduce the delay in DNS queries and work with transparent proxies to obtain target domain names. <blockquote>**Warning:** FakeDNS may contaminate the local DNS and cause `network unreachable` after Xray is closed.</blockquote>",
+      "label_ip_pool": "IP Pool",
+      "hint_ip_pool": "FakeDNS will use the IP block specified by this option to allocate addresses.",
+      "label_pool_size": "Pool Size",
+      "hint_pool_size": "Specifies the maximum number of domain name-IP mappings stored by `FakeDNS`. When the number of mappings exceeds this value, mappings will be eliminated according to the LRU rule. The default is `65535`.",
+      "fakedns": "fakedns"
     }
   }
 }

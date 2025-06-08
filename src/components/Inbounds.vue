@@ -17,36 +17,42 @@
           </select>
         </td>
       </tr>
-      <slot v-for="(proxy, index) in config.inbounds" :key="index">
-        <tr v-show="!proxy.isSystem()" class="proxy-row">
-          <th>{{ proxy.tag == '' ? 'no tag' : proxy.tag! }}</th>
-          <td>
-            <a class="hint tag" href="#" @click.prevent="edit_proxy(proxy)">
-              <span v-show="proxy.streamSettings?.network" :class="['proxy-label', 'tag']">
-                {{ proxy.protocol }}
+      <draggable v-if="config.inbounds.length" tag="slot" :list="config.inbounds" handle=".drag-handle">
+        <template #item="{ element: proxy, index }">
+          <tr v-show="!proxy.isSystem()" class="proxy-row">
+            <th class="drag-handle" aria-label="Drag to reorder">
+              <span class="grip" aria-hidden="true"></span>
+              {{ proxy.tag == '' ? 'no tag' : proxy.tag! }}
+            </th>
+            <td>
+              <a class="hint tag" href="#" @click.prevent="edit_proxy(proxy)">
+                <span v-show="proxy.streamSettings?.network" :class="['proxy-label', 'tag']">
+                  {{ proxy.protocol }}
+                </span>
+              </a>
+              <span v-show="proxy.streamSettings?.network && proxy.streamSettings?.network != 'tcp'" :class="['proxy-label', proxy.streamSettings?.network]">
+                {{ proxy.streamSettings?.network }}
               </span>
-            </a>
-            <span v-show="proxy.streamSettings?.network && proxy.streamSettings?.network != 'tcp'" :class="['proxy-label', proxy.streamSettings?.network]">
-              {{ proxy.streamSettings?.network }}
-            </span>
-            <span v-show="proxy.streamSettings?.security && proxy.streamSettings?.security != 'none'" :class="['proxy-label', proxy.streamSettings?.security]">
-              {{ proxy.streamSettings?.security }}
-            </span>
-            <span v-show="proxy.streamSettings?.sockopt?.tproxy === 'tproxy'" :class="['proxy-label', proxy.streamSettings?.sockopt?.tproxy]">{{ proxy.streamSettings?.sockopt?.tproxy }}</span>
-            <span class="row-buttons">
-              <a class="button_gen button_gen_small" href="#" @click.prevent="show_transport(proxy)">
-                {{ $t('labels.transport') }}
-              </a>
-              <a class="button_gen button_gen_small" href="#" @click.prevent="show_sniffing(proxy)">
-                {{ $t('labels.sniffing') }}
-              </a>
-              <a class="button_gen button_gen_small" href="#" @click.prevent="reorder_proxy(proxy)" v-if="index > 0" :title="$t('labels.redorder')">&#8593;</a>
-              <a class="button_gen button_gen_small" href="#" @click.prevent="edit_proxy(proxy)" title="edit">&#8494;</a>
-              <a class="button_gen button_gen_small" href="#" @click.prevent="remove_proxy(proxy)" title="delete">&#10005;</a>
-            </span>
-          </td>
-        </tr>
-      </slot>
+              <span v-show="proxy.streamSettings?.security && proxy.streamSettings?.security != 'none'" :class="['proxy-label', proxy.streamSettings?.security]">
+                {{ proxy.streamSettings?.security }}
+              </span>
+              <span v-show="proxy.streamSettings?.sockopt?.tproxy === 'tproxy'" :class="['proxy-label', proxy.streamSettings?.sockopt?.tproxy]">{{
+                proxy.streamSettings?.sockopt?.tproxy
+              }}</span>
+              <span class="row-buttons">
+                <a class="button_gen button_gen_small" href="#" @click.prevent="show_transport(proxy)">
+                  {{ $t('labels.transport') }}
+                </a>
+                <a class="button_gen button_gen_small" href="#" @click.prevent="show_sniffing(proxy)">
+                  {{ $t('labels.sniffing') }}
+                </a>
+                <a class="button_gen button_gen_small" href="#" @click.prevent="edit_proxy(proxy)" title="edit">&#8494;</a>
+                <a class="button_gen button_gen_small" href="#" @click.prevent="remove_proxy(proxy)" title="delete">&#10005;</a>
+              </span>
+            </td>
+          </tr>
+        </template>
+      </draggable>
     </tbody>
   </table>
 
@@ -79,6 +85,7 @@
   import SocksInbound from '@ibd/SocksInbound.vue';
   import TrojanInbound from '@ibd/TrojanInbound.vue';
   import WireguardInbound from '@ibd/WireguardInbound.vue';
+  import draggable from 'vuedraggable';
 
   import { useI18n } from 'vue-i18n';
 
@@ -86,7 +93,8 @@
     name: 'Inbounds',
     emits: ['show-transport', 'show-sniffing'],
     components: {
-      Modal
+      Modal,
+      draggable
     },
     setup(props, { emit }) {
       const { t } = useI18n();
@@ -120,11 +128,6 @@
         }
       });
 
-      const reorder_proxy = (proxy: XrayInboundObject<IProtocolType>) => {
-        const index = config.value.inbounds.indexOf(proxy);
-        config.value.inbounds.splice(index, 1);
-        config.value.inbounds.splice(index - 1, 0, proxy);
-      };
       const show_transport = async (inbound: XrayInboundObject<IProtocolType>) => {
         emit('show-transport', inbound, 'inbound');
       };
@@ -201,7 +204,6 @@
         selectedInboundType,
         edit_proxy,
         remove_proxy,
-        reorder_proxy,
         save_inbound,
         show_transport,
         show_sniffing

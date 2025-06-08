@@ -6,7 +6,7 @@
           <td colspan="4">{{ $t('com.PolicyModal.modal_title2') }}</td>
         </tr>
       </thead>
-      <draggable v-if="policies.length" tag="tbody" :list="policies" item-key="idx" handle=".drag-handle" @end="syncOrder">
+      <draggable v-if="policies.length" tag="tbody" :list="policies" handle=".drag-handle" @end="syncOrder">
         <template #item="{ element: r, index }">
           <tr>
             <th class="drag-handle" aria-label="Drag to reorder">

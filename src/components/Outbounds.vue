@@ -17,7 +17,7 @@
           </select>
         </td>
       </tr>
-      <draggable v-if="config.outbounds.length" tag="slot" :list="config.outbounds" item-key="index" handle=".drag-handle">
+      <draggable v-if="config.outbounds.length" tag="slot" :list="config.outbounds" handle=".drag-handle">
         <template #item="{ element: proxy, index }">
           <tr v-show="!proxy.isSystem()" class="proxy-row">
             <th class="drag-handle" aria-label="Drag to reorder">

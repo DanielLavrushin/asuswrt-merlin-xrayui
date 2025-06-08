@@ -311,14 +311,15 @@ class Engine {
     }
 
     if (config.fakedns) {
-      config.fakedns.forEach((fake: XrayFakeDnsObject) => {
+      config.fakedns = config.fakedns.map((fake: XrayFakeDnsObject) => {
         if (!(fake instanceof XrayFakeDnsObject)) {
           const instance = plainToInstance(XrayFakeDnsObject, fake);
           fake = Array.isArray(instance) ? instance[0] : instance;
         }
-
         fake.normalize();
+        return fake;
       });
+
       if (config.fakedns.length === 0) {
         config.fakedns = undefined;
       }

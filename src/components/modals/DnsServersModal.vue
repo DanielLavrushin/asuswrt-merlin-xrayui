@@ -26,7 +26,7 @@
             <td colspan="2" style="color: #ffcc00">{{ $t('com.DnsServersModal.no_hosts_defined') }}</td>
           </tr>
         </tbody>
-        <draggable v-if="servers.length" tag="tbody" :list="servers" item-key="idx" handle=".drag-handle">
+        <draggable v-if="servers.length" tag="tbody" :list="servers" handle=".drag-handle">
           <template #item="{ element: server, index }">
             <tr class="data_tr">
               <td class="drag-handle" aria-label="Drag to reorder"><span class="grip" aria-hidden="true"></span>{{ getServer(server) }}</td>

@@ -218,7 +218,8 @@
       const file = ref<string>(FILE_ACCESS);
       const logsContent = ref<string>('');
       // Access log
-      const ACCESS_RE = /^(\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2})(?:\.\d+)?\s+from\s+(\d{1,3}(?:\.\d{1,3}){3})(?::\d+)?\s+accepted\s+(tcp|udp):(\[[^\]]+\]|[^:]+):(\d+)\s+\[([^\s]+)\s*(->|>>)\s*([^\]]+)\](?:\s+email:\s+(.+))?$/;
+      const ACCESS_RE =
+        /^(\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2})(?:\.\d+)?\s+from\s+(\d{1,3}(?:\.\d{1,3}){3})(?::\d+)?\s+accepted\s+(tcp|udp):(\[[^\]]+\]|[^:]+):(\d+)\s+\[([^\s]+)\s*(->|>>)\s*([^\]]+)\](?:\s+email:\s+(.+))?$/;
 
       // DNS “got answer” line
       const DNS_RE = /^(\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2})(?:\.\d+)?\s+localhost got answer:\s+([^\s]+)\s+->\s+\[([^\]]+)\]\s+(\d+(?:\.\d+)?)ms$/;
@@ -239,7 +240,14 @@
           const i = filters.inbound.toLowerCase();
           const o = filters.outbound.toLowerCase();
 
-          return !s || (l instanceof AccessLogEntry && (l.source?.toLowerCase().includes(s) || l.source_device?.toLowerCase().includes(s)) && (!t || `${l.target}:${l.target_port}`.toLowerCase().includes(t)) && (!i || l.inbound?.toLowerCase().includes(i)) && (!o || l.outbound?.toLowerCase().includes(o)));
+          return (
+            !s ||
+            (l instanceof AccessLogEntry &&
+              (l.source?.toLowerCase().includes(s) || l.source_device?.toLowerCase().includes(s)) &&
+              (!t || `${l.target}:${l.target_port}`.toLowerCase().includes(t)) &&
+              (!i || l.inbound?.toLowerCase().includes(i)) &&
+              (!o || l.outbound?.toLowerCase().includes(o)))
+          );
         });
       });
 
@@ -264,7 +272,7 @@
         if (!follow.value) return;
         try {
           await engine.submit(SubmitActions.fetchXrayLogs);
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 2000));
           const response = await axios.get(file.value);
           if (response.data) {
             logsContent.value = response.data;

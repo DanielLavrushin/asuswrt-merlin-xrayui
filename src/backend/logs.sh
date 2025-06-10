@@ -1,45 +1,61 @@
 #!/bin/sh
 # shellcheck disable=SC2034  # codacy:Unused variables
 
-replace_ips_with_domains() {
-  file="$1"
-  tmpfile="/tmp/$(basename "$file").tmp"
-  sed_script="/tmp/xrayui_sed_replace.sed"
+DNSMASQ_LOG="/opt/var/log/dnsmasq.log"
+XRAYUI_DNSMASQ_CACHE="$ADDON_LOGS_DIR/xrayui_ip2domain.cache"
+XRAYUI_DNSMASQ_SED="$ADDON_LOGS_DIR/xrayui_sed_replace.sed"
 
-  load_xrayui_config
-  if [ "$dnsmasq" != "true" ]; then
-    return
-  fi
+logs_ip2domain_cache() {
+  local cache="$XRAYUI_DNSMASQ_CACHE"
 
-  [ ! -f "/opt/var/log/dnsmasq.log" ] && {
-    return
-  }
-
-  tail -n 1000 /opt/var/log/dnsmasq.log | awk '{
-      for(i=1; i<=NF; i++){
-        if($i=="is" && (i+1)<=NF){
-          mapping[$(i+1)] = $(i-1)
+  tail -n 1200 "$DNSMASQ_LOG" | awk '
+        $0 ~ / is / {
+            for (i=1;i<=NF;i++)
+                if ($i=="is" && i+1<=NF) {
+                    ip=$(i+1); host=$(i-1)
+                    if (host!="localhost") map[ip]=host
+                }
         }
-      }
-    } END {
-      for(ip in mapping){
-        print "s|tcp:" ip "|tcp:" mapping[ip] "|g"
-        print "s|udp:" ip "|udp:" mapping[ip] "|g"
-      }
-    }' >"$sed_script"
+        END{for(ip in map) printf "%s %s\n",ip,map[ip]}
+    ' >"$cache"
+}
 
-  sed -f "$sed_script" "$file" >"$tmpfile"
-  mv "$tmpfile" "$file"
+logs_build_sed() {
+  tmp="/tmp/$(basename "$XRAYUI_DNSMASQ_SED").$$"
+  awk '{                               
+           printf "s|%s|%s|g\n", $1, $2           
+           printf "s|tcp:%s|tcp:%s|g\n", $1, $2   
+           printf "s|udp:%s|udp:%s|g\n", $1, $2
+           printf "s|tcp %s|tcp %s|g\n", $1, $2  
+           printf "s|udp %s|udp %s|g\n", $1, $2
+        }' "$XRAYUI_DNSMASQ_CACHE" >"$tmp"
+
+  mv "$tmp" "$XRAYUI_DNSMASQ_SED"
+}
+
+replace_ips_with_domains() {
+  local file="$1" tmp="${file}.$$"
+
+  logs_ip2domain_cache
+  logs_build_sed
+  [ -s "$XRAYUI_DNSMASQ_SED" ] || return 0
+
+  sed -f "$XRAYUI_DNSMASQ_SED" "$file" >"$tmp" && mv "$tmp" "$file"
 }
 
 logs_fetch() {
   load_xrayui_config
 
-  local log_access=$(jq -r --arg access "$ADDON_LOGS_DIR/xray_access.log" '.log.access // $access' "$XRAY_CONFIG_FILE")
-  local log_error=$(jq -r --arg error "$ADDON_LOGS_DIR/xray_error.log" '.log.error // $error' "$XRAY_CONFIG_FILE")
+  local log_access
+  log_access=$(jq -r --arg access "$ADDON_LOGS_DIR/xray_access.log" \
+    '.log.access // $access' "$XRAY_CONFIG_FILE")
+  local log_error
+  log_error=$(jq -r --arg error "$ADDON_LOGS_DIR/xray_error.log" \
+    '.log.error // $error' "$XRAY_CONFIG_FILE")
 
   tail -n 200 "$log_error" >"$ADDON_WEB_DIR/xray_error_partial.asp"
   tail -n 200 "$log_access" >"$ADDON_WEB_DIR/xray_access_partial.asp"
+
   replace_ips_with_domains "$ADDON_WEB_DIR/xray_access_partial.asp"
 }
 

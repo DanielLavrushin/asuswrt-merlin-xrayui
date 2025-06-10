@@ -17,7 +17,7 @@
           </select>
         </td>
       </tr>
-      <draggable v-if="config.inbounds.length" tag="slot" :list="config.inbounds" handle=".drag-handle">
+      <draggable v-if="config.inbounds.length" tag="slot" :list="config.inbounds" handle=".drag-handle" :item-key="(o: XrayInboundObject<IProtocolType>) => o.tag">
         <template #item="{ element: proxy, index }">
           <tr v-show="!proxy.isSystem()" class="proxy-row">
             <th class="drag-handle" aria-label="Drag to reorder">

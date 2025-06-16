@@ -8,6 +8,9 @@ on:
         required: true
         default: "0.1"
 
+permissions:
+  contents: read
+
 jobs:
   build-and-release:
     runs-on: ubuntu-latest

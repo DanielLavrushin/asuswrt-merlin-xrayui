@@ -179,8 +179,11 @@
         this.routing = match[7] == '>>' ? 'direct' : 'rule';
         this.outbound = match[8];
         if (this.source) {
-          const deviceName = devices[this.source]?.nickName ?? devices[this.source]?.name;
+          const device = devices[this.source];
+          const deviceName = device?.nickName?.trim() ? device.nickName : device?.name;
+
           this.source_device = deviceName;
+          console.log('AccessLogEntry:', this.source, deviceName, devices);
         }
         if (match[9]) {
           this.source_device = match[9];

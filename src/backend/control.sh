@@ -34,6 +34,7 @@ start() {
         log_info "Clearing Xray logs..."
         rm -f "$ADDON_LOGS_DIR/xray_access.log"
         rm -f "$ADDON_LOGS_DIR/xray_error.log"
+        rm -f "$ADDON_LOGS_DIR/xrayui_ip2domain.cache"
     fi
 
     if [ ! -d "$ADDON_LOGS_DIR" ]; then

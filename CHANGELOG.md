@@ -5,6 +5,7 @@
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - IMPROVED: Display device nick name (if defined) instead of the name in the logs.
+- FIXED: Logs filter by `target`, `inbound` and `outbound` were not working.
 
 ## [0.51.0] - 2025-06-08
 

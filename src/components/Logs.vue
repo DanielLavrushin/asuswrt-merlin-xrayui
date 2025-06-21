@@ -15,7 +15,7 @@
               <option :value="FILE_ERROR" v-if="logs.error !== 'none'">Error Logs</option>
             </select>
             <input class="button_gen button_gen_small" type="button" :value="$t('com.Logs.display')" @click.prevent="display()" />
-            <modal ref="logsModal" width="1100" :title="$t('com.Logs.title')">
+            <modal ref="logsModal" width="85%" :title="$t('com.Logs.title')">
               <div class="modal-content">
                 <div class="logs-area-row">
                   <pre class="logs-area-content" v-if="file === FILE_ERROR">{{ logsContent }}</pre>
@@ -32,10 +32,7 @@
                       </thead>
                       <tbody class="logs-area-content">
                         <tr v-for="log in filteredLogs" :key="log.line" :class="[{ parsed: log.parsed, unparsed: !log.parsed }, log.kind]">
-                          <!-- ① Unparsed lines: grey, full-width -->
                           <td v-if="!log.parsed" colspan="5">{{ log.line }}</td>
-
-                          <!-- ② Parsed ACCESS entry: your current five-cell layout -->
                           <template v-else-if="log.kind === 'access'">
                             <td>{{ log.time }}</td>
                             <td>
@@ -55,9 +52,7 @@
                             </td>
                           </template>
 
-                          <!-- ③ Parsed DNS entry: reuse columns, collapse where it makes sense -->
                           <template v-else>
-                            <!-- here log.kind === 'dns' -->
                             <td>{{ log.time }}</td>
                             <td colspan="2">
                               <span class="log-label dns">DNS</span>
@@ -234,20 +229,18 @@
 
       const filteredLogs = computed<LogEntry[]>(() => {
         return parsedLogs.value.filter((l) => {
-          if (!l.parsed) return true;
+          if (!l.parsed || !(l instanceof AccessLogEntry)) return true;
 
-          const s = filters.source.toLowerCase();
-          const t = filters.target.toLowerCase();
-          const i = filters.inbound.toLowerCase();
-          const o = filters.outbound.toLowerCase();
+          const src = filters.source.trim().toLowerCase();
+          const tgt = filters.target.trim().toLowerCase();
+          const inbound = filters.inbound.trim().toLowerCase();
+          const outbound = filters.outbound.trim().toLowerCase();
 
           return (
-            !s ||
-            (l instanceof AccessLogEntry &&
-              (l.source?.toLowerCase().includes(s) || l.source_device?.toLowerCase().includes(s)) &&
-              (!t || `${l.target}:${l.target_port}`.toLowerCase().includes(t)) &&
-              (!i || l.inbound?.toLowerCase().includes(i)) &&
-              (!o || l.outbound?.toLowerCase().includes(o)))
+            (!src || [l.source, l.source_device].filter(Boolean).some((v) => v!.toLowerCase().includes(src))) &&
+            (!tgt || `${l.target}:${l.target_port}`.toLowerCase().includes(tgt)) &&
+            (!inbound || l.inbound?.toLowerCase().includes(inbound)) &&
+            (!outbound || l.outbound?.toLowerCase().includes(outbound))
           );
         });
       });

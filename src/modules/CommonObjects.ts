@@ -12,7 +12,7 @@ import {
 } from './TransportObjects';
 
 export class XraySniffingObject {
-  static destOverrideOptions = ['http', 'tls', 'quic', 'fakedns'];
+  static readonly destOverrideOptions = ['http', 'tls', 'quic', 'fakedns'];
   public enabled? = false;
   public metadataOnly? = false;
   public routeOnly? = false;
@@ -119,8 +119,8 @@ export class XrayStreamTlsCertificateObject {
 
 export class XrayStreamTlsSettingsObject implements ISecurityProtocol {
   static alpnOptions = XrayOptions.alpnOptions;
-  static fingerprintOptions = ['', 'randomized', 'random', 'chrome', 'firefox', 'ios', 'android', 'safari', 'edge', '360', 'qq'];
-  static tlsVersionsOptions = ['1.0', '1.1', '1.2', '1.3'];
+  static readonly fingerprintOptions = ['', 'randomized', 'random', 'chrome', 'firefox', 'ios', 'android', 'safari', 'edge', '360', 'qq'];
+  static readonly tlsVersionsOptions = ['1.0', '1.1', '1.2', '1.3'];
 
   public serverName?: string;
   public rejectUnknownSni? = false;
@@ -200,7 +200,7 @@ export class XrayStreamRealitySettingsObject implements ISecurityProtocol {
 }
 
 export class XrayLogObject {
-  static levelOptions = ['debug', 'info', 'warning', 'error', 'none'];
+  static readonly levelOptions = ['debug', 'info', 'warning', 'error', 'none'];
   public access?: string = 'none';
   public error?: string = 'none';
   public loglevel? = 'warning';
@@ -219,7 +219,7 @@ export class XrayLogObject {
 }
 
 export class XrayDnsObject {
-  static strategyOptions = ['UseIP', 'UseIPv4', 'UseIPv6'];
+  static readonly strategyOptions = ['UseIP', 'UseIPv4', 'UseIPv6'];
   public tag? = 'dnsQuery';
   public hosts?: Record<string, string | string[]> | undefined = {};
   public servers: (string | XrayDnsServerObject)[] | undefined = [];
@@ -322,8 +322,8 @@ export class XrayReverseObject {
 }
 
 export class XrayRoutingObject {
-  static domainStrategyOptions = ['AsIs', 'IPIfNonMatch', 'IPOnDemand'];
-  static domainMatcherOptions = ['hybrid', 'linear'];
+  static readonly domainStrategyOptions = ['AsIs', 'IPIfNonMatch', 'IPOnDemand'];
+  static readonly domainMatcherOptions = ['hybrid', 'linear'];
   public domainStrategy? = 'AsIs';
   public domainMatcher? = 'hybrid';
   public rules?: XrayRoutingRuleObject[] = [];
@@ -370,58 +370,86 @@ export class XrayRoutingObject {
     return this;
   }
 
-  public default = (outboundTag: string, unblockItems: string[] | undefined): this => {
-    this.rules = [];
-    if (!unblockItems || unblockItems.length == 0) {
-      const rule = new XrayRoutingRuleObject();
-      rule.name = 'myip.com to proxy';
-      rule.domain = ['domain:myip.com'];
-      rule.outboundTag = outboundTag;
+  private readonly create_rule = (name: string, outboundTag: string, network = 'tcp,udp', domains: string[] = [], ips: string[] = [], ports = ''): XrayRoutingRuleObject => {
+    const rule = new XrayRoutingRuleObject();
+    rule.name = name;
+    rule.outboundTag = outboundTag;
+    rule.domainMatcher = this.domainMatcher;
+    rule.domain = domains;
+    rule.ip = ips;
+    rule.type = 'field';
+    rule.port = ports;
+    rule.network = network;
+    rule.enabled = true;
+    rule.normalize();
+    return rule;
+  };
 
+  public default = (outboundTag: string, unblockItems?: string[] | undefined): this => {
+    this.rules = [];
+
+    if (!unblockItems || unblockItems.length == 0) {
+      const rule = this.create_rule('myip.com to proxy', outboundTag, 'tcp,udp', ['domain:myip.com']);
       this.rules.push(rule);
     } else if (unblockItems.length > 0) {
       unblockItems.forEach((item) => {
         const gs = item.toLowerCase();
-        const rule = new XrayRoutingRuleObject();
-        rule.name = `${item} to ${outboundTag}`;
-        rule.outboundTag = outboundTag;
-
-        switch (gs) {
-          case 'kinopub':
-            rule.domain = [
-              `kino.pub`,
-              `kinopub.online`,
-              `gfw.ovh`,
-              `vjs.zencdn.net`,
-              `m.pushbr.com`,
-              `mos-gorsud.co`,
-              `zamerka.com`,
-              `"regexp:(\\w+)-static-[0-9]+\\.cdntogo\\.net$"`
-            ];
-            break;
-          case 'envato':
-            rule.domain = [`domain:envato.com`, `domain:envato.net`, `domain:envatoelements.com`, `domain:envatousercontent.com`];
-            break;
-          case 'facebook':
-            rule.domain = [`geosite:${gs}`, `geosite:facebook-dev`];
-            break;
-          case 'metacritic':
-            rule.domain = [`domain:metacritic.com`];
-            break;
-          case 'wikipedia':
-            rule.domain = [`geosite:wikimedia`];
-            break;
-          case 'google':
-            rule.domain = [`geosite:google`, `geosite:google-play`, `geosite:google-registry`, `geosite:google-ads`, `geosite:google-trust-services`, `geosite:google-scholar`];
-            break;
-          default: {
-            rule.domain = [`geosite:${gs}`];
-            break;
-          }
-        }
-
         if (this.rules) {
-          this.rules.push(rule);
+          switch (gs) {
+            case 'discord':
+              this.rules.push(this.create_rule(`${gs} to ${outboundTag}`, outboundTag, 'tcp,udp', ['geosite:discord']));
+              this.rules.push(this.create_rule(`${gs} ip to ${outboundTag}`, outboundTag, 'udp', [], [], '50000-50100,6463-6472'));
+              break;
+            case 'kinopub':
+              this.rules.push(
+                this.create_rule(`${item} to ${outboundTag}`, outboundTag, 'tcp,udp', [
+                  `kino.pub`,
+                  `kinopub.online`,
+                  `gfw.ovh`,
+                  `vjs.zencdn.net`,
+                  `m.pushbr.com`,
+                  `mos-gorsud.co`,
+                  `zamerka.com`,
+                  `"regexp:(\\w+)-static-[0-9]+\\.cdntogo\\.net$"`
+                ])
+              );
+              break;
+            case 'envato':
+              this.rules.push(
+                this.create_rule(`${gs} to ${outboundTag}`, outboundTag, 'tcp,udp', [
+                  `domain:envato.com`,
+                  `domain:envato.net`,
+                  `domain:envatoelements.com`,
+                  `domain:envatousercontent.com`
+                ])
+              );
+              break;
+            case 'facebook':
+              this.rules.push(this.create_rule(`${gs} to ${outboundTag}`, outboundTag, 'tcp,udp', [`geosite:${gs}`, `geosite:facebook-dev`]));
+              break;
+            case 'metacritic':
+              this.rules.push(this.create_rule(`${gs} to ${outboundTag}`, outboundTag, 'tcp,udp', [`domain:metacritic.com`]));
+              break;
+            case 'wikipedia':
+              this.rules.push(this.create_rule(`${gs} to ${outboundTag}`, outboundTag, 'tcp,udp', [`geosite:wikimedia`]));
+              break;
+            case 'google':
+              this.rules.push(
+                this.create_rule(`${gs} to ${outboundTag}`, outboundTag, 'tcp,udp', [
+                  `geosite:google`,
+                  `geosite:google-play`,
+                  `geosite:google-registry`,
+                  `geosite:google-ads`,
+                  `geosite:google-trust-services`,
+                  `geosite:google-scholar`
+                ])
+              );
+              break;
+            default: {
+              this.rules.push(this.create_rule(`${gs} to ${outboundTag}`, outboundTag, 'tcp,udp', [`geosite:${gs}`]));
+              break;
+            }
+          }
         }
       });
     }
@@ -431,8 +459,8 @@ export class XrayRoutingObject {
 }
 
 export class XrayRoutingPolicy {
-  static defaultPorts = ['443', '80', '22'];
-  static modes = ['redirect', 'bypass'];
+  static readonly defaultPorts = ['443', '80', '22'];
+  static readonly modes = ['redirect', 'bypass'];
   public name?: string;
   public mac?: string[] = [];
   public tcp? = '';
@@ -440,8 +468,8 @@ export class XrayRoutingPolicy {
   public mode?: string = 'redirect';
   public enabled? = true;
 
-  public static vendors: { name: string; tcp: string; udp: string }[] | null = [
-    { name: 'Default ports', tcp: '443,80,22', udp: '443,80,22' },
+  public static readonly vendors: { name: string; tcp: string; udp: string }[] | null = [
+    { name: 'Default ports', tcp: '443,80,22', udp: '443,22' },
     { name: 'Steam', tcp: '7777:7788,3478:4380,27000:27100', udp: '7777:7788,3478:4380,27000:27100' },
     { name: 'Microsoft Xbox', tcp: '', udp: '3544,4500,500' },
     { name: 'Epic Games Store', tcp: '5060,5062,5222,6250', udp: '5060,5062,5222,6250' },
@@ -475,15 +503,15 @@ export class XrayRoutingPolicy {
     this.mode = 'bypass';
     this.name = 'bypass xray except web traffic';
     this.tcp = `443,80,22`;
-    this.udp = `443,80,22`;
+    this.udp = `443,22`;
     return this;
   };
 }
 
 export class XrayRoutingRuleObject {
-  static connectionCheckRuleName = 'sys:connection-check';
-  static networkOptions = ['', 'tcp', 'udp', 'tcp,udp'];
-  static protocolOptions = ['http', 'tls', 'bittorrent'];
+  static readonly connectionCheckRuleName = 'sys:connection-check';
+  static readonly networkOptions = ['', 'tcp', 'udp', 'tcp,udp'];
+  static readonly protocolOptions = ['http', 'tls', 'bittorrent'];
   public idx = 0;
   public name?: string;
   public enabled? = true;
@@ -595,7 +623,7 @@ export class XrayProtocolOption {
 }
 
 export class XrayNoiseObject {
-  static typeOptions = ['rand', 'str', 'base64'];
+  static readonly typeOptions = ['rand', 'str', 'base64'];
   public type = 'rand';
   public packet!: string;
   public delay: string | number = 0;
@@ -610,8 +638,8 @@ export class XrayPeerObject {
 }
 
 export class XraySockoptObject {
-  static tproxyOptions = ['off', 'redirect', 'tproxy'];
-  static domainStrategyOptions = ['AsIs', 'UseIP', 'UseIPv4', 'UseIPv6'];
+  static readonly tproxyOptions = ['off', 'redirect', 'tproxy'];
+  static readonly domainStrategyOptions = ['AsIs', 'UseIP', 'UseIPv4', 'UseIPv6'];
 
   public mark?: number;
   public tcpFastOpen?: boolean;

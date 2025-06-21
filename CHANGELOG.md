@@ -1,5 +1,16 @@
 # XRAYUI Changelog
 
+## [0.52.0] - 2025-06-21
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- FIXED: Log filters for `target`, `inbound`, and `outbound` now work correctly.
+- FIXED: Source-network extraction now recognizes valid IPv4 and IPv6 CIDR notation, resolving connection issues on `PPPoE` connections.
+- ADDED: Predefined `Discord` IP/port rules are now included when importing a configuration.
+- IMPROVED: Faster and more stable IP-to-domain-name resolution in logs.
+- IMPROVED: Logs now display the device **nickname** (if defined) instead of the device name.
+- REMOVED: UDP port `80` has been removed from the default port list in the Policies Manager.
+
 ## [0.51.0] - 2025-06-08
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

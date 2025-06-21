@@ -15,7 +15,7 @@
               <option :value="FILE_ERROR" v-if="logs.error !== 'none'">Error Logs</option>
             </select>
             <input class="button_gen button_gen_small" type="button" :value="$t('com.Logs.display')" @click.prevent="display()" />
-            <modal ref="logsModal" width="1100" :title="$t('com.Logs.title')">
+            <modal ref="logsModal" width="85%" :title="$t('com.Logs.title')">
               <div class="modal-content">
                 <div class="logs-area-row">
                   <pre class="logs-area-content" v-if="file === FILE_ERROR">{{ logsContent }}</pre>
@@ -32,10 +32,7 @@
                       </thead>
                       <tbody class="logs-area-content">
                         <tr v-for="log in filteredLogs" :key="log.line" :class="[{ parsed: log.parsed, unparsed: !log.parsed }, log.kind]">
-                          <!-- ① Unparsed lines: grey, full-width -->
                           <td v-if="!log.parsed" colspan="5">{{ log.line }}</td>
-
-                          <!-- ② Parsed ACCESS entry: your current five-cell layout -->
                           <template v-else-if="log.kind === 'access'">
                             <td>{{ log.time }}</td>
                             <td>
@@ -55,9 +52,7 @@
                             </td>
                           </template>
 
-                          <!-- ③ Parsed DNS entry: reuse columns, collapse where it makes sense -->
                           <template v-else>
-                            <!-- here log.kind === 'dns' -->
                             <td>{{ log.time }}</td>
                             <td colspan="2">
                               <span class="log-label dns">DNS</span>
@@ -184,7 +179,10 @@
         this.routing = match[7] == '>>' ? 'direct' : 'rule';
         this.outbound = match[8];
         if (this.source) {
-          this.source_device = devices[this.source]?.name;
+          const device = devices[this.source];
+          const deviceName = device?.nickName?.trim() ? device.nickName : device?.name;
+
+          this.source_device = deviceName;
         }
         if (match[9]) {
           this.source_device = match[9];
@@ -218,7 +216,8 @@
       const file = ref<string>(FILE_ACCESS);
       const logsContent = ref<string>('');
       // Access log
-      const ACCESS_RE = /^(\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2})(?:\.\d+)?\s+from\s+(\d{1,3}(?:\.\d{1,3}){3})(?::\d+)?\s+accepted\s+(tcp|udp):(\[[^\]]+\]|[^:]+):(\d+)\s+\[([^\s]+)\s*(->|>>)\s*([^\]]+)\](?:\s+email:\s+(.+))?$/;
+      const ACCESS_RE =
+        /^(\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2})(?:\.\d+)?\s+from\s+(\d{1,3}(?:\.\d{1,3}){3})(?::\d+)?\s+accepted\s+(tcp|udp):(\[[^\]]+\]|[^:]+):(\d+)\s+\[([^\s]+)\s*(->|>>)\s*([^\]]+)\](?:\s+email:\s+(.+))?$/;
 
       // DNS “got answer” line
       const DNS_RE = /^(\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2})(?:\.\d+)?\s+localhost got answer:\s+([^\s]+)\s+->\s+\[([^\]]+)\]\s+(\d+(?:\.\d+)?)ms$/;
@@ -232,14 +231,19 @@
 
       const filteredLogs = computed<LogEntry[]>(() => {
         return parsedLogs.value.filter((l) => {
-          if (!l.parsed) return true;
+          if (!l.parsed || !(l instanceof AccessLogEntry)) return true;
 
-          const s = filters.source.toLowerCase();
-          const t = filters.target.toLowerCase();
-          const i = filters.inbound.toLowerCase();
-          const o = filters.outbound.toLowerCase();
+          const src = filters.source.trim().toLowerCase();
+          const tgt = filters.target.trim().toLowerCase();
+          const inbound = filters.inbound.trim().toLowerCase();
+          const outbound = filters.outbound.trim().toLowerCase();
 
-          return !s || (l instanceof AccessLogEntry && (l.source?.toLowerCase().includes(s) || l.source_device?.toLowerCase().includes(s)) && (!t || `${l.target}:${l.target_port}`.toLowerCase().includes(t)) && (!i || l.inbound?.toLowerCase().includes(i)) && (!o || l.outbound?.toLowerCase().includes(o)));
+          return (
+            (!src || [l.source, l.source_device].filter(Boolean).some((v) => v!.toLowerCase().includes(src))) &&
+            (!tgt || `${l.target}:${l.target_port}`.toLowerCase().includes(tgt)) &&
+            (!inbound || l.inbound?.toLowerCase().includes(inbound)) &&
+            (!outbound || l.outbound?.toLowerCase().includes(outbound))
+          );
         });
       });
 
@@ -253,8 +257,10 @@
           .split('\n')
           .map((line) => {
             let m;
-            if ((m = line.match(ACCESS_RE))) return new AccessLogEntry(m, devices.value);
-            if ((m = line.match(DNS_RE))) return new DnsLogEntry(m, line);
+            m = line.match(ACCESS_RE);
+            if (m) return new AccessLogEntry(m, devices.value);
+            m = line.match(DNS_RE);
+            if (m) return new DnsLogEntry(m, line);
             return new AccessLogEntry(undefined, undefined, line);
           })
           .filter((entry): entry is AccessLogEntry => entry !== null);
@@ -264,7 +270,7 @@
         if (!follow.value) return;
         try {
           await engine.submit(SubmitActions.fetchXrayLogs);
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 2000));
           const response = await axios.get(file.value);
           if (response.data) {
             logsContent.value = response.data;

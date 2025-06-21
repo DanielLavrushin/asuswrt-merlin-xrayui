@@ -1,46 +1,96 @@
 #!/bin/sh
 # shellcheck disable=SC2034  # codacy:Unused variables
 
+DNSMASQ_LOG="/opt/var/log/dnsmasq.log"
+XRAYUI_DNSMASQ_CACHE="$ADDON_LOGS_DIR/xrayui_ip2domain.cache"
+XRAYUI_DNSMASQ_SED="$ADDON_LOGS_DIR/xrayui_sed_replace.sed"
+
+logs_ip2domain_cache() {
+  local cache="$XRAYUI_DNSMASQ_CACHE"
+  local tmp="${cache}.$$"
+
+  tail -n 1200 "$DNSMASQ_LOG" | awk '
+    # dnsmasq:  reply <host> is <IP>
+    $0 ~ / reply / {
+        host=$3; ip=$(NF)
+        if(host!="localhost" && ip ~ /^[0-9A-Fa-f:.]+$/) map[ip]=host
+    }
+    # dnsmasq: <host> is <IP>
+    $0 ~ / is / {
+        for(i=1;i<=NF;i++)
+            if($i=="is" && (i+1)<=NF){
+                ip=$(i+1); host=$(i-1)
+                if(host!="localhost" && ip ~ /^[0-9A-Fa-f:.]+$/) map[ip]=host
+            }
+    }
+    END{ for(ip in map) printf "%s %s\n", ip, map[ip] }
+' >"$tmp" || {
+    rm -f "$tmp"
+    return 1
+  }
+
+  cat "$tmp" "$cache" 2>/dev/null |
+    awk '!seen[$1]++' >"${cache}.new" &&
+    mv "${cache}.new" "$cache"
+
+  rm -f "$tmp"
+}
+
+logs_build_sed_script() {
+  local slice="$1"
+  local script="$XRAYUI_DNSMASQ_SED".$$
+
+  grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' "$slice" |
+    sort -u >"$script.ips"
+
+  awk '
+        NR==FNR          { want[$1]=1; next }          # first file = .ips
+        ($1 in want)     { printf "s|%s|%s|g\n", $1, $2 }
+    ' "$script.ips" "$XRAYUI_DNSMASQ_CACHE" >"$script"
+
+  rm -f "$script.ips"
+  echo "$script"
+}
+
 replace_ips_with_domains() {
-  file="$1"
-  tmpfile="/tmp/$(basename "$file").tmp"
-  sed_script="/tmp/xrayui_sed_replace.sed"
+  logs_ip2domain_cache # refresh cache first
 
-  load_xrayui_config
-  if [ "$dnsmasq" != "true" ]; then
-    return
-  fi
+  local slice="$1"
+  local sed_script
+  sed_script="$(logs_build_sed_script "$slice")"
 
-  [ ! -f "/opt/var/log/dnsmasq.log" ] && {
+  [ -s "$sed_script" ] || {
+    rm -f "$sed_script"
     return
   }
 
-  tail -n 1000 /opt/var/log/dnsmasq.log | awk '{
-      for(i=1; i<=NF; i++){
-        if($i=="is" && (i+1)<=NF){
-          mapping[$(i+1)] = $(i-1)
-        }
-      }
-    } END {
-      for(ip in mapping){
-        print "s|tcp:" ip "|tcp:" mapping[ip] "|g"
-        print "s|udp:" ip "|udp:" mapping[ip] "|g"
-      }
-    }' >"$sed_script"
-
-  sed -f "$sed_script" "$file" >"$tmpfile"
-  mv "$tmpfile" "$file"
+  sed -f "$sed_script" "$slice" >"$slice.$$" &&
+    mv "$slice.$$" "$slice"
+  rm -f "$sed_script"
 }
 
 logs_fetch() {
   load_xrayui_config
 
-  local log_access=$(jq -r --arg access "$ADDON_LOGS_DIR/xray_access.log" '.log.access // $access' "$XRAY_CONFIG_FILE")
-  local log_error=$(jq -r --arg error "$ADDON_LOGS_DIR/xray_error.log" '.log.error // $error' "$XRAY_CONFIG_FILE")
+  local log_access
+  log_access=$(jq -r --arg access "$ADDON_LOGS_DIR/xray_access.log" \
+    '.log.access // $access' "$XRAY_CONFIG_FILE")
+  local log_error
+  log_error=$(jq -r --arg error "$ADDON_LOGS_DIR/xray_error.log" \
+    '.log.error // $error' "$XRAY_CONFIG_FILE")
 
-  tail -n 200 "$log_error" >"$ADDON_WEB_DIR/xray_error_partial.asp"
-  tail -n 200 "$log_access" >"$ADDON_WEB_DIR/xray_access_partial.asp"
-  replace_ips_with_domains "$ADDON_WEB_DIR/xray_access_partial.asp"
+  local pub_error="$ADDON_WEB_DIR/xray_error_partial.asp"
+  local pub_access="$ADDON_WEB_DIR/xray_access_partial.asp"
+
+  local tmp_error="${pub_error}.$$"
+  local tmp_access="${pub_access}.$$"
+
+  tail -n 200 "$log_error" >"$tmp_error"
+  tail -n 200 "$log_access" >"$tmp_access"
+  replace_ips_with_domains "$tmp_access"
+
+  mv "$tmp_error" "$pub_error"
+  mv "$tmp_access" "$pub_access"
 }
 
 change_log_level() {

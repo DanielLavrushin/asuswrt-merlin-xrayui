@@ -108,7 +108,19 @@
   import Hint from '@main/Hint.vue';
   import { XrayDnsObject, XrayLogObject, XrayRoutingPolicy, XrayRoutingObject, XraySniffingObject } from '@/modules/CommonObjects';
   import { XrayDokodemoDoorInboundObject, XrayInboundObject } from '@/modules/InboundObjects';
-  import { XrayBlackholeOutboundObject, XrayFreedomOutboundObject, XrayHttpOutboundObject, XrayLoopbackOutboundObject, XrayOutboundObject, XrayShadowsocksOutboundObject, XraySocksOutboundObject, XrayTrojanOutboundObject, XrayVlessOutboundObject, XrayVmessOutboundObject, XrayWireguardOutboundObject } from '@/modules/OutboundObjects';
+  import {
+    XrayBlackholeOutboundObject,
+    XrayFreedomOutboundObject,
+    XrayHttpOutboundObject,
+    XrayLoopbackOutboundObject,
+    XrayOutboundObject,
+    XrayShadowsocksOutboundObject,
+    XraySocksOutboundObject,
+    XrayTrojanOutboundObject,
+    XrayVlessOutboundObject,
+    XrayVmessOutboundObject,
+    XrayWireguardOutboundObject
+  } from '@/modules/OutboundObjects';
   import { XrayProtocol } from '@/modules/Options';
   import { IProtocolType } from '@/modules/Interfaces';
   import { plainToInstance } from 'class-transformer';
@@ -207,6 +219,7 @@
           in_doko.settings = new XrayDokodemoDoorInboundObject();
           in_doko.protocol = XrayProtocol.DOKODEMODOOR;
           in_doko.port = 5599;
+          in_doko.listen = '127.0.0.1';
           in_doko.settings.network = 'tcp,udp';
           in_doko.settings.followRedirect = true;
           in_doko.sniffing = new XraySniffingObject();
@@ -219,7 +232,6 @@
             out_free.tag = 'direct';
             out_free.settings = new XrayFreedomOutboundObject();
             out_free.protocol = XrayProtocol.FREEDOM;
-            out_free.settings.domainStrategy = 'UseIP';
             props.config.outbounds.splice(0, 0, out_free);
           }
 
@@ -235,12 +247,6 @@
           if (bypassMode.value) {
             props.config.routing.policies = [new XrayRoutingPolicy().default().normalize()!];
           }
-
-          // if (unblockItems.value?.length > 0) {
-          //   await engine.executeWithLoadingProgress(async () => {
-          //     await engine.submit(SubmitActions.geodataCommunityUpdate);
-          //   }, false);
-          // }
         }
       };
 
@@ -355,7 +361,30 @@
         protocolQr,
         bypassMode,
         completeSetup,
-        unblockItemsList: ['Github', 'Google', 'Youtube', 'Telegram', 'TikTok', 'Reddit', 'LinkedIn', 'DeviantArt', 'Flibusta', 'Wikipedia', 'Twitch', 'Disney', 'Netflix', 'Discord', 'Instagram', 'Twitter', 'Patreon', 'Metacritic', 'Envato', 'SoundCloud', 'Kinopub', 'Facebook'].sort(),
+        unblockItemsList: [
+          'Github',
+          'Google',
+          'Youtube',
+          'Telegram',
+          'TikTok',
+          'Reddit',
+          'LinkedIn',
+          'DeviantArt',
+          'Flibusta',
+          'Wikipedia',
+          'Twitch',
+          'Disney',
+          'Netflix',
+          'Discord',
+          'Instagram',
+          'Twitter',
+          'Patreon',
+          'Metacritic',
+          'Envato',
+          'SoundCloud',
+          'Kinopub',
+          'Facebook'
+        ].sort(),
         unblockItems,
         select_json_file,
         select_qr,

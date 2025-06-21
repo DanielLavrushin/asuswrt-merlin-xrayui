@@ -1,7 +1,7 @@
 <template>
   <Teleport to="#xrayui-modals">
     <div class="xray-modal-overlay" v-if="isVisible" @mousedown.self="close" role="dialog" aria-modal="true">
-      <div class="xray-modal-content" @click.stop :style="{ width: `${width}px` }">
+      <div class="xray-modal-content" @click.stop :style="{ width }">
         <header class="xray-modal-header">
           <h2>
             <slot name="title">
@@ -28,7 +28,7 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, computed, onMounted, onBeforeUnmount } from 'vue';
+  import { defineComponent, ref, onBeforeUnmount } from 'vue';
 
   export default defineComponent({
     name: 'Modal',
@@ -74,7 +74,7 @@
         document.removeEventListener('keydown', handleKeyDown);
       });
 
-      return { isVisible, show, close, width: props.width };
+      return { isVisible, show, close, width: props.width.endsWith('%') ? props.width : `${props.width.replace('px', '')}px` };
     }
   });
 </script>

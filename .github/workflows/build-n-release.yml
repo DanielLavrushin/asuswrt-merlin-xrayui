@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version'
+        description: 'release version'
         required: true
-        default: '0.1'
+        default: '0.51.0'
       draft:
         description: 'mark as draft?'
         required: false
@@ -28,22 +28,28 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.*
+          cache: 'pnpm'
+          cache-dependency-path: |
+            ./pnpm-lock.yaml
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+          version: 10
 
       - name: Install XRAYUI dependencies
-        run: npm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build XRAYUI
-        run: npm run build
-
-      - name: Install WebApp dependencies
-        run: |
-          cd tools/webapp
-          npm install
-
-      - name: Build WebApp
-        run: |
-          cd tools/webapp
-          npm run build
+        run: pnpm run build
 
       - name: Update XRAYUI Version
         env:
@@ -55,19 +61,14 @@ jobs:
       - name: Archive XRAYUI dist
         run: tar --transform 's|^|xrayui/|' -czf asuswrt-merlin-xrayui.tar.gz -C dist .
 
-      - name: Archive WebApp dist
-        run: |
-          cd tools/webapp
-          tar -czf ./../../xrayui-webapp.tar.gz -C ./dist .
-
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version-file: tools/xraydatbuilder/src/go.mod
 
       - name: Build xraydatbuilder
+        working-directory: tools/xraydatbuilder/src
         run: |
-          cd tools/xraydatbuilder/src || exit 1
           chmod +x ./build.sh
           ./build.sh
           tar -czf ./../../../xrayui-datbuilder.tar.gz -C ../dist .
@@ -111,14 +112,4 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: xrayui-datbuilder.tar.gz
           asset_name: xrayui-datbuilder.tar.gz
-          asset_content_type: application/gzip
-
-      - name: Upload xrayui-webapp Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: xrayui-webapp.tar.gz
-          asset_name: xrayui-webapp.tar.gz
           asset_content_type: application/gzip

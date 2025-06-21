@@ -4,11 +4,11 @@
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
-- FIXED: Logs filter by `target`, `inbound` and `outbound` were not working.
-- FIXED: Update source network extraction to include valid CIDR notation for IPv4 and IPv6. This should fix the connection issues when using `PPPoE` connection types.
-- ADDED: `Discord` predefined ip ports to the rules when importing the configuration.
-- IMPROVED: Display device nick name (if defined) instead of the name in the logs.
-- REMOVED: Port `80` from the defualt UDP ports in the policies manager.
+- FIXED: Log filters for `target`, `inbound`, and `outbound` now work correctly.
+- FIXED: Source-network extraction now recognizes valid IPv4 and IPv6 CIDR notation, resolving connection issues on `PPPoE` connections.
+- ADDED: Predefined `Discord` IP/port rules are now included when importing a configuration.
+- IMPROVED: Logs now display the device **nickname** (if defined) instead of the device name.
+- REMOVED: UDP port `80` has been removed from the default port list in the Policies Manager.
 
 ## [0.51.0] - 2025-06-08
 

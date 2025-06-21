@@ -6,6 +6,8 @@
 
 - IMPROVED: Display device nick name (if defined) instead of the name in the logs.
 - FIXED: Logs filter by `target`, `inbound` and `outbound` were not working.
+- ADDED: Discord predefined ip ports to the rules when importing the configuration.
+- REMOVED: Port `80` from the defualt UDP ports in the policies manager.
 
 ## [0.51.0] - 2025-06-08
 

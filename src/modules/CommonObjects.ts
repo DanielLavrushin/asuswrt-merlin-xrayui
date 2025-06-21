@@ -12,7 +12,7 @@ import {
 } from './TransportObjects';
 
 export class XraySniffingObject {
-  static destOverrideOptions = ['http', 'tls', 'quic', 'fakedns'];
+  static readonly destOverrideOptions = ['http', 'tls', 'quic', 'fakedns'];
   public enabled? = false;
   public metadataOnly? = false;
   public routeOnly? = false;
@@ -119,8 +119,8 @@ export class XrayStreamTlsCertificateObject {
 
 export class XrayStreamTlsSettingsObject implements ISecurityProtocol {
   static alpnOptions = XrayOptions.alpnOptions;
-  static fingerprintOptions = ['', 'randomized', 'random', 'chrome', 'firefox', 'ios', 'android', 'safari', 'edge', '360', 'qq'];
-  static tlsVersionsOptions = ['1.0', '1.1', '1.2', '1.3'];
+  static readonly fingerprintOptions = ['', 'randomized', 'random', 'chrome', 'firefox', 'ios', 'android', 'safari', 'edge', '360', 'qq'];
+  static readonly tlsVersionsOptions = ['1.0', '1.1', '1.2', '1.3'];
 
   public serverName?: string;
   public rejectUnknownSni? = false;
@@ -219,7 +219,7 @@ export class XrayLogObject {
 }
 
 export class XrayDnsObject {
-  static strategyOptions = ['UseIP', 'UseIPv4', 'UseIPv6'];
+  static readonly strategyOptions = ['UseIP', 'UseIPv4', 'UseIPv6'];
   public tag? = 'dnsQuery';
   public hosts?: Record<string, string | string[]> | undefined = {};
   public servers: (string | XrayDnsServerObject)[] | undefined = [];
@@ -503,15 +503,15 @@ export class XrayRoutingPolicy {
     this.mode = 'bypass';
     this.name = 'bypass xray except web traffic';
     this.tcp = `443,80,22`;
-    this.udp = `443,80,22`;
+    this.udp = `443,22`;
     return this;
   };
 }
 
 export class XrayRoutingRuleObject {
-  static connectionCheckRuleName = 'sys:connection-check';
-  static networkOptions = ['', 'tcp', 'udp', 'tcp,udp'];
-  static protocolOptions = ['http', 'tls', 'bittorrent'];
+  static readonly connectionCheckRuleName = 'sys:connection-check';
+  static readonly networkOptions = ['', 'tcp', 'udp', 'tcp,udp'];
+  static readonly protocolOptions = ['http', 'tls', 'bittorrent'];
   public idx = 0;
   public name?: string;
   public enabled? = true;
@@ -623,7 +623,7 @@ export class XrayProtocolOption {
 }
 
 export class XrayNoiseObject {
-  static typeOptions = ['rand', 'str', 'base64'];
+  static readonly typeOptions = ['rand', 'str', 'base64'];
   public type = 'rand';
   public packet!: string;
   public delay: string | number = 0;
@@ -638,8 +638,8 @@ export class XrayPeerObject {
 }
 
 export class XraySockoptObject {
-  static tproxyOptions = ['off', 'redirect', 'tproxy'];
-  static domainStrategyOptions = ['AsIs', 'UseIP', 'UseIPv4', 'UseIPv6'];
+  static readonly tproxyOptions = ['off', 'redirect', 'tproxy'];
+  static readonly domainStrategyOptions = ['AsIs', 'UseIP', 'UseIPv4', 'UseIPv6'];
 
   public mark?: number;
   public tcpFastOpen?: boolean;

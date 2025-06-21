@@ -1,7 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { IProtocolType } from './Interfaces';
 import { XrayAllocateObject, XraySniffingObject, XrayStreamSettingsObject } from './CommonObjects';
-import { XrayVlessClientObject, XrayVmessClientObject, XrayHttpClientObject, XrayShadowsocksClientObject, XrayTrojanClientObject, XraySocksClientObject, XrayWireguardClientObject } from './ClientsObjects';
+import {
+  XrayVlessClientObject,
+  XrayVmessClientObject,
+  XrayHttpClientObject,
+  XrayShadowsocksClientObject,
+  XrayTrojanClientObject,
+  XraySocksClientObject,
+  XrayWireguardClientObject
+} from './ClientsObjects';
 import { plainToInstance } from 'class-transformer';
 
 export class XrayInboundObject<TProxy extends IProtocolType> {

@@ -1,0 +1,5 @@
+tools:
+  github-actions-security:
+    patterns:
+      - name: github-actions/unpinned-action
+        enabled: false

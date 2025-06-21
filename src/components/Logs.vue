@@ -183,7 +183,6 @@
           const deviceName = device?.nickName?.trim() ? device.nickName : device?.name;
 
           this.source_device = deviceName;
-          console.log('AccessLogEntry:', this.source, deviceName, devices);
         }
         if (match[9]) {
           this.source_device = match[9];

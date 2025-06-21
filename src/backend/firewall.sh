@@ -266,11 +266,11 @@ configure_firewall_client() {
     log_info "Configuring firewall Exclusion rules..."
 
     local source_nets_v4 source_nets_v6 static_v6
-    source_nets_v4=$(ip -4 route show scope link | awk '$1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/ {print $1}')
+    source_nets_v4=$(ip -4 route show scope link | awk '$1 ~ /\// && $1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/ {print $1}')
 
     source_nets_v6=""
     if is_ipv6_enabled; then
-        source_nets_v6=$(ip -6 route show scope link | awk '$1 ~ /^(fc00:|fd..:|fe80:)/ {print $1}')
+        source_nets_v6=$(ip -6 route show scope link | awk '$1 ~ /:.*\// && $1 ~ /^(fc00:|fd..:|fe80:)/ {print $1}')
     fi
 
     source_nets="$source_nets_v4 10.10.10.0/24 $source_nets_v6"

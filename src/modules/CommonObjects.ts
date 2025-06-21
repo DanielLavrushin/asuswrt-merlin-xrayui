@@ -200,7 +200,7 @@ export class XrayStreamRealitySettingsObject implements ISecurityProtocol {
 }
 
 export class XrayLogObject {
-  static levelOptions = ['debug', 'info', 'warning', 'error', 'none'];
+  static readonly levelOptions = ['debug', 'info', 'warning', 'error', 'none'];
   public access?: string = 'none';
   public error?: string = 'none';
   public loglevel? = 'warning';
@@ -370,7 +370,7 @@ export class XrayRoutingObject {
     return this;
   }
 
-  create_rule = (name: string, outboundTag: string, network = 'tcp,udp', domains: string[] = [], ips: string[] = [], ports: string = ''): XrayRoutingRuleObject => {
+  private readonly create_rule = (name: string, outboundTag: string, network = 'tcp,udp', domains: string[] = [], ips: string[] = [], ports = ''): XrayRoutingRuleObject => {
     const rule = new XrayRoutingRuleObject();
     rule.name = name;
     rule.outboundTag = outboundTag;
@@ -385,7 +385,7 @@ export class XrayRoutingObject {
     return rule;
   };
 
-  public default = (outboundTag: string, unblockItems: string[] | undefined): this => {
+  public default = (outboundTag: string, unblockItems?: string[] | undefined): this => {
     this.rules = [];
 
     if (!unblockItems || unblockItems.length == 0) {

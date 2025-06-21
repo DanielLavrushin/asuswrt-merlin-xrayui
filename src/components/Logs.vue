@@ -184,7 +184,8 @@
         this.routing = match[7] == '>>' ? 'direct' : 'rule';
         this.outbound = match[8];
         if (this.source) {
-          this.source_device = devices[this.source]?.name;
+          const deviceName = devices[this.source]?.nickName ?? devices[this.source]?.name;
+          this.source_device = deviceName;
         }
         if (match[9]) {
           this.source_device = match[9];
@@ -261,8 +262,10 @@
           .split('\n')
           .map((line) => {
             let m;
-            if ((m = line.match(ACCESS_RE))) return new AccessLogEntry(m, devices.value);
-            if ((m = line.match(DNS_RE))) return new DnsLogEntry(m, line);
+            m = line.match(ACCESS_RE);
+            if (m) return new AccessLogEntry(m, devices.value);
+            m = line.match(DNS_RE);
+            if (m) return new DnsLogEntry(m, line);
             return new AccessLogEntry(undefined, undefined, line);
           })
           .filter((entry): entry is AccessLogEntry => entry !== null);

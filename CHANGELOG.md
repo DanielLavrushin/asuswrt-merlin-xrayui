@@ -1,5 +1,11 @@
 # XRAYUI Changelog
 
+## [0.52.0] - 2025-06-xx
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- IMPROVED: Display device nick name (if defined) instead of the name in the logs.
+
 ## [0.51.0] - 2025-06-08
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

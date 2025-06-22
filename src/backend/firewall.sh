@@ -242,11 +242,19 @@ configure_firewall_client() {
             log_debug "xt_TPROXY kernel module successfully loaded."
         fi
     fi
+
     local IPT_BASE_FLAGS="$IPT_TABLE -A XRAYUI"
 
     ipt $IPT_TABLE -F XRAYUI 2>/dev/null || log_debug "Failed to flush $IPT_TABLE chain. Was it already empty?"
     ipt $IPT_TABLE -X XRAYUI 2>/dev/null || log_debug "Failed to remove $IPT_TABLE chain. Was it already empty?"
     ipt $IPT_TABLE -N XRAYUI 2>/dev/null || log_debug "Failed to create $IPT_TABLE chain."
+
+    for wan_if in $(ip -o link show | awk -F': ' '{print $2}' |
+        grep -E '^(ppp|pppoe|wan|wwan|lte|l2tp)[0-9]+$'); do
+        ipt "$IPT_TABLE" -C XRAYUI -i "$wan_if" -j RETURN 2>/dev/null ||
+            ipt "$IPT_TABLE" -I XRAYUI 1 -i "$wan_if" -j RETURN
+    done
+
     if [ "$IPT_TYPE" = "TPROXY" ]; then
         lsmod | grep -q '^xt_socket ' || modprobe xt_socket 2>/dev/null
 

@@ -1,0 +1,394 @@
+{
+  "log": {
+    "access": "/opt/share/xrayui/logs/xray_access.log",
+    "error": "/opt/share/xrayui/logs/xray_error.log",
+    "loglevel": "warning"
+  },
+  "dns": {
+    "tag": "dnsQuery"
+  },
+  "inbounds": [
+    {
+      "protocol": "dokodemo-door",
+      "listen": "127.0.0.1",
+      "port": 5599,
+      "tag": "all-in",
+      "settings": {
+        "address": "",
+        "network": "tcp,udp",
+        "followRedirect": true
+      },
+      "streamSettings": {
+        "tcpSettings": {},
+        "sockopt": {
+          "tproxy": "tproxy"
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls", "quic"]
+      }
+    },
+    {
+      "protocol": "vless",
+      "listen": "0.0.0.0",
+      "port": 51000,
+      "tag": "in-proxy",
+      "settings": {
+        "decryption": "none",
+        "clients": [
+          {
+            "id": "b0ad24fd-4ae1-4f55-8cc0-82599d98179d",
+            "email": "proxy-user",
+            "flow": "xtls-rprx-vision"
+          }
+        ]
+      },
+      "streamSettings": {
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "dest": "dl.google.com:443",
+          "serverNames": ["dl.google.com"],
+          "privateKey": "0JAmj_P2Z4Gw547e84-3vbnfKkhePjOBCp-R87zr6kk",
+          "shortIds": ["ffb40259c97a0a99", "7ace47e53232e787", "10dc68b79c2d19d3"],
+          "publicKey": "_GK1HpPnKgIgs_KdX4QxdjEpC3_XPFfrh_aUoSwxMJH4",
+          "spiderX": "/"
+        },
+        "tcpSettings": {}
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls", "quic", "fakedns"]
+      }
+    },
+    {
+      "protocol": "socks",
+      "listen": "127.0.0.1",
+      "port": 1080,
+      "tag": "sys:socks-in",
+      "settings": {}
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "freedom",
+      "tag": "direct",
+      "settings": {}
+    },
+    {
+      "protocol": "vless",
+      "tag": "proxy",
+      "settings": {
+        "vnext": [
+          {
+            "address": "10.11.12.13",
+            "port": 4433,
+            "users": [
+              {
+                "id": "1f6b677e-2ead-4a51-9021-cf3f811ae1f4",
+                "email": "proxy-user",
+                "encryption": "none",
+                "flow": "xtls-rprx-vision"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "serverName": "dl.google.com",
+          "fingerprint": "randomized",
+          "publicKey": "eOMw85G4HAxRJg0vuDoYLhHPzmI2SvMCHQ6Va9-ElVc",
+          "shortId": "49068d3fb47ef8ec",
+          "spiderX": "/dv"
+        },
+        "tcpSettings": {},
+        "kcpSettings": {}
+      }
+    },
+    {
+      "protocol": "vless",
+      "tag": "proxy2",
+      "settings": {
+        "vnext": [
+          {
+            "address": "10.11.12.13",
+            "port": 4433,
+            "users": [
+              {
+                "id": "2b9b42d9-37d4-4e58-9cb4-5f777c9cf855",
+                "email": "proxy-user",
+                "encryption": "none",
+                "flow": "xtls-rprx-vision"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "serverName": "dl.google.com",
+          "fingerprint": "randomized",
+          "publicKey": "eOMw85G4HAxRJg0vuDoYLhHPzmI2SvMCHQ6Va9-ElVc",
+          "shortId": "49068d3fb47ef8ec",
+          "spiderX": "/dv"
+        },
+        "tcpSettings": {}
+      }
+    },
+    {
+      "protocol": "vless",
+      "tag": "proxy3",
+      "settings": {
+        "vnext": [
+          {
+            "address": "10.11.12.13",
+            "port": 4433,
+            "users": [
+              {
+                "id": "1582d02b-62e6-48e5-91b8-295e49ee70fb",
+                "email": "proxy-user",
+                "encryption": "none",
+                "flow": "xtls-rprx-vision"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "serverName": "dl.google.com",
+          "fingerprint": "randomized",
+          "publicKey": "eOMw85G4HAxRJg0vuDoYLhHPzmI2SvMCHQ6Va9-ElVc",
+          "shortId": "49068d3fb47ef8ec",
+          "spiderX": "/dv"
+        }
+      }
+    },
+    {
+      "protocol": "vless",
+      "tag": "proxy4",
+      "settings": {
+        "vnext": [
+          {
+            "address": "10.11.12.13",
+            "port": 4433,
+            "users": [
+              {
+                "id": "758f5c10-1521-4722-ba66-88a56dd414d2",
+                "email": "proxy-user",
+                "encryption": "none",
+                "flow": "xtls-rprx-vision"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "serverName": "dl.google.com",
+          "fingerprint": "randomized",
+          "publicKey": "eOMw85G4HAxRJg0vuDoYLhHPzmI2SvMCHQ6Va9-ElVc",
+          "shortId": "49068d3fb47ef8ec",
+          "spiderX": "/dv"
+        },
+        "tcpSettings": {}
+      }
+    },
+    {
+      "protocol": "blackhole",
+      "tag": "block-ads",
+      "settings": {}
+    },
+    {
+      "protocol": "blackhole",
+      "tag": "block-torrent",
+      "settings": {}
+    }
+  ],
+  "routing": {
+    "domainStrategy": "IPOnDemand",
+    "rules": [
+      {
+        "idx": 0,
+        "name": "sys:connection-check",
+        "domain": ["ip-api.com"],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "idx": 1,
+        "name": "server to direct",
+        "type": "field",
+        "inboundTag": ["in-proxy"],
+        "outboundTag": "proxy"
+      },
+      {
+        "idx": 2,
+        "name": "block torrent traffic",
+        "type": "field",
+        "protocol": ["bittorrent"],
+        "outboundTag": "block-torrent"
+      },
+      {
+        "idx": 3,
+        "name": "block ads&crap",
+        "domain": ["geosite:category-ads-all"],
+        "type": "field",
+        "outboundTag": "block-ads"
+      },
+      {
+        "idx": 4,
+        "name": "specific sites to proxy",
+        "domain": [
+          "domain:ru",
+          "domain:su",
+          "geosite:flibusta",
+          "domain:whoer.net",
+          "2ip.ru",
+          "kino.pub",
+          "gfw.ovh",
+          "vjs.zencdn.net",
+          "m.pushbr.com",
+          "mos-gorsud.co",
+          "zamerka.com",
+          "regexp:(\\w+)-static-[0-9]+\\.cdntogo\\.net$",
+          "domain:twk.ovh",
+          "domain:gfw.ovh",
+          "domain:2ip.io",
+          "regex:iedem\\..*",
+          "domain:yourlistbest.net",
+          "domain:rt.com",
+          "geosite:yandex"
+        ],
+        "type": "field",
+        "outboundTag": "proxy"
+      },
+      {
+        "idx": 5,
+        "name": "specific things to direct",
+        "domain": [
+          "domain:dk",
+          "ubuntu.com",
+          "codacy.com",
+          "domain:cdn.jpg.wtf",
+          "domain:d3.ru",
+          "domain:dirty.ru",
+          "domain:sports.ru",
+          "geosite:cloudflare",
+          "geosite:discord",
+          "geosite:intel",
+          "geosite:github",
+          "geosite:reddit",
+          "geosite:gog",
+          "geosite:lenovo",
+          "geosite:amd",
+          "geosite:nvidia",
+          "geosite:digicert",
+          "geosite:sslcom",
+          "geosite:letsencrypt",
+          "geosite:asus",
+          "geosite:adobe",
+          "geosite:steam",
+          "geosite:whatsapp",
+          "geosite:adguard",
+          "geosite:instagram",
+          "geosite:openai",
+          "geosite:paypal",
+          "geosite:amazon",
+          "geosite:aws",
+          "geosite:apple",
+          "geosite:google",
+          "geosite:google-play",
+          "geosite:google-registry-tld",
+          "geosite:google-ads",
+          "geosite:google-gemini",
+          "geosite:telegram",
+          "geosite:twitter",
+          "geosite:microsoft",
+          "geosite:microsoft-dev",
+          "geosite:spotify",
+          "geosite:facebook",
+          "geosite:akamai",
+          "geosite:youtube",
+          "amazonaws.com",
+          "cloudfront.net",
+          "geosite:cursor",
+          "geosite:twitch"
+        ],
+        "type": "field",
+        "outboundTag": "direct"
+      },
+      {
+        "idx": 6,
+        "name": "dolcevita to proxy",
+        "type": "field",
+        "source": ["10.8.0.2"],
+        "outboundTag": "proxy3"
+      },
+      {
+        "idx": 7,
+        "name": "ilya to proxy",
+        "type": "field",
+        "source": ["10.8.0.5"],
+        "outboundTag": "proxy2"
+      },
+      {
+        "idx": 8,
+        "name": "olala to proxy",
+        "type": "field",
+        "source": ["10.8.0.6"],
+        "outboundTag": "proxy4"
+      },
+      {
+        "idx": 9,
+        "name": "ovpn to xray proxy",
+        "type": "field",
+        "source": ["10.8.0.0/24"],
+        "outboundTag": "proxy3"
+      },
+      {
+        "idx": 10,
+        "name": "geoip:ru to proxy",
+        "ip": ["geoip:ru", "geoip:cn"],
+        "type": "field",
+        "outboundTag": "proxy"
+      }
+    ],
+    "policies": [
+      {
+        "name": "bypass xray",
+        "mac": ["2C:4D:54:21:57:80", "2C:4D:54:21:57:81", "2C:4D:54:21:57:82", "2C:4D:54:21:57:83"],
+        "mode": "bypass",
+        "enabled": true
+      },
+      {
+        "name": "bypass game ports",
+        "tcp": "7777:7788,3478:4380,27000:27100,5060,5062,5222,6250",
+        "udp": "7777:7788,3478:4380,27000:27100,5060,5062,5222,6250",
+        "mode": "redirect",
+        "enabled": true
+      },
+      {
+        "name": "all devices to xray",
+        "mode": "redirect",
+        "enabled": true
+      },
+      {
+        "name": "ac88u bypass",
+        "mac": ["2C:4D:54:21:57:84"],
+        "mode": "bypass",
+        "enabled": false
+      }
+    ]
+  }
+}

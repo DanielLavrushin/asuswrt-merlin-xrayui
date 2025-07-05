@@ -370,7 +370,7 @@ export class XrayRoutingObject {
     return this;
   }
 
-  private readonly create_rule = (name: string, outboundTag: string, network = 'tcp,udp', domains: string[] = [], ips: string[] = [], ports = ''): XrayRoutingRuleObject => {
+  public create_rule = (name: string, outboundTag: string, network = 'tcp,udp', domains: string[] = [], ips: string[] = [], ports = ''): XrayRoutingRuleObject => {
     const rule = new XrayRoutingRuleObject();
     rule.name = name;
     rule.outboundTag = outboundTag;

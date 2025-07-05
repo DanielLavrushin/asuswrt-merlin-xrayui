@@ -92,6 +92,8 @@ export default defineConfig(({ mode }) => {
         '@obd': resolve(__dirname, 'src', 'components', 'outbounds'),
         '@modal': resolve(__dirname, 'src', 'components', 'modals'),
         '@clients': resolve(__dirname, 'src', 'components', 'clients'),
+        '@modules': resolve(__dirname, 'src', 'modules'),
+        '@translations': resolve(__dirname, 'src', 'translations'),
         '@': resolve(__dirname, 'src')
       }
     },

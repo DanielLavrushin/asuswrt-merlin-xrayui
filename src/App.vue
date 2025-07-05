@@ -12,7 +12,7 @@
   import AsusFooter from './components/asus/Footer.vue';
   import MainForm from './components/MainForm.vue';
 
-  import engine, { EngineResponseConfig, SubmitActions } from './modules/Engine';
+  import engine, { EngineResponseConfig, SubmitActions } from '@modules/Engine';
 
   export default defineComponent({
     name: 'App',

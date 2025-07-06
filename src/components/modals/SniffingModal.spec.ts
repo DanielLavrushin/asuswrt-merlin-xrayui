@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils';
+import { mount, shallowMount } from '@vue/test-utils';
 import { defineComponent, h, nextTick } from 'vue';
 import SniffingModal from '@modal/SniffingModal.vue';
 import { XraySniffingObject } from '@/modules/CommonObjects';
@@ -40,7 +40,7 @@ describe('SniffingModal.vue', () => {
   });
 
   function mountComponent() {
-    return mount(SniffingModal, {
+    return shallowMount(SniffingModal, {
       props: { sniffing: sniff },
       global: {
         stubs: {
@@ -59,9 +59,12 @@ describe('SniffingModal.vue', () => {
       }
     });
   }
-  it('renders exactly one checkbox per destOverride option', () => {
-    const wrapper = mountComponent();
+  let wrapper: ReturnType<typeof mountComponent>;
 
+  beforeEach(() => {
+    wrapper = mountComponent();
+  });
+  it('renders exactly one checkbox per destOverride option', () => {
     const boxes = wrapper.findAll('input[id^="destopt-"]');
     expect(boxes).toHaveLength(XraySniffingObject.destOverrideOptions.length);
 
@@ -70,8 +73,6 @@ describe('SniffingModal.vue', () => {
   });
 
   it('watch on metadataOnly clears destOverride', async () => {
-    const wrapper = mountComponent();
-
     wrapper.vm.sniffing.metadataOnly = true;
     await nextTick();
 
@@ -79,7 +80,6 @@ describe('SniffingModal.vue', () => {
   });
 
   it('save() calls modal.close() and emits "save"', async () => {
-    const wrapper = mountComponent();
     const destOpts = wrapper.findAll('input[id^="destopt-"]');
     await destOpts[0].setValue(false);
     const modalWrapper = wrapper.findComponent(ModalStub);
@@ -98,7 +98,6 @@ describe('SniffingModal.vue', () => {
   });
 
   it('turn off sniffing"', async () => {
-    const wrapper = mountComponent();
     const sniffRadioOff = wrapper.find('input[id="snifoff"]');
     await sniffRadioOff.setValue(true);
 
@@ -113,8 +112,6 @@ describe('SniffingModal.vue', () => {
   });
 
   it('manage excluded domains list', async () => {
-    const wrapper = mountComponent();
-
     wrapper.vm.manage_domains_exclude();
     await nextTick();
 

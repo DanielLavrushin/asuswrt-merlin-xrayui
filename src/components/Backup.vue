@@ -34,7 +34,7 @@
   </tr>
 </template>
 <script lang="ts">
-  import { defineComponent, ref, watch, inject, Ref } from 'vue';
+  import { defineComponent, ref, inject, Ref } from 'vue';
   import Modal from '@main/Modal.vue';
   import Hint from '@main/Hint.vue';
   import engine, { EngineResponseConfig, SubmitActions } from '@/modules/Engine';
@@ -46,8 +46,7 @@
       Modal,
       Hint
     },
-    props: {},
-    setup(props) {
+    setup() {
       const { t } = useI18n();
       const modal = ref();
       const backups = ref<string[]>([]);
@@ -103,4 +102,3 @@
     }
   });
 </script>
-<style scoped lang="scss"></style>

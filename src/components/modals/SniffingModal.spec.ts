@@ -7,7 +7,6 @@ describe('SniffingModal.vue', () => {
   let sniff: XraySniffingObject;
   const closeSpy = jest.fn();
   let onCloseDomains: (() => void) | null = null;
-  // 1) Stub the *lowercase* <teleport> so it inlines its children
   const TeleportStub = defineComponent({
     name: 'teleport',
     setup(_, { slots }) {
@@ -15,8 +14,6 @@ describe('SniffingModal.vue', () => {
     }
   });
 
-  // 2) Stub the *lowercase* <modal> tag (that your component uses)…
-  //    and expose no-ops for show/close.
   const ModalStub = defineComponent({
     name: 'modal',
     props: { title: String, width: String },
@@ -47,12 +44,17 @@ describe('SniffingModal.vue', () => {
       props: { sniffing: sniff },
       global: {
         stubs: {
-          teleport: TeleportStub, // override the real <teleport>
-          modal: ModalStub, // override the real <modal>
-          hint: true // no-op for <hint>
+          teleport: TeleportStub,
+          modal: ModalStub,
+          hint: true
         },
         mocks: {
-          $t: (k: string) => k
+          $t: (key: string, params?: Record<string, any>) => {
+            if (key === 'labels.items' && Array.isArray(params) && params.length > 0) {
+              return `items: ${params[0]}`;
+            }
+            return key;
+          }
         }
       }
     });
@@ -125,5 +127,9 @@ describe('SniffingModal.vue', () => {
     await nextTick();
 
     expect(wrapper.vm.sniffing.domainsExcluded).toEqual(['example.com', 'test.com']);
+
+    const badge = wrapper.find('a');
+    expect(badge.exists()).toBe(true);
+    expect(badge.text()).toBe('items: 2');
   });
 });

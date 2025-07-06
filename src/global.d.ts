@@ -4,19 +4,19 @@ import { XrayRouterDeviceOnline } from './modules/Interfaces';
 
 export {};
 
-interface XrayUiCustomSettings {
+export interface XrayUiCustomSettings {
   [key: string]: string;
   xray_page: string;
   xray_version: string;
   xray_startup: string;
 }
 
-interface XrayUiServer {
+export interface XrayUiServer {
   isRunning: boolean;
   xray_version_latest: string;
 }
 
-interface XrayRouter {
+export interface XrayRouter {
   cpu: number;
   name: string;
   ip: string;
@@ -28,7 +28,7 @@ interface XrayRouter {
   devices_online: Record<string, XrayRouterDeviceOnline>;
 }
 
-interface XrayUiGlobal {
+export interface XrayUiGlobal {
   server: XrayUiServer;
   router: XrayRouter;
   commands: SubmitActions;

@@ -8,7 +8,7 @@ import TrojanParser from './TrojanParser';
 import ShadowsocksParser from './ShadowsocksParser';
 
 export default class ProxyParser {
-  private parsedObject!: XrayParsedUrlObject;
+  private readonly parsedObject!: XrayParsedUrlObject;
   constructor(proxyUrl: string) {
     const url = proxyUrl.trim();
     this.parsedObject = new XrayParsedUrlObject(url);

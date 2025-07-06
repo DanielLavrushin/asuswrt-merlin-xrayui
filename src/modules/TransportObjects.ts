@@ -9,7 +9,7 @@ export class XrayStreamTcpSettingsObject implements ITransportNetwork {
 }
 
 export class XrayStreamKcpSettingsObject implements ITransportNetwork {
-  static headerTypes = ['none', 'srtp', 'utp', 'wechat-video', 'dtls', 'wireguard'];
+  static readonly headerTypes = ['none', 'srtp', 'utp', 'wechat-video', 'dtls', 'wireguard'];
 
   public mtu? = 1350;
   public tti? = 50;
@@ -45,10 +45,10 @@ export class XrayStreamKcpSettingsObject implements ITransportNetwork {
 }
 
 export class XrayStreamWsSettingsObject implements ITransportNetwork {
-  public acceptProxyProtocol = false;
-  public path = '/';
+  public acceptProxyProtocol? = false;
+  public path? = '/';
   public host?: string;
-  public headers: Record<string, unknown> | undefined = {};
+  public headers?: Record<string, unknown>;
 
   constructor(parsedObject?: XrayParsedUrlObject | undefined) {
     if (parsedObject) {
@@ -56,7 +56,12 @@ export class XrayStreamWsSettingsObject implements ITransportNetwork {
       this.host = parsedObject.parsedParams.host;
     }
   }
-  normalize = () => void 0;
+  normalize = () => {
+    this.path = this.path === '/' ? undefined : this.path;
+    this.host = !this.host ? undefined : this.host;
+    this.headers = this.headers && Object.keys(this.headers).length === 0 ? undefined : this.headers;
+    this.acceptProxyProtocol = !this.acceptProxyProtocol ? undefined : this.acceptProxyProtocol;
+  };
 }
 
 export class XrayStreamHttpSettingsObject implements ITransportNetwork {

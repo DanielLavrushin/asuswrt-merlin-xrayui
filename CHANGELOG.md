@@ -10,6 +10,7 @@
 - ADDED: Predefined `Discord` IP/port rules are now included when importing a configuration.
 - ADDED: When importing the configuration `TPROXY` (transparent proxy) is set by default.
 - ADDED: Chinese language support (simplified). Credits to @cdzqs.
+- ADDED: Proper `IPv6` handling added—auto-excludes DNS/DHCPv6, ICMPv6.
 - IMPROVED: Faster and more stable IP-to-domain-name resolution in logs.
 - IMPROVED: Logs now display the device **nickname** (if defined) instead of the device name.
 - IMPROVED: Refactor `Clients Online` component to accurately display active users and minimize router CPU/memory usage. (A global attempt to switch to the `xray api`).

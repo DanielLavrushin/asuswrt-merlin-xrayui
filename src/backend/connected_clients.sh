@@ -7,8 +7,8 @@
 get_connected_clients() {
     load_xrayui_config
     api_addr=$(jq -r '.api.listen' "$(api_get_current_config)")
-    stats_json="/opt/share/xrayui/xray_stats.json" # keep paths consistent
-    out_json="/tmp/xray_clients_online.json"
+    stats_json="$ADDON_SHARE_DIR/xray_stats.json"
+    out_json="$ADDON_SHARE_DIR/xray_clients_online.json"
 
     : >"$out_json"
 
@@ -23,9 +23,9 @@ get_connected_clients() {
     fi
 
     jq -r '
-        (.stat // [])                                  # null → []
-        | map(select((.value // 0) | tonumber > 0))    # traffic this window
-        | map(.name | split(">>>")[1])                 # e-mail
+        (.stat // [])
+        | map(select((.value // 0) | tonumber > 0))
+        | map(.name | split(">>>")[1])
         | unique
         | map({ ip:"", email:[.] })
     ' "$stats_json" >"$out_json"

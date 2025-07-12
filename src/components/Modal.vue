@@ -148,7 +148,6 @@
 
         td {
           text-align: left;
-          line-height: 23px;
         }
       }
     }

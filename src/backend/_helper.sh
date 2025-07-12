@@ -336,8 +336,5 @@ fixme() {
     log_info "Removing file $UI_RESPONSE_FILE..."
     rm -f $UI_RESPONSE_FILE || log_warn "Failed to remove $UI_RESPONSE_FILE"
 
-    log_info "Removing file $XRAYUI_CLIENTS_FILE..."
-    rm -f $XRAYUI_CLIENTS_FILE || log_warn "Failed to remove $XRAYUI_CLIENTS_FILE"
-
     log_ok "Done with fixme function."
 }

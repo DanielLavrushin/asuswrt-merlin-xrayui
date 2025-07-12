@@ -7,6 +7,7 @@ import ./lock.sh
 import ./ntp.sh
 import ./config.sh
 import ./mount.sh
+import ./api.sh
 import ./version.sh
 import ./control.sh
 import ./startup.sh

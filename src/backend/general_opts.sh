@@ -56,6 +56,10 @@ apply_general_options() {
         json_content=$(echo "$json_content" | jq 'del(.log.dnsLog)')
     fi
 
+    if [ "$clients_check" = "true" ]; then
+        api_write_config true
+    fi
+
     echo "$json_content" >"$XRAY_CONFIG_FILE"
 
     update_xrayui_config "dnsmasq" "$logs_dnsmasq"

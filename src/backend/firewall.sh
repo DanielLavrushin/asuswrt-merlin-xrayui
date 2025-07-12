@@ -122,7 +122,10 @@ configure_firewall() {
 
     if jq -e '
   .inbounds[]
-  | select(.protocol=="dokodemo-door")
+  | select(
+      .protocol == "dokodemo-door"
+      and ((.tag // "") | startswith("sys:") | not)
+    )
   | (.listen // "")
   | startswith("127.")
 ' "$XRAY_CONFIG_FILE" >/dev/null; then
@@ -152,7 +155,14 @@ configure_inbounds() {
     log_info "Scanning for all dokodemo-door inbounds..."
     # Get all dokodemo-door inbounds in compact JSON format.
     local dokodemo_inbounds
-    dokodemo_inbounds=$(jq -c '.inbounds[] | select(.protocol=="dokodemo-door")' "$XRAY_CONFIG_FILE")
+    dokodemo_inbounds=$(
+        jq -c '
+    .inbounds[]
+    | select(.protocol == "dokodemo-door"  
+      and ((.tag // "") | startswith("sys:") | not)
+      )
+  ' "$XRAY_CONFIG_FILE"
+    )
 
     # Split into two groups based on the tproxy flag.
     local direct_inbounds tproxy_inbounds
@@ -582,7 +592,10 @@ cleanup_firewall() {
     if [ -f "$XRAYUI_CONFIG_FILE" ]; then
         if jq -e '
   .inbounds[]
-  | select(.protocol=="dokodemo-door")
+  | select(
+      .protocol == "dokodemo-door"
+      and ((.tag // "") | startswith("sys:") | not)
+    )
   | (.listen // "")
   | startswith("127.")
 ' "$XRAY_CONFIG_FILE" >/dev/null; then

@@ -42,8 +42,21 @@ start() {
     fi
 
     update_loading_progress "Starting $ADDON_TITLE..."
-    xray -c "$XRAY_CONFIG_FILE" >/dev/null 2>&1 &
-    echo $! >$XRAY_PIDFILE
+    if [ "$clients_check" = "true" ]; then
+
+        local xray_config_name=$(basename "$XRAY_CONFIG_FILE")
+        local xray_api_config="/opt/etc/xray/xrayui/${xray_config_name%.json}-api.json"
+
+        local XRAY_EXTRA_CFG=""
+        if [ -f "$xray_api_config" ]; then
+            XRAY_EXTRA_CFG="-c $xray_api_config"
+            log_info "API extension $xray_api_config found – enabling per-user stats."
+        else
+            log_info "No API extension for $(basename "$XRAY_CONFIG_FILE"); running plain config."
+        fi
+    fi
+    xray -c "$XRAY_CONFIG_FILE" $XRAY_EXTRA_CFG >/dev/null 2>&1 &
+    echo $! >"$XRAY_PIDFILE"
 
     configure_firewall
 }

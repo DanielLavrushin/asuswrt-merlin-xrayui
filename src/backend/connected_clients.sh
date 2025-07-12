@@ -1,56 +1,35 @@
 #!/bin/sh
 # shellcheck disable=SC2034  # codacy:Unused variables
 
+#!/bin/sh
+# shellcheck disable=SC2034
+
 get_connected_clients() {
-
     load_xrayui_config
+    api_addr=$(jq -r '.api.listen' "$(api_get_current_config)")
+    stats_json="$ADDON_SHARE_DIR/xray_stats.json"
+    out_json="$ADDON_SHARE_DIR/xray_clients_online.json"
 
-    local temp_file="/tmp/xray_clients_online.json"
-    >"$temp_file" || log_error "Failed to create temporary file: $temp_file"
+    : >"$out_json"
 
-    local ports_list=""
-    local inbounds_ports=$(jq -r '.inbounds[]
-    | select(.protocol != "dokodemo-door" and (.tag | startswith("sys:") | not))
-    | .port' "$XRAY_CONFIG_FILE" | sort -u)
-
-    for xray_port in $inbounds_ports; do
-        if echo "$xray_port" | grep -q '-'; then
-            PORT_START=$(echo "$xray_port" | cut -d'-' -f1)
-            PORT_END=$(echo "$xray_port" | cut -d'-' -f2)
-            for port in $(seq "$PORT_START" "$PORT_END"); do
-                ports_list="$ports_list $port"
-            done
-        else
-            ports_list="$ports_list $xray_port"
-        fi
-    done
-
-    log_debug "Checking connected clients for ports: $ports_list"
-
-    local pattern=$(echo "$ports_list" | tr ' ' '\n' | grep -E '^[0-9]+$' | sort -n -u | awk '{printf "%s|", $0}' | sed 's/|$//')
-
-    local ips=$(netstat -an | grep "$pattern" | awk '$6=="ESTABLISHED" { split($5,a,":"); if (length(a) >= 4) print a[4]; else print a[1] }' | sort -u)
-
-    local access_log=$(jq -r '.log.access' "$XRAY_CONFIG_FILE")
-
-    for ip in $ips; do
-        if [ -n "$ip" ]; then
-            emails=$(grep -a "$ip" "$access_log" | awk -F'email: ' '{print $2}' | sort | uniq | sed 's/^/"/; s/$/"/' | tr '\n' ',' | sed 's/,$//')
-            if [ -n "$emails" ]; then
-                echo "{\"ip\": \"$ip\", \"email\": [$emails]}," >>"$temp_file"
-                # else
-                #  echo "{\"ip\": \"$ip\", \"email\": []}," >>"$temp_file"
-            fi
-        fi
-    done
-
-    if [ -s "$temp_file" ]; then
-        json_array="[$(sed '$ s/,$//' "$temp_file")]"
-    else
-        json_array="[]"
+    # pull user counters and *reset* them
+    if ! xray api statsquery \
+        -s "$api_addr" \
+        -pattern 'user>>>' \
+        -reset >"$stats_json" 2>/dev/null; then
+        log_error "StatsService unreachable on $api_addr"
+        echo "[]"
+        return
     fi
 
-    echo "$json_array" >$XRAYUI_CLIENTS_FILE
-    rm -f "$temp_file"
-    echo "$json_array"
+    jq -r '
+        (.stat // [])
+        | map(select((.value // 0) | tonumber > 0))
+        | map(.name | split(">>>")[1])
+        | unique
+        | map({ ip:"", email:[.] })
+    ' "$stats_json" >"$out_json"
+
+    mv "$out_json" "$XRAYUI_CLIENTS_FILE"
+    cat "$XRAYUI_CLIENTS_FILE"
 }

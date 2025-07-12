@@ -179,7 +179,8 @@ uninstall() {
     log_info "Removing XRAY UI files..."
     rm -rf "$ADDON_WEB_DIR" || log_warn "Failed to remove $ADDON_WEB_DIR."
     rm -rf "$ADDON_JFFS_ADN_DIR" || log_warn "Failed to remove $ADDON_JFFS_ADN_DIR."
-    rm -rf "/tmp/xray_clients_online.json" || log_warn "Failed to remove /tmp/xray_clients_online.json."
+    rm -rf "$ADDON_SHARE_DIR/xray_clients_online.json"
+    rm -rf "$ADDON_SHARE_DIR/xray_stats.json"
     rm -rf "$ADDON_SHARE_DIR/logs" || log_warn "Failed to remove $ADDON_SHARE_DIR/logs."
 
     if [ $? -eq 0 ]; then

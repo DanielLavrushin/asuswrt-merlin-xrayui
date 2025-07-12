@@ -31,23 +31,6 @@
           </td>
         </tr>
       </tbody>
-      <tbody>
-        <tr class="data_filter">
-          <td></td>
-          <td>
-            <input type="text" class="input_option" placeholder="device" />
-          </td>
-          <td>
-            <input type="text" class="input_option" placeholder="target" />
-          </td>
-          <td>
-            <input type="text" class="input_option" placeholder="inbound" />
-          </td>
-          <td>
-            <input type="text" class="input_option" placeholder="outbound" />
-          </td>
-        </tr>
-      </tbody>
     </table>
   </div>
 </template>
@@ -72,7 +55,10 @@
       let pollTimeout: number | null = null;
 
       // Determines if the component should continue polling.
-      const enable_check = () => xrayConfig.inbounds?.some((o) => !o.tag?.startsWith('sys:') && o.protocol !== XrayProtocol.FREEDOM && o.protocol !== XrayProtocol.DOKODEMODOOR && o.protocol !== XrayProtocol.BLACKHOLE) ?? false;
+      const enable_check = () =>
+        xrayConfig.inbounds?.some(
+          (o) => !o.tag?.startsWith('sys:') && o.protocol !== XrayProtocol.FREEDOM && o.protocol !== XrayProtocol.DOKODEMODOOR && o.protocol !== XrayProtocol.BLACKHOLE
+        ) ?? false;
 
       // Fetch client data from the server.
       const fetchClients = async () => {

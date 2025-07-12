@@ -48,6 +48,9 @@ jobs:
       - name: Install XRAYUI dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Test XRAYUI
+        run: pnpm test
+
       - name: Build XRAYUI
         run: pnpm run build
 

@@ -12,6 +12,7 @@
 - ADDED: Chinese language support (simplified). Credits to @cdzqs.
 - IMPROVED: Faster and more stable IP-to-domain-name resolution in logs.
 - IMPROVED: Logs now display the device **nickname** (if defined) instead of the device name.
+- IMPROVED: Refactor `Clients Online` component to accurately display active users and minimize router CPU/memory usage. (A global attemt to switch to the `xray api`).
 - REMOVED: UDP port `80` has been removed from the default port list in the Policies Manager.
 
 ## [0.52.1] - 2025-06-22

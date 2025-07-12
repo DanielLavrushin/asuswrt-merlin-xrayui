@@ -47,7 +47,7 @@
 </template>
 
 <script lang="ts">
-  import { engine } from '@/modules/Engine';
+  import engine from '@/modules/Engine';
   import { XrayVlessClientObject } from '@/modules/ClientsObjects';
   import { XrayOptions } from '@/modules/Options';
   import { defineComponent, ref } from 'vue';

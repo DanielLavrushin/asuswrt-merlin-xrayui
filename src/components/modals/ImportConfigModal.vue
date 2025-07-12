@@ -106,7 +106,7 @@
   import { XrayObject } from '@/modules/XrayConfig';
   import ProxyParser from '@/modules/parsers/ProxyParser';
   import Hint from '@main/Hint.vue';
-  import { XrayDnsObject, XrayLogObject, XrayRoutingPolicy, XrayRoutingObject, XraySniffingObject } from '@/modules/CommonObjects';
+  import { XrayDnsObject, XrayLogObject, XrayRoutingPolicy, XrayRoutingObject, XraySniffingObject, XraySockoptObject } from '@/modules/CommonObjects';
   import { XrayDokodemoDoorInboundObject, XrayInboundObject } from '@/modules/InboundObjects';
   import {
     XrayBlackholeOutboundObject,
@@ -221,6 +221,10 @@
           in_doko.port = 5599;
           in_doko.listen = '127.0.0.1';
           in_doko.settings.network = 'tcp,udp';
+          if (in_doko.streamSettings) {
+            in_doko.streamSettings.sockopt = new XraySockoptObject();
+            in_doko.streamSettings.sockopt.tproxy = 'tproxy';
+          }
           in_doko.settings.followRedirect = true;
           in_doko.sniffing = new XraySniffingObject();
           in_doko.sniffing.enabled = true;

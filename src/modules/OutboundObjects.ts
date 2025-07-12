@@ -10,9 +10,9 @@ import {
   XrayVmessServerObject,
   XrayNoiseObject,
   XrayShadowsocksServerObject,
-  XrayPeerObject
+  XrayPeerObject,
+  XrayVlessServerObject
 } from './CommonObjects';
-import { XrayVlessServerObject } from './CommonObjects';
 import { plainToInstance } from 'class-transformer';
 
 export class XrayOutboundObject<TProxy extends IProtocolType> {
@@ -38,7 +38,7 @@ export class XrayOutboundObject<TProxy extends IProtocolType> {
     this.sendThrough = this.sendThrough === '0.0.0.0' ? undefined : this.sendThrough;
     this.tag = this.tag === '' ? undefined : this.tag;
 
-    this.streamSettings = plainToInstance(XrayStreamSettingsObject, this.streamSettings) as XrayStreamSettingsObject;
+    this.streamSettings = plainToInstance(XrayStreamSettingsObject, this.streamSettings);
     this.streamSettings = this.streamSettings.normalize();
 
     this.settings.normalize && this.settings.normalize();
@@ -124,7 +124,7 @@ export class XrayTrojanOutboundObject implements IProtocolType {
 }
 
 export class XrayWireguardOutboundObject implements IProtocolType {
-  static strategyOptions = ['ForceIPv6v4', 'ForceIPv6', 'ForceIPv4v6', 'ForceIPv4', 'ForceIP'];
+  static readonly strategyOptions = ['ForceIPv6v4', 'ForceIPv6', 'ForceIPv4v6', 'ForceIPv4', 'ForceIP'];
   public privateKey!: string;
   public address: string[] = [];
   public peers: XrayPeerObject[] = [];
@@ -143,8 +143,8 @@ export class XrayLoopbackOutboundObject implements IProtocolType {
   normalize = () => void 0;
 }
 export class XrayFreedomOutboundObject implements IProtocolType {
-  static strategyOptions = ['AsIs', 'UseIP', 'UseIPv4', 'UseIPv6'];
-  static fragmentOptions = ['1-3', 'tlshello'];
+  static readonly strategyOptions = ['AsIs', 'UseIP', 'UseIPv4', 'UseIPv6'];
+  static readonly fragmentOptions = ['1-3', 'tlshello'];
   public domainStrategy? = 'AsIs';
   public redirect? = '';
   public fragment?: { packets: string; length: string; interval: string } | null = { packets: '', length: '100-200', interval: '10-20' };

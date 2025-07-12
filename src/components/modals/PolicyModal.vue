@@ -20,7 +20,7 @@
             <td>{{ r.mode }}</td>
             <td>
               <span class="row-buttons">
-                <input class="button_gen button_gen_small" type="button" value="&#8593;" :title="$t('labels.redorder')" @click="reorderRule(r)" v-if="index > 0" />
+                <input class="button_gen button_gen_small" type="button" value="&#8593;" :title="$t('labels.reorder')" @click="reorderRule(r)" v-if="index > 0" />
                 <input class="button_gen button_gen_small" type="button" :value="$t('labels.edit')" @click.prevent="editRule(r)" />
                 <input class="button_gen button_gen_small" type="button" value="&#10005;" :title="$t('labels.delete')" @click.prevent="deleteRule(r)" />
               </span>

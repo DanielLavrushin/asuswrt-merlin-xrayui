@@ -110,8 +110,22 @@
         inbound.sniffing = sniffing.value = inbound.sniffing ?? new XraySniffingObject();
         modal.value.show();
       };
+
+      const manage_domains_exclude = () => {
+        domainsExludedContent.value = sniffing.value.domainsExcluded?.join('\n') ?? '';
+
+        modalDomains.value.show(() => {
+          sniffing.value.domainsExcluded = domainsExludedContent.value.split('\n').filter((x) => x.trim() !== '');
+        });
+      };
+
       const save = () => {
         emit('save', sniffing);
+        if (!sniffing.value.enabled) {
+          sniffing.value.metadataOnly = false;
+          sniffing.value.destOverride = [];
+          sniffing.value.routeOnly = false;
+        }
         modal.value.close();
       };
 
@@ -136,13 +150,6 @@
         { deep: true }
       );
 
-      const manage_domains_exclude = () => {
-        domainsExludedContent.value = sniffing.value.domainsExcluded?.join('\n') ?? '';
-        modalDomains.value.show(() => {
-          sniffing.value.domainsExcluded = domainsExludedContent.value.split('\n').filter((x) => x.trim() !== '');
-        });
-      };
-
       return {
         sniffing,
         destOptions,
@@ -156,4 +163,3 @@
     }
   });
 </script>
-<style scoped></style>

@@ -12,15 +12,20 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "lib": ["esnext", "dom"],
+    "types": ["@types/node", "@types/jest", "vue", "vite/client"],
     "baseUrl": ".",
     "paths": {
       "@main/*": ["src/components/*"],
+      "@modules/*": ["src/modules/*"],
       "@ibd/*": ["src/components/inbounds/*"],
       "@obd/*": ["src/components/outbounds/*"],
       "@modal/*": ["src/components/modals/*"],
       "@clients/*": ["src/components/clients/*"],
+      "@translations/*": ["src/translations/*"],
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.vue", "src/**/*.d.ts"]
+  "include": ["src/**/*.ts", "src/**/*.vue", "src/**/*.d.ts"],
+  "isolatedModules": true,
+  "diagnostics": false
 }

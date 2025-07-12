@@ -1,5 +1,19 @@
 # XRAYUI Changelog
 
+## [0.52.2] -2025-07-xx
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- FIXED: Log filters for `target`, `inbound`, and `outbound` now work correctly.
+- FIXED: Source-network extraction now recognizes valid IPv4 and IPv6 CIDR notation, resolving connection issues on `PPPoE` connections.
+- FIXED: Add support for dynamic `WAN` interface handling in XRAYUI firewall configuration
+- ADDED: Predefined `Discord` IP/port rules are now included when importing a configuration.
+- ADDED: When importing the configuration `TPROXY` (transparent proxy) is set by default.
+- ADDED: Chinese language support (simplified). Credits to @cdzqs.
+- IMPROVED: Faster and more stable IP-to-domain-name resolution in logs.
+- IMPROVED: Logs now display the device **nickname** (if defined) instead of the device name.
+- REMOVED: UDP port `80` has been removed from the default port list in the Policies Manager.
+
 ## [0.52.1] - 2025-06-22
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

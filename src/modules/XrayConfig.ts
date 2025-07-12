@@ -66,6 +66,6 @@ export const xrayProtocols: XrayProtocolOption[] = [
   }
 ];
 
-let xrayConfig = reactive(new XrayObject());
+const xrayConfig = reactive(new XrayObject());
 export default xrayConfig;
 export { xrayConfig };

@@ -61,28 +61,28 @@ import {
 } from './TransportObjects';
 import { XrayProtocol } from './Options';
 
-class EngineWireguard {
+export class EngineWireguard {
   public privateKey!: string;
   public publicKey!: string;
 }
 
-class EngineReality {
+export class EngineReality {
   public privateKey!: string;
   public publicKey!: string;
 }
 
-class EngineSsl {
+export class EngineSsl {
   public certificateFile!: string;
   public keyFile!: string;
 }
-class EngineClientConnectionStatus {
+export class EngineClientConnectionStatus {
   public ipAddress?: string;
   public countryName?: string;
   public countryCode?: string;
   public connected?: boolean;
 }
 
-class EngineLoadingProgress {
+export class EngineLoadingProgress {
   public progress = 0;
   public message = '';
 
@@ -96,7 +96,7 @@ class EngineLoadingProgress {
   }
 }
 
-class EngineResponseConfig {
+export class EngineResponseConfig {
   public wireguard?: EngineWireguard;
   public reality?: EngineReality;
   public certificates?: EngineSsl;
@@ -121,7 +121,7 @@ class EngineResponseConfig {
   public loading?: EngineLoadingProgress;
   public connection_check?: EngineClientConnectionStatus;
 }
-class EngineGeodatConfig {
+export class EngineGeodatConfig {
   public community?: Record<string, string>;
   public geoip_url?: string;
   public geosite_url?: string;
@@ -129,14 +129,14 @@ class EngineGeodatConfig {
   public tags?: string[] = [];
 }
 
-class GeodatTagRequest {
+export class GeodatTagRequest {
   public tag?: string;
   public isNew!: boolean;
   public content?: string;
 }
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
-enum SubmitActions {
+export enum SubmitActions {
   configurationSetMode = 'xrayui_configuration_mode',
   configurationApply = 'xrayui_configuration_apply',
   clientsOnline = 'xrayui_connectedclients',
@@ -170,10 +170,10 @@ enum SubmitActions {
   restoreBackup = 'xrayui_configuration_backuprestore'
 }
 
-class Engine {
+export class Engine {
   public xrayConfig: XrayObject = xrayConfig;
   public mode = 'server';
-  private zero_uuid = '10000000-1000-4000-8000-100000000000';
+  private readonly zero_uuid = '10000000-1000-4000-8000-100000000000';
 
   private splitPayload(payload: string, chunkSize: number): string[] {
     const chunks: string[] = [];
@@ -663,7 +663,5 @@ function transformStreamSettings(streamSettings: XrayStreamSettingsObject | unde
   return settings;
 }
 
-let engine = new Engine();
+const engine = new Engine();
 export default engine;
-
-export { EngineResponseConfig, EngineClientConnectionStatus, EngineLoadingProgress, EngineGeodatConfig, GeodatTagRequest, SubmitActions, Engine, engine };

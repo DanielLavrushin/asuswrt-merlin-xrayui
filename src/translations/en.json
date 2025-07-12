@@ -20,7 +20,7 @@
     "accept": "accept",
     "save": "save",
     "edit": "edit",
-    "redorder": "move up",
+    "reorder": "move up",
     "renew": "renew",
     "regenerate": "regenerate",
     "enabled": "enabled",

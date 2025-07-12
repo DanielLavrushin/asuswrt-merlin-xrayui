@@ -11,6 +11,7 @@ import en from './translations/en.json';
 import de from './translations/de.json';
 import ru from './translations/ru.json';
 import uk from './translations/uk.json';
+import cn from './translations/cn.json';
 
 window.hint = (message: string) => {
   window.overlib(message);
@@ -103,7 +104,8 @@ document.addEventListener('DOMContentLoaded', () => {
       en,
       de,
       ru,
-      uk
+      uk,
+      cn
     }
   });
 

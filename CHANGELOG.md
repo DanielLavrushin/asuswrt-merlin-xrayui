@@ -1,20 +1,21 @@
 # XRAYUI Changelog
 
-## [0.52.2] -2025-07-xx
+## [0.52.2] -2025-07-13
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
-- FIXED: Log filters for `target`, `inbound`, and `outbound` now work correctly.
-- FIXED: Source-network extraction now recognizes valid IPv4 and IPv6 CIDR notation, resolving connection issues on `PPPoE` connections.
-- FIXED: Add support for dynamic `WAN` interface handling in XRAYUI firewall configuration
-- ADDED: Predefined `Discord` IP/port rules are now included when importing a configuration.
-- ADDED: When importing the configuration `TPROXY` (transparent proxy) is set by default.
-- ADDED: Chinese language support (simplified). Credits to @cdzqs.
-- ADDED: Proper `IPv6` handling added—auto-excludes DNS/DHCPv6, ICMPv6.
-- IMPROVED: Faster and more stable IP-to-domain-name resolution in logs.
-- IMPROVED: Logs now display the device **nickname** (if defined) instead of the device name.
-- IMPROVED: Refactor `Clients Online` component to accurately display active users and minimize router CPU/memory usage. (A global attempt to switch to the `xray api`).
-- REMOVED: UDP port `80` has been removed from the default port list in the Policies Manager.
+-FIXED: Log filters for target, inbound, and outbound now work as expected.
+
+- FIXED: Source-network extraction now accepts valid `IPv4`/`IPv6` CIDR notation, resolving connection issues on `PPPoE` links.
+- FIXED: Dynamic `WAN` interface detection is now handled correctly in the XRAYUI firewall configuration.
+- ADDED: Predefined `Discord` IP/port rules are included when importing a configuration.
+- ADDED: The `TPROXY` (transparent proxy) option is now enabled by default on configuration import.
+- ADDED: `Simplified-Chinese` language support — thanks to `@cdzqs`.
+- ADDED: Enhanced `IPv6` support — DNS/DHCPv6 and ICMPv6 traffic are automatically excluded.
+- IMPROVED: Faster, more stable IP-to-domain-name resolution in logs.
+- IMPROVED: Logs now show the device nickname (if set) instead of the raw hostname.
+- IMPROVED: Refactored `Clients Online` component; uses the Xray API, reports active users accurately, and reduces router CPU/RAM usage.
+- REMOVED: UDP port `80` has been dropped from the default port list in Policies Manager.
 
 ## [0.52.1] - 2025-06-22
 

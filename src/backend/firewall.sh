@@ -283,8 +283,28 @@ configure_firewall_client() {
     update_loading_progress "Configuring firewall Exclusion rules..."
     log_info "Configuring firewall Exclusion rules..."
 
-    local source_nets_v4 source_nets_v6 static_v6
+    local source_nets_v4 source_nets_v6
     source_nets_v4=$(ip -4 route show scope link | awk '$1 ~ /\// && $1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/ {print $1}')
+
+    if is_ipv6_enabled && [ "$IPT_TABLE" = "mangle" ]; then
+        for rule in \
+            "-p udp -m multiport --dports 53,546,547" \
+            "-p udp -m multiport --sports 53,546,547" \
+            "-p icmpv6"; do
+            ip6tables -w -t "$IPT_TABLE" -C XRAYUI $rule -j RETURN 2>/dev/null ||
+                ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 $rule -j RETURN
+        done
+
+        for addr in "::1" "fe80::/10"; do
+            ip6tables -w -t "$IPT_TABLE" -C XRAYUI -s "$addr" -j RETURN 2>/dev/null ||
+                ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -s "$addr" -j RETURN
+            ip6tables -w -t "$IPT_TABLE" -C XRAYUI -d "$addr" -j RETURN 2>/dev/null ||
+                ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -d "$addr" -j RETURN
+        done
+
+        ip6tables -w -t "$IPT_TABLE" -C XRAYUI -d ff00::/8 -j RETURN 2>/dev/null ||
+            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -d ff00::/8 -j RETURN
+    fi
 
     source_nets_v6=""
     if is_ipv6_enabled; then
@@ -375,7 +395,7 @@ configure_firewall_client() {
         local via_routes
         via_routes=$(ip -4 route show | awk '$2=="via" && $1!="default" {print $1}')
         local static_routes
-        static_routes=$(nvram get lan_route)
+        static_routes=$(nvram get lan_route | tr ' ' '\n' | grep -E '^(([0-9]{1,3}\.){3}[0-9]{1,3}|[0-9a-fA-F:]+)(/[0-9]{1,3})?$')
 
         log_debug "TPROXY v4 exclude: $wan_v4_list ; v6 exclude: $wan_v6_list"
         # unified exclusion: WAN IP, any “via” routes, and your nvram static list

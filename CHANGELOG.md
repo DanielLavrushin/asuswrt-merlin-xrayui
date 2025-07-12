@@ -4,8 +4,7 @@
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
--FIXED: Log filters for target, inbound, and outbound now work as expected.
-
+- FIXED: Log filters for target, inbound, and outbound now work as expected.
 - FIXED: Source-network extraction now accepts valid `IPv4`/`IPv6` CIDR notation, resolving connection issues on `PPPoE` links.
 - FIXED: Dynamic `WAN` interface detection is now handled correctly in the XRAYUI firewall configuration.
 - ADDED: Predefined `Discord` IP/port rules are included when importing a configuration.

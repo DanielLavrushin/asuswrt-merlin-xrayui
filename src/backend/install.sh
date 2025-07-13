@@ -156,6 +156,16 @@ EOF
 
     local json_content=$(cat "$XRAY_CONFIG_FILE")
 
+    #  -> 0.53.0
+    log_info "Updating $XRAY_CONFIG_FILE config to version 0.53.0..."
+    if json_content=$(jq '
+      .inbounds |= map(select(.tag != "sys:socks-in"))
+    | .routing.rules //= []
+    | .routing.rules |= map(select(.tag != "sys:connection-check"))
+  ' "$XRAY_CONFIG_FILE"); then
+        echo "$json_content" >"$XRAY_CONFIG_FILE"
+    fi
+
     log_ok "Installed $(show_version)"
     log_box "Installation process completed successfully."
 

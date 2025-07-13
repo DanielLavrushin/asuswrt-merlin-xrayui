@@ -82,6 +82,18 @@ export class EngineClientConnectionStatus {
   public connected?: boolean;
 }
 
+export class EngineConnectionStatus {
+  [outboundTag: string]: ConnectionStatusEntry;
+}
+
+export interface ConnectionStatusEntry {
+  alive: boolean;
+  delay: number;
+  outbound_tag: string;
+  last_seen_time: number;
+  last_try_time: number;
+}
+
 export class EngineLoadingProgress {
   public progress = 0;
   public message = '';
@@ -116,6 +128,7 @@ export class EngineResponseConfig {
     logs_max_size: number;
     logs_dor: boolean;
     skip_test: boolean;
+    check_connection: boolean;
   };
   public geodata?: EngineGeodatConfig = new EngineGeodatConfig();
   public loading?: EngineLoadingProgress;
@@ -160,6 +173,7 @@ export enum SubmitActions {
   fetchXrayLogs = 'xrayui_configuration_logs_fetch',
   updateLogsLevel = 'xrayui_configuration_logs_changeloglevel',
   checkConnection = 'xrayui_configuration_checkconnection',
+  checkConnectionStatus = 'xrayui_connectionstatus',
   initResponse = 'xrayui_configuration_initresponse',
   generalOptionsApply = 'xrayui_configuration_applygeneraloptions',
   xrayVersionSwitch = 'xrayui_configuration_xrayversionswitch',
@@ -347,6 +361,19 @@ export class Engine {
     const response = await this.getXrayResponse();
     return response.connection_check;
   }
+
+  async getConnectionStatus(): Promise<EngineConnectionStatus | undefined> {
+    const response = await axios.get<EngineConnectionStatus>(`/ext/xrayui/connection-status.json?_=${Date.now()}`, {
+      headers: {
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache',
+        Expires: '0'
+      }
+    });
+    let responseConfig = response.data;
+    return responseConfig;
+  }
+
   async getXrayResponse(): Promise<EngineResponseConfig> {
     const response = await axios.get<EngineResponseConfig>(`/ext/xrayui/xray-ui-response.json?_=${Date.now()}`, {
       headers: {

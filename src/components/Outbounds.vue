@@ -47,7 +47,7 @@
                   {{ $t('labels.transport') }}
                 </a>
                 <a class="button_gen button_gen_small" href="#" @click.prevent="edit_proxy(proxy)" :title="$t('labels.edit')">&#8494;</a>
-                <a class="button_gen button_gen_small" href="#" @click.prevent="remove_proxy(proxy)" :title="$t('labels.delete')"> &#10005; </a>
+                <a class="button_gen button_gen_small" href="#" @click.prevent="remove_proxy(proxy)" :title="$t('labels.delete')">&#10005;</a>
               </span>
             </td>
           </tr>

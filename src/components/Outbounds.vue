@@ -23,8 +23,8 @@
             <th class="drag-handle" aria-label="Drag to reorder">
               <span class="grip" aria-hidden="true"></span>
               {{ proxy.tag == '' ? 'no tag' : proxy.tag! }}
-              <span v-if="check_connection && connectionStatus[proxy.tag]" class="proxy-label connection-status" :class="{ alive: connectionStatus[proxy.tag]?.alive }">
-                {{ connectionStatus[proxy.tag]?.alive ? 'online' : 'offline' }}
+              <span v-if="check_connection && connectionStatus[proxy.tag]" class="connection-status">
+                {{ connectionStatus[proxy.tag]?.alive ? '🟢' : '🔴' }}
               </span>
             </th>
             <td>
@@ -259,13 +259,8 @@
 </script>
 
 <style scoped>
-  .proxy-label.connection-status {
+  .connection-status {
     float: right;
     margin: 0 4px 0 10px;
-    background-color: red;
-
-    &.alive {
-      background-color: green;
-    }
   }
 </style>

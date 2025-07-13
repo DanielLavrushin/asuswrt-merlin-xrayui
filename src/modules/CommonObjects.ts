@@ -509,7 +509,7 @@ export class XrayRoutingPolicy {
 }
 
 export class XrayRoutingRuleObject {
-  static readonly connectionCheckRuleName = 'sys:connection-check';
+  static readonly sysMetricsRuleName = 'sys:metrics';
   static readonly networkOptions = ['', 'tcp', 'udp', 'tcp,udp'];
   static readonly protocolOptions = ['http', 'tls', 'bittorrent'];
   public idx = 0;

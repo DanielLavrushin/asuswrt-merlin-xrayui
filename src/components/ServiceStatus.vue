@@ -44,29 +44,18 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, computed, watch, inject, Ref, onMounted } from 'vue';
+  import { defineComponent, ref, computed, inject, Ref } from 'vue';
   import engine, { EngineResponseConfig, SubmitActions } from '@/modules/Engine';
   import GeneralOptionsModal from '@modal/GeneralOptionsModal.vue';
   import ImportConfig from './ImportConfig.vue';
   import { XrayObject } from '@/modules/XrayConfig';
-  import { XrayRoutingRuleObject } from '@/modules/CommonObjects';
   import ConfigModal from '@modal/ConfigModal.vue';
-  import axios from 'axios';
   import { useI18n } from 'vue-i18n';
   import ProcessUptime from './ProcessUptime.vue';
   import XrayVersion from './XrayVersion.vue';
   import Profiles from './Profiles.vue';
   import Backup from './Backup.vue';
-  import { XrayProtocol } from '@/modules/Options';
 
-  class IpApiResponse {
-    public status?: string;
-    public countryCode?: string;
-    public country?: string;
-    public query?: string;
-    public city?: string;
-    public connected?: boolean;
-  }
   export default defineComponent({
     name: 'ServiceStatus',
     components: {
@@ -86,7 +75,7 @@
     },
     computed: {
       statusLabel(): string {
-        return !this.checkConEnabled ? (this.isRunning ? this.$t('com.ClientStatus.xray_running') : this.$t('com.ClientStatus.xray_stopped')) : this.connectionStationLabel;
+        return this.connectionStationLabel;
       }
     },
     setup(props) {
@@ -95,46 +84,18 @@
       const configModal = ref();
       const generalOptionsModal = ref();
       const contryCodeClass = ref<string>('flag-icon flag-icon-unknown');
-      const connectionStatus = ref<boolean>(false);
       const connectionStationLabel = ref<string>(t('com.ClientStatus.xray_running'));
       const connectionClasses = computed(() => ({
         'label-success': isRunning.value,
-        'label-error': !isRunning.value,
-        'label-warning': checkConEnabled.value && !connectionStatus.value
+        'label-error': !isRunning.value
       }));
 
       const uiResponse = inject<Ref<EngineResponseConfig>>('uiResponse')!;
 
       const isRunning = ref<boolean>(window.xray.server.isRunning);
-      const checkConEnabled = ref(false);
 
       const show_config_modal = () => {
         configModal.value.show();
-      };
-
-      const checkConnection = async (): Promise<IpApiResponse | null> => {
-        const rule = config.value.routing?.rules?.find((r) => r.name === XrayRoutingRuleObject.connectionCheckRuleName);
-        checkConEnabled.value = rule !== undefined;
-        if (checkConEnabled.value) {
-          const response = await axios.get<IpApiResponse>('http://ip-api.com/json/', {
-            headers: {
-              'Cache-Control': 'no-cache',
-              Pragma: 'no-cache',
-              Expires: '0'
-            }
-          });
-          const status = response.data;
-          //  const status = await engine.getClientConnectionStatus();
-          if (status.status === 'success') {
-            status.connected = config.value.outbounds?.find((o) => o.protocol !== XrayProtocol.BLACKHOLE && o.protocol !== XrayProtocol.FREEDOM && o.settings?.isTargetAddress?.(status.query!)) !== undefined;
-            isRunning.value = window.xray.server.isRunning;
-            connectionStatus.value = status.connected;
-            connectionStationLabel.value = status.connected ? t('com.ClientStatus.xray_connected') : t('com.ClientStatus.xray_connecting');
-            contryCodeClass.value = `fi-${status.countryCode?.toLowerCase()}`;
-            return status;
-          }
-        }
-        return null;
       };
 
       const manage_general_options = () => {
@@ -156,27 +117,6 @@
         });
       };
 
-      onMounted(async () => {
-        watch(
-          () => config.value.routing?.rules?.length,
-          (newObj) => {
-            if (newObj && newObj > 0 && isRunning.value) {
-              const rule = config.value.routing?.rules?.find((r) => r.name === XrayRoutingRuleObject.connectionCheckRuleName);
-
-              if (rule) {
-                const checkConnectionInterval = setInterval(async () => {
-                  const result = await checkConnection();
-                  if (result?.connected) {
-                    clearInterval(checkConnectionInterval);
-                  }
-                }, 5000);
-              }
-            }
-          },
-          { immediate: true }
-        );
-      });
-
       return {
         config,
         configModal,
@@ -188,9 +128,7 @@
         connect: SubmitActions.serverStart,
         reconnect: SubmitActions.serverRestart,
         stop: SubmitActions.serverStop,
-        checkConEnabled,
         uiResponse,
-        checkConnection,
         show_config_modal,
         manage_general_options,
         testConfig,

@@ -25,15 +25,8 @@
             <th>{{ $t('com.GeneralOptionsModal.check_xray_connection') }}</th>
             <td>
               <label class="go-option">
-                <input type="checkbox" v-model="checkconenabled" @change="setcheckconnection" />
+                <input type="checkbox" v-model="options.check_connection" />
               </label>
-              <modal ref="conModal" :title="$t('com.GeneralOptionsModal.modalConnectTitle')" width="450">
-                <div class="formfontdesc" v-html="$t('com.GeneralOptionsModal.modalConnectCheckDescription')"></div>
-                <template #footer>
-                  <input class="button_gen button_gen_small" type="button" :value="$t('labels.cancel')" @click.prevent="concheckcancel" />
-                  <input class="button_gen button_gen_small" type="button" :value="$t('labels.accept')" @click.prevent="concheckaccept" />
-                </template>
-              </modal>
             </td>
           </tr>
           <tr>
@@ -231,6 +224,7 @@
     public geo_ip_url = '';
     public geo_site_url = '';
     public geo_auto_update = false;
+    public check_connection = false;
   }
 
   interface WellKnownGeodatSource {
@@ -257,10 +251,19 @@
       const config = ref<XrayObject>(props.config);
       const modal = ref();
       const conModal = ref();
-      const gh_proxies = ref<string[]>(['https://ghfast.top/', 'https://ghproxy.net/', 'https://jiashu.1win.eu.org/', 'https://gitproxy.click/', 'https://gh-proxy.ygxz.in/', 'https://github.moeyy.xyz/', 'https://cdn.moran233.xyz/', 'https://gh-proxy.com/', 'https://git.886.be/']);
+      const gh_proxies = ref<string[]>([
+        'https://ghfast.top/',
+        'https://ghproxy.net/',
+        'https://jiashu.1win.eu.org/',
+        'https://gitproxy.click/',
+        'https://gh-proxy.ygxz.in/',
+        'https://github.moeyy.xyz/',
+        'https://cdn.moran233.xyz/',
+        'https://gh-proxy.com/',
+        'https://git.886.be/'
+      ]);
       const options = ref<GeneralOptions>(new GeneralOptions());
       const selected_wellknown = ref<WellKnownGeodatSource>();
-      const checkconenabled = ref<boolean>(props.config.routing?.rules?.find((r) => r.name === XrayRoutingRuleObject.connectionCheckRuleName) !== undefined);
 
       const known_geodat_sources = ref<WellKnownGeodatSource[]>([
         {
@@ -295,12 +298,6 @@
         }
       ]);
 
-      watch(
-        () => props.config.routing?.rules,
-        (rules) => {
-          checkconenabled.value = rules?.find((r) => r.name === XrayRoutingRuleObject.connectionCheckRuleName) !== undefined;
-        }
-      );
       const setwellknown = (event: Event) => {
         if (selected_wellknown.value) {
           options.value.geo_ip_url = selected_wellknown.value.geoip_url;
@@ -331,6 +328,7 @@
         options.value.clients_check = uiResponse?.value.xray?.clients_check ?? false;
         options.value.debug = uiResponse?.value.xray?.debug ?? false;
         options.value.ipsec = uiResponse?.value.xray?.ipsec ?? 'off';
+        options.value.check_connection = uiResponse?.value.xray?.check_connection ?? false;
         modal.value.show();
       };
 
@@ -339,66 +337,15 @@
         window.xray.custom_settings.xray_startup = window.xray.custom_settings.xray_startup === 'y' ? 'n' : 'y';
       };
 
-      const setcheckconnection = async () => {
-        if (checkconenabled.value) {
-          conModal.value.show();
-        } else {
-          const rule = props.config.routing?.rules?.find((r) => r.name === XrayRoutingRuleObject.connectionCheckRuleName);
-          if (rule) {
-            props.config.routing?.rules?.splice(props.config.routing?.rules?.indexOf(rule), 1);
-          }
-
-          const socks = props.config.inbounds?.find((i) => i.tag === 'sys:socks-in');
-          if (socks) {
-            props.config.inbounds?.splice(props.config.inbounds?.indexOf(socks), 1);
-            await engine.executeWithLoadingProgress(async () => {
-              let cfg = engine.prepareServerConfig(props.config);
-              await engine.submit(SubmitActions.configurationApply, cfg);
-            });
-          }
-        }
-      };
-      const concheckcancel = async () => {
-        checkconenabled.value = false;
-        conModal.value.close();
-      };
       const validateCheckConOption = () => {
         const outbound = props.config.outbounds?.find((o) => o.protocol !== XrayProtocol.FREEDOM && o.protocol !== XrayProtocol.BLACKHOLE);
         return outbound !== undefined;
-      };
-
-      const concheckaccept = async () => {
-        if (checkconenabled.value) {
-          const socks = new XrayInboundObject<XraySocksInboundObject>(XrayProtocol.SOCKS, new XraySocksInboundObject());
-          socks.listen = '127.0.0.1';
-          socks.tag = 'sys:socks-in';
-          socks.port = 1080;
-          props.config.inbounds.push(socks);
-
-          if (props.config.routing) {
-            const rule = new XrayRoutingRuleObject();
-            rule.name = XrayRoutingRuleObject.connectionCheckRuleName;
-            rule.domain = ['ip-api.com'];
-
-            const outbound = props.config.outbounds?.find((o) => o.protocol !== XrayProtocol.FREEDOM && o.protocol !== XrayProtocol.BLACKHOLE);
-            rule.outboundTag = outbound?.tag;
-
-            props.config.routing.rules = [rule].concat(props.config.routing.rules || []);
-          }
-          conModal.value.close();
-          await engine.executeWithLoadingProgress(async () => {
-            let cfg = engine.prepareServerConfig(props.config);
-            await engine.submit(SubmitActions.configurationApply, cfg);
-            await engine.loadXrayConfig();
-          });
-        }
       };
 
       return {
         options,
         modal,
         conModal,
-        checkconenabled,
         config: props.config,
         known_geodat_sources,
         selected_wellknown,
@@ -409,9 +356,6 @@
         save,
         setwellknown,
         updatestartup,
-        setcheckconnection,
-        concheckcancel,
-        concheckaccept,
         validateCheckConOption
       };
     }

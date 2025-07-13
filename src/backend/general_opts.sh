@@ -24,6 +24,7 @@ apply_general_options() {
     local clients_check=$(echo "$genopts" | jq -r '.clients_check')
     local debug=$(echo "$genopts" | jq -r '.debug')
     local ipsec=$(echo "$genopts" | jq -r '.ipsec')
+    local check_connection=$(echo "$genopts" | jq -r '.check_connection')
 
     local geosite_url=$(echo "$genopts" | jq -r '.geo_site_url')
     local geoip_url=$(echo "$genopts" | jq -r '.geo_ip_url')
@@ -56,8 +57,41 @@ apply_general_options() {
         json_content=$(echo "$json_content" | jq 'del(.log.dnsLog)')
     fi
 
-    if [ "$clients_check" = "true" ]; then
+    if [ "$clients_check" = "true" ] || [ "$check_connection" = "true" ]; then
         api_write_config true
+    fi
+
+    if [ "$check_connection" = "true" ]; then
+        json_content=$(
+            echo "$json_content" |
+                jq '
+            # ensure rules exists
+            .routing.rules //= [] |
+            # check if already present
+            (.routing.rules | map(.name=="sys:metrics") | any) as $has |
+            if $has then
+              .
+            else
+              .routing.rules = [
+                {
+                  "idx": 0,
+                  "type": "field",
+                  "name": "sys:metrics",
+                  "inboundTag": ["sys:metrics_in"],
+                  "outboundTag": "sys:metrics_out",
+                }
+              ] + .routing.rules
+            end
+          '
+        )
+    else
+        json_content=$(
+            echo "$json_content" |
+                jq '
+            .routing.rules //= [] |
+            .routing.rules |= map(select(.name != "sys:metrics"))
+          '
+        )
     fi
 
     echo "$json_content" >"$XRAY_CONFIG_FILE"
@@ -73,6 +107,7 @@ apply_general_options() {
     update_xrayui_config "clients_check" "$clients_check"
     update_xrayui_config "ipsec" "$ipsec"
     update_xrayui_config "ADDON_DEBUG" "$debug"
+    update_xrayui_config "check_connection" "$check_connection"
 
     # Update the logrotate configuration with the new max size
     logrotate_setup

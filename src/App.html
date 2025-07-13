@@ -60,12 +60,6 @@
     <div id="xrayui-app"></div>
     <div id="xrayui-modals"></div>
     <script>
-      if (xray.router.wan_connected) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = 'https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css';
-        document.head.appendChild(link);
-      }
       window.addEventListener('load', function () {
         if (xray.router.features) {
           if (xray.router.features.indexOf('rog') !== -1) {

@@ -25,7 +25,8 @@ XRAYUI_LOCKFILE=/tmp/$ADDON_TAG.lock
 
 UI_RESPONSE_FILE="$ADDON_WEB_DIR/xray-ui-response.json"
 
-XRAYUI_CLIENTS_FILE="$ADDON_WEB_DIR/clients-online.json"
+XRAYUI_CLIENTS_FILE="$ADDON_SHARE_DIR/xray_clients_online.json"
+XRAYUI_CONNECTION_STATUS_FILE="$ADDON_SHARE_DIR/xray_connection_status.json"
 
 DEFAULT_XRAY_PROFILE_NAME="config.json"
 DEFAULT_GEOIP_URL="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"

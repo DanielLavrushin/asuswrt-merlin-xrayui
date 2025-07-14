@@ -75,7 +75,7 @@
     },
     computed: {
       statusLabel(): string {
-        return this.connectionStationLabel;
+        return this.isRunning ? this.$t('com.ClientStatus.xray_running') : this.$t('com.ClientStatus.xray_stopped');
       }
     },
     setup(props) {

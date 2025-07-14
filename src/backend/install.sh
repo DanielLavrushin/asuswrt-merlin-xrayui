@@ -250,7 +250,7 @@ uninstall() {
 
     if [ "$user_input" = "yes" ] || [ "$user_input" = "y" ]; then
         log_info "Removing  BACKUPS..."
-        backup_clearall
+        backup_clear
     else
         log_info "Keeping  BACKUPS."
     fi

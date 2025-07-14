@@ -118,13 +118,11 @@ configure_firewall() {
     [ -n "$xray_pid" ] && daemon_uid=$(awk '/^Uid:/ {print $2}' /proc/"$xray_pid"/status)
 
     for IPT in $IPT_LIST; do
-        # 1) keep  existing MSS clamp
         $IPT -t mangle -C OUTPUT -p tcp --tcp-flags SYN,RST SYN \
             -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null ||
             $IPT -t mangle -I OUTPUT 1 -p tcp --tcp-flags SYN,RST SYN \
                 -j TCPMSS --clamp-mss-to-pmtu
 
-        # 2) if X-ray is NOT running as root, exempt only its sockets
         if [ -n "$daemon_uid" ] && [ "$daemon_uid" != "0" ]; then
             $IPT -t mangle -C OUTPUT -m owner --uid-owner "$daemon_uid" -j RETURN 2>/dev/null ||
                 $IPT -t mangle -I OUTPUT 1 -m owner --uid-owner "$daemon_uid" -j RETURN

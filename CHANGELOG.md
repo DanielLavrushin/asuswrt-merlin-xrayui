@@ -1,6 +1,15 @@
 # XRAYUI Changelog
 
-## [0.52.2] -2025-07-13
+## [0.53.0] - 2025-07-14
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- REMOVED: General connection check. Country flags were removed.
+- ADDED: Connection check per outbound.
+  > If you previously had connection check option enabled, it is recommended to turn it off and on again.
+- ADDED: Loopback RETURN rule in mangle table for `127.0.0.0/8` packets.
+
+## [0.52.2] - 2025-07-13
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 

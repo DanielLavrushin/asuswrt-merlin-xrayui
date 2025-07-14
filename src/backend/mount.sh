@@ -51,7 +51,8 @@ mount_ui() {
     ln -s -f "$XRAY_CONFIG_FILE" "$ADDON_WEB_DIR/xray-config.json" || log_error "Failed to create symlink for xray-config.json."
 
     rm -f "$ADDON_WEB_DIR/clients-online.json"
-    ln -s -f "$ADDON_SHARE_DIR/xray_clients_online.json" "$ADDON_WEB_DIR/clients-online.json" || log_error "Failed to create symlink for xray_clients_online.json."
+    ln -s -f "$XRAYUI_CLIENTS_FILE" "$ADDON_WEB_DIR/clients-online.json" || log_error "Failed to create symlink for xray_clients_online.json."
+    ln -s -f "$XRAYUI_CONNECTION_STATUS_FILE" "$ADDON_WEB_DIR/connection-status.json" || log_error "Failed to create symlink for xray_connection_status.json."
 
     geodata_remount_to_web
 

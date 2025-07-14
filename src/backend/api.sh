@@ -11,19 +11,104 @@ api_write_config() {
   mkdir -p /opt/etc/xray/xrayui
 
   local xray_api_config=$(api_get_current_config)
-  cat >"$xray_api_config" <<'EOF'
+  local outbound_tags
+  outbound_tags=$(
+    jq -c '
+      [ .outbounds[]
+      | select(.tag and .protocol != "blackhole")
+      | .tag ]
+      | unique
+    ' "$XRAY_CONFIG_FILE"
+  )
+
+  cat >"$xray_api_config" <<EOF
 {
   "api": {
     "tag": "sys:api",
     "listen": "127.0.0.1:10085",
-    "services": ["StatsService"]
+    "services": ["HandlerService", "LoggerService", "StatsService"]
   },
+  "inbounds": [
+    {
+      "listen": "127.0.0.1",
+      "port": 10086,
+      "protocol": "dokodemo-door",
+      "settings": {
+        "address": "127.0.0.1"
+      },
+      "tag": "sys:metrics_in"
+    }
+  ],
   "stats": {},
   "policy": {
     "levels": {
       "0": { "statsUserUplink": true, "statsUserDownlink": true }
     }
-  }
+  },
+  "observatory": {
+    "subjectSelector": $outbound_tags,
+    "probeUrl": "https://www.google.com/generate_204",
+    "probeInterval": "10s",
+    "enableConcurrency": true
+  },
+  "metrics": { "tag": "sys:metrics_out" }
 }
 EOF
+}
+
+api_get_connected_clients() {
+  load_xrayui_config
+  api_addr=$(jq -r '.api.listen' "$(api_get_current_config)")
+  stats_json="$ADDON_SHARE_DIR/xray_stats.json"
+  out_json="$XRAYUI_CLIENTS_FILE"
+
+  : >"$out_json"
+
+  # pull user counters and *reset* them
+  if ! xray api statsquery \
+    -s "$api_addr" \
+    -pattern 'user>>>' \
+    -reset >"$stats_json" 2>/dev/null; then
+    log_error "StatsService unreachable on $api_addr"
+    echo "[]"
+    return
+  fi
+
+  jq -r '
+        (.stat // [])
+        | map(select((.value // 0) | tonumber > 0))
+        | map(.name | split(">>>")[1])
+        | unique
+        | map({ ip:"", email:[.] })
+    ' "$stats_json" >"$out_json"
+
+}
+
+api_get_connection_status() {
+  local cfg api_addr host port url observatory
+
+  load_xrayui_config
+
+  cfg=$(api_get_current_config)
+
+  host=$(jq -r '
+    .inbounds[]
+    | select(.tag == "sys:metrics_in")
+    | .listen
+  ' "$cfg")
+  port=$(jq -r '
+    .inbounds[]
+    | select(.tag == "sys:metrics_in")
+    | .port
+  ' "$cfg")
+
+  api_addr="${host}:${port}"
+  url="http://${api_addr}/debug/vars"
+  log_debug "Fetching observatory from $url"
+  if ! curl -fsS "$url" |
+    jq '.observatory' \
+      >"$XRAYUI_CONNECTION_STATUS_FILE"; then
+    log_error "Failed to fetch or parse observatory from $url"
+    return 1
+  fi
 }

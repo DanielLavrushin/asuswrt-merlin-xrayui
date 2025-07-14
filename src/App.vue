@@ -100,6 +100,60 @@
 
   .FormTable {
     margin-bottom: 14px;
+
+    // Proxy label styles
+    .proxy-label {
+      color: white;
+      padding: 2px 10px;
+      border-radius: 4px;
+      margin-left: 4px;
+      font-weight: bold;
+      background-color: #929ea1;
+      box-shadow: 0 0 2px #000;
+
+      &.tag {
+        border: 1px solid $c_yellow;
+        text-decoration: none;
+        background: transparent;
+        color: $c_yellow;
+
+        &:hover {
+          box-shadow: 0 0 5px $c_yellow;
+        }
+      }
+      &.reality {
+        background-color: rgb(95, 1, 95);
+      }
+      &.tls {
+        background-color: rgb(136, 5, 5);
+      }
+      &.tcp {
+        background-color: rgb(35, 46, 46);
+      }
+      &.kcp {
+        background-color: rgb(0, 114, 0);
+      }
+      &.ws {
+        background-color: rgb(2, 0, 150);
+      }
+      &.xhttp {
+        background-color: rgb(153, 130, 0);
+      }
+      &.grpc {
+        background-color: rgb(207, 78, 2);
+      }
+      &.httpupgrade {
+        background-color: rgb(2, 82, 119);
+      }
+      &.splithttp {
+        background-color: rgb(94, 10, 59);
+      }
+
+      &.tproxy {
+        background: rgb(207, 78, 2);
+      }
+    }
+
     td,
     th {
       vertical-align: middle;
@@ -124,59 +178,6 @@
         &.label-warning {
           background-color: $c_yellow;
           color: #596e74;
-        }
-      }
-
-      // Proxy label styles
-      .proxy-label {
-        color: white;
-        padding: 2px 10px;
-        border-radius: 4px;
-        margin-left: 4px;
-        font-weight: bold;
-        background-color: #929ea1;
-        box-shadow: 0 0 2px #000;
-
-        &.tag {
-          border: 1px solid $c_yellow;
-          text-decoration: none;
-          background: transparent;
-          color: $c_yellow;
-
-          &:hover {
-            box-shadow: 0 0 5px $c_yellow;
-          }
-        }
-        &.reality {
-          background-color: rgb(95, 1, 95);
-        }
-        &.tls {
-          background-color: rgb(136, 5, 5);
-        }
-        &.tcp {
-          background-color: rgb(35, 46, 46);
-        }
-        &.kcp {
-          background-color: rgb(0, 114, 0);
-        }
-        &.ws {
-          background-color: rgb(2, 0, 150);
-        }
-        &.xhttp {
-          background-color: rgb(153, 130, 0);
-        }
-        &.grpc {
-          background-color: rgb(207, 78, 2);
-        }
-        &.httpupgrade {
-          background-color: rgb(2, 82, 119);
-        }
-        &.splithttp {
-          background-color: rgb(94, 10, 59);
-        }
-
-        &.tproxy {
-          background: rgb(207, 78, 2);
         }
       }
 

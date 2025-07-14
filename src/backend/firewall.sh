@@ -97,6 +97,7 @@ configure_firewall() {
     ipt mangle -A DIVERT -j MARK --set-mark $tproxy_mark/$tproxy_mask
     ipt mangle -A DIVERT -j CONNMARK --save-mark --mask $tproxy_mask
     ipt mangle -A DIVERT -j ACCEPT
+
     ipt mangle -C PREROUTING -p tcp -m socket --transparent -j DIVERT 2>/dev/null ||
         ipt mangle -I PREROUTING 1 -p tcp -m socket --transparent -j DIVERT
 
@@ -113,9 +114,21 @@ configure_firewall() {
     ipt filter -C FORWARD -j XRAYUI 2>/dev/null || ipt filter -I FORWARD 1 -j XRAYUI
 
     # Clamp MSS for Xray-originated flows as well
+    local daemon_uid=""
+    [ -n "$xray_pid" ] && daemon_uid=$(awk '/^Uid:/ {print $2}' /proc/"$xray_pid"/status)
+
     for IPT in $IPT_LIST; do
-        $IPT -t mangle -C OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null ||
-            $IPT -t mangle -I OUTPUT 1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+        $IPT -t mangle -C OUTPUT -p tcp --tcp-flags SYN,RST SYN \
+            -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null ||
+            $IPT -t mangle -I OUTPUT 1 -p tcp --tcp-flags SYN,RST SYN \
+                -j TCPMSS --clamp-mss-to-pmtu
+
+        if [ -n "$daemon_uid" ] && [ "$daemon_uid" != "0" ]; then
+            $IPT -t mangle -C OUTPUT -m owner --uid-owner "$daemon_uid" -j RETURN 2>/dev/null ||
+                $IPT -t mangle -I OUTPUT 1 -m owner --uid-owner "$daemon_uid" -j RETURN
+        else
+            log_debug "X-ray runs as UID $daemon_uid; skipping owner-match OUTPUT rule"
+        fi
     done
 
     SERVER_IPS=$(jq -r '[.outbounds[] | select(.settings.vnext != null) | .settings.vnext[].address] | unique | join(" ")' "$XRAY_CONFIG_FILE")
@@ -283,28 +296,33 @@ configure_firewall_client() {
     update_loading_progress "Configuring firewall Exclusion rules..."
     log_info "Configuring firewall Exclusion rules..."
 
+    if [ "$IPT_TABLE" = "mangle" ]; then
+        ipt $IPT_TABLE -C XRAYUI -d 127.0.0.0/8 -j RETURN 2>/dev/null ||
+            ipt $IPT_TABLE -I XRAYUI 1 -d 127.0.0.0/8 -j RETURN
+
+        if is_ipv6_enabled; then
+            for rule in \
+                "-p udp -m multiport --dports 53,546,547" \
+                "-p udp -m multiport --sports 53,546,547" \
+                "-p icmpv6"; do
+                ip6tables -w -t "$IPT_TABLE" -C XRAYUI $rule -j RETURN 2>/dev/null ||
+                    ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 $rule -j RETURN
+            done
+
+            for addr in "::1" "fe80::/10"; do
+                ip6tables -w -t "$IPT_TABLE" -C XRAYUI -s "$addr" -j RETURN 2>/dev/null ||
+                    ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -s "$addr" -j RETURN
+                ip6tables -w -t "$IPT_TABLE" -C XRAYUI -d "$addr" -j RETURN 2>/dev/null ||
+                    ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -d "$addr" -j RETURN
+            done
+
+            ip6tables -w -t "$IPT_TABLE" -C XRAYUI -d ff00::/8 -j RETURN 2>/dev/null ||
+                ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -d ff00::/8 -j RETURN
+        fi
+    fi
+
     local source_nets_v4 source_nets_v6
     source_nets_v4=$(ip -4 route show scope link | awk '$1 ~ /\// && $1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/ {print $1}')
-
-    if is_ipv6_enabled && [ "$IPT_TABLE" = "mangle" ]; then
-        for rule in \
-            "-p udp -m multiport --dports 53,546,547" \
-            "-p udp -m multiport --sports 53,546,547" \
-            "-p icmpv6"; do
-            ip6tables -w -t "$IPT_TABLE" -C XRAYUI $rule -j RETURN 2>/dev/null ||
-                ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 $rule -j RETURN
-        done
-
-        for addr in "::1" "fe80::/10"; do
-            ip6tables -w -t "$IPT_TABLE" -C XRAYUI -s "$addr" -j RETURN 2>/dev/null ||
-                ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -s "$addr" -j RETURN
-            ip6tables -w -t "$IPT_TABLE" -C XRAYUI -d "$addr" -j RETURN 2>/dev/null ||
-                ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -d "$addr" -j RETURN
-        done
-
-        ip6tables -w -t "$IPT_TABLE" -C XRAYUI -d ff00::/8 -j RETURN 2>/dev/null ||
-            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -d ff00::/8 -j RETURN
-    fi
 
     source_nets_v6=""
     if is_ipv6_enabled; then

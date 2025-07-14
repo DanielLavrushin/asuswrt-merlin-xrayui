@@ -42,7 +42,9 @@ start() {
     fi
 
     update_loading_progress "Starting $ADDON_TITLE..."
-    if [ "$clients_check" = "true" ]; then
+    if [ "$clients_check" = "true" ] || [ "$check_connection" = "true" ]; then
+
+        api_write_config
 
         local xray_config_name=$(basename "$XRAY_CONFIG_FILE")
         local xray_api_config="/opt/etc/xray/xrayui/${xray_config_name%.json}-api.json"

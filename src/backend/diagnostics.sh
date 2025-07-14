@@ -83,7 +83,7 @@ diagnostics_xray() {
     log_info
 
     log_info "Xray config:"
-    cat "$XRAY_CONFIG" 2>&1
+    cat "$XRAY_CONFIG_FILE" 2>&1
     log_info "--------------------------------------------------------"
     log_info
 

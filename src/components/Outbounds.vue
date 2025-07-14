@@ -23,6 +23,9 @@
             <th class="drag-handle" aria-label="Drag to reorder">
               <span class="grip" aria-hidden="true"></span>
               {{ proxy.tag == '' ? 'no tag' : proxy.tag! }}
+              <span v-if="check_connection && connectionStatus[proxy.tag]" class="connection-status">
+                {{ connectionStatus[proxy.tag]?.alive ? '🟢' : '🔴' }}
+              </span>
             </th>
             <td>
               <a class="hint" href="#" @click.prevent="edit_proxy(proxy)">
@@ -44,7 +47,7 @@
                   {{ $t('labels.transport') }}
                 </a>
                 <a class="button_gen button_gen_small" href="#" @click.prevent="edit_proxy(proxy)" :title="$t('labels.edit')">&#8494;</a>
-                <a class="button_gen button_gen_small" href="#" @click.prevent="remove_proxy(proxy)" :title="$t('labels.delete')"> &#10005; </a>
+                <a class="button_gen button_gen_small" href="#" @click.prevent="remove_proxy(proxy)" :title="$t('labels.delete')">&#10005;</a>
               </span>
             </td>
           </tr>
@@ -62,15 +65,14 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, computed, nextTick, watch } from 'vue';
-  import engine from '@/modules/Engine';
+  import { defineComponent, ref, computed, nextTick, watch, onMounted, onUnmounted, inject, Ref } from 'vue';
+  import engine, { EngineResponseConfig, SubmitActions } from '@/modules/Engine';
   import Modal from '@main/Modal.vue';
   import { xrayProtocols } from '@/modules/XrayConfig';
 
   import { IProtocolType } from '@/modules/Interfaces';
-  import { XrayProtocol } from '@/modules/CommonObjects';
+  import { XrayProtocol, XrayProtocolOption } from '@/modules/CommonObjects';
   import { XrayOutboundObject } from '@/modules/OutboundObjects';
-  import { XrayProtocolOption } from '@/modules/CommonObjects';
   import { XrayProtocolMode } from '@/modules/Options';
 
   import FreedomOutbound from '@obd/FreedomOutbound.vue';
@@ -85,7 +87,6 @@
   import TrojanOutbound from '@obd/TrojanOutbound.vue';
   import WireguardOutbound from '@obd/WireguardOutbound.vue';
   import draggable from 'vuedraggable';
-
   import { useI18n } from 'vue-i18n';
 
   export default defineComponent({
@@ -103,9 +104,35 @@
       const availableProxies = ref<XrayProtocolOption[]>(xrayProtocols.filter((p) => p.modes & XrayProtocolMode.Outbound));
       const selectedProxyType = ref<string>();
       const selectedProxy = ref<any>();
+      const connectionStatus = ref<Record<string, { alive: boolean }>>({});
+      const uiResponse = inject<Ref<EngineResponseConfig>>('uiResponse')!;
+      const check_connection = ref(false);
       const proxyModal = ref();
       const proxyRef = ref();
       const parserModal = ref();
+
+      let pollHandle: number;
+      watch(
+        () => uiResponse.value.xray?.check_connection,
+        (chkcon) => {
+          check_connection.value = chkcon!;
+        },
+        { immediate: true }
+      );
+      const fetchStatus = async () => {
+        if (!check_connection.value) {
+          connectionStatus.value = {};
+          return;
+        }
+        await engine.submit(SubmitActions.checkConnectionStatus, null, 2000);
+        const result = await engine.getConnectionStatus();
+        if (!result) return;
+        const map: Record<string, { alive: boolean }> = {};
+        Object.values(result).forEach((entry: any) => {
+          map[entry.outbound_tag] = { alive: entry.alive };
+        });
+        connectionStatus.value = map;
+      };
 
       const showImportModal = () => {
         parserModal.value.show();
@@ -202,6 +229,14 @@
         }
       });
 
+      onMounted(() => {
+        fetchStatus();
+        pollHandle = window.setInterval(fetchStatus, 5000);
+      });
+      onUnmounted(() => {
+        clearInterval(pollHandle);
+      });
+
       return {
         config,
         proxyComponent,
@@ -211,6 +246,8 @@
         availableProxies,
         selectedProxyType,
         parserModal,
+        connectionStatus,
+        check_connection,
         showImportModal,
         show_transport,
         edit_proxy,
@@ -221,4 +258,9 @@
   });
 </script>
 
-<style scoped></style>
+<style scoped>
+  .connection-status {
+    float: right;
+    margin: 0 4px 0 10px;
+  }
+</style>

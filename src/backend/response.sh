@@ -34,6 +34,7 @@ initial_response() {
     local clients_check="${clients_check:-false}"
     local ipsec="${ipsec:-off}"
     local debug="${ADDON_DEBUG:-false}"
+    local check_connection="${check_connection:-false}"
 
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg geoip "$geoip_date" --arg geosite "$geosite_date" --arg geoipurl "$geoipurl" --arg geositeurl "$geositeurl" \
         '.geodata.geoip_url = $geoipurl | .geodata.geosite_url = $geositeurl | .geodata.community["geoip.dat"] = $geoip | .geodata.community["geosite.dat"] = $geosite')
@@ -48,6 +49,7 @@ initial_response() {
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg profile "$profile" '.xray.profile = $profile')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson skip_test "$skip_test" '.xray.skip_test = $skip_test')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson clients_check "$clients_check" '.xray.clients_check = $clients_check')
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson check_connection "$check_connection" '.xray.check_connection = $check_connection')
 
     local github_proxy="${github_proxy:-""}"
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg github_proxy "$github_proxy" '.xray.github_proxy = $github_proxy')

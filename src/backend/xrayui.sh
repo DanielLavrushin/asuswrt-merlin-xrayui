@@ -14,7 +14,6 @@ import ./startup.sh
 import ./install.sh
 import ./update.sh
 import ./firewall.sh
-import ./connected_clients.sh
 import ./certificates.sh
 import ./reality.sh
 import ./wireguard.sh
@@ -171,7 +170,10 @@ service_event)
         esac
         ;;
     connectedclients)
-        get_connected_clients
+        api_get_connected_clients
+        ;;
+    connectionstatus)
+        api_get_connection_status
         ;;
     regenerate)
         case "$3" in

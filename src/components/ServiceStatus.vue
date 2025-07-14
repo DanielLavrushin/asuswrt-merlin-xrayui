@@ -16,7 +16,6 @@
           <span v-if="!isRunning">
             <a class="button_gen button_gen_small button_info" href="#" @click.prevent="testConfig()" title="try to retrieve a server-side error">!</a>
           </span>
-          <span :class="[' label', 'flag', 'fi', contryCodeClass]"></span>
           <span class="row-buttons">
             <a v-if="!isRunning" class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(connect)">{{ $t('labels.start') }} </a>
             <a v-if="isRunning" class="button_gen button_gen_small" href="#" @click.prevent="handleStatus(reconnect)">{{ $t('labels.restart') }} </a>
@@ -83,7 +82,6 @@
       const config = ref(props.config);
       const configModal = ref();
       const generalOptionsModal = ref();
-      const contryCodeClass = ref<string>('flag-icon flag-icon-unknown');
       const connectionStationLabel = ref<string>(t('com.ClientStatus.xray_running'));
       const connectionClasses = computed(() => ({
         'label-success': isRunning.value,
@@ -122,7 +120,6 @@
         configModal,
         isRunning,
         connectionClasses,
-        contryCodeClass,
         connectionStationLabel,
         generalOptionsModal,
         connect: SubmitActions.serverStart,

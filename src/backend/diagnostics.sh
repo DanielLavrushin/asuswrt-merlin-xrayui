@@ -72,24 +72,6 @@ diagnostics_xrayui() {
     log_ok "XrayUI diagnostics completed successfully"
 }
 
-diagnostics_xray() {
-    log_info_box "Running Xray diagnostics for $ADDON_TITLE"
-
-    load_xrayui_config
-
-    log_info "version info:"
-    show_version 2>&1
-    log_info "--------------------------------------------------------"
-    log_info
-
-    log_info "Xray config:"
-    cat "$XRAY_CONFIG_FILE" 2>&1
-    log_info "--------------------------------------------------------"
-    log_info
-
-    log_ok "Xray diagnostics completed successfully"
-}
-
 diagnostics_iptables() {
     log_info_box "Running iptables diagnostics for $ADDON_TITLE"
     log_info

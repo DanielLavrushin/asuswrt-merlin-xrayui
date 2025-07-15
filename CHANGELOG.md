@@ -8,6 +8,9 @@
 - ADDED: Connection check per outbound.
   > If you previously had connection check option enabled, it is recommended to turn it off and on again.
 - ADDED: Loopback RETURN rule in mangle table for `127.0.0.0/8` packets.
+- ADDED: LAN/Wi-Fi global IPv6 addresses are now excluded when configuring firewall rules.
+- ADDED: `IPsec` VPN subnet exclusion – skips subnet rule when IPsec is disabled.
+- FIXED: Don't resolve log ips when dnsmasq is disabled.
 
 ## [0.52.2] - 2025-07-13
 

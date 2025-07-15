@@ -87,7 +87,10 @@ logs_fetch() {
 
   tail -n 200 "$log_error" >"$tmp_error"
   tail -n 200 "$log_access" >"$tmp_access"
-  replace_ips_with_domains "$tmp_access"
+
+  if [ "$logs_dnsmasq" = "true" ]; then
+    replace_ips_with_domains "$tmp_access"
+  fi
 
   mv "$tmp_error" "$pub_error"
   mv "$tmp_access" "$pub_access"

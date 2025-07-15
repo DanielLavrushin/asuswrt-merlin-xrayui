@@ -153,45 +153,33 @@
     public line?: string;
     public parsed: boolean = false;
 
-    constructor(match?: RegExpMatchArray, devices?: Record<string, any>, line?: string) {
+    constructor(match?: RegExpMatchArray, devices: Record<string, any> = {}, line?: string) {
       this.line = line;
-      if (!match || !devices) return;
-      try {
-        // match[1] contains the full datetime string (e.g., "2025/02/19 17:06:49")
-        const utcDateTimeStr = match[1];
+      if (!match) return;
 
-        // Convert "YYYY/MM/DD HH:mm:ss" to ISO format "YYYY-MM-DDTHH:mm:ssZ"
-        const isoDateTime = utcDateTimeStr.replace(/\//g, '-').replace(' ', 'T') + 'Z';
-        const localDate = new Date(isoDateTime);
+      const groups = match.groups ?? {};
+      Object.assign(this, groups);
 
-        // Format time as 24-hour clock
-        this.time = localDate.toLocaleTimeString([], {
-          hour12: false,
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit'
-        });
-        this.source = match[2];
-        this.type = match[3];
-        this.target = match[4];
-        this.target_port = match[5];
-        this.inbound = match[6];
-        this.routing = match[7] == '>>' ? 'direct' : 'rule';
-        this.outbound = match[8];
-        if (this.source) {
-          const device = devices[this.source];
-          const deviceName = device?.nickName?.trim() ? device.nickName : device?.name;
-
-          this.source_device = deviceName;
-        }
-        if (match[9]) {
-          this.source_device = match[9];
-        }
-        this.parsed = true;
-      } catch (error) {
-        console.error('Error parsing log entry:', error);
-        this.parsed = false;
+      if (groups.time) {
+        const iso = groups.time.replace(/\//g, '-').replace(' ', 'T') + 'Z';
+        this.time = new Date(iso).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
       }
+
+      if (groups.target) {
+        const [host, port] = groups.target.split(':');
+        this.target = host;
+        this.target_port = port ?? '';
+      }
+
+      if (groups.routing) this.routing = groups.routing === '>>' ? 'direct' : 'rule';
+
+      if (this.source) {
+        const dev = devices[this.source];
+        const name = dev?.nickName?.trim() ? dev.nickName : dev?.name;
+        this.source_device = name;
+      }
+
+      this.parsed = true;
     }
   }
   type LogEntry = AccessLogEntry | DnsLogEntry;
@@ -217,10 +205,10 @@
       const logsContent = ref<string>('');
       // Access log
       const ACCESS_RE =
-        /^(\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2})(?:\.\d+)?\s+from\s+(\d{1,3}(?:\.\d{1,3}){3})(?::\d+)?\s+accepted\s+(tcp|udp):(\[[^\]]+\]|[^:]+):(\d+)\s+\[([^\s]+)\s*(->|>>)\s*([^\]]+)\](?:\s+email:\s+(.+))?$/;
+        /^(?<time>.+)\.\d+\s+from\s+(?:tcp:|udp:)*(?<source>.+?):\d+\s+accepted\s+(?<type>tcp|udp)*(?:\:*)(?<target>.+?:\d+)\s+\[(?<inbound>.+)\s+(?<routing>(?:>>|->))\s+(?<outbound>.+)?\]$/;
 
       // DNS “got answer” line
-      const DNS_RE = /^(\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2})(?:\.\d+)?\s+localhost got answer:\s+([^\s]+)\s+->\s+\[([^\]]+)\]\s+(\d+(?:\.\d+)?)ms$/;
+      const DNS_RE = /^(.+)\.\d+\s+from\s+(DNS)\s+accepted\s+(?:udp:)(.+?)\s+\[(.+?)\s+(->|>>)\s+(.+)\]$/;
 
       const filters = reactive({
         source: '',

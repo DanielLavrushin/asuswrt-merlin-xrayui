@@ -55,15 +55,16 @@ initial_response() {
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg github_proxy "$github_proxy" '.xray.github_proxy = $github_proxy')
 
     local dnsmasq_enabled=false
-    # look in both the main conf _and_ any .add file
-    for f in /etc/dnsmasq.conf; do
-        [ -f "$f" ] || continue
-        grep -qE '^\s*log-queries' "$f" &&
-            grep -qE '^\s*log-facility=.*dnsmasq\.log' "$f" && dnsmasq_enabled=true && log_debug "dnsmasq enabled in $f"
-        if [ "$dnsmasq_enabled" = true ]; then
-            break
-        fi
-    done
+    if [ "$logs_dnsmasq" = true ]; then
+        for f in /etc/dnsmasq.conf; do
+            [ -f "$f" ] || continue
+            grep -qE '^\s*log-queries' "$f" &&
+                grep -qE '^\s*log-facility=.*dnsmasq\.log' "$f" && dnsmasq_enabled=true && log_debug "dnsmasq enabled in $f"
+            if [ "$dnsmasq_enabled" = true ]; then
+                break
+            fi
+        done
+    fi
 
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson dnsmasq "$dnsmasq_enabled" '.xray.dnsmasq = $dnsmasq') || log_error "Error: Failed to update JSON content with dnsmasq status."
 

@@ -18,12 +18,12 @@ dnsmasq_configure() {
 
     log_debug "config: $CONFIG"
     log_debug "XRAY_CONFIG_FILE: $XRAY_CONFIG_FILE"
-    log_debug "dnsmasq flag: $dnsmasq"
+    log_debug "logs_dnsmasq setting: $logs_dnsmasq"
 
     pc_append "" "$CONFIG"
     pc_append "#$ADDON_TAG start" "$CONFIG"
 
-    if [ "$dnsmasq" = "true" ]; then
+    if [ "$logs_dnsmasq" = "true" ]; then
 
         grep -qE '^log-queries' "$CONFIG" || pc_append "log-queries" "$CONFIG" >/dev/null && log_debug "log-queries enabled"
         grep -qE '^log-async' "$CONFIG" || pc_append "log-async=25" "$CONFIG" >/dev/null && log_debug "log-async enabled"

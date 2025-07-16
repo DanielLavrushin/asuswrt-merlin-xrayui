@@ -286,24 +286,6 @@ configure_firewall_client() {
             ipt "$IPT_TABLE" -I XRAYUI 1 -i "$wan_if" -j RETURN
     done
 
-    if [ "$IPT_TYPE" = "TPROXY" ]; then
-        lsmod | grep -q '^xt_socket ' || modprobe xt_socket 2>/dev/null
-
-        for lan_dns_net in 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16; do
-            ipt $IPT_TABLE -C XRAYUI -d "$lan_dns_net" -p udp --dport 53 -j RETURN 2>/dev/null ||
-                ipt $IPT_TABLE -I XRAYUI 1 -d "$lan_dns_net" -p udp --dport 53 -j RETURN
-        done
-
-        ipt $IPT_TABLE -C XRAYUI -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask 2>/dev/null ||
-            ipt $IPT_TABLE -I XRAYUI 2 -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
-
-    fi
-
-    # --- Begin Exclusion Rules ---
-
-    update_loading_progress "Configuring firewall Exclusion rules..."
-    log_info "Configuring firewall Exclusion rules..."
-
     if [ "$IPT_TABLE" = "mangle" ]; then
         ipt $IPT_TABLE -C XRAYUI -d 127.0.0.0/8 -j RETURN 2>/dev/null ||
             ipt $IPT_TABLE -I XRAYUI 1 -d 127.0.0.0/8 -j RETURN
@@ -313,21 +295,38 @@ configure_firewall_client() {
                 "-p udp -m multiport --dports 53,546,547" \
                 "-p udp -m multiport --sports 53,546,547" \
                 "-p icmpv6"; do
-                ip6tables -w -t "$IPT_TABLE" -C XRAYUI $rule -j RETURN 2>/dev/null ||
-                    ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 $rule -j RETURN
+                ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 $rule -j RETURN
             done
 
-            for addr in "::1" "fe80::/10"; do
-                ip6tables -w -t "$IPT_TABLE" -C XRAYUI -s "$addr" -j RETURN 2>/dev/null ||
-                    ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -s "$addr" -j RETURN
-                ip6tables -w -t "$IPT_TABLE" -C XRAYUI -d "$addr" -j RETURN 2>/dev/null ||
-                    ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -d "$addr" -j RETURN
-            done
+            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 4 -d ff00::/8 -j RETURN
 
-            ip6tables -w -t "$IPT_TABLE" -C XRAYUI -d ff00::/8 -j RETURN 2>/dev/null ||
-                ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -d ff00::/8 -j RETURN
+            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 5 -s fe80::/10 -j RETURN
+            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 6 -d fe80::/10 -j RETURN
+
+            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 7 -s ::1 -j RETURN
+            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 8 -d ::1 -j RETURN
+
+            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 9 -s ::/128 -j RETURN
+            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 10 -i lo -j RETURN || log_debug "Failed to add lo interface rule in $IPT_TABLE."
+
         fi
     fi
+
+    if [ "$IPT_TYPE" = "TPROXY" ]; then
+        lsmod | grep -q '^xt_socket ' || modprobe xt_socket 2>/dev/null
+
+        ipt $IPT_TABLE -C XRAYUI -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask 2>/dev/null ||
+            ipt $IPT_TABLE -I XRAYUI 1 -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
+
+        for lan_dns_net in 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16; do
+            ipt $IPT_TABLE -I XRAYUI 1 -d "$lan_dns_net" -p udp --dport 53 -j RETURN
+        done
+    fi
+
+    # --- Begin Exclusion Rules ---
+
+    update_loading_progress "Configuring firewall Exclusion rules..."
+    log_info "Configuring firewall Exclusion rules..."
 
     local source_nets_v4 source_nets_v6
     source_nets_v4=$(ip -4 route show scope link | awk '$1 ~ /\// && $1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/ {print $1}')

@@ -121,7 +121,7 @@ log_box() {
 
 get_proc() {
     local proc_name="$1"
-    echo $(/bin/pidof "$proc_name" 2>/dev/null)
+    echo $(/bin/pidof "$proc_name" 2>/dev/null | awk '{print $NF}')
 }
 
 get_proc_uptime() {

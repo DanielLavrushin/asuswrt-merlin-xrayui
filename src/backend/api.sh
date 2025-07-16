@@ -112,3 +112,50 @@ api_get_connection_status() {
     return 1
   fi
 }
+
+api_apply_configuration() {
+  load_xrayui_config
+
+  if [ "$check_connection" = "false" ] && [ "$clients_check" = "false" ]; then
+    log_info "Skipping API configuration as per user settings."
+    return
+  fi
+
+  local json_content=$(cat "$XRAY_CONFIG_FILE")
+  api_write_config
+
+  if [ "$check_connection" = "true" ]; then
+    json_content=$(
+      echo "$json_content" |
+        jq '
+            # ensure rules exists
+            .routing.rules //= [] |
+            # check if already present
+            (.routing.rules | map(.name=="sys:metrics") | any) as $has |
+            if $has then
+              .
+            else
+              .routing.rules = [
+                {
+                  "idx": 0,
+                  "type": "field",
+                  "name": "sys:metrics",
+                  "inboundTag": ["sys:metrics_in"],
+                  "outboundTag": "sys:metrics_out",
+                }
+              ] + .routing.rules
+            end
+          '
+    )
+  else
+    json_content=$(
+      echo "$json_content" |
+        jq '
+            .routing.rules //= [] |
+            .routing.rules |= map(select(.name != "sys:metrics"))
+          '
+    )
+  fi
+
+  echo "$json_content" >"$XRAY_CONFIG_FILE"
+}

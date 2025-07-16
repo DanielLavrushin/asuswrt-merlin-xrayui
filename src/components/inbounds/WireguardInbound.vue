@@ -1,6 +1,9 @@
 <template>
   <div class="formfontdesc">
-    <p>User-space implementation of the Wireguard protocol. The Wireguard protocol is not specifically designed for circumvention purposes. If used as the outer layer for circumvention, its characteristics may lead to server blocking.</p>
+    <p>
+      User-space implementation of the Wireguard protocol. The Wireguard protocol is not specifically designed for circumvention purposes. If used as the outer layer for
+      circumvention, its characteristics may lead to server blocking.
+    </p>
     <table width="100%" class="FormTable modal-form-table">
       <thead>
         <tr>
@@ -53,8 +56,7 @@
   import engine, { SubmitActions } from '@/modules/Engine';
   import Clients from '@clients/WireguardClients.vue';
   import InboundCommon from './InboundCommon.vue';
-  import { XrayInboundObject } from '@/modules/InboundObjects';
-  import { XrayWireguardInboundObject } from '@/modules/InboundObjects';
+  import { XrayInboundObject, XrayWireguardInboundObject } from '@/modules/InboundObjects';
   import { XrayProtocol } from '@/modules/CommonObjects';
   import Hint from '@main/Hint.vue';
 
@@ -72,7 +74,9 @@
     },
 
     setup(props) {
-      const inbound = ref<XrayInboundObject<XrayWireguardInboundObject>>(props.inbound ?? new XrayInboundObject<XrayWireguardInboundObject>(XrayProtocol.WIREGUARD, new XrayWireguardInboundObject()));
+      const inbound = ref<XrayInboundObject<XrayWireguardInboundObject>>(
+        props.inbound ?? new XrayInboundObject<XrayWireguardInboundObject>(XrayProtocol.WIREGUARD, new XrayWireguardInboundObject())
+      );
       const privatekey = ref<string>(inbound.value.settings.secretKey);
       const regen = async (privatekey: string | undefined = undefined) => {
         const delay = 2000;

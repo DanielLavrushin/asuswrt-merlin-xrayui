@@ -44,7 +44,7 @@ start() {
     update_loading_progress "Starting $ADDON_TITLE..."
     if [ "$clients_check" = "true" ] || [ "$check_connection" = "true" ]; then
 
-        api_write_config
+        api_apply_configuration
 
         local xray_config_name=$(basename "$XRAY_CONFIG_FILE")
         local xray_api_config="/opt/etc/xray/xrayui/${xray_config_name%.json}-api.json"
@@ -57,8 +57,11 @@ start() {
             log_info "No API extension for $(basename "$XRAY_CONFIG_FILE"); running plain config."
         fi
     fi
-    xray -c "$XRAY_CONFIG_FILE" $XRAY_EXTRA_CFG >/dev/null 2>&1 &
+    XRAY_ARGS="-c $XRAY_CONFIG_FILE $XRAY_EXTRA_CFG"
+    log_debug "Starting Xray with args: $XRAY_ARGS"
+    xray $XRAY_ARGS >/dev/null 2>&1 &
     echo $! >"$XRAY_PIDFILE"
+    log_debug "Xray started with PID $(cat "$XRAY_PIDFILE")"
 
     configure_firewall
 }

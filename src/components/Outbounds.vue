@@ -24,7 +24,7 @@
               <span class="grip" aria-hidden="true"></span>
               {{ proxy.tag == '' ? 'no tag' : proxy.tag! }}
               <span v-if="check_connection && connectionStatus[proxy.tag]" class="connection-status">
-                {{ connectionStatus[proxy.tag]?.alive ? '🟢' : '🔴' }}
+                {{ connectionStatus[proxy.tag]?.alive ? '🟢' : connectionStatus[proxy.tag]?.alive === false ? '🔴' : '🟡' }}
               </span>
             </th>
             <td>
@@ -104,7 +104,7 @@
       const availableProxies = ref<XrayProtocolOption[]>(xrayProtocols.filter((p) => p.modes & XrayProtocolMode.Outbound));
       const selectedProxyType = ref<string>();
       const selectedProxy = ref<any>();
-      const connectionStatus = ref<Record<string, { alive: boolean }>>({});
+      const connectionStatus = ref<Record<string, { alive?: boolean }>>({});
       const uiResponse = inject<Ref<EngineResponseConfig>>('uiResponse')!;
       const check_connection = ref(false);
       const proxyModal = ref();
@@ -112,6 +112,21 @@
       const parserModal = ref();
 
       let pollHandle: number;
+      watch(
+        () => config.value.outbounds.length,
+        (newVal) => {
+          if (newVal > 0) {
+            connectionStatus.value = config.value.outbounds
+              .filter((p) => p.protocol != XrayProtocol.BLACKHOLE)
+              .reduce((acc, proxy) => {
+                acc[proxy.tag!] = { alive: undefined };
+                return acc;
+              }, {} as Record<string, { alive?: boolean }>);
+          }
+        },
+        { immediate: true }
+      );
+
       watch(
         () => uiResponse.value.xray?.check_connection,
         (chkcon) => {

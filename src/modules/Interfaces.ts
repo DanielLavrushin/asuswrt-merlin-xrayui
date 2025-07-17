@@ -23,5 +23,6 @@ export interface IXrayServer<TClient> {
 export interface XrayRouterDeviceOnline {
   name: string;
   ip: string;
+  ip6: string;
   mac: string;
 }

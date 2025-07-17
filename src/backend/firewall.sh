@@ -654,7 +654,7 @@ cleanup_firewall() {
     for fam in -4 -6; do
         [ "$fam" = "-6" ] && ! is_ipv6_enabled && continue
         for m in 0x10000/0x10000 0x8777 0x77; do
-            while ip $fam rule show | grep -q "fwmark $tproxy_mark"; do
+            while ip $fam rule show | grep -q "fwmark $m"; do
                 ip $fam rule del lookup $tproxy_table 2>/dev/null
             done
         done

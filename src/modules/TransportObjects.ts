@@ -3,8 +3,12 @@ import { ITransportNetwork } from './Interfaces';
 
 export class XrayStreamTcpSettingsObject implements ITransportNetwork {
   public acceptProxyProtocol? = false;
-  normalize = () => {
+
+  normalize = (): this | undefined => {
     this.acceptProxyProtocol = !this.acceptProxyProtocol ? undefined : this.acceptProxyProtocol;
+
+    if (JSON.stringify(this) === JSON.stringify({})) return undefined;
+    return this;
   };
 }
 
@@ -31,7 +35,7 @@ export class XrayStreamKcpSettingsObject implements ITransportNetwork {
     }
   }
 
-  normalize = () => {
+  normalize = (): this | undefined => {
     this.mtu = this.mtu === 1350 ? undefined : this.mtu;
     this.tti = this.tti === 50 ? undefined : this.tti;
     this.uplinkCapacity = this.uplinkCapacity === 5 ? undefined : this.uplinkCapacity;
@@ -41,6 +45,9 @@ export class XrayStreamKcpSettingsObject implements ITransportNetwork {
     this.writeBufferSize = this.writeBufferSize === 2 ? undefined : this.writeBufferSize;
     this.seed = !this.seed || this.seed == '' ? undefined : this.seed;
     this.header = this.header?.type === 'none' ? undefined : this.header;
+
+    if (JSON.stringify(this) === JSON.stringify({})) return undefined;
+    return this;
   };
 }
 
@@ -56,11 +63,14 @@ export class XrayStreamWsSettingsObject implements ITransportNetwork {
       this.host = parsedObject.parsedParams.host;
     }
   }
-  normalize = () => {
+  normalize = (): this | undefined => {
     this.path = this.path === '/' ? undefined : this.path;
     this.host = !this.host ? undefined : this.host;
     this.headers = this.headers && Object.keys(this.headers).length === 0 ? undefined : this.headers;
     this.acceptProxyProtocol = !this.acceptProxyProtocol ? undefined : this.acceptProxyProtocol;
+
+    if (JSON.stringify(this) === JSON.stringify({})) return undefined;
+    return this;
   };
 }
 
@@ -71,11 +81,14 @@ export class XrayStreamHttpSettingsObject implements ITransportNetwork {
   public mode? = 'auto';
   public extra?: XrayXhttpExtraObject = new XrayXhttpExtraObject();
 
-  normalize = () => {
+  normalize = (): this | undefined => {
     this.path = this.path === '/' ? undefined : this.path;
     this.host = !this.host ? undefined : this.host;
 
     this.extra?.normalize();
+
+    if (JSON.stringify(this) === JSON.stringify({})) return undefined;
+    return this;
   };
 }
 
@@ -101,7 +114,9 @@ export class XrayStreamGrpcSettingsObject implements ITransportNetwork {
   public health_check_timeout = 20;
   public initial_windows_size = 0;
   public permit_without_stream = false;
-  normalize = () => void 0;
+  normalize = (): this => {
+    return this;
+  };
 }
 
 export class XrayStreamHttpUpgradeSettingsObject implements ITransportNetwork {
@@ -109,7 +124,9 @@ export class XrayStreamHttpUpgradeSettingsObject implements ITransportNetwork {
   public path = '/';
   public host?: string;
   public headers = {};
-  normalize = () => void 0;
+  normalize = (): this => {
+    return this;
+  };
 }
 
 export class XrayStreamSplitHttpSettingsObject implements ITransportNetwork {
@@ -121,5 +138,7 @@ export class XrayStreamSplitHttpSettingsObject implements ITransportNetwork {
   public scMinPostsIntervalMs?: number;
   public noSSEHeader = false;
   public xmux: XrayXmuxObject = new XrayXmuxObject();
-  normalize = () => void 0;
+  normalize = (): this => {
+    return this;
+  };
 }

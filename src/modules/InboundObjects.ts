@@ -34,7 +34,7 @@ export class XrayInboundObject<TProxy extends IProtocolType> {
     return this.tag?.startsWith('sys:') ?? false;
   };
 
-  normalize = () => {
+  normalize = (): this | undefined => {
     this.tag = this.tag === '' ? undefined : this.tag;
     this.listen = this.listen === '' ? undefined : this.listen;
 
@@ -51,7 +51,8 @@ export class XrayInboundObject<TProxy extends IProtocolType> {
       this.allocate = this.allocate.normalize();
     }
 
-    this.settings.normalize && this.settings.normalize();
+    if (JSON.stringify(this) === JSON.stringify({})) return undefined;
+    return this;
   };
 }
 
@@ -62,24 +63,26 @@ export class XrayDokodemoDoorInboundObject implements IProtocolType {
   public followRedirect?: boolean;
   public userLevel?: number;
 
-  normalize = () => {
+  normalize = (): this => {
     this.network = this.network && this.network !== 'tcp' ? this.network : undefined;
     this.userLevel = this.userLevel && this.userLevel > 0 ? this.userLevel : undefined;
     this.port = this.port && this.port > 0 ? this.port : undefined;
+    return this;
   };
 }
 export class XrayVlessInboundObject implements IProtocolType {
   public decryption = 'none';
   public clients: XrayVlessClientObject[] = [];
-  normalize = () => void 0;
   getUserNames = (): string[] => {
     return this.clients.map((c) => c.email);
+  };
+  normalize = (): this | undefined => {
+    return this;
   };
 }
 
 export class XrayVmessInboundObject implements IProtocolType {
   public clients: XrayVmessClientObject[] = [];
-  normalize = () => void 0;
   getUserNames = (): string[] => {
     return this.clients.map((c) => c.email);
   };
@@ -88,8 +91,10 @@ export class XrayVmessInboundObject implements IProtocolType {
 export class XrayHttpInboundObject implements IProtocolType {
   public allowTransparent? = false;
   public clients: XrayHttpClientObject[] = [];
-  normalize = () => {
+  normalize = (): this | undefined => {
     this.allowTransparent = this.allowTransparent ? this.allowTransparent : undefined;
+    if (JSON.stringify(this) === JSON.stringify({})) return undefined;
+    return this;
   };
 
   getUserNames = (): string[] => {
@@ -101,10 +106,13 @@ export class XrayShadowsocksInboundObject implements IProtocolType {
   public network? = 'tcp';
   public password? = '';
   public clients: XrayShadowsocksClientObject[] = [];
-  normalize = () => {
+  normalize = (): this | undefined => {
     this.network = this.network && this.network !== 'tcp' ? this.network : undefined;
     this.password = this.password && this.password !== '' ? this.password : undefined;
+    if (JSON.stringify(this) === JSON.stringify({})) return undefined;
+    return this;
   };
+
   getUserNames = (): string[] => {
     return this.clients.map((c) => c.email);
   };
@@ -112,9 +120,11 @@ export class XrayShadowsocksInboundObject implements IProtocolType {
 
 export class XrayTrojanInboundObject implements IProtocolType {
   public clients: XrayTrojanClientObject[] = [];
-  normalize = () => void 0;
   getUserNames = (): string[] => {
     return this.clients.map((c) => c.email);
+  };
+  normalize = (): this | undefined => {
+    return this;
   };
 }
 
@@ -123,11 +133,13 @@ export class XraySocksInboundObject implements IProtocolType {
   public auth? = 'noauth';
   public accounts?: XraySocksClientObject[] = [];
   public udp? = false;
-  normalize = () => {
+  normalize = (): this | undefined => {
     this.ip = !this.ip || this.ip === '127.0.0.1' ? undefined : this.ip;
     this.udp = this.udp ? this.udp : undefined;
     this.auth = this.auth === 'noauth' ? undefined : this.auth;
     this.accounts = this.accounts && this.accounts.length > 0 ? this.accounts : undefined;
+    if (JSON.stringify(this) === JSON.stringify({})) return undefined;
+    return this;
   };
   getUserNames = (): string[] => {
     return this.accounts?.map((c) => c.user) ?? [];
@@ -139,5 +151,8 @@ export class XrayWireguardInboundObject implements IProtocolType {
   public kernelMode = true;
   public mtu = 1420;
   public peers: XrayWireguardClientObject[] = [];
-  normalize = () => void 0;
+
+  normalize = (): this | undefined => {
+    return this;
+  };
 }

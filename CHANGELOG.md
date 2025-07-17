@@ -13,6 +13,8 @@
 - FIXED: Don't resolve log ips when dnsmasq is disabled.
 - FIXED: Correctly resolve online a device object by an ip6 in the logs.
 - FIXED: Switching inbound/outbound transport no longer retains the previous object in the config.
+- FIXED: Sort profiles alphabetically.
+- IMPROVED: prune empty config objects on save to prevent ghost entries like `settings: {}` in the final output.
 
 ## [0.52.2] - 2025-07-13
 

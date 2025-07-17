@@ -550,6 +550,22 @@ export class XrayRoutingRuleObject {
   };
 }
 
+type StreamKey = keyof XrayStreamSettingsObject;
+
+const NET_MAP: Record<string, StreamKey[]> = {
+  tcp: ['tcpSettings'],
+  kcp: ['kcpSettings'],
+  ws: ['wsSettings'],
+  http: ['xhttpSettings', 'httpupgradeSettings'],
+  grpc: ['grpcSettings'],
+  splithttp: ['splithttpSettings']
+};
+
+const SEC_MAP: Record<string, StreamKey[]> = {
+  tls: ['realitySettings'],
+  reality: ['tlsSettings']
+};
+
 export class XrayStreamSettingsObject {
   public network? = 'tcp';
   public security? = 'none';
@@ -562,22 +578,21 @@ export class XrayStreamSettingsObject {
   public grpcSettings?: XrayStreamGrpcSettingsObject;
   public httpupgradeSettings?: XrayStreamHttpUpgradeSettingsObject;
   public splithttpSettings?: XrayStreamSplitHttpSettingsObject;
-
   public sockopt?: XraySockoptObject;
 
   public normalize(): this | undefined {
-    this.network = this.network == '' || this.network == 'tcp' ? undefined : this.network;
-    this.security = this.security == '' || this.security == 'none' ? undefined : this.security;
+    this.network = this.network && this.network !== 'tcp' ? this.network : undefined;
+    this.security = this.security && this.security !== 'none' ? this.security : undefined;
+    if (!this.security) return undefined;
 
-    if (!this.security) {
-      return undefined;
-    }
-    if (this.security === 'tls') {
-      this.realitySettings = undefined;
-    }
-    if (this.security === 'reality') {
-      this.tlsSettings = undefined;
-    }
+    SEC_MAP[this.security]?.forEach((k) => ((this as any)[k] = undefined));
+
+    const keep = new Set(NET_MAP[this.network ?? ''] ?? []);
+    Object.values(NET_MAP)
+      .flat()
+      .forEach((k) => {
+        if (!keep.has(k)) (this as any)[k] = undefined;
+      });
 
     this.normalizeAllSettings();
     this.sockopt = this.sockopt?.normalize();
@@ -585,12 +600,13 @@ export class XrayStreamSettingsObject {
     if (JSON.stringify(this) === JSON.stringify({})) return undefined;
     return this;
   }
+
   normalizeAllSettings(): void {
-    Object.keys(this)
-      .filter((key) => key.endsWith('Settings'))
-      .forEach((key) => {
-        const setting = this[key as keyof XrayStreamSettingsObject] as { normalize?: () => void } | undefined;
-        setting?.normalize?.();
+    (Object.keys(this) as StreamKey[])
+      .filter((k) => k.endsWith('Settings'))
+      .forEach((k) => {
+        const normalized = (this as any)[k]?.normalize?.();
+        (this as any)[k] = normalized;
       });
   }
 }

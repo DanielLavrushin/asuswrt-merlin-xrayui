@@ -12,6 +12,7 @@
 - ADDED: `IPsec` VPN subnet exclusion – skips subnet rule when IPsec is disabled.
 - FIXED: Don't resolve log ips when dnsmasq is disabled.
 - FIXED: Correctly resolve online a device object by an ip6 in the logs.
+- FIXED: Switching inbound/outbound transport no longer retains the previous object in the config.
 
 ## [0.52.2] - 2025-07-13
 

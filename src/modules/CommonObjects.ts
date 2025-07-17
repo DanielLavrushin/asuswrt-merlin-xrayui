@@ -569,6 +569,16 @@ export class XrayStreamSettingsObject {
     this.network = this.network == '' || this.network == 'tcp' ? undefined : this.network;
     this.security = this.security == '' || this.security == 'none' ? undefined : this.security;
 
+    if (!this.security) {
+      return undefined;
+    }
+    if (this.security === 'tls') {
+      this.realitySettings = undefined;
+    }
+    if (this.security === 'reality') {
+      this.tlsSettings = undefined;
+    }
+
     this.normalizeAllSettings();
     this.sockopt = this.sockopt?.normalize();
 

@@ -129,6 +129,15 @@ export class EngineResponseConfig {
     logs_dor: boolean;
     skip_test: boolean;
     check_connection: boolean;
+    startup_delay: number;
+    hooks?: {
+      before_firewall: string;
+      after_firewall: string;
+      before_start: string;
+      after_start: string;
+      before_stop: string;
+      after_stop: string;
+    };
   };
   public geodata?: EngineGeodatConfig = new EngineGeodatConfig();
   public loading?: EngineLoadingProgress;

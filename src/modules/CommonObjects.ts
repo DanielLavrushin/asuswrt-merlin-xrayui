@@ -583,9 +583,8 @@ export class XrayStreamSettingsObject {
   public normalize(): this | undefined {
     this.network = this.network && this.network !== 'tcp' ? this.network : undefined;
     this.security = this.security && this.security !== 'none' ? this.security : undefined;
-    if (!this.security) return undefined;
 
-    SEC_MAP[this.security]?.forEach((k) => ((this as any)[k] = undefined));
+    if (this.security) SEC_MAP[this.security]?.forEach((k) => ((this as any)[k] = undefined));
 
     const keep = new Set(NET_MAP[this.network ?? ''] ?? []);
     Object.values(NET_MAP)
@@ -597,8 +596,7 @@ export class XrayStreamSettingsObject {
     this.normalizeAllSettings();
     this.sockopt = this.sockopt?.normalize();
 
-    if (JSON.stringify(this) === JSON.stringify({})) return undefined;
-    return this;
+    return JSON.stringify(this) === '{}' ? undefined : this;
   }
 
   normalizeAllSettings(): void {
@@ -680,6 +678,7 @@ export class XraySockoptObject {
   public tcpNoDelay?: boolean;
 
   normalize = (): this | undefined => {
+    debugger;
     if (this.tproxy == 'off') return undefined;
 
     this.mark = !this.mark && this.mark == 0 ? undefined : this.mark;

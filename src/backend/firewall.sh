@@ -445,7 +445,6 @@ configure_firewall_client() {
         local static_routes
         static_routes=$(nvram get lan_route | tr ' ' '\n' | grep -E '^(([0-9]{1,3}\.){3}[0-9]{1,3}|[0-9a-fA-F:]+)(/[0-9]{1,3})?$')
 
-        log_debug "TPROXY v4 exclude: $wan_v4_list ; v6 exclude: $wan_v6_list"
         # unified exclusion: WAN IP, any “via” routes, and your nvram static list
         for dst in $wan_v4_list $wan_v6_list $via_routes $static_routes; do
             log_debug "TPROXY: excluding $dst from $IPT_TABLE"

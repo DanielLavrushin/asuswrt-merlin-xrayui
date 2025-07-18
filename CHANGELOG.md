@@ -10,6 +10,7 @@
 - ADDED: Loopback RETURN rule in mangle table for `127.0.0.0/8` packets.
 - ADDED: LAN/Wi-Fi global IPv6 addresses are now excluded when configuring firewall rules.
 - ADDED: `IPsec` VPN subnet exclusion – skips subnet rule when IPsec is disabled.
+- ADDED: Numeric `startup delay` field in `General Settings` to specify the wait time before Xray starts after router reboot.
 - FIXED: Don't resolve log ips when dnsmasq is disabled.
 - FIXED: Correctly resolve online a device object by an ip6 in the logs.
 - FIXED: Switching inbound/outbound transport no longer retains the previous object in the config.

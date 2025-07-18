@@ -552,7 +552,7 @@ export class XrayRoutingRuleObject {
 
 type StreamKey = keyof XrayStreamSettingsObject;
 
-const NET_MAP: Record<string, StreamKey[]> = {
+const NET_KEEP: Record<string, StreamKey[]> = {
   tcp: ['tcpSettings'],
   kcp: ['kcpSettings'],
   ws: ['wsSettings'],
@@ -561,9 +561,9 @@ const NET_MAP: Record<string, StreamKey[]> = {
   splithttp: ['splithttpSettings']
 };
 
-const SEC_MAP: Record<string, StreamKey[]> = {
-  tls: ['realitySettings'],
-  reality: ['tlsSettings']
+const SEC_KEEP: Record<string, StreamKey[]> = {
+  tls: ['tlsSettings'],
+  reality: ['realitySettings']
 };
 
 export class XrayStreamSettingsObject {
@@ -584,27 +584,27 @@ export class XrayStreamSettingsObject {
     this.network = this.network && this.network !== 'tcp' ? this.network : undefined;
     this.security = this.security && this.security !== 'none' ? this.security : undefined;
 
-    if (this.security) SEC_MAP[this.security]?.forEach((k) => ((this as any)[k] = undefined));
+    const allowed = new Set<StreamKey>([...(NET_KEEP[this.network ?? ''] ?? []), ...(SEC_KEEP[this.security ?? ''] ?? [])]);
 
-    const keep = new Set(NET_MAP[this.network ?? ''] ?? []);
-    Object.values(NET_MAP)
-      .flat()
+    (Object.keys(this) as StreamKey[])
+      .filter((k) => k.endsWith('Settings'))
       .forEach((k) => {
-        if (!keep.has(k)) (this as any)[k] = undefined;
+        if (!allowed.has(k)) (this as any)[k] = undefined;
       });
 
     this.normalizeAllSettings();
-    this.sockopt = this.sockopt?.normalize();
+
+    if (this.sockopt && typeof this.sockopt.normalize === 'function') this.sockopt = this.sockopt.normalize();
 
     return JSON.stringify(this) === '{}' ? undefined : this;
   }
 
-  normalizeAllSettings(): void {
+  private normalizeAllSettings(): void {
     (Object.keys(this) as StreamKey[])
       .filter((k) => k.endsWith('Settings'))
       .forEach((k) => {
-        const normalized = (this as any)[k]?.normalize?.();
-        (this as any)[k] = normalized;
+        const obj = (this as any)[k];
+        if (obj && typeof obj.normalize === 'function') (this as any)[k] = obj.normalize();
       });
   }
 }
@@ -678,7 +678,6 @@ export class XraySockoptObject {
   public tcpNoDelay?: boolean;
 
   normalize = (): this | undefined => {
-    debugger;
     if (this.tproxy == 'off') return undefined;
 
     this.mark = !this.mark && this.mark == 0 ? undefined : this.mark;

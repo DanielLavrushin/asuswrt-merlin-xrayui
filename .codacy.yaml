@@ -3,3 +3,7 @@ tools:
     patterns:
       - name: github-actions/unpinned-action
         enabled: false
+exclude_paths:
+  - '**.spec.ts'
+  - '**.test.ts'
+  - '**.d.ts'

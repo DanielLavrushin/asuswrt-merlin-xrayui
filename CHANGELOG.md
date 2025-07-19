@@ -4,7 +4,6 @@
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
-- REMOVED: General connection check. Country flags were removed.
 - ADDED: It is now possible to add a `subscription URL` to a specific outbound connection. XRAYUI Will fetch connection updates on every service restart. While a URL is set, certain settings are disabled because they are managed by the subscription.
 - ADDED: Connection check per outbound.
   > If you previously had connection check option enabled, it is recommended to turn it off and on again.
@@ -20,6 +19,9 @@
 - FIXED: Sort profiles alphabetically.
 - FIXED: `Wireguard` Inbound private/public key regeneration.
 - IMPROVED: prune empty config objects on save to prevent ghost entries like `settings: {}` in the final output.
+- REMOVED: General connection check. Country flags were removed.
+- REMOVED: Manual order button from the Rules modal window.
+- REMOVED: Manual order button from the Policies modal window.
 
 ## [0.52.2] - 2025-07-13
 

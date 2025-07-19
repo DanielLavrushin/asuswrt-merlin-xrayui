@@ -415,7 +415,9 @@
       "label_tag": "Tag",
       "label_send_through": "Send through",
       "hint_tag": "The identifier of this outbound connection, used to locate this connection in other configurations. <blockquote>**Danger**: When it is not empty, its value must be unique among all tags.</blockquote>",
-      "hint_send_through": "The IP address used to send data. It is effective when the host has multiple IP addresses, and the default value is `0.0.0.0`.<hr/> It is allowed to fill in the IPv6 CIDR block (such as `114:514:1919:810::/64`), and Xray will use the random IP address in the address block to initiate external connections. Network access, routing tables, and kernel parameters need to be configured correctly to allow Xray to bind to any IP within the address block.<hr/> For networks that use ndp to access, it is not recommended to set a subnet smaller than `/120`, otherwise it may cause NDP flood and a series of problems such as the router neighbor cache being filled up."
+      "hint_send_through": "The IP address used to send data. It is effective when the host has multiple IP addresses, and the default value is `0.0.0.0`.<hr/> It is allowed to fill in the IPv6 CIDR block (such as `114:514:1919:810::/64`), and Xray will use the random IP address in the address block to initiate external connections. Network access, routing tables, and kernel parameters need to be configured correctly to allow Xray to bind to any IP within the address block.<hr/> For networks that use ndp to access, it is not recommended to set a subnet smaller than `/120`, otherwise it may cause NDP flood and a series of problems such as the router neighbor cache being filled up.",
+      "label_subscription_url": "Subscription URL",
+      "hint_subscription_url": "Enter the subscription URL that fetches updates for this outbound configuration.<hr/>Updates are applied on every service restart.<hr/>While a URL is set, certain settings are disabled because they are managed by the subscription."
     },
     "FreedomOutbound": {
       "modal_title": "Freedom",

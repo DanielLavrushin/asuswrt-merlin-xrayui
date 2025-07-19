@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { IProtocolType } from './Interfaces';
-import { XrayAllocateObject, XraySniffingObject, XrayStreamSettingsObject } from './CommonObjects';
+import { XrayAllocateObject, XraySniffingObject, XrayStreamSettingsObject, isObjectEmpty } from './CommonObjects';
 import {
   XrayVlessClientObject,
   XrayVmessClientObject,
@@ -51,8 +51,7 @@ export class XrayInboundObject<TProxy extends IProtocolType> {
       this.allocate = this.allocate.normalize();
     }
 
-    if (JSON.stringify(this) === JSON.stringify({})) return undefined;
-    return this;
+    return isObjectEmpty(this) ? undefined : this;
   };
 }
 
@@ -93,8 +92,7 @@ export class XrayHttpInboundObject implements IProtocolType {
   public clients: XrayHttpClientObject[] = [];
   normalize = (): this | undefined => {
     this.allowTransparent = this.allowTransparent ? this.allowTransparent : undefined;
-    if (JSON.stringify(this) === JSON.stringify({})) return undefined;
-    return this;
+    return isObjectEmpty(this) ? undefined : this;
   };
 
   getUserNames = (): string[] => {
@@ -109,8 +107,7 @@ export class XrayShadowsocksInboundObject implements IProtocolType {
   normalize = (): this | undefined => {
     this.network = this.network && this.network !== 'tcp' ? this.network : undefined;
     this.password = this.password && this.password !== '' ? this.password : undefined;
-    if (JSON.stringify(this) === JSON.stringify({})) return undefined;
-    return this;
+    return isObjectEmpty(this) ? undefined : this;
   };
 
   getUserNames = (): string[] => {
@@ -138,8 +135,7 @@ export class XraySocksInboundObject implements IProtocolType {
     this.udp = this.udp ? this.udp : undefined;
     this.auth = this.auth === 'noauth' ? undefined : this.auth;
     this.accounts = this.accounts && this.accounts.length > 0 ? this.accounts : undefined;
-    if (JSON.stringify(this) === JSON.stringify({})) return undefined;
-    return this;
+    return isObjectEmpty(this) ? undefined : this;
   };
   getUserNames = (): string[] => {
     return this.accounts?.map((c) => c.user) ?? [];

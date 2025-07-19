@@ -415,7 +415,9 @@
       "label_tag": "标签",
       "label_send_through": "源地址",
       "hint_tag": "出站连接的标识符。 <blockquote>**危险**: 非空时标签需唯一。</blockquote>",
-      "hint_send_through": "发送数据的 IP 地址（多 IP 时生效，默认0.0.0.0）。<hr/> 可填入 IPv6 CIDR 块（如114:514:1919:810::/64），Xray 使用块内随机 IP 发起连接，需正确配置网络访问、路由表和内核参数。<hr/>使用 ndp 的网络不建议设置小于/120的子网，避免 NDP 泛洪和路由器邻居缓存溢出。"
+      "hint_send_through": "发送数据的 IP 地址（多 IP 时生效，默认0.0.0.0）。<hr/> 可填入 IPv6 CIDR 块（如114:514:1919:810::/64），Xray 使用块内随机 IP 发起连接，需正确配置网络访问、路由表和内核参数。<hr/>使用 ndp 的网络不建议设置小于/120的子网，避免 NDP 泛洪和路由器邻居缓存溢出。",
+      "label_subscription_url": "订阅 URL",
+      "hint_subscription_url": "输入用于获取此出站配置更新的订阅 URL。<hr/>更新将在每次重启服务时应用。<hr/>设置了 URL 后，某些设置将被禁用，因为它们由订阅管理。"
     },
     "FreedomOutbound": {
       "modal_title": "直连（Freedom）",

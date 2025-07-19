@@ -1,4 +1,4 @@
-import { XrayHeaderObject, XrayParsedUrlObject, XrayXmuxObject } from './CommonObjects';
+import { XrayHeaderObject, XrayParsedUrlObject, XrayXmuxObject, isObjectEmpty } from './CommonObjects';
 import { ITransportNetwork } from './Interfaces';
 
 export class XrayStreamTcpSettingsObject implements ITransportNetwork {
@@ -7,8 +7,7 @@ export class XrayStreamTcpSettingsObject implements ITransportNetwork {
   normalize = (): this | undefined => {
     this.acceptProxyProtocol = !this.acceptProxyProtocol ? undefined : this.acceptProxyProtocol;
 
-    if (JSON.stringify(this) === JSON.stringify({})) return undefined;
-    return this;
+    return isObjectEmpty(this) ? undefined : this;
   };
 }
 
@@ -46,8 +45,7 @@ export class XrayStreamKcpSettingsObject implements ITransportNetwork {
     this.seed = !this.seed || this.seed == '' ? undefined : this.seed;
     this.header = this.header?.type === 'none' ? undefined : this.header;
 
-    if (JSON.stringify(this) === JSON.stringify({})) return undefined;
-    return this;
+    return isObjectEmpty(this) ? undefined : this;
   };
 }
 
@@ -69,8 +67,7 @@ export class XrayStreamWsSettingsObject implements ITransportNetwork {
     this.headers = this.headers && Object.keys(this.headers).length === 0 ? undefined : this.headers;
     this.acceptProxyProtocol = !this.acceptProxyProtocol ? undefined : this.acceptProxyProtocol;
 
-    if (JSON.stringify(this) === JSON.stringify({})) return undefined;
-    return this;
+    return isObjectEmpty(this) ? undefined : this;
   };
 }
 
@@ -87,8 +84,7 @@ export class XrayStreamHttpSettingsObject implements ITransportNetwork {
 
     this.extra?.normalize();
 
-    if (JSON.stringify(this) === JSON.stringify({})) return undefined;
-    return this;
+    return isObjectEmpty(this) ? undefined : this;
   };
 }
 

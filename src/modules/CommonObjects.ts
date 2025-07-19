@@ -11,6 +11,10 @@ import {
   XrayStreamSplitHttpSettingsObject
 } from './TransportObjects';
 
+export const isObjectEmpty = (obj: Record<string, unknown> | unknown | null | undefined): boolean => {
+  return !obj || (Object.keys(obj).length === 0 && obj.constructor === Object);
+};
+
 export class XraySniffingObject {
   static readonly destOverrideOptions = ['http', 'tls', 'quic', 'fakedns'];
   public enabled? = false;
@@ -596,7 +600,7 @@ export class XrayStreamSettingsObject {
 
     if (this.sockopt && typeof this.sockopt.normalize === 'function') this.sockopt = this.sockopt.normalize();
 
-    return JSON.stringify(this) === '{}' ? undefined : this;
+    return isObjectEmpty(this) ? undefined : this;
   }
 
   private normalizeAllSettings(): void {

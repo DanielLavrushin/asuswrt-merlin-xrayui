@@ -5,14 +5,16 @@
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - REMOVED: General connection check. Country flags were removed.
+- ADDED: It is now possible to add a `subscription URL` to a specific outbound connection. XRAYUI Will fetch connection updates on every service restart. While a URL is set, certain settings are disabled because they are managed by the subscription.
 - ADDED: Connection check per outbound.
   > If you previously had connection check option enabled, it is recommended to turn it off and on again.
 - ADDED: Loopback RETURN rule in mangle table for `127.0.0.0/8` packets.
 - ADDED: LAN/Wi-Fi global IPv6 addresses are now excluded when configuring firewall rules.
 - ADDED: `IPsec` VPN subnet exclusion – skips subnet rule when IPsec is disabled.
 - ADDED: Numeric `startup delay` field in `General Settings` to specify the wait time before Xray starts after router reboot.
-- FIXED: Don't resolve log ips when dnsmasq is disabled.
-- FIXED: Correctly resolve online a device object by an ip6 in the logs.
+- ADDED: It is now possible to set a XRAY start delay on router reboot (in seconds), this setting is located in General Settings.
+- FIXED: Don't resolve log IPs when dnsmasq is disabled.
+- FIXED: Correctly resolve a device name by an ip6 in the logs.
 - FIXED: Switching inbound/outbound transport no longer retains the previous object in the config.
 - FIXED: Sort profiles alphabetically.
 - FIXED: `Wireguard` Inbound private/public key regeneration.

@@ -11,7 +11,8 @@ import {
   XrayNoiseObject,
   XrayShadowsocksServerObject,
   XrayPeerObject,
-  XrayVlessServerObject
+  XrayVlessServerObject,
+  isObjectEmpty
 } from './CommonObjects';
 import { plainToInstance } from 'class-transformer';
 
@@ -19,6 +20,7 @@ export class XrayOutboundObject<TProxy extends IProtocolType> {
   public protocol!: string;
   public sendThrough? = '0.0.0.0';
   public tag?: string;
+  public surl?: string;
   public settings?: TProxy;
   public streamSettings?: XrayStreamSettingsObject = new XrayStreamSettingsObject();
 
@@ -45,8 +47,7 @@ export class XrayOutboundObject<TProxy extends IProtocolType> {
       this.settings = (this.settings as any).normalize();
     }
 
-    if (JSON.stringify(this) === JSON.stringify({})) return undefined;
-    return this;
+    return isObjectEmpty(this) ? undefined : this;
   };
 }
 
@@ -83,8 +84,7 @@ export class XrayBlackholeOutboundObject implements IProtocolType {
   normalize = (): this | undefined => {
     this.response = this.response?.type === 'none' ? undefined : this.response;
 
-    if (JSON.stringify(this) === JSON.stringify({})) return undefined;
-    return this;
+    return isObjectEmpty(this) ? undefined : this;
   };
 }
 
@@ -165,8 +165,7 @@ export class XrayFreedomOutboundObject implements IProtocolType {
     this.noises = !this.noises || this.noises.length === 0 ? undefined : this.noises;
     this.proxyProtocol = this.proxyProtocol === 0 ? undefined : this.proxyProtocol;
 
-    if (JSON.stringify(this) === JSON.stringify({})) return undefined;
-    return this;
+    return isObjectEmpty(this) ? undefined : this;
   };
 }
 
@@ -181,8 +180,7 @@ export class XrayDnsOutboundObject implements IProtocolType {
     this.network = this.network && this.network !== 'tcp' ? this.network : undefined;
     this.port = !this.port || this.port === 0 ? undefined : this.port;
     this.nonIPQuery = this.nonIPQuery === 'drop' ? undefined : this.nonIPQuery;
-    if (JSON.stringify(this) === JSON.stringify({})) return undefined;
-    return this;
+    return isObjectEmpty(this) ? undefined : this;
   };
 }
 

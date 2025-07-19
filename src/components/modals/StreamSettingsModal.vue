@@ -2,7 +2,7 @@
   <modal ref="modal" :title="$t('com.StreamSettingsModal.modal_title')">
     <div class="formfontdesc">
       <p v-html="$t('com.StreamSettingsModal.modal_desc')"></p>
-      <table width="100%" class="FormTable modal-form-table">
+      <table width="100%" class="FormTable modal-form-table" :class="{ locked: isLocked }">
         <thead>
           <tr>
             <td colspan="2">
@@ -40,7 +40,7 @@
               <span class="hint-color">default: tcp</span>
             </td>
           </tr>
-          <tr>
+          <tr class="unlocked">
             <th>
               {{ $t('com.StreamSettingsModal.label_tproxy') }}
               <hint v-html="$t('com.StreamSettingsModal.hint_tproxy')"></hint>
@@ -71,7 +71,15 @@
   import { XrayInboundObject } from '@/modules/InboundObjects';
   import { XrayOutboundObject } from '@/modules/OutboundObjects';
   import { XrayOptions } from '@/modules/Options';
-  import { XrayStreamGrpcSettingsObject, XrayStreamTcpSettingsObject, XrayStreamKcpSettingsObject, XrayStreamHttpSettingsObject, XrayStreamWsSettingsObject, XrayStreamHttpUpgradeSettingsObject, XrayStreamSplitHttpSettingsObject } from '@/modules/TransportObjects';
+  import {
+    XrayStreamGrpcSettingsObject,
+    XrayStreamTcpSettingsObject,
+    XrayStreamKcpSettingsObject,
+    XrayStreamHttpSettingsObject,
+    XrayStreamWsSettingsObject,
+    XrayStreamHttpUpgradeSettingsObject,
+    XrayStreamSplitHttpSettingsObject
+  } from '@/modules/TransportObjects';
   import { XrayStreamSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject } from '@/modules/CommonObjects';
 
   import Hint from '@main/Hint.vue';
@@ -106,6 +114,9 @@
       const transport = ref<XrayStreamSettingsObject>(props.transport ?? new XrayStreamSettingsObject());
       const network = ref<ITransportNetwork>();
       const proxyType = ref<string>('');
+      const proxySubscribeUrl = ref<string>('');
+
+      const isLocked = computed(() => !!proxySubscribeUrl.value?.trim());
 
       const networkComponent = computed(() => {
         switch (transport.value.network) {
@@ -156,6 +167,9 @@
       const show = (proxy: XrayInboundObject<IProtocolType> | XrayOutboundObject<IProtocolType>, pxtype: string) => {
         proxy.streamSettings = transport.value = proxy.streamSettings ?? new XrayStreamSettingsObject();
         proxyType.value = pxtype;
+
+        proxySubscribeUrl.value = (proxy as XrayOutboundObject<IProtocolType>).surl ?? '';
+        console.log('proxySubscribeUrl', proxySubscribeUrl.value);
         modal.value.show();
       };
       const save = () => {
@@ -177,7 +191,8 @@
         manage_security,
         manage_sockopt,
         show,
-        save
+        save,
+        isLocked
       };
     }
   });

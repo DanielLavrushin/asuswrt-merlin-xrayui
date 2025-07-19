@@ -1,5 +1,5 @@
 export interface IProtocolType {
-  normalize?: () => void;
+  normalize?: () => IProtocolType | undefined;
   //eslint-disable-next-line
   isTargetAddress?: (address: string) => boolean;
   getUserNames?: () => string[];
@@ -23,5 +23,6 @@ export interface IXrayServer<TClient> {
 export interface XrayRouterDeviceOnline {
   name: string;
   ip: string;
+  ip6: string;
   mac: string;
 }

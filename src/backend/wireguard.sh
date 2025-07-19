@@ -1,9 +1,10 @@
 #!/bin/sh
 # shellcheck disable=SC2034  # codacy:Unused variables
 
-regenerate_wireguard_keys() {
+wireguard_generate_keys() {
     log_info "Regenerating WireGuard private and public keys..."
-    local private_key=$(reconstruct_payload)
+    local payload=$(reconstruct_payload)
+    local private_key=$(echo "$payload" | jq -r '.pk')
     local public_key
 
     if [ -z "$private_key" ]; then

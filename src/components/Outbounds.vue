@@ -22,8 +22,9 @@
           <tr v-show="!proxy.isSystem()" class="proxy-row">
             <th class="drag-handle" aria-label="Drag to reorder">
               <span class="grip" aria-hidden="true"></span>
+              {{ proxy.surl ? '🔗' : '' }}
               {{ proxy.tag == '' ? 'no tag' : proxy.tag! }}
-              <span v-if="check_connection && connectionStatus[proxy.tag]" class="connection-status">
+              <span v-if="isRunning && check_connection && connectionStatus[proxy.tag]" class="connection-status">
                 {{ connectionStatus[proxy.tag]?.alive ? '🟢' : connectionStatus[proxy.tag]?.alive === false ? '🔴' : '🟡' }}
               </span>
             </th>
@@ -267,7 +268,8 @@
         show_transport,
         edit_proxy,
         remove_proxy,
-        save_proxy
+        save_proxy,
+        isRunning: window.xray.server.isRunning
       };
     }
   });

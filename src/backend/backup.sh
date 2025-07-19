@@ -36,7 +36,7 @@ backup_configuration() {
     local backup_file="$backup_dir/xrayui-$timestamp.tar.gz"
 
     local items_list=""
-    for item in /opt/etc/xray/*.json /opt/etc/xray/cert /jffs/xrayui_custom /opt/share/xrayui/data /opt/etc/xrayui.conf; do
+    for item in /opt/etc/xray/*.json /opt/etc/xray/xrayui/* /opt/etc/xray/cert /jffs/xrayui_custom /opt/share/xrayui/data /opt/etc/xrayui.conf; do
         if [ -e "$item" ]; then
             items_list="$items_list $item"
         else

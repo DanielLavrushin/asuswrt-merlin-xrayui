@@ -11,6 +11,10 @@ import {
   XrayStreamSplitHttpSettingsObject
 } from './TransportObjects';
 
+export const isObjectEmpty = (obj: Record<string, unknown> | unknown | null | undefined): boolean => {
+  return !obj || (Object.keys(obj).length === 0 && obj.constructor === Object);
+};
+
 export class XraySniffingObject {
   static readonly destOverrideOptions = ['http', 'tls', 'quic', 'fakedns'];
   public enabled? = false;
@@ -550,6 +554,22 @@ export class XrayRoutingRuleObject {
   };
 }
 
+type StreamKey = keyof XrayStreamSettingsObject;
+
+const NET_KEEP: Record<string, StreamKey[]> = {
+  tcp: ['tcpSettings'],
+  kcp: ['kcpSettings'],
+  ws: ['wsSettings'],
+  http: ['xhttpSettings', 'httpupgradeSettings'],
+  grpc: ['grpcSettings'],
+  splithttp: ['splithttpSettings']
+};
+
+const SEC_KEEP: Record<string, StreamKey[]> = {
+  tls: ['tlsSettings'],
+  reality: ['realitySettings']
+};
+
 export class XrayStreamSettingsObject {
   public network? = 'tcp';
   public security? = 'none';
@@ -562,25 +582,33 @@ export class XrayStreamSettingsObject {
   public grpcSettings?: XrayStreamGrpcSettingsObject;
   public httpupgradeSettings?: XrayStreamHttpUpgradeSettingsObject;
   public splithttpSettings?: XrayStreamSplitHttpSettingsObject;
-
   public sockopt?: XraySockoptObject;
 
   public normalize(): this | undefined {
-    this.network = this.network == '' || this.network == 'tcp' ? undefined : this.network;
-    this.security = this.security == '' || this.security == 'none' ? undefined : this.security;
+    this.network = this.network && this.network !== 'tcp' ? this.network : undefined;
+    this.security = this.security && this.security !== 'none' ? this.security : undefined;
+
+    const allowed = new Set<StreamKey>([...(NET_KEEP[this.network ?? ''] ?? []), ...(SEC_KEEP[this.security ?? ''] ?? [])]);
+
+    (Object.keys(this) as StreamKey[])
+      .filter((k) => k.endsWith('Settings'))
+      .forEach((k) => {
+        if (!allowed.has(k)) (this as any)[k] = undefined;
+      });
 
     this.normalizeAllSettings();
-    this.sockopt = this.sockopt?.normalize();
 
-    if (JSON.stringify(this) === JSON.stringify({})) return undefined;
-    return this;
+    if (this.sockopt && typeof this.sockopt.normalize === 'function') this.sockopt = this.sockopt.normalize();
+
+    return isObjectEmpty(this) ? undefined : this;
   }
-  normalizeAllSettings(): void {
-    Object.keys(this)
-      .filter((key) => key.endsWith('Settings'))
-      .forEach((key) => {
-        const setting = this[key as keyof XrayStreamSettingsObject] as { normalize?: () => void } | undefined;
-        setting?.normalize?.();
+
+  private normalizeAllSettings(): void {
+    (Object.keys(this) as StreamKey[])
+      .filter((k) => k.endsWith('Settings'))
+      .forEach((k) => {
+        const obj = (this as any)[k];
+        if (obj && typeof obj.normalize === 'function') (this as any)[k] = obj.normalize();
       });
   }
 }

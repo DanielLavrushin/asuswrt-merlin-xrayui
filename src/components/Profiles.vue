@@ -15,7 +15,14 @@
             <tr v-for="p in profiles" :key="p">
               <td>{{ p }}</td>
               <td>
-                <input v-if="uiResponse.xray && p !== uiResponse.xray.profile" class="button_gen button_gen_small" type="button" value="&#10005;" :title="$t('labels.delete')" @click.prevent="deleteProfile(p)" />
+                <input
+                  v-if="uiResponse.xray && p !== uiResponse.xray.profile"
+                  class="button_gen button_gen_small"
+                  type="button"
+                  value="&#10005;"
+                  :title="$t('labels.delete')"
+                  @click.prevent="deleteProfile(p)"
+                />
               </td>
             </tr>
             <tr>
@@ -58,7 +65,7 @@
           if (newVal) {
             if (newVal?.xray) {
               profile.value = newVal.xray.profile;
-              profiles.value = newVal.xray.profiles;
+              profiles.value = newVal.xray.profiles.sort();
             }
           }
         },
@@ -80,7 +87,7 @@
       };
       const deleteProfile = async (p: string) => {
         if (confirm('Are you sure you want to delete config profile ' + p + '?')) {
-          profiles.value = profiles.value.filter((x) => x !== p);
+          profiles.value = profiles.value.filter((x) => x !== p).sort();
           await delete_profile(p);
         }
       };
@@ -118,4 +125,3 @@
     }
   });
 </script>
-<style scoped lang="scss"></style>

@@ -42,7 +42,25 @@
       const configSize = ref<number>(0);
       const configUri = '/ext/xrayui/xray-config.json';
       const hideSenseData = ref<boolean>(true);
-      const sensitiveKeys = ['secretKey', 'address', 'password', 'serverName', 'publicKey', 'shortIds', 'privateKey', 'shortId', 'email', 'id', 'user', 'pass', 'certificate', 'key', 'mac'];
+      const sensitiveKeys = [
+        'surl',
+        'secretKey',
+        'address',
+        'password',
+        'serverName',
+        'publicKey',
+        'shortIds',
+        'privateKey',
+        'shortId',
+        'email',
+        'id',
+        'user',
+        'pass',
+        'certificate',
+        'key',
+        'mac',
+        'spiderX'
+      ];
 
       const maskObject = (obj: any): any => {
         if (Array.isArray(obj)) {

@@ -18,15 +18,12 @@
         <td>{{ client.publicKey }}</td>
         <td>{{ client.allowedIPs.join(', ') }}</td>
         <td>
-          <button @click.prevent="showQrCode(client)" class="button_gen button_gen_small">manage</button>
-          <button @click.prevent="removeClient(client)" class="button_gen button_gen_small">remove</button>
+          <button @click.prevent="editClient(client, index)" class="button_gen button_gen_small">&#8494;</button>
+          <button @click.prevent="removeClient(client)" class="button_gen button_gen_small">&#10005;</button>
         </td>
       </tr>
     </tbody>
   </table>
-  <modal ref="modalQr" title="QR Code Modal">
-    <qrcode-vue :value="qr_content" :size="qr_size" level="H" render-as="svg" />
-  </modal>
   <modal ref="modalNewClient" title="New Peer">
     <table class="FormTable modal-form-table">
       <tbody>
@@ -50,7 +47,7 @@
       </tbody>
     </table>
     <template v-slot:footer>
-      <button @click.prevent="addClient2()" class="button_gen button_gen_small">save</button>
+      <button @click.prevent="save()" class="button_gen button_gen_small">save</button>
     </template>
   </modal>
 </template>
@@ -60,7 +57,7 @@
   import { XrayWireguardClientObject } from '@/modules/ClientsObjects';
   import { XrayOptions } from '@/modules/Options';
   import { defineComponent, ref } from 'vue';
-  import QrcodeVue from 'qrcode.vue';
+  import Qr from './QrCodeClient.vue';
 
   import modal from '@main/Modal.vue';
   import engine, { SubmitActions } from '@/modules/Engine';
@@ -68,14 +65,14 @@
   export default defineComponent({
     name: 'WireguardClients',
     components: {
-      QrcodeVue,
-      modal
+      modal,
+      Qr
     },
     methods: {
       async regen() {
         const delay = 2000;
         window.showLoading(delay);
-        await engine.submit(SubmitActions.regenerateWireguardKeys, this.privateKey, delay);
+        await engine.submit(SubmitActions.regenerateWireguardKeys, { pk: this.$props.privateKey }, delay);
         let result = await engine.getXrayResponse();
         if (result.wireguard) {
           this.newClient.publicKey = result.wireguard.publicKey;
@@ -90,7 +87,6 @@
       },
 
       showQrCode(client: XrayWireguardClientObject) {
-        this.qr_content = JSON.stringify(xrayConfig);
         this.modalQr.value?.show();
       },
 
@@ -100,46 +96,71 @@
       },
       addClient() {
         this.modalNewClient.show();
-      },
-      addClient2() {
-        let client = new XrayWireguardClientObject();
-        client.allowedIPs = this.ips.split('\n');
-        client.publicKey = this.newClient.publicKey;
-        if (!client.publicKey) {
-          alert('Public key is required');
-          return;
-        }
-        if (this.ips.length == 0) {
-          alert('Allowed IPs is required');
-          return;
-        }
-        this.clients.push(client);
-        this.resetNewForm();
-        this.modalNewClient.close();
       }
     },
     props: {
       clients: Array<XrayWireguardClientObject>,
-      privateKey: String
+      privateKey: String,
+      mode: String,
+      proxy: {
+        type: Object as () => any,
+        required: true
+      }
     },
 
     setup(props) {
+      const editingIndex = ref<number | null>(null);
       const clients = ref<XrayWireguardClientObject[]>(props.clients ?? []);
       const newClient = ref<XrayWireguardClientObject>(new XrayWireguardClientObject());
+      const mode = ref(props.mode);
       const modalQr = ref();
       const modalNewClient = ref();
-      const qr_content = ref('');
+
       const ips = ref('');
-      const privatekey = ref<string>(props.privateKey!);
+      const privateKey = ref<string>(props.privateKey ?? '');
+
+      const editClient = (client: XrayWireguardClientObject, index: number) => {
+        newClient.value = { ...client };
+        ips.value = client.allowedIPs.join('\n');
+        editingIndex.value = index;
+        modalNewClient.value?.show();
+      };
+
+      const save = () => {
+        if (!newClient.value.publicKey) {
+          alert('Public key is required');
+          return;
+        }
+        const allowed = ips.value.split('\n').filter(Boolean);
+        if (!allowed.length) {
+          alert('Allowed IPs is required');
+          return;
+        }
+        newClient.value.allowedIPs = allowed;
+        if (editingIndex.value === null) {
+          clients.value.push({ ...newClient.value });
+        } else {
+          clients.value.splice(editingIndex.value, 1, { ...newClient.value });
+        }
+        modalNewClient.value?.close();
+        resetNewForm();
+      };
+      const resetNewForm = () => {
+        ips.value = '';
+        newClient.value = new XrayWireguardClientObject();
+        editingIndex.value = null;
+      };
       return {
         flows: XrayOptions.clientFlowOptions,
         ips,
         clients,
         modalNewClient,
-        qr_content,
-        qr_size: 500,
         newClient,
-        modalQr
+        modalQr,
+        mode,
+        privateKey,
+        editClient,
+        save
       };
     }
   });

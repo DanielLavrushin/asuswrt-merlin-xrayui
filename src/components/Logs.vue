@@ -236,7 +236,11 @@
       });
 
       const devices = computed(() => {
-        return Object.fromEntries(Object.entries(window.xray.router.devices_online).map(([mac, device]) => [device.ip, device]));
+        const pairs = Object.values(window.xray.router.devices_online).flatMap((device) => [
+          ...(device.ip ? [[device.ip, device]] : []),
+          ...(device.ip6 ? [[device.ip6, device]] : [])
+        ]);
+        return Object.fromEntries(pairs);
       });
 
       const parsedLogs = computed<LogEntry[]>(() => {

@@ -1,7 +1,7 @@
 #!/bin/sh
 # shellcheck disable=SC2034  # codacy:Unused variables
 
-regenerate_reality_keys() {
+reality_generate_keys() {
     log_info "Regenerating Reality private and public keys..."
 
     local xray_output=$(xray x25519)

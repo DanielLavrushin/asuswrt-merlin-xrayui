@@ -4,8 +4,10 @@
 startup() {
     log_ok "Starting $ADDON_TITLE..."
 
-    local skipwait=${skipwait:-false}
+    load_xrayui_config
 
+    local skipwait=${skipwait:-false}
+    local startup_delay=${startup_delay:-0}
     remount_ui
     cron_jobs_add
 
@@ -16,7 +18,10 @@ startup() {
 
         if [ "$skipwait" = "false" ]; then
             log_ok "Waiting for network and iptable rules to be ready..."
-            #  sleep 60 # wait for network and iptable rules to be ready
+            if [ "$startup_delay" -gt 0 ]; then
+                log_ok "Waiting for $startup_delay seconds before starting Xray service..."
+                sleep "$startup_delay"
+            fi
         fi
         restart
     elif [ -n "$xray_pid" ]; then

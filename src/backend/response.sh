@@ -35,6 +35,7 @@ initial_response() {
     local ipsec="${ipsec:-off}"
     local debug="${ADDON_DEBUG:-false}"
     local check_connection="${check_connection:-false}"
+    local startup_delay="${startup_delay:-0}"
 
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg geoip "$geoip_date" --arg geosite "$geosite_date" --arg geoipurl "$geoipurl" --arg geositeurl "$geositeurl" \
         '.geodata.geoip_url = $geoipurl | .geodata.geosite_url = $geositeurl | .geodata.community["geoip.dat"] = $geoip | .geodata.community["geosite.dat"] = $geosite')
@@ -71,6 +72,7 @@ initial_response() {
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson logs_dor "$logs_dor" '.xray.logs_dor = $logs_dor')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson logs_max_size "$logs_max_size" '.xray.logs_max_size = $logs_max_size')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg ipsec "$ipsec" '.xray.ipsec = $ipsec')
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson startup_delay "$startup_delay" '.xray.startup_delay = $startup_delay')
 
     local XRAY_VERSION=$(xray version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1) || log_error "Error: Failed to get Xray version."
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg xray_ver "$XRAY_VERSION" --arg xrayui_ver "$XRAYUI_VERSION" '.xray.ui_version = $xrayui_ver | .xray.core_version = $xray_ver')
@@ -178,6 +180,62 @@ apply_config() {
 
     rm -f "$backup_config"
 }
+
+
+process_subscriptions() {
+    local config_file="$1"
+    local cfg=$(cat "$1")
+    local entry idx url proto tag fetched rep
+    local temp_config="/tmp/xray_server_config_new.json"
+
+    while IFS= read -r entry; do
+        [ -z "$entry" ] && continue
+        idx=$(printf '%s' "$entry" | jq -r '.idx')
+        url=$(printf '%s' "$entry" | jq -r '.url')
+        proto=$(printf '%s' "$entry" | jq -r '.proto')
+        tag=$(printf '%s' "$entry" | jq -r '.tag')
+        log_debug "Processing subscription for idx=$idx, tag=$tag, proto=$proto"
+
+        fetched=$(curl -fsL "$url") || continue
+
+        rep=$(printf '%s' "$fetched" | jq -c --arg t "$tag" --arg p "$proto" '
+            ( .outbounds
+              | map(select((($t != "") and (.tag==$t)) or (.protocol==$p)))
+            )[0]')
+
+        [ "$rep" = "null" ] && continue
+        cfg=$(printf '%s' "$cfg" | jq -c \
+            --arg pos "$idx" \
+            --arg url "$url" \
+            --arg tag "$tag" \
+            --argjson rep "$rep" \
+            '.outbounds[( $pos|tonumber )] = ($rep + {surl:$url, tag:$tag})')
+    done <<EOF
+$(printf '%s' "$cfg" | jq -c '.outbounds|to_entries[]|select(.value.surl and .value.surl!="")|{idx:.key,url:.value.surl,tag:(.value.tag//"")}')
+EOF
+
+    if [ -z "$cfg" ]; then
+        log_error "Failed to process subscriptions. No valid configuration found."
+        return 1
+    fi
+
+    echo "$cfg" >"$temp_config"
+    if [ $? -ne 0 ]; then
+        log_error "Failed to write processed configuration to $temp_config."
+        return 1
+    fi
+
+    cp "$temp_config" "$config_file"
+    if [ $? -ne 0 ]; then
+        log_error "Failed to copy processed configuration to $config_file."
+        return 1
+    fi
+    rm -f "$temp_config"
+
+    echo "Processed subscriptions successfully."
+ 
+}
+
 
 rules_to_dns_domains() {
     local configcontent="$1"

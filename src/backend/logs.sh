@@ -176,28 +176,29 @@ enable_config_logs() {
 }
 
 logrotate_setup() {
-  # setup logrotate
-  log_info "Setting up logrotate for XRAY UI..."
+    log_info "Setting up logrotate for XRAY UI..."
 
-  load_xrayui_config
-  local logs_max_size=${logs_max_size:-10}
+    load_xrayui_config
+    local logs_max_size=${logs_max_size:-10}
 
-  local log_access="$(jq -r --arg default "$ADDON_LOGS_DIR/xray_access.log" '.log.access // $default' "$XRAY_CONFIG_FILE")"
-  local log_error="$(jq -r --arg default "$ADDON_LOGS_DIR/xray_error.log" '.log.error // $default' "$XRAY_CONFIG_FILE")"
+    mkdir -p "$ADDON_LOGS_DIR"
+    chown root:root "$ADDON_LOGS_DIR"
+    chmod 755 "$ADDON_LOGS_DIR"
 
-  cat >/opt/etc/logrotate.d/xrayui <<EOF
+    local log_access="$(jq -r --arg default "$ADDON_LOGS_DIR/xray_access.log" '.log.access // $default' "$XRAY_CONFIG_FILE")"
+    local log_error="$(jq -r --arg default "$ADDON_LOGS_DIR/xray_error.log" '.log.error // $default' "$XRAY_CONFIG_FILE")"
+
+    cat >/opt/etc/logrotate.d/xrayui <<EOF
 $log_access $log_error {
-    su nobody root
-    size ${logs_max_size}M
-    rotate 2
-    notifempty
-    copytruncate
-    create 640 nobody root
-    missingok
+        size ${logs_max_size}M
+        rotate 2
+        notifempty
+        copytruncate
+        create 640 nobody root
+        missingok
 }
 EOF
 
-  chmod 0644 /opt/etc/logrotate.d/xrayui || log_error "Failed to make logrotate executable."
-  log_ok "Logrotate configuration created successfully."
-
+    chmod 0644 /opt/etc/logrotate.d/xrayui || log_error "Failed to make logrotate executable."
+    log_ok "Logrotate configuration created successfully."
 }

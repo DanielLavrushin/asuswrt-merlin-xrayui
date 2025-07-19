@@ -13,6 +13,7 @@
 - ADDED: `IPsec` VPN subnet exclusion – skips subnet rule when IPsec is disabled.
 - ADDED: Numeric `startup delay` field in `General Settings` to specify the wait time before Xray starts after router reboot.
 - ADDED: It is now possible to set a XRAY start delay on router reboot (in seconds), this setting is located in General Settings.
+- FIXED: Log rotation now works: logs automatically rotate when they hit the configured size.
 - FIXED: Don't resolve log IPs when dnsmasq is disabled.
 - FIXED: Correctly resolve a device name by an ip6 in the logs.
 - FIXED: Switching inbound/outbound transport no longer retains the previous object in the config.

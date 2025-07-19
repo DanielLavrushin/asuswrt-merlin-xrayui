@@ -169,7 +169,6 @@
         proxyType.value = pxtype;
 
         proxySubscribeUrl.value = (proxy as XrayOutboundObject<IProtocolType>).surl ?? '';
-        console.log('proxySubscribeUrl', proxySubscribeUrl.value);
         modal.value.show();
       };
       const save = () => {

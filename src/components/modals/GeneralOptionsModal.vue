@@ -130,10 +130,18 @@
           </thead>
           <tbody>
             <tr>
-              <th>{{ $t('com.GeneralOptionsModal.label_hooks_on_startup') }}</th>
+              <th>{{ $t('com.GeneralOptionsModal.label_hooks_before_firewall') }}</th>
               <td>
                 <div class="textarea-wrapper">
-                  <textarea v-model="options.hooks.before_firewall" style="height: 300px"></textarea>
+                  <textarea v-model="options.hooks.before_firewall"></textarea>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <th>{{ $t('com.GeneralOptionsModal.label_hooks_after_firewall') }}</th>
+              <td>
+                <div class="textarea-wrapper">
+                  <textarea v-model="options.hooks.after_firewall"></textarea>
                 </div>
               </td>
             </tr>

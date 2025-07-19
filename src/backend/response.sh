@@ -181,11 +181,10 @@ apply_config() {
     rm -f "$backup_config"
 }
 
-
 process_subscriptions() {
     local config_file="$1"
     local cfg=$(cat "$1")
-    local entry idx url proto tag fetched rep
+    local idx url proto tag fetched rep
     local temp_config="/tmp/xray_server_config_new.json"
 
     while IFS= read -r entry; do
@@ -194,16 +193,19 @@ process_subscriptions() {
         url=$(printf '%s' "$entry" | jq -r '.url')
         proto=$(printf '%s' "$entry" | jq -r '.proto')
         tag=$(printf '%s' "$entry" | jq -r '.tag')
-        log_debug "Processing subscription for idx=$idx, tag=$tag, proto=$proto"
 
         fetched=$(curl -fsL "$url") || continue
+        if ! echo "$fetched" | jq -e . >/dev/null 2>&1; then
+            fetched=$(echo "$fetched" | base64 -d 2>/dev/null) || continue
+        fi
 
         rep=$(printf '%s' "$fetched" | jq -c --arg t "$tag" --arg p "$proto" '
-            ( .outbounds
-              | map(select((($t != "") and (.tag==$t)) or (.protocol==$p)))
-            )[0]')
+            (.outbounds // [])
+            | map(select((($t != "") and (.tag==$t)) or (.protocol==$p)))
+            | first')
 
-        [ "$rep" = "null" ] && continue
+        [ -z "$rep" ] || [ "$rep" = "null" ] && continue
+
         cfg=$(printf '%s' "$cfg" | jq -c \
             --arg pos "$idx" \
             --arg url "$url" \
@@ -211,31 +213,14 @@ process_subscriptions() {
             --argjson rep "$rep" \
             '.outbounds[( $pos|tonumber )] = ($rep + {surl:$url, tag:$tag})')
     done <<EOF
-$(printf '%s' "$cfg" | jq -c '.outbounds|to_entries[]|select(.value.surl and .value.surl!="")|{idx:.key,url:.value.surl,tag:(.value.tag//"")}')
+$(printf '%s' "$cfg" | jq -c '.outbounds
+    | to_entries[]
+    | select(.value.surl and .value.surl!="")
+    | {idx:.key,url:.value.surl,proto:.value.protocol,tag:(.value.tag//"")}')
 EOF
 
-    if [ -z "$cfg" ]; then
-        log_error "Failed to process subscriptions. No valid configuration found."
-        return 1
-    fi
-
-    echo "$cfg" >"$temp_config"
-    if [ $? -ne 0 ]; then
-        log_error "Failed to write processed configuration to $temp_config."
-        return 1
-    fi
-
-    cp "$temp_config" "$config_file"
-    if [ $? -ne 0 ]; then
-        log_error "Failed to copy processed configuration to $config_file."
-        return 1
-    fi
-    rm -f "$temp_config"
-
-    echo "Processed subscriptions successfully."
- 
+    printf '%s' "$cfg" >"$temp_config" && cp "$temp_config" "$config_file" && rm -f "$temp_config"
 }
-
 
 rules_to_dns_domains() {
     local configcontent="$1"

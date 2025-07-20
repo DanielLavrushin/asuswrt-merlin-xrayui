@@ -143,6 +143,7 @@
     public kind = 'access' as const;
     public time?: string;
     public source?: string;
+    public source_port?: string;
     public source_device?: string;
     public type?: string;
     public target?: string;
@@ -165,16 +166,10 @@
         this.time = new Date(iso).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
       }
 
-      if (groups.target) {
-        const [host, port] = groups.target.split(':');
-        this.target = host;
-        this.target_port = port ?? '';
-      }
-
       if (groups.routing) this.routing = groups.routing === '>>' ? 'direct' : 'rule';
 
       if (this.source) {
-        const dev = devices[this.source];
+        const dev = devices[this.source.trim()];
         const name = dev?.nickName?.trim() ? dev.nickName : dev?.name;
         this.source_device = name;
       }
@@ -205,7 +200,7 @@
       const logsContent = ref<string>('');
       // Access log
       const ACCESS_RE =
-        /^(?<time>.+)\.\d+\s+from\s+(?:tcp:|udp:)*(?<source>.+?):\d+\s+accepted\s+(?<type>tcp|udp)*(?:\:*)(?<target>.+?:\d+)\s+\[(?<inbound>.+)\s+(?<routing>(?:>>|->))\s+(?<outbound>.+)?\]$/;
+        /^(?<time>.+)\.\d+\s+from\s+(?:tcp:|udp:)*(?:\[*)(?<source>.+?)(?:\]*\:)(?<source_port>\d+)\s+accepted\s+(?<type>tcp|udp)*(?:\:*)(?:\[*)(?<target>.+?)(?:\]*\:)(?<target_port>\d+)\s+\[(?<inbound>.+)\s+(?<routing>(?:>>|->))\s+(?<outbound>.+)?\]$/;
 
       // DNS “got answer” line
       const DNS_RE = /^(.+)\.\d+\s+from\s+(DNS)\s+accepted\s+(?:udp:)(.+?)\s+\[(.+?)\s+(->|>>)\s+(.+)\]$/;

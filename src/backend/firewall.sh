@@ -12,12 +12,18 @@ ipt() { # ipt <table> <args…>
     apply_rule "$tbl" "$@" # uses IPT_LIST and skips v6/nat automatically
 }
 
-apply_rule() { # $@ = ipt args INCLUDING the -t TABLE part
+apply_rule() {
     local tbl=$1
     shift
-    local rc=0 did=0
-
+    local rc=0 did=0 args rule
+    args="$*"
     for IPT in $IPT_LIST; do
+        rule="$args"
+        if [ "$IPT" = "ip6tables" ]; then
+            rule="$(printf '%s\n' "$rule" | sed 's/127\.0\.0\.1/::1/g')"
+        else
+            rule="$(printf '%s\n' "$rule" | sed 's/::1/127.0.0.1/g')"
+        fi
         if [ "$IPT" = "ip6tables" ] && [ "$tbl" = "nat" ]; then
             if [ "$IP6NAT_LOADED" = "0" ]; then
                 modprobe -q ip6table_nat 2>/dev/null && IP6NAT_LOADED=1 || IP6NAT_LOADED=-1
@@ -25,15 +31,12 @@ apply_rule() { # $@ = ipt args INCLUDING the -t TABLE part
             [ "$IP6NAT_LOADED" != "1" ] && continue
             $IPT -w -t nat -L -n >/dev/null 2>&1 || continue
         fi
-
-        [ "$IPT" = "ip6tables" ] && contains_ipv4 "$*" && continue
-        [ "$IPT" = "iptables" ] && contains_ipv6 "$*" && continue
-
-        $IPT -w -t "$tbl" "$@" 2>/dev/null
+        [ "$IPT" = "ip6tables" ] && contains_ipv4 "$rule" && continue
+        [ "$IPT" = "iptables" ] && contains_ipv6 "$rule" && continue
+        $IPT -w -t "$tbl" $rule 2>/dev/null
         rc=$?
         did=1
     done
-
     [ $did -eq 1 ] && return $rc || return 0
 }
 
@@ -300,27 +303,6 @@ configure_firewall_client() {
     if [ "$IPT_TABLE" = "mangle" ]; then
         iptables -w -t "$IPT_TABLE" -C XRAYUI -d 127.0.0.0/8 -j RETURN 2>/dev/null ||
             iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -d 127.0.0.0/8 -j RETURN
-
-        # if is_ipv6_enabled; then
-        #     for rule in \
-        #         "-p udp -m multiport --dports 53,546,547" \
-        #         "-p udp -m multiport --sports 53,546,547" \
-        #         "-p icmpv6"; do
-        #         ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 $rule -j RETURN
-        #     done
-
-        #     ip6tables -w -t "$IPT_TABLE" -I XRAYUI 4 -d ff00::/8 -j RETURN
-
-        #     ip6tables -w -t "$IPT_TABLE" -I XRAYUI 5 -s fe80::/10 -j RETURN
-        #     ip6tables -w -t "$IPT_TABLE" -I XRAYUI 6 -d fe80::/10 -j RETURN
-
-        #     ip6tables -w -t "$IPT_TABLE" -I XRAYUI 7 -s ::1 -j RETURN
-        #     ip6tables -w -t "$IPT_TABLE" -I XRAYUI 8 -d ::1 -j RETURN
-
-        #     ip6tables -w -t "$IPT_TABLE" -I XRAYUI 9 -s ::/128 -j RETURN
-        #     ip6tables -w -t "$IPT_TABLE" -I XRAYUI 10 -i lo -j RETURN || log_debug "Failed to add lo interface rule in $IPT_TABLE."
-
-        # fi
     fi
 
     # --- Begin Exclusion Rules ---
@@ -333,7 +315,11 @@ configure_firewall_client() {
 
     source_nets_v6=""
     if is_ipv6_enabled; then
-        source_nets_v6=$(ip -6 route show | awk '$1 ~ /^(fc00:|fd[0-9a-f]{2}:|fe80:).*\/[0-9]+$/ {print $1}' | sort -u)
+        for dev in $(nvram get lan_ifname) $(nvram get wl0_ifname) $(nvram get wl1_ifname); do
+            [ -z "$dev" ] && continue
+            source_nets_v6="$source_nets_v6 $(ip -6 route show proto kernel dev "$dev" | awk '{print $1}')"
+        done
+        source_nets_v6=$(printf '%s\n' $source_nets_v6 | sort -u)
     fi
 
     # Check if WireGuard is enabled and set the address accordingly

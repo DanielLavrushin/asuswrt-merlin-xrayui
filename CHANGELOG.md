@@ -5,7 +5,9 @@
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - FIXED: Unable to save HTTPUPGRADE Transport.
-- FIXED: Check for both status native and InstantGuard IPSEC.
+- FIXED: Check for both status native and `InstantGuard` IPSEC.
+- FIXED: `IPV6` Logs are correctly parsed.
+- IMPROVED: `IPV6` routing rules are correctly set in the iptables.
 
 ## [0.53.1] - 2025-07-20
 

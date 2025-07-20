@@ -85,7 +85,7 @@ jobs:
           echo "$CHANGELOG" >> $GITHUB_ENV
           echo "" >> $GITHUB_ENV
           echo "" >> $GITHUB_ENV
-          echo "![image](https://img.shields.io/github/downloads/DanielLavrushin/asuswrt-merlin-xrayui/v/${{ github.event.inputs.version }}/asuswrt-merlin-xrayui.tar.gz) ![image](https://img.shields.io/github/downloads/DanielLavrushin/asuswrt-merlin-xrayui/v/${{ github.event.inputs.version }}/xrayui-datbuilder.tar.gz)" >> $GITHUB_ENV
+          echo "![image](https://img.shields.io/github/downloads/DanielLavrushin/asuswrt-merlin-xrayui/v${{ github.event.inputs.version }}/asuswrt-merlin-xrayui.tar.gz) ![image](https://img.shields.io/github/downloads/DanielLavrushin/asuswrt-merlin-xrayui/v${{ github.event.inputs.version }}/xrayui-datbuilder.tar.gz)" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
       - name: Create GitHub Release

@@ -559,6 +559,7 @@ const NET_KEEP: Record<string, StreamKey[]> = {
   kcp: ['kcpSettings'],
   ws: ['wsSettings'],
   http: ['xhttpSettings', 'httpupgradeSettings'],
+  httpupgrade: ['httpupgradeSettings'],
   grpc: ['grpcSettings'],
   splithttp: ['splithttpSettings']
 };

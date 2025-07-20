@@ -57,6 +57,9 @@ start() {
             log_info "No API extension for $(basename "$XRAY_CONFIG_FILE"); running plain config."
         fi
     fi
+
+    process_subscriptions "$XRAY_CONFIG_FILE"
+
     XRAY_ARGS="-c $XRAY_CONFIG_FILE $XRAY_EXTRA_CFG"
     log_debug "Starting Xray with args: $XRAY_ARGS"
     xray $XRAY_ARGS >/dev/null 2>&1 &

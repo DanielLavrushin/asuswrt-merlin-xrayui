@@ -87,7 +87,7 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, watch, inject, onMounted, Ref } from 'vue';
+  import { defineComponent, ref, watch, inject, Ref } from 'vue';
 
   import { XrayRoutingObject, XrayRoutingRuleObject } from '@/modules/CommonObjects';
   import xrayConfig from '@/modules/XrayConfig';

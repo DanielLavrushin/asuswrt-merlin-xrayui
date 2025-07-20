@@ -107,7 +107,11 @@ export class EngineLoadingProgress {
     }
   }
 }
-
+export class EngineHooks {
+  public before_firewall_start?: string;
+  public after_firewall_start?: string;
+  public after_firewall_cleanup?: string;
+}
 export class EngineResponseConfig {
   public wireguard?: EngineWireguard;
   public reality?: EngineReality;
@@ -129,6 +133,8 @@ export class EngineResponseConfig {
     logs_dor: boolean;
     skip_test: boolean;
     check_connection: boolean;
+    startup_delay: number;
+    hooks?: EngineHooks;
   };
   public geodata?: EngineGeodatConfig = new EngineGeodatConfig();
   public loading?: EngineLoadingProgress;

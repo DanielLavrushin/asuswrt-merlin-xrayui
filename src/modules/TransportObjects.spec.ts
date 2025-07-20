@@ -1,5 +1,14 @@
-import { XrayParsedUrlObject } from './CommonObjects';
-import { XrayStreamKcpSettingsObject, XrayStreamTcpSettingsObject, XrayStreamWsSettingsObject } from './TransportObjects';
+import { XrayHeaderObject, XrayParsedUrlObject } from './CommonObjects';
+import {
+  XrayStreamGrpcSettingsObject,
+  XrayStreamHttpSettingsObject,
+  XrayStreamHttpUpgradeSettingsObject,
+  XrayStreamKcpSettingsObject,
+  XrayStreamSplitHttpSettingsObject,
+  XrayStreamTcpSettingsObject,
+  XrayStreamWsSettingsObject,
+  XrayXhttpExtraObject
+} from './TransportObjects';
 
 describe('TransportObjects', () => {
   let obj: XrayStreamKcpSettingsObject;
@@ -108,6 +117,116 @@ describe('TransportObjects', () => {
       expect(wsSettings.host).toBeUndefined();
       expect(wsSettings.acceptProxyProtocol).toBeUndefined();
       expect(wsSettings.headers).toBeUndefined();
+    });
+  });
+
+  describe('Additional TransportObjects coverage', () => {
+    describe('XrayStreamHttpSettingsObject', () => {
+      let http: XrayStreamHttpSettingsObject;
+
+      beforeEach(() => {
+        http = new XrayStreamHttpSettingsObject();
+      });
+
+      it('normalizes default values away', () => {
+        http.normalize();
+        expect(http.path).toBeUndefined();
+        expect(http.host).toBeUndefined();
+        expect(http.extra).toBeDefined();
+      });
+
+      it('retains custom values after normalize', () => {
+        http.path = '/custom';
+        http.host = 'example.com';
+        http.mode = 'stream-one';
+        http.normalize();
+        expect(http.path).toBe('/custom');
+        expect(http.host).toBe('example.com');
+        expect(http.mode).toBe('stream-one');
+      });
+    });
+
+    describe('XrayXhttpExtraObject', () => {
+      it('delegates normalize to xmux', () => {
+        const extra = new XrayXhttpExtraObject();
+        const mockXmux = { normalize: jest.fn(() => undefined) } as any;
+        extra.xmux = mockXmux;
+        extra.normalize();
+        expect(mockXmux.normalize).toHaveBeenCalledTimes(1);
+        expect(extra.xmux).toBeUndefined();
+      });
+    });
+
+    describe('XrayStreamGrpcSettingsObject', () => {
+      it('normalize returns the same instance', () => {
+        const grpc = new XrayStreamGrpcSettingsObject();
+        const result = grpc.normalize();
+        expect(result).toBe(grpc);
+      });
+    });
+
+    describe('XrayStreamHttpUpgradeSettingsObject', () => {
+      it('normalize is idempotent', () => {
+        const upgrade = new XrayStreamHttpUpgradeSettingsObject();
+        upgrade.acceptProxyProtocol = true;
+        const result = upgrade.normalize();
+        expect(result).toBe(upgrade);
+        expect(upgrade.acceptProxyProtocol).toBe(true);
+      });
+    });
+
+    describe('XrayStreamSplitHttpSettingsObject', () => {
+      it('normalize is a no‑op that returns the same object', () => {
+        const split = new XrayStreamSplitHttpSettingsObject();
+        split.host = 'split.host';
+        const result = split.normalize();
+        expect(result).toBe(split);
+        expect(split.host).toBe('split.host');
+      });
+    });
+  });
+
+  describe('normalize emptiness checks', () => {
+    describe('XrayStreamTcpSettingsObject', () => {
+      it('returns undefined when empty', () => {
+        const tcp = new XrayStreamTcpSettingsObject();
+        expect(tcp.normalize()).toBeUndefined();
+      });
+
+      it('returns self when not empty', () => {
+        const tcp = new XrayStreamTcpSettingsObject();
+        tcp.acceptProxyProtocol = true;
+        expect(tcp.normalize()).toBe(tcp);
+      });
+    });
+
+    describe('XrayStreamWsSettingsObject', () => {
+      it('returns undefined when empty', () => {
+        const ws = new XrayStreamWsSettingsObject();
+        expect(ws.normalize()).toBeUndefined();
+      });
+
+      it('returns self when path/host set', () => {
+        const ws = new XrayStreamWsSettingsObject();
+        ws.path = '/custom';
+        ws.host = 'ws.host';
+        expect(ws.normalize()).toBe(ws);
+      });
+    });
+
+    describe('XrayStreamKcpSettingsObject', () => {
+      it('returns undefined when header type is none and everything else default', () => {
+        const kcp = new XrayStreamKcpSettingsObject();
+        kcp.header = new XrayHeaderObject();
+        kcp.header.type = 'none';
+        expect(kcp.normalize()).toBeUndefined();
+      });
+
+      it('returns self when any field deviates from default', () => {
+        const kcp = new XrayStreamKcpSettingsObject();
+        kcp.mtu = 1400;
+        expect(kcp.normalize()).toBe(kcp);
+      });
     });
   });
 });

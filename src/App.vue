@@ -340,6 +340,25 @@
     border-left: 3px solid $c_yellow;
   }
 
+  .locked {
+    pointer-events: none;
+    position: relative;
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: repeating-linear-gradient(45deg, rgba(255, 165, 35, 0.2) 0 10px, rgba(0, 0, 0, 0) 10px 20px);
+      z-index: 2;
+      pointer-events: auto;
+    }
+
+    .unlocked * {
+      position: relative;
+      z-index: 4;
+      pointer-events: auto;
+    }
+  }
+
   /* ROG OVERRIDES  */
   .xrayui-rog {
     textarea {

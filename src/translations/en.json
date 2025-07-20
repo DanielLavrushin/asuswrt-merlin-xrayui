@@ -76,7 +76,19 @@
       "hint_clients_check": "If you enable this option, XRAYUI will check the connected clients online status.<hr/>This option is useful for keeping track of which clients are currently connected to the xray.<hr/> However, it may consume some resources, so it may be advisable to disable it if you're using a low-performance router.",
       "label_enable_debug": "Enable debug logs",
       "label_ipsec": "Enable DNS bypass (ipset)",
-      "hint_ipsec": "*OFF* - turns off the DNS → ipset feature; routing behaves exactly as if the option didn’t exist.<hr />*BYPASS* - domains you mapped to the `FREEDOM` outbound go straight to the internet, skipping Xray; every other domain is still proxied.<hr/>*REDIRECT* – the inverse: only domains not mapped to `FREEDOM` are proxied; all other traffic leaves the router directly.<blockquote>Important: `regexp`-based domains can’t be pushed into an ipset, so they’re ignored here.</blockquote>"
+      "hint_ipsec": "*OFF* - turns off the DNS → ipset feature; routing behaves exactly as if the option didn’t exist.<hr />*BYPASS* - domains you mapped to the `FREEDOM` outbound go straight to the internet, skipping Xray; every other domain is still proxied.<hr/>*REDIRECT* – the inverse: only domains not mapped to `FREEDOM` are proxied; all other traffic leaves the router directly.<blockquote>Important: `regexp`-based domains can’t be pushed into an ipset, so they’re ignored here.</blockquote>",
+      "startup_delay": "Startup delay",
+      "hint_startup_delay": "After the router restarts, XRAY will start after the specified time (in seconds). This can help avoid issues with XRAY hanging on startup.",
+      "tab_general": "General",
+      "tab_geodata": "Geodata",
+      "tab_logs": "Logs",
+      "tab_hooks": "Hooks",
+      "label_hooks_before_firewall_start": "Before firewall start",
+      "label_hooks_after_firewall_start": "After firewall start",
+      "label_hooks_after_firewall_cleanup": "After firewall cleanup",
+      "hint_hooks_before_firewall_start": "This script will be executed before the firewall starts. You can use it to set up any custom rules to iptables.<hr/> Don't add she-bang (`#!/bin/sh`) to the script, it will be added automatically.",
+      "hint_hooks_after_firewall_start": "This script will be executed after the firewall starts. You can use it to set up any custom rules to iptables.<hr/> Don't add she-bang (`#!/bin/sh`) to the script, it will be added automatically.",
+      "hint_hooks_after_firewall_cleanup": "This script will be executed after the firewall cleanup. You can use it to clean up any custom rules to iptables.<hr/> Don't add she-bang (`#!/bin/sh`) to the script, it will be added automatically."
     },
     "ImportConfig": {
       "import_config_file": "Import config file"
@@ -409,7 +421,9 @@
       "label_tag": "Tag",
       "label_send_through": "Send through",
       "hint_tag": "The identifier of this outbound connection, used to locate this connection in other configurations. <blockquote>**Danger**: When it is not empty, its value must be unique among all tags.</blockquote>",
-      "hint_send_through": "The IP address used to send data. It is effective when the host has multiple IP addresses, and the default value is `0.0.0.0`.<hr/> It is allowed to fill in the IPv6 CIDR block (such as `114:514:1919:810::/64`), and Xray will use the random IP address in the address block to initiate external connections. Network access, routing tables, and kernel parameters need to be configured correctly to allow Xray to bind to any IP within the address block.<hr/> For networks that use ndp to access, it is not recommended to set a subnet smaller than `/120`, otherwise it may cause NDP flood and a series of problems such as the router neighbor cache being filled up."
+      "hint_send_through": "The IP address used to send data. It is effective when the host has multiple IP addresses, and the default value is `0.0.0.0`.<hr/> It is allowed to fill in the IPv6 CIDR block (such as `114:514:1919:810::/64`), and Xray will use the random IP address in the address block to initiate external connections. Network access, routing tables, and kernel parameters need to be configured correctly to allow Xray to bind to any IP within the address block.<hr/> For networks that use ndp to access, it is not recommended to set a subnet smaller than `/120`, otherwise it may cause NDP flood and a series of problems such as the router neighbor cache being filled up.",
+      "label_subscription_url": "Subscription URL",
+      "hint_subscription_url": "Enter the subscription URL that fetches updates for this outbound configuration.<hr/>Updates are applied on every service restart.<hr/>While a URL is set, certain settings are disabled because they are managed by the subscription."
     },
     "FreedomOutbound": {
       "modal_title": "Freedom",

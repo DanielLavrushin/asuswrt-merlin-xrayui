@@ -41,8 +41,14 @@
         </span>
       </div>
     </fieldset>
-    <fieldset v-if="proxy">
+    <fieldset v-if="proxy" :class="{ locked: isLocked }">
       <legend>Outbound Settings</legend>
+
+      <div class="form-row unlocked">
+        {{ $t(`com.OutboundCommon.label_subscription_url`) }}
+        <hint v-html="$t(`com.OutboundCommon.hint_subscription_url`)"></hint>
+        <input type="text" class="input_20_table" v-model="proxySubscribeUrl" autocomplete="off" autocorrect="off" autocapitalize="off" />
+      </div>
 
       <div class="form-row">
         {{ $t(`com.${proxyTransCode}.label_address`) }}
@@ -152,6 +158,8 @@
         }
       });
 
+      const isLocked = computed(() => !!proxy.value?.surl?.trim());
+
       const firstVnext = computed(() => {
         const settings = proxy.value?.settings as any;
         return settings && Array.isArray(settings.vnext) ? settings.vnext[0] : undefined;
@@ -168,6 +176,13 @@
         get: () => firstVnext.value?.port ?? 0,
         set: (val: number | string) => {
           if (firstVnext.value) firstVnext.value.port = Number(val) || 0;
+        }
+      });
+
+      const proxySubscribeUrl = computed({
+        get: () => proxy.value?.surl ?? '',
+        set: (val: string) => {
+          if (proxy.value) proxy.value.surl = val.trim();
         }
       });
 
@@ -238,8 +253,10 @@
         proxyTransCode,
         proxyUserId,
         proxyUserFlow,
+        proxySubscribeUrl,
         flows: ['xtls-rprx-vision', 'xtls-rprx-vision-udp443'],
-        show_sniffing
+        show_sniffing,
+        isLocked
       };
     }
   });

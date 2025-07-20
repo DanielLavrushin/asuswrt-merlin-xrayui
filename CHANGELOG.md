@@ -1,16 +1,28 @@
 # XRAYUI Changelog
 
-## [0.53.0] - 2025-07-14
+## [0.53.1] - 2025-07-20
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
-- REMOVED: General connection check. Country flags were removed.
+- ADDED: It is now possible to add a `subscription URL` to a specific Outbound connection. XRAYUI will fetch connection updates on every service restart. While a URL is set, certain settings are disabled because they are managed by the subscription.
+- ADDED: It is now possible to edit the hook scripts from the UI (`firewall_before_start`, `firewall_after_start`, and after `firewall_after_cleanup`) directly from the web interface. Available in `General Options` → Hooks (Triggers).
 - ADDED: Connection check per outbound.
   > If you previously had connection check option enabled, it is recommended to turn it off and on again.
 - ADDED: Loopback RETURN rule in mangle table for `127.0.0.0/8` packets.
 - ADDED: LAN/Wi-Fi global IPv6 addresses are now excluded when configuring firewall rules.
 - ADDED: `IPsec` VPN subnet exclusion – skips subnet rule when IPsec is disabled.
-- FIXED: Don't resolve log ips when dnsmasq is disabled.
+- ADDED: Numeric `startup delay` field in `General Settings` to specify the wait time before Xray starts after router reboot.
+- ADDED: It is now possible to set a XRAY start delay on router reboot (in seconds), this setting is located in General Settings.
+- FIXED: Log rotation now works: logs automatically rotate when they hit the configured size.
+- FIXED: Don't resolve log IPs when dnsmasq is disabled.
+- FIXED: Correctly resolve a device name by an ip6 in the logs.
+- FIXED: Switching inbound/outbound transport no longer retains the previous object in the config.
+- FIXED: Sort profiles alphabetically.
+- FIXED: `Wireguard` Inbound private/public key regeneration.
+- IMPROVED: prune empty config objects on save to prevent ghost entries like `settings: {}` in the final output.
+- REMOVED: General connection check. Country flags were removed.
+- REMOVED: Manual order button from the Rules modal window.
+- REMOVED: Manual order button from the Policies modal window.
 
 ## [0.52.2] - 2025-07-13
 

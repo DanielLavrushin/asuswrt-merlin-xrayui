@@ -20,7 +20,6 @@
             <td>{{ r.mode }}</td>
             <td>
               <span class="row-buttons">
-                <input class="button_gen button_gen_small" type="button" value="&#8593;" :title="$t('labels.reorder')" @click="reorderRule(r)" v-if="index > 0" />
                 <input class="button_gen button_gen_small" type="button" :value="$t('labels.edit')" @click.prevent="editRule(r)" />
                 <input class="button_gen button_gen_small" type="button" value="&#10005;" :title="$t('labels.delete')" @click.prevent="deleteRule(r)" />
               </span>
@@ -214,16 +213,6 @@
         policies.value = [...props.policies];
         modalList.value.show();
       };
-      const reorderRule = (rule: XrayRoutingPolicy) => {
-        if (policies.value) {
-          const index = policies.value.indexOf(rule);
-          if (index > 0) {
-            policies.value.splice(index, 1);
-            policies.value.splice(index - 1, 0, rule);
-          }
-        }
-        emit('update:policies', policies.value);
-      };
 
       const normalizePorts = (ports: string) => {
         if (!ports) return '';
@@ -303,7 +292,6 @@
         vendorChange,
         on_off_rule,
         deleteRule,
-        reorderRule,
         addRule,
         editRule,
         saveRule,

@@ -25,10 +25,12 @@ apply_general_options() {
     local debug=$(echo "$genopts" | jq -r '.debug')
     local ipsec=$(echo "$genopts" | jq -r '.ipsec')
     local check_connection=$(echo "$genopts" | jq -r '.check_connection')
+    local startup_delay=$(echo "$genopts" | jq -r '.startup_delay')
 
     local geosite_url=$(echo "$genopts" | jq -r '.geo_site_url')
     local geoip_url=$(echo "$genopts" | jq -r '.geo_ip_url')
     local geo_auto_update=$(echo "$genopts" | jq -r '.geo_auto_update')
+    local hooks=$(echo "$genopts" | jq -r '.hooks')
 
     if [ ! -d "$ADDON_LOGS_DIR" ]; then
         mkdir -p "$ADDON_LOGS_DIR"
@@ -69,6 +71,9 @@ apply_general_options() {
     update_xrayui_config "ipsec" "$ipsec"
     update_xrayui_config "ADDON_DEBUG" "$debug"
     update_xrayui_config "check_connection" "$check_connection"
+    update_xrayui_config "startup_delay" "$startup_delay"
+
+    apply_general_options_hooks "$hooks"
 
     # Update the logrotate configuration with the new max size
     logrotate_setup
@@ -80,4 +85,21 @@ apply_general_options() {
         update_loading_progress "Restarting Xray service..."
         restart
     fi
+}
+
+apply_general_options_hooks() {
+    local hooks_json="$1"
+    local before=$(printf '%s' "$hooks_json" | jq -r '.before_firewall_start')
+    local after=$(printf '%s' "$hooks_json" | jq -r '.after_firewall_start')
+    local cleanup=$(printf '%s' "$hooks_json" | jq -r '.after_firewall_cleanup')
+
+    log_debug "Applying hooks: before='$before', after='$after', cleanup='$cleanup'"
+
+    local script_before="$ADDON_USER_SCRIPTS_DIR/firewall_before_start"
+    local script_after="$ADDON_USER_SCRIPTS_DIR/firewall_after_start"
+    local script_cleanup="$ADDON_USER_SCRIPTS_DIR/firewall_after_cleanup"
+
+    [ -n "$before" ] && printf '#!/bin/sh\n%s\n' "$before" >"$script_before" && chmod +x "$script_before"
+    [ -n "$after" ] && printf '#!/bin/sh\n%s\n' "$after" >"$script_after" && chmod +x "$script_after"
+    [ -n "$cleanup" ] && printf '#!/bin/sh\n%s\n' "$cleanup" >"$script_cleanup" && chmod +x "$script_cleanup"
 }

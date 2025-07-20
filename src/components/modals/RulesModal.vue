@@ -24,7 +24,6 @@
             <td>
               <text v-show="r.isSystem()">system rule</text>
               <span class="row-buttons">
-                <input v-if="index > 0" class="button_gen button_gen_small" type="button" value="&#8593;" :title="$t('labels.reorder')" @click="reorderRule(r)" />
                 <input class="button_gen button_gen_small" type="button" :value="$t('labels.edit')" @click.prevent="editRule(r)" />
                 <input class="button_gen button_gen_small" type="button" value="&#10005;" :title="$t('labels.delete')" @click.prevent="deleteRule(r)" />
               </span>
@@ -336,13 +335,6 @@
         return `to ${outbound} | dmns: ${domains} | ips: ${ips}`;
       };
 
-      const reorderRule = (rule: XrayRoutingRuleObject) => {
-        let index = allRules.value.indexOf(rule);
-        allRules.value.splice(index, 1);
-        allRules.value.splice(index - 1, 0, rule);
-        reindexRules();
-      };
-
       const show = (onCloseAction: (rules: XrayRoutingRuleObject[], disabledRules: XrayRoutingRuleObject[]) => void) => {
         currentRule.value = new XrayRoutingRuleObject();
 
@@ -437,7 +429,6 @@
         editRule,
         saveRule,
         show,
-        reorderRule,
         getRuleName,
         on_off_rule,
         reindexRules,

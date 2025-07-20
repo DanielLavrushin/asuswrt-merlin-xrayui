@@ -178,10 +178,10 @@ service_event)
     regenerate)
         case "$3" in
         realitykeys)
-            regenerate_reality_keys
+            reality_generate_keys
             ;;
         wgkeys)
-            regenerate_wireguard_keys
+            wireguard_generate_keys
             ;;
         sslcertificates)
             regenerate_ssl_certificates

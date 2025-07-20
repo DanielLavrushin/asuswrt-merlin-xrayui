@@ -118,5 +118,6 @@
     "*.w": "$(capture).*.w, I$(capture).w",
     "*.wat": "$(capture).wasm",
     "*.xaml": "$(capture).xaml.cs"
-  }
+  },
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

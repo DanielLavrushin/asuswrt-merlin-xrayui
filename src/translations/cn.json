@@ -76,7 +76,19 @@
       "hint_clients_check": "启用此功能后 XRAYUI 将检查客户端在线状态。<hr/>有助于跟踪连接的客户端。<hr/> 因会消耗硬件资源，低性能路由器建议禁用此功能。",
       "label_enable_debug": "调试日志",
       "label_ipsec": "DNS 转发服务（ipset）",
-      "hint_ipsec": "*OFF* - 关闭转发服务，路由规则保持网络默认。<hr />*BYPASS* - 映射至 `FREEDOM` 出站端口的流量将直接访问（跳过 Xray），其他流量仍走出站端口。<hr/>*REDIRECT* – 与 BYPASS 相反，将未映射至 FREEDOM 的流量走代理，其余流量直接从路由器出站。<blockquote>重要提示：基于正则表达式 `regexp` 的流量无法推入 ipset ，此处将被忽略。</blockquote>"
+      "hint_ipsec": "*OFF* - 关闭转发服务，路由规则保持网络默认。<hr />*BYPASS* - 映射至 `FREEDOM` 出站端口的流量将直接访问（跳过 Xray），其他流量仍走出站端口。<hr/>*REDIRECT* – 与 BYPASS 相反，将未映射至 FREEDOM 的流量走代理，其余流量直接从路由器出站。<blockquote>重要提示：基于正则表达式 `regexp` 的流量无法推入 ipset ，此处将被忽略。</blockquote>",
+      "startup_delay": "启动延迟",
+      "hint_startup_delay": "路由器重启后，XRAY 将在指定时间（秒）后启动。这有助于避免 XRAY 启动时挂起。",
+      "tab_general": "常规",
+      "tab_geodata": "地理数据",
+      "tab_logs": "日志",
+      "tab_hooks": "钩子",
+      "label_hooks_before_firewall_start": "防火墙启动前",
+      "label_hooks_after_firewall_start": "防火墙启动后",
+      "label_hooks_after_firewall_cleanup": "防火墙清理后",
+      "hint_hooks_before_firewall_start": "此脚本将在防火墙启动前执行。你可以用它向 iptables 设置任何自定义规则。<hr/> 不要向脚本添加 she‑bang（`#!/bin/sh`），它将被自动添加。",
+      "hint_hooks_after_firewall_start": "此脚本将在防火墙启动后执行。你可以用它向 iptables 设置任何自定义规则。<hr/> 不要向脚本添加 she‑bang（`#!/bin/sh`），它将被自动添加。",
+      "hint_hooks_after_firewall_cleanup": "此脚本将在防火墙清理后执行。你可以用它从 iptables 清除已创建的自定义规则。<hr/> 不要向脚本添加 she‑bang（`#!/bin/sh`），它将被自动添加。"
     },
     "ImportConfig": {
       "import_config_file": "导入配置"
@@ -409,7 +421,9 @@
       "label_tag": "标签",
       "label_send_through": "源地址",
       "hint_tag": "出站连接的标识符。 <blockquote>**危险**: 非空时标签需唯一。</blockquote>",
-      "hint_send_through": "发送数据的 IP 地址（多 IP 时生效，默认0.0.0.0）。<hr/> 可填入 IPv6 CIDR 块（如114:514:1919:810::/64），Xray 使用块内随机 IP 发起连接，需正确配置网络访问、路由表和内核参数。<hr/>使用 ndp 的网络不建议设置小于/120的子网，避免 NDP 泛洪和路由器邻居缓存溢出。"
+      "hint_send_through": "发送数据的 IP 地址（多 IP 时生效，默认0.0.0.0）。<hr/> 可填入 IPv6 CIDR 块（如114:514:1919:810::/64），Xray 使用块内随机 IP 发起连接，需正确配置网络访问、路由表和内核参数。<hr/>使用 ndp 的网络不建议设置小于/120的子网，避免 NDP 泛洪和路由器邻居缓存溢出。",
+      "label_subscription_url": "订阅 URL",
+      "hint_subscription_url": "输入用于获取此出站配置更新的订阅 URL。<hr/>更新将在每次重启服务时应用。<hr/>设置了 URL 后，某些设置将被禁用，因为它们由订阅管理。"
     },
     "FreedomOutbound": {
       "modal_title": "直连（Freedom）",

@@ -37,7 +37,6 @@ cron_logrotate_run() {
         log_warn "No $LR_CONF found – skipping logrotate."
         return
     }
-
     [ -f "$LR_STANZA" ] || {
         log_warn "No $LR_STANZA found – skipping logrotate."
         return
@@ -47,10 +46,12 @@ cron_logrotate_run() {
         exit 1
     fi
 
-    exec "$LR_BIN" -s "$LR_STATUS" "$LR_CONF" || {
+    "$LR_BIN" -s "$LR_STATUS" "$LR_CONF" || {
+        log_debug "logrotate: $LR_BIN -s $LR_STATUS $LR_CONF"
         log_error "logrotate failed with exit code $?"
         exit 1
     }
+
     log_ok "logrotate completed successfully"
 }
 

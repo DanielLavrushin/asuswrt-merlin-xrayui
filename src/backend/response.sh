@@ -35,6 +35,7 @@ initial_response() {
     local ipsec="${ipsec:-off}"
     local debug="${ADDON_DEBUG:-false}"
     local check_connection="${check_connection:-false}"
+    local startup_delay="${startup_delay:-0}"
 
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg geoip "$geoip_date" --arg geosite "$geosite_date" --arg geoipurl "$geoipurl" --arg geositeurl "$geositeurl" \
         '.geodata.geoip_url = $geoipurl | .geodata.geosite_url = $geositeurl | .geodata.community["geoip.dat"] = $geoip | .geodata.community["geosite.dat"] = $geosite')
@@ -71,6 +72,21 @@ initial_response() {
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson logs_dor "$logs_dor" '.xray.logs_dor = $logs_dor')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson logs_max_size "$logs_max_size" '.xray.logs_max_size = $logs_max_size')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg ipsec "$ipsec" '.xray.ipsec = $ipsec')
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson startup_delay "$startup_delay" '.xray.startup_delay = $startup_delay')
+
+    # grab firewall hooks
+    local hook_before_firewall_start=$(sed '1{/^#!/d}' "$ADDON_USER_SCRIPTS_DIR/firewall_before_start" 2>/dev/null || echo "")
+    local after_firewall_start=$(sed '1{/^#!/d}' "$ADDON_USER_SCRIPTS_DIR/firewall_after_start" 2>/dev/null || echo "")
+    local after_firewall_cleanup=$(sed '1{/^#!/d}' "$ADDON_USER_SCRIPTS_DIR/firewall_after_cleanup" 2>/dev/null || echo "")
+
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg hook_before_firewall_start "$hook_before_firewall_start" \
+        --arg after_firewall_start "$after_firewall_start" \
+        --arg after_firewall_cleanup "$after_firewall_cleanup" \
+        '.xray.hooks = {
+            before_firewall_start: $hook_before_firewall_start,
+            after_firewall_start: $after_firewall_start,
+            after_firewall_cleanup: $after_firewall_cleanup
+        }') || log_error "Error: Failed to update JSON content with firewall hooks."
 
     local XRAY_VERSION=$(xray version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1) || log_error "Error: Failed to get Xray version."
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg xray_ver "$XRAY_VERSION" --arg xrayui_ver "$XRAYUI_VERSION" '.xray.ui_version = $xrayui_ver | .xray.core_version = $xray_ver')
@@ -177,6 +193,47 @@ apply_config() {
     log_ok "Xray service restarted successfully with the new configuration."
 
     rm -f "$backup_config"
+}
+
+process_subscriptions() {
+    local config_file="$1"
+    local cfg=$(cat "$1")
+    local idx url proto tag fetched rep
+    local temp_config="/tmp/xray_server_config_new.json"
+
+    while IFS= read -r entry; do
+        [ -z "$entry" ] && continue
+        idx=$(printf '%s' "$entry" | jq -r '.idx')
+        url=$(printf '%s' "$entry" | jq -r '.url')
+        proto=$(printf '%s' "$entry" | jq -r '.proto')
+        tag=$(printf '%s' "$entry" | jq -r '.tag')
+
+        fetched=$(curl -fsL "$url") || continue
+        if ! echo "$fetched" | jq -e . >/dev/null 2>&1; then
+            fetched=$(echo "$fetched" | base64 -d 2>/dev/null) || continue
+        fi
+
+        rep=$(printf '%s' "$fetched" | jq -c --arg t "$tag" --arg p "$proto" '
+            (.outbounds // [])
+            | map(select((($t != "") and (.tag==$t)) or (.protocol==$p)))
+            | first')
+
+        [ -z "$rep" ] || [ "$rep" = "null" ] && continue
+
+        cfg=$(printf '%s' "$cfg" | jq -c \
+            --arg pos "$idx" \
+            --arg url "$url" \
+            --arg tag "$tag" \
+            --argjson rep "$rep" \
+            '.outbounds[( $pos|tonumber )] = ($rep + {surl:$url, tag:$tag})')
+    done <<EOF
+$(printf '%s' "$cfg" | jq -c '.outbounds
+    | to_entries[]
+    | select(.value.surl and .value.surl!="")
+    | {idx:.key,url:.value.surl,proto:.value.protocol,tag:(.value.tag//"")}')
+EOF
+
+    printf '%s' "$cfg" >"$temp_config" && cp "$temp_config" "$config_file" && rm -f "$temp_config"
 }
 
 rules_to_dns_domains() {

@@ -182,7 +182,8 @@ logrotate_setup() {
   local logs_max_size=${logs_max_size:-10}
 
   mkdir -p "$ADDON_LOGS_DIR"
-  chown root:root "$ADDON_LOGS_DIR"
+  local username="$(nvram get http_username)"
+  chown "$username":root "$ADDON_LOGS_DIR"
   chmod 755 "$ADDON_LOGS_DIR"
 
   local log_access="$(jq -r --arg default "$ADDON_LOGS_DIR/xray_access.log" '.log.access // $default' "$XRAY_CONFIG_FILE")"

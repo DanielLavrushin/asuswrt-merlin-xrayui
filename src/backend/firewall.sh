@@ -85,11 +85,11 @@ configure_firewall() {
         log_debug "IPv6 enabled: no"
     fi
 
-    ipset list -n 2>/dev/null | grep -qx "$IPSEC_BYPASS_V4" || ipset create "$IPSEC_BYPASS_V4" hash:ip family inet timeout 86400
-    ipset list -n 2>/dev/null | grep -qx "$IPSEC_PROXY_V4" || ipset create "$IPSEC_PROXY_V4" hash:ip family inet timeout 86400
+    ipset list -n 2>/dev/null | grep -qx "$IPSET_BYPASS_V4" || ipset create "$IPSET_BYPASS_V4" hash:ip family inet timeout 86400
+    ipset list -n 2>/dev/null | grep -qx "$IPSET_PROXY_V4" || ipset create "$IPSET_PROXY_V4" hash:ip family inet timeout 86400
     if is_ipv6_enabled; then
-        ipset list -n 2>/dev/null | grep -qx "$IPSEC_BYPASS_V6" || ipset create "$IPSEC_BYPASS_V6" hash:ip family inet6 timeout 86400
-        ipset list -n 2>/dev/null | grep -qx "$IPSEC_PROXY_V6" || ipset create "$IPSEC_PROXY_V6" hash:ip family inet6 timeout 86400
+        ipset list -n 2>/dev/null | grep -qx "$IPSET_BYPASS_V6" || ipset create "$IPSET_BYPASS_V6" hash:ip family inet6 timeout 86400
+        ipset list -n 2>/dev/null | grep -qx "$IPSET_PROXY_V6" || ipset create "$IPSET_PROXY_V6" hash:ip family inet6 timeout 86400
     fi
 
     # Clamp TCP MSS to path-MTU for every forwarded SYN (v4 + v6)
@@ -139,7 +139,18 @@ configure_firewall() {
         fi
     done
 
-    SERVER_IPS=$(jq -r '[.outbounds[] | select(.settings.vnext != null) | .settings.vnext[].address] | unique | join(" ")' "$XRAY_CONFIG_FILE")
+    SERVER_IPS=""
+    for addr in $(jq -r '[.outbounds[] | select(.settings.vnext!=null)|.settings.vnext[].address]|unique|join(" ")' "$XRAY_CONFIG_FILE"); do
+        if contains_ipv4 "$addr" || contains_ipv6 "$addr"; then
+            SERVER_IPS="$SERVER_IPS $addr"
+        else
+            for ip in $(resolve_host_ips "$addr"); do
+                SERVER_IPS="$SERVER_IPS $ip"
+            done
+        fi
+    done
+
+    SERVER_IPS=$(printf '%s\n' $SERVER_IPS | sort -u | tr '\n' ' ')
 
     if jq -e '
   .inbounds[]
@@ -287,40 +298,29 @@ configure_firewall_client() {
     done
 
     if [ "$IPT_TABLE" = "mangle" ]; then
-        ipt $IPT_TABLE -C XRAYUI -d 127.0.0.0/8 -j RETURN 2>/dev/null ||
-            ipt $IPT_TABLE -I XRAYUI 1 -d 127.0.0.0/8 -j RETURN
+        iptables -w -t "$IPT_TABLE" -C XRAYUI -d 127.0.0.0/8 -j RETURN 2>/dev/null ||
+            iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -d 127.0.0.0/8 -j RETURN
 
-        if is_ipv6_enabled; then
-            for rule in \
-                "-p udp -m multiport --dports 53,546,547" \
-                "-p udp -m multiport --sports 53,546,547" \
-                "-p icmpv6"; do
-                ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 $rule -j RETURN
-            done
+        # if is_ipv6_enabled; then
+        #     for rule in \
+        #         "-p udp -m multiport --dports 53,546,547" \
+        #         "-p udp -m multiport --sports 53,546,547" \
+        #         "-p icmpv6"; do
+        #         ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 $rule -j RETURN
+        #     done
 
-            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 4 -d ff00::/8 -j RETURN
+        #     ip6tables -w -t "$IPT_TABLE" -I XRAYUI 4 -d ff00::/8 -j RETURN
 
-            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 5 -s fe80::/10 -j RETURN
-            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 6 -d fe80::/10 -j RETURN
+        #     ip6tables -w -t "$IPT_TABLE" -I XRAYUI 5 -s fe80::/10 -j RETURN
+        #     ip6tables -w -t "$IPT_TABLE" -I XRAYUI 6 -d fe80::/10 -j RETURN
 
-            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 7 -s ::1 -j RETURN
-            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 8 -d ::1 -j RETURN
+        #     ip6tables -w -t "$IPT_TABLE" -I XRAYUI 7 -s ::1 -j RETURN
+        #     ip6tables -w -t "$IPT_TABLE" -I XRAYUI 8 -d ::1 -j RETURN
 
-            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 9 -s ::/128 -j RETURN
-            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 10 -i lo -j RETURN || log_debug "Failed to add lo interface rule in $IPT_TABLE."
+        #     ip6tables -w -t "$IPT_TABLE" -I XRAYUI 9 -s ::/128 -j RETURN
+        #     ip6tables -w -t "$IPT_TABLE" -I XRAYUI 10 -i lo -j RETURN || log_debug "Failed to add lo interface rule in $IPT_TABLE."
 
-        fi
-    fi
-
-    if [ "$IPT_TYPE" = "TPROXY" ]; then
-        lsmod | grep -q '^xt_socket ' || modprobe xt_socket 2>/dev/null
-
-        ipt $IPT_TABLE -C XRAYUI -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask 2>/dev/null ||
-            ipt $IPT_TABLE -I XRAYUI 1 -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
-
-        for lan_dns_net in 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16; do
-            ipt $IPT_TABLE -I XRAYUI 1 -d "$lan_dns_net" -p udp --dport 53 -j RETURN
-        done
+        # fi
     fi
 
     # --- Begin Exclusion Rules ---
@@ -333,7 +333,7 @@ configure_firewall_client() {
 
     source_nets_v6=""
     if is_ipv6_enabled; then
-        source_nets_v6=$(ip -6 route show scope link | awk '$1 ~ /:.*\// && $1 ~ /^(fc00:|fd..:|fe80:)/ {print $1}')
+        source_nets_v6=$(ip -6 route show | awk '$1 ~ /^(fc00:|fd[0-9a-f]{2}:|fe80:).*\/[0-9]+$/ {print $1}' | sort -u)
     fi
 
     local wgs_enabled="$(nvram get "wgs_enable" 2>/dev/null)"
@@ -348,6 +348,25 @@ configure_firewall_client() {
 
     source_nets="$source_nets_v4 $ipsec_addr $wgs_addr $source_nets_v6"
 
+    if [ "$IPT_TYPE" = "TPROXY" ]; then
+        lsmod | grep -q '^xt_socket ' || modprobe xt_socket 2>/dev/null
+
+        ipt $IPT_TABLE -C XRAYUI -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask 2>/dev/null ||
+            ipt $IPT_TABLE -I XRAYUI 1 -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
+
+        for net4 in $source_nets_v4; do
+            iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -d "$net4" -p udp --dport 53 -j RETURN
+        done
+        if is_ipv6_enabled; then
+            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -s ::1 -j RETURN
+            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -d ff00::/8 -j RETURN
+            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -p icmpv6 -j RETURN
+            for net6 in $source_nets_v6; do
+                ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -d "$net6" -p udp -m multiport --dports 53,546,547 -j RETURN
+            done
+        fi
+    fi
+
     for net in $source_nets; do
         log_debug "Excluding static network $net from $IPT_TABLE."
 
@@ -360,21 +379,25 @@ configure_firewall_client() {
     done
 
     # IPSET FREEDOM eraly return rules
-    iptables -w -t "$IPT_TABLE" -C XRAYUI -m set --match-set "$IPSEC_BYPASS_V4" dst -j RETURN 2>/dev/null ||
-        iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set --match-set "$IPSEC_BYPASS_V4" dst -j RETURN
+    if [ -n "$ipsec" ] && [ "$ipsec" != "off" ]; then
+        log_debug "Adding IPSET rules for $IPT_TABLE."
+        iptables -w -t "$IPT_TABLE" -C XRAYUI -m set --match-set "$IPSET_BYPASS_V4" dst -j RETURN 2>/dev/null ||
+            iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set --match-set "$IPSET_BYPASS_V4" dst -j RETURN
 
-    if is_ipv6_enabled && ipset list -n | grep -qx "$IPSEC_BYPASS_V6"; then
-        ip6tables -w -t "$IPT_TABLE" -C XRAYUI -m set --match-set "$IPSEC_BYPASS_V6" dst -j RETURN 2>/dev/null ||
-            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set --match-set "$IPSEC_BYPASS_V6" dst -j RETURN
-    fi
+        if is_ipv6_enabled && ipset list -n | grep -qx "$IPSET_BYPASS_V6"; then
+            log_debug "Adding IPv6 IPSET rules for $IPT_TABLE."
+            ip6tables -w -t "$IPT_TABLE" -C XRAYUI -m set --match-set "$IPSET_BYPASS_V6" dst -j RETURN 2>/dev/null ||
+                ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set --match-set "$IPSET_BYPASS_V6" dst -j RETURN
+        fi
 
-    if [ "$ipsec" = "redirect" ]; then
-        iptables -w -t "$IPT_TABLE" -C XRAYUI -m set ! --match-set "$IPSEC_PROXY_V4" dst -j RETURN 2>/dev/null ||
-            iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set ! --match-set "$IPSEC_PROXY_V4" dst -j RETURN
+        if [ "$ipsec" = "redirect" ]; then
+            iptables -w -t "$IPT_TABLE" -C XRAYUI -m set ! --match-set "$IPSET_PROXY_V4" dst -j RETURN 2>/dev/null ||
+                iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set ! --match-set "$IPSET_PROXY_V4" dst -j RETURN
 
-        if is_ipv6_enabled && ipset list -n | grep -qx "$IPSEC_PROXY_V6"; then
-            ip6tables -w -t "$IPT_TABLE" -C XRAYUI -m set ! --match-set "$IPSEC_PROXY_V6" dst -j RETURN 2>/dev/null ||
-                ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set ! --match-set "$IPSEC_PROXY_V6" dst -j RETURN
+            if is_ipv6_enabled && ipset list -n | grep -qx "$IPSET_PROXY_V6"; then
+                ip6tables -w -t "$IPT_TABLE" -C XRAYUI -m set ! --match-set "$IPSET_PROXY_V6" dst -j RETURN 2>/dev/null ||
+                    ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set ! --match-set "$IPSET_PROXY_V6" dst -j RETURN
+            fi
         fi
     fi
 
@@ -395,7 +418,7 @@ configure_firewall_client() {
     # Exclude traffic destined to the Xray server:
     [ -n "$SERVER_IPS" ] && for serverip in $SERVER_IPS; do
         log_info "Excluding Xray server IP from $IPT_TABLE."
-        ipt $IPT_BASE_FLAGS -d "$serverip" -j RETURN 2>/dev/null || log_error "Failed to add rule to exclude Xray server IP in $IPT_TABLE."
+        ipt $IPT_BASE_FLAGS -d "$serverip" -j RETURN 2>/dev/null || log_error "Failed to add rule to exclude Xray server IP $serverip in $IPT_TABLE."
     done
 
     # Exclude tunnel UDP ports
@@ -639,10 +662,10 @@ cleanup_firewall() {
     ipt mangle -X XRAYUI 2>/dev/null || log_debug "Failed to remove mangle chain. Was it already empty?"
 
     # Cleanup IPSEC ipsets
-    for set in "$IPSEC_BYPASS_V4" "$IPSEC_PROXY_V4"; do
+    for set in "$IPSET_BYPASS_V4" "$IPSET_PROXY_V4"; do
         ipset list -n 2>/dev/null | grep -qx "$set" && ipset destroy "$set" 2>/dev/null
     done
-    for set in "$IPSEC_BYPASS_V6" "$IPSEC_PROXY_V6"; do
+    for set in "$IPSET_BYPASS_V6" "$IPSET_PROXY_V6"; do
         ipset list -n 2>/dev/null | grep -qx "$set" && ipset destroy "$set" 2>/dev/null
     done
 
@@ -668,7 +691,7 @@ cleanup_firewall() {
     done
 
     # Flush and remove ipsets created during configuration
-    for set in "$IPSEC_BYPASS_V4" "$IPSEC_PROXY_V4" XRAYUI_BYPASS; do
+    for set in "$IPSET_BYPASS_V4" "$IPSET_PROXY_V4" XRAYUI_BYPASS; do
         ipset list -n 2>/dev/null | grep -qx "$set" && {
             ipset flush "$set" 2>/dev/null
             ipset destroy "$set" 2>/dev/null
@@ -676,7 +699,7 @@ cleanup_firewall() {
     done
 
     if is_ipv6_enabled; then
-        for set in "$IPSEC_BYPASS_V6" "$IPSEC_PROXY_V6" XRAYUI_BYPASS6; do
+        for set in "$IPSET_BYPASS_V6" "$IPSET_PROXY_V6" XRAYUI_BYPASS6; do
             ipset list -n 2>/dev/null | grep -qx "$set" && {
                 ipset flush "$set" 2>/dev/null
                 ipset destroy "$set" 2>/dev/null
@@ -798,4 +821,9 @@ ensure_bypass_ipset() {
 split_ports() {
     [ -z "$1" ] && return 0
     printf '%s\n' "$1" | tr ',' '\n' | xargs -n15 | sed 's/ /,/g'
+}
+
+resolve_host_ips() {
+    nslookup "$1" 2>/dev/null | awk '/^Address/{print $3}'
+    [ -z "$2" ] && ping -c1 -W1 "$1" 2>/dev/null | sed -n 's/.*(\([0-9a-fA-F:.]*\)).*/\1/p'
 }

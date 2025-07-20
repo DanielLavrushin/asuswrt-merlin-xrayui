@@ -24,5 +24,6 @@ export interface XrayRouterDeviceOnline {
   name: string;
   ip: string;
   ip6: string;
+  ip6_prefix: string;
   mac: string;
 }

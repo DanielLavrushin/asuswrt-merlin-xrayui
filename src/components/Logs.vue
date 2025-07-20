@@ -238,7 +238,8 @@
       const devices = computed(() => {
         const pairs = Object.values(window.xray.router.devices_online).flatMap((device) => [
           ...(device.ip ? [[device.ip, device]] : []),
-          ...(device.ip6 ? [[device.ip6, device]] : [])
+          ...(device.ip6 ? [[device.ip6, device]] : []),
+          ...(device.ip6_prefix ? [[device.ip6_prefix, device]] : [])
         ]);
         return Object.fromEntries(pairs);
       });

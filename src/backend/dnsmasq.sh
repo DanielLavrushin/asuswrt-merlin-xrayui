@@ -78,16 +78,16 @@ dnsmasq_xray_ipsec_domains() {
 
     case "$ipsec_mode" in
     bypass)
-        SET_V4="$IPSEC_BYPASS_V4"
-        SET_V6="$IPSEC_BYPASS_V6"
+        SET_V4="$IPSET_BYPASS_V4"
+        SET_V6="$IPSET_BYPASS_V6"
         JQ_FILTER='
               [ .outbounds[] | select(.protocol=="freedom") | .tag ] as $free
               | .routing.rules[]
               | select((.outboundTag as $t | $free | index($t)))'
         ;;
     redirect)
-        SET_V4="$IPSEC_PROXY_V4"
-        SET_V6="$IPSEC_PROXY_V6"
+        SET_V4="$IPSET_PROXY_V4"
+        SET_V6="$IPSET_PROXY_V6"
         JQ_FILTER='
               [ .outbounds[] | select(.protocol=="freedom") | .tag ] as $free
               | .routing.rules[]

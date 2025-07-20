@@ -231,7 +231,7 @@ export class XrayDnsObject {
   public disableFallback?: boolean;
   public disableFallbackIfMatch?: boolean;
 
-  public normalize(): this {
+  public normalize(): this | undefined {
     this.clientIp = this.clientIp == '' ? undefined : this.clientIp;
     this.queryStrategy = this.queryStrategy == '' || this.queryStrategy == 'UseIP' ? undefined : this.queryStrategy;
     this.disableCache = !this.disableCache ? undefined : this.disableCache;
@@ -594,14 +594,14 @@ export class XrayStreamSettingsObject {
         if (!allowed.has(k)) (this as any)[k] = undefined;
       });
 
-    this.normalizeAllSettings();
+    if (this.normalizeAllSettings) this.normalizeAllSettings();
 
     if (this.sockopt && typeof this.sockopt.normalize === 'function') this.sockopt = this.sockopt.normalize();
 
     return isObjectEmpty(this) ? undefined : this;
   }
 
-  private normalizeAllSettings(): void {
+  private normalizeAllSettings?(): void {
     (Object.keys(this) as StreamKey[])
       .filter((k) => k.endsWith('Settings'))
       .forEach((k) => {

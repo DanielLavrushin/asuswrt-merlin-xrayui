@@ -130,18 +130,26 @@
           </thead>
           <tbody>
             <tr>
-              <th>{{ $t('com.GeneralOptionsModal.label_hooks_before_firewall') }}</th>
+              <th>{{ $t('com.GeneralOptionsModal.label_hooks_before_firewall_start') }}</th>
               <td>
                 <div class="textarea-wrapper">
-                  <textarea v-model="options.hooks.before_firewall"></textarea>
+                  <textarea v-model="options.hooks.before_firewall_start"></textarea>
                 </div>
               </td>
             </tr>
             <tr>
-              <th>{{ $t('com.GeneralOptionsModal.label_hooks_after_firewall') }}</th>
+              <th>{{ $t('com.GeneralOptionsModal.label_hooks_after_firewall_start') }}</th>
               <td>
                 <div class="textarea-wrapper">
-                  <textarea v-model="options.hooks.after_firewall"></textarea>
+                  <textarea v-model="options.hooks.after_firewall_start"></textarea>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <th>{{ $t('com.GeneralOptionsModal.label_hooks_after_firewall_cleanup') }}</th>
+              <td>
+                <div class="textarea-wrapper">
+                  <textarea v-model="options.hooks.after_firewall_cleanup"></textarea>
                 </div>
               </td>
             </tr>
@@ -246,7 +254,7 @@
     public geo_auto_update = false;
     public check_connection = false;
     public startup_delay = 0;
-    public hooks = { before_firewall: '', after_firewall: '' };
+    public hooks = { before_firewall_start: '', after_firewall_start: '', after_firewall_cleanup: '' };
   }
 
   interface WellKnownGeodatSource {
@@ -363,12 +371,9 @@
         options.value.check_connection = uiResponse?.value.xray?.check_connection ?? false;
         options.value.startup_delay = uiResponse?.value.xray?.startup_delay ?? 0;
         options.value.hooks = uiResponse?.value.xray?.hooks ?? {
-          before_firewall: '',
-          after_firewall: '',
-          before_start: '',
-          after_start: '',
-          before_stop: '',
-          after_stop: ''
+          before_firewall_start: '',
+          after_firewall_start: '',
+          after_firewall_cleanup: ''
         };
         modal.value.show();
       };

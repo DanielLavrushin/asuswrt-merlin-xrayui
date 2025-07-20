@@ -131,12 +131,9 @@ export class EngineResponseConfig {
     check_connection: boolean;
     startup_delay: number;
     hooks?: {
-      before_firewall: string;
-      after_firewall: string;
-      before_start: string;
-      after_start: string;
-      before_stop: string;
-      after_stop: string;
+      before_firewall_start: string;
+      after_firewall_start: string;
+      after_firewall_cleanup: string;
     };
   };
   public geodata?: EngineGeodatConfig = new EngineGeodatConfig();

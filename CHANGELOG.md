@@ -1,5 +1,12 @@
 # XRAYUI Changelog
 
+## [0.53.2] - 2025-07-20
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- FIXED: Unable to save HTTPUPGRADE Transport.
+- FIXED: Check for both status native and InstantGuard IPSEC.
+
 ## [0.53.1] - 2025-07-20
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

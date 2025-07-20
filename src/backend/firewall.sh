@@ -336,15 +336,14 @@ configure_firewall_client() {
         source_nets_v6=$(ip -6 route show | awk '$1 ~ /^(fc00:|fd[0-9a-f]{2}:|fe80:).*\/[0-9]+$/ {print $1}' | sort -u)
     fi
 
+    # Check if WireGuard is enabled and set the address accordingly
     local wgs_enabled="$(nvram get "wgs_enable" 2>/dev/null)"
     if [ "$wgs_enabled" = "1" ]; then
         wgs_addr=$(nvram get wgs_addr 2>/dev/null | tr ',' ' ' | sed -E 's#([0-9]+\.[0-9]+\.[0-9]+)\.[0-9]+/32#\1.0/24#g')
     fi
 
-    local ipsec_enabled="$(nvram get "ipsec_server_enable" 2>/dev/null)"
-    if [ "$ipsec_enabled" = "1" ]; then
-        ipsec_addr="10.10.10.0/24"
-    fi
+    # Check if IPSEC is enabled and set the address accordingly
+    [ "$(nvram get ipsec_server_enable 2>/dev/null)" = 1 ] || [ "$(nvram get ipsec_ig_enable 2>/dev/null)" = 1 ] && ipsec_addr="10.10.10.0/24"
 
     source_nets="$source_nets_v4 $ipsec_addr $wgs_addr $source_nets_v6"
 

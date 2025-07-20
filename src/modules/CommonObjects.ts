@@ -11,8 +11,15 @@ import {
   XrayStreamSplitHttpSettingsObject
 } from './TransportObjects';
 
-export const isObjectEmpty = (obj: Record<string, unknown> | unknown | null | undefined): boolean => {
-  return !obj || (Object.keys(obj).length === 0 && obj.constructor === Object);
+export const isObjectEmpty = (obj: any): boolean => {
+  if (obj == null) return true;
+  for (const key of Object.keys(obj)) {
+    const val = obj[key];
+    if (typeof val === 'function' || val === undefined) continue;
+    if (typeof val === 'object' && isObjectEmpty(val)) continue;
+    return false;
+  }
+  return true;
 };
 
 export class XraySniffingObject {
@@ -23,12 +30,13 @@ export class XraySniffingObject {
   public destOverride?: string[] = [];
   public domainsExcluded?: string[] = [];
 
-  normalize() {
+  normalize(): this | undefined {
     this.destOverride = !this.destOverride || this.destOverride.length == 0 ? undefined : this.destOverride;
     this.domainsExcluded = !this.domainsExcluded || this.domainsExcluded.length == 0 ? undefined : this.domainsExcluded;
     this.enabled = !this.enabled ? undefined : this.enabled;
     this.metadataOnly = !this.metadataOnly ? undefined : this.metadataOnly;
     this.routeOnly = !this.routeOnly ? undefined : this.routeOnly;
+    return this.enabled ? this : undefined;
   }
 }
 
@@ -69,17 +77,7 @@ export class XrayXmuxObject {
     this.hMaxReusableSecs = this.hMaxReusableSecs === defModel.hMaxReusableSecs ? undefined : this.hMaxReusableSecs;
     this.hKeepAlivePeriod = this.hKeepAlivePeriod === 0 ? undefined : this.hKeepAlivePeriod;
 
-    if (
-      this.maxConcurrency == undefined &&
-      this.maxConnections == undefined &&
-      this.cMaxReuseTimes == undefined &&
-      this.hMaxRequestTimes == undefined &&
-      this.hMaxReusableSecs == undefined &&
-      this.hKeepAlivePeriod == undefined
-    ) {
-      return undefined;
-    }
-    return this;
+    return isObjectEmpty(this) ? undefined : this;
   };
 }
 

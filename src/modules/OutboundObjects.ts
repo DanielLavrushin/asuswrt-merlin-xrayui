@@ -63,6 +63,10 @@ export class XrayVlessOutboundObject implements IProtocolType {
   getUserNames = (): string[] => {
     return this.vnext.flatMap((c) => c.users?.map((u) => u.email).filter((email): email is string => !!email) ?? []);
   };
+
+  normalize = (): this | undefined => {
+    return isObjectEmpty(this) ? undefined : this;
+  };
 }
 
 export class XrayVmessOutboundObject implements IProtocolType {
@@ -76,6 +80,10 @@ export class XrayVmessOutboundObject implements IProtocolType {
   };
   getUserNames = (): string[] => {
     return this.vnext.flatMap((c) => c.users?.map((u) => u.email).filter((email): email is string => !!email) ?? []);
+  };
+
+  normalize = (): this | undefined => {
+    return isObjectEmpty(this) ? undefined : this;
   };
 }
 

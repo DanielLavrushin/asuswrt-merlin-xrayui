@@ -36,7 +36,7 @@ export class XrayInboundObject<TProxy extends IProtocolType> {
 
   normalize = (): this | undefined => {
     this.tag = this.tag === '' ? undefined : this.tag;
-    this.listen = this.listen === '' ? undefined : this.listen;
+    this.listen = this.listen === '' || this.listen === '0.0.0.0' ? undefined : this.listen;
 
     if (this.streamSettings) {
       this.streamSettings = plainToInstance(XrayStreamSettingsObject, this.streamSettings) as XrayStreamSettingsObject;

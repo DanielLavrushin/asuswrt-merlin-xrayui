@@ -200,7 +200,7 @@
       const logsContent = ref<string>('');
       // Access log
       const ACCESS_RE =
-        /^(?<time>.+)\.\d+\s+from\s+(?:tcp:|udp:)*(?:\[*)(?<source>.+?)(?:\]*\:)(?<source_port>\d+)\s+accepted\s+(?<type>tcp|udp)*(?:\:*)(?:\[*)(?<target>.+?)(?:\]*\:)(?<target_port>\d+)\s+\[(?<inbound>.+)\s+(?<routing>(?:>>|->))\s+(?<outbound>.+)?\]$/;
+        /^(?<time>.+)\.\d+\s+from\s+(?:tcp:|udp:)*(?:\[*)(?<source>.+?)(?:%.+)*(?:\]*\:)(?<source_port>\d+)\s+accepted\s+(?<type>tcp|udp)*(?:\:*)(?:\[*)(?<target>.+?)(?:\]*\:)(?<target_port>\d+)\s+\[(?<inbound>.+)\s+(?<routing>(?:>>|->))\s+(?<outbound>.+)?\]$/;
 
       // DNS “got answer” line
       const DNS_RE = /^(.+)\.\d+\s+from\s+(DNS)\s+accepted\s+(?:udp:)(.+?)\s+\[(.+?)\s+(->|>>)\s+(.+)\]$/;

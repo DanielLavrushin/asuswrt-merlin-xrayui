@@ -81,7 +81,13 @@
       "tab_general": "Allgemein",
       "tab_geodata": "Geodaten",
       "tab_logs": "Protokolle",
-      "tab_hooks": "Hooks"
+      "tab_hooks": "Hooks",
+      "label_hooks_before_firewall_start": "Vor dem Firewall-Start",
+      "label_hooks_after_firewall_start": "Nach dem Firewall-Start",
+      "label_hooks_after_firewall_cleanup": "Nach der Firewall-Bereinigung",
+      "hint_hooks_before_firewall_start": "Dieses Skript wird ausgeführt, bevor die Firewall startet. Sie können es verwenden, um beliebige eigene Regeln in iptables einzurichten.<hr/> Fügen Sie keinen Shebang (`#!/bin/sh`) zum Skript hinzu, er wird automatisch ergänzt.",
+      "hint_hooks_after_firewall_start": "Dieses Skript wird ausgeführt, nachdem die Firewall gestartet wurde. Sie können es verwenden, um beliebige eigene Regeln in iptables einzurichten.<hr/> Fügen Sie keinen Shebang (`#!/bin/sh`) zum Skript hinzu, er wird automatisch ergänzt.",
+      "hint_hooks_after_firewall_cleanup": "Dieses Skript wird ausgeführt, nachdem die Firewall bereinigt wurde. Sie können es verwenden, um eigene, zuvor erstellte Regeln aus iptables zu entfernen.<hr/> Fügen Sie keinen Shebang (`#!/bin/sh`) zum Skript hinzu, er wird automatisch ergänzt."
     },
     "ImportConfig": {
       "import_config_file": "Konfigurationsdatei importieren"

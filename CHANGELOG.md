@@ -1,10 +1,11 @@
 # XRAYUI Changelog
 
-## [0.53.0] - 2025-07-20
+## [0.53.1] - 2025-07-20
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
-- ADDED: It is now possible to add a `subscription URL` to a specific outbound connection. XRAYUI Will fetch connection updates on every service restart. While a URL is set, certain settings are disabled because they are managed by the subscription.
+- ADDED: It is now possible to add a `subscription URL` to a specific Outbound connection. XRAYUI will fetch connection updates on every service restart. While a URL is set, certain settings are disabled because they are managed by the subscription.
+- ADDED: It is now possible to edit the hook scripts from the UI (`firewall_before_start`, `firewall_after_start`, and after `firewall_after_cleanup`) directly from the web interface. Available in `General Options` → Hooks (Triggers).
 - ADDED: Connection check per outbound.
   > If you previously had connection check option enabled, it is recommended to turn it off and on again.
 - ADDED: Loopback RETURN rule in mangle table for `127.0.0.0/8` packets.

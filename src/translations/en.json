@@ -82,7 +82,13 @@
       "tab_general": "General",
       "tab_geodata": "Geodata",
       "tab_logs": "Logs",
-      "tab_hooks": "Hooks"
+      "tab_hooks": "Hooks",
+      "label_hooks_before_firewall_start": "Before firewall start",
+      "label_hooks_after_firewall_start": "After firewall start",
+      "label_hooks_after_firewall_cleanup": "After firewall cleanup",
+      "hint_hooks_before_firewall_start": "This script will be executed before the firewall starts. You can use it to set up any custom rules to iptables.<hr/> Don't add she-bang (`#!/bin/sh`) to the script, it will be added automatically.",
+      "hint_hooks_after_firewall_start": "This script will be executed after the firewall starts. You can use it to set up any custom rules to iptables.<hr/> Don't add she-bang (`#!/bin/sh`) to the script, it will be added automatically.",
+      "hint_hooks_after_firewall_cleanup": "This script will be executed after the firewall cleanup. You can use it to clean up any custom rules to iptables.<hr/> Don't add she-bang (`#!/bin/sh`) to the script, it will be added automatically."
     },
     "ImportConfig": {
       "import_config_file": "Import config file"

@@ -75,11 +75,6 @@
 
       <div v-show="currentTab === 1">
         <table class="FormTable modal-form-table">
-          <thead>
-            <tr>
-              <td colspan="2">{{ $t('com.GeneralOptionsModal.geodad_header') }}</td>
-            </tr>
-          </thead>
           <tbody>
             <tr>
               <th>
@@ -121,16 +116,14 @@
           </tbody>
         </table>
       </div>
-      <div v-show="currentTab === 2">
+      <div v-show="currentTab === 2" v-if="options.hooks">
         <table class="FormTable modal-form-table">
-          <thead>
-            <tr>
-              <td colspan="2">{{ $t('com.GeneralOptionsModal.tab_hooks') }}</td>
-            </tr>
-          </thead>
           <tbody>
             <tr>
-              <th>{{ $t('com.GeneralOptionsModal.label_hooks_before_firewall_start') }}</th>
+              <th>
+                {{ $t('com.GeneralOptionsModal.label_hooks_before_firewall_start') }}
+                <hint v-html="$t('com.GeneralOptionsModal.hint_hooks_before_firewall_start')"></hint>
+              </th>
               <td>
                 <div class="textarea-wrapper">
                   <textarea v-model="options.hooks.before_firewall_start"></textarea>
@@ -138,7 +131,10 @@
               </td>
             </tr>
             <tr>
-              <th>{{ $t('com.GeneralOptionsModal.label_hooks_after_firewall_start') }}</th>
+              <th>
+                {{ $t('com.GeneralOptionsModal.label_hooks_after_firewall_start') }}
+                <hint v-html="$t('com.GeneralOptionsModal.hint_hooks_after_firewall_start')"></hint>
+              </th>
               <td>
                 <div class="textarea-wrapper">
                   <textarea v-model="options.hooks.after_firewall_start"></textarea>
@@ -146,7 +142,10 @@
               </td>
             </tr>
             <tr>
-              <th>{{ $t('com.GeneralOptionsModal.label_hooks_after_firewall_cleanup') }}</th>
+              <th>
+                {{ $t('com.GeneralOptionsModal.label_hooks_after_firewall_cleanup') }}
+                <hint v-html="$t('com.GeneralOptionsModal.hint_hooks_after_firewall_cleanup')"></hint>
+              </th>
               <td>
                 <div class="textarea-wrapper">
                   <textarea v-model="options.hooks.after_firewall_cleanup"></textarea>
@@ -159,11 +158,6 @@
 
       <div v-show="currentTab === 3">
         <table class="FormTable modal-form-table">
-          <thead>
-            <tr>
-              <td colspan="2">{{ $t('com.GeneralOptionsModal.logs_header') }}</td>
-            </tr>
-          </thead>
           <tbody>
             <tr>
               <th>
@@ -226,188 +220,98 @@
     </template>
   </modal>
 </template>
-<script lang="ts">
-  import { defineComponent, inject, Ref, ref, watch } from 'vue';
-  import engine, { EngineResponseConfig, SubmitActions } from '@/modules/Engine';
-  import { XrayObject } from '@/modules/XrayConfig';
-  import Hint from '@main/Hint.vue';
-  import Modal from '@main/Modal.vue';
-  import { XrayProtocol } from '@/modules/Options';
+<script lang="ts" setup>
+  import { ref, inject, Ref } from 'vue';
   import { useI18n } from 'vue-i18n';
+  import Modal from '@main/Modal.vue';
+  import Hint from '@main/Hint.vue';
+  import useGeneralOptions from './GeneralOptions';
+  import { XrayObject } from '@/modules/XrayConfig';
+  import { EngineResponseConfig } from '@/modules/Engine';
+  import engine, { SubmitActions } from '@/modules/Engine';
+  import { XrayProtocol } from '@/modules/Options';
 
-  class GeneralOptions {
-    public startup = false;
-    public debug = false;
-    public github_proxy = '';
-    public logs_access = false;
-    public logs_dnsmasq = false;
-    public logs_error = false;
-    public logs_dns = false;
-    public logs_dor = false;
-    public skip_test = false;
-    public clients_check = false;
-    public ipsec = 'off';
-    public logs_max_size = 10;
-    public logs_level = 'warning';
-    public geo_ip_url = '';
-    public geo_site_url = '';
-    public geo_auto_update = false;
-    public check_connection = false;
-    public startup_delay = 0;
-    public hooks = { before_firewall_start: '', after_firewall_start: '', after_firewall_cleanup: '' };
-  }
+  const props = defineProps<{ config: XrayObject }>();
+  const ui = inject<Ref<EngineResponseConfig>>('uiResponse')!;
 
-  interface WellKnownGeodatSource {
-    name: string;
-    source: string;
-    geoip_url: string;
-    geosite_url: string;
-  }
+  const { t } = useI18n();
+  const { options, log_levels, ipsec_options, hydrate, persist } = useGeneralOptions(props.config, ui);
 
-  export default defineComponent({
-    name: 'GeneralOptionsModal',
-    components: {
-      Modal,
-      Hint
+  const modal = ref();
+  const currentTab = ref(0);
+
+  const tabs = [t('com.GeneralOptionsModal.tab_general'), t('com.GeneralOptionsModal.tab_geodata'), t('com.GeneralOptionsModal.tab_hooks'), t('com.GeneralOptionsModal.tab_logs')];
+
+  const gh_proxies = [
+    'https://ghfast.top/',
+    'https://ghproxy.net/',
+    'https://jiashu.1win.eu.org/',
+    'https://gitproxy.click/',
+    'https://gh-proxy.ygxz.in/',
+    'https://github.moeyy.xyz/',
+    'https://cdn.moran233.xyz/',
+    'https://gh-proxy.com/',
+    'https://git.886.be/'
+  ];
+
+  const known_geodat_sources = [
+    {
+      name: 'Loyalsoldier source',
+      source: 'https://github.com/Loyalsoldier/v2ray-rules-dat',
+      geoip_url: 'https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat',
+      geosite_url: 'https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat'
     },
-    props: {
-      config: {
-        type: XrayObject,
-        required: true
-      }
+    {
+      name: 'RUNET Freedom source',
+      source: 'https://github.com/runetfreedom/russia-v2ray-rules-dat',
+      geoip_url: 'https://raw.githubusercontent.com/runetfreedom/russia-v2ray-rules-dat/release/geoip.dat',
+      geosite_url: 'https://raw.githubusercontent.com/runetfreedom/russia-v2ray-rules-dat/release/geosite.dat'
     },
-    setup(props) {
-      const { t } = useI18n();
-
-      const tabs = [
-        t('com.GeneralOptionsModal.tab_general'),
-        t('com.GeneralOptionsModal.tab_geodata'),
-        t('com.GeneralOptionsModal.tab_hooks'),
-        t('com.GeneralOptionsModal.tab_logs')
-      ];
-
-      const currentTab = ref(0);
-      const uiResponse = inject<Ref<EngineResponseConfig>>('uiResponse')!;
-      const config = ref<XrayObject>(props.config);
-      const modal = ref();
-      const conModal = ref();
-      const gh_proxies = ref<string[]>([
-        'https://ghfast.top/',
-        'https://ghproxy.net/',
-        'https://jiashu.1win.eu.org/',
-        'https://gitproxy.click/',
-        'https://gh-proxy.ygxz.in/',
-        'https://github.moeyy.xyz/',
-        'https://cdn.moran233.xyz/',
-        'https://gh-proxy.com/',
-        'https://git.886.be/'
-      ]);
-      const options = ref<GeneralOptions>(new GeneralOptions());
-      const selected_wellknown = ref<WellKnownGeodatSource>();
-
-      const known_geodat_sources = ref<WellKnownGeodatSource[]>([
-        {
-          name: 'Loyalsoldier source',
-          source: 'https://github.com/Loyalsoldier/v2ray-rules-dat',
-          geoip_url: 'https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat',
-          geosite_url: 'https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat'
-        },
-        {
-          name: 'RUNET Freedom source',
-          source: 'https://github.com/runetfreedom/russia-v2ray-rules-dat',
-          geoip_url: 'https://raw.githubusercontent.com/runetfreedom/russia-v2ray-rules-dat/release/geoip.dat',
-          geosite_url: 'https://raw.githubusercontent.com/runetfreedom/russia-v2ray-rules-dat/release/geosite.dat'
-        },
-        {
-          name: 'Nidelon source',
-          source: 'https://github.com/Nidelon/ru-block-v2ray-rules',
-          geoip_url: 'https://github.com/Nidelon/ru-block-v2ray-rules/releases/latest/download/geoip.dat',
-          geosite_url: 'https://github.com/Nidelon/ru-block-v2ray-rules/releases/latest/download/geosite.dat'
-        },
-        {
-          name: 'DustinWin source',
-          source: 'https://github.com/DustinWin/ruleset_geodata',
-          geoip_url: 'https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo/geoip.dat',
-          geosite_url: 'https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo/geosite.dat'
-        },
-        {
-          name: 'Chocolate4U source',
-          source: 'https://github.com/Chocolate4U/Iran-v2ray-rules',
-          geoip_url: 'https://raw.githubusercontent.com/Chocolate4U/Iran-v2ray-rules/release/geoip.dat',
-          geosite_url: 'https://raw.githubusercontent.com/Chocolate4U/Iran-v2ray-rules/release/geosite.dat'
-        }
-      ]);
-
-      const setwellknown = (event: Event) => {
-        if (selected_wellknown.value) {
-          options.value.geo_ip_url = selected_wellknown.value.geoip_url;
-          options.value.geo_site_url = selected_wellknown.value.geosite_url;
-        }
-      };
-      const save = async () => {
-        await engine.executeWithLoadingProgress(async () => {
-          await engine.submit(SubmitActions.generalOptionsApply, options.value);
-        });
-      };
-
-      const show = () => {
-        options.value = new GeneralOptions();
-        options.value.startup = window.xray.custom_settings.xray_startup === 'y';
-        options.value.logs_access = config.value.log?.access != 'none';
-        options.value.logs_error = config.value.log?.error != 'none';
-        options.value.logs_dns = config.value.log?.dnsLog ?? false;
-        options.value.logs_level = config.value.log?.loglevel ?? 'warning';
-        options.value.geo_ip_url = uiResponse?.value.geodata?.geoip_url ?? '';
-        options.value.geo_site_url = uiResponse?.value.geodata?.geosite_url ?? '';
-        options.value.geo_auto_update = uiResponse?.value.geodata?.auto_update ?? false;
-        options.value.github_proxy = uiResponse?.value.xray?.github_proxy ?? '';
-        options.value.logs_dnsmasq = uiResponse?.value.xray?.dnsmasq ?? false;
-        options.value.logs_max_size = uiResponse?.value.xray?.logs_max_size ?? 10;
-        options.value.logs_dor = uiResponse?.value.xray?.logs_dor ?? false;
-        options.value.skip_test = uiResponse?.value.xray?.skip_test ?? false;
-        options.value.clients_check = uiResponse?.value.xray?.clients_check ?? false;
-        options.value.debug = uiResponse?.value.xray?.debug ?? false;
-        options.value.ipsec = uiResponse?.value.xray?.ipsec ?? 'off';
-        options.value.check_connection = uiResponse?.value.xray?.check_connection ?? false;
-        options.value.startup_delay = uiResponse?.value.xray?.startup_delay ?? 0;
-        options.value.hooks = uiResponse?.value.xray?.hooks ?? {
-          before_firewall_start: '',
-          after_firewall_start: '',
-          after_firewall_cleanup: ''
-        };
-        modal.value.show();
-      };
-
-      const updatestartup = async () => {
-        await engine.submit(SubmitActions.toggleStartupOption);
-        window.xray.custom_settings.xray_startup = window.xray.custom_settings.xray_startup === 'y' ? 'n' : 'y';
-      };
-
-      const validateCheckConOption = () => {
-        const outbound = props.config.outbounds?.find((o) => o.protocol !== XrayProtocol.FREEDOM && o.protocol !== XrayProtocol.BLACKHOLE);
-        return outbound !== undefined;
-      };
-
-      return {
-        options,
-        modal,
-        conModal,
-        config: props.config,
-        known_geodat_sources,
-        selected_wellknown,
-        gh_proxies,
-        log_levels: ['none', 'debug', 'info', 'warning', 'error'],
-        ipsec_options: ['off', 'bypass', 'redirect'],
-        tabs,
-        currentTab,
-        show,
-        save,
-        setwellknown,
-        updatestartup,
-        validateCheckConOption
-      };
+    {
+      name: 'Nidelon source',
+      source: 'https://github.com/Nidelon/ru-block-v2ray-rules',
+      geoip_url: 'https://github.com/Nidelon/ru-block-v2ray-rules/releases/latest/download/geoip.dat',
+      geosite_url: 'https://github.com/Nidelon/ru-block-v2ray-rules/releases/latest/download/geosite.dat'
+    },
+    {
+      name: 'DustinWin source',
+      source: 'https://github.com/DustinWin/ruleset_geodata',
+      geoip_url: 'https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo/geoip.dat',
+      geosite_url: 'https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo/geosite.dat'
+    },
+    {
+      name: 'Chocolate4U source',
+      source: 'https://github.com/Chocolate4U/Iran-v2ray-rules',
+      geoip_url: 'https://raw.githubusercontent.com/Chocolate4U/Iran-v2ray-rules/release/geoip.dat',
+      geosite_url: 'https://raw.githubusercontent.com/Chocolate4U/Iran-v2ray-rules/release/geosite.dat'
     }
-  });
+  ];
+
+  const selected_wellknown = ref<any>();
+
+  const setwellknown = () => {
+    if (selected_wellknown.value) {
+      options.geo_ip_url = selected_wellknown.value.geoip_url;
+      options.geo_site_url = selected_wellknown.value.geosite_url;
+    }
+  };
+
+  const updatestartup = async () => {
+    await engine.submit(SubmitActions.toggleStartupOption);
+    window.xray.custom_settings.xray_startup = window.xray.custom_settings.xray_startup === 'y' ? 'n' : 'y';
+  };
+
+  const validateCheckConOption = () => {
+    const outbound = props.config.outbounds?.find((o) => o.protocol !== XrayProtocol.FREEDOM && o.protocol !== XrayProtocol.BLACKHOLE);
+    return outbound !== undefined;
+  };
+
+  const show = () => {
+    hydrate();
+    modal.value.show();
+  };
+  defineExpose({ show });
+  const save = persist;
 </script>
 
 <style scoped>

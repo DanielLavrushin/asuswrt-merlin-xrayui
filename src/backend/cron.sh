@@ -33,14 +33,24 @@ cron_logrotate_add() {
 cron_logrotate_run() {
     log_info "Running logrotate for $ADDON_TITLE"
 
-    [ -f "$LR_CONF" ] || { log_warn "No $LR_CONF found – skipping logrotate."; return; }
-    [ -f "$LR_STANZA" ] || { log_warn "No $LR_STANZA found – skipping logrotate."; return; }
+    [ -f "$LR_CONF" ] || {
+        log_warn "No $LR_CONF found – skipping logrotate."
+        return
+    }
+    [ -f "$LR_STANZA" ] || {
+        log_warn "No $LR_STANZA found – skipping logrotate."
+        return
+    }
     if [ ! -x "$LR_BIN" ]; then
         log_error "logrotate binary not found – aborting rotation."
         exit 1
     fi
 
-    "$LR_BIN" -s "$LR_STATUS" "$LR_CONF" || { log_error "logrotate failed with exit code $?"; exit 1; }
+    "$LR_BIN" -s "$LR_STATUS" "$LR_CONF" || {
+        log_debug "logrotate: $LR_BIN -s $LR_STATUS $LR_CONF"
+        log_error "logrotate failed with exit code $?"
+        exit 1
+    }
 
     log_ok "logrotate completed successfully"
 }

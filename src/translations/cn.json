@@ -82,7 +82,13 @@
       "tab_general": "常规",
       "tab_geodata": "地理数据",
       "tab_logs": "日志",
-      "tab_hooks": "钩子"
+      "tab_hooks": "钩子",
+      "label_hooks_before_firewall_start": "防火墙启动前",
+      "label_hooks_after_firewall_start": "防火墙启动后",
+      "label_hooks_after_firewall_cleanup": "防火墙清理后",
+      "hint_hooks_before_firewall_start": "此脚本将在防火墙启动前执行。你可以用它向 iptables 设置任何自定义规则。<hr/> 不要向脚本添加 she‑bang（`#!/bin/sh`），它将被自动添加。",
+      "hint_hooks_after_firewall_start": "此脚本将在防火墙启动后执行。你可以用它向 iptables 设置任何自定义规则。<hr/> 不要向脚本添加 she‑bang（`#!/bin/sh`），它将被自动添加。",
+      "hint_hooks_after_firewall_cleanup": "此脚本将在防火墙清理后执行。你可以用它从 iptables 清除已创建的自定义规则。<hr/> 不要向脚本添加 she‑bang（`#!/bin/sh`），它将被自动添加。"
     },
     "ImportConfig": {
       "import_config_file": "导入配置"

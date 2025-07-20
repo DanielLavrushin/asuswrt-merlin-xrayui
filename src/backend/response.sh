@@ -74,6 +74,20 @@ initial_response() {
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg ipsec "$ipsec" '.xray.ipsec = $ipsec')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson startup_delay "$startup_delay" '.xray.startup_delay = $startup_delay')
 
+    # grab firewall hooks
+    local hook_before_firewall_start=$(sed '1{/^#!/d}' "$ADDON_USER_SCRIPTS_DIR/firewall_before_start" 2>/dev/null || echo "")
+    local after_firewall_start=$(sed '1{/^#!/d}' "$ADDON_USER_SCRIPTS_DIR/firewall_after_start" 2>/dev/null || echo "")
+    local after_firewall_cleanup=$(sed '1{/^#!/d}' "$ADDON_USER_SCRIPTS_DIR/firewall_after_cleanup" 2>/dev/null || echo "")
+
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg hook_before_firewall_start "$hook_before_firewall_start" \
+        --arg after_firewall_start "$after_firewall_start" \
+        --arg after_firewall_cleanup "$after_firewall_cleanup" \
+        '.xray.hooks = {
+            before_firewall_start: $hook_before_firewall_start,
+            after_firewall_start: $after_firewall_start,
+            after_firewall_cleanup: $after_firewall_cleanup
+        }') || log_error "Error: Failed to update JSON content with firewall hooks."
+
     local XRAY_VERSION=$(xray version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1) || log_error "Error: Failed to get Xray version."
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg xray_ver "$XRAY_VERSION" --arg xrayui_ver "$XRAYUI_VERSION" '.xray.ui_version = $xrayui_ver | .xray.core_version = $xray_ver')
 

@@ -5,6 +5,7 @@
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - IMPROVED: Rework the iptables rules.
+- ADDED: A rule to exclude BROADCAST packets from the chain.
 
 ## [0.53.3] - 2025-07-21
 

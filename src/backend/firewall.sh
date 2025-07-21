@@ -364,9 +364,9 @@ configure_firewall_client() {
             ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -s ::1 -j RETURN
             ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -d ff00::/8 -j RETURN
             ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -p icmpv6 -j RETURN
-            for net6 in $source_nets_v6; do
-                ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -d "$net6" -p udp -m multiport --dports 53,546,547 -j RETURN
-            done
+            #   for net6 in $source_nets_v6; do
+            #       ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -d "$net6" -p udp -m multiport --dports 53,546,547 -j RETURN
+            #   done
         fi
     fi
 

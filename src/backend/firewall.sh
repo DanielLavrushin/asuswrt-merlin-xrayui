@@ -352,11 +352,11 @@ configure_firewall_client() {
         iptables -w -t "$IPT_TABLE" -C XRAYUI -m addrtype --src-type LOCAL -j RETURN 2>/dev/null || iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -m addrtype --src-type LOCAL -j RETURN
         iptables -w -t "$IPT_TABLE" -C XRAYUI -m addrtype --dst-type LOCAL -j RETURN 2>/dev/null || iptables -w -t "$IPT_TABLE" -I XRAYUI 2 -m addrtype --dst-type LOCAL -j RETURN
 
-        ipt $IPT_TABLE -C XRAYUI -p udp -m socket --transparent -j RETURN 2>/dev/null ||
-            ipt $IPT_TABLE -I XRAYUI 3 -p udp -m socket --transparent -j RETURN
+        ipt $IPT_TABLE -C XRAYUI -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask 2>/dev/null ||
+            ipt $IPT_TABLE -I XRAYUI 3 -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
 
-        ipt $IPT_TABLE -C XRAYUI -p tcp -m socket --transparent -j RETURN 2>/dev/null ||
-            ipt $IPT_TABLE -I XRAYUI 4 -p tcp -m socket --transparent -j RETURN
+        ipt $IPT_TABLE -C XRAYUI -p tcp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask 2>/dev/null ||
+            ipt $IPT_TABLE -I XRAYUI 4 -p tcp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
 
         # for net4 in $source_nets_v4; do
         #     iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -d "$net4" -p udp --dport 53 -j RETURN

@@ -598,13 +598,6 @@ configure_firewall_client() {
     # --- End Exclusion Rules ---
 
     if [ "$IPT_TYPE" = "TPROXY" ]; then
-        if ! iptables -w -t "$IPT_TABLE" -S XRAYUI | grep -q -- ' -j TPROXY '; then
-
-            log_warn "No TPROXY rules found in XRAYUI – adding catch‑all (faldsikring)."
-            ipt "$IPT_TABLE" -A XRAYUI -p tcp -j TPROXY --on-port "$fallback_port" --tproxy-mark "$tproxy_mark/$tproxy_mask"
-            ipt "$IPT_TABLE" -A XRAYUI -p udp -j TPROXY --on-port "$fallback_port" --tproxy-mark "$tproxy_mark/$tproxy_mask"
-        fi
-
         add_tproxy_routes "$tproxy_mark/$tproxy_mask" "$tproxy_table"
     else
         ipt $IPT_TABLE -A XRAYUI -p tcp -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN

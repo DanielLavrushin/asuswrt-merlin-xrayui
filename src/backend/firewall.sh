@@ -32,7 +32,10 @@ apply_rule() {
             $IPT -w -t nat -L -n >/dev/null 2>&1 || continue
         fi
         [ "$IPT" = "ip6tables" ] && contains_ipv4 "$rule" && continue
-        [ "$IPT" = "iptables" ] && contains_ipv6 "$rule" && continue
+        [ "$IPT" = "iptables" ] &&
+            contains_ipv6 "$rule" &&
+            ! echo "$rule" | grep -q -- '-m[[:space:]]\+mac' &&
+            continue
         $IPT -w -t "$tbl" $rule 2>/dev/null
         rc=$?
         did=1
@@ -310,10 +313,7 @@ configure_firewall_client() {
     update_loading_progress "Configuring firewall Exclusion rules..."
     log_info "Configuring firewall Exclusion rules..."
 
-    local source_nets_v4 source_nets_v6
-    source_nets_v4=$(ip -4 route show scope link | awk '$1 ~ /\// && $1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/ {print $1}')
-
-    source_nets_v6=""
+    local source_nets_v6=""
     if is_ipv6_enabled; then
         for dev in $(nvram get lan_ifname) $(nvram get wl0_ifname) $(nvram get wl1_ifname); do
             [ -z "$dev" ] && continue
@@ -331,7 +331,13 @@ configure_firewall_client() {
     # Check if IPSEC is enabled and set the address accordingly
     [ "$(nvram get ipsec_server_enable 2>/dev/null)" = 1 ] || [ "$(nvram get ipsec_ig_enable 2>/dev/null)" = 1 ] && ipsec_addr="10.10.10.0/24"
 
-    source_nets="$source_nets_v4 $ipsec_addr $wgs_addr $source_nets_v6"
+    local source_nets_v4 source_nets_v6
+    source_nets_v4=$(ip -4 route show scope link | awk '$1 ~ /\// && $1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/ {print $1}')
+
+    source_nets_v4="$source_nets_v4 $wgs_addr $ipsec_addr"
+    source_nets_v4=$(printf '%s\n' $source_nets_v4 | sort -u)
+
+    source_nets="$source_nets_v4 $source_nets_v6"
 
     if [ "$IPT_TYPE" = "TPROXY" ]; then
         lsmod | grep -q '^xt_socket ' || modprobe xt_socket 2>/dev/null

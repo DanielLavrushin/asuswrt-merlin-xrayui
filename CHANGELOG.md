@@ -1,5 +1,14 @@
 # XRAYUI Changelog
 
+## [0.53.3] - 2025-07-21
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- FIXED: DNS packets from certain LAN subnets are now properly returned to the chain instead of being dropped.
+- FIXED: IPv4/IPv6 subnets were skipped by the parser; they’re processed correctly again.
+- FIXED: Per‑device MAC‑address rules are once more inserted into **iptables**, so MAC‑based bypass/redirect works as intended.
+- IMPROVED: Logs parsing.
+
 ## [0.53.2] - 2025-07-20
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

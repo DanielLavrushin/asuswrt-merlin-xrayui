@@ -36,6 +36,7 @@
                           <template v-else-if="log.kind === 'access'">
                             <td>{{ log.time }}</td>
                             <td>
+                              <span v-if="log.user" class="log-label user">{{ log.user }}</span>
                               <span v-if="!log.source_device">{{ log.source }}</span>
                               <a v-else class="device" :title="log.source">{{ log.source_device }}</a>
                             </td>
@@ -151,6 +152,7 @@
     public inbound?: string;
     public routing?: string;
     public outbound?: string;
+    public user?: string;
     public line?: string;
     public parsed: boolean = false;
 
@@ -200,7 +202,7 @@
       const logsContent = ref<string>('');
       // Access log
       const ACCESS_RE =
-        /^(?<time>.+)\.\d+\s+from\s+(?:tcp:|udp:)*(?:\[*)(?<source>.+?)(?:%.+)*(?:\]*\:)(?<source_port>\d+)\s+accepted\s+(?<type>tcp|udp)*(?:\:*)(?:\[*)(?<target>.+?)(?:\]*\:)(?<target_port>\d+)\s+\[(?<inbound>.+)\s+(?<routing>(?:>>|->))\s+(?<outbound>.+)?\]$/;
+        /^(?<time>.+)\.\d+\s+from\s+(?:tcp:|udp:)*(?:\[*)(?<source>.+?)(?:%.+)*(?:\]*\:)(?<source_port>\d+)\s+accepted\s+(?<type>tcp|udp)*(?:\:*)(?:\[*)(?<target>.+?)(?:\]*\:)(?<target_port>\d+)\s+\[(?<inbound>.+)\s+(?<routing>(?:>>|->))\s+(?<outbound>.+)?\](?:\semail:\s(?<user>.+))*$/;
 
       // DNS “got answer” line
       const DNS_RE = /^(.+)\.\d+\s+from\s+(DNS)\s+accepted\s+(?:udp:)(.+?)\s+\[(.+?)\s+(->|>>)\s+(.+)\]$/;
@@ -312,6 +314,11 @@
     }
     &.rule {
       color: #ff6bd6;
+    }
+    &.user {
+      color: #ffe600;
+      font-style: italic;
+      margin-right: 5px;
     }
   }
 

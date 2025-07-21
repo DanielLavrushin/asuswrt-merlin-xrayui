@@ -1,165 +1,127 @@
 <template>
   <div class="formfontdesc" v-if="logs">
-    <table width="100%" class="FormTable">
-      <thead>
-        <tr>
-          <td colspan="2">{{ $t('com.Logs.title') }}</td>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>{{ $t('com.Logs.type') }}</th>
-          <td>
-            <select class="input_option" v-model="file">
-              <option :value="FILE_ACCESS" v-if="logs.access !== 'none'">Access Logs</option>
-              <option :value="FILE_ERROR" v-if="logs.error !== 'none'">Error Logs</option>
-            </select>
-            <input class="button_gen button_gen_small" type="button" :value="$t('com.Logs.display')" @click.prevent="display()" />
-            <modal ref="logsModal" width="85%" :title="$t('com.Logs.title')">
-              <div class="modal-content">
-                <div class="logs-area-row">
-                  <pre class="logs-area-content" v-if="file === FILE_ERROR">{{ logsContent }}</pre>
-                  <div v-if="file === FILE_ACCESS" class="scrollable-table">
-                    <table class="FormTable logsTable">
-                      <thead>
-                        <tr>
-                          <td>Time</td>
-                          <td>Source</td>
-                          <td>Target</td>
-                          <td>Inbound</td>
-                          <td>Outbound</td>
-                        </tr>
-                      </thead>
-                      <tbody class="logs-area-content">
-                        <tr v-for="log in filteredLogs" :key="log.line" :class="[{ parsed: log.parsed, unparsed: !log.parsed }, log.kind]">
-                          <td v-if="!log.parsed" colspan="5">{{ log.line }}</td>
-                          <template v-else-if="log.kind === 'access'">
-                            <td>{{ log.time }}</td>
-                            <td>
-                              <span v-if="log.user" class="log-label user">{{ log.user }}</span>
-                              <span v-if="!log.source_device">{{ log.source }}</span>
-                              <a v-else class="device" :title="log.source">{{ log.source_device }}</a>
-                            </td>
-                            <td>
-                              <span :class="['log-label', log.type]">{{ log.type }}</span>
-                              {{ log.target }}:{{ log.target_port }}
-                            </td>
-                            <td>{{ log.inbound }}</td>
-                            <td>
-                              <span v-if="log.routing" :class="['log-label', log.routing]">
-                                {{ log.routing[0] }}
-                              </span>
-                              {{ log.outbound }}
-                            </td>
-                          </template>
+    <div class="log-card">
+      <header class="log-card-bar">
+        <h3>{{ $t('com.Logs.title') }}</h3>
+        <div class="actions">
+          <select class="input_option" v-model="file">
+            <option :value="FILE_ACCESS" v-if="logs.access !== 'none'">Access Logs</option>
+            <option :value="FILE_ERROR" v-if="logs.error !== 'none'">Error Logs</option>
+          </select>
+          <input class="button_gen button_gen_small" type="button" :value="$t('com.Logs.display')" @click.prevent="display()" />
+        </div>
+      </header>
 
-                          <template v-else>
-                            <td>{{ log.time }}</td>
-                            <td colspan="2">
-                              <span class="log-label dns">DNS</span>
-                              {{ log.host }}
-                            </td>
-                            <td class="dns-answers ellipsis" :title="log.answers.join(', ')" colspan="2">
-                              <span v-for="(ip, idx) in log.answers" :key="ip"> {{ ip }}<span v-if="idx < log.answers.length - 1">, </span> </span>
-                              – {{ log.latency }} ms
-                            </td>
-                          </template>
-                        </tr>
-                      </tbody>
-                      <tbody v-if="parsedLogs.length === 0">
-                        <tr>
-                          <td colspan="5">No logs available</td>
-                        </tr>
-                      </tbody>
-                      <tbody>
-                        <tr class="filter-row">
-                          <td></td>
-                          <td>
-                            <input v-model.trim="filters.source" placeholder="🔎 source" class="input_20_table" />
-                          </td>
-                          <td>
-                            <input v-model.trim="filters.target" placeholder="🔎 target" class="input_20_table" />
-                          </td>
-                          <td>
-                            <input v-model.trim="filters.inbound" placeholder="🔎 inbound" class="input_20_table" />
-                          </td>
-                          <td>
-                            <input v-model.trim="filters.outbound" placeholder="🔎 outbound" class="input_20_table" />
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </modal>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+      <modal ref="logsModal" width="90%" :title="$t('com.Logs.title')">
+        <div class="logs-shell">
+          <pre v-if="file === FILE_ERROR" class="plain-log">{{ logsContent }}</pre>
+
+          <div v-else class="table-wrapper">
+            <table class="modern-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>
+                    <input v-model.trim="filters.source" placeholder="🔎 source" />
+                  </th>
+                  <th>
+                    <input v-model.trim="filters.target" placeholder="🔎 target" />
+                  </th>
+                  <th>
+                    <input v-model.trim="filters.inbound" placeholder="🔎 inbound" />
+                  </th>
+                  <th>
+                    <input v-model.trim="filters.outbound" placeholder="🔎 outbound" />
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr v-for="log in filteredLogs" :key="log.line" :class="[{ parsed: log.parsed, unparsed: !log.parsed }, log.kind]">
+                  <td v-if="!log.parsed" colspan="5">{{ log.line }}</td>
+
+                  <template v-else-if="log.kind === 'access'">
+                    <td>{{ log.time }}</td>
+                    <td>
+                      <span v-if="log.user" class="badge user">{{ log.user }}</span>
+                      <span v-if="!log.source_device">{{ log.source }}</span>
+                      <a v-else class="device" :title="log.source">{{ log.source_device }}</a>
+                    </td>
+                    <td>
+                      <span :class="['badge', log.type]"> <i :class="log.type === 'tcp' ? 'i-tcp' : 'i-udp'"></i>{{ log.type }} </span>
+                      {{ log.target }}:{{ log.target_port }}
+                    </td>
+                    <td>{{ log.inbound }}</td>
+                    <td>
+                      <span v-if="log.routing" :class="['badge', log.routing]">
+                        <i :class="log.routing === 'direct' ? 'i-direct' : 'i-rule'"></i>
+                        {{ log.routing }}
+                      </span>
+                      {{ log.outbound }}
+                    </td>
+                  </template>
+
+                  <template v-else>
+                    <td>{{ log.time }}</td>
+                    <td>
+                      <span class="badge dns"><i class="i-dns"></i>DNS</span>
+                    </td>
+                    <td :title="log.answers">{{ log.host }}</td>
+                    <td></td>
+                    <td>
+                      <span class="badge cache" v-if="log.type === 'cache'">CACHE</span>
+                      <span v-else-if="log.type === 'answer'">{{ log.latency }}ms</span>
+                    </td>
+                  </template>
+                </tr>
+
+                <tr v-if="parsedLogs.length === 0">
+                  <td colspan="5">No logs available</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </modal>
+    </div>
   </div>
 </template>
 
-<script lang="ts">
-  import { defineComponent, ref, computed, reactive } from 'vue';
+<script lang="ts" setup>
+  import { ref, computed, reactive } from 'vue';
   import axios from 'axios';
   import engine, { SubmitActions } from '@/modules/Engine';
   import { XrayLogObject } from '@/modules/CommonObjects';
   import Modal from '@main/Modal.vue';
+
+  const props = defineProps<{ logs: XrayLogObject }>();
+  const follow = ref(false);
+  const logsModal = ref();
+  let refreshInterval: number;
+
+  const FILE_ACCESS = '/ext/xrayui/xray_access_partial.asp';
+  const FILE_ERROR = '/ext/xrayui/xray_error_partial.asp';
+  const file = ref(FILE_ACCESS);
+  const logsContent = ref('');
+
+  const ACCESS_RE =
+    /^(?<time>.+)\.\d+\s+from\s+(?:tcp:|udp:)*(?:\[*)(?<source>.+?)(?:%.+)*(?:\]*\:)*(?<source_port>\d+)*\s+accepted\s+(?<type>tcp|udp)*(?:\:*)(?:\[*)(?<target>.+?)(?:\]*\:)(?<target_port>\d+)\s+\[(?<inbound>.+)\s+(?<routing>(?:>>|->))\s+(?<outbound>.+)?\](?:\semail:\s(?<user>.+))*$/;
+
+  const DNS_RE = /^(?<time>.+)\.\d+\s+(?:UDP|DOHL)(?:\:)*(?<dns>.+)\s.*(?<type>answer|cache).*:\s(?<host>.+)\s->\s\[(?<answers>.+)\](?:\s(?<latency>[\d\.]+)ms)*$/;
+
   class DnsLogEntry {
-    public kind = 'dns' as const;
-    public parsed = false;
-    public time?: string;
-    public host?: string;
-    public answers: string[] = [];
-    public latency?: number;
-    public line?: string;
+    kind = 'dns' as const;
+    parsed = false;
+    time?: string;
+    host?: string;
+    answers?: string;
+    latency?: number;
+    line?: string;
+    type?: 'answer' | 'cache';
 
     constructor(match?: RegExpMatchArray, line?: string) {
       this.line = line;
       if (!match) return;
-
-      try {
-        const [, utcDateTimeStr, host, ips, latency] = match;
-
-        // normalise timestamp to local time (same util code as AccessLogEntry)
-        const iso = utcDateTimeStr.replace(/\//g, '-').replace(' ', 'T') + 'Z';
-        this.time = new Date(iso).toLocaleTimeString([], {
-          hour12: false,
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit'
-        });
-
-        this.host = host;
-        this.answers = ips.split(/\s*,\s*/);
-        this.latency = Number(latency);
-        this.parsed = true;
-      } catch (err) {
-        console.error('Error parsing DNS entry:', err);
-      }
-    }
-  }
-  class AccessLogEntry {
-    public kind = 'access' as const;
-    public time?: string;
-    public source?: string;
-    public source_port?: string;
-    public source_device?: string;
-    public type?: string;
-    public target?: string;
-    public target_port?: string;
-    public inbound?: string;
-    public routing?: string;
-    public outbound?: string;
-    public user?: string;
-    public line?: string;
-    public parsed: boolean = false;
-
-    constructor(match?: RegExpMatchArray, devices: Record<string, any> = {}, line?: string) {
-      this.line = line;
-      if (!match) return;
-
       const groups = match.groups ?? {};
       Object.assign(this, groups);
 
@@ -167,222 +129,264 @@
         const iso = groups.time.replace(/\//g, '-').replace(' ', 'T') + 'Z';
         this.time = new Date(iso).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
       }
+      this.latency = Number(groups.latency);
+      this.parsed = true;
+    }
+  }
 
+  class AccessLogEntry {
+    kind = 'access' as const;
+    time?: string;
+    source?: string;
+    source_port?: string;
+    source_device?: string;
+    type?: string;
+    target?: string;
+    target_port?: string;
+    inbound?: string;
+    routing?: string;
+    outbound?: string;
+    user?: string;
+    line?: string;
+    parsed = false;
+
+    constructor(match?: RegExpMatchArray, devices: Record<string, any> = {}, line?: string) {
+      this.line = line;
+      if (!match) return;
+      const groups = match.groups ?? {};
+      Object.assign(this, groups);
+      if (groups.time) {
+        const iso = groups.time.replace(/\//g, '-').replace(' ', 'T') + 'Z';
+        this.time = new Date(iso).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      }
       if (groups.routing) this.routing = groups.routing === '>>' ? 'direct' : 'rule';
-
       if (this.source) {
         const dev = devices[this.source.trim()];
         const name = dev?.nickName?.trim() ? dev.nickName : dev?.name;
         this.source_device = name;
       }
-
       this.parsed = true;
     }
   }
+
   type LogEntry = AccessLogEntry | DnsLogEntry;
-  export default defineComponent({
-    name: 'Logs',
-    components: {
-      Modal
-    },
-    props: {
-      logs: {
-        type: Object as () => XrayLogObject,
-        required: true
-      }
-    },
-    setup(props) {
-      const follow = ref<boolean>(false);
-      const logsModal = ref();
-      let refreshInterval: number;
 
-      const FILE_ACCESS = '/ext/xrayui/xray_access_partial.asp';
-      const FILE_ERROR = '/ext/xrayui/xray_error_partial.asp';
-      const file = ref<string>(FILE_ACCESS);
-      const logsContent = ref<string>('');
-      // Access log
-      const ACCESS_RE =
-        /^(?<time>.+)\.\d+\s+from\s+(?:tcp:|udp:)*(?:\[*)(?<source>.+?)(?:%.+)*(?:\]*\:)(?<source_port>\d+)\s+accepted\s+(?<type>tcp|udp)*(?:\:*)(?:\[*)(?<target>.+?)(?:\]*\:)(?<target_port>\d+)\s+\[(?<inbound>.+)\s+(?<routing>(?:>>|->))\s+(?<outbound>.+)?\](?:\semail:\s(?<user>.+))*$/;
+  const filters = reactive({ source: '', target: '', inbound: '', outbound: '' });
 
-      // DNS “got answer” line
-      const DNS_RE = /^(.+)\.\d+\s+from\s+(DNS)\s+accepted\s+(?:udp:)(.+?)\s+\[(.+?)\s+(->|>>)\s+(.+)\]$/;
-
-      const filters = reactive({
-        source: '',
-        target: '',
-        inbound: '',
-        outbound: ''
-      });
-
-      const filteredLogs = computed<LogEntry[]>(() => {
-        return parsedLogs.value.filter((l) => {
-          if (!l.parsed || !(l instanceof AccessLogEntry)) return true;
-
-          const src = filters.source.trim().toLowerCase();
-          const tgt = filters.target.trim().toLowerCase();
-          const inbound = filters.inbound.trim().toLowerCase();
-          const outbound = filters.outbound.trim().toLowerCase();
-
-          return (
-            (!src || [l.source, l.source_device].filter(Boolean).some((v) => v!.toLowerCase().includes(src))) &&
-            (!tgt || `${l.target}:${l.target_port}`.toLowerCase().includes(tgt)) &&
-            (!inbound || l.inbound?.toLowerCase().includes(inbound)) &&
-            (!outbound || l.outbound?.toLowerCase().includes(outbound))
-          );
-        });
-      });
-
-      const devices = computed(() => {
-        const pairs = Object.values(window.xray.router.devices_online).flatMap((device) => [
-          ...(device.ip ? [[device.ip, device]] : []),
-          ...(device.ip6 ? [[device.ip6, device]] : []),
-          ...(device.ip6_prefix ? [[device.ip6_prefix, device]] : [])
-        ]);
-        return Object.fromEntries(pairs);
-      });
-
-      const parsedLogs = computed<LogEntry[]>(() => {
-        if (!logsContent.value) return [];
-        return logsContent.value
-          .split('\n')
-          .map((line) => {
-            let m;
-            m = line.match(ACCESS_RE);
-            if (m) return new AccessLogEntry(m, devices.value);
-            m = line.match(DNS_RE);
-            if (m) return new DnsLogEntry(m, line);
-            return new AccessLogEntry(undefined, undefined, line);
-          })
-          .filter((entry): entry is AccessLogEntry => entry !== null);
-      });
-
-      const fetchLogs = async () => {
-        if (!follow.value) return;
-        try {
-          await engine.submit(SubmitActions.fetchXrayLogs);
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-          const response = await axios.get(file.value);
-          if (response.data) {
-            logsContent.value = response.data;
-          }
-        } catch (error) {
-          console.error('Error fetching logs:', error);
-        }
-      };
-
-      const display = async () => {
-        follow.value = true;
-        refreshInterval = window.setInterval(fetchLogs, 2000);
-        logsModal.value.show(() => {
-          follow.value = false;
-          logsContent.value = '';
-          clearInterval(refreshInterval);
-        });
-        if (follow.value) {
-          await fetchLogs();
-        }
-      };
-
-      return {
-        follow,
-        logsModal,
-        file,
-        logs: props.logs,
-        logsContent,
-        parsedLogs,
-        FILE_ACCESS,
-        FILE_ERROR,
-        filters,
-        display,
-        filteredLogs
-      };
-    }
+  const devices = computed(() => {
+    const pairs = Object.values((window as any).xray.router.devices_online).flatMap((device: any) => [
+      ...(device.ip ? [[device.ip, device]] : []),
+      ...(device.ip6 ? [[device.ip6, device]] : []),
+      ...(device.ip6_prefix ? [[device.ip6_prefix, device]] : [])
+    ]);
+    return Object.fromEntries(pairs);
   });
+
+  const parsedLogs = computed<LogEntry[]>(() => {
+    if (!logsContent.value) return [];
+    return logsContent.value.split('\n').map((line) => {
+      let m: RegExpMatchArray | null;
+      m = line.match(ACCESS_RE);
+      if (m) return new AccessLogEntry(m, devices.value);
+      m = line.match(DNS_RE);
+      if (m) return new DnsLogEntry(m, line);
+      return new AccessLogEntry(undefined, undefined, line);
+    });
+  });
+
+  const filteredLogs = computed<LogEntry[]>(() => {
+    return parsedLogs.value.filter((l) => {
+      if (!l.parsed || !(l instanceof AccessLogEntry)) return true;
+      const src = filters.source.trim().toLowerCase();
+      const tgt = filters.target.trim().toLowerCase();
+      const inbound = filters.inbound.trim().toLowerCase();
+      const outbound = filters.outbound.trim().toLowerCase();
+      return (
+        (!src || [l.source, l.source_device].filter(Boolean).some((v) => v!.toLowerCase().includes(src))) &&
+        (!tgt || `${l.target}:${l.target_port}`.toLowerCase().includes(tgt)) &&
+        (!inbound || l.inbound?.toLowerCase().includes(inbound)) &&
+        (!outbound || l.outbound?.toLowerCase().includes(outbound))
+      );
+    });
+  });
+
+  const fetchLogs = async () => {
+    if (!follow.value) return;
+    await engine.submit(SubmitActions.fetchXrayLogs);
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    const response = await axios.get(file.value);
+    if (response.data) logsContent.value = response.data;
+  };
+
+  const display = async () => {
+    follow.value = true;
+    refreshInterval = window.setInterval(fetchLogs, 2000);
+    logsModal.value.show(() => {
+      follow.value = false;
+      logsContent.value = '';
+      clearInterval(refreshInterval);
+    });
+    if (follow.value) await fetchLogs();
+  };
 </script>
 
-<style lang="scss" scoped>
-  .log-label {
-    font-weight: bold;
-    &.tcp {
-      color: #4cc2ff;
-    }
-    &.udp {
-      color: #ffd166;
-    }
-    &.direct {
-      color: #00ff7f;
-    }
-    &.rule {
-      color: #ff6bd6;
-    }
-    &.user {
-      color: #ffe600;
-      font-style: italic;
-      margin-right: 5px;
-    }
-  }
-
-  .scrollable-table {
-    max-height: 600px;
-    overflow-y: auto;
-    display: block;
-    scrollbar-width: thin;
-    scrollbar-color: $scrollbar-thumb $scrollbar-track;
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-
-      th,
-      td {
-        border-color: #888;
-        .device {
-          font-weight: bold;
-          color: #00ff7f;
-        }
-      }
-    }
-  }
-
-  .logs-area-row {
-    padding: 0;
-    margin: 0;
+<style scoped lang="scss">
+  .log-card {
+    background: #475a5f;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.45);
     overflow: hidden;
   }
 
-  .logs-area-content {
-    line-height: normal;
-    max-height: 200px;
+  .log-card-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: #475a5f;
+    h3 {
+      margin: 0;
+      font-weight: 600;
+      color: #fff;
+    }
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+  }
+
+  .table-wrapper {
+    max-height: 70vh;
+    overflow: auto;
+  }
+
+  .modern-table {
     width: 100%;
-    max-width: 738px;
-    overflow-x: scroll;
-    overflow-y: scroll;
-    margin: 0;
-    color: #ffffff;
-    background-color: #576d73;
-    font-family: Courier New, Courier, monospace;
-    font-size: 11px;
-    scrollbar-width: thin;
-    scrollbar-color: $scrollbar-thumb $scrollbar-track;
-
-    td {
-      overflow: hidden;
-      text-wrap: none;
-      white-space: nowrap;
-
-      &.ellipsis {
-        max-width: 350px;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    color: #fafafa;
+    min-width: 650px;
+    thead {
+      position: sticky;
+      top: 0;
+      tr {
+        th {
+          padding: 0.5rem;
+          text-align: left;
+          input {
+            width: 100%;
+            padding: 0.25rem 0.5rem;
+            border: 1px solid #475a5f;
+            border-radius: 4px;
+            background: #2c2d38;
+            color: #eee;
+          }
+        }
       }
     }
-    tr.unparsed td {
-      color: #888;
-    }
+    tbody {
+      tr {
+        transition: background 0.15s;
+        &:nth-child(odd) {
+          background: #596d74;
+        }
+        &:hover {
+          background: #333444;
+        }
+        &.unparsed {
+          color: #888;
+        }
+        td {
+          padding: 0.5rem;
+          white-space: nowrap;
+          &.ellipsis {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
 
-    .filter-row {
-      background: #2b3538;
+          .device {
+            color: #00ff7f;
+          }
+        }
+      }
     }
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border-radius: 4px;
+    padding: 0 0.4rem;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    &.tcp {
+      background: rgba(76, 194, 255, 0.15);
+      color: #4cc2ff;
+    }
+    &.udp {
+      background: rgba(255, 209, 102, 0.15);
+      color: #ffd166;
+    }
+    &.direct {
+      background: rgba(0, 255, 127, 0.15);
+      color: #00ff7f;
+    }
+    &.rule {
+      background: rgba(255, 107, 214, 0.15);
+      color: #ff6bd6;
+    }
+    &.user {
+      background: rgba(255, 230, 0, 0.15);
+      color: #ffe600;
+      font-style: italic;
+      font-weight: 600;
+    }
+    &.dns {
+      background: rgba(167, 81, 238, 0.15);
+      color: #4a006d;
+      font-weight: 600;
+    }
+    &.cache {
+      background: rgba(255, 209, 102, 0.15);
+      color: #ffd166;
+    }
+  }
+
+  .i-tcp::before {
+    content: '↯';
+  }
+  .i-udp::before {
+    content: '☄';
+  }
+  .i-direct::before {
+    content: '✓';
+  }
+  .i-rule::before {
+    content: '❯';
+  }
+  .i-dns::before {
+    content: '🌐';
+  }
+
+  .plain-log {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    background: #475a5f;
+    padding: 1rem;
+    color: #ddd;
+    overflow: auto;
+  }
+
+  pre::-webkit-scrollbar,
+  .table-wrapper::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+  pre::-webkit-scrollbar-thumb,
+  .table-wrapper::-webkit-scrollbar-thumb {
+    background: #475a5f;
+    border-radius: 4px;
   }
 </style>

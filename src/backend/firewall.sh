@@ -357,9 +357,9 @@ configure_firewall_client() {
         ipt $IPT_TABLE -C XRAYUI -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask 2>/dev/null ||
             ipt $IPT_TABLE -I XRAYUI 1 -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
 
-        for net4 in $source_nets_v4; do
-            iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -d "$net4" -p udp --dport 53 -j RETURN
-        done
+        # for net4 in $source_nets_v4; do
+        #   iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -d "$net4" -p udp --dport 53 -j RETURN
+        #done
         if is_ipv6_enabled; then
             ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -s ::1 -j RETURN
             ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -d ff00::/8 -j RETURN
@@ -375,7 +375,7 @@ configure_firewall_client() {
 
         if [ "$IPT_TABLE" = "mangle" ]; then
             ipt $IPT_TABLE -A XRAYUI -d "$net" -p tcp -j RETURN 2>/dev/null || log_error "Failed to add RETURN rule for $net in $IPT_TABLE."
-            ipt $IPT_TABLE -A XRAYUI -d "$net" -p udp ! --dport 53 -j RETURN 2>/dev/null || log_error "Failed to add RETURN rule for $net in $IPT_TABLE."
+            ipt $IPT_TABLE -A XRAYUI -d "$net" -p udp -j RETURN 2>/dev/null || log_error "Failed to add RETURN rule for $net in $IPT_TABLE."
         else
             ipt $IPT_TABLE -A XRAYUI -d "$net" -j RETURN 2>/dev/null || log_error "Failed to add RETURN rule for $net in $IPT_TABLE."
         fi

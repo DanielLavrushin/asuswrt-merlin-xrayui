@@ -561,16 +561,15 @@ configure_firewall_client() {
                 base="-s $src"
                 for mac in $macs; do
                     [ "$mac" = "ANY" ] && mac_flag="" || mac_flag="-m mac --mac-source $mac"
-                    [ "$policy_mode" = "bypass" ] && ports_mark="!" || ports_mark=""
-
-                    [ "$tcp_enabled" = "yes" ] && [ -n "$tcp_ports" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p tcp -m multiport $ports_mark --dports "$tcp_ports" -j RETURN
-                    [ "$udp_enabled" = "yes" ] && [ -n "$udp_ports" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p udp -m multiport $ports_mark --dports "$udp_ports" -j RETURN
 
                     if [ "$policy_mode" = "redirect" ]; then
+                        [ "$tcp_enabled" = "yes" ] && [ -n "$tcp_ports" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p tcp -m multiport --dports "$tcp_ports" -j RETURN
+                        [ "$udp_enabled" = "yes" ] && [ -n "$udp_ports" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p udp -m multiport --dports "$udp_ports" -j RETURN
                         [ "$tcp_enabled" = "yes" ] && append_rule "$IPT_TABLE" $base $mac_flag -p tcp $IPT_JOURNAL_FLAGS
                         [ "$udp_enabled" = "yes" ] && append_rule "$IPT_TABLE" $base $mac_flag -p udp $IPT_JOURNAL_FLAGS
-
                     else
+                        [ "$tcp_enabled" = "yes" ] && [ -n "$tcp_ports" ] && append_rule "$IPT_TABLE" $base $mac_flag -p tcp -m multiport --dports "$tcp_ports" $IPT_JOURNAL_FLAGS
+                        [ "$udp_enabled" = "yes" ] && [ -n "$udp_ports" ] && append_rule "$IPT_TABLE" $base $mac_flag -p udp -m multiport --dports "$udp_ports" $IPT_JOURNAL_FLAGS
                         [ -z "$tcp_ports" ] && [ -z "$udp_ports" ] && insert_rule "$IPT_TABLE" $base $mac_flag -j RETURN
                         [ "$tcp_enabled" = "yes" ] && [ -n "$tcp_ports" ] && append_rule "$IPT_TABLE" $base $mac_flag -p tcp $IPT_JOURNAL_FLAGS
                         [ "$udp_enabled" = "yes" ] && [ -n "$udp_ports" ] && append_rule "$IPT_TABLE" $base $mac_flag -p udp $IPT_JOURNAL_FLAGS

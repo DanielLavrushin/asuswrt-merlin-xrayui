@@ -1,5 +1,11 @@
 # XRAYUI Changelog
 
+## [0.53.4] - 2025-07-21
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- IMPROVED: Rework the iptables rules.
+
 ## [0.53.3] - 2025-07-21
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

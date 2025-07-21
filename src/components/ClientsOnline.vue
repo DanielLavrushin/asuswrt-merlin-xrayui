@@ -6,7 +6,7 @@
           <td colspan="3">{{ $t('com.ClientsOnline.title') }}</td>
         </tr>
       </thead>
-      <tbody v-if="logsEnabled">
+      <tbody>
         <tr class="row_title">
           <th>{{ $t('com.ClientsOnline.label_ip') }}</th>
           <th>{{ $t('com.ClientsOnline.label_client') }}</th>
@@ -20,15 +20,6 @@
         </tr>
         <tr v-if="!clients.length" class="data_tr">
           <td colspan="3" style="color: #ffcc00">{{ $t('com.ClientsOnline.noone_is_online') }}</td>
-        </tr>
-      </tbody>
-      <tbody v-else>
-        <tr class="data_tr">
-          <td colspan="3" style="color: #ffcc00">
-            {{ $t('com.ClientsOnline.message_logs') }}
-            <br />
-            <input class="button_gen button_gen_small" type="button" :value="$t('com.ClientsOnline.enable_logs')" @click.prevent="enable_logs" />
-          </td>
         </tr>
       </tbody>
     </table>
@@ -51,7 +42,6 @@
     name: 'ClientsOnline',
     setup() {
       const clients = ref<Client[]>([]);
-      const logsEnabled = ref(false);
       let pollTimeout: number | null = null;
 
       // Determines if the component should continue polling.
@@ -67,17 +57,6 @@
           clients.value = response.data;
         } catch (error) {
           console.warn('Error fetching clients:', error);
-        }
-      };
-
-      // Enable logs using the engine's API.
-      const enable_logs = async () => {
-        try {
-          await engine.executeWithLoadingProgress(async () => {
-            await engine.submit(SubmitActions.enableLogs);
-          });
-        } catch (error) {
-          console.error('Error enabling logs:', error);
         }
       };
 
@@ -107,15 +86,6 @@
         pollClients();
       });
 
-      // Update logsEnabled based on the current xrayConfig.log state.
-      watch(
-        () => xrayConfig.log,
-        (logs) => {
-          logsEnabled.value = logs !== undefined;
-        },
-        { immediate: true }
-      );
-
       onBeforeUnmount(() => {
         if (pollTimeout !== null) {
           clearTimeout(pollTimeout);
@@ -124,8 +94,6 @@
 
       return {
         clients,
-        logsEnabled,
-        enable_logs,
         enable_check
       };
     }

@@ -315,11 +315,6 @@ configure_firewall_client() {
             ipt "$IPT_TABLE" -I XRAYUI 1 -i "$wan_if" -j RETURN
     done
 
-    if [ "$IPT_TABLE" = "mangle" ]; then
-        iptables -w -t "$IPT_TABLE" -C XRAYUI -d 127.0.0.0/8 -j RETURN 2>/dev/null ||
-            iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -d 127.0.0.0/8 -j RETURN
-    fi
-
     # --- Begin Exclusion Rules ---
 
     update_loading_progress "Configuring firewall Exclusion rules..."
@@ -354,19 +349,28 @@ configure_firewall_client() {
     if [ "$IPT_TYPE" = "TPROXY" ]; then
         lsmod | grep -q '^xt_socket ' || modprobe xt_socket 2>/dev/null
 
+        iptables -w -t "$IPT_TABLE" -C XRAYUI -m addrtype --src-type LOCAL -j RETURN 2>/dev/null || iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -m addrtype --src-type LOCAL -j RETURN
+        iptables -w -t "$IPT_TABLE" -C XRAYUI -m addrtype --dst-type LOCAL -j RETURN 2>/dev/null || iptables -w -t "$IPT_TABLE" -I XRAYUI 2 -m addrtype --dst-type LOCAL -j RETURN
+
         ipt $IPT_TABLE -C XRAYUI -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask 2>/dev/null ||
-            ipt $IPT_TABLE -I XRAYUI 1 -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
+            ipt $IPT_TABLE -I XRAYUI 3 -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
+
+        ipt $IPT_TABLE -C XRAYUI -p tcp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask 2>/dev/null ||
+            ipt $IPT_TABLE -I XRAYUI 4 -p tcp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
 
         # for net4 in $source_nets_v4; do
-        #   iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -d "$net4" -p udp --dport 53 -j RETURN
-        #done
+        #     iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -d "$net4" -p udp --dport 53 -j RETURN
+        # done
+
         if is_ipv6_enabled; then
-            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -s ::1 -j RETURN
-            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -d ff00::/8 -j RETURN
-            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -p icmpv6 -j RETURN
-            #   for net6 in $source_nets_v6; do
-            #       ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -d "$net6" -p udp -m multiport --dports 53,546,547 -j RETURN
-            #   done
+            ip6tables -w -t "$IPT_TABLE" -C XRAYUI -m addrtype --src-type LOCAL -j RETURN 2>/dev/null || ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -m addrtype --src-type LOCAL -j RETURN
+            ip6tables -w -t "$IPT_TABLE" -C XRAYUI -m addrtype --dst-type LOCAL -j RETURN 2>/dev/null || ip6tables -w -t "$IPT_TABLE" -I XRAYUI 2 -m addrtype --dst-type LOCAL -j RETURN
+            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 3 -d ff00::/8 -j RETURN
+            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 4 -p icmpv6 -j RETURN
+
+        #    for net6 in $source_nets_v6; do
+        #        ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -d "$net6" -p udp -m multiport --dports 53,546,547 -j RETURN
+        #    done
         fi
     fi
 
@@ -538,15 +542,15 @@ configure_firewall_client() {
         log_info "Apply $IPT_TYPE rules for inbound on port $dokodemo_port with protocols '$protocols'."
 
         jq -c '
-  (.routing.policies // []) 
-  | map(select(.enabled == true)) 
-  as $enabled
-  | (if ($enabled | length) == 0 
-       then [{ mode: "redirect", enabled: true, name: "all traffic to xray" }] 
-       else $enabled 
-     end)
-  | .[]
-' "$XRAY_CONFIG_FILE" | while IFS= read -r policy; do
+            (.routing.policies // []) 
+            | map(select(.enabled == true)) 
+            as $enabled
+            | (if ($enabled | length) == 0 
+                then [{ mode: "redirect", enabled: true, name: "all traffic to xray" }] 
+                else $enabled 
+                end)
+            | .[]
+            ' "$XRAY_CONFIG_FILE" | while IFS= read -r policy; do
             policy_name="$(echo "$policy" | jq -r '.name')"
             policy_mode="$(echo "$policy" | jq -r '.mode // "bypass"')"
             tcp_ports="$(echo "$policy" | jq -r '.tcp // ""')"
@@ -561,28 +565,46 @@ configure_firewall_client() {
                 base="-s $src"
                 for mac in $macs; do
                     [ "$mac" = "ANY" ] && mac_flag="" || mac_flag="-m mac --mac-source $mac"
+                    [ "$tcp_enabled" = "yes" ] && [ -n "$tcp_ports" ] && tcp_flags="-m multiport --dports $tcp_ports" || tcp_flags=""
+                    [ "$udp_enabled" = "yes" ] && [ -n "$udp_ports" ] && udp_flags="-m multiport --dports $udp_ports" || udp_flags=""
 
                     if [ "$policy_mode" = "redirect" ]; then
-                        [ "$tcp_enabled" = "yes" ] && [ -n "$tcp_ports" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p tcp -m multiport --dports "$tcp_ports" -j RETURN
-                        [ "$udp_enabled" = "yes" ] && [ -n "$udp_ports" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p udp -m multiport --dports "$udp_ports" -j RETURN
-                        [ "$tcp_enabled" = "yes" ] && append_rule "$IPT_TABLE" $base $mac_flag -p tcp $IPT_JOURNAL_FLAGS
-                        [ "$udp_enabled" = "yes" ] && append_rule "$IPT_TABLE" $base $mac_flag -p udp $IPT_JOURNAL_FLAGS
+                        [ "$tcp_enabled" = "yes" ] && [ -n "$tcp_ports" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p tcp $tcp_flags -j RETURN
+                        [ "$udp_enabled" = "yes" ] && [ -n "$udp_ports" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p udp $udp_flags -j RETURN
+
+                        [ -z "$tcp_ports" ] && [ -z "$udp_ports" ] && append_rule "$IPT_TABLE" $base $mac_flag -p tcp $IPT_JOURNAL_FLAGS
+                        [ -z "$tcp_ports" ] && [ -z "$udp_ports" ] && append_rule "$IPT_TABLE" $base $mac_flag -p udp $IPT_JOURNAL_FLAGS
                     else
-                        [ "$tcp_enabled" = "yes" ] && [ -n "$tcp_ports" ] && append_rule "$IPT_TABLE" $base $mac_flag -p tcp -m multiport --dports "$tcp_ports" $IPT_JOURNAL_FLAGS
-                        [ "$udp_enabled" = "yes" ] && [ -n "$udp_ports" ] && append_rule "$IPT_TABLE" $base $mac_flag -p udp -m multiport --dports "$udp_ports" $IPT_JOURNAL_FLAGS
+                        [ "$tcp_enabled" = "yes" ] && [ -n "$tcp_ports" ] && append_rule "$IPT_TABLE" $base $mac_flag -p tcp $tcp_flags $IPT_JOURNAL_FLAGS
+                        [ "$udp_enabled" = "yes" ] && [ -n "$udp_ports" ] && append_rule "$IPT_TABLE" $base $mac_flag -p udp $udp_flags $IPT_JOURNAL_FLAGS
                         [ -z "$tcp_ports" ] && [ -z "$udp_ports" ] && insert_rule "$IPT_TABLE" $base $mac_flag -j RETURN
-                        [ "$tcp_enabled" = "yes" ] && [ -n "$tcp_ports" ] && append_rule "$IPT_TABLE" $base $mac_flag -p tcp $IPT_JOURNAL_FLAGS
-                        [ "$udp_enabled" = "yes" ] && [ -n "$udp_ports" ] && append_rule "$IPT_TABLE" $base $mac_flag -p udp $IPT_JOURNAL_FLAGS
                     fi
 
                 done
             done
         done
+
+        if [ "$IPT_TYPE" = "TPROXY" ]; then
+            if ! iptables -w -t "$IPT_TABLE" -S XRAYUI | grep -q -- ' -j TPROXY '; then
+                log_debug "No TPROXY rules found in XRAYUI chain, adding catch-all."
+                for src in $source_nets; do
+                    append_rule "$IPT_TABLE" -s "$src" -p tcp $IPT_JOURNAL_FLAGS
+                    append_rule "$IPT_TABLE" -s "$src" -p udp $IPT_JOURNAL_FLAGS
+                done
+            fi
+        fi
     done
 
     # --- End Exclusion Rules ---
 
     if [ "$IPT_TYPE" = "TPROXY" ]; then
+        if ! iptables -w -t "$IPT_TABLE" -S XRAYUI | grep -q -- ' -j TPROXY '; then
+
+            log_warn "No TPROXY rules found in XRAYUI – adding catch‑all (faldsikring)."
+            ipt "$IPT_TABLE" -A XRAYUI -p tcp -j TPROXY --on-port "$fallback_port" --tproxy-mark "$tproxy_mark/$tproxy_mask"
+            ipt "$IPT_TABLE" -A XRAYUI -p udp -j TPROXY --on-port "$fallback_port" --tproxy-mark "$tproxy_mark/$tproxy_mask"
+        fi
+
         add_tproxy_routes "$tproxy_mark/$tproxy_mask" "$tproxy_table"
     else
         ipt $IPT_TABLE -A XRAYUI -p tcp -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN

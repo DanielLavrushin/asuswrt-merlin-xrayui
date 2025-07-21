@@ -7,10 +7,12 @@ apply_general_options() {
 
     load_xrayui_config
 
+    local temp_config="/tmp/xray_server_config_new.json"
     local json_content=$(cat "$XRAY_CONFIG_FILE")
 
     local genopts=$(reconstruct_payload)
 
+    log_debug "General options recieved: $genopts"
     # setting logs
     local github_proxy=$(echo "$genopts" | jq -r '.github_proxy')
     local log_level=$(echo "$genopts" | jq -r '.logs_level')
@@ -58,6 +60,10 @@ apply_general_options() {
     else
         json_content=$(echo "$json_content" | jq 'del(.log.dnsLog)')
     fi
+
+    echo "$json_content" >"$temp_config"
+    cp "$temp_config" "$XRAY_CONFIG_FILE"
+    rm -f "$temp_config"
 
     update_xrayui_config "logs_dnsmasq" "$logs_dnsmasq"
     update_xrayui_config "github_proxy" "$github_proxy"

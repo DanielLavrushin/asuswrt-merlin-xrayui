@@ -40,7 +40,7 @@ logs_build_sed_script() {
   local slice="$1"
   local script="$XRAYUI_DNSMASQ_SED".$$
 
-  grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' "$slice" |
+  grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}|([0-9A-Fa-f]{0,4}:){2,7}[0-9A-Fa-f]{0,4}' "$slice" |
     sort -u >"$script.ips"
 
   awk '

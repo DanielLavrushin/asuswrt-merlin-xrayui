@@ -12,7 +12,7 @@
         </div>
       </header>
 
-      <modal ref="logsModal" width="90%" :title="$t('com.Logs.title')">
+      <modal ref="logsModal" :width="modal_width" :title="$t('com.Logs.title')">
         <div class="logs-shell">
           <pre v-if="file === FILE_ERROR" class="plain-log">{{ logsContent }}</pre>
 
@@ -82,6 +82,10 @@
             </table>
           </div>
         </div>
+        <template v-slot:footer>
+          <a class="button_gen button_gen_small" :href="file" target="_blank">raw</a>
+          <input class="button_gen button_gen_small" type="button" :value="$t('labels.close')" @click.prevent="logsModal.close" />
+        </template>
       </modal>
     </div>
   </div>
@@ -95,6 +99,7 @@
   import Modal from '@main/Modal.vue';
 
   const props = defineProps<{ logs: XrayLogObject }>();
+
   const follow = ref(false);
   const logsModal = ref();
   let refreshInterval: number;
@@ -103,11 +108,12 @@
   const FILE_ERROR = '/ext/xrayui/xray_error_partial.asp';
   const file = ref(FILE_ACCESS);
   const logsContent = ref('');
+  const modal_width = ref('85%');
 
   const ACCESS_RE =
     /^(?<time>.+)\.\d+\s+from\s+(?:tcp:|udp:)*(?:\[*)(?<source>.+?)(?:%.+)*(?:\]*\:)*(?<source_port>\d+)*\s+accepted\s+(?<type>tcp|udp)*(?:\:*)(?:\[*)(?<target>.+?)(?:\]*\:)(?<target_port>\d+)\s+\[(?<inbound>.+)\s+(?<routing>(?:>>|->))\s+(?<outbound>.+)?\](?:\semail:\s(?<user>.+))*$/;
 
-  const DNS_RE = /^(?<time>.+)\.\d+\s+(?:UDP|DOHL)(?:\:)*(?<dns>.+)\s.*(?<type>answer|cache).*:\s(?<host>.+)\s->\s\[(?<answers>.+)\](?:\s(?<latency>[\d\.]+)ms)*$/;
+  const DNS_RE = /^(?<time>.+)\.\d+\s+(?:UDP|DOHL|localhost)(?:\:)*(?<dns>.+)\s.*(?<type>answer|cache).*:\s(?<host>.+)\s->\s\[(?<answers>.+)\](?:\s(?<latency>[\d\.]+)ms)*$/;
 
   class DnsLogEntry {
     kind = 'dns' as const;
@@ -220,6 +226,7 @@
 
   const display = async () => {
     follow.value = true;
+    console.log('Displaying logs from:', file.value, modal_width.value);
     refreshInterval = window.setInterval(fetchLogs, 2000);
     logsModal.value.show(() => {
       follow.value = false;
@@ -261,6 +268,7 @@
   }
 
   .modern-table {
+    overflow: auto;
     width: 100%;
     border-collapse: collapse;
     font-family: 'JetBrains Mono', monospace;
@@ -268,18 +276,19 @@
     min-width: 650px;
     thead {
       position: sticky;
+      background-color: #475a5f;
       top: 0;
       tr {
         th {
-          padding: 0.5rem;
-          text-align: left;
+          text-align: center;
           input {
             width: 100%;
-            padding: 0.25rem 0.5rem;
+            padding: 0.5rem 0.5rem;
             border: 1px solid #475a5f;
             border-radius: 4px;
-            background: #2c2d38;
+            background: #21333e;
             color: #eee;
+            box-sizing: border-box;
           }
         }
       }
@@ -291,7 +300,7 @@
           background: #596d74;
         }
         &:hover {
-          background: #333444;
+          background: #21333e;
         }
         &.unparsed {
           color: #888;
@@ -371,12 +380,15 @@
   }
 
   .plain-log {
+    max-height: 70vh;
+    overflow: auto;
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.85rem;
     background: #475a5f;
     padding: 1rem;
-    color: #ddd;
+    color: white;
     overflow: auto;
+    text-align: left;
   }
 
   pre::-webkit-scrollbar,
@@ -386,7 +398,7 @@
   }
   pre::-webkit-scrollbar-thumb,
   .table-wrapper::-webkit-scrollbar-thumb {
-    background: #475a5f;
+    background: #21333e;
     border-radius: 4px;
   }
 </style>

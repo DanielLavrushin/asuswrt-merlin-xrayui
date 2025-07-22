@@ -424,6 +424,9 @@ configure_firewall_client() {
     # Exclude traffic in DNAT state (covers inbound port-forwards):
     ipt $IPT_BASE_FLAGS -m conntrack --ctstate DNAT -j RETURN 2>/dev/null || log_error "Failed to add DNAT rule in $IPT_TABLE."
 
+    # Exclude UDP GlobalProtect traffic:
+    ipt $IPT_BASE_FLAGS -p udp --dport 4501 -j RETURN
+
     # Exclude NTP (UDP port 123)
     ipt $IPT_BASE_FLAGS -p udp --dport 123 -j RETURN 2>/dev/null || log_error "Failed to add NTP rule in $IPT_TABLE."
 
@@ -595,6 +598,9 @@ configure_firewall_client() {
                     append_rule "$IPT_TABLE" -s "$src" -p udp $IPT_JOURNAL_FLAGS
                 done
             fi
+
+            insert_rule "$IPT_TABLE" -p tcp --dport "$dokodemo_port" -j RETURN
+            insert_rule "$IPT_TABLE" -p udp --dport "$dokodemo_port" -j RETURN
         fi
     done
 

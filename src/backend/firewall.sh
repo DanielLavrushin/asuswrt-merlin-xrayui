@@ -32,11 +32,10 @@ apply_rule() {
             $IPT -w -t nat -L -n >/dev/null 2>&1 || continue
         fi
         [ "$IPT" = "ip6tables" ] && contains_ipv4 "$rule" && continue
-        [ "$IPT" = "iptables" ] &&
-            contains_ipv6 "$rule" &&
-            ! echo "$rule" | grep -q -- '-m[[:space:]]\+mac' &&
-            continue
-        $IPT -w -t "$tbl" $rule 2>/dev/null
+        [ "$IPT" = "iptables" ] && echo "$rule" | grep -qE ':[^[:space:]]*/[0-9]+' && continue
+        [ "$IPT" = "iptables" ] && contains_ipv6 "$rule" && ! echo "$rule" | grep -q -- '-m[[:space:]]\+mac' && continue
+        log_debug " - executing rule: $IPT -w -t $tbl $rule"
+        $IPT -w -t "$tbl" $rule
         rc=$?
         did=1
     done
@@ -46,14 +45,12 @@ apply_rule() {
 append_rule() {
     local tbl=$1
     shift
-    log_debug "  - Appending rule $tbl -I XRAYUI 1 $@"
     ipt $tbl -C XRAYUI "$@" 2>/dev/null || ipt $tbl -A XRAYUI "$@"
 }
 
 insert_rule() {
     local tbl=$1
     shift
-    log_debug "  - Inserting rule $tbl -I XRAYUI 1 $@"
     ipt $tbl -C XRAYUI "$@" 2>/dev/null || ipt $tbl -I XRAYUI 1 "$@"
 }
 
@@ -65,7 +62,10 @@ contains_ipv4() {
 
 contains_ipv6() {
     [ -z "$1" ] && return 1
-    printf '%s\n' "$1" |
+    local cleaned
+    cleaned=$(printf '%s\n' "$1" |
+        sed -E 's/(^|[[:space:]])([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}([[:space:]]|$)//g')
+    printf '%s\n' "$cleaned" |
         grep -Eq '(^|[[:space:]])([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}([[:space:]/]|$)'
 }
 
@@ -105,6 +105,16 @@ configure_firewall() {
         log_debug "IPv6 enabled: no"
     fi
 
+    # inbound QUIC both ways (PREROUTING)
+    # ipt raw -C PREROUTING -p udp -m multiport --dports 443,50000:50100 -j NOTRACK 2>/dev/null ||
+    #     ipt raw -I PREROUTING 1 -p udp -m multiport --dports 443,50000:50100 -j NOTRACK
+    # ipt raw -C PREROUTING -p udp --sport 443 -j NOTRACK 2>/dev/null ||
+    #     ipt raw -I PREROUTING 1 -p udp --sport 443 -j NOTRACK
+
+    # # outbound QUIC from Xray (OUTPUT)
+    # ipt raw -C OUTPUT -p udp -m multiport --dports 443,50000:50100 -j NOTRACK 2>/dev/null ||
+    #     ipt raw -I OUTPUT 1 -p udp -m multiport --dports 443,50000:50100 -j NOTRACK
+
     ipset list -n 2>/dev/null | grep -qx "$IPSET_BYPASS_V4" || ipset create "$IPSET_BYPASS_V4" hash:ip family inet timeout 86400
     ipset list -n 2>/dev/null | grep -qx "$IPSET_PROXY_V4" || ipset create "$IPSET_PROXY_V4" hash:ip family inet timeout 86400
     if is_ipv6_enabled; then
@@ -128,10 +138,6 @@ configure_firewall() {
 
     ipt mangle -C PREROUTING -p tcp -m socket --transparent -j DIVERT 2>/dev/null ||
         ipt mangle -I PREROUTING 1 -p tcp -m socket --transparent -j DIVERT
-
-    # IPv4 nat chain
-    ipt nat -N XRAYUI 2>/dev/null || true
-    ipt nat -F XRAYUI 2>/dev/null
 
     ipt filter -C XRAYUI -j RETURN 2>/dev/null || ipt filter -A XRAYUI -j RETURN
 
@@ -267,8 +273,8 @@ configure_firewall_server() {
         local IPT_LISTEN_FLAGS="$IPT_LISTEN_ADDR_FLAGS --dport $port -j ACCEPT"
 
         log_debug "Adding rules for inbound:$tag $listen_addr $port $IPT_LISTEN_FLAGS"
-        ipt filter -I XRAYUI 1 -p tcp $IPT_LISTEN_FLAGS 2>/dev/null || log_debug "Failed to add TCP rule for port $port."
-        ipt filter -I XRAYUI 1 -p udp $IPT_LISTEN_FLAGS 2>/dev/null || log_debug "Failed to add UDP rule for port $port."
+        ipt filter -I XRAYUI 1 -p tcp $IPT_LISTEN_FLAGS
+        ipt filter -I XRAYUI 1 -p udp $IPT_LISTEN_FLAGS
 
         log_ok "Firewall SERVER rules applied for inbound:$tag $listen_addr $port"
     done
@@ -304,10 +310,6 @@ configure_firewall_client() {
             log_debug "xt_TPROXY kernel module successfully loaded."
         fi
     fi
-
-    ipt $IPT_TABLE -F XRAYUI 2>/dev/null || log_debug "Failed to flush $IPT_TABLE chain. Was it already empty?"
-    ipt $IPT_TABLE -X XRAYUI 2>/dev/null || log_debug "Failed to remove $IPT_TABLE chain. Was it already empty?"
-    ipt $IPT_TABLE -N XRAYUI 2>/dev/null || log_debug "Failed to create $IPT_TABLE chain."
 
     for wan_if in $(ip -o link show | awk -F': ' '{print $2}' |
         grep -E '^(ppp|pppoe|wan|wwan|lte|l2tp)[0-9]+$'); do
@@ -349,14 +351,14 @@ configure_firewall_client() {
     if [ "$IPT_TYPE" = "TPROXY" ]; then
         lsmod | grep -q '^xt_socket ' || modprobe xt_socket 2>/dev/null
 
-        iptables -w -t "$IPT_TABLE" -C XRAYUI -m addrtype --src-type LOCAL -j RETURN 2>/dev/null || iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -m addrtype --src-type LOCAL -j RETURN
-        iptables -w -t "$IPT_TABLE" -C XRAYUI -m addrtype --dst-type LOCAL -j RETURN 2>/dev/null || iptables -w -t "$IPT_TABLE" -I XRAYUI 2 -m addrtype --dst-type LOCAL -j RETURN
-
         ipt $IPT_TABLE -C XRAYUI -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask 2>/dev/null ||
-            ipt $IPT_TABLE -I XRAYUI 3 -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
+            ipt $IPT_TABLE -I XRAYUI 1 -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
 
         ipt $IPT_TABLE -C XRAYUI -p tcp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask 2>/dev/null ||
-            ipt $IPT_TABLE -I XRAYUI 4 -p tcp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
+            ipt $IPT_TABLE -I XRAYUI 2 -p tcp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
+
+        iptables -w -t "$IPT_TABLE" -C XRAYUI -m addrtype --src-type LOCAL -j RETURN 2>/dev/null || iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -m addrtype --src-type LOCAL -j RETURN
+        iptables -w -t "$IPT_TABLE" -C XRAYUI -m addrtype --dst-type LOCAL -j RETURN 2>/dev/null || iptables -w -t "$IPT_TABLE" -I XRAYUI 2 -m addrtype --dst-type LOCAL -j RETURN
 
         # for net4 in $source_nets_v4; do
         #     iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -d "$net4" -p udp --dport 53 -j RETURN
@@ -376,13 +378,7 @@ configure_firewall_client() {
 
     for net in $source_nets; do
         log_debug "Excluding static network $net from $IPT_TABLE."
-
-        if [ "$IPT_TABLE" = "mangle" ]; then
-            ipt $IPT_TABLE -A XRAYUI -d "$net" -p tcp -j RETURN 2>/dev/null || log_error "Failed to add RETURN rule for $net in $IPT_TABLE."
-            ipt $IPT_TABLE -A XRAYUI -d "$net" -p udp -j RETURN 2>/dev/null || log_error "Failed to add RETURN rule for $net in $IPT_TABLE."
-        else
-            ipt $IPT_TABLE -A XRAYUI -d "$net" -j RETURN 2>/dev/null || log_error "Failed to add RETURN rule for $net in $IPT_TABLE."
-        fi
+        ipt $IPT_TABLE -A XRAYUI -d "$net" -j RETURN
     done
 
     # IPSET FREEDOM eraly return rules
@@ -411,33 +407,33 @@ configure_firewall_client() {
     local IPT_BASE_FLAGS="$IPT_TABLE -A XRAYUI"
 
     # Exclude DHCP (UDP ports 67 and 68):
-    ipt $IPT_BASE_FLAGS -p udp --dport 67 -j RETURN 2>/dev/null || log_error "Failed to add DHCP rule for UDP 67 in $IPT_TABLE."
-    ipt $IPT_BASE_FLAGS -p udp --dport 68 -j RETURN 2>/dev/null || log_error "Failed to add DHCP rule for UDP 68 in $IPT_TABLE."
+    ipt $IPT_BASE_FLAGS -p udp --dport 67 -j RETURN
+    ipt $IPT_BASE_FLAGS -p udp --dport 68 -j RETURN
 
     # Exclude multicast addresses:
-    ipt $IPT_BASE_FLAGS -d 224.0.0.0/4 -j RETURN 2>/dev/null || log_error "Failed to add multicast rule (224.0.0.0/4) in $IPT_TABLE."
-    ipt $IPT_BASE_FLAGS -d 239.0.0.0/8 -j RETURN 2>/dev/null || log_error "Failed to add multicast rule (239.0.0.0/8) in $IPT_TABLE."
+    ipt $IPT_BASE_FLAGS -d 224.0.0.0/4 -j RETURN
+    ipt $IPT_BASE_FLAGS -d 239.0.0.0/8 -j RETURN
 
     # Exclude  broadcast addresses:
-    ipt $IPT_BASE_FLAGS -m addrtype --dst-type BROADCAST -j RETURN || log_error "Failed to add broadcast rule in $IPT_TABLE."
+    iptables -w -t "$IPT_TABLE" -A XRAYUI -m addrtype --dst-type BROADCAST -j RETURN
 
     # Exclude traffic in DNAT state (covers inbound port-forwards):
-    ipt $IPT_BASE_FLAGS -m conntrack --ctstate DNAT -j RETURN 2>/dev/null || log_error "Failed to add DNAT rule in $IPT_TABLE."
+    ipt $IPT_BASE_FLAGS -m conntrack --ctstate DNAT -j RETURN
 
     # Exclude UDP GlobalProtect traffic:
     ipt $IPT_BASE_FLAGS -p udp --dport 4501 -j RETURN
 
     # Exclude NTP (UDP port 123)
-    ipt $IPT_BASE_FLAGS -p udp --dport 123 -j RETURN 2>/dev/null || log_error "Failed to add NTP rule in $IPT_TABLE."
+    ipt $IPT_BASE_FLAGS -p udp --dport 123 -j RETURN
 
     # Exclude traffic destined to the Xray server:
     [ -n "$SERVER_IPS" ] && for serverip in $SERVER_IPS; do
         log_info "Excluding Xray server IP from $IPT_TABLE."
-        ipt $IPT_BASE_FLAGS -d "$serverip" -j RETURN 2>/dev/null || log_error "Failed to add rule to exclude Xray server IP $serverip in $IPT_TABLE."
+        ipt $IPT_BASE_FLAGS -d "$serverip" -j RETURN
     done
 
     # Exclude tunnel UDP ports
-    ipt $IPT_BASE_FLAGS -p udp -m multiport --dports 500,4500,51820 -j RETURN 2>/dev/null || log_error "Failed to add tunnel UDP ports rule in $IPT_TABLE."
+    ipt $IPT_BASE_FLAGS -p udp -m multiport --dports 500,4500,51820 -j RETURN
 
     # TPROXY excludes:
     if [ "$IPT_TYPE" = "TPROXY" ]; then
@@ -486,7 +482,7 @@ configure_firewall_client() {
         # unified exclusion: WAN IP, any “via” routes, and your nvram static list
         for dst in $wan_v4_list $wan_v6_list $via_routes $static_routes; do
             log_debug "TPROXY: excluding $dst from $IPT_TABLE"
-            ipt $IPT_BASE_FLAGS -d "$dst" -j RETURN 2>/dev/null || log_error "Failed to exclude $dst in $IPT_TABLE."
+            ipt $IPT_BASE_FLAGS -d "$dst" -j RETURN
         done
     fi
 
@@ -506,8 +502,9 @@ configure_firewall_client() {
     fi
 
     # Start Redirecting traffic to the xray
+    set_global_return_rule=""
 
-    echo "$inbounds" | while IFS= read -r inbound; do
+    while IFS= read -r inbound; do
         local dokodemo_port=$(echo "$inbound" | jq -r '.port // empty')
         local dokodemo_addr=$(echo "$inbound" | jq -r '.listen // "0.0.0.0"')
         local protocols=$(echo "$inbound" | jq -r '.settings.network // "tcp"')
@@ -546,6 +543,7 @@ configure_firewall_client() {
 
         # Apply policy rules
         log_info "Apply $IPT_TYPE rules for inbound on port $dokodemo_port with protocols '$protocols'."
+        set_global_redirect=""
 
         jq -c '
             (.routing.policies // []) 
@@ -556,7 +554,9 @@ configure_firewall_client() {
                 else $enabled 
                 end)
             | .[]
-            ' "$XRAY_CONFIG_FILE" | while IFS= read -r policy; do
+        ' "$XRAY_CONFIG_FILE" >/tmp/xrayui-policies.$$
+
+        while IFS= read -r policy; do
             policy_name="$(echo "$policy" | jq -r '.name')"
             policy_mode="$(echo "$policy" | jq -r '.mode // "bypass"')"
             tcp_ports="$(echo "$policy" | jq -r '.tcp // ""')"
@@ -565,48 +565,60 @@ configure_firewall_client() {
 
             [ -z "$macs" ] && macs="ANY"
 
-            log_debug "Applying policy: $policy_name, MODE: $policy_mode"
+            log_info "Applying policy: $policy_name, MODE: $policy_mode"
+
+            [ -z "$set_global_redirect" ] && [ "$policy_mode" = "redirect" ] && [ "$macs" = "ANY" ] && [ -z "$tcp_ports" ] && [ -z "$udp_ports" ] && set_global_redirect="yes"
+
+            [ "$tcp_enabled" = "yes" ] && [ -n "$tcp_ports" ] && tcp_flags="-m multiport --dports $tcp_ports"
+            [ "$udp_enabled" = "yes" ] && [ -n "$udp_ports" ] && udp_flags="-m multiport --dports $udp_ports"
 
             for src in $source_nets; do
                 base="-s $src"
                 for mac in $macs; do
                     [ "$mac" = "ANY" ] && mac_flag="" || mac_flag="-m mac --mac-source $mac"
-                    [ "$tcp_enabled" = "yes" ] && [ -n "$tcp_ports" ] && tcp_flags="-m multiport --dports $tcp_ports" || tcp_flags=""
-                    [ "$udp_enabled" = "yes" ] && [ -n "$udp_ports" ] && udp_flags="-m multiport --dports $udp_ports" || udp_flags=""
 
-                    if [ "$policy_mode" = "redirect" ]; then
-                        [ "$tcp_enabled" = "yes" ] && [ -n "$tcp_ports" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p tcp $tcp_flags -j RETURN
-                        [ "$udp_enabled" = "yes" ] && [ -n "$udp_ports" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p udp $udp_flags -j RETURN
-
-                        [ -z "$tcp_ports" ] && [ -z "$udp_ports" ] && append_rule "$IPT_TABLE" $base $mac_flag -p tcp $IPT_JOURNAL_FLAGS
-                        [ -z "$tcp_ports" ] && [ -z "$udp_ports" ] && append_rule "$IPT_TABLE" $base $mac_flag -p udp $IPT_JOURNAL_FLAGS
-                    else
-                        [ "$tcp_enabled" = "yes" ] && [ -n "$tcp_ports" ] && append_rule "$IPT_TABLE" $base $mac_flag -p tcp $tcp_flags $IPT_JOURNAL_FLAGS
-                        [ "$udp_enabled" = "yes" ] && [ -n "$udp_ports" ] && append_rule "$IPT_TABLE" $base $mac_flag -p udp $udp_flags $IPT_JOURNAL_FLAGS
-                        [ -z "$tcp_ports" ] && [ -z "$udp_ports" ] && insert_rule "$IPT_TABLE" $base $mac_flag -j RETURN
+                    if [ "$policy_mode" = "bypass" ]; then
+                        [ -z "$tcp_flags" ] && [ -z "$udp_flags" ] && [ "$mac" != "ANY" ] && insert_rule "$IPT_TABLE" $base $mac_flag -j RETURN
+                        [ -n "$tcp_flags" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p tcp -m multiport ! --dports "$tcp_ports" -j RETURN
+                        [ -n "$udp_flags" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p udp -m multiport ! --dports "$udp_ports" -j RETURN
+                        [ -z "$set_global_return_rule" ] && [ -z "$tcp_flags" ] && [ -z "$udp_flags" ] && [ "$mac" = "ANY" ] && set_global_return_rule="yes"
                     fi
-
+                    if [ "$policy_mode" = "redirect" ]; then
+                        [ -n "$tcp_flags" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p tcp -m multiport --dports "$tcp_ports" -j RETURN
+                        [ -n "$udp_flags" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p udp -m multiport --dports "$udp_ports" -j RETURN
+                    fi
                 done
-            done
-        done
 
+            done
+            unset tcp_flags udp_flags macs tcp_ports udp_ports mac_flag
+        done </tmp/xrayui-policies.$$
+
+        rm -f /tmp/xrayui-policies.$$
         if [ "$IPT_TYPE" = "TPROXY" ]; then
-            if ! iptables -w -t "$IPT_TABLE" -S XRAYUI | grep -q -- ' -j TPROXY '; then
-                log_debug "No TPROXY rules found in XRAYUI chain, adding catch-all."
+            if ! iptables -w -t "$IPT_TABLE" -S XRAYUI | grep -q -- ' -j TPROXY ' || { [ -n "$set_global_redirect" ] && [ -z "$set_global_return_rule" ]; }; then
                 for src in $source_nets; do
                     append_rule "$IPT_TABLE" -s "$src" -p tcp $IPT_JOURNAL_FLAGS
                     append_rule "$IPT_TABLE" -s "$src" -p udp $IPT_JOURNAL_FLAGS
                 done
             fi
-
-            insert_rule "$IPT_TABLE" -p tcp --dport "$dokodemo_port" -j RETURN
-            insert_rule "$IPT_TABLE" -p udp --dport "$dokodemo_port" -j RETURN
         fi
-    done
 
+        # Exclude dokodemo-door port from TPROXY  destination
+        insert_rule "$IPT_TABLE" -p tcp --dport "$dokodemo_port" -j RETURN
+        insert_rule "$IPT_TABLE" -p udp --dport "$dokodemo_port" -j RETURN
+
+    done <<EOF
+$inbounds
+EOF
     # --- End Exclusion Rules ---
 
     if [ "$IPT_TYPE" = "TPROXY" ]; then
+        if [ -n "$set_global_return_rule" ]; then
+            log_info "Adding global bypass rule for $IPT_TABLE."
+            append_rule "$IPT_TABLE" -j RETURN
+            unset set_global_return_rule
+        fi
+
         add_tproxy_routes "$tproxy_mark/$tproxy_mask" "$tproxy_table"
     else
         ipt $IPT_TABLE -A XRAYUI -p tcp -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN
@@ -616,6 +628,7 @@ configure_firewall_client() {
     #   ipt $IPT_BASE_FLAGS -m limit --limit 10/second --limit-burst 30 -j LOG --log-prefix "XrayUI: " --log-level 4
 
     # Hook chain into  PREROUTING:
+    log_info "Hooking XRAYUI chain into $IPT_TABLE PREROUTING."
     if ! ipt "$IPT_TABLE" -C PREROUTING -j XRAYUI 2>/dev/null; then
         ipt "$IPT_TABLE" -A PREROUTING -j XRAYUI
     fi
@@ -634,64 +647,66 @@ cleanup_firewall() {
 
     load_xrayui_config
 
+    # we need to collect iptables collection for ipt function
     IPT_LIST="iptables"
-    is_ipv6_enabled && IPT_LIST="$IPT_LIST ip6tables"
+    if is_ipv6_enabled; then
+        IPT_LIST="$IPT_LIST ip6tables"
+        log_debug "IPv6 enabled: yes"
+    else
+        log_debug "IPv6 enabled: no"
+    fi
 
-    ipt filter -D INPUT -j XRAYUI 2>/dev/null || log_debug "Failed to remove XRAYUI chain from INPUT. Was it already empty?"
-    ipt filter -D FORWARD -j XRAYUI 2>/dev/null || log_debug "Failed to remove XRAYUI chain from FORWARD. Was it already empty?"
-    ipt nat -D PREROUTING -j XRAYUI 2>/dev/null || log_debug "Failed to remove NAT chain from PREROUTING. Was it already empty?"
-    ipt mangle -D PREROUTING -j XRAYUI 2>/dev/null || log_debug "Failed to remove mangle chain from PREROUTING. Was it already empty?"
+    for tbl in filter mangle nat; do
+        for hook in INPUT FORWARD PREROUTING OUTPUT; do
+            ipt $tbl -D $hook -j XRAYUI 2>/dev/null
+        done
 
-    ipt filter -F XRAYUI 2>/dev/null
-    ipt filter -X XRAYUI 2>/dev/null
-
-    ipt nat -F XRAYUI 2>/dev/null || log_debug "Failed to flush NAT chain. Was it already empty?"
-    ipt nat -X XRAYUI 2>/dev/null || log_debug "Failed to remove NAT chain. Was it already empty?"
-    ipt mangle -F XRAYUI 2>/dev/null || log_debug "Failed to flush mangle chain. Was it already empty?"
-    ipt mangle -X XRAYUI 2>/dev/null || log_debug "Failed to remove mangle chain. Was it already empty?"
+        ipt $tbl -F XRAYUI 2>/dev/null
+        ipt $tbl -X XRAYUI 2>/dev/null
+    done
 
     # Cleanup IPSEC ipsets
     for set in "$IPSET_BYPASS_V4" "$IPSET_PROXY_V4"; do
-        ipset list -n 2>/dev/null | grep -qx "$set" && ipset destroy "$set" 2>/dev/null
+        ipset list -n 2>/dev/null | grep -qx "$set" && ipset destroy "$set"
     done
     for set in "$IPSET_BYPASS_V6" "$IPSET_PROXY_V6"; do
-        ipset list -n 2>/dev/null | grep -qx "$set" && ipset destroy "$set" 2>/dev/null
+        ipset list -n 2>/dev/null | grep -qx "$set" && ipset destroy "$set"
     done
 
-    ipt mangle -D FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null || true
-    ipt mangle -D OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null || true
+    ipt mangle -D FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null
+    ipt mangle -D OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null
 
     # 0.46.: temportary workaround for iptables-legacy
     for fam in -4 -6; do
         [ "$fam" = "-6" ] && ! is_ipv6_enabled && continue
         for m in 0x10000/0x10000 0x8777 0x77; do
             while ip $fam rule show | grep -q "fwmark $tproxy_mark"; do
-                ip $fam rule del lookup $tproxy_table 2>/dev/null
+                ip $fam rule del lookup $tproxy_table
             done
         done
     done
 
     # flush both possible tables
     for tbl in 77 8777; do
-        ip route flush table "$tbl" 2>/dev/null
+        ip route flush table "$tbl"
         if is_ipv6_enabled; then
-            ip -6 route flush table "$tbl" 2>/dev/null
+            ip -6 route flush table "$tbl"
         fi
     done
 
     # Flush and remove ipsets created during configuration
     for set in "$IPSET_BYPASS_V4" "$IPSET_PROXY_V4" XRAYUI_BYPASS; do
         ipset list -n 2>/dev/null | grep -qx "$set" && {
-            ipset flush "$set" 2>/dev/null
-            ipset destroy "$set" 2>/dev/null
+            ipset flush "$set"
+            ipset destroy "$set"
         }
     done
 
     if is_ipv6_enabled; then
         for set in "$IPSET_BYPASS_V6" "$IPSET_PROXY_V6" XRAYUI_BYPASS6; do
             ipset list -n 2>/dev/null | grep -qx "$set" && {
-                ipset flush "$set" 2>/dev/null
-                ipset destroy "$set" 2>/dev/null
+                ipset flush "$set"
+                ipset destroy "$set"
             }
         done
     fi
@@ -725,22 +740,25 @@ cleanup_firewall() {
 
 add_tproxy_routes() { # $1 = fwmark, $2 = table
     local mark="$1" tbl="$2" fam
-
+    log_info "Adding TPROXY routes for mark $mark in table $tbl"
     for fam in -4 -6; do
         # Skip IPv6 loop if the stack is disabled
         [ "$fam" = "-6" ] && ! is_ipv6_enabled && continue
 
         # 1. policy-rule
+        log_debug "Checking if fwmark $mark exists in ip $fam rule list"
         ip $fam rule list | grep -q "fwmark $mark" ||
             ip $fam rule add fwmark $mark lookup "$tbl" 2>/dev/null || ip $fam rule replace fwmark $mark lookup "$tbl"
 
         # 2. ensure “local all-/::0” route in mark table
         local local_dst
+        log_debug "Ensuring local route for $fam in table $tbl"
         [ "$fam" = "-4" ] && local_dst="0.0.0.0/0" || local_dst="::/0"
         ip $fam route list table "$tbl" | grep -q "^local $local_dst" ||
             ip $fam route add local $local_dst dev lo table "$tbl" proto static exist 2>/dev/null || ip $fam route replace local $local_dst dev lo table "$tbl" proto static
 
         # 3. copy non-default routes from main
+        log_debug "Copying non-default routes from main table to $fam table $tbl"
         ip $fam route show table main | grep -v '^default' | while read -r r; do
             ip $fam route add table "$tbl" $r 2>/dev/null || ip $fam route replace table "$tbl" $r 2>/dev/null
         done

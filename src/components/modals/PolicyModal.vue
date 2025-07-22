@@ -85,8 +85,8 @@
             <label
               v-for="device in devices"
               :key="device.mac"
-              v-show="(showAll || device.isOnline) && device.isVisible"
-              :class="{ online: showAll && device.isOnline }"
+              v-show="(showAll || device.isOnline || device.isOrphan) && device.isVisible"
+              :class="{ online: showAll && device.isOnline, orphan: device.isOrphan }"
               :title="device.mac"
             >
               <input type="checkbox" :value="device.mac" v-model="currentRule.mac" />
@@ -154,7 +154,7 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref } from 'vue';
+  import { defineComponent, ref, watch } from 'vue';
   import Modal from '@main/Modal.vue';
   import { XrayRoutingPolicy } from '@/modules/CommonObjects';
   import Hint from '@main/Hint.vue';
@@ -165,23 +165,13 @@
     public name?: string;
     public isOnline!: boolean;
     public isVisible!: boolean;
+    public isOrphan!: boolean;
   }
 
   export default defineComponent({
     name: 'PolicyModal',
-    components: {
-      Modal,
-      Hint,
-      draggable
-    },
-
-    props: {
-      policies: {
-        type: Array<XrayRoutingPolicy>,
-        required: true
-      }
-    },
-
+    components: { Modal, Hint, draggable },
+    props: { policies: { type: Array<XrayRoutingPolicy>, required: true } },
     setup(props, { emit }) {
       const policies = ref<XrayRoutingPolicy[]>(props.policies);
       const currentRule = ref<XrayRoutingPolicy>(new XrayRoutingPolicy());
@@ -192,21 +182,42 @@
       const devices = ref<MacDevice[]>([]);
       const deviceFilter = ref('');
 
+      const pushMac = (mac: string) => {
+        if (!devices.value.some((d) => d.mac === mac)) {
+          devices.value.push({
+            mac,
+            name: undefined,
+            isOnline: false,
+            isVisible: true,
+            isOrphan: true
+          });
+        }
+      };
+
       window.xray.router.devices.forEach((device) => {
         devices.value.push({
           mac: device[0],
           name: device[1],
           isOnline: false,
-          isVisible: deviceFilter.value ? device[1].toLowerCase().includes(deviceFilter.value.toLowerCase()) : true
+          isVisible: true,
+          isOrphan: false
         });
       });
+
       Object.getOwnPropertyNames(window.xray.router.devices_online).forEach((mac) => {
-        const device = devices.value.find((x) => x.mac === mac);
-        if (device) {
-          device.isOnline = true;
-        }
+        const dev = devices.value.find((x) => x.mac === mac);
+        if (dev) dev.isOnline = true;
       });
-      devices.value.sort((a, b) => (a.name || a.mac).localeCompare(b.name || b.mac));
+
+      props.policies.forEach((r) => (r.mac || []).forEach(pushMac));
+
+      const sortDevices = () => devices.value.sort((a, b) => (a.name || a.mac).localeCompare(b.name || b.mac));
+      sortDevices();
+
+      const ensureRuleMacs = (macs?: string[]) => {
+        (macs || []).forEach(pushMac);
+        sortDevices();
+      };
 
       const on_off_rule = (rule: XrayRoutingPolicy, index: number) => {};
       const show = () => {
@@ -216,11 +227,10 @@
 
       const normalizePorts = (ports: string) => {
         if (!ports) return '';
-
         return ports
           .replace(/\n/g, ',')
-          .replace(/\-/g, ':')
-          .replace(/[^0-9,\:]/g, '')
+          .replace(/-/g, ':')
+          .replace(/[^0-9,:]/g, '')
           .split(',')
           .filter((x) => x)
           .join(',')
@@ -229,13 +239,13 @@
 
       const editRule = (rule: XrayRoutingPolicy) => {
         currentRule.value = rule;
+        ensureRuleMacs(rule.mac);
         modalAdd.value?.show();
         emit('update:policies', policies.value);
       };
+
       const deleteRule = (rule: XrayRoutingPolicy) => {
-        if (policies.value) {
-          policies.value = policies.value.filter((r) => r !== rule);
-        }
+        if (policies.value) policies.value = policies.value.filter((r) => r !== rule);
         emit('update:policies', policies.value);
       };
 
@@ -243,6 +253,7 @@
         currentRule.value = new XrayRoutingPolicy();
         modalAdd.value?.show();
       };
+
       const vendorChange = () => {
         if (vendor.value) {
           currentRule.value.tcp += (currentRule.value.tcp ? ',' : '') + vendor.value.tcp.split(',');
@@ -250,6 +261,7 @@
         }
         vendor.value = null;
       };
+
       const saveRule = () => {
         const newRule = new XrayRoutingPolicy();
         newRule.enabled = currentRule.value.enabled;
@@ -259,24 +271,25 @@
         newRule.tcp = normalizePorts(currentRule.value.tcp!);
         newRule.udp = normalizePorts(currentRule.value.udp!);
 
-        const ruleIndex = policies.value.indexOf(currentRule.value);
-        if (ruleIndex === -1) {
-          policies.value.push(newRule);
-        } else {
-          policies.value[ruleIndex] = newRule;
-        }
+        const idx = policies.value.indexOf(currentRule.value);
+        if (idx === -1) policies.value.push(newRule);
+        else policies.value[idx] = newRule;
+
+        ensureRuleMacs(newRule.mac);
         emit('update:policies', policies.value);
         modalAdd.value?.close();
       };
 
       const applyDeviceFilter = () => {
         devices.value.forEach((device) => {
-          device.isVisible = deviceFilter.value && deviceFilter.value != '' ? (device.name || device.mac).toLowerCase().includes(deviceFilter.value.toLowerCase()) : true;
+          device.isVisible = deviceFilter.value ? (device.name || device.mac).toLowerCase().includes(deviceFilter.value.toLowerCase()) : true;
         });
       };
-      const syncOrder = () => {
-        emit('update:policies', policies.value);
-      };
+
+      const syncOrder = () => emit('update:policies', policies.value);
+
+      watch(deviceFilter, applyDeviceFilter);
+
       return {
         policies,
         currentRule,
@@ -301,6 +314,7 @@
     }
   });
 </script>
+
 <style scoped>
   th :deep(.hint-color) {
     width: 100%;
@@ -308,5 +322,9 @@
   .online {
     font-weight: bold;
     color: #00ff7f;
+  }
+  .orphan {
+    color: #ff4d4d;
+    text-decoration: line-through;
   }
 </style>

@@ -1,11 +1,13 @@
 # XRAYUI Changelog
 
-## [0.53.4] - 2025-07-21
+## [0.54.0] - 2025-07-22
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
-- IMPROVED: Rework the iptables rules.
-- ADDED: A rule to exclude BROADCAST packets from the chain.
+- IMPROVED: Rework of the iptables rules.
+- ADDED: A rule to exclude `BROADCAST` packets from the chain.
+- ADDED: Exclude UDP `GlobalProtect` traffic.
+- FIXED: Orphaned MACs that the router forgot now boldly appear in the routing policies device list with a red strikethrough, letting you disable them even in offline‑only view.
 
 ## [0.53.3] - 2025-07-21
 

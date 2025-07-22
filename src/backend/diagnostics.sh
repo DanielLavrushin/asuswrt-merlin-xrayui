@@ -84,7 +84,7 @@ diagnostics_iptables() {
     log_info
 
     log_info $(diagnostics_hdr "raw/PREROUTING (v4):")
-    iptables -t raw -nvL PREROUTING --line-numbers
+    iptables -w -t raw -nvL PREROUTING --line-numbers
     log_info "--------------------------------------------------------"
     log_info
 

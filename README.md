@@ -4,14 +4,12 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/5afa683e2930418a9b13efac6537aad8)](https://app.codacy.com/gh/DanielLavrushin/asuswrt-merlin-xrayui/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 ![GitHub Downloads (specific asset, latest release)](https://img.shields.io/github/downloads/daniellavrushin/asuswrt-merlin-xrayui/latest/total)
 ![image](https://img.shields.io/github/downloads/DanielLavrushin/asuswrt-merlin-xrayui/total?label=total%20downloads)
-<img width="800" height="1325" alt="image" src="https://github.com/user-attachments/assets/fdea28a1-fcf4-43fb-ab55-f1d8a343e6c5" />
 
 # ASUSWRT Merlin XrayUI
 
 This repository provides a lightweight and efficient UI to manage your [X-RAY Core](https://github.com/XTLS/Xray-core) services on routers running ASUSWRT-Merlin firmware.
 
-![image](https://github.com/user-attachments/assets/47638748-7add-4841-b44e-e666598d2ae1)
-
+<img width="800" height="1325" alt="image" src="https://github.com/user-attachments/assets/fdea28a1-fcf4-43fb-ab55-f1d8a343e6c5" />
 
 <details>
     <summary>Supported devices</summary>

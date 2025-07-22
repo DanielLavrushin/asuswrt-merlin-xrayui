@@ -4,19 +4,14 @@
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
-- IMPROVED: Rework of the iptables rules.
-- ADDED: A rule to exclude `BROADCAST` packets from the chain.
-- ADDED: Exclude UDP `GlobalProtect` traffic.
-- FIXED: Orphaned MACs that the router forgot now boldly appear in the routing policies device list with a red strikethrough, letting you disable them even in offline‑only view.
-
-## [0.53.3] - 2025-07-21
-
-> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
-
-- FIXED: DNS packets from certain LAN subnets are now properly returned to the chain instead of being dropped.
-- FIXED: IPv4/IPv6 subnets were skipped by the parser; they’re processed correctly again.
-- FIXED: Per‑device MAC‑address rules are once more inserted into **iptables**, so MAC‑based bypass/redirect works as intended.
-- IMPROVED: Logs parsing.
+- IMPROVED: `iptables` rule set has been completely overhauled.
+- ADDED: New rule excludes `BROADCAST` packets from the processing chain.
+- ADDED: UDP traffic for `GlobalProtect` is now explicitly bypassed.
+- FIXED: Orphaned `MAC` addresses once forgotten by the router always show up in the routing‑policy device list, struck through in red so you can disable them—even in offline‑only view.
+- FIXED: DNS packets from certain LAN subnets are now reinjected into the chain instead of being dropped.
+- FIXED: `IPv4/IPv6` subnet ranges are parsed correctly again.
+- FIXED: Per‑device MAC‑address rules are once more inserted into iptables, restoring MAC‑based bypass/redirect behavior.
+- IMPROVED: Logs modal window has been refactored.
 
 ## [0.53.2] - 2025-07-20
 

@@ -2,8 +2,9 @@
 
 ## [0.54.2] - 2025-07-24
 
-> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+> **Unreleased**
 
+- ADDED: Start Xray with `nice -n 19` and `ionice -c3` to minimize CPU and disk I/O contention with other system processes.
 - ADDED: A new `Time Delay` option in `General Settings`. This value in seconds delays the heavy XRAYUI settings from being applied after the XRAY service starts. The optimal delay may vary by router model; a 10–20 second delay is recommended for low/mid-range routers. Default is `10 seconds`. This delay can help to reduce the CPU spikes on XRAY start/restart.
 - CHANGED: Removed the `flow` user property from `VLESS` Outbound when set to `none`.
 - IMPROVED: Achieved a significant (x20 times) performance boost in ipset geosite file extraction tool (aka `v2dat`).

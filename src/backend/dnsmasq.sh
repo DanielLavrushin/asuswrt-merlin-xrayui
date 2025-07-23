@@ -126,7 +126,7 @@ EOF
                 set -- "$@" -f "$t"
             done
 
-            "$V2DAT" unpack geosite -o - "$@" "$GEOSITE" |
+            nice -n 19 ionice -c3 "$V2DAT" unpack geosite -o - "$@" "$GEOSITE" |
                 awk '!/^#/ && !/^(keyword:|regexp:|full:)/' |
                 dnsmasq_domain_to_ipset_bulk "$SET_V4" "$SET_V6"
         fi

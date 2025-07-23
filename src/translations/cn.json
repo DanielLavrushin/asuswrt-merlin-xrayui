@@ -74,6 +74,8 @@
       "hint_skip_test": "启用此功能将跳过 XRAY 配置文件自检（建议保持关闭以确保配置有效性）。<hr/>低性能路由器建议启用（自检会消耗硬件资源）。",
       "label_clients_check": "检查客户端在线状态",
       "hint_clients_check": "启用此功能后 XRAYUI 将检查客户端在线状态。<hr/>有助于跟踪连接的客户端。<hr/> 因会消耗硬件资源，低性能路由器建议禁用此功能。",
+      "sleep_time": "XRAY 启动后的延迟",
+      "hint_sleep_time": "XRAYUI 在启动 XRAY 后会等待指定时间（秒）再继续执行后续操作（如应用防火墙规则等）。",
       "label_enable_debug": "调试日志",
       "label_ipsec": "DNS 转发服务（ipset）",
       "hint_ipsec": "*OFF* - 关闭转发服务，路由规则保持网络默认。<hr />*BYPASS* - 映射至 `FREEDOM` 出站端口的流量将直接访问（跳过 Xray），其他流量仍走出站端口。<hr/>*REDIRECT* – 与 BYPASS 相反，将未映射至 FREEDOM 的流量走代理，其余流量直接从路由器出站。<blockquote>重要提示：基于正则表达式 `regexp` 的流量无法推入 ipset ，此处将被忽略。</blockquote>",

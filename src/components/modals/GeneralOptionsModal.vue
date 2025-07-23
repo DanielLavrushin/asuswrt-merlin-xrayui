@@ -33,6 +33,15 @@
                 <input type="number" maxlength="4" class="input_6_table" v-model="options.startup_delay" />
               </td>
             </tr>
+            <tr>
+              <th>
+                {{ $t('com.GeneralOptionsModal.sleep_time') }}
+                <hint v-html="$t('com.GeneralOptionsModal.hint_sleep_time')"></hint>
+              </th>
+              <td>
+                <input type="number" maxlength="4" class="input_6_table" v-model="options.sleep_time" />
+              </td>
+            </tr>
             <tr v-show="validateCheckConOption()">
               <th>{{ $t('com.GeneralOptionsModal.check_xray_connection') }}</th>
               <td>

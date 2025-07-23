@@ -36,6 +36,7 @@ initial_response() {
     local debug="${ADDON_DEBUG:-false}"
     local check_connection="${check_connection:-false}"
     local startup_delay="${startup_delay:-0}"
+    local xray_sleep_time="${xray_sleep_time:-10}"
 
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg geoip "$geoip_date" --arg geosite "$geosite_date" --arg geoipurl "$geoipurl" --arg geositeurl "$geositeurl" \
         '.geodata.geoip_url = $geoipurl | .geodata.geosite_url = $geositeurl | .geodata.community["geoip.dat"] = $geoip | .geodata.community["geosite.dat"] = $geosite')
@@ -73,6 +74,7 @@ initial_response() {
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson logs_max_size "$logs_max_size" '.xray.logs_max_size = $logs_max_size')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg ipsec "$ipsec" '.xray.ipsec = $ipsec')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson startup_delay "$startup_delay" '.xray.startup_delay = $startup_delay')
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson sleep_time "$xray_sleep_time" '.xray.sleep_time = $sleep_time')
 
     # grab firewall hooks
     local hook_before_firewall_start=$(sed '1{/^#!/d}' "$ADDON_USER_SCRIPTS_DIR/firewall_before_start" 2>/dev/null || echo "")

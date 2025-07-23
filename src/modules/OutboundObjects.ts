@@ -65,6 +65,12 @@ export class XrayVlessOutboundObject implements IProtocolType {
   };
 
   normalize = (): this | undefined => {
+    this.vnext.forEach((server) => {
+      server.users?.forEach((user) => {
+        user.flow = user.flow === 'none' ? undefined : user.flow;
+      });
+    });
+
     return isObjectEmpty(this) ? undefined : this;
   };
 }

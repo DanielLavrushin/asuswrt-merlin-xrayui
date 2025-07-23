@@ -1,5 +1,12 @@
 # XRAYUI Changelog
 
+## [0.54.1] - 2025-07-23
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- FIXED: XRAY does not work in the `REDIRECT` mode.
+- FIXED: Unable to save network type `HTTPUpgrade` from the Transport window.
+
 ## [0.54.0] - 2025-07-22
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

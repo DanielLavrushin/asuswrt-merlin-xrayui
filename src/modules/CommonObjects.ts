@@ -558,7 +558,7 @@ const NET_KEEP: Record<string, StreamKey[]> = {
   tcp: ['tcpSettings'],
   kcp: ['kcpSettings'],
   ws: ['wsSettings'],
-  http: ['xhttpSettings', 'httpupgradeSettings'],
+  http: ['xhttpSettings'],
   httpupgrade: ['httpupgradeSettings'],
   grpc: ['grpcSettings'],
   splithttp: ['splithttpSettings']

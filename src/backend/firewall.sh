@@ -136,8 +136,12 @@ configure_firewall() {
     ipt mangle -A DIVERT -j CONNMARK --save-mark --mask $tproxy_mask
     ipt mangle -A DIVERT -j ACCEPT
 
-    ipt mangle -C PREROUTING -p tcp -m socket --transparent -j DIVERT 2>/dev/null ||
-        ipt mangle -I PREROUTING 1 -p tcp -m socket --transparent -j DIVERT
+    if lsmod | grep -q '^xt_socket ' || modprobe xt_socket 2>/dev/null; then
+        ipt mangle -C PREROUTING -p tcp -m socket --transparent -j DIVERT 2>/dev/null ||
+            ipt mangle -I PREROUTING 1 -p tcp -m socket --transparent -j DIVERT
+    else
+        log_warn "xt_socket missing; skipping transparent DIVERT hook"
+    fi
 
     ipt filter -C XRAYUI -j RETURN 2>/dev/null || ipt filter -A XRAYUI -j RETURN
 
@@ -594,13 +598,12 @@ configure_firewall_client() {
         done </tmp/xrayui-policies.$$
 
         rm -f /tmp/xrayui-policies.$$
-        if [ "$IPT_TYPE" = "TPROXY" ]; then
-            if ! iptables -w -t "$IPT_TABLE" -S XRAYUI | grep -q -- ' -j TPROXY ' || { [ -n "$set_global_redirect" ] && [ -z "$set_global_return_rule" ]; }; then
-                for src in $source_nets; do
-                    append_rule "$IPT_TABLE" -s "$src" -p tcp $IPT_JOURNAL_FLAGS
-                    append_rule "$IPT_TABLE" -s "$src" -p udp $IPT_JOURNAL_FLAGS
-                done
-            fi
+
+        if ! iptables -w -t "$IPT_TABLE" -S XRAYUI | grep -q -E ' -j (TPROXY|DNAT|REDIRECT)' || { [ -n "$set_global_redirect" ] && [ -z "$set_global_return_rule" ]; }; then
+            for src in $source_nets; do
+                append_rule "$IPT_TABLE" -s "$src" -p tcp $IPT_JOURNAL_FLAGS
+                append_rule "$IPT_TABLE" -s "$src" -p udp $IPT_JOURNAL_FLAGS
+            done
         fi
 
         # Exclude dokodemo-door port from TPROXY  destination

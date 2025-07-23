@@ -66,6 +66,17 @@ start() {
     echo $! >"$XRAY_PIDFILE"
     log_debug "Xray started with PID $(cat "$XRAY_PIDFILE")"
 
+    xray_sleep_time="${xray_sleep_time:-10}"
+    if [ "$xray_sleep_time" -gt 0 ]; then
+        i=1
+        while [ "$i" -le "$xray_sleep_time" ]; do
+            update_loading_progress "Waiting $i/$xray_sleep_time seconds for Xray to initialize..."
+            log_debug "Waiting $i/$xray_sleep_time seconds for Xray to initialize..."
+            sleep 1
+            i=$((i + 1))
+        done
+    fi
+
     configure_firewall
 }
 
@@ -89,6 +100,7 @@ restart() {
     POST_RESTART_DNSMASQ="true"
 
     stop
+    log_debug "Waiting for Xray to stop..."
     sleep 4
     start
 

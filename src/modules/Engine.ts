@@ -134,6 +134,7 @@ export class EngineResponseConfig {
     skip_test: boolean;
     check_connection: boolean;
     startup_delay: number;
+    sleep_time: number;
     hooks?: EngineHooks;
   };
   public geodata?: EngineGeodatConfig = new EngineGeodatConfig();

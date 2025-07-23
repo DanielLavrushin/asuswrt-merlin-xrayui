@@ -28,6 +28,7 @@ apply_general_options() {
     local ipsec=$(echo "$genopts" | jq -r '.ipsec')
     local check_connection=$(echo "$genopts" | jq -r '.check_connection')
     local startup_delay=$(echo "$genopts" | jq -r '.startup_delay')
+    local xray_sleep_time=$(echo "$genopts" | jq -r '.sleep_time // 10')
 
     local geosite_url=$(echo "$genopts" | jq -r '.geo_site_url')
     local geoip_url=$(echo "$genopts" | jq -r '.geo_ip_url')
@@ -78,6 +79,7 @@ apply_general_options() {
     update_xrayui_config "ADDON_DEBUG" "$debug"
     update_xrayui_config "check_connection" "$check_connection"
     update_xrayui_config "startup_delay" "$startup_delay"
+    update_xrayui_config "xray_sleep_time" "$xray_sleep_time"
 
     apply_general_options_hooks "$hooks"
 

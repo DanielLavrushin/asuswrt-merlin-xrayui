@@ -45,13 +45,22 @@ apply_rule() {
 append_rule() {
     local tbl=$1
     shift
-    ipt $tbl -C XRAYUI "$@" 2>/dev/null || ipt $tbl -A XRAYUI "$@"
+    ipt $tbl -A XRAYUI "$@"
 }
 
 insert_rule() {
     local tbl=$1
     shift
-    ipt $tbl -C XRAYUI "$@" 2>/dev/null || ipt $tbl -I XRAYUI 1 "$@"
+    ipt $tbl -I XRAYUI 1 "$@"
+}
+
+append_rule_delayed() {
+    if [ -n "$collected_redirect_rules" ]; then
+        collected_redirect_rules="$collected_redirect_rules
+$1"
+    else
+        collected_redirect_rules="$1"
+    fi
 }
 
 contains_ipv4() {
@@ -86,7 +95,6 @@ is_ipv6_enabled() {
 configure_firewall() {
     log_info "Configuring Xray firewall rules..."
     update_loading_progress "Configuring Xray firewall rules..."
-
     load_xrayui_config
 
     # Check if 'xray' process is running
@@ -123,8 +131,7 @@ configure_firewall() {
     fi
 
     # Clamp TCP MSS to path-MTU for every forwarded SYN (v4 + v6)
-    ipt mangle -C FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null ||
-        ipt mangle -I FORWARD 1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+    ipt mangle -I FORWARD 1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 
     # create / flush chains (filter + mangle for both families)
     for tbl in filter mangle nat; do
@@ -137,33 +144,28 @@ configure_firewall() {
     ipt mangle -A DIVERT -j ACCEPT
 
     if lsmod | grep -q '^xt_socket ' || modprobe xt_socket 2>/dev/null; then
-        ipt mangle -C PREROUTING -p tcp -m socket --transparent -j DIVERT 2>/dev/null ||
-            ipt mangle -I PREROUTING 1 -p tcp -m socket --transparent -j DIVERT
+        ipt mangle -I PREROUTING 1 -p tcp -m socket --transparent -j DIVERT
     else
         log_warn "xt_socket missing; skipping transparent DIVERT hook"
     fi
 
-    ipt filter -C XRAYUI -j RETURN 2>/dev/null || ipt filter -A XRAYUI -j RETURN
+    ipt filter -A XRAYUI -j RETURN
 
     configure_firewall_server
 
     # Hook filter-table XRAYUI
-    ipt filter -C INPUT -j XRAYUI 2>/dev/null || ipt filter -I INPUT 1 -j XRAYUI
-    ipt filter -C FORWARD -j XRAYUI 2>/dev/null || ipt filter -I FORWARD 1 -j XRAYUI
+    ipt filter -I INPUT 1 -j XRAYUI
+    ipt filter -I FORWARD 1 -j XRAYUI
 
     # Clamp MSS for Xray-originated flows as well
     local daemon_uid=""
     [ -n "$xray_pid" ] && daemon_uid=$(awk '/^Uid:/ {print $2}' /proc/"$xray_pid"/status)
 
     for IPT in $IPT_LIST; do
-        $IPT -t mangle -C OUTPUT -p tcp --tcp-flags SYN,RST SYN \
-            -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null ||
-            $IPT -t mangle -I OUTPUT 1 -p tcp --tcp-flags SYN,RST SYN \
-                -j TCPMSS --clamp-mss-to-pmtu
+        $IPT -t mangle -I OUTPUT 1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 
         if [ -n "$daemon_uid" ] && [ "$daemon_uid" != "0" ]; then
-            $IPT -t mangle -C OUTPUT -m owner --uid-owner "$daemon_uid" -j RETURN 2>/dev/null ||
-                $IPT -t mangle -I OUTPUT 1 -m owner --uid-owner "$daemon_uid" -j RETURN
+            $IPT -t mangle -I OUTPUT 1 -m owner --uid-owner "$daemon_uid" -j RETURN
         else
             log_debug "X-ray runs as UID $daemon_uid; skipping owner-match OUTPUT rule"
         fi
@@ -289,6 +291,9 @@ configure_firewall_client() {
     local IPT_TYPE=$1
     inbounds=$2
 
+    set_global_redirect=""
+    set_global_bypass=""
+
     log_info "Configuring aggregated $IPT_TYPE rules for dokodemo-door inbounds..."
 
     if [ "$IPT_TYPE" = "DIRECT" ]; then
@@ -317,8 +322,7 @@ configure_firewall_client() {
 
     for wan_if in $(ip -o link show | awk -F': ' '{print $2}' |
         grep -E '^(ppp|pppoe|wan|wwan|lte|l2tp)[0-9]+$'); do
-        ipt "$IPT_TABLE" -C XRAYUI -i "$wan_if" -j RETURN 2>/dev/null ||
-            ipt "$IPT_TABLE" -I XRAYUI 1 -i "$wan_if" -j RETURN
+        ipt "$IPT_TABLE" -I XRAYUI 1 -i "$wan_if" -j RETURN
     done
 
     # --- Begin Exclusion Rules ---
@@ -355,22 +359,19 @@ configure_firewall_client() {
     if [ "$IPT_TYPE" = "TPROXY" ]; then
         lsmod | grep -q '^xt_socket ' || modprobe xt_socket 2>/dev/null
 
-        ipt $IPT_TABLE -C XRAYUI -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask 2>/dev/null ||
-            ipt $IPT_TABLE -I XRAYUI 1 -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
+        ipt $IPT_TABLE -I XRAYUI 1 -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
+        ipt $IPT_TABLE -I XRAYUI 2 -p tcp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
 
-        ipt $IPT_TABLE -C XRAYUI -p tcp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask 2>/dev/null ||
-            ipt $IPT_TABLE -I XRAYUI 2 -p tcp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
-
-        iptables -w -t "$IPT_TABLE" -C XRAYUI -m addrtype --src-type LOCAL -j RETURN 2>/dev/null || iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -m addrtype --src-type LOCAL -j RETURN
-        iptables -w -t "$IPT_TABLE" -C XRAYUI -m addrtype --dst-type LOCAL -j RETURN 2>/dev/null || iptables -w -t "$IPT_TABLE" -I XRAYUI 2 -m addrtype --dst-type LOCAL -j RETURN
+        iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -m addrtype --src-type LOCAL -j RETURN
+        iptables -w -t "$IPT_TABLE" -I XRAYUI 2 -m addrtype --dst-type LOCAL -j RETURN
 
         # for net4 in $source_nets_v4; do
         #     iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -d "$net4" -p udp --dport 53 -j RETURN
         # done
 
         if is_ipv6_enabled; then
-            ip6tables -w -t "$IPT_TABLE" -C XRAYUI -m addrtype --src-type LOCAL -j RETURN 2>/dev/null || ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -m addrtype --src-type LOCAL -j RETURN
-            ip6tables -w -t "$IPT_TABLE" -C XRAYUI -m addrtype --dst-type LOCAL -j RETURN 2>/dev/null || ip6tables -w -t "$IPT_TABLE" -I XRAYUI 2 -m addrtype --dst-type LOCAL -j RETURN
+            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -m addrtype --src-type LOCAL -j RETURN
+            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 2 -m addrtype --dst-type LOCAL -j RETURN
             ip6tables -w -t "$IPT_TABLE" -I XRAYUI 3 -d ff00::/8 -j RETURN
             ip6tables -w -t "$IPT_TABLE" -I XRAYUI 4 -p icmpv6 -j RETURN
 
@@ -388,22 +389,18 @@ configure_firewall_client() {
     # IPSET FREEDOM eraly return rules
     if [ -n "$ipsec" ] && [ "$ipsec" != "off" ]; then
         log_debug "Adding IPSET rules for $IPT_TABLE."
-        iptables -w -t "$IPT_TABLE" -C XRAYUI -m set --match-set "$IPSET_BYPASS_V4" dst -j RETURN 2>/dev/null ||
-            iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set --match-set "$IPSET_BYPASS_V4" dst -j RETURN
+        iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set --match-set "$IPSET_BYPASS_V4" dst -j RETURN
 
         if is_ipv6_enabled && ipset list -n | grep -qx "$IPSET_BYPASS_V6"; then
             log_debug "Adding IPv6 IPSET rules for $IPT_TABLE."
-            ip6tables -w -t "$IPT_TABLE" -C XRAYUI -m set --match-set "$IPSET_BYPASS_V6" dst -j RETURN 2>/dev/null ||
-                ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set --match-set "$IPSET_BYPASS_V6" dst -j RETURN
+            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set --match-set "$IPSET_BYPASS_V6" dst -j RETURN
         fi
 
         if [ "$ipsec" = "redirect" ]; then
-            iptables -w -t "$IPT_TABLE" -C XRAYUI -m set ! --match-set "$IPSET_PROXY_V4" dst -j RETURN 2>/dev/null ||
-                iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set ! --match-set "$IPSET_PROXY_V4" dst -j RETURN
+            iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set ! --match-set "$IPSET_PROXY_V4" dst -j RETURN
 
             if is_ipv6_enabled && ipset list -n | grep -qx "$IPSET_PROXY_V6"; then
-                ip6tables -w -t "$IPT_TABLE" -C XRAYUI -m set ! --match-set "$IPSET_PROXY_V6" dst -j RETURN 2>/dev/null ||
-                    ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set ! --match-set "$IPSET_PROXY_V6" dst -j RETURN
+                ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set ! --match-set "$IPSET_PROXY_V6" dst -j RETURN
             fi
         fi
     fi
@@ -411,8 +408,10 @@ configure_firewall_client() {
     local IPT_BASE_FLAGS="$IPT_TABLE -A XRAYUI"
 
     # Exclude DHCP (UDP ports 67 and 68):
-    ipt $IPT_BASE_FLAGS -p udp --dport 67 -j RETURN
-    ipt $IPT_BASE_FLAGS -p udp --dport 68 -j RETURN
+    # Exclude NTP (UDP port 123)
+    # Exclude tunnel UDP ports
+    # Exclude UDP GlobalProtect traffic:
+    ipt $IPT_BASE_FLAGS -p udp -m multiport --dports 67,68,123,500,4500,4501,51820 -j RETURN
 
     # Exclude multicast addresses:
     ipt $IPT_BASE_FLAGS -d 224.0.0.0/4 -j RETURN
@@ -424,20 +423,11 @@ configure_firewall_client() {
     # Exclude traffic in DNAT state (covers inbound port-forwards):
     ipt $IPT_BASE_FLAGS -m conntrack --ctstate DNAT -j RETURN
 
-    # Exclude UDP GlobalProtect traffic:
-    ipt $IPT_BASE_FLAGS -p udp --dport 4501 -j RETURN
-
-    # Exclude NTP (UDP port 123)
-    ipt $IPT_BASE_FLAGS -p udp --dport 123 -j RETURN
-
     # Exclude traffic destined to the Xray server:
     [ -n "$SERVER_IPS" ] && for serverip in $SERVER_IPS; do
         log_info "Excluding Xray server IP from $IPT_TABLE."
         ipt $IPT_BASE_FLAGS -d "$serverip" -j RETURN
     done
-
-    # Exclude tunnel UDP ports
-    ipt $IPT_BASE_FLAGS -p udp -m multiport --dports 500,4500,51820 -j RETURN
 
     # TPROXY excludes:
     if [ "$IPT_TYPE" = "TPROXY" ]; then
@@ -498,15 +488,27 @@ configure_firewall_client() {
     if [ -n "$server_ports" ]; then
         for port in $server_ports; do
             for proto in tcp udp; do
-                ipt "$IPT_TABLE" -C XRAYUI -p "$proto" --dport "$port" -j RETURN 2>/dev/null ||
-                    ipt $IPT_BASE_FLAGS -p "$proto" --dport "$port" -j RETURN
+                ipt $IPT_BASE_FLAGS -p "$proto" --dport "$port" -j RETURN
             done
             log_debug "Excluding server port $port (tcp+udp) from $IPT_TABLE."
         done
     fi
 
+    collected_redirect_rules=""
+
+    # Collect all policies from the xray config file
+    jq -c '
+            (.routing.policies // []) 
+            | map(select(.enabled == true)) 
+            as $enabled
+            | (if ($enabled | length) == 0 
+                then [{ mode: "redirect", enabled: true, name: "all traffic to xray" }] 
+                else $enabled 
+                end)
+            | .[]
+        ' "$XRAY_CONFIG_FILE" >/tmp/xrayui-policies.$$
+
     # Start Redirecting traffic to the xray
-    set_global_return_rule=""
 
     while IFS= read -r inbound; do
         local dokodemo_port=$(echo "$inbound" | jq -r '.port // empty')
@@ -547,18 +549,6 @@ configure_firewall_client() {
 
         # Apply policy rules
         log_info "Apply $IPT_TYPE rules for inbound on port $dokodemo_port with protocols '$protocols'."
-        set_global_redirect=""
-
-        jq -c '
-            (.routing.policies // []) 
-            | map(select(.enabled == true)) 
-            as $enabled
-            | (if ($enabled | length) == 0 
-                then [{ mode: "redirect", enabled: true, name: "all traffic to xray" }] 
-                else $enabled 
-                end)
-            | .[]
-        ' "$XRAY_CONFIG_FILE" >/tmp/xrayui-policies.$$
 
         while IFS= read -r policy; do
             policy_name="$(echo "$policy" | jq -r '.name')"
@@ -572,6 +562,7 @@ configure_firewall_client() {
             log_info "Applying policy: $policy_name, MODE: $policy_mode"
 
             [ -z "$set_global_redirect" ] && [ "$policy_mode" = "redirect" ] && [ "$macs" = "ANY" ] && [ -z "$tcp_ports" ] && [ -z "$udp_ports" ] && set_global_redirect="yes"
+            [ -z "$set_global_bypass" ] && [ "$policy_mode" = "bypass" ] && [ "$macs" = "ANY" ] && [ -z "$tcp_flags" ] && [ -z "$udp_flags" ] && set_global_bypass="yes"
 
             [ "$tcp_enabled" = "yes" ] && [ -n "$tcp_ports" ] && tcp_flags="-m multiport --dports $tcp_ports"
             [ "$udp_enabled" = "yes" ] && [ -n "$udp_ports" ] && udp_flags="-m multiport --dports $udp_ports"
@@ -585,11 +576,13 @@ configure_firewall_client() {
                         [ -z "$tcp_flags" ] && [ -z "$udp_flags" ] && [ "$mac" != "ANY" ] && insert_rule "$IPT_TABLE" $base $mac_flag -j RETURN
                         [ -n "$tcp_flags" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p tcp -m multiport ! --dports "$tcp_ports" -j RETURN
                         [ -n "$udp_flags" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p udp -m multiport ! --dports "$udp_ports" -j RETURN
-                        [ -z "$set_global_return_rule" ] && [ -z "$tcp_flags" ] && [ -z "$udp_flags" ] && [ "$mac" = "ANY" ] && set_global_return_rule="yes"
                     fi
                     if [ "$policy_mode" = "redirect" ]; then
                         [ -n "$tcp_flags" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p tcp -m multiport --dports "$tcp_ports" -j RETURN
                         [ -n "$udp_flags" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p udp -m multiport --dports "$udp_ports" -j RETURN
+
+                        [ "$mac" != "ANY" ] && append_rule_delayed "append_rule $IPT_TABLE $base $mac_flag -p tcp $IPT_JOURNAL_FLAGS"
+                        [ "$mac" != "ANY" ] && append_rule_delayed "append_rule $IPT_TABLE $base $mac_flag -p udp $IPT_JOURNAL_FLAGS"
                     fi
                 done
 
@@ -597,16 +590,25 @@ configure_firewall_client() {
             unset tcp_flags udp_flags macs tcp_ports udp_ports mac_flag
         done </tmp/xrayui-policies.$$
 
-        rm -f /tmp/xrayui-policies.$$
-
-        if ! iptables -w -t "$IPT_TABLE" -S XRAYUI | grep -q -E ' -j (TPROXY|DNAT|REDIRECT)' || { [ -n "$set_global_redirect" ] && [ -z "$set_global_return_rule" ]; }; then
+        if { ! iptables -w -t "$IPT_TABLE" -S XRAYUI | grep -q -E ' -j (TPROXY|DNAT|REDIRECT)' && [ -z "$set_global_bypass" ]; } || { [ -n "$set_global_redirect" ] && [ -z "$set_global_bypass" ]; }; then
             for src in $source_nets; do
                 append_rule "$IPT_TABLE" -s "$src" -p tcp $IPT_JOURNAL_FLAGS
                 append_rule "$IPT_TABLE" -s "$src" -p udp $IPT_JOURNAL_FLAGS
             done
+
+        else
+            if [ -n "$collected_redirect_rules" ]; then
+                log_info "Applying collected redirect rules for $IPT_TABLE."
+                while IFS= read -r rule; do
+                    eval "$rule"
+                done <<EOF
+$collected_redirect_rules
+EOF
+            fi
         fi
 
         # Exclude dokodemo-door port from TPROXY  destination
+        log_info "Excluding dokodemo-door port $dokodemo_port from $IPT_TABLE."
         insert_rule "$IPT_TABLE" -p tcp --dport "$dokodemo_port" -j RETURN
         insert_rule "$IPT_TABLE" -p udp --dport "$dokodemo_port" -j RETURN
 
@@ -615,11 +617,12 @@ $inbounds
 EOF
     # --- End Exclusion Rules ---
 
+    rm -f /tmp/xrayui-policies.$$
     if [ "$IPT_TYPE" = "TPROXY" ]; then
-        if [ -n "$set_global_return_rule" ]; then
+        if [ -n "$set_global_bypass" ]; then
             log_info "Adding global bypass rule for $IPT_TABLE."
             append_rule "$IPT_TABLE" -j RETURN
-            unset set_global_return_rule
+            unset set_global_bypass
         fi
 
         add_tproxy_routes "$tproxy_mark/$tproxy_mask" "$tproxy_table"

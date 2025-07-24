@@ -18,7 +18,7 @@
         :preventOnFilter="false"
       >
         <template #item="{ element: r, index }">
-          <tr v-if="!r.isSystem()">
+          <tr v-show="(r.filtered && filterText) || !filterText" v-if="!r.isSystem()">
             <th class="drag-handle" aria-label="Drag to reorder">
               <span class="grip drag-handle" aria-hidden="true"></span>
               <label>
@@ -48,6 +48,9 @@
       </tbody>
     </table>
     <template v-slot:footer>
+      <label class="rule-filter">
+        <input type="text" placeholder="rule filter" v-model="filterText" @input="filter_rules" />
+      </label>
       <input class="button_gen button_gen_small" type="button" :value="$t('com.RulesModal.add_new_rule')" @click.prevent="addRule" />
     </template>
   </modal>
@@ -256,6 +259,7 @@
       const outbounds = ref<string[]>([]);
       const inbounds = ref<string[]>([]);
       const users = ref<string[]>([]);
+      const filterText = ref<string>('');
 
       // Methods
       const deleteRule = (rule: XrayRoutingRuleObject) => {
@@ -422,6 +426,21 @@
         emit('update:disabled_rules', disabledRules.value);
       };
 
+      const filter_rules = (event: Event) => {
+        const pattern = filterText.value.toLowerCase();
+        console.log(`------------------ Filtering rules with pattern: ${pattern}`);
+        allRules.value.forEach((rule) => {
+          rule.filtered = false; // Reset filter status
+          rule.filtered = rule.name?.toLowerCase().includes(pattern);
+          rule.filtered = rule.filtered || rule.outboundTag?.toLowerCase().includes(pattern);
+          rule.filtered = rule.filtered || rule.domain?.some((d) => d.toLowerCase().includes(pattern));
+          rule.filtered = rule.filtered || rule.ip?.some((ip) => ip.toLowerCase().includes(pattern));
+          rule.filtered = rule.filtered || rule.source?.some((s) => s.toLowerCase().includes(pattern));
+          rule.filtered = rule.filtered || rule.inboundTag?.some((tag) => tag.toLowerCase().includes(pattern));
+          console.log(`Rule ${rule.name} filtered: ${rule.filtered}`);
+        });
+      };
+
       return {
         rules,
         allRules,
@@ -434,6 +453,7 @@
         outbounds,
         inbounds,
         users,
+        filterText,
         deleteRule,
         addRule,
         editRule,
@@ -442,6 +462,7 @@
         getRuleName,
         on_off_rule,
         reindexRules,
+        filter_rules,
         domainMatcherOptions: XrayRoutingObject.domainMatcherOptions,
         networkOptions: XrayRoutingRuleObject.networkOptions,
         protocolOptions: XrayRoutingRuleObject.protocolOptions
@@ -475,6 +496,13 @@
 
     tbody tr.rule-system td {
       color: rgb(255, 0, 255);
+    }
+  }
+  .rule-filter {
+    float: left;
+    input {
+      text-align: center;
+      width: 100px;
     }
   }
 </style>

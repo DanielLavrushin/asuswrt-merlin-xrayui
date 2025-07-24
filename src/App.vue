@@ -70,10 +70,18 @@
       text-decoration: none;
     }
   }
-
+  input {
+    outline: none;
+  }
   input[type='checkbox'],
   input[type='radio'] {
     vertical-align: bottom;
+  }
+
+  input[type='text'] {
+    background: #596e74;
+    border: 1px solid #929ea1;
+    color: #ffffff;
   }
 
   input::placeholder {

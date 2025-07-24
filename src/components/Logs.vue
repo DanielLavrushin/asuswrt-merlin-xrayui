@@ -226,7 +226,6 @@
 
   const display = async () => {
     follow.value = true;
-    console.log('Displaying logs from:', file.value, modal_width.value);
     refreshInterval = window.setInterval(fetchLogs, 2000);
     logsModal.value.show(() => {
       follow.value = false;

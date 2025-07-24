@@ -517,6 +517,7 @@ export class XrayRoutingRuleObject {
   public idx = 0;
   public name?: string;
   public enabled? = true;
+  public filtered? = false;
   public domainMatcher? = 'hybrid';
   public domain?: string[];
   public ip?: string[];
@@ -532,6 +533,7 @@ export class XrayRoutingRuleObject {
   public attrs?: unknown;
 
   public normalize() {
+    this.filtered = undefined; // This property is used for filtering in the UI, not for backend processing.
     this.enabled = undefined;
     this.domainMatcher = this.domainMatcher == 'hybrid' ? undefined : this.domainMatcher;
     this.domain = this.domain?.length == 0 ? undefined : this.domain;
@@ -540,7 +542,6 @@ export class XrayRoutingRuleObject {
     this.source = this.source?.length == 0 ? undefined : this.source;
     this.inboundTag = this.inboundTag?.length == 0 ? undefined : this.inboundTag;
     this.user = this.user?.length == 0 ? undefined : this.user;
-
     this.port = this.port == '' ? undefined : this.port;
     this.sourcePort = this.sourcePort == '' ? undefined : this.sourcePort;
     this.outboundTag = this.outboundTag == '' ? undefined : this.outboundTag;

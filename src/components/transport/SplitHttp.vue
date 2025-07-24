@@ -3,14 +3,14 @@
     <tr>
       <th>The HTTP path</th>
       <td>
-        <input type="text" maxlength="15" class="input_20_table" v-model="transport.splithttpSettings.path" />
+        <input type="text" class="input_20_table" v-model="transport.splithttpSettings.path" />
         <span class="hint-color"></span>
       </td>
     </tr>
     <tr>
       <th>The Host header</th>
       <td>
-        <input type="text" maxlength="15" class="input_20_table" v-model="transport.splithttpSettings.host" />
+        <input type="text" class="input_20_table" v-model="transport.splithttpSettings.host" />
         <span class="hint-color"></span>
       </td>
     </tr>
@@ -54,13 +54,6 @@
       <th>A connection can be reused at most several times</th>
       <td>
         <input type="number" maxlength="4" class="input_6_table" onkeypress="return validator.isNumber(this,event);" v-model="transport.splithttpSettings.xmux.cMaxReuseTimes" />
-        <span class="hint-color">default: 0 (infinite)</span>
-      </td>
-    </tr>
-    <tr>
-      <th>How long can a connection "survive" at most</th>
-      <td>
-        <input type="number" maxlength="4" class="input_6_table" onkeypress="return validator.isNumber(this,event);" v-model="transport.splithttpSettings.xmux.cMaxLifetimeMs" />
         <span class="hint-color">default: 0 (infinite)</span>
       </td>
     </tr>

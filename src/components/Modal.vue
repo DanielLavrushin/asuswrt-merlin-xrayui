@@ -49,7 +49,6 @@
 
       const show = (onClose?: () => void) => {
         isVisible.value = true;
-        console.log('Modal shown, width:', props.width);
         if (onClose) onCloseCallback = onClose;
         // Add Escape key listener when modal is shown
         document.addEventListener('keydown', handleKeyDown);
@@ -156,6 +155,11 @@
     .xray-modal-footer {
       margin-top: 20px;
       text-align: center;
+
+      .row-buttons {
+        width: 100%;
+        text-align: right;
+      }
     }
   }
 </style>

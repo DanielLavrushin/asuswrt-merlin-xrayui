@@ -45,6 +45,11 @@ IPSET_BYPASS_V6="${ADDON_TAG_UPPER}_BYPASS6"
 IPSET_PROXY_V4="${ADDON_TAG_UPPER}_PROXY4"
 IPSET_PROXY_V6="${ADDON_TAG_UPPER}_PROXY6"
 
+IONICE=""
+NICE=""
+ionice -c3 true >/dev/null 2>&1 && IONICE="ionice -c3"
+nice -n 19 true >/dev/null 2>&1 && NICE="nice -n 19"
+
 if [ -f "$XRAYUI_CONFIG_FILE" ]; then
     . "$XRAYUI_CONFIG_FILE"
 fi

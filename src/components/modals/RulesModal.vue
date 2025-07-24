@@ -428,16 +428,15 @@
 
       const filter_rules = (event: Event) => {
         const pattern = filterText.value.toLowerCase();
-        console.log(`------------------ Filtering rules with pattern: ${pattern}`);
         allRules.value.forEach((rule) => {
           rule.filtered = false; // Reset filter status
-          rule.filtered = rule.name?.toLowerCase().includes(pattern);
-          rule.filtered = rule.filtered || rule.outboundTag?.toLowerCase().includes(pattern);
-          rule.filtered = rule.filtered || rule.domain?.some((d) => d.toLowerCase().includes(pattern));
-          rule.filtered = rule.filtered || rule.ip?.some((ip) => ip.toLowerCase().includes(pattern));
-          rule.filtered = rule.filtered || rule.source?.some((s) => s.toLowerCase().includes(pattern));
-          rule.filtered = rule.filtered || rule.inboundTag?.some((tag) => tag.toLowerCase().includes(pattern));
-          console.log(`Rule ${rule.name} filtered: ${rule.filtered}`);
+          rule.filtered =
+            rule.name?.toLowerCase().includes(pattern) ||
+            rule.outboundTag?.toLowerCase().includes(pattern) ||
+            rule.domain?.some((d) => d.toLowerCase().includes(pattern)) ||
+            rule.ip?.some((ip) => ip.toLowerCase().includes(pattern)) ||
+            rule.source?.some((s) => s.toLowerCase().includes(pattern)) ||
+            rule.inboundTag?.some((tag) => tag.toLowerCase().includes(pattern));
         });
       };
 

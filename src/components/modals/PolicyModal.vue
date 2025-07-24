@@ -6,11 +6,20 @@
           <td colspan="4">{{ $t('com.PolicyModal.modal_title2') }}</td>
         </tr>
       </thead>
-      <draggable v-if="policies.length" tag="tbody" :list="policies" handle=".drag-handle" @end="syncOrder">
+      <draggable
+        v-if="policies.length"
+        tag="tbody"
+        :list="policies"
+        handle=".drag-handle"
+        @end="syncOrder"
+        :filter="'input,select,textarea,label,.row-buttons'"
+        :delay="150"
+        :preventOnFilter="false"
+      >
         <template #item="{ element: r, index }">
           <tr>
             <th class="drag-handle" aria-label="Drag to reorder">
-              <span class="grip" aria-hidden="true"></span>
+              <span class="grip drag-handle" aria-hidden="true"></span>
               <label>
                 <input type="checkbox" v-model="r.enabled" @change.prevent="on_off_rule(r, index)" />
                 {{ $t('com.PolicyModal.rule_no', [index + 1]) }}

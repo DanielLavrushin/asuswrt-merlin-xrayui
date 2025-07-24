@@ -17,11 +17,21 @@
           </select>
         </td>
       </tr>
-      <draggable v-if="config.outbounds.length" tag="slot" :list="config.outbounds" handle=".drag-handle" :item-key="(o: XrayOutboundObject<IProtocolType>) => o.tag">
+      <draggable
+        v-if="config.outbounds.length"
+        tag="slot"
+        :list="config.outbounds"
+        handle=".drag-handle"
+        :item-key="(o: XrayOutboundObject<IProtocolType>) => o.tag"
+        :filter="'input,select,textarea,label,.row-buttons'"
+        :delay="100"
+        :delayOnTouchOnly="true"
+        :preventOnFilter="false"
+      >
         <template #item="{ element: proxy, index }">
           <tr v-show="!proxy.isSystem()" class="proxy-row">
             <th class="drag-handle" aria-label="Drag to reorder">
-              <span class="grip" aria-hidden="true"></span>
+              <span class="grip drag-handle" aria-hidden="true"></span>
               {{ proxy.surl ? '🔗' : '' }}
               {{ proxy.tag == '' ? 'no tag' : proxy.tag! }}
               <span v-if="isRunning && check_connection && connectionStatus[proxy.tag]" class="connection-status">

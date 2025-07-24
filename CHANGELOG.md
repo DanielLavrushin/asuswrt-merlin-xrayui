@@ -9,6 +9,8 @@
 - CHANGED: Removed the `flow` user property from `VLESS` Outbound when set to `none`.
 - IMPROVED: Achieved a significant (x20 times) performance boost in ipset geosite file extraction tool (aka `v2dat`).
 - IMPROVED: Made minor improvements to the firewall settings.
+- IMPROVED: Policies rework. Now the policies behave smart.
+- FIXED: Unable to click checkboxes inside the draggable elements on the mobile devices.
 
 ## [0.54.1] - 2025-07-23
 

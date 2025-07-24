@@ -561,11 +561,11 @@ configure_firewall_client() {
 
             log_info "Applying policy: $policy_name, MODE: $policy_mode"
 
-            [ -z "$set_global_redirect" ] && [ "$policy_mode" = "redirect" ] && [ "$macs" = "ANY" ] && [ -z "$tcp_ports" ] && [ -z "$udp_ports" ] && set_global_redirect="yes"
-            [ -z "$set_global_bypass" ] && [ "$policy_mode" = "bypass" ] && [ "$macs" = "ANY" ] && [ -z "$tcp_flags" ] && [ -z "$udp_flags" ] && set_global_bypass="yes"
-
             [ "$tcp_enabled" = "yes" ] && [ -n "$tcp_ports" ] && tcp_flags="-m multiport --dports $tcp_ports"
             [ "$udp_enabled" = "yes" ] && [ -n "$udp_ports" ] && udp_flags="-m multiport --dports $udp_ports"
+
+            [ -z "$set_global_redirect" ] && [ "$policy_mode" = "redirect" ] && [ "$macs" = "ANY" ] && [ -z "$tcp_ports" ] && [ -z "$udp_ports" ] && set_global_redirect="yes"
+            [ -z "$set_global_bypass" ] && [ "$policy_mode" = "bypass" ] && [ "$macs" = "ANY" ] && [ -z "$tcp_flags" ] && [ -z "$udp_flags" ] && set_global_bypass="yes"
 
             for src in $source_nets; do
                 base="-s $src"
@@ -576,13 +576,16 @@ configure_firewall_client() {
                         [ -z "$tcp_flags" ] && [ -z "$udp_flags" ] && [ "$mac" != "ANY" ] && insert_rule "$IPT_TABLE" $base $mac_flag -j RETURN
                         [ -n "$tcp_flags" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p tcp -m multiport ! --dports "$tcp_ports" -j RETURN
                         [ -n "$udp_flags" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p udp -m multiport ! --dports "$udp_ports" -j RETURN
+
+                        [ "$mac" = "ANY" ] && [ -n "$tcp_flags" ] && append_rule_delayed "append_rule $IPT_TABLE $base $mac_flag -p tcp $IPT_JOURNAL_FLAGS"
+                        [ "$mac" = "ANY" ] && [ -n "$udp_flags" ] && append_rule_delayed "append_rule $IPT_TABLE $base $mac_flag -p udp $IPT_JOURNAL_FLAGS"
                     fi
                     if [ "$policy_mode" = "redirect" ]; then
                         [ -n "$tcp_flags" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p tcp -m multiport --dports "$tcp_ports" -j RETURN
                         [ -n "$udp_flags" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p udp -m multiport --dports "$udp_ports" -j RETURN
 
-                        [ "$mac" != "ANY" ] && append_rule_delayed "append_rule $IPT_TABLE $base $mac_flag -p tcp $IPT_JOURNAL_FLAGS"
-                        [ "$mac" != "ANY" ] && append_rule_delayed "append_rule $IPT_TABLE $base $mac_flag -p udp $IPT_JOURNAL_FLAGS"
+                        [ "$mac" != "ANY" ] && append_rule_delayed "append_rule $IPT_TABLE $base $mac_flag -p tcp $IPT_JOURNAL_FLAGS" && set_global_bypass="yes"
+                        [ "$mac" != "ANY" ] && append_rule_delayed "append_rule $IPT_TABLE $base $mac_flag -p udp $IPT_JOURNAL_FLAGS" && set_global_bypass="yes"
                     fi
                 done
 
@@ -590,6 +593,7 @@ configure_firewall_client() {
             unset tcp_flags udp_flags macs tcp_ports udp_ports mac_flag
         done </tmp/xrayui-policies.$$
 
+        log_debug "Detecting global rules: set_global_bypass=$set_global_bypass, set_global_redirect=$set_global_redirect"
         if { ! iptables -w -t "$IPT_TABLE" -S XRAYUI | grep -q -E ' -j (TPROXY|DNAT|REDIRECT)' && [ -z "$set_global_bypass" ]; } || { [ -n "$set_global_redirect" ] && [ -z "$set_global_bypass" ]; }; then
             for src in $source_nets; do
                 append_rule "$IPT_TABLE" -s "$src" -p tcp $IPT_JOURNAL_FLAGS

@@ -6,11 +6,21 @@
           <td colspan="4">{{ $t('com.RulesModal.modal_title2') }}</td>
         </tr>
       </thead>
-      <draggable v-if="allRules.length" tag="tbody" :list="allRules" handle=".drag-handle" @end="reindexRules" :item-key="(r:XrayRoutingRuleObject) => r.idx">
+      <draggable
+        v-if="allRules.length"
+        tag="tbody"
+        :list="allRules"
+        handle=".drag-handle"
+        @end="reindexRules"
+        :item-key="(r:XrayRoutingRuleObject) => r.idx"
+        :filter="'input,select,textarea,label,.row-buttons'"
+        :delay="150"
+        :preventOnFilter="false"
+      >
         <template #item="{ element: r, index }">
           <tr v-if="!r.isSystem()">
             <th class="drag-handle" aria-label="Drag to reorder">
-              <span class="grip" aria-hidden="true"></span>
+              <span class="grip drag-handle" aria-hidden="true"></span>
               <label>
                 <input type="checkbox" v-model="r.enabled" @change.prevent="on_off_rule(r, index)" />
                 {{ $t('com.RulesModal.rule_no', [index + 1]) }}

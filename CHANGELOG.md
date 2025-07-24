@@ -2,8 +2,6 @@
 
 ## [0.55.0] - 2025-07-24
 
-> **UNRELEASED**
->
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - ADDED: a `Rules Filter` feature to help you quickly find a specific rule in the list. Available in the bottom-left corner of the `Routing Rules` window.

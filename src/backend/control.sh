@@ -62,7 +62,7 @@ start() {
 
     XRAY_ARGS="-c $XRAY_CONFIG_FILE $XRAY_EXTRA_CFG"
     log_debug "Starting Xray with args: $XRAY_ARGS"
-    nice -n 19 ionice -c3 xray $XRAY_ARGS >/dev/null 2>&1 &
+    $IONICE $NICE xray $XRAY_ARGS >/dev/null 2>&1 &
     echo $! >"$XRAY_PIDFILE"
     log_debug "Xray started with PID $(cat "$XRAY_PIDFILE")"
 

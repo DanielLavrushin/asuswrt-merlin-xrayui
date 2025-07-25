@@ -1,5 +1,13 @@
 # XRAYUI Changelog
 
+## [0.55.1] - 2025-xx-xx
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- FIXED: A `Complete setup` in the import window was broken.
+- FIXED: Import failed when a protocol url has uncompleted parameters.
+- ADDED: A new checkbox `Keep my rules and policies` when importing a configuration. This option is useful if you want to clean inbounds and outbounds but keep your existing routing rules intact.
+
 ## [0.55.0] - 2025-07-24
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

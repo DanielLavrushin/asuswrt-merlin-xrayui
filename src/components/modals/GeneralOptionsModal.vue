@@ -234,7 +234,7 @@
   import { useI18n } from 'vue-i18n';
   import Modal from '@main/Modal.vue';
   import Hint from '@main/Hint.vue';
-  import useGeneralOptions from './GeneralOptions';
+  import useGeneralOptions from './GeneralOptionsModal';
   import { XrayObject } from '@/modules/XrayConfig';
   import { EngineResponseConfig } from '@/modules/Engine';
   import engine, { SubmitActions } from '@/modules/Engine';

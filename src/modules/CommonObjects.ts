@@ -715,6 +715,7 @@ export class XrayParsedUrlObject {
   public parsedParams: Record<string, string | undefined> = {};
 
   public constructor(url: string) {
+    url = decodeURI(url.trim());
     const [protocol, rest] = url.split('://');
     this.protocol = protocol;
     const extraParams = {} as Record<string, string>;
@@ -741,7 +742,17 @@ export class XrayParsedUrlObject {
     const [authHost, queryFragment] = rest.split('?');
     const [uuid, serverPort] = authHost.split('@');
     const [server, port] = serverPort.split(':');
-    const [query, tag] = queryFragment.split('#');
+    let [query, tag] = queryFragment ? queryFragment.split('#') : ['', ''];
+
+    this.server = server;
+    if (!tag) {
+      const [_, tag2] = url.split('#');
+      tag = tag2 || this.server;
+    }
+
+    if (!queryFragment) {
+      query = 'type=tcp&security=none';
+    }
 
     const params = new URLSearchParams(query);
     params.forEach((value: string, key: string) => {
@@ -755,7 +766,6 @@ export class XrayParsedUrlObject {
     });
 
     this.tag = tag;
-    this.server = server;
     this.port = parseInt(port);
     this.uuid = uuid;
     this.network = this.parsedParams.type;

@@ -116,7 +116,14 @@
       "label_proxy_json": "JSON 地址",
       "label_proxy_file": "从文件恢复",
       "hint_proxy_json": "您可以在此处粘贴 JSON 文件的内容。XRAYUI 将修改配置以确保与路由器兼容。",
-      "hint_proxy_file": "选择您要导入的 JSON 文件。<hr/> 仅在您重新上传之前正常工作的配置并且确定它在您的路由器上可以正常工作时使用此选项。 <hr/> 如果您想确保与您的路由器兼容，请使用 `导入 JSON` 选项。"
+      "hint_proxy_file": "选择您要导入的 JSON 文件。<hr/> 仅在您重新上传之前正常工作的配置并且确定它在您的路由器上可以正常工作时使用此选项。 <hr/> 如果您想确保与您的路由器兼容，请使用 `导入 JSON` 选项。",
+      "label_keep_existing_rules": "保留现有路由规则",
+      "hint_keep_existing_rules": "如果选择此选项，XRAYUI 将保留你现有的路由规则和策略。如果不选择，XRAYUI 将用导入配置中的新规则和策略覆盖你现有的配置。<hr/>当你想清理入站和出站但保持现有路由规则不变时，此选项很有用。",
+      "alert_qr_decode_error": "无法解码二维码。",
+      "alert_not_supported_protocol": "该协议的解析尚不支持",
+      "alert_complete_setup": "你选择了完整设置。这将覆盖你当前的配置。确定要继续吗？",
+      "alert_invalid_json": "你提供的 JSON 无效。请检查语法并重试。",
+      "alert_import_success": "配置导入成功。"
     },
     "ConfigModal": {
       "modal_title": "XRAY 配置文件",

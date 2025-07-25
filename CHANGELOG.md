@@ -6,7 +6,8 @@
 
 - FIXED: A `Complete setup` in the import window was broken.
 - FIXED: Import failed when a protocol url has uncompleted parameters.
-- ADDED: A new checkbox `Keep my rules and policies` when importing a configuration. This option is useful if you want to clean inbounds and outbounds but keep your existing routing rules intact.
+- ADDED: Introduced a new checkbox option, `Keep my rules and policies`, to retain existing routing rules during configuration imports. Updated logic to handle this new feature.
+- IMPROVED: Import window refactored. Improved file handling and parsing logic for importing configurations (e.g., JSON and QR code support) with better error handling and user alerts.
 
 ## [0.55.0] - 2025-07-24
 

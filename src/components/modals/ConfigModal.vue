@@ -61,7 +61,11 @@
         'certificate',
         'key',
         'mac',
-        'spiderX'
+        'spiderX',
+        'path',
+        'dns',
+        'servers',
+        'host'
       ];
 
       const maskObject = (obj: any): any => {

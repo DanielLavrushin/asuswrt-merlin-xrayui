@@ -105,14 +105,11 @@
       // Loads the configuration from the URI and updates reactive state.
       const load = async () => {
         try {
-          const result = await engine.loadXrayConfig(xrayConfig);
-          if (result) {
-            const cfg = engine.prepareServerConfig(result);
-            originalConfig = cfg;
-            configJson.value = cfg;
-            configSize.value = JSON.stringify(cfg).length;
-            hide_sense_data();
-          }
+          const cfg = engine.prepareServerConfig(xrayConfig);
+          originalConfig = cfg;
+          configJson.value = cfg;
+          configSize.value = JSON.stringify(cfg).length;
+          hide_sense_data();
         } catch (error) {
           console.error('Error loading config:', error);
         }

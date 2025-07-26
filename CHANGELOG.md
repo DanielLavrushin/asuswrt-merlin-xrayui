@@ -7,6 +7,7 @@
 - ADDED: Full subscription link support; XRAYUI now auto-detects and parses JSON or Base64 subscription URLs. Supports `VLESS`, `VMess`, `Trojan`, and `Shadowsocks`. Paste the link in the Outbound modal form.
 - FIXED: A `Complete setup` in the import window was broken.
 - FIXED: Import failed when a protocol url has uncompleted parameters.
+- FIXED: Not all devices are listed in the Routing policies. ([#190](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/190))
 - ADDED: Introduced a new checkbox option, `Keep my rules and policies`, to retain existing routing rules during configuration imports. Updated logic to handle this new feature.
 - IMPROVED: Import window refactored. Improved file handling and parsing logic for importing configurations (e.g., JSON and QR code support) with better error handling and user alerts.
 

@@ -91,14 +91,10 @@
             <label v-if="devices.length > 10">
               <input type="text" v-model="deviceFilter" class="input_15_table" placeholder="filter devices" @input="applyDeviceFilter" />
             </label>
-            <label
-              v-for="device in devices"
-              :key="device.mac"
-              v-show="(showAll || device.isOnline || device.isOrphan) && device.isVisible"
-              :class="{ online: showAll && device.isOnline, orphan: device.isOrphan }"
-              :title="device.mac"
-            >
+            <label v-for="device in devices" :key="device.mac" v-show="(showAll || device.isOnline || device.isOrphan) && device.isVisible" :title="device.mac">
               <input type="checkbox" :value="device.mac" v-model="currentRule.mac" />
+              {{ device.isOnline ? '🟢 ' : '⚪ ' }}
+              {{ device.isOrphan ? '❌ ' : '' }}
               {{ device.name || device.mac }}
             </label>
           </td>
@@ -203,11 +199,19 @@
         }
       };
 
-      window.xray.router.devices.forEach((device) => {
+      Object.getOwnPropertyNames(window.xray.router.devices).forEach((mac) => {
+        if (!mac.match(/^[0-9a-f]{2}(:[0-9a-f]{2}){5}$/i)) return;
+        const device = window.xray.router.devices[mac];
+        if (!device) return;
+        if (typeof device !== 'object') {
+          return;
+        }
+        console.log(mac, device);
+        const name = (device.is_wireless ? '🛜 ' : '') + (device.nickName || device.name || device.vendor);
         devices.value.push({
-          mac: device[0],
-          name: device[1],
-          isOnline: false,
+          mac,
+          name,
+          isOnline: device.online == '1',
           isVisible: true,
           isOrphan: false
         });

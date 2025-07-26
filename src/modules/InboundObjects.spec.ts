@@ -43,8 +43,7 @@ describe('InboundObjects', () => {
     it('normalizes defaults away', () => {
       const doko = new XrayDokodemoDoorInboundObject();
       const res = doko.normalize();
-      expect(res.network).toBeUndefined();
-      expect(res.port).toBeUndefined();
+      expect(res).toBeUndefined();
     });
 
     it('retains custom props', () => {
@@ -53,9 +52,9 @@ describe('InboundObjects', () => {
       doko.port = 123;
       doko.userLevel = 1;
       const res = doko.normalize();
-      expect(res.network).toBe('udp');
-      expect(res.port).toBe(123);
-      expect(res.userLevel).toBe(1);
+      expect(res?.network).toBe('udp');
+      expect(res?.port).toBe(123);
+      expect(res?.userLevel).toBe(1);
     });
   });
 

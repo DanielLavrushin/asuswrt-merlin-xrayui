@@ -36,7 +36,7 @@
           ip: '<% nvram_get("lan_ipaddr"); %>',
           territory: '<% nvram_get("territory_code"); %>',
           devices_online: JSON.parse(`<% get_clientlist(); %>`),
-          devices: JSON.parse(`<% get_all_basic_clientlist(); %>`),
+          devices: JSON.parse(`<% get_clientlist_from_json_database(); %>`),
           wan_ip: '<% nvram_get("wan_ipaddr"); %>',
           wan_connected: '<% nvram_get("link_internet"); %>' == '2',
           features: '<% nvram_get("rc_support"); %>'

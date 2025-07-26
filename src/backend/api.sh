@@ -26,7 +26,7 @@ api_write_config() {
   "api": {
     "tag": "sys:api",
     "listen": "127.0.0.1:10085",
-    "services": ["HandlerService", "LoggerService", "StatsService"]
+    "services": ["HandlerService", "LoggerService", "StatsService", "ReflectionService"]
   },
   "inbounds": [
     {

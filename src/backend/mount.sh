@@ -22,6 +22,10 @@ mount_ui() {
 
     log_info "Mounting XRAYUI as $ADDON_USER_PAGE"
 
+    if [ ! -d $ADDON_TMP_DIR ]; then
+        mkdir -p "$ADDON_TMP_DIR"
+    fi
+
     ln -s -f "$ADDON_JFFS_ADN_DIR/index.asp" "/www/user/$ADDON_USER_PAGE"
     echo "xrayui" >"/www/user/$(echo $ADDON_USER_PAGE | cut -f1 -d'.').title"
 

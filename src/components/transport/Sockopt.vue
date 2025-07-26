@@ -1,6 +1,6 @@
 <template>
   <div class="formfontdesc">
-    <p>Configures transparent proxies.</p>
+    <p>{{ $t('com.SockOpt.hint') }}</p>
     <table width="100%" class="FormTable modal-form-table">
       <thead>
         <tr>
@@ -10,16 +10,8 @@
       <tbody>
         <tr>
           <th>
-            Specifies whether to enable transparent proxy
-            <hint>
-              Specifies whether to enable transparent proxy (only applicable to Linux).
-              <ul>
-                <li>off: Turn off transparent proxy.</li>
-                <li>redirect: Use the transparent proxy in Redirect mode. It supports all TCP connections based on `IPv4/6`.</li>
-                <li>tproxy: Use the transparent proxy in TProxy mode. It supports all TCP and UDP connections based on `IPv4/6`.</li>
-              </ul>
-              Transparent proxy requires Root or `CAP\_NET\_ADMIN` permission.
-            </hint>
+            {{ $t('com.SockOpt.label_tproxy_enable') }}
+            <hint v-html="$t('com.SockOpt.hint_tproxy_enable')"></hint>
           </th>
           <td>
             <select class="input_option" v-model="sockopt.tproxy">
@@ -30,24 +22,17 @@
         </tr>
         <tr>
           <th>
-            Outbound network interface
-            <hint> Specifies the name of the bound outbound network interface. supported by Linux MacOS iOS. MacOS iOS Requires Xray-core v1.8.6 or higher. </hint>
+            {{ $t('com.SockOpt.label_tproxy_interface') }}
+            <hint v-html="$t('com.SockOpt.hint_tproxy_interface')"></hint>
           </th>
           <td>
             <input type="number" maxlength="15" class="input_20_table" v-model="sockopt.interface" />
-            <span class="hint-color"></span>
           </td>
         </tr>
         <tr>
           <th>
-            Domain strategy
-            <hint>
-              When the target address is a domain name, the corresponding value is configured, and the behavior of SystemDialer is as follows:
-              <ul>
-                <li>`AsIs`: Resolve the IP address using the system DNS server and connect to the domain name.</li>
-                <li>"UseIP", "UseIPv4", and "UseIPv6": Resolve the IP address using the built-in DNS server and connect to the IP address directly.</li>
-              </ul>
-            </hint>
+            {{ $t('com.SockOpt.label_tproxy_domain_strategy') }}
+            <hint v-html="$t('com.SockOpt.hint_tproxy_domain_strategy')"></hint>
           </th>
           <td>
             <select class="input_option" v-model="sockopt.domainStrategy">
@@ -58,18 +43,43 @@
         </tr>
         <tr>
           <th>
-            Mark
-            <hint>
-              The mark value of the transparent proxy. The mark value is used to mark the packets that need to be processed by the transparent proxy. An `integer` value. When its value is non-zero, `SO_MARK` is marked with this value on the outbound connection.
-              <ul>
-                <li>Only applicable to `Linux` systems..</li>
-                <li>Requires `CAP_NET_ADMIN` permission.</li>
-              </ul>
-            </hint>
+            {{ $t('com.SockOpt.label_tproxy_mark') }}
+            <hint v-html="$t('com.SockOpt.hint_tproxy_mark')"></hint>
           </th>
           <td>
-            <input type="number" maxlength="15" class="input_20_table" v-model="sockopt.mark" />
-            <span class="hint-color"></span>
+            <input type="number" maxlength="3" class="input_6_table" v-model="sockopt.mark" />
+          </td>
+        </tr>
+        <tr>
+          <th>
+            {{ $t('com.SockOpt.label_tcpmptcp') }}
+            <hint v-html="$t('com.SockOpt.hint_tcpmptcp')"></hint>
+          </th>
+          <td>
+            <input type="checkbox" v-model="sockopt.tcpMptcp" />
+            <span class="hint-color">default: false</span>
+          </td>
+        </tr>
+        <tr>
+          <th>
+            {{ $t('com.SockOpt.label_tcp_no_delay') }}
+            <hint v-html="$t('com.SockOpt.hint_tcp_no_delay')"></hint>
+          </th>
+          <td>
+            <input type="checkbox" v-model="sockopt.tcpNoDelay" />
+            <span class="hint-color">default false, recommended to be enabled with "Multipath": true</span>
+          </td>
+        </tr>
+        <tr>
+          <th>
+            {{ $t('com.SockOpt.label_dealer_proxy') }}
+            <hint v-html="$t('com.SockOpt.hint_dealer_proxy')"></hint>
+          </th>
+          <td>
+            <select class="input_option" v-model="sockopt.dialerProxy">
+              <option value="">none</option>
+              <option v-for="(opt, index) in outboundOptions" :key="index" :value="opt">{{ opt }}</option>
+            </select>
           </td>
         </tr>
       </tbody>
@@ -78,9 +88,10 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, watch } from 'vue';
+  import { computed, defineComponent, ref, watch } from 'vue';
   import { XraySockoptObject, XrayStreamSettingsObject } from '@/modules/CommonObjects';
   import Hint from '@main/Hint.vue';
+  import xrayConfig from '@modules/XrayConfig';
   export default defineComponent({
     name: 'Sockopt',
     components: {
@@ -92,6 +103,9 @@
     setup(props) {
       const sockopt = ref<XraySockoptObject>(props.transport?.sockopt ?? new XraySockoptObject());
 
+      const outboundOptions = computed(() => {
+        return xrayConfig.outbounds.filter((outbound) => outbound.tag).map((outbound) => outbound.tag);
+      });
       watch(
         () => props.transport,
         () => {
@@ -106,7 +120,8 @@
       return {
         sockopt,
         domainStrategyOptions: XraySockoptObject.domainStrategyOptions,
-        tproxyOptions: XraySockoptObject.tproxyOptions
+        tproxyOptions: XraySockoptObject.tproxyOptions,
+        outboundOptions
       };
     }
   });

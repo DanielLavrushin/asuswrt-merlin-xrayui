@@ -116,7 +116,14 @@
       "label_proxy_json": "JSON 地址",
       "label_proxy_file": "从文件恢复",
       "hint_proxy_json": "您可以在此处粘贴 JSON 文件的内容。XRAYUI 将修改配置以确保与路由器兼容。",
-      "hint_proxy_file": "选择您要导入的 JSON 文件。<hr/> 仅在您重新上传之前正常工作的配置并且确定它在您的路由器上可以正常工作时使用此选项。 <hr/> 如果您想确保与您的路由器兼容，请使用 `导入 JSON` 选项。"
+      "hint_proxy_file": "选择您要导入的 JSON 文件。<hr/> 仅在您重新上传之前正常工作的配置并且确定它在您的路由器上可以正常工作时使用此选项。 <hr/> 如果您想确保与您的路由器兼容，请使用 `导入 JSON` 选项。",
+      "label_keep_existing_rules": "保留现有路由规则",
+      "hint_keep_existing_rules": "如果选择此选项，XRAYUI 将保留你现有的路由规则和策略。如果不选择，XRAYUI 将用导入配置中的新规则和策略覆盖你现有的配置。<hr/>当你想清理入站和出站但保持现有路由规则不变时，此选项很有用。",
+      "alert_qr_decode_error": "无法解码二维码。",
+      "alert_not_supported_protocol": "该协议的解析尚不支持",
+      "alert_complete_setup": "你选择了完整设置。这将覆盖你当前的配置。确定要继续吗？",
+      "alert_invalid_json": "你提供的 JSON 无效。请检查语法并重试。",
+      "alert_import_success": "配置导入成功。"
     },
     "ConfigModal": {
       "modal_title": "XRAY 配置文件",
@@ -578,6 +585,24 @@
       "label_pool_size": "池大小",
       "hint_pool_size": "指定 FakeDNS 存储的域名 - IP 映射最大数量，超出后按 LRU 规则淘汰，默认65535。",
       "fakedns": "fakedns"
+    },
+    "SockOpt": {
+      "label": "透明代理设置",
+      "hint": "透明代理设置可用于配置透明代理功能的各项选项。",
+      "label_tproxy_enable": "启用透明代理",
+      "label_tproxy_interface": "接口",
+      "label_tproxy_domain_strategy": "域名策略",
+      "label_tproxy_mark": "标记",
+      "label_tcpmptcp": "启用多路径 TCP",
+      "label_dealer_proxy": "Dealer 代理",
+      "label_tcp_no_delay": "TCP 无延迟",
+      "hint_tproxy_enable": "启用或禁用透明代理。",
+      "hint_tproxy_interface": "指定绑定的出站网络接口名称。支持 Linux、macOS、iOS。macOS 和 iOS 需要 `Xray-core v1.8.6` 或更高版本。",
+      "hint_tproxy_domain_strategy": "用于透明代理的域名策略。",
+      "hint_tproxy_mark": "用于透明代理的标记。",
+      "hint_tcp_no_delay": "启用或禁用 TCP No Delay，默认值为 false；建议在 `tcpMptcp`: true 时启用。",
+      "hint_tcpmptcp": "启用或禁用多路径 TCP。",
+      "hint_dealer_proxy": "出站代理的标识符。当该值不为空时，将使用指定的出站来建立连接。该选项可用于支持底层传输协议的链式转发。"
     }
   }
 }

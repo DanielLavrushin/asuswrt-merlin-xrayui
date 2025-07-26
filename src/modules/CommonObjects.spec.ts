@@ -422,7 +422,7 @@ describe('CommonObjects', () => {
     it('normalize is pass‑through with defaults', () => {
       const r = new XrayStreamRealitySettingsObject();
       expect(r.normalize()).toBe(r);
-      expect(r.show).toBe(false);
+      expect(r.show).toBeUndefined();
     });
 
     it('constructor maps parsed params correctly', () => {

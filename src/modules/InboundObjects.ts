@@ -17,7 +17,7 @@ export class XrayInboundObject<TProxy extends IProtocolType> {
   public listen? = '0.0.0.0';
   public port!: number | string;
   public tag?: string;
-  public settings!: TProxy;
+  public settings?: TProxy;
   public streamSettings?: XrayStreamSettingsObject = new XrayStreamSettingsObject();
   public allocate?: XrayAllocateObject;
   public sniffing?: XraySniffingObject;
@@ -51,6 +51,9 @@ export class XrayInboundObject<TProxy extends IProtocolType> {
       this.allocate = this.allocate.normalize();
     }
 
+    if (this.settings && typeof (this.settings as any).normalize === 'function') {
+      this.settings = (this.settings as any).normalize();
+    }
     return isObjectEmpty(this) ? undefined : this;
   };
 }
@@ -62,11 +65,12 @@ export class XrayDokodemoDoorInboundObject implements IProtocolType {
   public followRedirect?: boolean;
   public userLevel?: number;
 
-  normalize = (): this => {
+  normalize = (): this | undefined => {
     this.network = this.network && this.network !== 'tcp' ? this.network : undefined;
     this.userLevel = this.userLevel && this.userLevel > 0 ? this.userLevel : undefined;
     this.port = this.port && this.port > 0 ? this.port : undefined;
-    return this;
+    this.address = this.address && this.address !== '' ? this.address : undefined;
+    return isObjectEmpty(this) ? undefined : this;
   };
 }
 export class XrayVlessInboundObject implements IProtocolType {

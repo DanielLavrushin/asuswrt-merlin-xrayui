@@ -338,3 +338,17 @@ fixme() {
 
     log_ok "Done with fixme function."
 }
+
+urldecode() {
+    local data="$1"
+    data=$(printf '%s' "$data" | sed 's/+/ /g; s/%\([0-9A-Fa-f][0-9A-Fa-f]\)/\\x\1/g')
+    printf '%b' "$data"
+}
+
+is_json() {
+    echo "$1" | jq -e . >/dev/null 2>&1
+}
+
+b64d() {
+    echo "$1" | base64 -d 2>/dev/null
+}

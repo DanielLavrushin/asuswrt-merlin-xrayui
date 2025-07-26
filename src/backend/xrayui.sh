@@ -19,6 +19,7 @@ import ./reality.sh
 import ./wireguard.sh
 import ./general_opts.sh
 import ./response.sh
+import ./subscriptions.sh
 import ./github.sh
 import ./geodata.sh
 import ./profile.sh
@@ -91,6 +92,14 @@ diagnostics)
         diagnostics_env
         diagnostics_xrayui
         diagnostics_iptables
+        ;;
+    esac
+    exit 0
+    ;;
+subscriptions)
+    case "$2" in
+    process)
+        process_subscriptions "$3"
         ;;
     esac
     exit 0

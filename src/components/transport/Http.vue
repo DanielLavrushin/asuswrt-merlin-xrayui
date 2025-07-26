@@ -30,7 +30,7 @@
       </td>
     </tr>
 
-    <tr>
+    <tr class="unlocked">
       <th>Disable gRPC disguise</th>
       <td><input type="checkbox" v-model="extra.noGRPCHeader" /></td>
     </tr>
@@ -47,7 +47,7 @@
       </td>
     </tr>
 
-    <tr>
+    <tr class="unlocked">
       <th>Min interval between POSTs (ms)</th>
       <td>
         <input type="number" min="0" class="input_20_table" v-model.number="extra.scMinPostsIntervalMs" />
@@ -67,6 +67,8 @@
         <input type="text" placeholder="20-80" class="input_20_table" v-model="extra.scStreamUpServerSecs" />
       </td>
     </tr>
+  </tbody>
+  <tbody class="unlocked">
     <tr>
       <th>XMUX · Max concurrent streams</th>
       <td>

@@ -4,6 +4,7 @@
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
+- ADDED: Full subscription link support; XRAYUI now auto-detects and parses JSON or Base64 subscription URLs. Supports `VLESS`, `VMess`, `Trojan`, and `Shadowsocks`. Paste the link in the Outbound modal form.
 - FIXED: A `Complete setup` in the import window was broken.
 - FIXED: Import failed when a protocol url has uncompleted parameters.
 - ADDED: Introduced a new checkbox option, `Keep my rules and policies`, to retain existing routing rules during configuration imports. Updated logic to handle this new feature.

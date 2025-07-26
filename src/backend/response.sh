@@ -197,47 +197,6 @@ apply_config() {
     rm -f "$backup_config"
 }
 
-process_subscriptions() {
-    local config_file="$1"
-    local cfg=$(cat "$1")
-    local idx url proto tag fetched rep
-    local temp_config="/tmp/xray_server_config_new.json"
-
-    while IFS= read -r entry; do
-        [ -z "$entry" ] && continue
-        idx=$(printf '%s' "$entry" | jq -r '.idx')
-        url=$(printf '%s' "$entry" | jq -r '.url')
-        proto=$(printf '%s' "$entry" | jq -r '.proto')
-        tag=$(printf '%s' "$entry" | jq -r '.tag')
-
-        fetched=$(curl -fsL "$url") || continue
-        if ! echo "$fetched" | jq -e . >/dev/null 2>&1; then
-            fetched=$(echo "$fetched" | base64 -d 2>/dev/null) || continue
-        fi
-
-        rep=$(printf '%s' "$fetched" | jq -c --arg t "$tag" --arg p "$proto" '
-            (.outbounds // [])
-            | map(select((($t != "") and (.tag==$t)) or (.protocol==$p)))
-            | first')
-
-        [ -z "$rep" ] || [ "$rep" = "null" ] && continue
-
-        cfg=$(printf '%s' "$cfg" | jq -c \
-            --arg pos "$idx" \
-            --arg url "$url" \
-            --arg tag "$tag" \
-            --argjson rep "$rep" \
-            '.outbounds[( $pos|tonumber )] = ($rep + {surl:$url, tag:$tag})')
-    done <<EOF
-$(printf '%s' "$cfg" | jq -c '.outbounds
-    | to_entries[]
-    | select(.value.surl and .value.surl!="")
-    | {idx:.key,url:.value.surl,proto:.value.protocol,tag:(.value.tag//"")}')
-EOF
-
-    printf '%s' "$cfg" >"$temp_config" && cp "$temp_config" "$config_file" && rm -f "$temp_config"
-}
-
 rules_to_dns_domains() {
     local configcontent="$1"
 

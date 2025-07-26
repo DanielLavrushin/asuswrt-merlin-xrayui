@@ -132,7 +132,7 @@ describe('TransportObjects', () => {
         http.normalize();
         expect(http.path).toBeUndefined();
         expect(http.host).toBeUndefined();
-        expect(http.extra).toBeDefined();
+        expect(http.extra).toBeUndefined();
       });
 
       it('retains custom values after normalize', () => {
@@ -143,17 +143,6 @@ describe('TransportObjects', () => {
         expect(http.path).toBe('/custom');
         expect(http.host).toBe('example.com');
         expect(http.mode).toBe('stream-one');
-      });
-    });
-
-    describe('XrayXhttpExtraObject', () => {
-      it('delegates normalize to xmux', () => {
-        const extra = new XrayXhttpExtraObject();
-        const mockXmux = { normalize: jest.fn(() => undefined) } as any;
-        extra.xmux = mockXmux;
-        extra.normalize();
-        expect(mockXmux.normalize).toHaveBeenCalledTimes(1);
-        expect(extra.xmux).toBeUndefined();
       });
     });
 

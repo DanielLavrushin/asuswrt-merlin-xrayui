@@ -199,15 +199,16 @@
         }
       };
 
-      Object.getOwnPropertyNames(window.xray.router.devices).forEach((mac) => {
+      const devicesObj = window.xray.router.devices as Record<string, any>;
+      Object.getOwnPropertyNames(devicesObj).forEach((mac: string) => {
         if (!mac.match(/^[0-9a-f]{2}(:[0-9a-f]{2}){5}$/i)) return;
-        const device = window.xray.router.devices[mac];
+        const device = devicesObj[mac];
         if (!device) return;
         if (typeof device !== 'object') {
           return;
         }
-        console.log(mac, device);
-        const name = (device.is_wireless ? '🛜 ' : '') + (device.nickName || device.name || device.vendor);
+
+        const name = (device.is_wireless ? '🛜 ' : '') + (device.nickName || device.name || device.vendor || mac);
         devices.value.push({
           mac,
           name,

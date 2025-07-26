@@ -170,7 +170,7 @@ export class XrayStreamTlsSettingsObject implements ISecurityProtocol {
 }
 
 export class XrayStreamRealitySettingsObject implements ISecurityProtocol {
-  public show = false;
+  public show? = false;
   public dest?: string;
   public xver?: number;
   public serverName?: string;
@@ -197,6 +197,18 @@ export class XrayStreamRealitySettingsObject implements ISecurityProtocol {
   }
 
   public normalize(): this {
+    this.show = !this.show ? undefined : this.show;
+    this.dest = !this.dest || this.dest === '' ? undefined : this.dest;
+    this.privateKey = !this.privateKey || this.privateKey === '' ? undefined : this.privateKey;
+    this.serverName = !this.serverName || this.serverName === '' ? undefined : this.serverName;
+    this.serverNames = !this.serverNames || this.serverNames.length === 0 ? undefined : this.serverNames;
+    this.xver = !this.xver || this.xver < 0 ? undefined : this.xver;
+    this.minClientVer = !this.minClientVer || this.minClientVer < 0 ? undefined : this.minClientVer;
+    this.maxClientVer = !this.maxClientVer || this.maxClientVer < 0 ? undefined : this.maxClientVer;
+    this.maxTimeDiff = !this.maxTimeDiff || this.maxTimeDiff < 0 ? undefined : this.maxTimeDiff;
+    this.shortIds = !this.shortIds || this.shortIds.length === 0 ? undefined : this.shortIds;
+    this.fingerprint = !this.fingerprint || this.fingerprint === '' ? undefined : this.fingerprint;
+    this.publicKey = !this.publicKey || this.publicKey === '' ? undefined : this.publicKey;
     return this;
   }
 }
@@ -559,7 +571,7 @@ const NET_KEEP: Record<string, StreamKey[]> = {
   tcp: ['tcpSettings'],
   kcp: ['kcpSettings'],
   ws: ['wsSettings'],
-  http: ['xhttpSettings'],
+  xhttp: ['xhttpSettings'],
   httpupgrade: ['httpupgradeSettings'],
   grpc: ['grpcSettings'],
   splithttp: ['splithttpSettings']

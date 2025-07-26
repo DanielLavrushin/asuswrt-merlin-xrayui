@@ -71,7 +71,8 @@
       HeadersMapping
     },
     props: {
-      transport: XrayStreamSettingsObject
+      transport: XrayStreamSettingsObject,
+      proxyType: String
     },
     setup(props) {
       const transport = ref<XrayStreamSettingsObject>(props.transport ?? new XrayStreamSettingsObject());

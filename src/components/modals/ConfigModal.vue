@@ -26,6 +26,8 @@
   import JsonPretty from 'vue-json-pretty';
   import 'vue-json-pretty/lib/styles.css';
   import { useI18n } from 'vue-i18n';
+  import engine from '@modules/Engine';
+  import xrayConfig from '@modules/XrayConfig';
 
   export default defineComponent({
     name: 'ConfigModal',
@@ -99,12 +101,14 @@
       // Loads the configuration from the URI and updates reactive state.
       const load = async () => {
         try {
-          const response = await fetch(configUri);
-          const data = await response.json();
-          originalConfig = data;
-          configJson.value = data;
-          configSize.value = JSON.stringify(data).length;
-          hide_sense_data();
+          const result = await engine.loadXrayConfig(xrayConfig);
+          if (result) {
+            const cfg = engine.prepareServerConfig(result);
+            originalConfig = cfg;
+            configJson.value = cfg;
+            configSize.value = JSON.stringify(cfg).length;
+            hide_sense_data();
+          }
         } catch (error) {
           console.error('Error loading config:', error);
         }

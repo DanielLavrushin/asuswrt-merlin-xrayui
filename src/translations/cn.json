@@ -585,6 +585,24 @@
       "label_pool_size": "池大小",
       "hint_pool_size": "指定 FakeDNS 存储的域名 - IP 映射最大数量，超出后按 LRU 规则淘汰，默认65535。",
       "fakedns": "fakedns"
+    },
+    "SockOpt": {
+      "label": "透明代理设置",
+      "hint": "透明代理设置可用于配置透明代理功能的各项选项。",
+      "label_tproxy_enable": "启用透明代理",
+      "label_tproxy_interface": "接口",
+      "label_tproxy_domain_strategy": "域名策略",
+      "label_tproxy_mark": "标记",
+      "label_tcpmptcp": "启用多路径 TCP",
+      "label_dealer_proxy": "Dealer 代理",
+      "label_tcp_no_delay": "TCP 无延迟",
+      "hint_tproxy_enable": "启用或禁用透明代理。",
+      "hint_tproxy_interface": "指定绑定的出站网络接口名称。支持 Linux、macOS、iOS。macOS 和 iOS 需要 `Xray-core v1.8.6` 或更高版本。",
+      "hint_tproxy_domain_strategy": "用于透明代理的域名策略。",
+      "hint_tproxy_mark": "用于透明代理的标记。",
+      "hint_tcp_no_delay": "启用或禁用 TCP No Delay，默认值为 false；建议在 `tcpMptcp`: true 时启用。",
+      "hint_tcpmptcp": "启用或禁用多路径 TCP。",
+      "hint_dealer_proxy": "出站代理的标识符。当该值不为空时，将使用指定的出站来建立连接。该选项可用于支持底层传输协议的链式转发。"
     }
   }
 }

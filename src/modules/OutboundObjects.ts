@@ -41,7 +41,7 @@ export class XrayOutboundObject<TProxy extends IProtocolType> {
     this.tag = this.tag === '' ? undefined : this.tag;
 
     this.streamSettings = plainToInstance(XrayStreamSettingsObject, this.streamSettings);
-    this.streamSettings = this.streamSettings.normalize();
+    this.streamSettings = this.streamSettings ? this.streamSettings.normalize() : undefined;
     if (this.surl && this.streamSettings) {
       this.streamSettings.realitySettings = undefined;
       this.streamSettings.tlsSettings = undefined;

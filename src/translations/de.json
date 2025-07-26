@@ -273,6 +273,24 @@
       "hint_certificate": "Zertifikat",
       "hint_fingerprint": "Gibt den Fingerabdruck der TLS Client Hello-Nachricht an. Wenn leer, wird die Fingerabdrucksimulation nicht aktiviert. Bei Aktivierung simuliert Xray den TLS-Fingerabdruck mithilfe der uTLS-Bibliothek oder generiert ihn zufällig.",
       "hint_session_resumption": "Wenn `false`, wird die Erweiterung `session_ticket` nicht in `ClientHello` aufgenommen. Häufig ist diese Erweiterung in Go-Programmen nicht aktiviert, daher wird empfohlen, den Standardwert beizubehalten. Standardmäßig `false`."
+    },
+    "SockOpt": {
+      "label": "Einstellungen für transparentes Proxying",
+      "hint": "Mit den Einstellungen für transparentes Proxying können verschiedene Optionen für die Funktion 'Transparenter Proxy' konfiguriert werden.",
+      "label_tproxy_enable": "Transparenten Proxy aktivieren",
+      "label_tproxy_interface": "Schnittstelle",
+      "label_tproxy_domain_strategy": "Domain-Strategie",
+      "label_tproxy_mark": "Markierung",
+      "label_tcpmptcp": "Multipath TCP aktivieren",
+      "label_dealer_proxy": "Ausgehender Proxy",
+      "label_tcp_no_delay": "TCP No Delay",
+      "hint_tproxy_enable": "Transparentes Proxying aktivieren oder deaktivieren.",
+      "hint_tproxy_interface": "Gibt den Namen der gebundenen ausgehenden Netzwerkschnittstelle an. Unterstützt unter Linux, macOS, iOS. Für macOS und iOS ist `Xray-core v1.8.6` oder höher erforderlich.",
+      "hint_tproxy_domain_strategy": "Die für transparentes Proxying zu verwendende Domain-Strategie.",
+      "hint_tproxy_mark": "Die für transparentes Proxying verwendete Markierung.",
+      "hint_tcp_no_delay": "TCP No Delay aktivieren oder deaktivieren. Standardwert false; empfohlen in Verbindung mit `tcpMptcp`: true.",
+      "hint_tcpmptcp": "Multipath TCP aktivieren oder deaktivieren.",
+      "hint_dealer_proxy": "Kennung für einen ausgehenden Proxy. Wenn der Wert nicht leer ist, wird der angegebene Outbound zum Aufbau der Verbindung verwendet. Diese Option kann die Kettenweiterleitung zugrunde liegender Transportprotokolle unterstützen."
     }
   }
 }

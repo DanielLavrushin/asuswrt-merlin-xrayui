@@ -702,7 +702,8 @@ export class XraySockoptObject {
     this.tcpMptcp = !this.tcpMptcp ? undefined : this.tcpMptcp;
     this.tcpNoDelay = !this.tcpNoDelay ? undefined : this.tcpNoDelay;
     this.domainStrategy = this.domainStrategy == 'AsIs' ? undefined : this.domainStrategy;
-    return this;
+    this.dialerProxy = this.dialerProxy == '' ? undefined : this.dialerProxy;
+    return isObjectEmpty(this) ? undefined : this;
   };
 }
 

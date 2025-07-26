@@ -585,6 +585,24 @@
       "label_pool_size": "Pool Size",
       "hint_pool_size": "Specifies the maximum number of domain name-IP mappings stored by `FakeDNS`. When the number of mappings exceeds this value, mappings will be eliminated according to the LRU rule. The default is `65535`.",
       "fakedns": "fakedns"
+    },
+    "SockOpt": {
+      "label": "Transparent Proxy Settings",
+      "hint": "Transparent Proxy Settings allow you to configure various options for the transparent proxy feature.",
+      "label_tproxy_enable": "Enable Transparent Proxy",
+      "label_tproxy_interface": "Interface",
+      "label_tproxy_domain_strategy": "Domain Strategy",
+      "label_tproxy_mark": "Mark",
+      "label_tcpmptcp": "Enable Multipath TCP",
+      "label_dealer_proxy": "Dealer Proxy",
+      "label_tcp_no_delay": "TCP No Delay",
+      "hint_tproxy_enable": "Enable or disable transparent proxying.",
+      "hint_tproxy_interface": "Specifies the name of the bound outbound network interface. supported by Linux MacOS iOS. MacOS iOS Requires `Xray-core v1.8.6` or higher.",
+      "hint_tproxy_domain_strategy": "The domain strategy to use for transparent proxying.",
+      "hint_tproxy_mark": "The mark to use for transparent proxying.",
+      "hint_tcp_no_delay": "Enable or disable TCP No Delay, Default value false, recommended to be enabled with `tcpMptcp`: true.",
+      "hint_tcpmptcp": "Enable or disable Multipath TCP.",
+      "hint_dealer_proxy": "An identifier for an outbound proxy. When the value is not empty, the specified outbound will be used to establish the connection. This option can be used to support chain forwarding of underlying transport protocols."
     }
   }
 }

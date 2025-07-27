@@ -90,7 +90,11 @@
       "label_hooks_after_firewall_cleanup": "防火墙清理后",
       "hint_hooks_before_firewall_start": "此脚本将在防火墙启动前执行。你可以用它向 iptables 设置任何自定义规则。<hr/> 不要向脚本添加 she‑bang（`#!/bin/sh`），它将被自动添加。",
       "hint_hooks_after_firewall_start": "此脚本将在防火墙启动后执行。你可以用它向 iptables 设置任何自定义规则。<hr/> 不要向脚本添加 she‑bang（`#!/bin/sh`），它将被自动添加。",
-      "hint_hooks_after_firewall_cleanup": "此脚本将在防火墙清理后执行。你可以用它从 iptables 清除已创建的自定义规则。<hr/> 不要向脚本添加 she‑bang（`#!/bin/sh`），它将被自动添加。"
+      "hint_hooks_after_firewall_cleanup": "此脚本将在防火墙清理后执行。你可以用它从 iptables 清除已创建的自定义规则。<hr/> 不要向脚本添加 she‑bang（`#!/bin/sh`），它将被自动添加。",
+      "tab_subscriptions": "订阅",
+      "label_subscription_links": "订阅源",
+      "hint_subscription_links": "您可以在此添加订阅源。<hr/> 可以添加多个链接，每行一个。<hr/> 需要点击 `获取` 按钮，从订阅源获取订阅链接。<hr/> 之后可以在出站设置中选择订阅的出站。",
+      "button_subscription_fetch": "获取"
     },
     "ImportConfig": {
       "import_config_file": "导入配置"
@@ -116,7 +120,14 @@
       "label_proxy_json": "JSON 地址",
       "label_proxy_file": "从文件恢复",
       "hint_proxy_json": "您可以在此处粘贴 JSON 文件的内容。XRAYUI 将修改配置以确保与路由器兼容。",
-      "hint_proxy_file": "选择您要导入的 JSON 文件。<hr/> 仅在您重新上传之前正常工作的配置并且确定它在您的路由器上可以正常工作时使用此选项。 <hr/> 如果您想确保与您的路由器兼容，请使用 `导入 JSON` 选项。"
+      "hint_proxy_file": "选择您要导入的 JSON 文件。<hr/> 仅在您重新上传之前正常工作的配置并且确定它在您的路由器上可以正常工作时使用此选项。 <hr/> 如果您想确保与您的路由器兼容，请使用 `导入 JSON` 选项。",
+      "label_keep_existing_rules": "保留现有路由规则",
+      "hint_keep_existing_rules": "如果选择此选项，XRAYUI 将保留你现有的路由规则和策略。如果不选择，XRAYUI 将用导入配置中的新规则和策略覆盖你现有的配置。<hr/>当你想清理入站和出站但保持现有路由规则不变时，此选项很有用。",
+      "alert_qr_decode_error": "无法解码二维码。",
+      "alert_not_supported_protocol": "该协议的解析尚不支持",
+      "alert_complete_setup": "你选择了完整设置。这将覆盖你当前的配置。确定要继续吗？",
+      "alert_invalid_json": "你提供的 JSON 无效。请检查语法并重试。",
+      "alert_import_success": "配置导入成功。"
     },
     "ConfigModal": {
       "modal_title": "XRAY 配置文件",
@@ -425,7 +436,9 @@
       "hint_tag": "出站连接的标识符。 <blockquote>**危险**: 非空时标签需唯一。</blockquote>",
       "hint_send_through": "发送数据的 IP 地址（多 IP 时生效，默认0.0.0.0）。<hr/> 可填入 IPv6 CIDR 块（如114:514:1919:810::/64），Xray 使用块内随机 IP 发起连接，需正确配置网络访问、路由表和内核参数。<hr/>使用 ndp 的网络不建议设置小于/120的子网，避免 NDP 泛洪和路由器邻居缓存溢出。",
       "label_subscription_url": "订阅 URL",
-      "hint_subscription_url": "输入用于获取此出站配置更新的订阅 URL。<hr/>更新将在每次重启服务时应用。<hr/>设置了 URL 后，某些设置将被禁用，因为它们由订阅管理。"
+      "hint_subscription_url": "输入用于获取此出站配置更新的订阅 URL。<hr/>更新将在每次重启服务时应用。<hr/>设置了 URL 后，某些设置将被禁用，因为它们由订阅管理。",
+      "label_subscription_type": "可用订阅配置",
+      "hint_subscription_type": "订阅配置的类型。<ul> <li>`xray`：Xray 订阅配置</li> <li>`clash`：Clash 订阅配置</li> </ul><hr/>仅当未设置 `subscriptionUrl` 时，此设置才会生效。"
     },
     "FreedomOutbound": {
       "modal_title": "直连（Freedom）",
@@ -578,6 +591,24 @@
       "label_pool_size": "池大小",
       "hint_pool_size": "指定 FakeDNS 存储的域名 - IP 映射最大数量，超出后按 LRU 规则淘汰，默认65535。",
       "fakedns": "fakedns"
+    },
+    "SockOpt": {
+      "label": "透明代理设置",
+      "hint": "透明代理设置可用于配置透明代理功能的各项选项。",
+      "label_tproxy_enable": "启用透明代理",
+      "label_tproxy_interface": "接口",
+      "label_tproxy_domain_strategy": "域名策略",
+      "label_tproxy_mark": "标记",
+      "label_tcpmptcp": "启用多路径 TCP",
+      "label_dealer_proxy": "Dealer 代理",
+      "label_tcp_no_delay": "TCP 无延迟",
+      "hint_tproxy_enable": "启用或禁用透明代理。",
+      "hint_tproxy_interface": "指定绑定的出站网络接口名称。支持 Linux、macOS、iOS。macOS 和 iOS 需要 `Xray-core v1.8.6` 或更高版本。",
+      "hint_tproxy_domain_strategy": "用于透明代理的域名策略。",
+      "hint_tproxy_mark": "用于透明代理的标记。",
+      "hint_tcp_no_delay": "启用或禁用 TCP No Delay，默认值为 false；建议在 `tcpMptcp`: true 时启用。",
+      "hint_tcpmptcp": "启用或禁用多路径 TCP。",
+      "hint_dealer_proxy": "出站代理的标识符。当该值不为空时，将使用指定的出站来建立连接。该选项可用于支持底层传输协议的链式转发。"
     }
   }
 }

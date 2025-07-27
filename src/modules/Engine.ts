@@ -112,6 +112,11 @@ export class EngineHooks {
   public after_firewall_start?: string;
   public after_firewall_cleanup?: string;
 }
+export class EngineSubscriptions {
+  public links?: string[] = [];
+  public protocols?: Record<string, string[]> = {};
+}
+
 export class EngineResponseConfig {
   public wireguard?: EngineWireguard;
   public reality?: EngineReality;
@@ -136,6 +141,7 @@ export class EngineResponseConfig {
     startup_delay: number;
     sleep_time: number;
     hooks?: EngineHooks;
+    subscriptions?: EngineSubscriptions;
   };
   public geodata?: EngineGeodatConfig = new EngineGeodatConfig();
   public loading?: EngineLoadingProgress;
@@ -188,7 +194,8 @@ export enum SubmitActions {
   deleteProfile = 'xrayui_configuration_deleteprofile',
   createBackup = 'xrayui_configuration_backup',
   clearBackup = 'xrayui_configuration_backupclear',
-  restoreBackup = 'xrayui_configuration_backuprestore'
+  restoreBackup = 'xrayui_configuration_backuprestore',
+  subscribeFetchProtocols = 'xrayui_configuration_sbscrpts_fetchprotocols'
 }
 
 export class Engine {
@@ -247,7 +254,6 @@ export class Engine {
       this.create_form_element(form, 'hidden', 'action_script', action);
       this.create_form_element(form, 'hidden', 'modified', '0');
       this.create_form_element(form, 'hidden', 'action_wait', '');
-
       const amngCustomInput = document.createElement('input');
       if (payload) {
         const chunkSize = 2048;
@@ -390,7 +396,25 @@ export class Engine {
       }
     });
     let responseConfig = response.data;
+    await this.loadSubscriptions(responseConfig);
     return responseConfig;
+  }
+
+  async loadSubscriptions(resp: EngineResponseConfig): Promise<EngineSubscriptions | undefined> {
+    const response = await axios.get<EngineResponseConfig>(`/ext/xrayui/subscriptions.json?_=${Date.now()}`, {
+      headers: {
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache',
+        Expires: '0'
+      }
+    });
+    if (resp.xray && !resp.xray.subscriptions) {
+      resp.xray.subscriptions = new EngineSubscriptions();
+    }
+    if (resp.xray?.subscriptions) {
+      resp.xray.subscriptions.protocols = response.data as Record<string, string[]>;
+    }
+    return resp.xray?.subscriptions;
   }
 
   async executeWithLoadingProgress(action: () => Promise<void>, windowReload = true): Promise<void> {

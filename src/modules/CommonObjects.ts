@@ -170,7 +170,7 @@ export class XrayStreamTlsSettingsObject implements ISecurityProtocol {
 }
 
 export class XrayStreamRealitySettingsObject implements ISecurityProtocol {
-  public show = false;
+  public show? = false;
   public dest?: string;
   public xver?: number;
   public serverName?: string;
@@ -197,6 +197,18 @@ export class XrayStreamRealitySettingsObject implements ISecurityProtocol {
   }
 
   public normalize(): this {
+    this.show = !this.show ? undefined : this.show;
+    this.dest = !this.dest || this.dest === '' ? undefined : this.dest;
+    this.privateKey = !this.privateKey || this.privateKey === '' ? undefined : this.privateKey;
+    this.serverName = !this.serverName || this.serverName === '' ? undefined : this.serverName;
+    this.serverNames = !this.serverNames || this.serverNames.length === 0 ? undefined : this.serverNames;
+    this.xver = !this.xver || this.xver < 0 ? undefined : this.xver;
+    this.minClientVer = !this.minClientVer || this.minClientVer < 0 ? undefined : this.minClientVer;
+    this.maxClientVer = !this.maxClientVer || this.maxClientVer < 0 ? undefined : this.maxClientVer;
+    this.maxTimeDiff = !this.maxTimeDiff || this.maxTimeDiff < 0 ? undefined : this.maxTimeDiff;
+    this.shortIds = !this.shortIds || this.shortIds.length === 0 ? undefined : this.shortIds;
+    this.fingerprint = !this.fingerprint || this.fingerprint === '' ? undefined : this.fingerprint;
+    this.publicKey = !this.publicKey || this.publicKey === '' ? undefined : this.publicKey;
     return this;
   }
 }
@@ -559,7 +571,7 @@ const NET_KEEP: Record<string, StreamKey[]> = {
   tcp: ['tcpSettings'],
   kcp: ['kcpSettings'],
   ws: ['wsSettings'],
-  http: ['xhttpSettings'],
+  xhttp: ['xhttpSettings'],
   httpupgrade: ['httpupgradeSettings'],
   grpc: ['grpcSettings'],
   splithttp: ['splithttpSettings']
@@ -690,7 +702,8 @@ export class XraySockoptObject {
     this.tcpMptcp = !this.tcpMptcp ? undefined : this.tcpMptcp;
     this.tcpNoDelay = !this.tcpNoDelay ? undefined : this.tcpNoDelay;
     this.domainStrategy = this.domainStrategy == 'AsIs' ? undefined : this.domainStrategy;
-    return this;
+    this.dialerProxy = this.dialerProxy == '' ? undefined : this.dialerProxy;
+    return isObjectEmpty(this) ? undefined : this;
   };
 }
 
@@ -713,50 +726,75 @@ export class XrayParsedUrlObject {
   public network?: string;
   public security?: string;
   public parsedParams: Record<string, string | undefined> = {};
+  public url!: string;
 
-  public constructor(url: string) {
-    const [protocol, rest] = url.split('://');
+  private fixPct(input: string) {
+    return input.replace(/%(?![0-9A-Fa-f]{2})/g, '%25');
+  }
+
+  public constructor(rawUrl: string) {
+    const trimmed = rawUrl.trim();
+    this.url = trimmed;
+    const [protocol, afterScheme] = trimmed.split('://');
     this.protocol = protocol;
     const extraParams = {} as Record<string, string>;
 
     if (protocol === XrayProtocol.VMESS) {
-      const vmessJson = JSON.parse(atob(rest)) as ParseJsonObject;
+      const vmessJson = JSON.parse(atob(afterScheme.replaceAll(' ', ''))) as ParseJsonObject;
       this.server = vmessJson.add;
-      this.port = parseInt(vmessJson.port);
+      this.port = parseInt(vmessJson.port, 10);
       this.uuid = vmessJson.id;
-      this.tag = vmessJson.ps;
+      this.tag = vmessJson.ps || vmessJson.add;
       this.network = vmessJson.net;
       this.security = vmessJson.tls;
       this.parsedParams = vmessJson;
       return;
     } else if (protocol === 'ss') {
-      const [authHost] = rest.split('?');
+      const hashIdx = afterScheme.indexOf('#');
+      const restNoFrag = hashIdx >= 0 ? afterScheme.slice(0, hashIdx) : afterScheme;
+      const [authHost] = restNoFrag.split('?');
       const [uuid] = authHost.split('@');
       const ssDecoded = atob(uuid);
-      const [method, pass] = ssDecoded.split(':');
+      const [method, pass, port] = ssDecoded.split(':');
+      const [_, server] = ssDecoded.split('@');
       extraParams.method = method;
       extraParams.pass = pass;
+      if (port) {
+        this.port = parseInt(port, 10);
+      }
+      if (server) {
+        this.server = server;
+      }
     }
 
-    const [authHost, queryFragment] = rest.split('?');
-    const [uuid, serverPort] = authHost.split('@');
-    const [server, port] = serverPort.split(':');
-    const [query, tag] = queryFragment.split('#');
+    const hashIdx = afterScheme.indexOf('#');
+    const fragment = hashIdx >= 0 ? afterScheme.slice(hashIdx + 1) : '';
+    const rest = hashIdx >= 0 ? afterScheme.slice(0, hashIdx) : afterScheme;
 
-    const params = new URLSearchParams(query);
+    const [authHost, queryFragmentRaw] = rest.split('?');
+    const [uuid, serverPort] = authHost.split('@');
+    const [server, port] = (serverPort || '').split(':');
+    let queryRaw = queryFragmentRaw || '';
+
+    this.server = this.server ?? server;
+    let tag = fragment || this.server;
+
+    if (!queryRaw) {
+      queryRaw = 'type=tcp&security=none';
+    }
+
+    const safeQuery = this.fixPct(queryRaw);
+    const params = new URLSearchParams(safeQuery);
     params.forEach((value: string, key: string) => {
-      // eslint-disable-next-line
       this.parsedParams[key] = value;
     });
 
     Object.keys(extraParams).forEach((key) => {
-      // eslint-disable-next-line
       this.parsedParams[key] = extraParams[key];
     });
 
     this.tag = tag;
-    this.server = server;
-    this.port = parseInt(port);
+    this.port = this.port ?? parseInt(port, 10);
     this.uuid = uuid;
     this.network = this.parsedParams.type;
     this.security = this.parsedParams.security;

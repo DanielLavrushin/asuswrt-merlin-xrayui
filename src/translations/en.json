@@ -90,7 +90,11 @@
       "label_hooks_after_firewall_cleanup": "After firewall cleanup",
       "hint_hooks_before_firewall_start": "This script will be executed before the firewall starts. You can use it to set up any custom rules to iptables.<hr/> Don't add she-bang (`#!/bin/sh`) to the script, it will be added automatically.",
       "hint_hooks_after_firewall_start": "This script will be executed after the firewall starts. You can use it to set up any custom rules to iptables.<hr/> Don't add she-bang (`#!/bin/sh`) to the script, it will be added automatically.",
-      "hint_hooks_after_firewall_cleanup": "This script will be executed after the firewall cleanup. You can use it to clean up any custom rules to iptables.<hr/> Don't add she-bang (`#!/bin/sh`) to the script, it will be added automatically."
+      "hint_hooks_after_firewall_cleanup": "This script will be executed after the firewall cleanup. You can use it to clean up any custom rules to iptables.<hr/> Don't add she-bang (`#!/bin/sh`) to the script, it will be added automatically.",
+      "tab_subscriptions": "Subscriptions",
+      "label_subscription_links": "Subscription Sources",
+      "hint_subscription_links": "Here you can add your subscription sources.<hr/> It is possible to add multiple links, one per line.<hr/> You need to press `fetch` button to fetch the subscription links from the sources.<hr/> After that you can select the subscription outbound in the  outbound settings.",
+      "button_subscription_fetch": "fetch"
     },
     "ImportConfig": {
       "import_config_file": "Import config file"
@@ -116,7 +120,14 @@
       "label_proxy_json": "Import JSON",
       "label_proxy_file": "Restore from File",
       "hint_proxy_json": "You can paste the contents of a JSON file here. XRAYUI will modify the configuration to ensure compatibility with the router.",
-      "hint_proxy_file": "Select the JSON file you want to import.<hr/> Use this option only if you are re-uploading a previously working configuration and are certain it works on your router. <hr/> If you want to ensure compatibility with your router, please use the `Import JSON` option instead."
+      "hint_proxy_file": "Select the JSON file you want to import.<hr/> Use this option only if you are re-uploading a previously working configuration and are certain it works on your router. <hr/> If you want to ensure compatibility with your router, please use the `Import JSON` option instead.",
+      "label_keep_existing_rules": "Keep existing routing rules",
+      "hint_keep_existing_rules": "If you select this option, XRAYUI will keep your existing routing rules and policies. If you don't select this option, XRAYUI will overwrite your existing routing rules and policies with the new ones from the imported configuration.<hr/>This option is useful if you want to clean inbounds and outbounds but keep your existing routing rules intact.",
+      "alert_qr_decode_error": "Failed to decode QR code.",
+      "alert_not_supported_protocol": "Parse of this protocol is not supported yet",
+      "alert_complete_setup": "You have selected a complete setup. This will overwrite your current configuration. Are you sure you want to proceed?",
+      "alert_invalid_json": "The JSON you provided is invalid. Please check the syntax and try again.",
+      "alert_import_success": "Configuration imported successfully."
     },
     "ConfigModal": {
       "modal_title": "Show XRAY configuration file",
@@ -425,7 +436,9 @@
       "hint_tag": "The identifier of this outbound connection, used to locate this connection in other configurations. <blockquote>**Danger**: When it is not empty, its value must be unique among all tags.</blockquote>",
       "hint_send_through": "The IP address used to send data. It is effective when the host has multiple IP addresses, and the default value is `0.0.0.0`.<hr/> It is allowed to fill in the IPv6 CIDR block (such as `114:514:1919:810::/64`), and Xray will use the random IP address in the address block to initiate external connections. Network access, routing tables, and kernel parameters need to be configured correctly to allow Xray to bind to any IP within the address block.<hr/> For networks that use ndp to access, it is not recommended to set a subnet smaller than `/120`, otherwise it may cause NDP flood and a series of problems such as the router neighbor cache being filled up.",
       "label_subscription_url": "Subscription URL",
-      "hint_subscription_url": "Enter the subscription URL that fetches updates for this outbound configuration.<hr/>Updates are applied on every service restart.<hr/>While a URL is set, certain settings are disabled because they are managed by the subscription."
+      "hint_subscription_url": "Enter the subscription URL that fetches updates for this outbound configuration.<hr/>Updates are applied on every service restart.<hr/>While a URL is set, certain settings are disabled because they are managed by the subscription.",
+      "label_subscription_type": "Available Subscription Configuration",
+      "hint_subscription_type": "The type of the subscription configuration. <ul> <li>`xray`: Xray subscription configuration</li> <li>`clash`: Clash subscription configuration</li> </ul><hr/>This setting is only effective when the `subscriptionUrl` is not set."
     },
     "FreedomOutbound": {
       "modal_title": "Freedom",
@@ -578,6 +591,24 @@
       "label_pool_size": "Pool Size",
       "hint_pool_size": "Specifies the maximum number of domain name-IP mappings stored by `FakeDNS`. When the number of mappings exceeds this value, mappings will be eliminated according to the LRU rule. The default is `65535`.",
       "fakedns": "fakedns"
+    },
+    "SockOpt": {
+      "label": "Transparent Proxy Settings",
+      "hint": "Transparent Proxy Settings allow you to configure various options for the transparent proxy feature.",
+      "label_tproxy_enable": "Enable Transparent Proxy",
+      "label_tproxy_interface": "Interface",
+      "label_tproxy_domain_strategy": "Domain Strategy",
+      "label_tproxy_mark": "Mark",
+      "label_tcpmptcp": "Enable Multipath TCP",
+      "label_dealer_proxy": "Dealer Proxy",
+      "label_tcp_no_delay": "TCP No Delay",
+      "hint_tproxy_enable": "Enable or disable transparent proxying.",
+      "hint_tproxy_interface": "Specifies the name of the bound outbound network interface. supported by Linux MacOS iOS. MacOS iOS Requires `Xray-core v1.8.6` or higher.",
+      "hint_tproxy_domain_strategy": "The domain strategy to use for transparent proxying.",
+      "hint_tproxy_mark": "The mark to use for transparent proxying.",
+      "hint_tcp_no_delay": "Enable or disable TCP No Delay, Default value false, recommended to be enabled with `tcpMptcp`: true.",
+      "hint_tcpmptcp": "Enable or disable Multipath TCP.",
+      "hint_dealer_proxy": "An identifier for an outbound proxy. When the value is not empty, the specified outbound will be used to establish the connection. This option can be used to support chain forwarding of underlying transport protocols."
     }
   }
 }

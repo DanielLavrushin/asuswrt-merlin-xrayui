@@ -2,14 +2,13 @@
   <modal ref="importModal" :title="$t('com.ImportConfigModal.modal_title')" width="700">
     <div class="formfontdesc">
       <p v-html="$t('com.ImportConfigModal.modal_desc')"></p>
+
       <table class="FormTable modal-form-table">
         <tbody>
           <tr>
-            <th>
-              {{ $t('com.ImportConfigModal.label_import_type') }}
-            </th>
+            <th>{{ $t('com.ImportConfigModal.label_import_type') }}</th>
             <td>
-              <select v-model="import_type" class="input_option">
+              <select v-model="state.importType" class="input_option">
                 <option value="qr">{{ $t('com.ImportConfigModal.opt_qr') }}</option>
                 <option value="url">{{ $t('com.ImportConfigModal.opt_url') }}</option>
                 <option value="json">{{ $t('com.ImportConfigModal.opt_json') }}</option>
@@ -17,95 +16,109 @@
               </select>
             </td>
           </tr>
-          <tr v-if="import_type === 'qr'">
+
+          <tr v-if="isQr">
             <th>
               {{ $t('com.ImportConfigModal.label_qr_code') }}
               <hint v-html="$t('com.ImportConfigModal.hint_qr_code')"></hint>
             </th>
             <td>
-              <input type="file" accept="image/*" v-on:change="select_qr" />
+              <input type="file" accept="image/*" @change="onQrFile" />
             </td>
           </tr>
-          <tr v-if="import_type === 'url'">
+
+          <tr v-if="isUrl">
             <th>
               {{ $t('com.ImportConfigModal.label_proxy_uri') }}
               <hint v-html="$t('com.ImportConfigModal.hint_proxy_uri')"></hint>
             </th>
             <td>
               <div class="textarea-wrapper">
-                <textarea v-model="protocolUrl" rows="25"></textarea>
+                <textarea v-model="state.protocol.url" rows="25"></textarea>
               </div>
             </td>
           </tr>
-          <tr v-if="import_type === 'json'">
+
+          <tr v-if="isJson">
             <th>
               {{ $t('com.ImportConfigModal.label_proxy_json') }}
               <hint v-html="$t('com.ImportConfigModal.hint_proxy_json')"></hint>
             </th>
             <td>
               <div class="textarea-wrapper">
-                <textarea v-model="protocolJson" rows="25"></textarea>
+                <textarea v-model="state.protocol.json" rows="25"></textarea>
               </div>
             </td>
           </tr>
-          <tr v-if="import_type === 'file'">
+          <tr v-if="isFile">
             <th>
               {{ $t('com.ImportConfigModal.label_proxy_file') }}
               <hint v-html="$t('com.ImportConfigModal.hint_proxy_file')"></hint>
             </th>
             <td>
-              <input type="file" accept="application/json" v-on:change="select_json_file" />
+              <input type="file" accept="application/json" @change="onJsonFile" />
             </td>
           </tr>
-          <tr v-show="import_type != 'file'">
+          <tr v-if="!isFile">
             <th>
               {{ $t('com.ImportConfigModal.label_complete_setup') }}
               <hint v-html="$t('com.ImportConfigModal.hint_complete_setup')"></hint>
             </th>
             <td>
-              <input type="checkbox" v-model="completeSetup" />
+              <input type="checkbox" v-model="state.completeSetup" />
             </td>
           </tr>
         </tbody>
-        <tbody v-show="completeSetup && import_type != 'file'">
-          <tr>
+
+        <tbody v-show="state.completeSetup && !isFile">
+          <tr v-show="!isFile">
+            <th>
+              {{ $t('com.ImportConfigModal.label_keep_existing_rules') }}
+              <hint v-html="$t('com.ImportConfigModal.hint_keep_existing_rules')"></hint>
+            </th>
+            <td>
+              <input type="checkbox" v-model="state.keepExistingRules" />
+            </td>
+          </tr>
+          <tr v-show="!state.keepExistingRules">
             <th>
               {{ $t('com.ImportConfigModal.label_unblock') }}
               <hint v-html="$t('com.ImportConfigModal.hint_unblock')"></hint>
             </th>
             <td class="flex-checkbox">
               <div v-for="(opt, index) in unblockItemsList" :key="index">
-                <input type="checkbox" v-model="unblockItems" class="input" :value="opt" :id="'destopt-' + index" />
+                <input type="checkbox" v-model="state.unblockItems" class="input" :value="opt" :id="'destopt-' + index" />
                 <label :for="'destopt-' + index" class="settingvalue">{{ opt }}</label>
               </div>
             </td>
           </tr>
-          <tr>
+          <tr v-show="!state.keepExistingRules">
             <th>
               {{ $t('com.ImportConfigModal.label_dont_break') }}
               <hint v-html="$t('com.ImportConfigModal.hint_dont_break')"></hint>
             </th>
             <td>
-              <input type="checkbox" v-model="bypassMode" />
+              <input type="checkbox" v-model="state.bypassMode" />
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-    <template v-slot:footer>
-      <input class="button_gen button_gen_small" type="button" :value="$t('labels.import')" @click.prevent="parse" v-show="import_type" />
+
+    <template #footer>
+      <input class="button_gen button_gen_small" type="button" :value="$t('labels.import')" @click.prevent="onImport" v-show="state.importType" />
     </template>
   </modal>
 </template>
-
 <script lang="ts">
-  import { defineComponent, ref } from 'vue';
-  import engine, { SubmitActions } from '@/modules/Engine';
+  import { defineComponent, ref, reactive, computed } from 'vue';
+  import engine from '@/modules/Engine';
   import Modal from '@main/Modal.vue';
   import jsQR from 'jsqr';
   import { XrayObject } from '@/modules/XrayConfig';
   import ProxyParser from '@/modules/parsers/ProxyParser';
   import Hint from '@main/Hint.vue';
+  import { plainToInstance } from 'class-transformer';
   import { XrayDnsObject, XrayLogObject, XrayRoutingPolicy, XrayRoutingObject, XraySniffingObject, XraySockoptObject } from '@/modules/CommonObjects';
   import { XrayDokodemoDoorInboundObject, XrayInboundObject } from '@/modules/InboundObjects';
   import {
@@ -123,280 +136,279 @@
   } from '@/modules/OutboundObjects';
   import { XrayProtocol } from '@/modules/Options';
   import { IProtocolType } from '@/modules/Interfaces';
-  import { plainToInstance } from 'class-transformer';
+  import { useI18n } from 'vue-i18n';
+
+  type ImportType = 'qr' | 'url' | 'json' | 'file';
 
   export default defineComponent({
     name: 'ImportConfigModal',
-    components: {
-      Modal,
-      Hint
-    },
+    components: { Modal, Hint },
     props: {
-      config: XrayObject
+      config: {
+        type: Object as () => XrayObject,
+        required: true
+      }
     },
-
+    emits: ['update:config'],
     setup(props, { emit }) {
+      const { t } = useI18n();
       const importModal = ref();
-      const import_type = ref<string>();
-      const protocolUrl = ref<string>();
-      const protocolJson = ref<string>();
-      const protocolQr = ref<string>();
-      const protocolFile = ref<string>();
-      const completeSetup = ref<boolean>(true);
-      const bypassMode = ref<boolean>(true);
-      const unblockItems = ref<string[]>(['Youtube']);
+      const state = reactive({
+        importType: '' as ImportType | '',
+        protocol: {
+          url: '' as string,
+          json: '' as string,
+          file: '' as string
+        },
+        completeSetup: true,
+        bypassMode: true,
+        keepExistingRules: false,
+        unblockItems: ['Youtube'] as string[]
+      });
 
-      const showModal = () => {
-        importModal.value.show();
-      };
+      const unblockItemsList = [
+        'Github',
+        'Google',
+        'Youtube',
+        'Telegram',
+        'TikTok',
+        'Reddit',
+        'LinkedIn',
+        'DeviantArt',
+        'Flibusta',
+        'Wikipedia',
+        'Twitch',
+        'Disney',
+        'Netflix',
+        'Discord',
+        'Instagram',
+        'Twitter',
+        'Patreon',
+        'Metacritic',
+        'Envato',
+        'SoundCloud',
+        'Kinopub',
+        'Facebook'
+      ].sort();
 
-      const select_json_file = async (event: any) => {
-        const file = event.target.files[0];
+      const isQr = computed(() => state.importType === 'qr');
+      const isUrl = computed(() => state.importType === 'url');
+      const isJson = computed(() => state.importType === 'json');
+      const isFile = computed(() => state.importType === 'file');
+
+      const show = () => importModal.value.show();
+
+      const onJsonFile = async (e: Event) => {
+        const input = e.target as HTMLInputElement;
+        const file = input.files?.[0];
+        if (!file) return;
         const reader = new FileReader();
-        reader.onload = (e) => {
-          if (e.target) {
-            protocolFile.value = e.target.result as string;
-          }
+        reader.onload = (ev) => {
+          if (ev.target) state.protocol.file = ev.target.result as string;
         };
         reader.readAsText(file);
       };
 
-      const select_qr = async (event: any) => {
-        const file = event.target.files[0];
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if (e.target) {
-            const file = event.target.files[0];
-            if (file) decodeQRCode(file).then((data) => (protocolUrl.value = data));
-          }
-        };
-        reader.readAsDataURL(file);
+      const onQrFile = async (e: Event) => {
+        const input = e.target as HTMLInputElement;
+        const file = input.files?.[0];
+        if (!file) return;
+        const data = await decodeQRCode(file);
+        if (data) state.protocol.url = data;
       };
 
-      async function decodeQRCode(imageFile: MediaSource) {
+      const decodeQRCode = async (imageFile: File) => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        const image = new Image();
+        image.src = URL.createObjectURL(imageFile);
+        await new Promise((resolve) => (image.onload = resolve as any));
+        canvas.width = image.width;
+        canvas.height = image.height;
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
+        if (!code) {
+          alert(t('com.ImportConfigModal.alert_qr_decode_error'));
 
-        if (ctx) {
-          const image = new Image();
-          image.src = URL.createObjectURL(imageFile);
-
-          await new Promise((resolve) => {
-            image.onload = resolve;
-          });
-
-          canvas.width = image.width;
-          canvas.height = image.height;
-          ctx.fillStyle = 'white';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-          ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
-
-          if (code) {
-            return code.data;
-          }
-          alert('Failed to decode QR code');
+          return;
         }
-      }
-
-      const show = () => {
-        importModal.value.show();
+        return code.data;
       };
 
-      const set_default_config = (outboundTag: string) => {
-        if (props.config) {
-          props.config.outbounds = props.config.outbounds || [];
-          props.config.inbounds = [];
+      const rebuildConfig = (primaryOutbound: XrayOutboundObject<IProtocolType>) => {
+        const cfg = props.config;
+        cfg.inbounds = [];
+        cfg.outbounds = [];
+        cfg.log = new XrayLogObject().normalize();
+        cfg.dns = new XrayDnsObject().default().normalize();
 
-          props.config.log = new XrayLogObject().normalize();
-          props.config.dns = new XrayDnsObject().default().normalize();
+        const in_doko = new XrayInboundObject<XrayDokodemoDoorInboundObject>();
+        in_doko.tag = 'all-in';
+        in_doko.settings = new XrayDokodemoDoorInboundObject();
+        in_doko.protocol = XrayProtocol.DOKODEMODOOR;
+        in_doko.port = 5599;
+        in_doko.listen = '127.0.0.1';
+        in_doko.settings.network = 'tcp,udp';
+        if (in_doko.streamSettings) {
+          in_doko.streamSettings.sockopt = new XraySockoptObject();
+          in_doko.streamSettings.sockopt.tproxy = 'tproxy';
+        }
+        in_doko.settings.followRedirect = true;
+        in_doko.sniffing = new XraySniffingObject();
+        in_doko.sniffing.enabled = true;
+        in_doko.sniffing.destOverride = ['http', 'tls', 'quic'];
+        cfg.inbounds.push(in_doko);
 
-          const in_doko = new XrayInboundObject<XrayDokodemoDoorInboundObject>();
-          in_doko.tag = 'all-in';
-          in_doko.settings = new XrayDokodemoDoorInboundObject();
-          in_doko.protocol = XrayProtocol.DOKODEMODOOR;
-          in_doko.port = 5599;
-          in_doko.listen = '127.0.0.1';
-          in_doko.settings.network = 'tcp,udp';
-          if (in_doko.streamSettings) {
-            in_doko.streamSettings.sockopt = new XraySockoptObject();
-            in_doko.streamSettings.sockopt.tproxy = 'tproxy';
-          }
-          in_doko.settings.followRedirect = true;
-          in_doko.sniffing = new XraySniffingObject();
-          in_doko.sniffing.enabled = true;
-          in_doko.sniffing.destOverride = ['http', 'tls', 'quic'];
-          props.config.inbounds.push(in_doko);
+        cfg.outbounds.push(primaryOutbound);
 
-          if (props.config.outbounds.filter((outbound) => outbound.protocol === XrayProtocol.FREEDOM).length === 0) {
-            const out_free = new XrayOutboundObject<XrayFreedomOutboundObject>();
-            out_free.tag = 'direct';
-            out_free.settings = new XrayFreedomOutboundObject();
-            out_free.protocol = XrayProtocol.FREEDOM;
-            props.config.outbounds.splice(0, 0, out_free);
-          }
+        const freedomExists = cfg.outbounds.some((o) => o.protocol === XrayProtocol.FREEDOM);
+        if (!freedomExists) {
+          const out_free = new XrayOutboundObject<XrayFreedomOutboundObject>();
+          out_free.tag = 'direct';
+          out_free.settings = new XrayFreedomOutboundObject();
+          out_free.protocol = XrayProtocol.FREEDOM;
+          cfg.outbounds.splice(0, 0, out_free);
+        }
 
-          if (props.config.outbounds.filter((outbound) => outbound.protocol === XrayProtocol.BLACKHOLE).length === 0) {
-            const out_block = new XrayOutboundObject<XrayBlackholeOutboundObject>();
-            out_block.tag = 'block';
-            out_block.settings = new XrayBlackholeOutboundObject();
-            out_block.protocol = XrayProtocol.BLACKHOLE;
-            props.config.outbounds.splice(props.config.outbounds.length, 0, out_block);
-          }
+        const blackholeExists = cfg.outbounds.some((o) => o.protocol === XrayProtocol.BLACKHOLE);
+        if (!blackholeExists) {
+          const out_block = new XrayOutboundObject<XrayBlackholeOutboundObject>();
+          out_block.tag = 'block';
+          out_block.settings = new XrayBlackholeOutboundObject();
+          out_block.protocol = XrayProtocol.BLACKHOLE;
+          cfg.outbounds.push(out_block);
+        }
 
-          props.config.routing = new XrayRoutingObject().default(outboundTag, unblockItems.value).normalize();
-          if (bypassMode.value) {
-            props.config.routing.policies = [new XrayRoutingPolicy().default().normalize()!];
-          }
+        const proxyTag = cfg.outbounds.find((o) => o.tag && o.protocol != XrayProtocol.FREEDOM && o.protocol != XrayProtocol.BLACKHOLE)?.tag ?? 'proxy';
+
+        if (!state.keepExistingRules) {
+          cfg.routing = new XrayRoutingObject().default(proxyTag, state.unblockItems).normalize();
+          if (state.bypassMode) cfg.routing.policies = [new XrayRoutingPolicy().default().normalize()!];
         }
       };
 
-      const parse = async () => {
-        if (completeSetup.value && !confirm('You selected a complete setup. This will overwrite your current configuration. Are you sure?')) {
+      const onImport = async () => {
+        if (!props.config) {
+          alert(t('com.ImportConfigModal.alert_not_supported_protocol'));
           return;
         }
 
-        if (props.config) {
-          if (protocolUrl.value) {
-            let parser: ProxyParser;
-            try {
-              parser = new ProxyParser(protocolUrl.value);
-            } catch (e) {
-              alert('Failed to parse the proxy URI. Possible reasons: invalid format or unsupported protocol.');
-              console.error(e);
-              return;
-            }
-            const proxy: XrayOutboundObject<IProtocolType> | null = parser.getOutbound();
-            if (proxy) {
-              props.config.outbounds.push(proxy);
-            }
-          } else if (protocolJson.value) {
-            let jsonConfig;
-            try {
-              jsonConfig = plainToInstance(XrayObject, JSON.parse(protocolJson.value));
-            } catch (e) {
-              alert('Invalid JSON format. Please check the structure.');
-              console.error('Failed to parse JSON:', e);
-              return;
-            }
+        if (state.completeSetup && !isFile.value) {
+          const proceed = confirm('You selected a complete setup. This will overwrite your current configuration. Are you sure?');
+          if (!proceed) return;
+        }
 
-            if (jsonConfig?.outbounds) {
-              for (const outbound of jsonConfig.outbounds) {
-                let outProxy: XrayOutboundObject<IProtocolType> | null = null;
-                switch (outbound.protocol) {
-                  case XrayProtocol.VMESS:
-                    outProxy = plainToInstance(XrayOutboundObject<XrayVmessOutboundObject>, outbound);
-                    break;
-                  case XrayProtocol.VLESS:
-                    outProxy = plainToInstance(XrayOutboundObject<XrayVlessOutboundObject>, outbound, { enableImplicitConversion: true });
-                    break;
-                  case XrayProtocol.SHADOWSOCKS:
-                    outProxy = plainToInstance(XrayOutboundObject<XrayShadowsocksOutboundObject>, outbound);
-                    break;
-                  case XrayProtocol.TROJAN:
-                    outProxy = plainToInstance(XrayOutboundObject<XrayTrojanOutboundObject>, outbound);
-                    break;
-                  case XrayProtocol.WIREGUARD:
-                    outProxy = plainToInstance(XrayOutboundObject<XrayWireguardOutboundObject>, outbound);
-                    break;
-                  case XrayProtocol.LOOPBACK:
-                    outProxy = plainToInstance(XrayOutboundObject<XrayLoopbackOutboundObject>, outbound);
-                    break;
-                  case XrayProtocol.HTTP:
-                    outProxy = plainToInstance(XrayOutboundObject<XrayHttpOutboundObject>, outbound);
-                    break;
-                  case XrayProtocol.DNS:
-                    outProxy = plainToInstance(XrayOutboundObject<XrayFreedomOutboundObject>, outbound);
-                    break;
-                  case XrayProtocol.SOCKS:
-                    outProxy = plainToInstance(XrayOutboundObject<XraySocksOutboundObject>, outbound);
-                    break;
-                  case XrayProtocol.FREEDOM:
-                  case XrayProtocol.BLACKHOLE:
-                  default:
-                    continue;
-                }
-                outProxy.tag = outbound.tag ?? `out-${outbound.protocol.toLowerCase()}`;
-                props.config.outbounds.push(outProxy);
-              }
-            } else {
-              alert('Invalid JSON format. Please check the structure.');
-              return;
-            }
-          } else if (protocolFile.value) {
-            let jsonConfig;
-            try {
-              jsonConfig = plainToInstance(XrayObject, JSON.parse(protocolFile.value));
-            } catch (e) {
-              alert('Invalid JSON format. Please check the structure.');
-              console.error('Failed to parse JSON:', e);
-              return;
-            }
-
-            await engine.loadXrayConfig(jsonConfig);
-            importModal.value.close();
-            alert(`Configuration imported successfully`);
+        if (isFile.value) {
+          let jsonConfig: XrayObject | undefined;
+          try {
+            jsonConfig = plainToInstance(XrayObject, JSON.parse(state.protocol.file));
+          } catch (e) {
+            alert(t('com.ImportConfigModal.alert_invalid_json'));
+            console.error('Failed to parse JSON:', e);
             return;
           }
-
-          const proxyTag = props.config.outbounds.find((o) => o.tag && o.protocol != XrayProtocol.FREEDOM && o.protocol != XrayProtocol.BLACKHOLE)?.tag ?? 'proxy';
-
-          if (completeSetup.value) {
-            set_default_config(proxyTag);
-          }
-
-          emit('update:config', props.config);
+          await engine.loadXrayConfig(jsonConfig);
           importModal.value.close();
-          alert(`Configuration imported successfully`);
-        } else {
-          alert(`Parse of this protocol is not supported yet`);
+          alert(t('com.ImportConfigModal.alert_import_success'));
+          return;
         }
+
+        let primaryOutbound: XrayOutboundObject<IProtocolType> | null = null;
+
+        if (isUrl.value) {
+          try {
+            const parser = new ProxyParser(state.protocol.url);
+            primaryOutbound = parser.getOutbound();
+          } catch (e) {
+            alert(t('com.ImportConfigModal.alert_not_supported_protocol'));
+            console.error(e);
+            return;
+          }
+        } else if (isJson.value) {
+          let jsonConfig: XrayObject | undefined;
+          try {
+            jsonConfig = plainToInstance(XrayObject, JSON.parse(state.protocol.json));
+          } catch (e) {
+            alert(t('com.ImportConfigModal.alert_invalid_json'));
+            console.error('Failed to parse JSON:', e);
+            return;
+          }
+          if (!jsonConfig?.outbounds || jsonConfig.outbounds.length === 0) {
+            alert(t('com.ImportConfigModal.alert_invalid_json'));
+            return;
+          }
+          const first = jsonConfig.outbounds.find((o) => ![XrayProtocol.FREEDOM, XrayProtocol.BLACKHOLE].includes(o.protocol));
+          if (!first) {
+            alert(t('com.ImportConfigModal.alert_not_supported_protocol'));
+            return;
+          }
+          switch (first.protocol) {
+            case XrayProtocol.VMESS:
+              primaryOutbound = plainToInstance(XrayOutboundObject<XrayVmessOutboundObject>, first);
+              break;
+            case XrayProtocol.VLESS:
+              primaryOutbound = plainToInstance(XrayOutboundObject<XrayVlessOutboundObject>, first, { enableImplicitConversion: true });
+              break;
+            case XrayProtocol.SHADOWSOCKS:
+              primaryOutbound = plainToInstance(XrayOutboundObject<XrayShadowsocksOutboundObject>, first);
+              break;
+            case XrayProtocol.TROJAN:
+              primaryOutbound = plainToInstance(XrayOutboundObject<XrayTrojanOutboundObject>, first);
+              break;
+            case XrayProtocol.WIREGUARD:
+              primaryOutbound = plainToInstance(XrayOutboundObject<XrayWireguardOutboundObject>, first);
+              break;
+            case XrayProtocol.LOOPBACK:
+              primaryOutbound = plainToInstance(XrayOutboundObject<XrayLoopbackOutboundObject>, first);
+              break;
+            case XrayProtocol.HTTP:
+              primaryOutbound = plainToInstance(XrayOutboundObject<XrayHttpOutboundObject>, first);
+              break;
+            case XrayProtocol.DNS:
+              primaryOutbound = plainToInstance(XrayOutboundObject<XrayFreedomOutboundObject>, first);
+              break;
+            case XrayProtocol.SOCKS:
+              primaryOutbound = plainToInstance(XrayOutboundObject<XraySocksOutboundObject>, first);
+              break;
+            default:
+              break;
+          }
+          if (primaryOutbound) primaryOutbound.tag = first.tag ?? `out-${first.protocol.toLowerCase()}`;
+        }
+
+        if (!primaryOutbound) {
+          alert('Failed to build outbound from the provided data');
+          return;
+        }
+
+        if (state.completeSetup) {
+          rebuildConfig(primaryOutbound);
+        } else {
+          props.config.outbounds.push(primaryOutbound);
+        }
+
+        emit('update:config', props.config);
+        importModal.value.close();
+        alert(t('com.ImportConfigModal.alert_import_success'));
       };
 
       return {
         importModal,
-        import_type,
-        protocolUrl,
-        protocolJson,
-        protocolFile,
-        protocolQr,
-        bypassMode,
-        completeSetup,
-        unblockItemsList: [
-          'Github',
-          'Google',
-          'Youtube',
-          'Telegram',
-          'TikTok',
-          'Reddit',
-          'LinkedIn',
-          'DeviantArt',
-          'Flibusta',
-          'Wikipedia',
-          'Twitch',
-          'Disney',
-          'Netflix',
-          'Discord',
-          'Instagram',
-          'Twitter',
-          'Patreon',
-          'Metacritic',
-          'Envato',
-          'SoundCloud',
-          'Kinopub',
-          'Facebook'
-        ].sort(),
-        unblockItems,
-        select_json_file,
-        select_qr,
-        showModal,
-        parse,
-        show
+        state,
+        unblockItemsList,
+        isQr,
+        isUrl,
+        isJson,
+        isFile,
+        show,
+        onImport,
+        onQrFile,
+        onJsonFile
       };
     }
   });
 </script>
-<style scoped></style>

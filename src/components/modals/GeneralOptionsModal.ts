@@ -1,5 +1,5 @@
 import { reactive, toRaw, Ref } from 'vue';
-import engine, { EngineHooks, SubmitActions } from '@/modules/Engine';
+import engine, { EngineHooks, EngineSubscriptions, SubmitActions } from '@/modules/Engine';
 import { XrayObject } from '@/modules/XrayConfig';
 import { EngineResponseConfig } from '@/modules/Engine';
 
@@ -15,18 +15,25 @@ export default function useGeneralOptions(cfg: XrayObject, ui: Ref<EngineRespons
     geo_ip_url: ui.value?.geodata?.geoip_url ?? '',
     geo_site_url: ui.value?.geodata?.geosite_url ?? '',
     geo_auto_update: ui.value?.geodata?.auto_update ?? false,
-    hooks: ui.value?.xray?.hooks ?? new EngineHooks()
+    hooks: ui.value?.xray?.hooks ?? new EngineHooks(),
+    subscriptions: ui.value?.xray?.subscriptions ?? new EngineSubscriptions(),
+    normalise: function () {
+      this.subscriptions.protocols = undefined;
+      return this;
+    }
   });
 
-  const options = reactive({ ...makeBase() });
+  let options = reactive({ ...makeBase() });
 
   const hydrate = () => Object.assign(options, makeBase());
 
   const persist = async () => {
     await engine.executeWithLoadingProgress(async () => {
+      options = options.normalise();
       await engine.submit(SubmitActions.generalOptionsApply, toRaw(options));
     });
   };
+
   return {
     options,
     log_levels: ['none', 'debug', 'info', 'warning', 'error'],

@@ -89,7 +89,11 @@
       "label_hooks_after_firewall_cleanup": "Nach der Firewall-Bereinigung",
       "hint_hooks_before_firewall_start": "Dieses Skript wird ausgeführt, bevor die Firewall startet. Sie können es verwenden, um beliebige eigene Regeln in iptables einzurichten.<hr/> Fügen Sie keinen Shebang (`#!/bin/sh`) zum Skript hinzu, er wird automatisch ergänzt.",
       "hint_hooks_after_firewall_start": "Dieses Skript wird ausgeführt, nachdem die Firewall gestartet wurde. Sie können es verwenden, um beliebige eigene Regeln in iptables einzurichten.<hr/> Fügen Sie keinen Shebang (`#!/bin/sh`) zum Skript hinzu, er wird automatisch ergänzt.",
-      "hint_hooks_after_firewall_cleanup": "Dieses Skript wird ausgeführt, nachdem die Firewall bereinigt wurde. Sie können es verwenden, um eigene, zuvor erstellte Regeln aus iptables zu entfernen.<hr/> Fügen Sie keinen Shebang (`#!/bin/sh`) zum Skript hinzu, er wird automatisch ergänzt."
+      "hint_hooks_after_firewall_cleanup": "Dieses Skript wird ausgeführt, nachdem die Firewall bereinigt wurde. Sie können es verwenden, um eigene, zuvor erstellte Regeln aus iptables zu entfernen.<hr/> Fügen Sie keinen Shebang (`#!/bin/sh`) zum Skript hinzu, er wird automatisch ergänzt.",
+      "tab_subscriptions": "Abonnements",
+      "label_subscription_links": "Abonnementquellen",
+      "hint_subscription_links": "Hier können Sie Ihre Abonnementquellen hinzufügen.<hr/> Es ist möglich, mehrere Links hinzuzufügen, einen pro Zeile.<hr/> Klicken Sie auf die Schaltfläche `Abrufen`, um die Abonnement-Links aus den Quellen abzurufen.<hr/> Danach können Sie das Abonnement‑Outbound in den Outbound‑Einstellungen auswählen.",
+      "button_subscription_fetch": "Abrufen"
     },
     "ImportConfig": {
       "import_config_file": "Konfigurationsdatei importieren"
@@ -106,7 +110,14 @@
       "hint_proxy_uri": "Hier können Sie die URL des Protokolls einfügen. Normalerweise beginnen diese mit `vless://` oder `vmess://`.",
       "hint_complete_setup": "Wenn Sie diese Option wählen, überschreibt XRAYUI Ihre aktuelle Konfiguration mit der am besten geeigneten Standardkonfiguration für das importierte Protokoll.<hr />Es wird eine Standard-Routing-Regel erstellt, um die ausgehende Proxy-Verbindung zu testen. Nach dem Import und der Anwendung der Konfiguration können Sie versuchen, https://ip-api.com/ zu öffnen, um die IP des verbundenen Servers zu sehen.<hr />Anschließend wird empfohlen, eigene Routing-Regeln für den Datenverkehr einzurichten.",
       "hint_unblock": "Wählen Sie die Dienste aus, die Sie freischalten möchten. Dies erstellt automatisch eine Routing-Regel, die deren Datenverkehr über den Proxy leitet.<hr />Es wird empfohlen, nur Dienste auszuwählen, die in Ihrer Region blockiert sind. Diese Regeln können Sie später im Abschnitt \"Routing\" hinzufügen, aktualisieren oder löschen.",
-      "hint_dont_break": "Aktivieren Sie dieses Kästchen, wenn Sie IoT-Geräte in Ihrem Router-Netzwerk haben, wie z. B. Smart TVs, Xbox, PlayStation oder andere Geräte, die durch XRAY nicht beeinträchtigt werden sollen.<hr />Diese Option beschränkt den umgeleiteten Datenverkehr zu XRAY über Ihren Router, wodurch das Risiko einer Unterbrechung dieser Geräte verringert wird. Später können Sie diese Option im Routing-Abschnitt (\"Ports Bypass/Redirect Policy\") anpassen.<hr />Wenn Sie keine IoT-Geräte haben, lassen Sie diese Option am besten deaktiviert."
+      "hint_dont_break": "Aktivieren Sie dieses Kästchen, wenn Sie IoT-Geräte in Ihrem Router-Netzwerk haben, wie z. B. Smart TVs, Xbox, PlayStation oder andere Geräte, die durch XRAY nicht beeinträchtigt werden sollen.<hr />Diese Option beschränkt den umgeleiteten Datenverkehr zu XRAY über Ihren Router, wodurch das Risiko einer Unterbrechung dieser Geräte verringert wird. Später können Sie diese Option im Routing-Abschnitt (\"Ports Bypass/Redirect Policy\") anpassen.<hr />Wenn Sie keine IoT-Geräte haben, lassen Sie diese Option am besten deaktiviert.",
+      "label_keep_existing_rules": "Bestehende Routing-Regeln behalten",
+      "hint_keep_existing_rules": "Wenn Sie diese Option auswählen, behält XRAYUI Ihre bestehenden Routing-Regeln und -Richtlinien bei. Wenn Sie sie nicht auswählen, überschreibt XRAYUI Ihre bestehenden Routing-Regeln und -Richtlinien mit den neuen aus der importierten Konfiguration.<hr/>Diese Option ist nützlich, wenn Sie Inbounds und Outbounds bereinigen, aber Ihre bestehenden Routing-Regeln beibehalten möchten.",
+      "alert_qr_decode_error": "QR-Code konnte nicht dekodiert werden.",
+      "alert_not_supported_protocol": "Das Parsen dieses Protokolls wird derzeit nicht unterstützt",
+      "alert_complete_setup": "Sie haben eine vollständige Einrichtung ausgewählt. Dadurch wird Ihre aktuelle Konfiguration überschrieben. Möchten Sie wirklich fortfahren?",
+      "alert_invalid_json": "Der von Ihnen bereitgestellte JSON ist ungültig. Bitte überprüfen Sie die Syntax und versuchen Sie es erneut.",
+      "alert_import_success": "Konfiguration erfolgreich importiert."
     },
     "ConfigModal": {
       "modal_title": "XRAY-Konfigurationsdatei anzeigen",
@@ -266,6 +277,24 @@
       "hint_certificate": "Zertifikat",
       "hint_fingerprint": "Gibt den Fingerabdruck der TLS Client Hello-Nachricht an. Wenn leer, wird die Fingerabdrucksimulation nicht aktiviert. Bei Aktivierung simuliert Xray den TLS-Fingerabdruck mithilfe der uTLS-Bibliothek oder generiert ihn zufällig.",
       "hint_session_resumption": "Wenn `false`, wird die Erweiterung `session_ticket` nicht in `ClientHello` aufgenommen. Häufig ist diese Erweiterung in Go-Programmen nicht aktiviert, daher wird empfohlen, den Standardwert beizubehalten. Standardmäßig `false`."
+    },
+    "SockOpt": {
+      "label": "Einstellungen für transparentes Proxying",
+      "hint": "Mit den Einstellungen für transparentes Proxying können verschiedene Optionen für die Funktion 'Transparenter Proxy' konfiguriert werden.",
+      "label_tproxy_enable": "Transparenten Proxy aktivieren",
+      "label_tproxy_interface": "Schnittstelle",
+      "label_tproxy_domain_strategy": "Domain-Strategie",
+      "label_tproxy_mark": "Markierung",
+      "label_tcpmptcp": "Multipath TCP aktivieren",
+      "label_dealer_proxy": "Ausgehender Proxy",
+      "label_tcp_no_delay": "TCP No Delay",
+      "hint_tproxy_enable": "Transparentes Proxying aktivieren oder deaktivieren.",
+      "hint_tproxy_interface": "Gibt den Namen der gebundenen ausgehenden Netzwerkschnittstelle an. Unterstützt unter Linux, macOS, iOS. Für macOS und iOS ist `Xray-core v1.8.6` oder höher erforderlich.",
+      "hint_tproxy_domain_strategy": "Die für transparentes Proxying zu verwendende Domain-Strategie.",
+      "hint_tproxy_mark": "Die für transparentes Proxying verwendete Markierung.",
+      "hint_tcp_no_delay": "TCP No Delay aktivieren oder deaktivieren. Standardwert false; empfohlen in Verbindung mit `tcpMptcp`: true.",
+      "hint_tcpmptcp": "Multipath TCP aktivieren oder deaktivieren.",
+      "hint_dealer_proxy": "Kennung für einen ausgehenden Proxy. Wenn der Wert nicht leer ist, wird der angegebene Outbound zum Aufbau der Verbindung verwendet. Diese Option kann die Kettenweiterleitung zugrunde liegender Transportprotokolle unterstützen."
     }
   }
 }

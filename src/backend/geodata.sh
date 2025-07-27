@@ -8,13 +8,11 @@ update_community_geodata() {
     local geositeurl=$(github_proxy_url "${geosite_url:-$DEFAULT_GEOSITE_URL}")
     local geoipurl=$(github_proxy_url "${geoip_url:-$DEFAULT_GEOIP_URL}")
 
-    local target_dir=$(dirname "$(which xray)")
-
-    mkdir -p "$target_dir"
+    local xray_dir=$(dirname "$(which xray)")
 
     log_info "Downloading geosite.dat from $geositeurl..."
     update_loading_progress "Downloading geosite.dat..."
-    curl -L "$geositeurl" -o "$target_dir/geosite.dat"
+    curl -L "$geositeurl" -o "$ADDON_TMP_DIR/geosite.dat"
     if [ $? -ne 0 ]; then
         log_error "Failed to download geosite.dat."
         return 1
@@ -22,20 +20,23 @@ update_community_geodata() {
 
     log_info "Downloading geoip.dat from $geoipurl..."
     update_loading_progress "Downloading geoip.dat..."
-    curl -L "$geoipurl" -o "$target_dir/geoip.dat"
+    curl -L "$geoipurl" -o "$ADDON_TMP_DIR/geoip.dat"
     if [ $? -ne 0 ]; then
         log_error "Failed to download geoip.dat."
         return 1
     fi
 
-    if [ -f "$target_dir/geosite.dat" ] && [ -f "$target_dir/geoip.dat" ]; then
-        log_ok "Files successfully placed in $target_dir."
+    mv -f "$ADDON_TMP_DIR/geosite.dat" "$xray_dir/geosite.dat"
+    mv -f "$ADDON_TMP_DIR/geoip.dat" "$xray_dir/geoip.dat"
+
+    if [ -f "$xray_dir/geosite.dat" ] && [ -f "$xray_dir/geoip.dat" ]; then
+        log_ok "Files successfully placed in $xray_dir."
         if [ -f "$XRAY_PIDFILE" ]; then
             update_loading_progress "Restarting Xray service..."
             restart
         fi
     else
-        log_error "Failed to place geosite.dat/geoip.dat in $target_dir."
+        log_error "Failed to place geosite.dat/geoip.dat in $xray_dir."
     fi
 }
 

@@ -29,8 +29,8 @@
         <input type="text" placeholder="100-1000" class="input_20_table" v-model="extra.xPaddingBytes" />
       </td>
     </tr>
-
-    <tr>
+    <headers-mapping v-if="transport.xhttpSettings" :headersMap="transport.xhttpSettings.headers" @on:header:update="onheaderapupdate" />
+    <tr class="unlocked">
       <th>Disable gRPC disguise</th>
       <td><input type="checkbox" v-model="extra.noGRPCHeader" /></td>
     </tr>
@@ -47,7 +47,7 @@
       </td>
     </tr>
 
-    <tr>
+    <tr class="unlocked">
       <th>Min interval between POSTs (ms)</th>
       <td>
         <input type="number" min="0" class="input_20_table" v-model.number="extra.scMinPostsIntervalMs" />
@@ -67,6 +67,8 @@
         <input type="text" placeholder="20-80" class="input_20_table" v-model="extra.scStreamUpServerSecs" />
       </td>
     </tr>
+  </tbody>
+  <tbody class="unlocked">
     <tr>
       <th>XMUX · Max concurrent streams</th>
       <td>
@@ -123,19 +125,23 @@
       HeadersMapping
     },
     props: {
-      transport: XrayStreamSettingsObject
+      transport: XrayStreamSettingsObject,
+      proxyType: String
     },
     setup(props) {
       const transport = ref<XrayStreamSettingsObject>(props.transport ?? new XrayStreamSettingsObject());
       const extra = computed(() => transport.value.xhttpSettings!.extra ?? (transport.value.xhttpSettings!.extra = new XrayXhttpExtraObject()));
       const xmux = computed(() => extra.value.xmux ?? (extra.value.xmux = new XrayXmuxObject()));
-
+      const onheaderapupdate = (headers: any) => {
+        if (transport.value.xhttpSettings) transport.value.xhttpSettings.headers = headers;
+      };
       return {
         transport,
         modes: XrayStreamHttpSettingsObject.modes,
         methods: XrayOptions.httpMethods,
         extra,
-        xmux
+        xmux,
+        onheaderapupdate
       };
     }
   });

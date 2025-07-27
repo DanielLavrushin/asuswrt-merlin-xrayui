@@ -37,6 +37,7 @@ initial_response() {
     local check_connection="${check_connection:-false}"
     local startup_delay="${startup_delay:-0}"
     local xray_sleep_time="${xray_sleep_time:-10}"
+    local subscriptionLinks="${subscriptionLinks:-""}"
 
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg geoip "$geoip_date" --arg geosite "$geosite_date" --arg geoipurl "$geoipurl" --arg geositeurl "$geositeurl" \
         '.geodata.geoip_url = $geoipurl | .geodata.geosite_url = $geositeurl | .geodata.community["geoip.dat"] = $geoip | .geodata.community["geosite.dat"] = $geosite')
@@ -75,6 +76,7 @@ initial_response() {
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg ipsec "$ipsec" '.xray.ipsec = $ipsec')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson startup_delay "$startup_delay" '.xray.startup_delay = $startup_delay')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson sleep_time "$xray_sleep_time" '.xray.sleep_time = $sleep_time')
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg subscriptionLinks "$subscriptionLinks" '.xray.subscriptions.links = ($subscriptionLinks | split("|"))')
 
     # grab firewall hooks
     local hook_before_firewall_start=$(sed '1{/^#!/d}' "$ADDON_USER_SCRIPTS_DIR/firewall_before_start" 2>/dev/null || echo "")
@@ -195,47 +197,6 @@ apply_config() {
     log_ok "Xray service restarted successfully with the new configuration."
 
     rm -f "$backup_config"
-}
-
-process_subscriptions() {
-    local config_file="$1"
-    local cfg=$(cat "$1")
-    local idx url proto tag fetched rep
-    local temp_config="/tmp/xray_server_config_new.json"
-
-    while IFS= read -r entry; do
-        [ -z "$entry" ] && continue
-        idx=$(printf '%s' "$entry" | jq -r '.idx')
-        url=$(printf '%s' "$entry" | jq -r '.url')
-        proto=$(printf '%s' "$entry" | jq -r '.proto')
-        tag=$(printf '%s' "$entry" | jq -r '.tag')
-
-        fetched=$(curl -fsL "$url") || continue
-        if ! echo "$fetched" | jq -e . >/dev/null 2>&1; then
-            fetched=$(echo "$fetched" | base64 -d 2>/dev/null) || continue
-        fi
-
-        rep=$(printf '%s' "$fetched" | jq -c --arg t "$tag" --arg p "$proto" '
-            (.outbounds // [])
-            | map(select((($t != "") and (.tag==$t)) or (.protocol==$p)))
-            | first')
-
-        [ -z "$rep" ] || [ "$rep" = "null" ] && continue
-
-        cfg=$(printf '%s' "$cfg" | jq -c \
-            --arg pos "$idx" \
-            --arg url "$url" \
-            --arg tag "$tag" \
-            --argjson rep "$rep" \
-            '.outbounds[( $pos|tonumber )] = ($rep + {surl:$url, tag:$tag})')
-    done <<EOF
-$(printf '%s' "$cfg" | jq -c '.outbounds
-    | to_entries[]
-    | select(.value.surl and .value.surl!="")
-    | {idx:.key,url:.value.surl,proto:.value.protocol,tag:(.value.tag//"")}')
-EOF
-
-    printf '%s' "$cfg" >"$temp_config" && cp "$temp_config" "$config_file" && rm -f "$temp_config"
 }
 
 rules_to_dns_domains() {

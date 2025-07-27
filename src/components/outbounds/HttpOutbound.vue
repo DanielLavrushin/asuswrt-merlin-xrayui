@@ -1,6 +1,9 @@
 <template>
-  <div class="formfontdesc">
-    <p>HTTP is a protocol that is used for communication over the internet. Please note that HTTP does not provide encryption for data transmission and is not suitable for transmitting sensitive information over public networks, as it can be easily targeted for attacks. HTTP can only proxy TCP protocols, and cannot handle UDP-based protocols.</p>
+  <div class="formfontdesc" v-if="proxy.settings">
+    <p>
+      HTTP is a protocol that is used for communication over the internet. Please note that HTTP does not provide encryption for data transmission and is not suitable for
+      transmitting sensitive information over public networks, as it can be easily targeted for attacks. HTTP can only proxy TCP protocols, and cannot handle UDP-based protocols.
+    </p>
     <table width="100%" class="FormTable modal-form-table">
       <thead>
         <tr>
@@ -25,7 +28,15 @@
             <hint> The port of the HTTP proxy server. **Required**. </hint>
           </th>
           <td>
-            <input type="number" maxlength="5" class="input_6_table" v-model="proxy.settings.servers[0].port" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
+            <input
+              type="number"
+              maxlength="5"
+              class="input_6_table"
+              v-model="proxy.settings.servers[0].port"
+              autocorrect="off"
+              autocapitalize="off"
+              onkeypress="return validator.isNumber(this,event);"
+            />
           </td>
         </tr>
       </tbody>

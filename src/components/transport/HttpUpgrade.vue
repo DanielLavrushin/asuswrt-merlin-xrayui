@@ -16,7 +16,7 @@
         <hint v-html="$t('com.HttpUpgrade.hint_path')"></hint>
       </th>
       <td>
-        <input type="text" maxlength="15" class="input_20_table" v-model="transport.httpupgradeSettings.path" />
+        <input type="text" class="input_20_table" v-model="transport.httpupgradeSettings.path" />
         <span class="hint-color"></span>
       </td>
     </tr>
@@ -26,7 +26,7 @@
         <hint v-html="$t('com.HttpUpgrade.hint_host')"></hint>
       </th>
       <td>
-        <input type="text" maxlength="15" class="input_20_table" v-model="transport.httpupgradeSettings.host" />
+        <input type="text" class="input_20_table" v-model="transport.httpupgradeSettings.host" />
         <span class="hint-color"></span>
       </td>
     </tr>

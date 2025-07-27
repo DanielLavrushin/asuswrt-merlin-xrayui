@@ -1,3 +1,4 @@
+import { plainToInstance } from 'class-transformer';
 import { XrayHeaderObject, XrayParsedUrlObject, XrayXmuxObject, isObjectEmpty } from './CommonObjects';
 import { ITransportNetwork } from './Interfaces';
 
@@ -76,13 +77,39 @@ export class XrayStreamHttpSettingsObject implements ITransportNetwork {
   public host?: string;
   public path? = '/';
   public mode? = 'auto';
+  xPaddingBytes? = '100-1000';
+  noGRPCHeader? = false;
+  noSSEHeader? = false;
+  scMaxEachPostBytes? = 1000000;
+  scMinPostsIntervalMs? = 30;
+  scMaxBufferedPosts? = 30;
+  scStreamUpServerSecs? = '20-80';
+  public headers? = {};
+
   public extra?: XrayXhttpExtraObject = new XrayXhttpExtraObject();
 
-  normalize = (): this | undefined => {
-    this.path = this.path === '/' ? undefined : this.path;
-    this.host = !this.host ? undefined : this.host;
+  constructor(parsedObject?: XrayParsedUrlObject | undefined) {
+    if (parsedObject) {
+      this.path = parsedObject.parsedParams.path ?? '/';
+      this.mode = parsedObject.parsedParams.mode ?? 'auto';
+      this.host = parsedObject.parsedParams.host;
+    }
+  }
 
-    this.extra?.normalize();
+  normalize = (): this | undefined => {
+    this.mode = this.mode === 'auto' ? undefined : this.mode;
+    this.path = this.path === '/' ? undefined : this.path;
+    this.host = !this.host || this.host === '' ? undefined : this.host;
+    this.xPaddingBytes = this.xPaddingBytes === '100-1000' ? undefined : this.xPaddingBytes;
+    this.noGRPCHeader = !this.noGRPCHeader ? undefined : this.noGRPCHeader;
+    this.noSSEHeader = !this.noSSEHeader ? undefined : this.noSSEHeader;
+    this.scMaxEachPostBytes = this.scMaxEachPostBytes == 1000000 ? undefined : this.scMaxEachPostBytes;
+    this.scMinPostsIntervalMs = this.scMinPostsIntervalMs == 30 ? undefined : this.scMinPostsIntervalMs;
+    this.scMaxBufferedPosts = this.scMaxBufferedPosts == 30 ? undefined : this.scMaxBufferedPosts;
+    this.scStreamUpServerSecs = this.scStreamUpServerSecs === '20-80' ? undefined : this.scStreamUpServerSecs;
+    this.headers = isObjectEmpty(this.headers) ? undefined : this.headers;
+    this.extra = plainToInstance(XrayXhttpExtraObject, this.extra ?? {});
+    this.extra = this.extra ? this.extra.normalize() : undefined;
 
     return isObjectEmpty(this) ? undefined : this;
   };
@@ -98,8 +125,17 @@ export class XrayXhttpExtraObject {
   scStreamUpServerSecs? = '20-80';
   xmux?: XrayXmuxObject = new XrayXmuxObject();
 
-  normalize = () => {
-    this.xmux = this.xmux?.normalize();
+  normalize = (): this | undefined => {
+    this.xPaddingBytes = this.xPaddingBytes === '100-1000' ? undefined : this.xPaddingBytes;
+    this.noGRPCHeader = !this.noGRPCHeader ? undefined : this.noGRPCHeader;
+    this.noSSEHeader = !this.noSSEHeader ? undefined : this.noSSEHeader;
+    this.scMaxEachPostBytes = this.scMaxEachPostBytes == 1000000 ? undefined : this.scMaxEachPostBytes;
+    this.scMinPostsIntervalMs = this.scMinPostsIntervalMs == 30 ? undefined : this.scMinPostsIntervalMs;
+    this.scMaxBufferedPosts = this.scMaxBufferedPosts == 30 ? undefined : this.scMaxBufferedPosts;
+    this.scStreamUpServerSecs = this.scStreamUpServerSecs === '20-80' ? undefined : this.scStreamUpServerSecs;
+    this.xmux = plainToInstance(XrayXmuxObject, this.xmux ?? {});
+    this.xmux = this.xmux ? this.xmux.normalize() : undefined;
+    return isObjectEmpty(this) ? undefined : this;
   };
 }
 

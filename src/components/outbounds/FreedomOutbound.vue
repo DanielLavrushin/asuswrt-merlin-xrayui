@@ -1,5 +1,5 @@
 <template>
-  <div class="formfontdesc">
+  <div class="formfontdesc" v-if="proxy.settings">
     <p>{{ $t('com.FreedomOutbound.modal_desc') }}</p>
     <table width="100%" class="FormTable modal-form-table">
       <thead>
@@ -8,7 +8,7 @@
         </tr>
       </thead>
       <tbody>
-        <outbound-common :proxy="proxy"></outbound-common>
+        <outbound-common v-model:proxy="proxy"></outbound-common>
         <tr>
           <th>
             {{ $t('com.FreedomOutbound.label_domain_strategy') }}
@@ -178,13 +178,15 @@
       proxy: XrayOutboundObject<XrayFreedomOutboundObject>
     },
     setup(props) {
-      const proxy = ref<XrayOutboundObject<XrayFreedomOutboundObject>>(props.proxy ?? new XrayOutboundObject<XrayFreedomOutboundObject>(XrayProtocol.FREEDOM, new XrayFreedomOutboundObject()));
+      const proxy = ref<XrayOutboundObject<XrayFreedomOutboundObject>>(
+        props.proxy ?? new XrayOutboundObject<XrayFreedomOutboundObject>(XrayProtocol.FREEDOM, new XrayFreedomOutboundObject())
+      );
       const noiseItem = ref<XrayNoiseObject>();
       const modalNoise = ref();
       const modalNoises = ref();
 
       const modal_save_noise = () => {
-        if (noiseItem.value && proxy.value.settings.noises) {
+        if (noiseItem.value && proxy.value.settings && proxy.value.settings.noises) {
           if (!proxy.value.settings.noises.includes(noiseItem.value)) {
             proxy.value.settings.noises.push(noiseItem.value);
           }

@@ -1,6 +1,9 @@
 <template>
-  <div class="formfontdesc">
-    <p>Loopback is an outbound protocol. It can send traffics through corresponding outbound to routing inbound, thus rerouting traffics to other routing rules without leaving Xray-core.</p>
+  <div class="formfontdesc" v-if="proxy.settings">
+    <p>
+      Loopback is an outbound protocol. It can send traffics through corresponding outbound to routing inbound, thus rerouting traffics to other routing rules without leaving
+      Xray-core.
+    </p>
     <table width="100%" class="FormTable modal-form-table">
       <thead>
         <tr>
@@ -51,7 +54,9 @@
       proxy: XrayOutboundObject<XrayLoopbackOutboundObject>
     },
     setup(props) {
-      const proxy = ref<XrayOutboundObject<XrayLoopbackOutboundObject>>(props.proxy ?? new XrayOutboundObject<XrayLoopbackOutboundObject>(XrayProtocol.LOOPBACK, new XrayLoopbackOutboundObject()));
+      const proxy = ref<XrayOutboundObject<XrayLoopbackOutboundObject>>(
+        props.proxy ?? new XrayOutboundObject<XrayLoopbackOutboundObject>(XrayProtocol.LOOPBACK, new XrayLoopbackOutboundObject())
+      );
       const inbounds = ref(Array.from(new Set(xrayConfig.routing?.rules?.flatMap((rule) => rule.inboundTag || []).filter((tag) => tag && tag.trim() !== ''))));
       return {
         proxy,

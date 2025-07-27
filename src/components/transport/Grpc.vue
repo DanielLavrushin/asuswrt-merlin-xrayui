@@ -6,7 +6,7 @@
         <hint v-html="$t('com.Grpc.hint_service_name')"></hint>
       </th>
       <td>
-        <input type="text" maxlength="15" class="input_20_table" v-model="transport.grpcSettings.serviceName" />
+        <input type="text" class="input_20_table" v-model="transport.grpcSettings.serviceName" />
         <span class="hint-color"></span>
       </td>
     </tr>
@@ -46,7 +46,15 @@
         <hint v-html="$t('com.Grpc.hint_initial_windows_size')"></hint>
       </th>
       <td>
-        <input type="number" maxlength="5" min="0" max="65535" class="input_6_table" onkeypress="return validator.isNumber(this,event);" v-model="transport.grpcSettings.initial_windows_size" />
+        <input
+          type="number"
+          maxlength="5"
+          min="0"
+          max="65535"
+          class="input_6_table"
+          onkeypress="return validator.isNumber(this,event);"
+          v-model="transport.grpcSettings.initial_windows_size"
+        />
         <span class="hint-color">default: 0</span>
       </td>
     </tr>

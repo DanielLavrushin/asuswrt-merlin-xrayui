@@ -401,8 +401,8 @@ export class Engine {
   }
 
   async loadSubscriptions(resp: EngineResponseConfig): Promise<EngineSubscriptions | undefined> {
-    try {
-      if (resp.xray?.subscriptions?.links && resp.xray?.subscriptions?.links.length > 0) {
+    if (resp.xray?.subscriptions?.links && resp.xray?.subscriptions?.links.length > 0) {
+      try {
         const response = await axios.get<EngineResponseConfig>(`/ext/xrayui/subscriptions.json?_=${Date.now()}`, {
           headers: {
             'Cache-Control': 'no-cache',
@@ -415,12 +415,12 @@ export class Engine {
         }
         if (resp.xray?.subscriptions) {
           resp.xray.subscriptions.protocols = response.data as Record<string, string[]>;
+          return resp.xray.subscriptions;
         }
-        return resp.xray?.subscriptions;
+      } catch (e) {
+        console.error('Error loading subscriptions:', e);
+        return new EngineSubscriptions();
       }
-    } catch (e) {
-      console.error('Error loading subscriptions:', e);
-      return new EngineSubscriptions();
     }
     return new EngineSubscriptions();
   }

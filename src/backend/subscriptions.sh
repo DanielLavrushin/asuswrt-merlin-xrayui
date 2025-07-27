@@ -427,4 +427,158 @@ subscription_parse_shadowsocks() {
 }
 
 subscription_parse_kv() { printf '%s' "$1" | tr '&' '\n' | awk -F= -v k="$2" '$1==k{print $2}'; }
+
 subscription_parse_hostport() { printf '%s' "$1" | awk -F@ '{print $NF}' | awk -F/ '{print $1}'; }
+
+subscription_fetch_protocols() {
+    load_xrayui_config
+    load_ui_response
+
+    payload=$(reconstruct_payload)
+    links=${payload:-$subscriptionLinks}
+    links=${links#\"}
+    links=${links%\"}
+    [ -z "$links" ] && return 0
+
+    tmp_json="/tmp/xrayui_proto_json.$$"
+    tmp_lines="/tmp/xrayui_proto_links.$$"
+    tmp_pairs="/tmp/xrayui_proto_pairs.$$"
+    tmp_urls="/tmp/xrayui_proto_urls.$$"
+    : >"$tmp_lines"
+    : >"$tmp_pairs"
+    : >"$tmp_urls"
+    printf '%s\n' "$links" | tr '|' '\n' >"$tmp_urls"
+
+    log_debug "Fetching subscription links: $tmp_urls ..."
+
+    while IFS= read -r url; do
+        url=$(printf '%s' "$url" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        [ -z "$url" ] && continue
+
+        tmpc="/tmp/xrayui_proto_c.$$"
+        tmpd="/tmp/xrayui_proto_d.$$"
+        : >"$tmpc"
+        : >"$tmpd"
+
+        update_loading_progress "Fetching content from $url ..."
+        log_debug "Fetching content from $url ..."
+        curl -fsL --max-time 20 -A xrayui/1.0 "$url" </dev/null >"$tmpc" 2>/dev/null || true
+
+        sz=$(wc -c <"$tmpc")
+        if [ "$sz" -eq 0 ]; then
+            log_debug "No content fetched from $url"
+            rm -f "$tmpc" "$tmpd"
+            continue
+        fi
+
+        tr -d '\r' <"$tmpc" >"$tmpc.tmp" && mv "$tmpc.tmp" "$tmpc"
+
+        prev=$(safe_preview <"$tmpc")
+
+        if grep '://' "$tmpc" >/dev/null 2>&1; then
+            cp "$tmpc" "$tmpd"
+        else
+            if base64 -d <"$tmpc" >"$tmpd" 2>/dev/null; then :; else cp "$tmpc" "$tmpd"; fi
+        fi
+
+        prev2=$(safe_preview <"$tmpd")
+
+        cat "$tmpd" >>"$tmp_lines"
+        printf '\n' >>"$tmp_lines"
+
+        rm -f "$tmpc" "$tmpd"
+    done <"$tmp_urls"
+    rm -f "$tmp_urls"
+
+    line_count=$(wc -l <"$tmp_lines")
+    update_loading_progress "Processing $line_count links ..."
+    log_debug "Processing $line_count links ..."
+    while IFS= read -r line; do
+        line=$(printf '%s' "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        [ -z "$line" ] && continue
+
+        case $line in *%[0-9A-Fa-f][0-9A-Fa-f]*) line=$(urldecode_pct "$line") ;; esac
+        case "$line" in *://*) : ;; *) continue ;; esac
+
+        #  case "$line" in *#*) line=${line%%#*} ;; esac
+        line=$(printf '%s' "$line" | tr '\t' ' ')
+
+        scheme=${line%%://*}
+        scheme=$(printf '%s' "$scheme" | tr '[:upper:]' '[:lower:]')
+        case "$scheme" in
+        vless) key=vless ;;
+        vmess) key=vmess ;;
+        trojan) key=trojan ;;
+        ss) key=shadowsocks ;; # keep ss:// link, key is "shadowsocks"
+        wireguard | wg | wgcf) key=wireguard ;;
+        *) continue ;;
+        esac
+        printf '%s\t%s\n' "$key" "$line" >>"$tmp_pairs"
+    done <"$tmp_lines"
+
+    log_debug "Parsing protocols from $tmp_pairs ..."
+
+    if [ -s "$tmp_pairs" ]; then
+        awk -F '\t' 'NF==2{print $0}' "$tmp_pairs" |
+            jq -R -s -c '
+          split("\n")
+          | map(select(length>0) | split("\t") | {name: .[0], link: .[1]})
+          | sort_by(.name)
+          | group_by(.name)
+          | map({key: (.[0].name), value: (map(.link) | unique)})
+          | from_entries
+        ' >"$tmp_json" || printf '{}' >"$tmp_json"
+
+        log_debug "Saved protocols to $tmp_json"
+    else
+        printf '{}' >"$tmp_json"
+    fi
+    mv "$tmp_json" "$XRAYUI_SUBSCRIPTIONS_FILE"
+
+    rm -f "$tmp_json" "$tmp_lines" "$tmp_pairs"
+    return 0
+}
+
+b64decode() {
+    s=$1
+
+    # pass through real URLs
+    case $s in *://*)
+        printf '%s\n' "$s"
+        return 0
+        ;;
+    esac
+
+    # strip CR/LF
+    clean=$(printf '%s' "$s" | tr -d '\r\n')
+
+    # try standard base64 first
+    out=$(printf '%s' "$clean" | base64 -d 2>/dev/null)
+    rc=$?
+    if [ $rc -eq 0 ] && [ -n "$out" ]; then
+        printf '%s\n' "$out"
+        return 0
+    fi
+
+    # URL-safe -> standard alphabet
+    u=$(printf '%s' "$clean" | tr '_-' '/+')
+
+    # add padding if missing
+    len=$(printf '%s' "$u" | wc -c | awk '{print $1}')
+    mod=$((len % 4))
+    if [ "$mod" -eq 2 ]; then
+        u="${u}=="
+    elif [ "$mod" -eq 3 ]; then
+        u="${u}="
+    fi
+
+    out=$(printf '%s' "$u" | base64 -d 2>/dev/null)
+    rc=$?
+    if [ $rc -eq 0 ] && [ -n "$out" ]; then
+        printf '%s\n' "$out"
+        return 0
+    fi
+
+    # fallback: return original
+    printf '%s\n' "$s"
+}

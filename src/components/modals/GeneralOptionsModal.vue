@@ -2,12 +2,12 @@
   <modal ref="modal" :title="$t('com.GeneralOptionsModal.modal_title')" width="700">
     <div class="formfontdesc">
       <div class="go-tabs-nav">
-        <button v-for="(tab, idx) in tabs" :key="idx" :class="{ active: currentTab === idx }" @click="currentTab = idx">
-          {{ tab }}
+        <button v-for="(tab, idx) in tabs" :key="idx" :class="{ active: currentTab.n === tab.n }" @click="currentTab = tab">
+          {{ tab.t }}
         </button>
       </div>
 
-      <div v-show="currentTab === 0">
+      <div v-show="currentTab.n === 'general'">
         <table class="FormTable modal-form-table">
           <tbody>
             <tr>
@@ -82,7 +82,7 @@
         </table>
       </div>
 
-      <div v-show="currentTab === 1">
+      <div v-show="currentTab.n === 'geodata'">
         <table class="FormTable modal-form-table">
           <tbody>
             <tr>
@@ -125,7 +125,7 @@
           </tbody>
         </table>
       </div>
-      <div v-show="currentTab === 2" v-if="options.hooks">
+      <div v-show="currentTab.n === 'hooks'" v-if="options.hooks">
         <table class="FormTable modal-form-table">
           <tbody>
             <tr>
@@ -165,7 +165,7 @@
         </table>
       </div>
 
-      <div v-show="currentTab === 3">
+      <div v-show="currentTab.n === 'logs'">
         <table class="FormTable modal-form-table">
           <tbody>
             <tr>
@@ -223,20 +223,43 @@
           </tbody>
         </table>
       </div>
+      <div v-show="currentTab.n === 'subscriptions'">
+        <table class="FormTable modal-form-table">
+          <tbody>
+            <tr>
+              <th>
+                {{ $t('com.GeneralOptionsModal.label_subscription_links') }}
+                <hint v-html="$t('com.GeneralOptionsModal.hint_subscription_links')"></hint>
+              </th>
+              <td>
+                <div class="textarea-wrapper">
+                  <textarea v-model="subscriptionLinks"></textarea>
+                  <span class="row-buttons">
+                    <button class="button_gen button_gen_small" @click.prevent="fetch_subscription_protocols">
+                      {{ $t('com.GeneralOptionsModal.button_subscription_fetch') }}
+                    </button>
+                  </span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
+
     <template #footer>
       <input class="button_gen button_gen_small" type="button" :value="$t('labels.save')" @click.prevent="save" />
     </template>
   </modal>
 </template>
 <script lang="ts" setup>
-  import { ref, inject, Ref } from 'vue';
+  import { ref, inject, Ref, computed } from 'vue';
   import { useI18n } from 'vue-i18n';
   import Modal from '@main/Modal.vue';
   import Hint from '@main/Hint.vue';
   import useGeneralOptions from './GeneralOptionsModal';
   import { XrayObject } from '@/modules/XrayConfig';
-  import { EngineResponseConfig } from '@/modules/Engine';
+  import { EngineResponseConfig, EngineSubscriptions } from '@/modules/Engine';
   import engine, { SubmitActions } from '@/modules/Engine';
   import { XrayProtocol } from '@/modules/Options';
 
@@ -247,9 +270,15 @@
   const { options, log_levels, ipsec_options, hydrate, persist } = useGeneralOptions(props.config, ui);
 
   const modal = ref();
-  const currentTab = ref(0);
 
-  const tabs = [t('com.GeneralOptionsModal.tab_general'), t('com.GeneralOptionsModal.tab_geodata'), t('com.GeneralOptionsModal.tab_hooks'), t('com.GeneralOptionsModal.tab_logs')];
+  const tabs = [
+    { n: 'general', t: t('com.GeneralOptionsModal.tab_general') },
+    { n: 'geodata', t: t('com.GeneralOptionsModal.tab_geodata') },
+    { n: 'hooks', t: t('com.GeneralOptionsModal.tab_hooks') },
+    { n: 'logs', t: t('com.GeneralOptionsModal.tab_logs') },
+    { n: 'subscriptions', t: t('com.GeneralOptionsModal.tab_subscriptions') }
+  ];
+  const currentTab = ref(tabs[0]);
 
   const gh_proxies = [
     'https://ghfast.top/',
@@ -298,6 +327,22 @@
 
   const selected_wellknown = ref<any>();
 
+  const subscriptionLinks = computed({
+    get() {
+      return options.subscriptions?.links?.join('\n') || '';
+    },
+    set(newValue) {
+      if (!options.subscriptions) {
+        options.subscriptions = new EngineSubscriptions();
+      }
+      options.subscriptions.links = newValue
+        .split('\n')
+        .map((link: string) => link.trim())
+        .filter((link: string) => link.length > 0);
+      console.log('Updated subscription links:', options.subscriptions.links);
+    }
+  });
+
   const setwellknown = () => {
     if (selected_wellknown.value) {
       options.geo_ip_url = selected_wellknown.value.geoip_url;
@@ -313,6 +358,13 @@
   const validateCheckConOption = () => {
     const outbound = props.config.outbounds?.find((o) => o.protocol !== XrayProtocol.FREEDOM && o.protocol !== XrayProtocol.BLACKHOLE);
     return outbound !== undefined;
+  };
+
+  const fetch_subscription_protocols = async () => {
+    await engine.executeWithLoadingProgress(async () => {
+      await engine.submit(SubmitActions.subscribeFetchProtocols, options.subscriptions?.links?.join('|'));
+    }, false);
+    await engine.getXrayResponse();
   };
 
   const show = () => {

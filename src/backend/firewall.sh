@@ -144,7 +144,9 @@ configure_firewall() {
     ipt mangle -A DIVERT -j ACCEPT
 
     if lsmod | grep -q '^xt_socket ' || modprobe xt_socket 2>/dev/null; then
-        ipt mangle -I PREROUTING 1 -p tcp -m socket --transparent -j DIVERT
+        if ! iptables -t mangle -C PREROUTING -p tcp -m socket --transparent -j DIVERT 2>/dev/null; then
+            iptables -t mangle -I PREROUTING 1 -p tcp -m socket --transparent -j DIVERT
+        fi
     else
         log_warn "xt_socket missing; skipping transparent DIVERT hook"
     fi
@@ -685,6 +687,15 @@ cleanup_firewall() {
 
     ipt mangle -D FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null
     ipt mangle -D OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null
+
+    while iptables -t mangle -C PREROUTING -p tcp -m socket --transparent -j DIVERT 2>/dev/null; do
+        iptables -t mangle -D PREROUTING -p tcp -m socket --transparent -j DIVERT
+    done
+    if is_ipv6_enabled; then
+        while ip6tables -t mangle -C PREROUTING -p tcp -m socket --transparent -j DIVERT 2>/dev/null; do
+            ip6tables -t mangle -D PREROUTING -p tcp -m socket --transparent -j DIVERT
+        done
+    fi
 
     # 0.46.: temportary workaround for iptables-legacy
     for fam in -4 -6; do

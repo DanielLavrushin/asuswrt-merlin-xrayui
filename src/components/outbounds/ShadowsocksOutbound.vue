@@ -7,8 +7,8 @@
           <td colspan="2">Shadowsocks</td>
         </tr>
       </thead>
-      <tbody>
-        <outbound-common :proxy="proxy"></outbound-common>
+      <tbody v-if="proxy.settings">
+        <outbound-common v-model:proxy="proxy" @apply-parsed="applyParsed"></outbound-common>
         <tr>
           <th>
             Shadowsocks server
@@ -25,7 +25,15 @@
             <hint> The port of the Shadowsocks server. **Required**. </hint>
           </th>
           <td>
-            <input type="number" maxlength="5" class="input_6_table" v-model="proxy.settings.servers[0].port" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
+            <input
+              type="number"
+              maxlength="5"
+              class="input_6_table"
+              v-model="proxy.settings.servers[0].port"
+              autocorrect="off"
+              autocapitalize="off"
+              onkeypress="return validator.isNumber(this,event);"
+            />
             <span class="hint-color">required</span>
           </td>
         </tr>
@@ -95,14 +103,10 @@
     props: {
       proxy: XrayOutboundObject<XrayShadowsocksOutboundObject>
     },
-    methods: {
-      generate_password() {
-        const selectedEnc = this.encryptions.find((e) => e.e === this.proxy.settings.servers[0].method);
-        this.proxy.settings.servers[0].password = engine.generateRandomBase64(selectedEnc?.l);
-      }
-    },
-    setup(props) {
-      const proxy = ref<XrayOutboundObject<XrayShadowsocksOutboundObject>>(props.proxy ?? new XrayOutboundObject<XrayShadowsocksOutboundObject>(XrayProtocol.SHADOWSOCKS, new XrayShadowsocksOutboundObject()));
+    setup(props, { emit }) {
+      const proxy = ref<XrayOutboundObject<XrayShadowsocksOutboundObject>>(
+        props.proxy ?? new XrayOutboundObject<XrayShadowsocksOutboundObject>(XrayProtocol.SHADOWSOCKS, new XrayShadowsocksOutboundObject())
+      );
       const encryptions = [
         { e: '2022-blake3-aes-128-gcm', l: 16 },
         { e: '2022-blake3-aes-256-gcm', l: 32 },
@@ -115,13 +119,39 @@
       ];
 
       const generate_password = () => {
-        const selectedEnc = encryptions.find((e) => e.e === proxy.value.settings.servers[0].method);
-        proxy.value.settings.servers[0].password = engine.generateRandomBase64(selectedEnc?.l);
+        if (proxy.value.settings) {
+          const selectedEnc = encryptions.find((e) => e.e === proxy.value.settings?.servers[0].method);
+          proxy.value.settings.servers[0].password = engine.generateRandomBase64(selectedEnc?.l);
+        }
       };
+
+      const applyParsed = (parsed: XrayOutboundObject<XrayShadowsocksOutboundObject>) => {
+        proxy.value.tag = proxy.value.tag || parsed.tag;
+        proxy.value.surl = undefined;
+
+        const src = parsed.settings?.servers[0];
+        const dst = proxy.value.settings?.servers[0];
+        if (src && dst) {
+          dst.address = src.address;
+          dst.port = src.port;
+          dst.method = src.method;
+          dst.password = src.password;
+          dst.email = src.email;
+          dst.uot = src.uot;
+        }
+
+        if (parsed.streamSettings) {
+          proxy.value.streamSettings = parsed.streamSettings;
+        }
+
+        emit('update:proxy', proxy.value);
+      };
+
       return {
         proxy,
         encryptions,
-        generate_password
+        generate_password,
+        applyParsed
       };
     }
   });

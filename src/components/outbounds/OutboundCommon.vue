@@ -6,7 +6,6 @@
     </th>
     <td>
       <input type="text" class="input_20_table" v-model="proxy.tag" />
-      <span class="hint-color"></span>
     </td>
   </tr>
 
@@ -20,6 +19,19 @@
       <span class="row-buttons">
         <input class="button_gen button_gen_small" type="button" :title="$t('labels.delete')" value="&#10005;" v-show="isLocked" @click="clear_url" />
       </span>
+    </td>
+  </tr>
+  <tr class="unlocked subscription-list" v-if="!proxy.surl && protocols.length > 0">
+    <th>
+      {{ $t('com.OutboundCommon.label_subscription_type') }}
+      <hint v-html="$t('com.OutboundCommon.hint_subscription_type')"></hint>
+    </th>
+    <td>
+      <select class="input_option" v-model="subscription" @change="apply_subscription">
+        <option v-for="protocol in protocols" :key="protocol.tag" :value="protocol">
+          {{ protocol.tag }}
+        </option>
+      </select>
     </td>
   </tr>
 
@@ -36,20 +48,30 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, computed, watch, nextTick } from 'vue';
-  import { XrayOutboundObject } from '@/modules/OutboundObjects';
+  import { defineComponent, ref, computed, watch, nextTick, inject, Ref, triggerRef } from 'vue';
+  import { XrayOutboundObject, XrayShadowsocksOutboundObject, XrayTrojanOutboundObject, XrayVlessOutboundObject, XrayVmessOutboundObject } from '@/modules/OutboundObjects';
   import { IProtocolType } from '@/modules/Interfaces';
   import AllocateModal from '@modal/AllocateModal.vue';
   import Hint from '@main/Hint.vue';
+  import { EngineResponseConfig } from '@modules/Engine';
+  import { XrayParsedUrlObject, XrayProtocol } from '@modules/CommonObjects';
+  import VlessParser from '@modules/parsers/VlessParser';
+  import VmessParser from '@modules/parsers/VmessParser';
+  import ShadowsocksParser from '@modules/parsers/ShadowsocksParser';
+  import TrojanParser from '@modules/parsers/TrojanParser';
+  import ProxyParser from '@modules/parsers/ProxyParser';
 
   export default defineComponent({
     name: 'OutboundCommon',
     components: { AllocateModal, Hint },
     props: { proxy: XrayOutboundObject<IProtocolType> },
-    setup(props) {
+    emits: ['apply-parsed'],
+    setup(props, { emit }) {
       const proxy = ref<XrayOutboundObject<IProtocolType>>(props.proxy ?? new XrayOutboundObject<IProtocolType>());
       const isLocked = computed(() => !!proxy.value.surl?.trim());
       const rowRef = ref<HTMLElement | null>(null);
+      const ui = inject<Ref<EngineResponseConfig>>('uiResponse')!;
+      const subscription = ref<XrayParsedUrlObject | undefined>(undefined);
 
       const toggle = (state: boolean) => {
         nextTick(() => {
@@ -62,9 +84,41 @@
         proxy.value.surl = '';
       };
 
+      const protocols = computed(() => {
+        const coll = ui.value.xray?.subscriptions?.protocols?.[proxy.value.protocol];
+        if (coll) {
+          return coll
+            .map((x) => {
+              try {
+                return new XrayParsedUrlObject(x);
+              } catch (e) {
+                return undefined;
+              }
+            })
+            .filter((x) => x !== undefined) as XrayParsedUrlObject[];
+        }
+        return [];
+      });
+
+      const apply_subscription = () => {
+        if (subscription.value) {
+          const parser = new ProxyParser(subscription.value.url);
+          const parsedProxy = parser.getOutbound();
+
+          if (parsedProxy) emit('apply-parsed', parsedProxy);
+        }
+      };
+
       watch(isLocked, toggle, { immediate: true });
 
-      return { proxy, isLocked, rowRef, clear_url };
+      return { protocols, subscription, proxy, isLocked, rowRef, clear_url, apply_subscription };
     }
   });
 </script>
+<style scoped lang="scss">
+  .subscription-list {
+    select {
+      max-width: 200px;
+    }
+  }
+</style>

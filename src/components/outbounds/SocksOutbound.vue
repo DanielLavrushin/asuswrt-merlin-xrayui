@@ -1,5 +1,5 @@
 <template>
-  <div class="formfontdesc">
+  <div class="formfontdesc" v-if="proxy.settings">
     <p>The SOCKS protocol is a standard protocol implementation that is compatible with Socks 5.</p>
     <table width="100%" class="FormTable modal-form-table">
       <thead>
@@ -25,7 +25,15 @@
             <hint> The server port. **Required**. </hint>
           </th>
           <td>
-            <input type="number" maxlength="5" class="input_6_table" v-model="proxy.settings.servers[0].port" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
+            <input
+              type="number"
+              maxlength="5"
+              class="input_6_table"
+              v-model="proxy.settings.servers[0].port"
+              autocorrect="off"
+              autocapitalize="off"
+              onkeypress="return validator.isNumber(this,event);"
+            />
           </td>
         </tr>
       </tbody>
@@ -52,7 +60,9 @@
       proxy: XrayOutboundObject<XraySocksOutboundObject>
     },
     setup(props) {
-      const proxy = ref<XrayOutboundObject<XraySocksOutboundObject>>(props.proxy ?? new XrayOutboundObject<XraySocksOutboundObject>(XrayProtocol.SOCKS, new XraySocksOutboundObject()));
+      const proxy = ref<XrayOutboundObject<XraySocksOutboundObject>>(
+        props.proxy ?? new XrayOutboundObject<XraySocksOutboundObject>(XrayProtocol.SOCKS, new XraySocksOutboundObject())
+      );
 
       return {
         proxy

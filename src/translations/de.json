@@ -89,7 +89,11 @@
       "label_hooks_after_firewall_cleanup": "Nach der Firewall-Bereinigung",
       "hint_hooks_before_firewall_start": "Dieses Skript wird ausgeführt, bevor die Firewall startet. Sie können es verwenden, um beliebige eigene Regeln in iptables einzurichten.<hr/> Fügen Sie keinen Shebang (`#!/bin/sh`) zum Skript hinzu, er wird automatisch ergänzt.",
       "hint_hooks_after_firewall_start": "Dieses Skript wird ausgeführt, nachdem die Firewall gestartet wurde. Sie können es verwenden, um beliebige eigene Regeln in iptables einzurichten.<hr/> Fügen Sie keinen Shebang (`#!/bin/sh`) zum Skript hinzu, er wird automatisch ergänzt.",
-      "hint_hooks_after_firewall_cleanup": "Dieses Skript wird ausgeführt, nachdem die Firewall bereinigt wurde. Sie können es verwenden, um eigene, zuvor erstellte Regeln aus iptables zu entfernen.<hr/> Fügen Sie keinen Shebang (`#!/bin/sh`) zum Skript hinzu, er wird automatisch ergänzt."
+      "hint_hooks_after_firewall_cleanup": "Dieses Skript wird ausgeführt, nachdem die Firewall bereinigt wurde. Sie können es verwenden, um eigene, zuvor erstellte Regeln aus iptables zu entfernen.<hr/> Fügen Sie keinen Shebang (`#!/bin/sh`) zum Skript hinzu, er wird automatisch ergänzt.",
+      "tab_subscriptions": "Abonnements",
+      "label_subscription_links": "Abonnementquellen",
+      "hint_subscription_links": "Hier können Sie Ihre Abonnementquellen hinzufügen.<hr/> Es ist möglich, mehrere Links hinzuzufügen, einen pro Zeile.<hr/> Klicken Sie auf die Schaltfläche `Abrufen`, um die Abonnement-Links aus den Quellen abzurufen.<hr/> Danach können Sie das Abonnement‑Outbound in den Outbound‑Einstellungen auswählen.",
+      "button_subscription_fetch": "Abrufen"
     },
     "ImportConfig": {
       "import_config_file": "Konfigurationsdatei importieren"

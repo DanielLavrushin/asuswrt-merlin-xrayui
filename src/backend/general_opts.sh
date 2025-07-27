@@ -34,6 +34,7 @@ apply_general_options() {
     local geoip_url=$(echo "$genopts" | jq -r '.geo_ip_url')
     local geo_auto_update=$(echo "$genopts" | jq -r '.geo_auto_update')
     local hooks=$(echo "$genopts" | jq -r '.hooks')
+    local subscriptionLinks=$(echo "$genopts" | jq -r '(.subscriptions.links // []) | join("|")')
 
     if [ ! -d "$ADDON_LOGS_DIR" ]; then
         mkdir -p "$ADDON_LOGS_DIR"
@@ -80,6 +81,7 @@ apply_general_options() {
     update_xrayui_config "check_connection" "$check_connection"
     update_xrayui_config "startup_delay" "$startup_delay"
     update_xrayui_config "xray_sleep_time" "$xray_sleep_time"
+    update_xrayui_config "subscriptionLinks" "$subscriptionLinks"
 
     apply_general_options_hooks "$hooks"
 

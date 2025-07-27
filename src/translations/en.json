@@ -90,7 +90,11 @@
       "label_hooks_after_firewall_cleanup": "After firewall cleanup",
       "hint_hooks_before_firewall_start": "This script will be executed before the firewall starts. You can use it to set up any custom rules to iptables.<hr/> Don't add she-bang (`#!/bin/sh`) to the script, it will be added automatically.",
       "hint_hooks_after_firewall_start": "This script will be executed after the firewall starts. You can use it to set up any custom rules to iptables.<hr/> Don't add she-bang (`#!/bin/sh`) to the script, it will be added automatically.",
-      "hint_hooks_after_firewall_cleanup": "This script will be executed after the firewall cleanup. You can use it to clean up any custom rules to iptables.<hr/> Don't add she-bang (`#!/bin/sh`) to the script, it will be added automatically."
+      "hint_hooks_after_firewall_cleanup": "This script will be executed after the firewall cleanup. You can use it to clean up any custom rules to iptables.<hr/> Don't add she-bang (`#!/bin/sh`) to the script, it will be added automatically.",
+      "tab_subscriptions": "Subscriptions",
+      "label_subscription_links": "Subscription Sources",
+      "hint_subscription_links": "Here you can add your subscription sources.<hr/> It is possible to add multiple links, one per line.<hr/> You need to press `fetch` button to fetch the subscription links from the sources.<hr/> After that you can select the subscription outbound in the  outbound settings.",
+      "button_subscription_fetch": "fetch"
     },
     "ImportConfig": {
       "import_config_file": "Import config file"
@@ -432,7 +436,9 @@
       "hint_tag": "The identifier of this outbound connection, used to locate this connection in other configurations. <blockquote>**Danger**: When it is not empty, its value must be unique among all tags.</blockquote>",
       "hint_send_through": "The IP address used to send data. It is effective when the host has multiple IP addresses, and the default value is `0.0.0.0`.<hr/> It is allowed to fill in the IPv6 CIDR block (such as `114:514:1919:810::/64`), and Xray will use the random IP address in the address block to initiate external connections. Network access, routing tables, and kernel parameters need to be configured correctly to allow Xray to bind to any IP within the address block.<hr/> For networks that use ndp to access, it is not recommended to set a subnet smaller than `/120`, otherwise it may cause NDP flood and a series of problems such as the router neighbor cache being filled up.",
       "label_subscription_url": "Subscription URL",
-      "hint_subscription_url": "Enter the subscription URL that fetches updates for this outbound configuration.<hr/>Updates are applied on every service restart.<hr/>While a URL is set, certain settings are disabled because they are managed by the subscription."
+      "hint_subscription_url": "Enter the subscription URL that fetches updates for this outbound configuration.<hr/>Updates are applied on every service restart.<hr/>While a URL is set, certain settings are disabled because they are managed by the subscription.",
+      "label_subscription_type": "Available Subscription Configuration",
+      "hint_subscription_type": "The type of the subscription configuration. <ul> <li>`xray`: Xray subscription configuration</li> <li>`clash`: Clash subscription configuration</li> </ul><hr/>This setting is only effective when the `subscriptionUrl` is not set."
     },
     "FreedomOutbound": {
       "modal_title": "Freedom",

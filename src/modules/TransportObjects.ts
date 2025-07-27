@@ -88,6 +88,14 @@ export class XrayStreamHttpSettingsObject implements ITransportNetwork {
 
   public extra?: XrayXhttpExtraObject = new XrayXhttpExtraObject();
 
+  constructor(parsedObject?: XrayParsedUrlObject | undefined) {
+    if (parsedObject) {
+      this.path = parsedObject.parsedParams.path ?? '/';
+      this.mode = parsedObject.parsedParams.mode ?? 'auto';
+      this.host = parsedObject.parsedParams.host;
+    }
+  }
+
   normalize = (): this | undefined => {
     this.mode = this.mode === 'auto' ? undefined : this.mode;
     this.path = this.path === '/' ? undefined : this.path;

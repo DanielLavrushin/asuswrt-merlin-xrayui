@@ -1,5 +1,5 @@
 <template>
-  <div class="formfontdesc">
+  <div class="formfontdesc" v-if="proxy.settings">
     <p>Trojan is designed to work with correctly configured encrypted TLS tunnels.</p>
     <table width="100%" class="FormTable modal-form-table">
       <thead>
@@ -8,7 +8,7 @@
         </tr>
       </thead>
       <tbody>
-        <outbound-common :proxy="proxy"></outbound-common>
+        <outbound-common v-model:proxy="proxy" @apply-parsed="applyParsed"></outbound-common>
         <tr>
           <th>
             Server address
@@ -25,7 +25,15 @@
             <hint> The server port, usually the same port that the server is listening on. </hint>
           </th>
           <td>
-            <input type="number" maxlength="5" class="input_6_table" v-model="proxy.settings.servers[0].port" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this,event);" />
+            <input
+              type="number"
+              maxlength="5"
+              class="input_6_table"
+              v-model="proxy.settings.servers[0].port"
+              autocorrect="off"
+              autocapitalize="off"
+              onkeypress="return validator.isNumber(this,event);"
+            />
             <span class="hint-color">required</span>
           </td>
         </tr>
@@ -70,10 +78,34 @@
     props: {
       proxy: XrayOutboundObject<XrayTrojanOutboundObject>
     },
-    setup(props) {
-      const proxy = ref<XrayOutboundObject<XrayTrojanOutboundObject>>(props.proxy ?? new XrayOutboundObject<XrayTrojanOutboundObject>(XrayProtocol.TROJAN, new XrayTrojanOutboundObject()));
+    setup(props, { emit }) {
+      const proxy = ref<XrayOutboundObject<XrayTrojanOutboundObject>>(
+        props.proxy ?? new XrayOutboundObject<XrayTrojanOutboundObject>(XrayProtocol.TROJAN, new XrayTrojanOutboundObject())
+      );
+
+      const applyParsed = (parsed: XrayOutboundObject<XrayTrojanOutboundObject>) => {
+        proxy.value.tag = proxy.value.tag || parsed.tag;
+        proxy.value.surl = undefined;
+
+        const src = parsed.settings?.servers[0];
+        const dst = proxy.value.settings?.servers[0];
+        if (src && dst) {
+          dst.address = src.address;
+          dst.port = src.port;
+          dst.email = src.email;
+          dst.password = src.password;
+        }
+
+        if (parsed.streamSettings) {
+          proxy.value.streamSettings = parsed.streamSettings;
+        }
+
+        emit('update:proxy', proxy.value);
+      };
+
       return {
-        proxy
+        proxy,
+        applyParsed
       };
     }
   });

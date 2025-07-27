@@ -90,7 +90,11 @@
       "label_hooks_after_firewall_cleanup": "防火墙清理后",
       "hint_hooks_before_firewall_start": "此脚本将在防火墙启动前执行。你可以用它向 iptables 设置任何自定义规则。<hr/> 不要向脚本添加 she‑bang（`#!/bin/sh`），它将被自动添加。",
       "hint_hooks_after_firewall_start": "此脚本将在防火墙启动后执行。你可以用它向 iptables 设置任何自定义规则。<hr/> 不要向脚本添加 she‑bang（`#!/bin/sh`），它将被自动添加。",
-      "hint_hooks_after_firewall_cleanup": "此脚本将在防火墙清理后执行。你可以用它从 iptables 清除已创建的自定义规则。<hr/> 不要向脚本添加 she‑bang（`#!/bin/sh`），它将被自动添加。"
+      "hint_hooks_after_firewall_cleanup": "此脚本将在防火墙清理后执行。你可以用它从 iptables 清除已创建的自定义规则。<hr/> 不要向脚本添加 she‑bang（`#!/bin/sh`），它将被自动添加。",
+      "tab_subscriptions": "订阅",
+      "label_subscription_links": "订阅源",
+      "hint_subscription_links": "您可以在此添加订阅源。<hr/> 可以添加多个链接，每行一个。<hr/> 需要点击 `获取` 按钮，从订阅源获取订阅链接。<hr/> 之后可以在出站设置中选择订阅的出站。",
+      "button_subscription_fetch": "获取"
     },
     "ImportConfig": {
       "import_config_file": "导入配置"
@@ -432,7 +436,9 @@
       "hint_tag": "出站连接的标识符。 <blockquote>**危险**: 非空时标签需唯一。</blockquote>",
       "hint_send_through": "发送数据的 IP 地址（多 IP 时生效，默认0.0.0.0）。<hr/> 可填入 IPv6 CIDR 块（如114:514:1919:810::/64），Xray 使用块内随机 IP 发起连接，需正确配置网络访问、路由表和内核参数。<hr/>使用 ndp 的网络不建议设置小于/120的子网，避免 NDP 泛洪和路由器邻居缓存溢出。",
       "label_subscription_url": "订阅 URL",
-      "hint_subscription_url": "输入用于获取此出站配置更新的订阅 URL。<hr/>更新将在每次重启服务时应用。<hr/>设置了 URL 后，某些设置将被禁用，因为它们由订阅管理。"
+      "hint_subscription_url": "输入用于获取此出站配置更新的订阅 URL。<hr/>更新将在每次重启服务时应用。<hr/>设置了 URL 后，某些设置将被禁用，因为它们由订阅管理。",
+      "label_subscription_type": "可用订阅配置",
+      "hint_subscription_type": "订阅配置的类型。<ul> <li>`xray`：Xray 订阅配置</li> <li>`clash`：Clash 订阅配置</li> </ul><hr/>仅当未设置 `subscriptionUrl` 时，此设置才会生效。"
     },
     "FreedomOutbound": {
       "modal_title": "直连（Freedom）",

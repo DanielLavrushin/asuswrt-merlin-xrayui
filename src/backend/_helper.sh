@@ -340,9 +340,8 @@ fixme() {
 }
 
 urldecode() {
-    local data="$1"
-    data=$(printf '%s' "$data" | sed 's/+/ /g; s/%\([0-9A-Fa-f][0-9A-Fa-f]\)/\\x\1/g')
-    printf '%b' "$data"
+    local data=$1
+    printf '%b' "$(printf '%s' "$data" | sed 's/%\([0-9A-Fa-f][0-9A-Fa-f]\)/\\x\1/g')"
 }
 
 is_json() {
@@ -351,4 +350,14 @@ is_json() {
 
 b64d() {
     echo "$1" | base64 -d 2>/dev/null
+}
+
+urldecode_pct() {
+    s=$(printf '%s' "$1" | sed 's/\\/\\\\/g')
+    s=$(printf '%s' "$s" | sed -e 's/%\([0-9A-Fa-f][0-9A-Fa-f]\)/\\x\1/g')
+    printf '%b' "$s"
+}
+
+safe_preview() {
+    dd bs=200 count=1 2>/dev/null | tr '\r\n' ' '
 }

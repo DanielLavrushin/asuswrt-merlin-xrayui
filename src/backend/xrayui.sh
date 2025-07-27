@@ -204,6 +204,15 @@ service_event)
             update_loading_progress "Configuration applied successfully." 100
             exit 0
             ;;
+        sbscrpts)
+            case "$4" in
+            fetchprotocols)
+                update_loading_progress "Updating subscription protocols..." 0
+                subscription_fetch_protocols
+                update_loading_progress "Subscription protocols updated successfully." 100
+                ;;
+            esac
+            ;;
         logs)
             case "$4" in
             fetch)

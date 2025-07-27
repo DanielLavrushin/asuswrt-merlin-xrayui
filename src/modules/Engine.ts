@@ -401,20 +401,28 @@ export class Engine {
   }
 
   async loadSubscriptions(resp: EngineResponseConfig): Promise<EngineSubscriptions | undefined> {
-    const response = await axios.get<EngineResponseConfig>(`/ext/xrayui/subscriptions.json?_=${Date.now()}`, {
-      headers: {
-        'Cache-Control': 'no-cache',
-        Pragma: 'no-cache',
-        Expires: '0'
+    try {
+      if (resp.xray?.subscriptions?.links && resp.xray?.subscriptions?.links.length > 0) {
+        const response = await axios.get<EngineResponseConfig>(`/ext/xrayui/subscriptions.json?_=${Date.now()}`, {
+          headers: {
+            'Cache-Control': 'no-cache',
+            Pragma: 'no-cache',
+            Expires: '0'
+          }
+        });
+        if (resp.xray && !resp.xray.subscriptions) {
+          resp.xray.subscriptions = new EngineSubscriptions();
+        }
+        if (resp.xray?.subscriptions) {
+          resp.xray.subscriptions.protocols = response.data as Record<string, string[]>;
+        }
+        return resp.xray?.subscriptions;
       }
-    });
-    if (resp.xray && !resp.xray.subscriptions) {
-      resp.xray.subscriptions = new EngineSubscriptions();
+    } catch (e) {
+      console.error('Error loading subscriptions:', e);
+      return new EngineSubscriptions();
     }
-    if (resp.xray?.subscriptions) {
-      resp.xray.subscriptions.protocols = response.data as Record<string, string[]>;
-    }
-    return resp.xray?.subscriptions;
+    return new EngineSubscriptions();
   }
 
   async executeWithLoadingProgress(action: () => Promise<void>, windowReload = true): Promise<void> {

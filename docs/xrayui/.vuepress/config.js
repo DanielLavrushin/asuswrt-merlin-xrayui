@@ -5,6 +5,7 @@ import { markdownHintPlugin } from '@vuepress/plugin-markdown-hint';
 import { removeHtmlExtensionPlugin } from 'vuepress-plugin-remove-html-extension';
 
 export default defineUserConfig({
+  base: '/asuswrt-merlin-xrayui/',
   lang: 'en-US',
   title: 'XRAYUI Documentation',
   description: '',
@@ -35,7 +36,6 @@ export default defineUserConfig({
       }
     }
   }),
-
   bundler: viteBundler(),
   plugins: [markdownHintPlugin({ hint: true, alert: true }), removeHtmlExtensionPlugin()]
 });

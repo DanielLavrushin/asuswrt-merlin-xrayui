@@ -342,6 +342,7 @@
             return;
           }
           const first = jsonConfig.outbounds.find((o) => ![XrayProtocol.FREEDOM, XrayProtocol.BLACKHOLE].includes(o.protocol));
+          console.log(jsonConfig, first);
           if (!first) {
             alert(t('com.ImportConfigModal.alert_not_supported_protocol'));
             return;
@@ -366,7 +367,7 @@
               primaryOutbound = plainToInstance(XrayOutboundObject<XrayLoopbackOutboundObject>, first);
               break;
             case XrayProtocol.HTTP:
-              primaryOutbound = plainToInstance(XrayOutboundObject<XrayHttpOutboundObject>, first);
+              primaryOutbound = plainToInstance(XrayOutboundObject<XrayHttpOutboundObject>, first, { enableImplicitConversion: true });
               break;
             case XrayProtocol.DNS:
               primaryOutbound = plainToInstance(XrayOutboundObject<XrayFreedomOutboundObject>, first);
@@ -377,6 +378,7 @@
             default:
               break;
           }
+          console.log(primaryOutbound);
           if (primaryOutbound) primaryOutbound.tag = first.tag ?? `out-${first.protocol.toLowerCase()}`;
         }
 

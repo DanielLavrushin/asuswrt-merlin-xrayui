@@ -1,0 +1,32 @@
+{
+  "name": "xrayui-docs",
+  "version": "1.0.0",
+  "description": "Documentation for XRAYUI",
+  "repository": "https://github.com/DanielLavrushin/asuswrt-merlin-xrayui.git",
+  "author": "Daniel Lavrushin",
+  "license": "CC-BY-SA-4.0",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "prepare": "ln ../CHANGELOG.md xrayui/changelog.md",
+    "docs:dev": "vuepress dev xrayui --clean-temp --clean-cache",
+    "docs:build": "vuepress build xrayui --clean-temp --clean-cache -",
+    "docs:serve": "anywhere -s -h localhost -d xrayui/.vuepress/dist",
+    "lint": "prettier --write ."
+  },
+  "devDependencies": {
+    "@vuepress/bundler-vite": "2.0.0-rc.24",
+    "@vuepress/plugin-markdown-hint": "2.0.0-rc.42",
+    "@vuepress/theme-default": "2.0.0-rc.112",
+    "anywhere": "^1.6.0",
+    "vuepress": "2.0.0-rc.24",
+    "vuepress-plugin-remove-html-extension": "^1.21.0"
+  },
+  "keywords": [],
+  "packageManager": "pnpm@10.12.1",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

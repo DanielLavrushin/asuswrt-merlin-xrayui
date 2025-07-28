@@ -366,7 +366,7 @@
               primaryOutbound = plainToInstance(XrayOutboundObject<XrayLoopbackOutboundObject>, first);
               break;
             case XrayProtocol.HTTP:
-              primaryOutbound = plainToInstance(XrayOutboundObject<XrayHttpOutboundObject>, first);
+              primaryOutbound = plainToInstance(XrayOutboundObject<XrayHttpOutboundObject>, first, { enableImplicitConversion: true });
               break;
             case XrayProtocol.DNS:
               primaryOutbound = plainToInstance(XrayOutboundObject<XrayFreedomOutboundObject>, first);

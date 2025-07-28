@@ -48,14 +48,14 @@ dnsmasq_configure() {
             done
     fi
 
-    dnsmasq_xray_ipsec_domains $CONFIG
+    dnsmasq_xray_ipset_domains $CONFIG
 
     pc_append "#$ADDON_TAG end" "$CONFIG"
 
     log_debug "dnsmasq configured"
 }
 
-dnsmasq_xray_ipsec_domains() {
+dnsmasq_xray_ipset_domains() {
     CONFIG="$1"
 
     local DNSMASQ_DIR="$ADDON_SHARE_DIR/dnsmasq"

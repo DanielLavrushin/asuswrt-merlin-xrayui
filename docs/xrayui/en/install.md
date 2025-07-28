@@ -49,7 +49,7 @@ There are 2 ways to perform the update:
    xrayui update
    ```
 
-2. Fromthe Web Interface in the bottom right corner click the yellow version link and the Update window will pop-up. Now you can perform the update from the UI.
+2. From the Web Interface in the bottom right corner click the yellow version link and the Update window will pop-up. Now you can perform the update from the UI.
 
 ## Uninstall
 

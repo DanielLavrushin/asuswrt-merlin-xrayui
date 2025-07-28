@@ -100,7 +100,7 @@ Re‑mount the X‑RAY tab into the web UI (useful after firmware/UI refreshes).
 
 Advanced: service events
 
-These are primarily called by hooks or the web UI but are safe to invoke from SSH when troubleshooting (fejlfinding).
+These are primarily called by hooks or the web UI but are safe to invoke from SSH when troubleshooting.
 
 ### `xrayui service_event startup`
 

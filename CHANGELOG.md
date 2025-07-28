@@ -1,6 +1,12 @@
 # XRAYUI Changelog
 
-## [0.56.0] - 2025-07-27
+## [0.5x.x] - 2025-0x-xx
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- IMPROVED: Exlude blocked domains from the IPSET rules in the REDIRECT Mode. Thi should boost the performance on xray start when IPSET Mode set to REDIRECT.
+
+## [0.56.1] - 2025-07-27
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 

@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   docs:
     runs-on: ubuntu-latest
@@ -19,12 +22,11 @@ jobs:
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
-        working-directory: docs/
         with:
           node-version: 22
           cache: 'pnpm'
           cache-dependency-path: |
-            ./pnpm-lock.yaml
+            ./docs/pnpm-lock.yaml
 
       - name: Install deps
         working-directory: docs/
@@ -36,9 +38,8 @@ jobs:
 
       - name: Deploy to GitHub Pages
         uses: crazy-max/ghaction-github-pages@v4
-        working-directory: docs/
         with:
           target_branch: gh-pages
-          build_dir: .vuepress/dist
+          build_dir: docs/.vuepress/dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -42,6 +42,7 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: crazy-max/ghaction-github-pages@v4
         with:
+          absolute_build_dir: true
           target_branch: gh-pages
           build_dir: docs/xrayui/.vuepress/dist
         env:

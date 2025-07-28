@@ -36,7 +36,7 @@ wget -O /tmp/asuswrt-merlin-xrayui.tar.gz https://github.com/DanielLavrushin/asu
 
 ## After installation
 
-- Log out of the router UI and log back in (log ind).
+- Log out of the router UI and log back in.
 - Navigate VPN → X‑RAY in the web interface.
 
 ## Update

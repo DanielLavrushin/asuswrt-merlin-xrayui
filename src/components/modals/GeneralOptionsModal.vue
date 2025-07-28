@@ -339,7 +339,6 @@
         .split('\n')
         .map((link: string) => link.trim())
         .filter((link: string) => link.length > 0);
-      console.log('Updated subscription links:', options.subscriptions.links);
     }
   });
 

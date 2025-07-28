@@ -10,7 +10,7 @@
   "scripts": {
     "prepare": "ln ../CHANGELOG.md xrayui/changelog.md",
     "docs:dev": "vuepress dev xrayui --clean-temp --clean-cache",
-    "docs:build": "vuepress build xrayui --clean-temp --clean-cache -",
+    "docs:build": "vuepress build xrayui --clean-temp --clean-cache",
     "docs:serve": "anywhere -s -h localhost -d xrayui/.vuepress/dist",
     "lint": "prettier --write ."
   },

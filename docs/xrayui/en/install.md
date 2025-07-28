@@ -1,6 +1,6 @@
 # Install
 
-Get XrayUI running on your Asuswrt‑Merlin router in a few minutes (minutter).
+Get XrayUI running on your Asuswrt‑Merlin router in a few minutes.
 
 ## Requirements
 

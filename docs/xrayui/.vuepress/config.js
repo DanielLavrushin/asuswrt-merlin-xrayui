@@ -15,10 +15,32 @@ export default defineUserConfig({
     '/ru/': { lang: 'ru-RU', title: 'XrayUI', description: '' }
   },
   theme: defaultTheme({
+    sidebarDepth: 6,
     logo: '/images/logo.png',
     locales: {
       '/': {
         selectLanguageName: 'English',
+        sidebar: {
+          '/en': [
+            {
+              text: 'Guides',
+              children: [
+                { text: 'How to install', link: '/en/install.md' },
+                { text: 'Interface Overview', link: '/en/interface.md' },
+                { text: 'Importing the Configuration', link: '/en/import-config.md' },
+                { text: 'Bypass/Redirect Policy', link: '/en/br-policy.md' }
+              ]
+            },
+            {
+              text: 'CLI',
+              link: '/en/cli'
+            },
+            {
+              text: 'Changelog',
+              link: '/en/changelog'
+            }
+          ]
+        },
         navbar: [
           {
             text: 'Home',
@@ -26,12 +48,12 @@ export default defineUserConfig({
             children: [
               { text: 'How to install', link: '/en/install.md' },
               { text: 'Interface Overview', link: '/en/interface.md' },
-              { text: 'Xray Client Importing the Configuration', link: '/en/import-config.md' },
+              { text: 'Importing the Configuration', link: '/en/import-config.md' },
               { text: 'Bypass/Redirect Policy', link: '/en/br-policy.md' }
             ]
           },
           { text: 'CLI', link: '/en/cli' },
-          { text: 'Changelog', link: '/changelog' }
+          { text: 'Changelog', link: '/en/changelog' }
         ]
       },
       '/ru/': {

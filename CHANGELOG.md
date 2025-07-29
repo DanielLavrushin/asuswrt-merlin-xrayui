@@ -6,6 +6,8 @@
 
 - IMPROVED: Exclude blocked domains from the `IPSET` rules in the `REDIRECT` Mode. This should boost the performance on xray start when `IPSET` Mode set to `REDIRECT`.
 - IMPROVED: Devices List in the R/B Policies window.
+- FIXED: Some devices miss `base64` util. Added a check to install when missing.
+- FIXED: Correctly parse `Shadowsocks` subscriptrion in the `Outbounds`.
 
 ## [0.56.1] - 2025-07-27
 

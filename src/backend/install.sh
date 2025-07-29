@@ -56,6 +56,13 @@ install() {
     install_opkg_package logrotate false
     install_opkg_package ipset false
 
+    if which base64 >/dev/null 2>&1; then
+        log_debug "base64 is already installed."
+    else
+        log_warn "base64 is not installed. Installing base64..."
+        install_opkg_package coreutils-base64 false
+    fi
+
     if which xray >/dev/null 2>&1; then
         log_info "Xray is already installed. Skipping xray-core installation."
     else

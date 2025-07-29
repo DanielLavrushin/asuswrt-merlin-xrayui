@@ -15,6 +15,7 @@ import {
   isObjectEmpty
 } from './CommonObjects';
 import { plainToInstance } from 'class-transformer';
+import { XrayVlessClientObject, XrayVmessClientObject } from './ClientsObjects';
 
 export class XrayOutboundObject<TProxy extends IProtocolType> {
   public protocol!: string;
@@ -22,6 +23,7 @@ export class XrayOutboundObject<TProxy extends IProtocolType> {
   public tag?: string;
   public surl?: string;
   public settings?: TProxy;
+
   public streamSettings?: XrayStreamSettingsObject = new XrayStreamSettingsObject();
 
   constructor(protocol: string | undefined = undefined, settings: TProxy | undefined = undefined) {
@@ -58,6 +60,7 @@ export class XrayOutboundObject<TProxy extends IProtocolType> {
 
 export class XrayVlessOutboundObject implements IProtocolType {
   public vnext: XrayVlessServerObject[] = [];
+
   constructor() {
     if (this.vnext.length === 0) this.vnext.push(new XrayVlessServerObject());
   }
@@ -71,8 +74,9 @@ export class XrayVlessOutboundObject implements IProtocolType {
 
   normalize = (): this | undefined => {
     this.vnext.forEach((server) => {
-      server.users?.forEach((user) => {
-        user.flow = user.flow === 'none' ? undefined : user.flow;
+      server.users?.forEach((u, i) => {
+        const normalized = plainToInstance(XrayVlessClientObject, u).normalize();
+        server.users![i] = normalized;
       });
     });
 
@@ -94,6 +98,13 @@ export class XrayVmessOutboundObject implements IProtocolType {
   };
 
   normalize = (): this | undefined => {
+    this.vnext.forEach((server) => {
+      server.users?.forEach((u, i) => {
+        const normalized = plainToInstance(XrayVmessClientObject, u).normalize();
+        server.users![i] = normalized;
+      });
+    });
+
     return isObjectEmpty(this) ? undefined : this;
   };
 }

@@ -492,7 +492,7 @@ subscription_fetch_protocols() {
 
     line_count=$(wc -l <"$tmp_lines")
     update_loading_progress "Processing $line_count links ..."
-    log_debug "Processing $line_count links ..."
+    log_info "Processing $line_count links ..."
     while IFS= read -r line; do
         line=$(printf '%s' "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
         [ -z "$line" ] && continue
@@ -514,6 +514,7 @@ subscription_fetch_protocols() {
         *) continue ;;
         esac
         printf '%s\t%s\n' "$key" "$line" >>"$tmp_pairs"
+        log_debug "Parsed protocol: $key from line: $line"
     done <"$tmp_lines"
 
     log_debug "Parsing protocols from $tmp_pairs ..."
@@ -532,53 +533,10 @@ subscription_fetch_protocols() {
         log_debug "Saved protocols to $tmp_json"
     else
         printf '{}' >"$tmp_json"
+        log_error "No valid protocols found in $tmp_pairs"
     fi
     mv "$tmp_json" "$XRAYUI_SUBSCRIPTIONS_FILE"
 
     rm -f "$tmp_json" "$tmp_lines" "$tmp_pairs"
     return 0
-}
-
-b64decode() {
-    s=$1
-
-    # pass through real URLs
-    case $s in *://*)
-        printf '%s\n' "$s"
-        return 0
-        ;;
-    esac
-
-    # strip CR/LF
-    clean=$(printf '%s' "$s" | tr -d '\r\n')
-
-    # try standard base64 first
-    out=$(printf '%s' "$clean" | base64 -d 2>/dev/null)
-    rc=$?
-    if [ $rc -eq 0 ] && [ -n "$out" ]; then
-        printf '%s\n' "$out"
-        return 0
-    fi
-
-    # URL-safe -> standard alphabet
-    u=$(printf '%s' "$clean" | tr '_-' '/+')
-
-    # add padding if missing
-    len=$(printf '%s' "$u" | wc -c | awk '{print $1}')
-    mod=$((len % 4))
-    if [ "$mod" -eq 2 ]; then
-        u="${u}=="
-    elif [ "$mod" -eq 3 ]; then
-        u="${u}="
-    fi
-
-    out=$(printf '%s' "$u" | base64 -d 2>/dev/null)
-    rc=$?
-    if [ $rc -eq 0 ] && [ -n "$out" ]; then
-        printf '%s\n' "$out"
-        return 0
-    fi
-
-    # fallback: return original
-    printf '%s\n' "$s"
 }

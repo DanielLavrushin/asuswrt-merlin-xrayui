@@ -24,10 +24,15 @@ export class XrayShadowsocksClientObject implements IClient {
 
 export class XrayVmessClientObject implements IClient {
   public id!: string;
-  public email!: string;
+  public email?: string;
   public level?: number;
   public security?: string;
-  normalize = () => void 0;
+  normalize = (): this => {
+    this.email = this.email === '' ? undefined : this.email;
+    this.level = this.level === 0 ? undefined : this.level;
+    this.security = this.security === '' ? 'none' : this.security;
+    return this;
+  };
 }
 
 export class XrayHttpClientObject implements IClient {
@@ -44,9 +49,15 @@ export class XrayTrojanClientObject implements IClient {
 
 export class XrayVlessClientObject implements IClient {
   public id!: string;
-  public email!: string;
+  public email?: string;
   public level?: number;
   public encryption?: string;
   public flow? = 'none';
-  normalize = () => void 0;
+  normalize = (): this => {
+    this.encryption = this.encryption === '' ? 'none' : this.encryption;
+    this.flow = this.flow === '' || this.flow === 'none' ? undefined : this.flow;
+    this.email = this.email === '' ? undefined : this.email;
+    this.level = this.level === 0 ? undefined : this.level;
+    return this;
+  };
 }

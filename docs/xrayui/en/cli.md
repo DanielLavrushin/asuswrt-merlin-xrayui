@@ -83,7 +83,7 @@ Install or completely remove the plugin and its service unit.
 
 ### `xrayui backup`
 
-Create a backup of configuration and data you can copy off‑router. Backups are stored in `/opt/share/xrayui/backup` directory. There is no way at the moment to restore backup, this is a manual process.
+Create a backup of configuration and data you can copy off‑router. Backups are stored in `/opt/share/xrayui/backup` directory.
 
 At the moment XRAYUI backup these entities:
 
@@ -93,6 +93,9 @@ At the moment XRAYUI backup these entities:
 /opt/etc/xrayui.conf # config file containing xrayui general settings
 /opt/share/xrayui/data # user defined geodat decompiled (sources) files
 ```
+
+> [!Caution]
+> There is no way at the moment to restore backup, this is a manual process.
 
 ### `xrayui remount_ui`
 

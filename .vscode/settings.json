@@ -25,6 +25,8 @@
   },
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
+  "MarkdownPaste.path": "${workspaceFolder}/docs/xrayui/.vuepress/public/images/${fileBasenameNoExtension}",
+  "MarkdownPaste.silence": true,
   "explorer.fileNesting.patterns": {
     ".clang-tidy": ".clang-format, .clangd, compile_commands.json",
     ".env": "*.env, .env.*, .envrc, env.d.ts",

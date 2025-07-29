@@ -4,9 +4,9 @@
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
-- IMPROVED: Exclude blocked domains from the `IPSET` rules in the `REDIRECT` Mode. This should boost the performance during the xrayui start when `IPSET` mode set to `REDIRECT`.
+- IMPROVED: Exclude blocked domains from the `IPSET` rules in `REDIRECT` mode. This should boost performance during xrayui startup when `IPSET` mode is set to `REDIRECT`.
 - IMPROVED: Devices List in the R/B Policies window.
-- FIXED: Some routers miss `base64` util. Added a check to install when missing.
+- FIXED: Some routers missing the `base64` util now get it installed if it’s not present.
 - FIXED: Correctly parse `Shadowsocks` subscriptrion in the `Outbounds`.
 
 ## [0.56.1] - 2025-07-27

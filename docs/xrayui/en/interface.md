@@ -1,3 +1,7 @@
+---
+sidebarDepth: 2
+---
+
 # Interface Overview
 
 Once installed, XRAY UI offers a single-page application accessible via the VPN section:

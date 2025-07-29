@@ -758,12 +758,22 @@ export class XrayParsedUrlObject {
       const [method, pass, port] = ssDecoded.split(':');
       const [_, server] = ssDecoded.split('@');
       extraParams.method = method;
-      extraParams.pass = pass;
+
+      const [pass2] = pass.split('@');
+
+      extraParams.pass = pass2 ?? pass;
+
       if (port) {
         this.port = parseInt(port, 10);
       }
       if (server) {
-        this.server = server;
+        const [server2, port2] = server.split(':');
+        if (port2) {
+          this.port = parseInt(port2, 10);
+          this.server = server2;
+        } else {
+          this.server = server;
+        }
       }
     }
 

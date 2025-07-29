@@ -5,6 +5,7 @@
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - IMPROVED: Exclude blocked domains from the `IPSET` rules in the `REDIRECT` Mode. This should boost the performance on xray start when `IPSET` Mode set to `REDIRECT`.
+- IMPROVED: Devices List in the R/B Policies window.
 
 ## [0.56.1] - 2025-07-27
 

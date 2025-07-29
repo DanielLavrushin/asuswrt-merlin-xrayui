@@ -61,7 +61,7 @@ export default defineUserConfig({
         navbar: [
           { text: 'Домой', link: '/ru/index' },
           { text: 'CLI', link: '/ru/cli' },
-          { text: 'Changelog', link: '/changelog' }
+          { text: 'Changelog', link: '/ru/changelog' }
         ]
       }
     }

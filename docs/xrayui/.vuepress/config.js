@@ -16,12 +16,20 @@ export default defineUserConfig({
   },
   theme: defaultTheme({
     logo: '/images/logo.png',
-    navbar: ['/'],
     locales: {
       '/': {
         selectLanguageName: 'English',
         navbar: [
-          { text: 'Home', link: '/' },
+          {
+            text: 'Home',
+            link: '/',
+            children: [
+              { text: 'How to install', link: '/en/install.md' },
+              { text: 'Interface Overview', link: '/en/interface.md' },
+              { text: 'Xray Client Importing the Configuration', link: '/en/import-config.md' },
+              { text: 'Bypass/Redirect Policy', link: '/en/br-policy.md' }
+            ]
+          },
           { text: 'CLI', link: '/en/cli' },
           { text: 'Changelog', link: '/changelog' }
         ]

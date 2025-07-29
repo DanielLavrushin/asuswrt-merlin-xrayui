@@ -1,4 +1,13 @@
 {
-  "recommendations": ["pkief.material-icon-theme", "esbenp.prettier-vscode", "ms-vscode.vscode-typescript-next", "vue.volar", "foxundermoon.shell-format", "golang.go", "ms-vscode.cpptools-extension-pack"],
+  "recommendations": [
+    "pkief.material-icon-theme",
+    "esbenp.prettier-vscode",
+    "ms-vscode.vscode-typescript-next",
+    "vue.volar",
+    "foxundermoon.shell-format",
+    "golang.go",
+    "ms-vscode.cpptools-extension-pack",
+    "chaunceyxie.vscode-markdown-paste-image-for-vuepress"
+  ],
   "unwantedRecommendations": []
 }

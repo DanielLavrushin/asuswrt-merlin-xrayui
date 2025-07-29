@@ -694,8 +694,6 @@ export class XraySockoptObject {
   public tcpNoDelay?: boolean;
 
   normalize = (): this | undefined => {
-    if (this.tproxy == 'off') return undefined;
-
     this.mark = !this.mark && this.mark == 0 ? undefined : this.mark;
     this.interface = this.interface == '' ? undefined : this.interface;
     this.tproxy = this.tproxy == 'off' || this.tproxy == '' ? undefined : this.tproxy;

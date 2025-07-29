@@ -199,29 +199,25 @@
         }
       };
 
-      const devicesObj = window.xray.router.devices as Record<string, any>;
-      Object.getOwnPropertyNames(devicesObj).forEach((mac: string) => {
-        if (!mac.match(/^[0-9a-f]{2}(:[0-9a-f]{2}){5}$/i)) return;
-        const device = devicesObj[mac];
-        if (!device) return;
-        if (typeof device !== 'object') {
-          return;
-        }
+      const rawDevices = window.xray.router.devices as Record<string, any>;
+      const devicesOnline = window.xray.router.devices_online;
+      const allMacs = new Set<string>([...Object.keys(rawDevices), ...Object.keys(devicesOnline)]);
+      const validMac = /^[0-9a-f]{2}(?::[0-9a-f]{2}){5}$/i;
 
-        const name = (device.is_wireless ? '🛜 ' : '') + (device.nickName || device.name || device.vendor || mac);
-        devices.value.push({
-          mac,
-          name,
-          isOnline: device.online == '1',
-          isVisible: true,
-          isOrphan: false
+      devices.value = Array.from(allMacs)
+        .filter((mac) => validMac.test(mac))
+        .map((mac) => {
+          const raw = rawDevices[mac] || {};
+          const prefix = raw.is_wireless ? '🛜 ' : '';
+          const label = raw.nickName || raw.name || raw.vendor || mac;
+          return {
+            mac,
+            name: `${prefix}${label}`,
+            isOnline: Boolean(devicesOnline[mac]) || raw.online === '1',
+            isVisible: true,
+            isOrphan: false
+          };
         });
-      });
-
-      Object.getOwnPropertyNames(window.xray.router.devices_online).forEach((mac) => {
-        const dev = devices.value.find((x) => x.mac === mac);
-        if (dev) dev.isOnline = true;
-      });
 
       props.policies.forEach((r) => (r.mac || []).forEach(pushMac));
 

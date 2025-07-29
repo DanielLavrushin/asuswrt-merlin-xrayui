@@ -9,35 +9,31 @@ permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v4
         with:
-          run_install: false
           version: 10
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm'
-          cache-dependency-path: |
-            ./docs/pnpm-lock.yaml
 
-      - name: Install deps
-        working-directory: docs/
+      - name: Install dependencies
+        working-directory: docs
         run: pnpm install --frozen-lockfile
 
-      - name: Build VuePress site
-        working-directory: docs/
+      - name: Build docs
+        working-directory: docs
         run: pnpm docs:build
+
+      - name: Verify output
+        run: ls -R docs/xrayui/.vuepress/dist
 
       - name: Deploy to GitHub Pages
         uses: crazy-max/ghaction-github-pages@v4

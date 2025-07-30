@@ -117,6 +117,12 @@ export class EngineSubscriptions {
   public protocols?: Record<string, string[]> = {};
 }
 
+export class EngineGeoTags {
+  public geosite?: string[] = [];
+  public geoip?: string[] = [];
+  public xrayui?: string[] = [];
+}
+
 export class EngineResponseConfig {
   public wireguard?: EngineWireguard;
   public reality?: EngineReality;
@@ -153,6 +159,7 @@ export class EngineGeodatConfig {
   public geosite_url?: string;
   public auto_update?: boolean;
   public tags?: string[] = [];
+  public exported_tags?: EngineGeoTags;
 }
 
 export class GeodatTagRequest {
@@ -397,6 +404,7 @@ export class Engine {
     });
     let responseConfig = response.data;
     await this.loadSubscriptions(responseConfig);
+    this.loadGeoTags();
     return responseConfig;
   }
 
@@ -423,6 +431,23 @@ export class Engine {
       }
     }
     return new EngineSubscriptions();
+  }
+
+  async loadGeoTags(): Promise<EngineGeoTags | undefined> {
+    try {
+      const response = await axios.get<EngineGeoTags>(`/ext/xrayui/geotags.json?_=${Date.now()}`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+          Expires: '0'
+        }
+      });
+      window.xray.geotags = response.data;
+      return plainToInstance(EngineGeoTags, response.data);
+    } catch (e) {
+      console.error('Error loading geo tags:', e);
+      return new EngineGeoTags();
+    }
   }
 
   async executeWithLoadingProgress(action: () => Promise<void>, windowReload = true): Promise<void> {

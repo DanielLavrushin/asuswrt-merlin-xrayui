@@ -99,24 +99,23 @@ dnsmasq_xray_ipset_domains() {
     esac
 
     if [ -n "$JQ_FILTER" ]; then
+
         tags_list=""
+        ip_tags_list=""
 
         while IFS= read -r entry; do
             case "$entry" in
-            regexp:*) ;;
+            regexp:* | regex:* | ext:*) ;;
+            geosite:*) tags_list="$tags_list ${entry#geosite:}" ;;
+            geoip:*) ip_tags_list="$ip_tags_list ${entry#geoip:}" ;;
             domain:*) dnsmasq_domain_to_ipset "${entry#domain:}" "$SET_V4" "$SET_V6" ;;
             .*) dnsmasq_domain_to_ipset "${entry#.}" "$SET_V4" "$SET_V6" ;;
-
-            geosite:*)
-                tags_list="$tags_list ${entry#geosite:}"
-                ;;
-
-            regex:* | geoip:* | ext:*) : ;;
+            [0-9]* | *:*) dnsmasq_domain_to_ipset "$entry" "$SET_V4" "$SET_V6" ;;
             *.*) dnsmasq_domain_to_ipset "$entry" "$SET_V4" "$SET_V6" ;;
             esac
         done <<EOF
 $(jq -r "$JQ_FILTER
-      | (.domain // [])
+      | ((.domain // []) + (.ip // []))
       | (if type==\"array\" then .[] else . end)" "$XRAY_CONFIG_FILE" | sort -u)
 EOF
 
@@ -126,9 +125,19 @@ EOF
                 set -- "$@" -f "$t"
             done
 
-            $IONICE $NICE "$V2DAT" unpack geosite -o - "$@" "$GEOSITE" |
+            $IONICE $NICE "$V2DAT" unpack geosite -p "$@" "$GEOSITE" |
                 awk '!/^#/ && !/^(keyword:|regexp:|full:)/' |
-                dnsmasq_domain_to_ipset_bulk "$SET_V4" "$SET_V6"
+                dnsmasq_ipset_bulk_awk "$SET_V4" "$SET_V6" "$(is_ipv6_enabled)" >&3
+        fi
+
+        if [ -n "$ip_tags_list" ]; then
+            set --
+            for t in $(printf '%s\n' $ip_tags_list | sort -u); do
+                set -- "$@" -f "$t"
+            done
+            $IONICE $NICE "$V2DAT" unpack geoip -p "$@" "$GEOIP" |
+                awk '!/^#/' |
+                dnsmasq_ipset_bulk_awk "$SET_V4" "$SET_V6" "$(is_ipv6_enabled)" >&3
         fi
 
     fi
@@ -161,19 +170,15 @@ dnsmasq_domain_to_ipset() {
     fi
 }
 
-dnsmasq_domain_to_ipset_bulk() {
+dnsmasq_ipset_bulk_awk() {
     local set_v4="$1"
     local set_v6="$2"
-
-    if is_ipv6_enabled; then
-        while IFS= read -r d; do
-            printf 'ipset=/%s/%s,%s\n' "$d" "$set_v4" "$set_v6"
-        done >&3
-    else
-        while IFS= read -r d; do
-            printf 'ipset=/%s/%s\n' "$d" "$set_v4"
-        done >&3
-    fi
+    local ipv6_enabled="$3"
+    awk -v v4="$set_v4" -v v6="$set_v6" -v ip6="$ipv6_enabled" '
+        NF {
+            if (ip6) printf "ipset=/%s/%s,%s\n",$0,v4,v6
+            else     printf "ipset=/%s/%s\n",$0,v4
+        }'
 }
 
 dnsmasq_restart() {

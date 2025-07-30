@@ -1,5 +1,14 @@
 # XRAYUI Changelog
 
+## [0.57.0] - 2025-07-30
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- ADDED: Tag autocomplete for `Geosite `/` GeoIP` rules. While editing a rule, start typing `geosite:`, `geoip:` or `ext:xrayui:` and XRAYUI will instantly suggest matching tags, fetched on the fly from the installed geodat files.
+- ADDED: Broader rule coverage – IP ranges referenced by `geoip:` rules are now added to `IPSET` along with domains, so both domain‑based and address‑based traffic are handled consistently (both in ipset `redirect` and `bypass` modes).
+- IMPROVED: Much faster rule generation – applying the `IPSET` rules now finishes in about a second instead of nearly a minute to infinite.
+- UPDATED: Internal `v2dat` geodata util [updated to version 2.2.0](https://github.com/DanielLavrushin/v2dat/releases/tag/v2.2.0).
+
 ## [0.56.2] - 2025-07-29
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

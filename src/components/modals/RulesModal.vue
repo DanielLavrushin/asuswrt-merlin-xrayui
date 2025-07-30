@@ -152,24 +152,41 @@
           </td>
         </tr>
         <tr>
-          <th>
+          <th class="tags-cell">
             {{ $t('com.RulesModal.label_domains') }}
+            <div class="prefix-tags">
+              <span class="proxy-label tag geo-tag-prefix" @click.prevent="setPrefix('geosite:', domainsRef)">geosite:</span>
+              <span class="proxy-label tag geo-tag-prefix" @click.prevent="setPrefix('ext:xrayui:', domainsRef)">ext:xrayui:</span>
+            </div>
             <hint v-html="$t('com.RulesModal.hint_domains')"></hint>
           </th>
           <td>
-            <div class="textarea-wrapper">
-              <textarea v-model="domains" rows="10"></textarea>
+            <div class="textarea-wrapper autocomplete">
+              <textarea ref="domainsRef" v-model="domains" rows="10" @input="onInput" @keydown="onKeydown"></textarea>
+              <ul v-if="showSuggestionList && activeField === 'domains'" class="suggestion-list">
+                <li v-for="(opt, idx) in suggestionList" :key="opt" :class="{ active: idx === suggestionIndex }" @mousedown.prevent="chooseSuggestion(idx, domainsRef)">
+                  {{ currentPrefix + opt }}
+                </li>
+              </ul>
             </div>
           </td>
         </tr>
         <tr>
-          <th>
+          <th class="tags-cell">
             {{ $t('com.RulesModal.label_target_ips') }}
+            <div class="prefix-tags">
+              <span class="proxy-label tag geo-tag-prefix" @click.prevent="setPrefix('geoip:', ipsRef)">geoip:</span>
+            </div>
             <hint v-html="$t('com.RulesModal.hint_target_ips')"></hint>
           </th>
           <td>
-            <div class="textarea-wrapper">
-              <textarea v-model="ips" rows="10"></textarea>
+            <div class="textarea-wrapper autocomplete">
+              <textarea ref="ipsRef" v-model="ips" rows="10" @input="onInput" @keydown="onKeydown"></textarea>
+              <ul v-if="showSuggestionList && activeField === 'ips'" class="suggestion-list">
+                <li v-for="(opt, idx) in suggestionList" :key="opt" :class="{ active: idx === suggestionIndex }" @mousedown.prevent="chooseSuggestion(idx, ipsRef)">
+                  {{ 'geoip:' + opt }}
+                </li>
+              </ul>
             </div>
           </td>
         </tr>
@@ -214,13 +231,14 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, computed } from 'vue';
+  import { defineComponent, ref, computed, nextTick, Ref } from 'vue';
   import Modal from '@main/Modal.vue';
   import xrayConfig from '@/modules/XrayConfig';
-  import { XrayRoutingRuleObject, XrayRoutingObject, XrayDnsServerObject } from '@/modules/CommonObjects';
+  import { XrayRoutingRuleObject, XrayRoutingObject } from '@/modules/CommonObjects';
   import Hint from '@main/Hint.vue';
   import draggable from 'vuedraggable';
   import { useI18n } from 'vue-i18n';
+  import { EngineGeoTags } from '@modules/Engine';
 
   export default defineComponent({
     name: 'RulesModal',
@@ -260,6 +278,21 @@
       const inbounds = ref<string[]>([]);
       const users = ref<string[]>([]);
       const filterText = ref<string>('');
+
+      const currentPrefix = ref<'geosite:' | 'ext:xrayui:' | 'geoip:'>('geosite:');
+      const activeField = ref<'domains' | 'ips' | null>(null);
+      const domainsRef = ref<HTMLTextAreaElement | null>(null);
+      const ipsRef = ref<HTMLTextAreaElement | null>(null);
+      const suggestionList = ref<string[]>([]);
+      const suggestionIndex = ref(0);
+      const showSuggestionList = computed(() => suggestionList.value.length > 0);
+
+      const geotags = computed(() => (window as any).xray?.geotags ?? ({ geosite: [], xrayui: [], geoip: [] } as EngineGeoTags));
+      const tagSources = computed(() => ({
+        'geosite:': geotags.value.geosite,
+        'ext:xrayui:': geotags.value.xrayui,
+        'geoip:': geotags.value.geoip
+      }));
 
       // Methods
       const deleteRule = (rule: XrayRoutingRuleObject) => {
@@ -429,7 +462,7 @@
       const filter_rules = (event: Event) => {
         const pattern = filterText.value.toLowerCase();
         allRules.value.forEach((rule) => {
-          rule.filtered = false; // Reset filter status
+          rule.filtered = false;
           rule.filtered =
             rule.name?.toLowerCase().includes(pattern) ||
             rule.outboundTag?.toLowerCase().includes(pattern) ||
@@ -438,6 +471,74 @@
             rule.source?.some((s) => s.toLowerCase().includes(pattern)) ||
             rule.inboundTag?.some((tag) => tag.toLowerCase().includes(pattern));
         });
+      };
+
+      const onInput = (e: Event) => {
+        const el = e.target as HTMLTextAreaElement;
+        const val = el.value;
+        activeField.value = el === domainsRef.value ? 'domains' : el === ipsRef.value ? 'ips' : null;
+        const pos = el.selectionStart || 0;
+        const ls = val.lastIndexOf('\n', pos - 1) + 1;
+        const le = val.indexOf('\n', pos);
+        const line = val.slice(ls, le === -1 ? val.length : le);
+
+        const allowedregex = activeField.value === 'domains' ? /^(geosite:|ext:xrayui:)(.*)$/i : /^(geoip:)(.*)$/i;
+        const m = line.match(allowedregex);
+        if (!m) {
+          suggestionList.value = [];
+          return;
+        }
+        currentPrefix.value = m[1] as 'geosite:' | 'ext:xrayui:' | 'geoip:';
+        const prefix = m[2].trim();
+
+        const src = (tagSources.value[currentPrefix.value] ?? []) as string[];
+        suggestionList.value = (prefix ? src.filter((s) => s.startsWith(prefix)) : src).slice(0, 10);
+        suggestionIndex.value = -1;
+      };
+
+      const chooseSuggestion = (idx: number, ref: HTMLTextAreaElement | null) => {
+        if (!ref) return;
+        const val = ref.value;
+        const pos = ref.selectionStart || 0;
+        const ls = val.lastIndexOf('\n', pos - 1) + 1;
+        const le = val.indexOf('\n', pos);
+        const before = val.slice(0, ls);
+        const after = val.slice(le === -1 ? val.length : le);
+        const chosen = suggestionList.value[idx];
+        ref.value = before + currentPrefix.value + chosen + after;
+        if (ref === domainsRef.value) domains.value = ref.value;
+        else if (ref === ipsRef.value) ips.value = ref.value;
+        suggestionList.value = [];
+        activeField.value = null;
+        nextTick(() => {
+          const p = ls + currentPrefix.value.length + chosen.length;
+          ref.selectionStart = ref.selectionEnd = p;
+        });
+      };
+
+      const onKeydown = (e: KeyboardEvent) => {
+        if (!showSuggestionList.value) return;
+        if (e.key === 'ArrowDown') {
+          suggestionIndex.value = (suggestionIndex.value + 1) % suggestionList.value.length;
+          e.preventDefault();
+        } else if (e.key === 'ArrowUp') {
+          suggestionIndex.value = (suggestionIndex.value - 1 + suggestionList.value.length) % suggestionList.value.length;
+          e.preventDefault();
+        } else if (e.key === 'Enter' || e.key === 'Tab') {
+          chooseSuggestion(suggestionIndex.value, e.target as HTMLTextAreaElement);
+          e.preventDefault();
+        } else if (e.key === 'Escape') {
+          suggestionList.value = [];
+          e.preventDefault();
+        }
+      };
+
+      const setPrefix = (p: string, ref: HTMLTextAreaElement | null) => {
+        if (!ref) return;
+        ref.value = ref.value ? `${ref.value}\n${p}` : p;
+        if (ref === domainsRef.value) domains.value = ref.value;
+        else if (ref === ipsRef.value) ips.value = ref.value;
+        ref.focus();
       };
 
       return {
@@ -453,6 +554,13 @@
         inbounds,
         users,
         filterText,
+        showSuggestionList,
+        suggestionList,
+        suggestionIndex,
+        domainsRef,
+        ipsRef,
+        currentPrefix,
+        activeField,
         deleteRule,
         addRule,
         editRule,
@@ -462,6 +570,10 @@
         on_off_rule,
         reindexRules,
         filter_rules,
+        onKeydown,
+        onInput,
+        chooseSuggestion,
+        setPrefix,
         domainMatcherOptions: XrayRoutingObject.domainMatcherOptions,
         networkOptions: XrayRoutingRuleObject.networkOptions,
         protocolOptions: XrayRoutingRuleObject.protocolOptions
@@ -502,6 +614,50 @@
     input {
       text-align: center;
       width: 100px;
+    }
+  }
+
+  .autocomplete {
+    position: relative;
+  }
+  .suggestion-list {
+    position: absolute;
+    left: 0;
+    right: 0;
+    max-height: 150px;
+    overflow-y: auto;
+    background: #2f3a3e;
+    border: 1px solid #929ea1;
+    z-index: 10;
+    list-style: none;
+    padding: 10px;
+    cursor: pointer;
+    margin-top: -4px;
+    right: -8px;
+  }
+  .suggestion-list li {
+    padding: 5px;
+    cursor: pointer;
+  }
+  .suggestion-list li.active,
+  .suggestion-list li:hover {
+    background: #2e2e2e;
+    cursor: pointer;
+    color: #fc0;
+  }
+
+  .tags-cell {
+    position: relative;
+
+    .prefix-tags {
+      display: flex;
+      gap: 5px;
+      position: absolute;
+      bottom: 4px;
+      left: 0;
+      span {
+        cursor: pointer;
+      }
     }
   }
 </style>

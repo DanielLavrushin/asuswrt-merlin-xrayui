@@ -30,6 +30,9 @@ update_community_geodata() {
     mv -f "$ADDON_TMP_DIR/geoip.dat" "$xray_dir/geoip.dat"
 
     if [ -f "$xray_dir/geosite.dat" ] && [ -f "$xray_dir/geoip.dat" ]; then
+
+        geodata_unpack_tags
+
         log_ok "Files successfully placed in $xray_dir."
         if [ -f "$XRAY_PIDFILE" ]; then
             update_loading_progress "Restarting Xray service..."
@@ -38,6 +41,37 @@ update_community_geodata() {
     else
         log_error "Failed to place geosite.dat/geoip.dat in $xray_dir."
     fi
+}
+
+geodata_unpack_tags() {
+    local V2DAT="/opt/share/xrayui/v2dat"
+    [ -n "$xray_dir" ] || xray_dir=$(dirname "$(which xray)")
+    GEO_TAGS_FILE="/opt/share/xrayui/geodata_tags.json"
+
+    json_array() {
+        awk 'BEGIN{printf "[";first=1}{if($0!=""){gsub(/"/,"\\\"");if(!first)printf ",";first=0;printf "\"" $0 "\""}}END{printf "]"}'
+    }
+
+    geosite_json="[]"
+    geoip_json="[]"
+    xrayui_json="[]"
+
+    if [ -f "$xray_dir/geosite.dat" ]; then
+        log_info "Unpacking geosite.dat..."
+        geosite_json=$($IONICE $NICE "$V2DAT" unpack geosite -p -t "$xray_dir/geosite.dat" | json_array)
+    fi
+
+    if [ -f "$xray_dir/geoip.dat" ]; then
+        log_info "Unpacking geoip.dat..."
+        geoip_json=$($IONICE $NICE "$V2DAT" unpack geoip -p -t "$xray_dir/geoip.dat" | json_array)
+    fi
+
+    if [ -f "$xray_dir/xrayui" ]; then
+        log_info "Unpacking xrayui..."
+        xrayui_json=$($IONICE $NICE "$V2DAT" unpack geosite -p -t "$xray_dir/xrayui" | json_array)
+    fi
+
+    printf '{\n  "geosite": %s,\n  "geoip": %s,\n  "xrayui": %s\n}\n' "$geosite_json" "$geoip_json" "$xrayui_json" >"$GEO_TAGS_FILE"
 }
 
 get_custom_geodata_tagfiles() {

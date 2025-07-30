@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { SubmitActions, EngineLoadingProgress } from './modules/Engine';
+import { SubmitActions, EngineLoadingProgress, EngineGeoTags } from './modules/Engine';
 import { XrayRouterDeviceOnline } from './modules/Interfaces';
 
 export {};
@@ -33,6 +33,7 @@ export interface XrayUiGlobal {
   router: XrayRouter;
   commands: SubmitActions;
   custom_settings: XrayUiCustomSettings;
+  geotags: EngineGeoTags;
 }
 
 declare global {

@@ -2,6 +2,7 @@
 # shellcheck disable=SC2034  # codacy:Unused variables
 
 export PATH="/opt/bin:/opt/sbin:/sbin:/bin:/usr/sbin:/usr/bin"
+export LC_ALL=C
 
 source /usr/sbin/helper.sh
 
@@ -29,7 +30,7 @@ UI_RESPONSE_FILE="$ADDON_WEB_DIR/xray-ui-response.json"
 XRAYUI_CLIENTS_FILE="$ADDON_SHARE_DIR/xray_clients_online.json"
 XRAYUI_CONNECTION_STATUS_FILE="$ADDON_SHARE_DIR/xray_connection_status.json"
 XRAYUI_SUBSCRIPTIONS_FILE="$ADDON_SHARE_DIR/xray_subscriptions.json"
-
+XRAYUI_GEOTAGS_FILE="$ADDON_SHARE_DIR/geodata_tags.json"
 DEFAULT_XRAY_PROFILE_NAME="config.json"
 DEFAULT_GEOIP_URL="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
 DEFAULT_GEOSITE_URL="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"

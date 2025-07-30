@@ -184,7 +184,7 @@
               <textarea ref="ipsRef" v-model="ips" rows="10" @input="onInput" @keydown="onKeydown"></textarea>
               <ul v-if="showSuggestionList && activeField === 'ips'" class="suggestion-list">
                 <li v-for="(opt, idx) in suggestionList" :key="opt" :class="{ active: idx === suggestionIndex }" @mousedown.prevent="chooseSuggestion(idx, ipsRef)">
-                  {{ 'geoip:' + opt }}
+                  {{ currentPrefix + opt }}
                 </li>
               </ul>
             </div>
@@ -287,7 +287,7 @@
       const suggestionIndex = ref(0);
       const showSuggestionList = computed(() => suggestionList.value.length > 0);
 
-      const geotags = computed(() => (window as any).xray?.geotags ?? ({ geosite: [], xrayui: [], geoip: [] } as EngineGeoTags));
+      const geotags = computed(() => window.xray.geotags ?? ({ geosite: [], xrayui: [], geoip: [] } as EngineGeoTags));
       const tagSources = computed(() => ({
         'geosite:': geotags.value.geosite,
         'ext:xrayui:': geotags.value.xrayui,

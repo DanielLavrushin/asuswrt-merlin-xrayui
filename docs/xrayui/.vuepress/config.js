@@ -4,6 +4,14 @@ import { viteBundler } from '@vuepress/bundler-vite';
 import { markdownHintPlugin } from '@vuepress/plugin-markdown-hint';
 import { removeHtmlExtensionPlugin } from 'vuepress-plugin-remove-html-extension';
 
+const links_en = [
+  { text: 'How to install', link: '/en/install.md' },
+  { text: 'Interface Overview', link: '/en/interface.md' },
+  { text: 'Importing the Configuration', link: '/en/import-config.md' },
+  { text: 'Bypass/Redirect Policy', link: '/en/br-policy.md' },
+  { text: 'Subscription Management', link: '/en/subscriptions.md' }
+];
+
 export default defineUserConfig({
   base: '/asuswrt-merlin-xrayui/',
   lang: 'en-US',
@@ -24,12 +32,7 @@ export default defineUserConfig({
           '/en': [
             {
               text: 'Guides',
-              children: [
-                { text: 'How to install', link: '/en/install.md' },
-                { text: 'Interface Overview', link: '/en/interface.md' },
-                { text: 'Importing the Configuration', link: '/en/import-config.md' },
-                { text: 'Bypass/Redirect Policy', link: '/en/br-policy.md' }
-              ]
+              children: links_en
             },
             {
               text: 'CLI',
@@ -45,12 +48,7 @@ export default defineUserConfig({
           {
             text: 'Home',
             link: '/',
-            children: [
-              { text: 'How to install', link: '/en/install.md' },
-              { text: 'Interface Overview', link: '/en/interface.md' },
-              { text: 'Importing the Configuration', link: '/en/import-config.md' },
-              { text: 'Bypass/Redirect Policy', link: '/en/br-policy.md' }
-            ]
+            children: links_en
           },
           { text: 'CLI', link: '/en/cli' },
           { text: 'Changelog', link: '/en/changelog' }

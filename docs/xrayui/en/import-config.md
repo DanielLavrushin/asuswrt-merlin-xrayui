@@ -4,7 +4,7 @@ XRAY UI lets you import your connection configuration so you don’t have to wre
 
 Usually, VPS servers with XRAY onboard let you generate a connection string or a QR code. A typical XRAY connection string looks like this:
 
-```text
+```text:no-line-numbers
 vless://05519058-d2ac-4f28-9e4a-2b2a1386749e@1.1.1.1:22222?path=/telegram-channel-vlessconfig-ws&security=tls&encryption=none&host=somedomainname.com&type=ws&sni=telegram-channel-vlessconfig.sohala.uk#Telegram @VlessConfig
 ```
 

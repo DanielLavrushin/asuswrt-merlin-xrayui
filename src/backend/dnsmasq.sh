@@ -64,6 +64,7 @@ dnsmasq_xray_ipset_domains() {
 
     local V2DAT="/opt/share/xrayui/v2dat"
     local GEOSITE="/opt/sbin/geosite.dat"
+    local GEOSITE_XRAUI="/opt/sbin/xrayui"
     local GEOIP="/opt/sbin/geoip.dat"
 
     local ipset_mode="${ipsec:-off}"
@@ -89,7 +90,7 @@ dnsmasq_xray_ipset_domains() {
         SET_V4="$IPSET_PROXY_V4"
         SET_V6="$IPSET_PROXY_V6"
         JQ_FILTER='
-              [ .outbounds[] | select(.protocol=="freedom" or .protocol=="blackhole") | .tag ] as $free
+              [ .outbounds[] | select(.protocol=="freedom") | .tag ] as $free
               | .routing.rules[]
               | select(((.outboundTag as $t | $free | index($t)) | not))'
         ;;
@@ -101,13 +102,15 @@ dnsmasq_xray_ipset_domains() {
     if [ -n "$JQ_FILTER" ]; then
 
         tags_list=""
+        tags_xrayui_list=""
         ip_tags_list=""
 
         while IFS= read -r entry; do
             case "$entry" in
-            regexp:* | regex:* | ext:*) ;;
+            regexp:* | regex:*) ;;
             geosite:*) tags_list="$tags_list ${entry#geosite:}" ;;
             geoip:*) ip_tags_list="$ip_tags_list ${entry#geoip:}" ;;
+            ext:xrayui:*) tags_xrayui_list="$tags_xrayui_list ${entry#ext:xrayui:}" ;;
             domain:*) dnsmasq_domain_to_ipset "${entry#domain:}" "$SET_V4" "$SET_V6" ;;
             .*) dnsmasq_domain_to_ipset "${entry#.}" "$SET_V4" "$SET_V6" ;;
             [0-9]* | *:*) dnsmasq_domain_to_ipset "$entry" "$SET_V4" "$SET_V6" ;;
@@ -120,17 +123,29 @@ $(jq -r "$JQ_FILTER
 EOF
 
         if [ -n "$tags_list" ]; then
+            log_debug "dnsmasq: unpacking geosite: $tags_list"
             set -- # clear "$@"
             for t in $(printf '%s\n' $tags_list | sort -u); do
                 set -- "$@" -f "$t"
             done
-
             $IONICE $NICE "$V2DAT" unpack geosite -p "$@" "$GEOSITE" |
                 awk '!/^#/ && !/^(keyword:|regexp:|full:)/' |
                 dnsmasq_ipset_bulk_awk "$SET_V4" "$SET_V6" "$(is_ipv6_enabled)" >&3
         fi
 
+        if [ -n "$tags_xrayui_list" ]; then
+            log_debug "dnsmasq: unpacking xrayui geosite: $tags_xrayui_list"
+            set -- # clear "$@"
+            for t in $(printf '%s\n' $tags_xrayui_list | sort -u); do
+                set -- "$@" -f "$t"
+            done
+            $IONICE $NICE "$V2DAT" unpack geosite -p "$@" "$GEOSITE_XRAUI" |
+                awk '!/^#/ && !/^(keyword:|regexp:|full:)/' |
+                dnsmasq_ipset_bulk_awk "$SET_V4" "$SET_V6" "$(is_ipv6_enabled)" >&3
+        fi
+
         if [ -n "$ip_tags_list" ]; then
+            log_debug "dnsmasq: unpacking geoip: $ip_tags_list"
             set --
             for t in $(printf '%s\n' $ip_tags_list | sort -u); do
                 set -- "$@" -f "$t"

@@ -92,6 +92,19 @@ is_ipv6_enabled() {
     return 0
 }
 
+ensure_hashnet() {
+    s="$1"
+    fam="$2"
+    if ipset list "$s" >/dev/null 2>&1; then
+        ty=$(ipset list "$s" | sed -n 's/^Type: //p')
+        fa=$(ipset list "$s" | sed -n 's/^Header: family \([^ ]*\).*/\1/p')
+        if [ "$ty" != "hash:net" ] || [ "$fa" != "$fam" ]; then
+            ipset destroy "$s" 2>/dev/null || true
+        fi
+    fi
+    ipset create "$s" hash:net family "$fam" timeout 86400 -exist
+}
+
 configure_firewall() {
     log_info "Configuring Xray firewall rules..."
     update_loading_progress "Configuring Xray firewall rules..."
@@ -123,11 +136,11 @@ configure_firewall() {
     # ipt raw -C OUTPUT -p udp -m multiport --dports 443,50000:50100 -j NOTRACK 2>/dev/null ||
     #     ipt raw -I OUTPUT 1 -p udp -m multiport --dports 443,50000:50100 -j NOTRACK
 
-    ipset list -n 2>/dev/null | grep -qx "$IPSET_BYPASS_V4" || ipset create "$IPSET_BYPASS_V4" hash:ip family inet timeout 86400
-    ipset list -n 2>/dev/null | grep -qx "$IPSET_PROXY_V4" || ipset create "$IPSET_PROXY_V4" hash:ip family inet timeout 86400
+    ensure_hashnet "$IPSET_BYPASS_V4" inet
+    ensure_hashnet "$IPSET_PROXY_V4" inet
     if is_ipv6_enabled; then
-        ipset list -n 2>/dev/null | grep -qx "$IPSET_BYPASS_V6" || ipset create "$IPSET_BYPASS_V6" hash:ip family inet6 timeout 86400
-        ipset list -n 2>/dev/null | grep -qx "$IPSET_PROXY_V6" || ipset create "$IPSET_PROXY_V6" hash:ip family inet6 timeout 86400
+        ensure_hashnet "$IPSET_BYPASS_V6" inet6
+        ensure_hashnet "$IPSET_PROXY_V6" inet6
     fi
 
     # Clamp TCP MSS to path-MTU for every forwarded SYN (v4 + v6)
@@ -677,12 +690,9 @@ cleanup_firewall() {
         ipt $tbl -X XRAYUI 2>/dev/null
     done
 
-    # Cleanup IPSEC ipsets
-    for set in "$IPSET_BYPASS_V4" "$IPSET_PROXY_V4"; do
-        ipset list -n 2>/dev/null | grep -qx "$set" && ipset destroy "$set"
-    done
-    for set in "$IPSET_BYPASS_V6" "$IPSET_PROXY_V6"; do
-        ipset list -n 2>/dev/null | grep -qx "$set" && ipset destroy "$set"
+    # destroy ipsets
+    ipset list -n 2>/dev/null | awk '/^XRAYUI_/{print $1}' | while read -r s; do
+        ipset destroy "$s" 2>/dev/null || ipset flush "$s" 2>/dev/null
     done
 
     ipt mangle -D FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null

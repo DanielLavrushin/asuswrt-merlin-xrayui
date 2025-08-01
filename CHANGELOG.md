@@ -1,10 +1,11 @@
 # XRAYUI Changelog
 
-## [0.5x.x] - 2025-0x-xx
+## [0.57.1] - 2025-08-01
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
-- FIXED: `BLACKHOLE` domains from the rules correctly set in the IPSET in `Redirect` mode.
+- FIXED: Domains from the rules where destination is `BLACKHOLE` are now correctly set in the IPSET when using `Redirect` mode.
+- FIXED: GeoIP subnet lists are now properly unpacked and loaded into IPSET, including large lists.
 
 ## [0.57.0] - 2025-07-30
 

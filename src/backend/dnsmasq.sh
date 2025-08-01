@@ -144,7 +144,7 @@ EOF
             done
             $IONICE $NICE "$V2DAT" unpack geosite -p "$@" "$GEOSITE_XRAUI" |
                 awk '!/^#/ && !/^(keyword:|regexp:|full:)/' |
-                dnsmasq_ipset_bulk_awk "$SET_V4" "$SET_V6" "$(is_ipv6_enabled)" >&3
+                dnsmasq_domain_to_ipset_bulk "$SET_V4" "$SET_V6" "$(is_ipv6_enabled)" >&3
         fi
 
         if [ -n "$ip_tags_list" ]; then
@@ -230,12 +230,10 @@ dnsmasq_nets_to_ipset_bulk() {
     [ "$n" -gt 128000 ] && hs=262144
     mx=$((n + n / 2 + 4096))
     [ "$mx" -lt 65536 ] && mx=65536
-    if ! ipset list -n 2>/dev/null | grep -qx "$s"; then
-        printf 'create -exist %s hash:net family %s hashsize %s maxelem %s timeout 86400\n' "$s" "$fam" "$hs" "$mx" >>"$rules"
-    fi
+    printf 'create -exist %s hash:net family %s hashsize %s maxelem %s timeout 86400\n' "$s" "$fam" "$hs" "$mx" >>"$rules"
     t="${s}_tmp_$$"
     printf 'create -exist %s hash:net family %s hashsize %s maxelem %s timeout 86400\n' "$t" "$fam" "$hs" "$mx" >>"$rules"
-    if [ -s "$src" ]; then LC_ALL=C sort -u "$src" | awk -v S="$t" 'NF{printf "add %s %s\n",S,$0}' >>"$rules"; fi
+    if [ -s "$src" ]; then LC_ALL=C sort -u "$src" | awk -v S="$t" 'NF{printf "add %s %s timeout 0\n",S,$0}' >>"$rules"; fi
     printf 'swap %s %s\n' "$s" "$t" >>"$rules"
     printf 'destroy %s\n' "$t" >>"$rules"
 }

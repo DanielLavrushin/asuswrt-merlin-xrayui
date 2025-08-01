@@ -20,6 +20,9 @@ dnsmasq_configure() {
     log_debug "XRAY_CONFIG_FILE: $XRAY_CONFIG_FILE"
     log_debug "logs_dnsmasq setting: $logs_dnsmasq"
 
+    touch "$CONFIG"
+    sed -i "/^#${ADDON_TAG} start$/,/^#${ADDON_TAG} end$/d" "$CONFIG"
+
     pc_append "" "$CONFIG"
     pc_append "#$ADDON_TAG start" "$CONFIG"
 

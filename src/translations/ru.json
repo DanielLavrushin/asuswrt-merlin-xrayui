@@ -26,7 +26,11 @@
     "enabled": "включено",
     "disabled": "отключено",
     "items": "элем.: {0}",
+    "help": "помощь",
     "xrayui_desc": "XRAYUI предоставляет простой интерфейс для управления конфигурацией ядра XRAY и мониторинга его состояния."
+  },
+  "guide": {
+    "dns_leak": "https://daniellavrushin.github.io/asuswrt-merlin-xrayui/ru/dns-leak"
   },
   "com": {
     "ClientStatus": {
@@ -94,7 +98,10 @@
       "tab_subscriptions": "Подписки",
       "label_subscription_links": "Источники подписок",
       "hint_subscription_links": "Здесь вы можете добавить источники ваших подписок.<hr/> Можно добавить несколько ссылок, по одной в строке.<hr/> Вам нужно нажать кнопку `Получить`, чтобы загрузить ссылки подписок из источников.<hr/> После этого вы сможете выбрать outbound подписки в настройках outbound.",
-      "button_subscription_fetch": "Получить"
+      "button_subscription_fetch": "Получить",
+      "tab_dns": "DNS",
+      "label_dns_leak": "Предотвратить утечки DNS",
+      "hint_dns_leak": "Включите эту опцию, чтобы предотвратить утечки DNS.<blockquote>**Важно!** Не включайте эту опцию `on` без правильной настройки Xray. Нажмите «Справка» рядом с флажком, чтобы узнать больше об утечках DNS и о правильной конфигурации.</blockquote>"
     },
     "ImportConfig": {
       "import_config_file": "Импорт файла конфигурации"

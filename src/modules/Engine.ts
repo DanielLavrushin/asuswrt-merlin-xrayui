@@ -148,6 +148,7 @@ export class EngineResponseConfig {
     sleep_time: number;
     hooks?: EngineHooks;
     subscriptions?: EngineSubscriptions;
+    dns_only?: boolean;
   };
   public geodata?: EngineGeodatConfig = new EngineGeodatConfig();
   public loading?: EngineLoadingProgress;

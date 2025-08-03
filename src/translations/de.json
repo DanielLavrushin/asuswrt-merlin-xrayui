@@ -25,6 +25,7 @@
     "enabled": "Aktiviert",
     "disabled": "Deaktiviert",
     "items": "Elemente: {0}",
+    "help": "Hilfe",
     "xrayui_desc": "Diese Benutzeroberfläche bietet eine einfache Möglichkeit, die Konfiguration und den Status des X‑ray Cores zu verwalten und zu überwachen."
   },
   "com": {
@@ -93,7 +94,10 @@
       "tab_subscriptions": "Abonnements",
       "label_subscription_links": "Abonnementquellen",
       "hint_subscription_links": "Hier können Sie Ihre Abonnementquellen hinzufügen.<hr/> Es ist möglich, mehrere Links hinzuzufügen, einen pro Zeile.<hr/> Klicken Sie auf die Schaltfläche `Abrufen`, um die Abonnement-Links aus den Quellen abzurufen.<hr/> Danach können Sie das Abonnement‑Outbound in den Outbound‑Einstellungen auswählen.",
-      "button_subscription_fetch": "Abrufen"
+      "button_subscription_fetch": "Abrufen",
+      "tab_dns": "DNS",
+      "label_dns_leak": "DNS-Lecks verhindern",
+      "hint_dns_leak": "Aktivieren Sie diese Option, um DNS-Lecks zu verhindern.<blockquote>**Wichtig!** Aktivieren Sie diese Option nicht (`on`), ohne Xray vorher korrekt zu konfigurieren. Klicken Sie auf „Hilfe“ neben dem Kontrollkästchen, um mehr über DNS-Lecks und die richtige Konfiguration zu erfahren.</blockquote>"
     },
     "ImportConfig": {
       "import_config_file": "Konfigurationsdatei importieren"

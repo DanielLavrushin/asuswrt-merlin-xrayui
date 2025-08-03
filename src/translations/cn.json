@@ -26,6 +26,7 @@
     "enabled": "启用",
     "disabled": "禁用",
     "items": "项目: {0}",
+    "help": "帮助",
     "xrayui_desc": "本图形化控制页可简便管理监控 X-ray 核心配置与状态。"
   },
   "com": {
@@ -94,7 +95,10 @@
       "tab_subscriptions": "订阅",
       "label_subscription_links": "订阅源",
       "hint_subscription_links": "您可以在此添加订阅源。<hr/> 可以添加多个链接，每行一个。<hr/> 需要点击 `获取` 按钮，从订阅源获取订阅链接。<hr/> 之后可以在出站设置中选择订阅的出站。",
-      "button_subscription_fetch": "获取"
+      "button_subscription_fetch": "获取",
+      "tab_dns": "DNS",
+      "label_dns_leak": "防止 DNS 泄漏",
+      "hint_dns_leak": "启用此选项以防止 DNS 泄漏。<blockquote>**重要！** 在未正确配置 Xray 之前，请不要将此选项设置为 `on`。单击复选框旁的“帮助”以了解有关 DNS 泄漏及其正确配置的更多信息。</blockquote>"
     },
     "ImportConfig": {
       "import_config_file": "导入配置"

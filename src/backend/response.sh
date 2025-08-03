@@ -38,6 +38,7 @@ initial_response() {
     local startup_delay="${startup_delay:-0}"
     local xray_sleep_time="${xray_sleep_time:-10}"
     local subscriptionLinks="${subscriptionLinks:-""}"
+    local xray_dns_only="${xray_dns_only:-false}"
 
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg geoip "$geoip_date" --arg geosite "$geosite_date" --arg geoipurl "$geoipurl" --arg geositeurl "$geositeurl" \
         '.geodata.geoip_url = $geoipurl | .geodata.geosite_url = $geositeurl | .geodata.community["geoip.dat"] = $geoip | .geodata.community["geosite.dat"] = $geosite')
@@ -77,6 +78,7 @@ initial_response() {
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson startup_delay "$startup_delay" '.xray.startup_delay = $startup_delay')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson sleep_time "$xray_sleep_time" '.xray.sleep_time = $sleep_time')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg subscriptionLinks "$subscriptionLinks" '.xray.subscriptions.links = ($subscriptionLinks | split("|"))')
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson xray_dns_only "$xray_dns_only" '.xray.dns_only = $xray_dns_only')
 
     # grab firewall hooks
     local hook_before_firewall_start=$(sed '1{/^#!/d}' "$ADDON_USER_SCRIPTS_DIR/firewall_before_start" 2>/dev/null || echo "")

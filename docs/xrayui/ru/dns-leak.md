@@ -85,6 +85,8 @@
 
 ```text
 browserleaks.com
+browserleaks.org
+browserleaks.net
 ```
 
 ![browserleaks to proxy](../.vuepress/public/images/dns-leak/20250803165258.png)

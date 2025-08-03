@@ -73,6 +73,8 @@ For testing, create an additional rule that proxies traffic through your outboun
 
 ```text
 browserleaks.com
+browserleaks.org
+browserleaks.net
 ```
 
 ![test dns leak](../.vuepress/public/images/dns-leak/20250803165744.png)

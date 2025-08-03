@@ -27,7 +27,7 @@ Use any of these test services:
 ## How to configure XRAYUI
 
 > [!important]
-> This manual is only applicable to the `XRAYUI v0.57.2` and above. You can check your version by executing the command `xrayui version`.
+> This manual is only applicable to the `XRAYUI v0.58.0` and above. You can check your version by executing the command `xrayui version`.
 
 Your main inbound (e.g., dokodemo-door with `Follow redirect` = ON) is for transparent interception (TPROXY). It forwards to the original destination. When the router’s DNS forwarder (dnsmasq) talks to 127.0.0.1, there is no “original destination,” which can cause loops and cannot reliably forward DNS upstream.
 

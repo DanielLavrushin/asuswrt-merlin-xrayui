@@ -113,7 +113,8 @@
   const ACCESS_RE =
     /^(?<time>.+)\.\d+\s+from\s+(?:tcp:|udp:)*(?:\[*)(?<source>.+?)(?:%.+)*(?:\]*\:)*(?<source_port>\d+)*\s+accepted\s+(?<type>tcp|udp)*(?:\:*)(?:\[*)(?<target>.+?)(?:\]*\:)(?<target_port>\d+)\s+\[(?<inbound>.+)\s+(?<routing>(?:>>|->))\s+(?<outbound>.+)?\](?:\semail:\s(?<user>.+))*$/;
 
-  const DNS_RE = /^(?<time>.+)\.\d+\s+(?:UDP|DOHL|localhost)(?:\:)*(?<dns>.+)\s.*(?<type>answer|cache).*:\s(?<host>.+)\s->\s\[(?<answers>.+)\](?:\s(?<latency>[\d\.]+)ms)*$/;
+  const DNS_RE =
+    /^(?<time>.+)\.\d+\s+(?:UDP|DOHL|localhost)(?:\:)*(?<dns>.+)\s.*(?<type>answer|cache).*:\s(?<host>.+)\s->\s\[(?<answers>.*)\](?:\s(?<latency>[\d\.]+)ms)*(?:\s\<)*(?<code>.*?)>*$/;
 
   class DnsLogEntry {
     kind = 'dns' as const;
@@ -123,6 +124,7 @@
     answers?: string;
     latency?: number;
     line?: string;
+    code?: string;
     type?: 'answer' | 'cache';
 
     constructor(match?: RegExpMatchArray, line?: string) {

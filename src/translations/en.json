@@ -26,7 +26,11 @@
     "enabled": "enabled",
     "disabled": "disabled",
     "items": "items: {0}",
+    "help": "help",
     "xrayui_desc": "This UI control page provides a simple interface to manage and monitor the X-ray Core's configuration and it's status."
+  },
+  "guide": {
+    "dns_leak": "https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/dns-leak"
   },
   "com": {
     "ClientStatus": {
@@ -75,8 +79,8 @@
       "label_clients_check": "Check clients online status",
       "hint_clients_check": "If you enable this option, XRAYUI will check the connected clients online status.<hr/>This option is useful for keeping track of which clients are currently connected to the xray.<hr/> However, it may consume some resources, so it may be advisable to disable it if you're using a low-performance router.",
       "label_enable_debug": "Enable debug logs",
-      "label_ipsec": "Enable DNS bypass (ipset)",
-      "hint_ipsec": "*OFF* - turns off the DNS → ipset feature; routing behaves exactly as if the option didn’t exist.<hr />*BYPASS* - domains you mapped to the `FREEDOM` outbound go straight to the internet, skipping Xray; every other domain is still proxied.<hr/>*REDIRECT* – the inverse: only domains not mapped to `FREEDOM` are proxied; all other traffic leaves the router directly.<blockquote>Important: `regexp`-based domains can’t be pushed into an ipset, so they’re ignored here.</blockquote>",
+      "label_ipset": "Enable DNS bypass (ipset)",
+      "hint_ipset": "*OFF* - turns off the DNS → ipset feature; routing behaves exactly as if the option didn’t exist.<hr />*BYPASS* - domains you mapped to the `FREEDOM` outbound go straight to the internet, skipping Xray; every other domain is still proxied.<hr/>*REDIRECT* – the inverse: only domains not mapped to `FREEDOM` are proxied; all other traffic leaves the router directly.<blockquote>Important: `regexp`-based domains can’t be pushed into an ipset, so they’re ignored here.</blockquote>",
       "startup_delay": "XRAYUI Startup delay",
       "hint_startup_delay": "After the router restarts, XRAYUI will start after the specified time (in seconds). This can help avoid issues with XRAY hanging on startup.",
       "sleep_time": "After XRAY start delay",
@@ -94,7 +98,10 @@
       "tab_subscriptions": "Subscriptions",
       "label_subscription_links": "Subscription Sources",
       "hint_subscription_links": "Here you can add your subscription sources.<hr/> It is possible to add multiple links, one per line.<hr/> You need to press `fetch` button to fetch the subscription links from the sources.<hr/> After that you can select the subscription outbound in the  outbound settings.",
-      "button_subscription_fetch": "fetch"
+      "button_subscription_fetch": "fetch",
+      "tab_dns": "DNS",
+      "label_dns_leak": "Prevent DNS leaks",
+      "hint_dns_leak": "Enable this option to prevent DNS leaks.<blockquote>**Important!** Do not turn this option `on` without proper xray configuration. Click help next to the checkbox to learn more about DNS leaks and how to configure them properly.</blockquote>"
     },
     "ImportConfig": {
       "import_config_file": "Import config file"

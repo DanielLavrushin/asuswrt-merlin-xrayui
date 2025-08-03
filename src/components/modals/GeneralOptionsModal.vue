@@ -81,21 +81,38 @@
           </tbody>
         </table>
       </div>
-
-      <div v-show="currentTab.n === 'geodata'">
+      <div v-show="currentTab.n === 'dns'">
         <table class="FormTable modal-form-table">
           <tbody>
             <tr>
               <th>
-                {{ $t('com.GeneralOptionsModal.label_ipsec') }}
-                <hint v-html="$t('com.GeneralOptionsModal.hint_ipsec')"></hint>
+                {{ $t('com.GeneralOptionsModal.label_ipset') }}
+                <hint v-html="$t('com.GeneralOptionsModal.hint_ipset')"></hint>
               </th>
               <td>
                 <select class="input_option" v-model="options.ipsec">
-                  <option v-for="opt in ipsec_options" :value="opt">{{ opt }}</option>
+                  <option v-for="opt in ipset_options" :value="opt">{{ opt }}</option>
                 </select>
               </td>
             </tr>
+            <tr>
+              <th>
+                {{ $t('com.GeneralOptionsModal.label_dns_leak') }}
+                <hint v-html="$t('com.GeneralOptionsModal.hint_dns_leak')"></hint>
+              </th>
+              <td>
+                <label class="go-option"><input type="checkbox" v-model="options.dns_only" /></label>
+                <span class="hint-color">
+                  <a :href="$t('guide.dns_leak')" target="_blank">{{ $t('labels.help') }}</a></span
+                >
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div v-show="currentTab.n === 'geodata'">
+        <table class="FormTable modal-form-table">
+          <tbody>
             <tr>
               <th>{{ $t('com.GeneralOptionsModal.wellknown_geodata') }}</th>
               <td>
@@ -267,12 +284,13 @@
   const ui = inject<Ref<EngineResponseConfig>>('uiResponse')!;
 
   const { t } = useI18n();
-  const { options, log_levels, ipsec_options, hydrate, persist } = useGeneralOptions(props.config, ui);
+  const { options, log_levels, ipset_options, hydrate, persist } = useGeneralOptions(props.config, ui);
 
   const modal = ref();
 
   const tabs = [
     { n: 'general', t: t('com.GeneralOptionsModal.tab_general') },
+    { n: 'dns', t: t('com.GeneralOptionsModal.tab_dns') },
     { n: 'geodata', t: t('com.GeneralOptionsModal.tab_geodata') },
     { n: 'hooks', t: t('com.GeneralOptionsModal.tab_hooks') },
     { n: 'logs', t: t('com.GeneralOptionsModal.tab_logs') },

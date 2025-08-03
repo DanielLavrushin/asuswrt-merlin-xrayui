@@ -37,7 +37,7 @@ export default function useGeneralOptions(cfg: XrayObject, ui: Ref<EngineRespons
   return {
     options,
     log_levels: ['none', 'debug', 'info', 'warning', 'error'],
-    ipsec_options: ['off', 'bypass', 'redirect'],
+    ipset_options: ['off', 'bypass', 'redirect'],
     hydrate,
     persist
   };

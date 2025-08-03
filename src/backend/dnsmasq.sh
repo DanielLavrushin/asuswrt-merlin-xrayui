@@ -7,7 +7,7 @@ dnsmasq_configure() {
     load_ui_response
     load_xrayui_config
 
-    log_debug "Configuring dnsmasq..."
+    log_info "Configuring dnsmasq..."
 
     # Check if 'xray' process is running
     local xray_pid=$(get_proc "xray")
@@ -33,29 +33,35 @@ dnsmasq_configure() {
         grep -qE '^log-facility' "$CONFIG" || pc_append "log-facility=/opt/var/log/dnsmasq.log" "$CONFIG" >/dev/null && log_debug "log-facility enabled"
     fi
 
-    if jq -e '
-       .inbounds[]
+    log_debug "dnsmasq: found inbound DNS server"
+
+    local has_dnsmasq_servers
+    jq -r '
+        .inbounds[]
         | select(.protocol == "dokodemo-door")
-        | select((.listen // "127.0.0.1") != "0.0.0.0")
+        | select(.listen // "127.0.0.1")
+        | select(.settings and (.settings | length > 0))
+        | select(.settings.followRedirect != true)
+        | select((.settings.port // 0) == 53)
         | "\(.listen // "127.0.0.1")#\(.port)"
-  ' "$XRAY_CONFIG_FILE" >/dev/null; then
-        log_debug "dnsmasq: found inbound DNS server"
-        jq -r '
-       .inbounds[]
-        | select(.protocol == "dokodemo-door")
-        | select((.listen // "127.0.0.1") != "0.0.0.0")
-        | "\(.listen // "127.0.0.1")#\(.port)"
-  ' "$XRAY_CONFIG_FILE" |
-            while IFS= read -r srv; do
-                pc_append "server=$srv" "$CONFIG" && log_debug "dnsmasq: added inbound DNS server=$srv"
-            done
+ ' "$XRAY_CONFIG_FILE" >/tmp/xrayui-dnsmasq-servers.$$
+
+    while IFS= read -r srv; do
+        pc_append "no-resolv" "$CONFIG" && log_debug "dnsmasq: no-resolv enabled"
+        pc_append "server=$srv" "$CONFIG" && log_debug "dnsmasq: added inbound DNS server=$srv"
+        has_dnsmasq_servers="true"
+    done </tmp/xrayui-dnsmasq-servers.$$
+
+    if [ "$xray_dns_only" = "true" ] && [ "$has_dnsmasq_servers" = "true" ]; then
+        log_debug "dnsmasq: xray_dns_only is enabled, disabling all other DNS"
+        sed -i '/^[[:space:]]*servers-file=/ s/^/#/' "$CONFIG" && log_debug "dnsmasq: commented servers-file"
     fi
 
     dnsmasq_xray_ipset_domains $CONFIG
 
     pc_append "#$ADDON_TAG end" "$CONFIG"
 
-    log_debug "dnsmasq configured"
+    log_ok "dnsmasq configured"
 }
 
 dnsmasq_xray_ipset_domains() {

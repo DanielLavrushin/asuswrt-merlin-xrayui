@@ -9,7 +9,8 @@ const links_en = [
   { text: 'Interface Overview', link: '/en/interface.md' },
   { text: 'Importing the Configuration', link: '/en/import-config.md' },
   { text: 'Bypass/Redirect Policy', link: '/en/br-policy.md' },
-  { text: 'Subscription Management', link: '/en/subscriptions.md' }
+  { text: 'Subscription Management', link: '/en/subscriptions.md' },
+  { text: 'DNS Leak', link: '/en/dns-leak.md' }
 ];
 
 export default defineUserConfig({

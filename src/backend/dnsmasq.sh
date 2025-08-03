@@ -52,6 +52,8 @@ dnsmasq_configure() {
         has_dnsmasq_servers="true"
     done </tmp/xrayui-dnsmasq-servers.$$
 
+    rm -f /tmp/xrayui-dnsmasq-servers.$$
+
     if [ "$xray_dns_only" = "true" ] && [ "$has_dnsmasq_servers" = "true" ]; then
         log_debug "dnsmasq: xray_dns_only is enabled, disabling all other DNS"
         sed -i '/^[[:space:]]*servers-file=/ s/^/#/' "$CONFIG" && log_debug "dnsmasq: commented servers-file"

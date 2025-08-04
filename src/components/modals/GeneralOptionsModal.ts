@@ -17,6 +17,7 @@ export default function useGeneralOptions(cfg: XrayObject, ui: Ref<EngineRespons
     geo_auto_update: ui.value?.geodata?.auto_update ?? false,
     hooks: ui.value?.xray?.hooks ?? new EngineHooks(),
     subscriptions: ui.value?.xray?.subscriptions ?? new EngineSubscriptions(),
+    logs_scribe: ui.value?.integration?.scribe?.enabled ?? false,
     normalise: function () {
       this.subscriptions.protocols = undefined;
       return this;

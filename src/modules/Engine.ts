@@ -127,6 +127,11 @@ export class EngineResponseConfig {
   public wireguard?: EngineWireguard;
   public reality?: EngineReality;
   public certificates?: EngineSsl;
+  public integration?: {
+    scribe?: {
+      enabled: boolean;
+    };
+  };
   public xray?: {
     ipsec: string;
     debug: boolean;
@@ -149,6 +154,7 @@ export class EngineResponseConfig {
     hooks?: EngineHooks;
     subscriptions?: EngineSubscriptions;
     dns_only?: boolean;
+    logs_scribe?: boolean;
   };
   public geodata?: EngineGeodatConfig = new EngineGeodatConfig();
   public loading?: EngineLoadingProgress;

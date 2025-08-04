@@ -45,22 +45,13 @@ apply_rule() {
 append_rule() {
     local tbl=$1
     shift
-    ipt $tbl -A XRAYUI "$@"
+    ipt $tbl -C XRAYUI "$@" 2>/dev/null || ipt $tbl -A XRAYUI "$@"
 }
 
 insert_rule() {
     local tbl=$1
     shift
-    ipt $tbl -I XRAYUI 1 "$@"
-}
-
-append_rule_delayed() {
-    if [ -n "$collected_redirect_rules" ]; then
-        collected_redirect_rules="$collected_redirect_rules
-$1"
-    else
-        collected_redirect_rules="$1"
-    fi
+    ipt $tbl -C XRAYUI "$@" 2>/dev/null || ipt $tbl -I XRAYUI 1 "$@"
 }
 
 contains_ipv4() {
@@ -588,22 +579,21 @@ configure_firewall_client() {
                     [ "$mac" = "ANY" ] && mac_flag="" || mac_flag="-m mac --mac-source $mac"
 
                     if [ "$policy_mode" = "bypass" ]; then
-                        [ -z "$tcp_flags" ] && [ -z "$udp_flags" ] && [ "$mac" != "ANY" ] && insert_rule "$IPT_TABLE" $base $mac_flag -j RETURN
-                        [ -n "$tcp_flags" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p tcp -m multiport ! --dports "$tcp_ports" -j RETURN
-                        [ -n "$udp_flags" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p udp -m multiport ! --dports "$udp_ports" -j RETURN
+                        [ -z "$tcp_flags" ] && [ -z "$udp_flags" ] && [ "$mac" != "ANY" ] && insert_rule "$IPT_TABLE" $base $mac_flag -j RETURN && continue
+                        [ -n "$tcp_flags" ] && append_rule "$IPT_TABLE" $base $mac_flag -p tcp -m multiport ! --dports "$tcp_ports" -j RETURN
+                        [ -n "$udp_flags" ] && append_rule "$IPT_TABLE" $base $mac_flag -p udp -m multiport ! --dports "$udp_ports" -j RETURN
 
-                        [ "$mac" = "ANY" ] && [ -n "$tcp_flags" ] && append_rule_delayed "append_rule $IPT_TABLE $base $mac_flag -p tcp $IPT_JOURNAL_FLAGS"
-                        [ "$mac" = "ANY" ] && [ -n "$udp_flags" ] && append_rule_delayed "append_rule $IPT_TABLE $base $mac_flag -p udp $IPT_JOURNAL_FLAGS"
+                        [ "$mac" = "ANY" ] && [ -n "$tcp_flags" ] && append_rule "$IPT_TABLE" $base $mac_flag -p tcp $IPT_JOURNAL_FLAGS
+                        [ "$mac" = "ANY" ] && [ -n "$udp_flags" ] && append_rule "$IPT_TABLE" $base $mac_flag -p udp $IPT_JOURNAL_FLAGS
                     fi
                     if [ "$policy_mode" = "redirect" ]; then
-                        [ -n "$tcp_flags" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p tcp -m multiport --dports "$tcp_ports" -j RETURN
-                        [ -n "$udp_flags" ] && insert_rule "$IPT_TABLE" $base $mac_flag -p udp -m multiport --dports "$udp_ports" -j RETURN
+                        [ -n "$tcp_flags" ] && append_rule "$IPT_TABLE" $base $mac_flag -p tcp -m multiport --dports "$tcp_ports" -j RETURN
+                        [ -n "$udp_flags" ] && append_rule "$IPT_TABLE" $base $mac_flag -p udp -m multiport --dports "$udp_ports" -j RETURN
 
-                        [ "$mac" != "ANY" ] && append_rule_delayed "append_rule $IPT_TABLE $base $mac_flag -p tcp $IPT_JOURNAL_FLAGS" && set_global_bypass="yes"
-                        [ "$mac" != "ANY" ] && append_rule_delayed "append_rule $IPT_TABLE $base $mac_flag -p udp $IPT_JOURNAL_FLAGS" && set_global_bypass="yes"
+                        [ "$mac" != "ANY" ] && [ -z "$tcp_flags" ] && append_rule "$IPT_TABLE" $base $mac_flag -p tcp $IPT_JOURNAL_FLAGS && set_global_bypass="yes"
+                        [ "$mac" != "ANY" ] && [ -z "$udp_flags" ] && append_rule "$IPT_TABLE" $base $mac_flag -p udp $IPT_JOURNAL_FLAGS && set_global_bypass="yes"
                     fi
                 done
-
             done
             unset tcp_flags udp_flags macs tcp_ports udp_ports mac_flag
         done </tmp/xrayui-policies.$$
@@ -614,16 +604,6 @@ configure_firewall_client() {
                 append_rule "$IPT_TABLE" -s "$src" -p tcp $IPT_JOURNAL_FLAGS
                 append_rule "$IPT_TABLE" -s "$src" -p udp $IPT_JOURNAL_FLAGS
             done
-
-        else
-            if [ -n "$collected_redirect_rules" ]; then
-                log_info "Applying collected redirect rules for $IPT_TABLE."
-                while IFS= read -r rule; do
-                    eval "$rule"
-                done <<EOF
-$collected_redirect_rules
-EOF
-            fi
         fi
 
         # Exclude dokodemo-door port from TPROXY  destination

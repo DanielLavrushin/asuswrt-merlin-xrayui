@@ -101,7 +101,9 @@
       "button_subscription_fetch": "fetch",
       "tab_dns": "DNS",
       "label_dns_leak": "Prevent DNS leaks",
-      "hint_dns_leak": "Enable this option to prevent DNS leaks.<blockquote>**Important!** Do not turn this option `on` without proper xray configuration. Click help next to the checkbox to learn more about DNS leaks and how to configure them properly.</blockquote>"
+      "hint_dns_leak": "Enable this option to prevent DNS leaks.<blockquote>**Important!** Do not turn this option `on` without proper xray configuration. Click help next to the checkbox to learn more about DNS leaks and how to configure them properly.</blockquote>",
+      "label_logs_scribe": "Integrate XRAYUI logs with Scribe",
+      "hint_logs_scribe": "Enabling this option will integrate XRAYUI logs with `Scribe`. This allows you to view XRAYUI logs in the `Scribe` web interface in a dedicated window.<hr/>You can install `Scribe` from the `AMTM`"
     },
     "ImportConfig": {
       "import_config_file": "Import config file"
@@ -140,7 +142,7 @@
       "modal_title": "Show XRAY configuration file",
       "hide_sensetive_data": "hide sensitive data",
       "open_raw": "open raw",
-      "copy_to_clipboard": "copy to clipboard",
+      "save_to_file": "save to file",
       "alert_copy_ok_hiddendata": "Configuration copied to clipboard. Sensitive data has been hidden. However, please review the configuration before sharing.",
       "alert_copy_ok_nohiddendata": "Configuration copied to clipboard. Warning: Sensitive data is visible. Please be cautious when sharing."
     },

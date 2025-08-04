@@ -39,6 +39,7 @@ initial_response() {
     local xray_sleep_time="${xray_sleep_time:-10}"
     local subscriptionLinks="${subscriptionLinks:-""}"
     local xray_dns_only="${xray_dns_only:-false}"
+    local integration_scribe="${integration_scribe:-false}"
 
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg geoip "$geoip_date" --arg geosite "$geosite_date" --arg geoipurl "$geoipurl" --arg geositeurl "$geositeurl" \
         '.geodata.geoip_url = $geoipurl | .geodata.geosite_url = $geositeurl | .geodata.community["geoip.dat"] = $geoip | .geodata.community["geosite.dat"] = $geosite')
@@ -114,6 +115,13 @@ initial_response() {
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq 'del(.loading)')
 
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson debug "$debug" '.xray.debug = $debug')
+
+    # integrations
+    if [ -f /jffs/scripts/scribe ]; then
+        UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson integration_scribe "$integration_scribe" '.integration.scribe = {
+            enabled: $integration_scribe,
+        }')
+    fi
 
     save_ui_response
 

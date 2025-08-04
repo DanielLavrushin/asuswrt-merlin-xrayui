@@ -97,7 +97,9 @@
       "button_subscription_fetch": "Abrufen",
       "tab_dns": "DNS",
       "label_dns_leak": "DNS-Lecks verhindern",
-      "hint_dns_leak": "Aktivieren Sie diese Option, um DNS-Lecks zu verhindern.<blockquote>**Wichtig!** Aktivieren Sie diese Option nicht (`on`), ohne Xray vorher korrekt zu konfigurieren. Klicken Sie auf „Hilfe“ neben dem Kontrollkästchen, um mehr über DNS-Lecks und die richtige Konfiguration zu erfahren.</blockquote>"
+      "hint_dns_leak": "Aktivieren Sie diese Option, um DNS-Lecks zu verhindern.<blockquote>**Wichtig!** Aktivieren Sie diese Option nicht (`on`), ohne Xray vorher korrekt zu konfigurieren. Klicken Sie auf „Hilfe“ neben dem Kontrollkästchen, um mehr über DNS-Lecks und die richtige Konfiguration zu erfahren.</blockquote>",
+      "label_logs_scribe": "XRAYUI-Protokolle mit Scribe integrieren",
+      "hint_logs_scribe": "Durch Aktivieren dieser Option werden die XRAYUI-Protokolle in `Scribe` integriert. Dadurch können Sie die XRAYUI-Protokolle in der Weboberfläche von `Scribe` in einem eigenen Fenster anzeigen.<hr/>Sie können `Scribe` über das `AMTM` installieren"
     },
     "ImportConfig": {
       "import_config_file": "Konfigurationsdatei importieren"
@@ -127,7 +129,7 @@
       "modal_title": "XRAY-Konfigurationsdatei anzeigen",
       "hide_sensetive_data": "Sensible Daten ausblenden",
       "open_raw": "Roh anzeigen",
-      "copy_to_clipboard": "In Zwischenablage kopieren",
+      "save_to_file": "in Datei speichern",
       "alert_copy_ok_hiddendata": "Konfiguration in die Zwischenablage kopiert. Sensible Daten wurden ausgeblendet. Bitte überprüfen Sie die Konfiguration, bevor Sie sie weitergeben.",
       "alert_copy_ok_nohiddendata": "Konfiguration in die Zwischenablage kopiert. Warnung: Sensible Daten sind sichtbar. Bitte seien Sie vorsichtig beim Teilen."
     },

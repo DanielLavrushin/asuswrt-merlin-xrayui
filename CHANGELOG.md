@@ -1,10 +1,13 @@
 # XRAYUI Changelog
 
-## [0.58.0] - 2025-08-0x
+## [0.58.1] - 2025-08-05
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
-- ADDED: A **DNS leak protection**: a new toggle at `General Settings` → `DNS` → `Prevent DNS leaks` that forces the router to send DNS only through Xray and disables alternate system resolvers. This switch does not create the DNS inbound for you—configure a dedicated DNS inbound first For setup steps, reference [this guide](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/dns-leak)
+- ADDED: A new option under `General Settings` → `Logs` named `Integrate XRAYUI logs with Scribe`. Enabling this option routes XRAYUI system log output to the `Scribe` module. A separate XRAYUI log section appears in the System Log menu when `Scribe UI` is enabled. This feature is only available then `Scribe` is deployed to your a router.
+- ADDED: A **DNS leak protection** toggle at `General Options` → `DNS` → `Prevent DNS leaks`. This forces the router to send DNS only through Xray and disables alternate system resolvers. Note: this switch does not create the DNS inbound for you—configure a dedicated DNS inbound first. For setup steps, see [this guide](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/dns-leak).
+- IMPROVED: Device Policies routing should now covers all edge cases.
+- IMPROVED: XRAY Config is now saved to your PC instead of copied to the clipboard, making it easier to share with others.
 
 ## [0.57.1] - 2025-08-01
 
@@ -35,7 +38,7 @@
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
-- ADDED: `Subscription Sources`. A new `Subscriptions` tab has been added to `General Settings`. Add subscription source links that contain one or more outbound protocol descriptors (e.g., ss://, vmess://, vless://). Links with Base64‑encoded content are also supported. After adding sources, press the `Fetch` button next to the field to load the outbound links. When finished, XRAYUI will show a drop‑down field in the Outbound modal window.
+- ADDED: `Subscription Sources`. A new `Subscriptions` tab has been added to `General Options`. Add subscription source links that contain one or more outbound protocol descriptors (e.g., ss://, vmess://, vless://). Links with Base64‑encoded content are also supported. After adding sources, press the `Fetch` button next to the field to load the outbound links. When finished, XRAYUI will show a drop‑down field in the Outbound modal window.
 - ADDED: Full subscription link support. XRAYUI now auto‑detects and parses JSON or Base64 subscription URLs. Supports `VLESS`, `VMess`, `Trojan`, and `Shadowsocks`. Paste the link in the Outbound modal form.
 - ADDED: It is now possible to select the Outbound tag in the Transparent Proxy (`sockopt`) window (`DealerProxy` setting).
 - FIXED: `XHTTP` Transport now correctly saves to the configuration. [#180](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/180)

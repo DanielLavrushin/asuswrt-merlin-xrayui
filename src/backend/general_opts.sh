@@ -36,6 +36,7 @@ apply_general_options() {
     local hooks=$(echo "$genopts" | jq -r '.hooks')
     local subscriptionLinks=$(echo "$genopts" | jq -r '(.subscriptions.links // []) | join("|")')
     local xray_dns_only=$(echo "$genopts" | jq -r '.dns_only')
+    local integration_scribe=$(echo "$genopts" | jq -r '.logs_scribe')
 
     if [ ! -d "$ADDON_LOGS_DIR" ]; then
         mkdir -p "$ADDON_LOGS_DIR"
@@ -84,6 +85,7 @@ apply_general_options() {
     update_xrayui_config "xray_sleep_time" "$xray_sleep_time"
     update_xrayui_config "subscriptionLinks" "$subscriptionLinks"
     update_xrayui_config "xray_dns_only" "$xray_dns_only"
+    update_xrayui_config "integration_scribe" "$integration_scribe"
 
     apply_general_options_hooks "$hooks"
 
@@ -92,6 +94,9 @@ apply_general_options() {
 
     # Update the cron job for geodata update
     cron_geodata_add
+
+    # integration scribe
+    logs_scribe_integration
 
     if [ -f "$XRAY_PIDFILE" ]; then
         update_loading_progress "Restarting Xray service..."

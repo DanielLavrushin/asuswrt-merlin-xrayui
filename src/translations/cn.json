@@ -98,7 +98,9 @@
       "button_subscription_fetch": "获取",
       "tab_dns": "DNS",
       "label_dns_leak": "防止 DNS 泄漏",
-      "hint_dns_leak": "启用此选项以防止 DNS 泄漏。<blockquote>**重要！** 在未正确配置 Xray 之前，请不要将此选项设置为 `on`。单击复选框旁的“帮助”以了解有关 DNS 泄漏及其正确配置的更多信息。</blockquote>"
+      "hint_dns_leak": "启用此选项以防止 DNS 泄漏。<blockquote>**重要！** 在未正确配置 Xray 之前，请不要将此选项设置为 `on`。单击复选框旁的“帮助”以了解有关 DNS 泄漏及其正确配置的更多信息。</blockquote>",
+      "label_logs_scribe": "将 XRAYUI 日志集成到 Scribe",
+      "hint_logs_scribe": "启用此选项将 XRAYUI 日志与 `Scribe` 集成。这允许您在 `Scribe` 的 Web 界面中专用窗口查看 XRAYUI 日志。<hr/>您可以通过 `AMTM` 安装 `Scribe`"
     },
     "ImportConfig": {
       "import_config_file": "导入配置"
@@ -137,7 +139,7 @@
       "modal_title": "XRAY 配置文件",
       "hide_sensetive_data": "隐藏敏感数据",
       "open_raw": "打开配置文件",
-      "copy_to_clipboard": "复制到剪贴板",
+      "save_to_file": "保存到文件",
       "alert_copy_ok_hiddendata": "配置已复制到剪贴板，敏感数据已隐藏（如服务器地址、账号、密码等）。共享之前，请再次检查。",
       "alert_copy_ok_nohiddendata": "配置已复制到剪贴板，警告：敏感数据可见（如服务器地址、账号、密码等）。共享时请谨慎。"
     },

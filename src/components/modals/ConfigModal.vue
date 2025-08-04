@@ -11,7 +11,7 @@
         <input type="checkbox" v-model="hideSenseData" @change="hide_sense_data" />
         {{ $t('com.ConfigModal.hide_sensetive_data') }}
       </label>
-      <input class="button_gen button_gen_small" type="button" :value="$t('com.ConfigModal.copy_to_clipboard')" @click.prevent="copy_to_clipboard" />
+      <input class="button_gen button_gen_small" type="button" :value="$t('com.ConfigModal.save_to_file')" @click.prevent="save_to_file" />
       <a class="button_gen button_gen_small" :href="configUri" target="_blank">
         {{ $t('com.ConfigModal.open_raw') }}
       </a>
@@ -120,25 +120,18 @@
         modal.value.show();
       };
 
-      // Copies the configuration (after applying sensitive-data masking) to the clipboard.
-      const copy_to_clipboard = async () => {
+      const save_to_file = () => {
         hide_sense_data();
         const configStr = JSON.stringify(configJson.value, null, 2);
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          try {
-            await navigator.clipboard.writeText(configStr);
-            if (hideSenseData.value) {
-              alert(t('com.ConfigModal.alert_copy_ok_hiddendata'));
-            } else {
-              alert(t('com.ConfigModal.alert_copy_ok_nohiddendata'));
-            }
-          } catch (err) {
-            console.error('Clipboard API error, falling back', err);
-            fallbackCopyTextToClipboard(configStr);
-          }
-        } else {
-          fallbackCopyTextToClipboard(configStr);
-        }
+        const blob = new Blob([configStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'config.json';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
       };
 
       // Fallback for copying text to clipboard using a temporary textarea.
@@ -193,7 +186,7 @@
         hideSenseData,
         configUri,
         show,
-        copy_to_clipboard,
+        save_to_file,
         hide_sense_data
       };
     }

@@ -140,7 +140,7 @@
       "modal_title": "Show XRAY configuration file",
       "hide_sensetive_data": "hide sensitive data",
       "open_raw": "open raw",
-      "copy_to_clipboard": "copy to clipboard",
+      "save_to_file": "save to file",
       "alert_copy_ok_hiddendata": "Configuration copied to clipboard. Sensitive data has been hidden. However, please review the configuration before sharing.",
       "alert_copy_ok_nohiddendata": "Configuration copied to clipboard. Warning: Sensitive data is visible. Please be cautious when sharing."
     },

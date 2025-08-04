@@ -127,7 +127,7 @@
       "modal_title": "XRAY-Konfigurationsdatei anzeigen",
       "hide_sensetive_data": "Sensible Daten ausblenden",
       "open_raw": "Roh anzeigen",
-      "copy_to_clipboard": "In Zwischenablage kopieren",
+      "save_to_file": "in Datei speichern",
       "alert_copy_ok_hiddendata": "Konfiguration in die Zwischenablage kopiert. Sensible Daten wurden ausgeblendet. Bitte überprüfen Sie die Konfiguration, bevor Sie sie weitergeben.",
       "alert_copy_ok_nohiddendata": "Konfiguration in die Zwischenablage kopiert. Warnung: Sensible Daten sind sichtbar. Bitte seien Sie vorsichtig beim Teilen."
     },

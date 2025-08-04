@@ -1,10 +1,12 @@
 # XRAYUI Changelog
 
-## [0.58.0] - 2025-08-0x
+## [0.58.1] - 2025-08-05
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
-- ADDED: A **DNS leak protection**: a new toggle at `General Settings` → `DNS` → `Prevent DNS leaks` that forces the router to send DNS only through Xray and disables alternate system resolvers. This switch does not create the DNS inbound for you—configure a dedicated DNS inbound first For setup steps, reference [this guide](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/dns-leak)
+- ADDED: A **DNS leak protection** toggle at `General Settings` → `DNS` → `Prevent DNS leaks`. This forces the router to send DNS only through Xray and disables alternate system resolvers. Note: this switch does not create the DNS inbound for you—configure a dedicated DNS inbound first. For setup steps, see [this guide](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/dns-leak).
+- IMPROVED: Device Policies routing should now covers all edge cases.
+- IMPROVED: XRAY Config is now saved to your PC instead of copied to the clipboard, making it easier to share with others.
 
 ## [0.57.1] - 2025-08-01
 

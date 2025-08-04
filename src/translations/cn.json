@@ -137,7 +137,7 @@
       "modal_title": "XRAY 配置文件",
       "hide_sensetive_data": "隐藏敏感数据",
       "open_raw": "打开配置文件",
-      "copy_to_clipboard": "复制到剪贴板",
+      "save_to_file": "保存到文件",
       "alert_copy_ok_hiddendata": "配置已复制到剪贴板，敏感数据已隐藏（如服务器地址、账号、密码等）。共享之前，请再次检查。",
       "alert_copy_ok_nohiddendata": "配置已复制到剪贴板，警告：敏感数据可见（如服务器地址、账号、密码等）。共享时请谨慎。"
     },

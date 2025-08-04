@@ -246,7 +246,7 @@ EOF
     log_debug "Scribe integration is disabled in the configuration. Removing syslog-ng configuration for XRAYUI."
   fi
 
-  /jffs/scripts/scribe restart || log_error "Failed to reload Scribe configuration." && return 1
+  /jffs/scripts/scribe restart || { log_error "Failed to reload Scribe configuration." && return 1; }
 
   log_ok "Scribe integration for XRAYUI logs configured successfully."
 

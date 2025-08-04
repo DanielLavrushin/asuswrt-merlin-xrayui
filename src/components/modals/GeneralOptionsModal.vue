@@ -237,6 +237,15 @@
                 <label class="go-option"><input type="checkbox" v-model="options.logs_dor" /></label>
               </td>
             </tr>
+            <tr v-if="ui?.integration?.scribe">
+              <th>
+                {{ $t('com.GeneralOptionsModal.label_logs_scribe') }}
+                <hint v-html="$t('com.GeneralOptionsModal.hint_logs_scribe')"></hint>
+              </th>
+              <td>
+                <label class="go-option"><input type="checkbox" v-model="options.logs_scribe" /></label>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>

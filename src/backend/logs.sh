@@ -204,3 +204,50 @@ EOF
   chmod 0644 /opt/etc/logrotate.d/xrayui || log_error "Failed to make logrotate executable."
   log_ok "Logrotate configuration created successfully."
 }
+
+logs_scribe_integration() {
+  log_info "Setting up XRAYUI syslog integration for Scribe..."
+
+  if [ ! -f /jffs/scripts/scribe ]; then
+    log_warn "Scribe script not found. Please install Scribe first."
+    return 0
+  fi
+
+  if [ ! -f /opt/etc/syslog-ng.conf ]; then
+    log_warn "Syslog configuration file not found."
+    return 0
+  fi
+
+  load_xrayui_config
+  if [ "$integration_scribe" = "true" ]; then
+    log_debug "Scribe integration is enabled in the configuration. Creating syslog-ng configuration for XRAYUI."
+    cat >/opt/etc/syslog-ng.d/xrayui <<EOF
+# syslog-ng configuration for XRAYUI
+destination d_xrayui { 
+    file("/opt/var/log/xrayui.log");
+};
+
+filter f_xrayui {
+    message("XRAYUI");
+};
+
+log {
+    source(src);
+    filter(f_xrayui);
+    destination(d_xrayui);
+    flags(final);
+};
+
+#eof
+EOF
+
+  else
+    rm -f /opt/etc/syslog-ng.d/xrayui
+    log_debug "Scribe integration is disabled in the configuration. Removing syslog-ng configuration for XRAYUI."
+  fi
+
+  /jffs/scripts/scribe reload || log_error "Failed to reload Scribe configuration." && return 1
+
+  log_ok "Scribe integration for XRAYUI logs configured successfully."
+
+}

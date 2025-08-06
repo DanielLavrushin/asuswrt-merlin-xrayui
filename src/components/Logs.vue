@@ -48,13 +48,13 @@
                       <a v-else class="device" :title="log.source">{{ log.source_device }}</a>
                     </td>
                     <td>
-                      <span :class="['badge', log.type]"> <i :class="log.type === 'tcp' ? 'i-tcp' : 'i-udp'"></i>{{ log.type }} </span>
+                      <span :class="['badge', log.type]"> <b :class="log.type === 'tcp' ? 'i-tcp' : 'i-udp'"></b>{{ log.type }} </span>
                       {{ log.target }}:{{ log.target_port }}
                     </td>
                     <td>{{ log.inbound }}</td>
                     <td>
                       <span v-if="log.routing" :class="['badge', log.routing]">
-                        <i :class="log.routing === 'direct' ? 'i-direct' : 'i-rule'"></i>
+                        <b :class="log.routing === 'direct' ? 'i-direct' : 'i-rule'"></b>
                         {{ log.routing }}
                       </span>
                       {{ log.outbound }}
@@ -64,7 +64,7 @@
                   <template v-else>
                     <td>{{ log.time }}</td>
                     <td>
-                      <span class="badge dns"><i class="i-dns"></i>DNS</span>
+                      <span class="badge dns"><b class="i-dns"></b>DNS</span>
                     </td>
                     <td :title="log.answers">{{ log.host }}</td>
                     <td></td>
@@ -114,7 +114,7 @@
     /^(?<time>.+)\.\d+\s+from\s+(?:tcp:|udp:)*(?:\[*)(?<source>.+?)(?:%.+)*(?:\]*\:)*(?<source_port>\d+)*\s+accepted\s+(?<type>tcp|udp)*(?:\:*)(?:\[*)(?<target>.+?)(?:\]*\:)(?<target_port>\d+)\s+\[(?<inbound>.+)\s+(?<routing>(?:>>|->))\s+(?<outbound>.+)?\](?:\semail:\s(?<user>.+))*$/;
 
   const DNS_RE =
-    /^(?<time>.+)\.\d+\s+(?:UDP|DOHL|localhost)(?:\:)*(?<dns>.+)\s.*(?<type>answer|cache).*:\s(?<host>.+)\s->\s\[(?<answers>.*)\](?:\s(?<latency>[\d\.]+)ms)*(?:\s\<)*(?<code>.*?)>*$/;
+    /^(?<time>.+)\.\d+\s+(?:UDP|DOH|DOHL|localhost)(?:\:)*(?<dns>.+)\s.*(?<type>answer|cache).*:\s(?<host>.+)\s->\s\[(?<answers>.*)\](?:\s(?<latency>[\d\.]+)ms)*(?:\s\<)*(?<code>.*?)>*$/;
 
   class DnsLogEntry {
     kind = 'dns' as const;

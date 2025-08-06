@@ -1,5 +1,13 @@
 # XRAYUI Changelog
 
+## [0.5x.x] - 2025-0x-xx
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- FIXED: DoH log entries were not correctly parsed in the access.log.
+- FIXED: When subscribtion enabled it was not possible to preserve sockopt object settings after applying changes.
+- IMPROVED: Display active/all rule and policicy counters.
+
 ## [0.58.1] - 2025-08-05
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

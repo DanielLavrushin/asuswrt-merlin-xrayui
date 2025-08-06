@@ -43,7 +43,7 @@
           <hint v-html="$t('com.Routing.hint_policies')"></hint>
         </th>
         <td>
-          {{ routing.policies.length }} item(s)
+          {{ countPolicies() }} item(s)
           <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click.prevent="manage_policy()" />
           <policy-modal ref="policyModal" v-model:policies="routing.policies"></policy-modal>
         </td>
@@ -154,7 +154,16 @@
       };
 
       const countRules = () => {
-        return routing.value.rules?.filter((r) => !r.isSystem()).length;
+        const rules = (routing.value.rules || []).concat(routing.value.disabled_rules || []);
+        const all = rules.filter((r) => !r.isSystem()).length || 0;
+        const enabled = rules.filter((r) => !r.isSystem() && r.enabled).length || 0;
+        return all === enabled ? all : `${enabled}/${all}`;
+      };
+
+      const countPolicies = () => {
+        const all = routing.value.policies?.length || 0;
+        const enabled = routing.value.policies?.filter((p) => p.enabled).length || 0;
+        return all === enabled ? all : `${enabled}/${all}`;
       };
 
       return {
@@ -169,6 +178,7 @@
         manage_rules,
         manage_policy,
         countRules,
+        countPolicies,
         domainStrategyOptions: XrayRoutingObject.domainStrategyOptions,
         domainMatcherOptions: XrayRoutingObject.domainMatcherOptions
       };

@@ -82,7 +82,7 @@ These scripts should be placed in the `/jffs/xrayui_custom` directory and named 
 
 A: [![image](https://github.com/user-attachments/assets/3128e51b-ecaf-4b1e-baf9-74876ba67589)](https://t.me/asusxray)
 
-**Q: How can I find any guide how to use the module?
+**Q: Do you have any documentation?**
 
 A: a complete how-to [guide is avilable here](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/install).
 

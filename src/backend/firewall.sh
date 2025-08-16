@@ -69,7 +69,7 @@ contains_ipv4() {
 contains_ipv6() {
     [ -z "$1" ] && return 1
     local s
-    s=$(printf '%s\n' "$1" | sed -E 's/(^|[[:space:]])([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}([[:space:]]|$)//g')
+    s=$(printf '%s\n' "$1" | sed -E 's/(^|[[:space:]])([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}([[:space:]]|$)/\1\3/g')
     printf '%s\n' "$s" | grep -Eq '(^|[[:space:]])([0-9A-Fa-f]{0,4}:){2,7}[0-9A-Fa-f]{0,4}([[:space:]/%]|$)'
 }
 

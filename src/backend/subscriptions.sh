@@ -37,8 +37,17 @@ process_subscriptions() {
             --arg pos "$idx" \
             --arg url "$url" \
             --arg tag "$tag" \
-            --argjson rep "$rep" \
-            '.outbounds[( $pos|tonumber )] = ($rep + {surl:$url, tag:$tag})')
+            --argjson rep "$rep" '
+                . as $root
+                | ($pos|tonumber) as $i
+                | (try $root.outbounds[$i].streamSettings.sockopt catch null) as $sock
+                | .outbounds[$i] = (
+                    ($rep + {surl:$url, tag:$tag})
+                    | if $sock != null
+                        then .streamSettings = ((.streamSettings // {}) + {sockopt:$sock})
+                        else .
+                        end
+                    )')
     done <<EOF
 $(printf '%s' "$cfg" | jq -c '.outbounds
     | to_entries[]

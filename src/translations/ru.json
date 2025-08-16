@@ -27,7 +27,7 @@
     "disabled": "отключено",
     "items": "элем.: {0}",
     "help": "помощь",
-    "xrayui_desc": "XRAYUI предоставляет простой интерфейс для управления конфигурацией ядра XRAY и мониторинга его состояния."
+    "xrayui_desc": "XRAYUI предоставляет простой интерфейс для управления конфигурацией ядра XRAY и мониторинга его состояния.<br/><a href='https://daniellavrushin.github.io/asuswrt-merlin-xrayui/ru/interface' class='hint' target='_blank'>Руководства и помощь</a>"
   },
   "guide": {
     "dns_leak": "https://daniellavrushin.github.io/asuswrt-merlin-xrayui/ru/dns-leak"

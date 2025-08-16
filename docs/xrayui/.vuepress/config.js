@@ -11,7 +11,8 @@ const links_en = [
   { text: 'Bypass/Redirect Policy', link: '/en/br-policy.md' },
   { text: 'Subscription Management', link: '/en/subscriptions.md' },
   { text: 'DNS Leak', link: '/en/dns-leak.md' },
-  { text: 'General Options', link: '/en/general-options.md' }
+  { text: 'General Options', link: '/en/general-options.md' },
+  { text: 'Securely Share Config', link: '/en/share-config.md' }
 ];
 const links_ru = [
   { text: 'Как установить', link: '/ru/install.md' },
@@ -20,7 +21,8 @@ const links_ru = [
   { text: 'Политика обхода/перенаправления', link: '/ru/br-policy.md' },
   { text: 'Управление подписками', link: '/ru/subscriptions.md' },
   { text: 'Утечки DNS и как их избежать', link: '/ru/dns-leak.md' },
-  { text: 'Общие параметры', link: '/ru/general-options.md' }
+  { text: 'Общие параметры', link: '/ru/general-options.md' },
+  { text: 'Безопасный обмен конфигом', link: '/ru/share-config.md' }
 ];
 export default defineUserConfig({
   base: '/asuswrt-merlin-xrayui/',

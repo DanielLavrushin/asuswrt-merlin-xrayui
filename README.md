@@ -82,35 +82,9 @@ These scripts should be placed in the `/jffs/xrayui_custom` directory and named 
 
 A: [![image](https://github.com/user-attachments/assets/3128e51b-ecaf-4b1e-baf9-74876ba67589)](https://t.me/asusxray)
 
-**Q: Can I import my VPS x-ray connection string?**
+**Q: How can I find any guide how to use the module?
 
-A: Yes, you can, and this is even preferable method to start x-ray in a client mode on your router. [Read this guide](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/wiki/Xray-Client-Importing-the-Configuration) for more details.
-
-**Q: What if I already have an Xray configuration?**
-
-A: If you already have an Xray configuration file that you want to use, you need to place it in the following location:
-
-```
-/opt/etc/xray/config.json
-```
-
-Once the file is placed here, the ASUSWRT Merlin XrayUI interface will automatically reflect the changes.
-
-**Q: What is Bypass/Redirect Policy?**
-
-A: The [Bypass/Redirect Policy](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/br-policy) is a set of rules that determines how network traffic is handled by Xray on a per-port or per-device basis.
-
-**Q: How can I configure a simple client on my ASUS router?**
-
-A: you can refference this [wiki guide](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/wiki/Xray-Client-Configuration-Guide)
-
-**Q: How can I configure a simple xray server on my ASUS router?**
-
-A: you can refference this [wiki guide](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/wiki/Xray-Server-Configuration-Guide)
-
-**Q:How to Create a custom geosite file (similar to the community geosite.dat) in XrayUI?**
-
-A: you can refference this [wiki guide](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/wiki/How-to-Create-a-Custom-Tag-File-in-XrayUI)
+A: a complete how-to [guide is avilable here](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/install).
 
 # Contributing
 

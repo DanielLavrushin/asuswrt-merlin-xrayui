@@ -15,14 +15,19 @@ ipt() { # ipt <table> <args…>
 apply_rule() {
     local tbl=$1
     shift
-    local rc=0 did=0 args rule
+    local rc=0 did=0 args rule isv4 isv6
     args="$*"
     for IPT in $IPT_LIST; do
         rule="$args"
-        if [ "$IPT" = "ip6tables" ]; then
-            rule="$(printf '%s\n' "$rule" | sed 's/127\.0\.0\.1/::1/g')"
-        else
-            rule="$(printf '%s\n' "$rule" | sed 's/::1/127.0.0.1/g')"
+        isv4=0
+        isv6=0
+        contains_ipv4 "$rule" && isv4=1
+        contains_ipv6 "$rule" && isv6=1
+        if [ "$IPT" = "iptables" ] && [ $isv6 -eq 1 ] && [ $isv4 -eq 0 ]; then
+            continue
+        fi
+        if [ "$IPT" = "ip6tables" ] && [ $isv4 -eq 1 ] && [ $isv6 -eq 0 ]; then
+            continue
         fi
         if [ "$IPT" = "ip6tables" ] && [ "$tbl" = "nat" ]; then
             if [ "$IP6NAT_LOADED" = "0" ]; then
@@ -31,9 +36,6 @@ apply_rule() {
             [ "$IP6NAT_LOADED" != "1" ] && continue
             $IPT -w -t nat -L -n >/dev/null 2>&1 || continue
         fi
-        [ "$IPT" = "ip6tables" ] && contains_ipv4 "$rule" && continue
-        [ "$IPT" = "iptables" ] && echo "$rule" | grep -qE ':[^[:space:]]*/[0-9]+' && continue
-        [ "$IPT" = "iptables" ] && contains_ipv6 "$rule" && ! echo "$rule" | grep -q -- '-m[[:space:]]\+mac' && continue
         log_debug " - executing rule: $IPT -w -t $tbl $rule"
         $IPT -w -t "$tbl" $rule
         rc=$?
@@ -41,6 +43,10 @@ apply_rule() {
     done
     [ $did -eq 1 ] && return $rc || return 0
 }
+
+valid_ip_or_cidr() { contains_ipv4 "$1" || contains_ipv6 "$1"; }
+is_default_route() { [ "$1" = "0.0.0.0" ] || [ "$1" = "0.0.0.0/0" ] || [ "$1" = "::/0" ]; }
+get_iface_ipv6_globals() { ip -6 -o addr show dev "$1" scope global | awk '$3=="inet6"{print $4}' | cut -d/ -f1; }
 
 append_rule() {
     local tbl=$1
@@ -62,11 +68,9 @@ contains_ipv4() {
 
 contains_ipv6() {
     [ -z "$1" ] && return 1
-    local cleaned
-    cleaned=$(printf '%s\n' "$1" |
-        sed -E 's/(^|[[:space:]])([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}([[:space:]]|$)//g')
-    printf '%s\n' "$cleaned" |
-        grep -Eq '(^|[[:space:]])([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}([[:space:]/]|$)'
+    local s
+    s=$(printf '%s\n' "$1" | sed -E 's/(^|[[:space:]])([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}([[:space:]]|$)//g')
+    printf '%s\n' "$s" | grep -Eq '(^|[[:space:]])([0-9A-Fa-f]{0,4}:){2,7}[0-9A-Fa-f]{0,4}([[:space:]/%]|$)'
 }
 
 is_ipv6_enabled() {
@@ -188,7 +192,7 @@ configure_firewall() {
         fi
     done
 
-    SERVER_IPS=$(printf '%s\n' $SERVER_IPS | sort -u | tr '\n' ' ')
+    SERVER_IPS="$(printf '%s\n' $SERVER_IPS | awk 'NF' | while read -r x; do valid_ip_or_cidr "$x" && echo "$x"; done | sort -u | tr '\n' ' ')"
 
     if jq -e '
   .inbounds[]
@@ -453,35 +457,35 @@ configure_firewall_client() {
         if is_ipv6_enabled; then
             for idx in 0 1 2 3; do
                 ifname="$(nvram get "wan${idx}_ifname")"
-                [ -z "$ifname" ] && continue
-                addrs=$(ip -6 addr show dev "$ifname" scope global |
-                    awk '{print $2}' | cut -d/ -f1)
-                wan_v6_list="$wan_v6_list $addrs"
+                [ -n "$ifname" ] || continue
+                addrs="$(get_iface_ipv6_globals "$ifname")"
+                [ -n "$addrs" ] && wan_v6_list="$wan_v6_list $addrs"
             done
-            for ifname in "$(nvram get lan_ifname)" "$(nvram get wl0_ifname)" \
-                "$(nvram get wl1_ifname)"; do
-                [ -z "$ifname" ] && continue
-                addrs=$(ip -6 addr show dev "$ifname" scope global |
-                    awk '{print $2}' | cut -d/ -f1)
-                wan_v6_list="$wan_v6_list $addrs"
+            for ifname in $(printf "%s\n" "$(nvram get lan_ifname)" "$(nvram get wl0_ifname)" "$(nvram get wl1_ifname)" | sed '/^$/d'); do
+                addrs="$(get_iface_ipv6_globals "$ifname")"
+                [ -n "$addrs" ] && wan_v6_list="$wan_v6_list $addrs"
             done
-            # Deduplicate the final list
-            wan_v6_list=$(printf '%s\n' $wan_v6_list | sed '/^$/d' | sort -u)
+            wan_v6_list="$(printf '%s\n' $wan_v6_list | sed '/^$/d' | sort -u)"
         fi
 
         local via_v4 via_v6
-        via_v4=$(ip -4 route show | awk '$2=="via" && $1!="default" {print $1}')
+        via_v4="$(ip -4 route show | awk '$2=="via" && $1!="default"{print $1}')"
         if is_ipv6_enabled; then
-            via_v6=$(ip -6 route show | awk '$2=="via" && $1!="default" {print $1}')
+            via_v6="$(ip -6 route show | awk '$2=="via" && $1!="default"{print $1}')"
         fi
-        via_routes=$(printf '%s\n' $via_v4 $via_v6 | sort -u)
+        via_routes="$(printf '%s\n' $via_v4 $via_v6 | sed '/^$/d' | sort -u)"
 
         local static_routes
         static_routes=$(nvram get lan_route | tr ' ' '\n' | grep -E '^(([0-9]{1,3}\.){3}[0-9]{1,3}|[0-9a-fA-F:]+)(/[0-9]{1,3})?$')
 
         # unified exclusion: WAN IP, any “via” routes, and your nvram static list
-        for dst in $wan_v4_list $wan_v6_list $via_routes $static_routes; do
-            log_debug "TPROXY: excluding $dst from $IPT_TABLE"
+        dests="$(printf '%s\n' $wan_v4_list $wan_v6_list $via_routes $static_routes | sed '/^$/d' | sort -u)"
+        for dst in $dests; do
+            is_default_route "$dst" && continue
+            valid_ip_or_cidr "$dst" || {
+                log_debug "Skipping non-IP token: $dst"
+                continue
+            }
             ipt $IPT_BASE_FLAGS -d "$dst" -j RETURN
         done
     fi
@@ -687,13 +691,10 @@ cleanup_firewall() {
         done
     fi
 
-    # 0.46.: temportary workaround for iptables-legacy
     for fam in -4 -6; do
         [ "$fam" = "-6" ] && ! is_ipv6_enabled && continue
-        for m in 0x10000/0x10000 0x8777 0x77; do
-            while ip $fam rule show | grep -q "fwmark $tproxy_mark"; do
-                ip $fam rule del lookup $tproxy_table
-            done
+        while ip $fam rule list | grep -q "fwmark $tproxy_mark.* lookup $tproxy_table"; do
+            ip $fam rule del fwmark $tproxy_mark lookup $tproxy_table 2>/dev/null || break
         done
     done
 
@@ -722,7 +723,7 @@ cleanup_firewall() {
         done
     fi
 
-    if [ -f "$XRAYUI_CONFIG_FILE" ]; then
+    if [ -f "$XRAY_CONFIG_FILE" ]; then
         if jq -e '
   .inbounds[]
   | select(

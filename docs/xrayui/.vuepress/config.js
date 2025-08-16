@@ -10,9 +10,18 @@ const links_en = [
   { text: 'Importing the Configuration', link: '/en/import-config.md' },
   { text: 'Bypass/Redirect Policy', link: '/en/br-policy.md' },
   { text: 'Subscription Management', link: '/en/subscriptions.md' },
-  { text: 'DNS Leak', link: '/en/dns-leak.md' }
+  { text: 'DNS Leak', link: '/en/dns-leak.md' },
+  { text: 'General Options', link: '/en/general-options.md' }
 ];
-
+const links_ru = [
+  { text: 'Как установить', link: '/ru/install.md' },
+  { text: 'Обзор интерфейса', link: '/ru/interface.md' },
+  { text: 'Импорт конфигурации', link: '/ru/import-config.md' },
+  { text: 'Политика обхода/перенаправления', link: '/ru/br-policy.md' },
+  { text: 'Управление подписками', link: '/ru/subscriptions.md' },
+  { text: 'Утечки DNS и как их избежать', link: '/ru/dns-leak.md' },
+  { text: 'Общие параметры', link: '/ru/general-options.md' }
+];
 export default defineUserConfig({
   base: '/asuswrt-merlin-xrayui/',
   lang: 'en-US',
@@ -57,10 +66,30 @@ export default defineUserConfig({
       },
       '/ru/': {
         selectLanguageName: 'Russian',
+        sidebar: {
+          '/ru': [
+            {
+              text: 'Руководства',
+              children: links_ru
+            },
+            {
+              text: 'Команды (CLI)',
+              link: '/ru/cli'
+            },
+            {
+              text: 'Changelog',
+              link: '/ru/changelog'
+            }
+          ]
+        },
         navbar: [
-          { text: 'Домой', link: '/ru/index' },
-          { text: 'CLI', link: '/ru/cli' },
-          { text: 'Changelog', link: '/ru/changelog' }
+          {
+            text: 'Руководства',
+            link: '/',
+            children: links_ru
+          },
+          { text: 'Команды (CLI)', link: '/ru/cli' },
+          { text: 'Список изменений', link: '/ru/changelog' }
         ]
       }
     }

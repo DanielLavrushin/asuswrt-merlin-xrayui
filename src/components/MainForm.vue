@@ -34,7 +34,7 @@
                                 <div @click="set_mode('advanced')" :class="{ active: mode === 'advanced' }">advanced</div>
                                 <div @click="set_mode('simple')" :class="{ active: mode === 'simple' }">simple</div>
                               </div>
-                              <div id="formfontdesc" class="formfontdesc">{{ $t('labels.xrayui_desc') }}</div>
+                              <div id="formfontdesc" class="formfontdesc" v-html="$t('labels.xrayui_desc')"></div>
                               <div style="margin: 10px 0 10px 5px" class="splitLine"></div>
                               <service-status v-model:config="config"></service-status>
                               <simple-mode v-if="isSimple" @show-sniffing="show_sniffing"></simple-mode>

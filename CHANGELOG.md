@@ -1,5 +1,11 @@
 # XRAYUI Changelog
 
+## [0.58.4] - 2025-08-18
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- FIXED: IPv6 TPROXY “mixed‑family” rule handling in firewall.sh — restored per‑family loopback translation (127.0.0.1↔::1) and proper v4/v6 skipping so IPv6 CIDRs aren’t sent to iptables (v4) and IPv4 tokens aren’t sent to ip6tables (v6). This eliminates invalid mask '64' / getaddrinfo errors and restores XRAY VPS connectivity on IPv6‑preferred networks again (with respect to the version `0.58.1`). #226
+
 ## [0.58.3] - 2025-08-17
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

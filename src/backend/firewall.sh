@@ -15,19 +15,14 @@ ipt() { # ipt <table> <args…>
 apply_rule() {
     local tbl=$1
     shift
-    local rc=0 did=0 args rule isv4 isv6
+    local rc=0 did=0 args rule
     args="$*"
     for IPT in $IPT_LIST; do
         rule="$args"
-        isv4=0
-        isv6=0
-        contains_ipv4 "$rule" && isv4=1
-        contains_ipv6 "$rule" && isv6=1
-        if [ "$IPT" = "iptables" ] && [ $isv6 -eq 1 ] && [ $isv4 -eq 0 ]; then
-            continue
-        fi
-        if [ "$IPT" = "ip6tables" ] && [ $isv4 -eq 1 ] && [ $isv6 -eq 0 ]; then
-            continue
+        if [ "$IPT" = "ip6tables" ]; then
+            rule="$(printf '%s\n' "$rule" | sed 's/127\.0\.0\.1/::1/g')"
+        else
+            rule="$(printf '%s\n' "$rule" | sed 's/::1/127.0.0.1/g')"
         fi
         if [ "$IPT" = "ip6tables" ] && [ "$tbl" = "nat" ]; then
             if [ "$IP6NAT_LOADED" = "0" ]; then
@@ -35,6 +30,17 @@ apply_rule() {
             fi
             [ "$IP6NAT_LOADED" != "1" ] && continue
             $IPT -w -t nat -L -n >/dev/null 2>&1 || continue
+        fi
+        if [ "$IPT" = "ip6tables" ] && contains_ipv4 "$rule"; then
+            continue
+        fi
+        if [ "$IPT" = "iptables" ]; then
+            if echo "$rule" | grep -qE ':[^[:space:]]*/[0-9]+'; then
+                continue
+            fi
+            if contains_ipv6 "$rule" && ! echo "$rule" | grep -q -- '-m[[:space:]]\+mac'; then
+                continue
+            fi
         fi
         log_debug " - executing rule: $IPT -w -t $tbl $rule"
         $IPT -w -t "$tbl" $rule

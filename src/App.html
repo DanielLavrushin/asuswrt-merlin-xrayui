@@ -39,7 +39,8 @@
           devices: JSON.parse(`<% get_clientlist_from_json_database(); %>`),
           wan_ip: '<% nvram_get("wan_ipaddr"); %>',
           wan_connected: '<% nvram_get("link_internet"); %>' == '2',
-          features: '<% nvram_get("rc_support"); %>'
+          features: '<% nvram_get("rc_support"); %>',
+          is_gnuton: '<% nvram_get("extendno"); %>' !== '0'
         },
         server: {
           isRunning: parseInt('<% sysinfo("pid.xray"); %>') > 0
@@ -62,6 +63,9 @@
     <script>
       window.addEventListener('load', function () {
         if (xray.router.features) {
+          if (xray.router.is_gnuton) {
+            return;
+          }
           if (xray.router.features.indexOf('rog') !== -1) {
             document.body.classList.add('xrayui-rog');
           } else if (xray.router.features.indexOf('tuf') !== -1) {

@@ -38,7 +38,7 @@ apply_rule() {
             if echo "$rule" | grep -qE ':[^[:space:]]*/[0-9]+'; then
                 continue
             fi
-            if contains_ipv6 "$rule" && ! echo "$rule" | grep -q -- '-m[[:space:]]\+mac'; then
+            if contains_ipv6 "$rule" && ! echo "$rule" | grep -Eq '-m[[:space:]]+mac'; then
                 continue
             fi
         fi
@@ -53,6 +53,11 @@ apply_rule() {
 valid_ip_or_cidr() { contains_ipv4 "$1" || contains_ipv6 "$1"; }
 is_default_route() { [ "$1" = "0.0.0.0" ] || [ "$1" = "0.0.0.0/0" ] || [ "$1" = "::/0" ]; }
 get_iface_ipv6_globals() { ip -6 -o addr show dev "$1" scope global | awk '$3=="inet6"{print $4}' | cut -d/ -f1; }
+normalize_tokens() {
+    tr ' \t' '\n' |
+        tr -d '\r,' |
+        sed '/^$/d'
+}
 
 append_rule() {
     local tbl=$1
@@ -75,8 +80,9 @@ contains_ipv4() {
 contains_ipv6() {
     [ -z "$1" ] && return 1
     local s
+    # strip MAC-48 patterns so they don't trigger as IPv6
     s=$(printf '%s\n' "$1" | sed -E 's/(^|[[:space:]])([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}([[:space:]]|$)/\1\3/g')
-    printf '%s\n' "$s" | grep -Eq '(^|[[:space:]])([0-9A-Fa-f]{0,4}:){2,7}[0-9A-Fa-f]{0,4}([[:space:]/%]|$)'
+    printf '%s\n' "$s" | grep -Eq '(^|[[:space:]])((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:)|(:{2}([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4}))([[:space:]/%]|$)'
 }
 
 is_ipv6_enabled() {
@@ -178,13 +184,12 @@ configure_firewall() {
     [ -n "$xray_pid" ] && daemon_uid=$(awk '/^Uid:/ {print $2}' /proc/"$xray_pid"/status)
 
     for IPT in $IPT_LIST; do
-        $IPT -t mangle -I OUTPUT 1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
-
         if [ -n "$daemon_uid" ] && [ "$daemon_uid" != "0" ]; then
             $IPT -t mangle -I OUTPUT 1 -m owner --uid-owner "$daemon_uid" -j RETURN
         else
             log_debug "X-ray runs as UID $daemon_uid; skipping owner-match OUTPUT rule"
         fi
+        $IPT -t mangle -I OUTPUT 1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
     done
 
     SERVER_IPS=""
@@ -198,7 +203,12 @@ configure_firewall() {
         fi
     done
 
-    SERVER_IPS="$(printf '%s\n' $SERVER_IPS | awk 'NF' | while read -r x; do valid_ip_or_cidr "$x" && echo "$x"; done | sort -u | tr '\n' ' ')"
+    SERVER_IPS="$(
+        printf '%s\n' $SERVER_IPS |
+            normalize_tokens |
+            while read -r x; do valid_ip_or_cidr "$x" && echo "$x"; done |
+            sort -u
+    )"
 
     if jq -e '
   .inbounds[]
@@ -471,7 +481,7 @@ configure_firewall_client() {
                 addrs="$(get_iface_ipv6_globals "$ifname")"
                 [ -n "$addrs" ] && wan_v6_list="$wan_v6_list $addrs"
             done
-            wan_v6_list="$(printf '%s\n' $wan_v6_list | sed '/^$/d' | sort -u)"
+            wan_v6_list="$(printf '%s\n' $wan_v6_list | normalize_tokens | sort -u)"
         fi
 
         local via_v4 via_v6
@@ -482,17 +492,41 @@ configure_firewall_client() {
         via_routes="$(printf '%s\n' $via_v4 $via_v6 | sed '/^$/d' | sort -u)"
 
         local static_routes
-        static_routes=$(nvram get lan_route | tr ' ' '\n' | grep -E '^(([0-9]{1,3}\.){3}[0-9]{1,3}|[0-9a-fA-F:]+)(/[0-9]{1,3})?$')
-
+        static_routes="$(
+            nvram get lan_route 2>/dev/null |
+                normalize_tokens |
+                grep -E '^(([0-9]{1,3}\.){3}[0-9]{1,3}|[0-9a-fA-F:]+)(/[0-9]{1,3})?$'
+        )"
         # unified exclusion: WAN IP, any “via” routes, and your nvram static list
-        dests="$(printf '%s\n' $wan_v4_list $wan_v6_list $via_routes $static_routes | sed '/^$/d' | sort -u)"
+        dests="$(
+            printf '%s\n' $wan_v4_list $wan_v6_list $via_routes $static_routes |
+                normalize_tokens |
+                sort -u
+        )"
+
+        log_info "Excluding unified destinations from $IPT_TABLE."
+        log_debug "Unified exclusion list: $dests"
         for dst in $dests; do
             is_default_route "$dst" && continue
-            valid_ip_or_cidr "$dst" || {
+            # Validate strictly
+            if ! valid_ip_or_cidr "$dst"; then
                 log_debug "Skipping non-IP token: $dst"
                 continue
-            }
-            ipt $IPT_BASE_FLAGS -d "$dst" -j RETURN
+            fi
+
+            # Extra per-family guard: never try v6 on v4 tool or vice versa
+            if contains_ipv6 "$dst"; then
+                # Force ip6tables path only
+                ip6tables -w -t mangle -A XRAYUI -d "$dst" -j RETURN 2>/dev/null ||
+                    log_debug "ip6tables reject for $dst (ignore if module missing)"
+                continue
+            fi
+            if contains_ipv4 "$dst"; then
+                # Force iptables path only
+                iptables -w -t mangle -A XRAYUI -d "$dst" -j RETURN 2>/dev/null ||
+                    log_debug "iptables reject for $dst (ignore if unexpected)"
+                continue
+            fi
         done
     fi
 
@@ -502,6 +536,7 @@ configure_firewall_client() {
     | .port' "$XRAY_CONFIG_FILE" | sort -u)
 
     if [ -n "$server_ports" ]; then
+        log_info "Excluding server ports from $IPT_TABLE."
         for port in $server_ports; do
             for proto in tcp udp; do
                 ipt $IPT_BASE_FLAGS -p "$proto" --dport "$port" -j RETURN

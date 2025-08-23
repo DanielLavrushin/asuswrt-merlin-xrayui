@@ -20,7 +20,7 @@ rtls_scan_start() {
     rm -rf "$ADDON_SHARE_DIR/logs/rtls.log"
     rm -rf "$ADDON_SHARE_DIR/logs/rtls-results.log"
 
-    local rtls_args="-addr $rtlsipaddr$rtlscidr -timeout $rtls_timeout -thread $rtls_threads -out $ADDON_SHARE_DIR/logs/rtls-results.log -mmdb $ADDON_SHARE_DIR/Country.mmdb"
+    local rtls_args="-addr $rtlsipaddr$rtlscidr -timeout $rtls_timeout -thread $rtls_threads -out $ADDON_SHARE_DIR/logs/rtls-results.log -mmdb $ADDON_SHARE_DIR/Country.mmdb -cps 200 -fallback -alpn h2"
 
     $IONICE $NICE "$rtls_bin" $rtls_args >"$ADDON_SHARE_DIR/logs/rtls.log" 2>&1
 

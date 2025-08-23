@@ -106,10 +106,14 @@ initial_response() {
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson profiles "$profiles" '.xray.profiles = $profiles') || log_error "Error: Failed to update JSON content with profiles."
 
     # Collect the backups
-    local backups=$(find "$ADDON_SHARE_DIR/backup" -maxdepth 1 -type f -name "*.tar.gz" -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
-    if [ -z "$backups" ]; then
-        backups="[]"
-    fi
+    local backups=$(
+        find "$ADDON_SHARE_DIR/backup" -maxdepth 1 -type f -name "*.tar.gz" \
+            -printf "%T@ %f\n" | sort -nr | awk '{print $2}' |
+            jq -R -s -c 'split("\n")[:-1]'
+    )
+
+    [ -z "$backups" ] && backups="[]"
+
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson backups "$backups" '.xray.backups = $backups')
 
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq 'del(.loading)')

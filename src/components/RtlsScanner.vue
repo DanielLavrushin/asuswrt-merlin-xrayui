@@ -66,7 +66,7 @@
                   autocapitalize="off"
                   onkeypress="return validator.isNumber(this,event);"
                 />
-                <span class="hint-color">default: 5000</span>
+                <span class="hint-color">default: 1000</span>
               </td>
             </tr>
           </tbody>

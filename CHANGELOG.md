@@ -1,5 +1,13 @@
 # XRAYUI Changelog
 
+## [0.59.0] - 2025-08-23
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- ADDED: A new integration feature - Reality TLS (`RTLS`) Scanner. It can be found under the Outbounds list. For more details refference [this manual](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/rtls-scanner).
+- IMPROVED: Sort backup list, latest backups come first.
+- FIXED:
+
 ## [0.58.4] - 2025-08-18
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

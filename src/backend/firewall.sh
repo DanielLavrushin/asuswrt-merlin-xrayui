@@ -38,7 +38,7 @@ apply_rule() {
             if echo "$rule" | grep -qE ':[^[:space:]]*/[0-9]+'; then
                 continue
             fi
-            if contains_ipv6 "$rule" && ! echo "$rule" | grep -Eq '-m[[:space:]]+mac'; then
+            if contains_ipv6 "$rule" && ! has_mac_module "$rule"; then
                 continue
             fi
         fi
@@ -57,6 +57,10 @@ normalize_tokens() {
     tr ' \t' '\n' |
         tr -d '\r,' |
         sed '/^$/d'
+}
+
+has_mac_module() {
+    printf '%s\n' "$1" | grep -Eq -- '(^|[[:space:]])-m[[:space:]]+mac([[:space:]]|$)'
 }
 
 append_rule() {
@@ -511,20 +515,7 @@ configure_firewall_client() {
                 log_debug "Skipping non-IP token: $dst"
                 continue
             }
-
-            # Extra per-family guard: never try v6 on v4 tool or vice versa
-            if contains_ipv6 "$dst"; then
-                # Force ip6tables path only
-                ip6tables -w -t mangle -A XRAYUI -d "$dst" -j RETURN 2>/dev/null ||
-                    log_debug "ip6tables reject for $dst (ignore if module missing)"
-                continue
-            fi
-            if contains_ipv4 "$dst"; then
-                # Force iptables path only
-                iptables -w -t mangle -A XRAYUI -d "$dst" -j RETURN 2>/dev/null ||
-                    log_debug "iptables reject for $dst (ignore if unexpected)"
-                continue
-            fi
+            append_rule "$IPT_TABLE" -d "$dst" -j RETURN
         done
     fi
 

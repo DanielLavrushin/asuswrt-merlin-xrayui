@@ -140,13 +140,30 @@ EOF
     # Install and setup v2dat (reverse geofile data extractor)
     log_info "Installing v2dat (reverse geofile data extractor)..."
     update_loading_progress "Downloading v2dat..."
-    local v2dat_url=$(github_proxy_url "https://github.com/DanielLavrushin/v2dat/releases/latest/download/v2dat.tar.gz")
+    local v2dat_arch_name=$(version_get_arch_name "v2dat")
+    local v2dat_url=$(github_proxy_url "https://github.com/DanielLavrushin/v2dat/releases/latest/download/$v2dat_arch_name")
     if wget -q --show-progress --no-hsts -O "/tmp/v2dat.tar.gz" "$v2dat_url"; then
         tar -xzf /tmp/v2dat.tar.gz -C "$ADDON_SHARE_DIR" || log_error "Failed to extract v2dat.tar.gz."
         rm -f /tmp/v2dat.tar.gz || log_error "Failed to remove v2dat.tar.gz."
         chmod +x "$ADDON_SHARE_DIR/v2dat" || log_error "Failed to make v2dat executable."
     else
         log_error "Failed to download v2dat."
+    fi
+
+    # Install and setup RTLS-SCANNER
+    log_info "Installing RTLS-SCANNER..."
+    local rtls_arch_name=$(version_get_arch_name "rtls-scanner")
+    update_loading_progress "Downloading RTLS-SCANNER..."
+    local rtls_scan_url=$(github_proxy_url "https://github.com/DanielLavrushin/rtls-scanner/releases/latest/download/$rtls_arch_name")
+    if wget -q --show-progress --no-hsts -O "/tmp/rtls-scanner.tar.gz" "$rtls_scan_url"; then
+        tar -xzf /tmp/rtls-scanner.tar.gz -C "$ADDON_SHARE_DIR" || log_error "Failed to extract rtls-scanner.tar.gz."
+        rm -f /tmp/rtls-scanner.tar.gz || log_error "Failed to remove rtls-scanner.tar.gz."
+        chmod +x "$ADDON_SHARE_DIR/rtls-scanner" || log_error "Failed to make rtls-scanner executable."
+
+        wget -q --show-progress --no-hsts -O "$ADDON_SHARE_DIR/Country.mmdb" "https://github.com/Loyalsoldier/geoip/releases/latest/download/Country.mmdb"
+
+    else
+        log_error "Failed to download RTLS-SCANNER."
     fi
 
     # setup logrotate
@@ -196,9 +213,16 @@ uninstall() {
     log_info "Removing XRAY UI files..."
     rm -rf "$ADDON_WEB_DIR" || log_warn "Failed to remove $ADDON_WEB_DIR."
     rm -rf "$ADDON_JFFS_ADN_DIR" || log_warn "Failed to remove $ADDON_JFFS_ADN_DIR."
-    rm -rf "$ADDON_SHARE_DIR/xray_clients_online.json"
-    rm -rf "$ADDON_SHARE_DIR/xray_stats.json"
+    rm -rf "$ADDON_SHARE_DIR"/*.json || log_warn "Failed to remove $ADDON_SHARE_DIR/*.json."
     rm -rf "$ADDON_SHARE_DIR/logs" || log_warn "Failed to remove $ADDON_SHARE_DIR/logs."
+
+    rm -rf "$ADDON_SHARE_DIR/rtls-scanner" || log_warn "Failed to remove $ADDON_SHARE_DIR/rtls-scanner."
+    rm -rf "$ADDON_SHARE_DIR/v2dat" || log_warn "Failed to remove $ADDON_SHARE_DIR/v2dat."
+
+    rm -rf "$ADDON_SHARE_DIR/Country.mmdb" || log_warn "Failed to remove $ADDON_SHARE_DIR/Country.mmdb."
+
+    rm -rf "$ADDON_SHARE_DIR/dnsmasq" || log_warn "Failed to remove $ADDON_SHARE_DIR/dnsmasq."
+    rm -rf "$ADDON_SHARE_DIR/tmp" || log_warn "Failed to remove $ADDON_SHARE_DIR/tmp."
 
     if [ $? -eq 0 ]; then
         log_info "XRAY UI files removed successfully."

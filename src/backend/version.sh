@@ -141,3 +141,43 @@ switch_xray_version() {
     log_ok $(show_version)
 
 }
+
+version_get_arch_name() {
+
+    local archname="$1"
+    local arch=$(uname -m)
+
+    local asset_name=""
+    case "$arch" in
+    x86_64)
+        asset_name="$archname-amd64.tar.gz"
+        ;;
+    i686 | i386)
+        asset_name="$archname-i386.tar.gz"
+        ;;
+    armv5* | armv6* | armv7*)
+        asset_name="$archname-armv5.tar.gz"
+        ;;
+    aarch64 | arm64)
+        asset_name="$archname-arm64.tar.gz"
+        ;;
+    mips)
+        asset_name="$archname-mips.tar.gz"
+        ;;
+    mipsle)
+        asset_name="$archname-mipsle.tar.gz"
+        ;;
+    mips64)
+        asset_name="$archname-mips64.tar.gz"
+        ;;
+    mips64le)
+        asset_name="$archname-mips64le.tar.gz"
+        ;;
+    *)
+        echo "Unsupported architecture: $arch"
+        return 1
+        ;;
+    esac
+
+    echo "$asset_name"
+}

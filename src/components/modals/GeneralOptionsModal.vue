@@ -152,7 +152,7 @@
               </th>
               <td>
                 <div class="textarea-wrapper">
-                  <textarea v-model="options.hooks.before_firewall_start"></textarea>
+                  <textarea v-model.trim="options.hooks.before_firewall_start"></textarea>
                 </div>
               </td>
             </tr>
@@ -163,7 +163,7 @@
               </th>
               <td>
                 <div class="textarea-wrapper">
-                  <textarea v-model="options.hooks.after_firewall_start"></textarea>
+                  <textarea v-model.trim="options.hooks.after_firewall_start"></textarea>
                 </div>
               </td>
             </tr>
@@ -174,7 +174,7 @@
               </th>
               <td>
                 <div class="textarea-wrapper">
-                  <textarea v-model="options.hooks.after_firewall_cleanup"></textarea>
+                  <textarea v-model.trim="options.hooks.after_firewall_cleanup"></textarea>
                 </div>
               </td>
             </tr>

@@ -209,7 +209,9 @@ export enum SubmitActions {
   createBackup = 'xrayui_configuration_backup',
   clearBackup = 'xrayui_configuration_backupclear',
   restoreBackup = 'xrayui_configuration_backuprestore',
-  subscribeFetchProtocols = 'xrayui_configuration_sbscrpts_fetchprotocols'
+  subscribeFetchProtocols = 'xrayui_configuration_sbscrpts_fetchprotocols',
+  rtlsScanStart = 'xrayui_rtlsscan_start',
+  rtlsScanStop = 'xrayui_rtlsscan_stop'
 }
 
 export class Engine {
@@ -454,6 +456,22 @@ export class Engine {
     } catch (e) {
       console.error('Error loading geo tags:', e);
       return new EngineGeoTags();
+    }
+  }
+
+  async loadsRtlsResults(): Promise<string | undefined> {
+    try {
+      const response = await axios.get<string>(`/ext/xrayui/rtls-results.json?_=${Date.now()}`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+          Expires: '0'
+        }
+      });
+      return response.data;
+    } catch (e) {
+      console.error('Error loading rtls results:', e);
+      return undefined;
     }
   }
 

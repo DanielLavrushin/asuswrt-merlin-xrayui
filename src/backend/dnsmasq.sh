@@ -74,7 +74,7 @@ dnsmasq_xray_ipset_domains() {
     local IPSET_CONF="$DNSMASQ_DIR/ipset.rules"
     local TMP="/tmp/xrayui_dnsmasq_direct.tmp.$$"
 
-    local V2DAT="/opt/share/xrayui/v2dat"
+    local V2DAT="$ADDON_SHARE_DIR/v2dat"
     local GEOSITE="/opt/sbin/geosite.dat"
     local GEOSITE_XRAUI="/opt/sbin/xrayui"
     local GEOIP="/opt/sbin/geoip.dat"

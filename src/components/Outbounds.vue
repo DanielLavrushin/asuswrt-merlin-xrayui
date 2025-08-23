@@ -17,6 +17,8 @@
           </select>
         </td>
       </tr>
+      <rtls-scanner />
+
       <draggable
         v-if="config.outbounds.length"
         tag="slot"
@@ -99,12 +101,14 @@
   import WireguardOutbound from '@obd/WireguardOutbound.vue';
   import draggable from 'vuedraggable';
   import { useI18n } from 'vue-i18n';
+  import RtlsScanner from './RtlsScanner.vue';
 
   export default defineComponent({
     name: 'Outbounds',
     emits: ['show-transport', 'show-sniffing'],
     components: {
       Modal,
+      RtlsScanner,
       draggable
     },
     methods: {},

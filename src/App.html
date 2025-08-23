@@ -40,7 +40,7 @@
           wan_ip: '<% nvram_get("wan_ipaddr"); %>',
           wan_connected: '<% nvram_get("link_internet"); %>' == '2',
           features: '<% nvram_get("rc_support"); %>',
-          is_gnuton: '<% nvram_get("extendno"); %>' !== '0'
+          is_gnuton: '<% nvram_get("extendno"); %>'.indexOf('gnuton') !== -1
         },
         server: {
           isRunning: parseInt('<% sysinfo("pid.xray"); %>') > 0

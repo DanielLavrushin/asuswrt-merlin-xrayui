@@ -80,9 +80,9 @@ contains_ipv4() {
 contains_ipv6() {
     [ -z "$1" ] && return 1
     local s
-    # strip MAC-48 patterns so they don't trigger as IPv6
     s=$(printf '%s\n' "$1" | sed -E 's/(^|[[:space:]])([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}([[:space:]]|$)/\1\3/g')
-    printf '%s\n' "$s" | grep -Eq '(^|[[:space:]])((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:)|(:{2}([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4}))([[:space:]/%]|$)'
+    printf '%s\n' "$s" |
+        grep -Eq '(^|[[:space:]])([0-9A-Fa-f]{0,4}:){2,}([0-9A-Fa-f]{0,4})?(%[[:alnum:]_.-]+)?(/[0-9]{1,3})?([[:space:]]|$)'
 }
 
 is_ipv6_enabled() {
@@ -452,7 +452,7 @@ configure_firewall_client() {
     # Exclude traffic destined to the Xray server:
     [ -n "$SERVER_IPS" ] && for serverip in $SERVER_IPS; do
         log_info "Excluding Xray server IP from $IPT_TABLE."
-        ipt $IPT_BASE_FLAGS -d "$serverip" -j RETURN
+        append_rule "$IPT_TABLE" -d "$serverip" -j RETURN
     done
 
     # TPROXY excludes:
@@ -499,20 +499,18 @@ configure_firewall_client() {
         )"
         # unified exclusion: WAN IP, any “via” routes, and your nvram static list
         dests="$(
-            printf '%s\n' $wan_v4_list $wan_v6_list $via_routes $static_routes |
-                normalize_tokens |
-                sort -u
+            printf '%s\n' $wan_v4_list $wan_v6_list $via_routes $static_routes $SERVER_IPS |
+                normalize_tokens | sort -u
         )"
 
         log_info "Excluding unified destinations from $IPT_TABLE."
         log_debug "Unified exclusion list: $dests"
         for dst in $dests; do
             is_default_route "$dst" && continue
-            # Validate strictly
-            if ! valid_ip_or_cidr "$dst"; then
+            valid_ip_or_cidr "$dst" || {
                 log_debug "Skipping non-IP token: $dst"
                 continue
-            fi
+            }
 
             # Extra per-family guard: never try v6 on v4 tool or vice versa
             if contains_ipv6 "$dst"; then

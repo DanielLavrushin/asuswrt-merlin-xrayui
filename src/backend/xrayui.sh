@@ -28,6 +28,7 @@ import ./backup.sh
 import ./cron.sh
 import ./dnsmasq.sh
 import ./diagnostics.sh
+import ./rtls.sh
 
 case "$1" in
 version)
@@ -124,16 +125,13 @@ cron)
     ;;
 service_event)
     case "$2" in
-    webapp)
+    rtlsscan)
         case "$3" in
         start)
-            webapp_start
+            rtls_scan_start
             ;;
         stop)
-            webapp_stop
-            ;;
-        restart)
-            webapp_restart
+            rtls_scan_stop
             ;;
         *) ;;
         esac

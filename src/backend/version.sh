@@ -159,7 +159,7 @@ version_get_arch_name() {
         asset_name="$archname-armv5.tar.gz"
         ;;
     aarch64 | arm64)
-        asset_name="$archname-arm64.tar.gz"
+        asset_name="$archname-arm64v8.tar.gz"
         ;;
     mips)
         asset_name="$archname-mips.tar.gz"

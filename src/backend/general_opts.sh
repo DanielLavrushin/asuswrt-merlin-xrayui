@@ -33,7 +33,7 @@ apply_general_options() {
     local geosite_url=$(echo "$genopts" | jq -r '.geo_site_url')
     local geoip_url=$(echo "$genopts" | jq -r '.geo_ip_url')
     local geo_auto_update=$(echo "$genopts" | jq -r '.geo_auto_update')
-    local hooks=$(echo "$genopts" | jq -r '.hooks')
+    local hooks=$(echo "$genopts" | jq -c '.hooks // {}')
     local subscriptionLinks=$(echo "$genopts" | jq -r '(.subscriptions.links // []) | join("|")')
     local xray_dns_only=$(echo "$genopts" | jq -r '.dns_only')
     local integration_scribe=$(echo "$genopts" | jq -r '.logs_scribe')
@@ -106,17 +106,33 @@ apply_general_options() {
 
 apply_general_options_hooks() {
     local hooks_json="$1"
-    local before=$(printf '%s' "$hooks_json" | jq -r '.before_firewall_start')
-    local after=$(printf '%s' "$hooks_json" | jq -r '.after_firewall_start')
-    local cleanup=$(printf '%s' "$hooks_json" | jq -r '.after_firewall_cleanup')
+    [ -z "$hooks_json" ] && hooks_json="{}"
+    [ "$hooks_json" = "null" ] && hooks_json="{}"
 
-    log_debug "Applying hooks: before='$before', after='$after', cleanup='$cleanup'"
+    local before after cleanup
+    before=$(printf '%s' "$hooks_json" | jq -r '.before_firewall_start // empty')
+    after=$(printf '%s' "$hooks_json" | jq -r '.after_firewall_start // empty')
+    cleanup=$(printf '%s' "$hooks_json" | jq -r '.after_firewall_cleanup // empty')
 
     local script_before="$ADDON_USER_SCRIPTS_DIR/firewall_before_start"
     local script_after="$ADDON_USER_SCRIPTS_DIR/firewall_after_start"
     local script_cleanup="$ADDON_USER_SCRIPTS_DIR/firewall_after_cleanup"
 
-    [ -n "$before" ] && printf '#!/bin/sh\n%s\n' "$before" >"$script_before" && chmod +x "$script_before"
-    [ -n "$after" ] && printf '#!/bin/sh\n%s\n' "$after" >"$script_after" && chmod +x "$script_after"
-    [ -n "$cleanup" ] && printf '#!/bin/sh\n%s\n' "$cleanup" >"$script_cleanup" && chmod +x "$script_cleanup"
+    if [ -n "$(printf '%s' "$before" | tr -d ' \t\r\n')" ]; then
+        printf '%s\n%s\n' '#!/bin/sh' "$before" >"$script_before" && chmod +x "$script_before"
+    else
+        rm -f "$script_before"
+    fi
+
+    if [ -n "$(printf '%s' "$after" | tr -d ' \t\r\n')" ]; then
+        printf '%s\n%s\n' '#!/bin/sh' "$after" >"$script_after" && chmod +x "$script_after"
+    else
+        rm -f "$script_after"
+    fi
+
+    if [ -n "$(printf '%s' "$cleanup" | tr -d ' \t\r\n')" ]; then
+        printf '%s\n%s\n' '#!/bin/sh' "$cleanup" >"$script_cleanup" && chmod +x "$script_cleanup"
+    else
+        rm -f "$script_cleanup"
+    fi
 }

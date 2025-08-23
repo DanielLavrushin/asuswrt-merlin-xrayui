@@ -621,9 +621,10 @@
     },
     "Rtls": {
       "manager": "Reality TLS Scanner",
+      "info": "The Reality TLS Scanner helps you discover public TLS endpoints in a subnet and highlights the ones closest to your target IP (e.g., your VPS). It visualizes findings on a `radar` and lists them in a sortable table so you can quickly select suitable hosts for REALITY-based configurations.",
       "modal_title": "Reality TLS Scanner",
       "hint": "Scan the selected subnet to discover domains closest to the target IP.",
-      "scan": "Scan",
+      "scan": "scan",
       "scan_start": "Start Scan",
       "scan_stop": "Stop Scan",
       "ip_label": "IP Address",

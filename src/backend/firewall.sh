@@ -20,9 +20,9 @@ apply_rule() {
     for IPT in $IPT_LIST; do
         rule="$args"
         if [ "$IPT" = "ip6tables" ]; then
-            rule="$(printf '%s\n' "$rule" | sed 's/127\.0\.0\.1/::1/g')"
+            rule="$(printf '%s\n' "$rule" | sed 's/\(^\|[[:space:]]\)127\.0\.0\.1\([[:space:]:/]\|$\)/\1::1\2/g')"
         else
-            rule="$(printf '%s\n' "$rule" | sed 's/::1/127.0.0.1/g')"
+            rule="$(printf '%s\n' "$rule" | sed 's/\(^\|[[:space:]]\)::1\([[:space:]:/]\|$\)/\1127.0.0.1\2/g')"
         fi
         if [ "$IPT" = "ip6tables" ] && [ "$tbl" = "nat" ]; then
             if [ "$IP6NAT_LOADED" = "0" ]; then
@@ -49,7 +49,6 @@ apply_rule() {
     done
     [ $did -eq 1 ] && return $rc || return 0
 }
-
 valid_ip_or_cidr() { contains_ipv4 "$1" || contains_ipv6 "$1"; }
 is_default_route() { [ "$1" = "0.0.0.0" ] || [ "$1" = "0.0.0.0/0" ] || [ "$1" = "::/0" ]; }
 get_iface_ipv6_globals() { ip -6 -o addr show dev "$1" scope global | awk '$3=="inet6"{print $4}' | cut -d/ -f1; }

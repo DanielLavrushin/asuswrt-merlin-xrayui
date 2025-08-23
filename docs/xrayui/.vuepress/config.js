@@ -13,7 +13,8 @@ const links_en = [
   { text: 'DNS Leak', link: '/en/dns-leak.md' },
   { text: 'General Options', link: '/en/general-options.md' },
   { text: 'Securely Share Config', link: '/en/share-config.md' },
-  { text: 'Transparent Proxy (TPROXY)', link: '/en/tproxy.md' }
+  { text: 'Transparent Proxy (TPROXY)', link: '/en/tproxy.md' },
+  { text: 'Reality TLS Scanner', link: '/en/rtls-scanner.md' }
 ];
 const links_ru = [
   { text: 'Как установить', link: '/ru/install.md' },
@@ -24,7 +25,8 @@ const links_ru = [
   { text: 'Утечки DNS и как их избежать', link: '/ru/dns-leak.md' },
   { text: 'Общие параметры', link: '/ru/general-options.md' },
   { text: 'Безопасный обмен конфигом', link: '/ru/share-config.md' },
-  { text: 'Прозрачный прокси (TPROXY)', link: '/ru/tproxy.md' }
+  { text: 'Прозрачный прокси (TPROXY)', link: '/ru/tproxy.md' },
+  { text: 'Сканер Reality TLS', link: '/ru/rtls-scanner.md' }
 ];
 export default defineUserConfig({
   base: '/asuswrt-merlin-xrayui/',

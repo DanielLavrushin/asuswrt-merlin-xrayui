@@ -4,9 +4,10 @@
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
-- ADDED: A new integration feature - Reality TLS (`RTLS`) Scanner. It can be found under the Outbounds list. For more details refference [this manual](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/rtls-scanner).
-- IMPROVED: Sort backup list, latest backups come first.
-- FIXED:
+- ADDED: `Reality TLS (REALITY) Scanner` (RTLS) under `Outbounds`. Discovers usable REALITY endpoints by probing domains, IPs, and CIDRs. [See the manual](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/rtls-scanner)
+- IMPROVED: Backups list is now sorted by file modification time with the newest first.
+- FIXED: Eliminated duplicate `IPv6` rules in `ip6tables` for the XRAYUI chain by validating existence before insert and hardening IPv4/IPv6 address handling to prevent cross-family leakage (e.g., 127.0.0.1 vs ::1).
+- FIXED: Hooks are correctly removed when the script fields are cleared. Empty or whitespace-only values (and the literal null) delete the corresponding hook files, and the UI no longer shows null after reload.
 
 ## [0.58.4] - 2025-08-18
 

@@ -9,6 +9,8 @@
 
 This repository provides a lightweight and efficient UI to manage your [X-RAY Core](https://github.com/XTLS/Xray-core) services on routers running ASUSWRT-Merlin firmware.
 
+[[english]](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/install) [[русский]](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/ru/install)
+
 <img width="800" height="1325" alt="image" src="https://github.com/user-attachments/assets/fdea28a1-fcf4-43fb-ab55-f1d8a343e6c5" />
 
 <details>

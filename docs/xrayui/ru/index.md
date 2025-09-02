@@ -7,7 +7,7 @@ actions:
     link: install
     type: primary
   - text: CLI
-    link: /en/cli
+    link: cli
     type: secondary
   - text: Сообщество
     link: https://t.me/asusxray

@@ -41,10 +41,8 @@ install() {
 
     update_loading_progress "Installing dependencies..."
 
-    opkg update || {
-        log_error "opkg update failed"
-        exit 1
-    }
+    opkg update
+    opkg upgrade
 
     install_opkg_package sed true
     install_opkg_package curl false

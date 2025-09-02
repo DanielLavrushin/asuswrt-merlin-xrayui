@@ -14,7 +14,8 @@ const links_en = [
   { text: 'General Options', link: '/en/general-options.md' },
   { text: 'Securely Share Config', link: '/en/share-config.md' },
   { text: 'Transparent Proxy (TPROXY)', link: '/en/tproxy.md' },
-  { text: 'Reality TLS Scanner', link: '/en/rtls-scanner.md' }
+  { text: 'Reality TLS Scanner', link: '/en/rtls-scanner.md' },
+  { text: 'Custom Geosite Files', link: '/en/custom-geodata.md' }
 ];
 const links_ru = [
   { text: 'Как установить', link: '/ru/install.md' },
@@ -26,7 +27,8 @@ const links_ru = [
   { text: 'Общие параметры', link: '/ru/general-options.md' },
   { text: 'Безопасный обмен конфигом', link: '/ru/share-config.md' },
   { text: 'Прозрачный прокси (TPROXY)', link: '/ru/tproxy.md' },
-  { text: 'Сканер Reality TLS', link: '/ru/rtls-scanner.md' }
+  { text: 'Сканер Reality TLS', link: '/ru/rtls-scanner.md' },
+  { text: 'Пользовательские файлы геоданных', link: '/ru/custom-geodata.md' }
 ];
 export default defineUserConfig({
   base: '/asuswrt-merlin-xrayui/',

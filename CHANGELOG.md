@@ -1,5 +1,11 @@
 # XRAYUI Changelog
 
+## [0.5x.x] - 2025-xx-xx
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- IMPROVED: Remove DIVERT rules from mangle table during cleanup.
+
 ## [0.59.0] - 2025-08-23
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

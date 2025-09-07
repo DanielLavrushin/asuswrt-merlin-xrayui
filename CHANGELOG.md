@@ -1,10 +1,11 @@
 # XRAYUI Changelog
 
-## [0.5x.x] - 2025-xx-xx
+## [0.59.1] - 2025-09-07
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
-- IMPROVED: Remove DIVERT rules from mangle table during cleanup.
+- IMPROVED: Remove `DIVERT` rules from mangle table during cleanup.
+- FIXED: when XrayUI is running in `Redirect` mode, any IP addresses defined in the routing rules are now also added into the system’s fast lookup list (`ipset`).
 
 ## [0.59.0] - 2025-08-23
 

@@ -190,7 +190,7 @@ EOF
                 elif printf %s "$t" | grep -Eq '^[0-9A-Fa-f:]+(/[0-9]{1,3})?$'; then
                     ipset add "$SET_V6" "$t" timeout 0 2>/dev/null
                 else
-                    # Non-IP address, no action needed
+                    set -- "$@" -f "$t"
                 fi
             done
 

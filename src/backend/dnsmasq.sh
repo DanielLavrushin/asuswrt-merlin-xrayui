@@ -127,7 +127,7 @@ dnsmasq_xray_ipset_domains() {
             ext:xrayui:*) tags_xrayui_list="$tags_xrayui_list ${entry#ext:xrayui:}" ;;
             domain:*) dnsmasq_domain_to_ipset "${entry#domain:}" "$SET_V4" "$SET_V6" ;;
             .*) dnsmasq_domain_to_ipset "${entry#.}" "$SET_V4" "$SET_V6" ;;
-            [0-9]* | *:*) ip_list="$ip_list ${entry#.}" ;;
+            [0-9]* | *:*) ip_list="$ip_list ${entry}" ;;
             *.*) dnsmasq_domain_to_ipset "$entry" "$SET_V4" "$SET_V6" ;;
             esac
         done <<EOF

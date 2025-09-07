@@ -711,6 +711,10 @@ cleanup_firewall() {
     ipt mangle -D FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null
     ipt mangle -D OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null
 
+    ipt mangle -D DIVERT -j MARK --set-mark $tproxy_mark/$tproxy_mask 2>/dev/null
+    ipt mangle -D DIVERT -j CONNMARK --save-mark --mask $tproxy_mask 2>/dev/null
+    ipt mangle -D DIVERT -j ACCEPT 2>/dev/null
+
     while iptables -t mangle -C PREROUTING -p tcp -m socket --transparent -j DIVERT 2>/dev/null; do
         iptables -t mangle -D PREROUTING -p tcp -m socket --transparent -j DIVERT
     done

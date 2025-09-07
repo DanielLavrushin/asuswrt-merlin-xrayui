@@ -117,17 +117,17 @@ dnsmasq_xray_ipset_domains() {
 
         tags_list=""
         tags_xrayui_list=""
-        ip_tags_list=""
+        ip_list=""
 
         while IFS= read -r entry; do
             case "$entry" in
             regexp:* | regex:*) ;;
             geosite:*) tags_list="$tags_list ${entry#geosite:}" ;;
-            geoip:*) ip_tags_list="$ip_tags_list ${entry#geoip:}" ;;
+            geoip:*) ip_list="$ip_list ${entry#geoip:}" ;;
             ext:xrayui:*) tags_xrayui_list="$tags_xrayui_list ${entry#ext:xrayui:}" ;;
             domain:*) dnsmasq_domain_to_ipset "${entry#domain:}" "$SET_V4" "$SET_V6" ;;
             .*) dnsmasq_domain_to_ipset "${entry#.}" "$SET_V4" "$SET_V6" ;;
-            [0-9]* | *:*) dnsmasq_domain_to_ipset "$entry" "$SET_V4" "$SET_V6" ;;
+            [0-9]* | *:*) ip_list="$ip_list ${entry}" ;;
             *.*) dnsmasq_domain_to_ipset "$entry" "$SET_V4" "$SET_V6" ;;
             esac
         done <<EOF
@@ -158,10 +158,10 @@ EOF
                 dnsmasq_domain_to_ipset_bulk "$SET_V4" "$SET_V6" "$(is_ipv6_enabled)" >&3
         fi
 
-        if [ -n "$ip_tags_list" ]; then
-            log_debug "dnsmasq: unpacking geoip: $ip_tags_list"
+        if [ -n "$ip_list" ]; then
+            log_debug "dnsmasq: unpacking geoip: $ip_list"
             set --
-            for t in $(printf '%s\n' $ip_tags_list | sort -u); do
+            for t in $(printf '%s\n' $ip_list | sort -u); do
                 set -- "$@" -f "$t"
             done
 
@@ -184,6 +184,16 @@ EOF
             fi
 
             ipset restore <"$IPSET_CONF_NEW"
+            for t in $(printf '%s\n' $ip_list | sort -u); do
+                if printf %s "$t" | grep -Eq '^([0-9]{1,3}\.){3}[0-9]{1,3}(/[0-9]{1,2})?$'; then
+                    ipset add "$SET_V4" "$t" timeout 0 2>/dev/null
+                elif printf %s "$t" | grep -Eq '^[0-9A-Fa-f:]+(/[0-9]{1,3})?$'; then
+                    ipset add "$SET_V6" "$t" timeout 0 2>/dev/null
+                else
+                    # Non-IP address, no action needed
+                fi
+            done
+
             mv -f "$IPSET_CONF_NEW" "$IPSET_CONF"
             rm -f "$G4" "$G6"
         fi

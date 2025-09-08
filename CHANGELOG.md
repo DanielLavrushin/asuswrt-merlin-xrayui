@@ -4,8 +4,9 @@
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
-- ADDED: Support for the new `url:` prefix, allowing remote domain lists to be included in custom geosite `dat` files.  
-  For more details, see the [documentation](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/custom-geodata#interface-overview).
+- ADDED: support for a new `url:` prefix in custom geosite files, allowing users to specify URLs that will be fetched and included as domain lists during compilation. The backend parses and fetches these lists, integrating them into the output `ext:xrayui:` dat extension. For more details, see the [documentation](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/custom-geodata#interface-overview).
+- IMPROVED: Modified backend logic to recompile all geodata (including [custom sources](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/custom-geodata)) after updates, ensuring new remote lists are processed.
+- IMPROVED: Clarified in documentation that enabling auto-update will also recompile custom geodat files, ensuring remote sources are refreshed automatically.
 
 ## [0.59.2] - 2025-09-07
 

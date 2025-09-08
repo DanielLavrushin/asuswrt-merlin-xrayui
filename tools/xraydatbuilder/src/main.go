@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"xraydatbuilder/url"
 
 	router "github.com/v2fly/v2ray-core/v5/app/router/routercommon"
 	"google.golang.org/protobuf/proto"
@@ -88,6 +89,9 @@ func (l *ParsedList) toProto() (*router.GeoSite, error) {
 				Value:     entry.Value,
 				Attribute: entry.Attrs,
 			})
+		case "url":
+			domains, _ := url.Fetch(entry.Value)
+			site.Domain = append(site.Domain, domains...)
 		default:
 			return nil, errors.New("unknown domain type: " + entry.Type)
 		}
@@ -122,10 +126,15 @@ func parseDomain(domain string, entry *Entry) error {
 		entry.Value = strings.ToLower(kv[0])
 		return nil
 	}
-
 	if len(kv) == 2 {
 		entry.Type = strings.ToLower(kv[0])
 		entry.Value = strings.ToLower(kv[1])
+		return nil
+	}
+
+	if len(kv) >= 2 && (strings.EqualFold(kv[0], "url")) {
+		entry.Type = strings.ToLower(kv[0])
+		entry.Value =  strings.Join(kv[1:], ":")
 		return nil
 	}
 

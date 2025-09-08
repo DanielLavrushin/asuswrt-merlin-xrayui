@@ -1,5 +1,12 @@
 # XRAYUI Changelog
 
+## [0.60.0] - 2025-09-08
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- ADDED: Support for the new `url:` prefix, allowing remote domain lists to be included in custom geosite `dat` files.  
+  For more details, see the [documentation](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/custom-geodata#interface-overview).
+
 ## [0.59.2] - 2025-09-07
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

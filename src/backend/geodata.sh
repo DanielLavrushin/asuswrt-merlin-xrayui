@@ -29,10 +29,9 @@ update_community_geodata() {
     mv -f "$ADDON_TMP_DIR/geosite.dat" "$xray_dir/geosite.dat"
     mv -f "$ADDON_TMP_DIR/geoip.dat" "$xray_dir/geoip.dat"
 
+    geodata_recompile_all
+
     if [ -f "$xray_dir/geosite.dat" ] && [ -f "$xray_dir/geoip.dat" ]; then
-
-        geodata_unpack_tags
-
         log_ok "Files successfully placed in $xray_dir."
         if [ -f "$XRAY_PIDFILE" ]; then
             update_loading_progress "Restarting Xray service..."
@@ -164,6 +163,7 @@ geodata_recompile_all() {
     chmod -x "$datadir/xrayui" || log_debug "Failed to set executable permission for $datadir/xrayui"
 
     cleanup_payload
+    geodata_unpack_tags
     geodata_remount_to_web
 
     if [ -f "$XRAY_PIDFILE" ]; then

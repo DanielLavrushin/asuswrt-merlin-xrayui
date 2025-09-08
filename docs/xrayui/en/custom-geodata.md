@@ -58,10 +58,28 @@ When you select a file (new or existing), additional options will appear:
 ![edit file](../.vuepress/public/images/custom-geodata/20250902212551.png)
 
 - Provide a common name (**tag**) for the group of domains you are listing.
-- **Content** – add the domains you want included in the geosite file.  
-  ::: tip domains
-  You can apply standard geosite rules to your list (e.g., prefixes such as `domain:`, `regexp:`, `full:`).
-  :::
+- **Content** – add the domains you want included in the geosite file.
+
+::: tip domains
+You can apply standard geosite rules to your list (e.g., prefixes such as `domain:`, `regexp:`, `full:`, or even custom `url:`).
+:::
+
+You can also add a custom prefix `url:` – a URL pointing to an online domain list.  
+If `url:` is set, the DatBuilder will fetch the domains from this source and append them under the current category.  
+Here’s an example of such a [source URL](https://raw.githubusercontent.com/itdoginfo/allow-domains/main/Russia/inside-raw.lst).
+
+For example:
+
+```text
+url:https://raw.githubusercontent.com/itdoginfo/allow-domains/main/Russia/inside-raw.lst
+```
+
+You can use multiple URLs in a single category. The only requirement is that each URL must be placed on a new line with the `url:` prefix.
+
+::: tip
+This is an extremely useful feature when you want to build dynamic custom `dat` files.  
+From the general options you can enable [Auto-update geodata files](general-options#auto-update-geodata-files), and XRAYUI will automatically fetch all the custom sources and recompile the `dat` file.
+:::
 
 Click the **compile** button to recompile the geosite file.
 

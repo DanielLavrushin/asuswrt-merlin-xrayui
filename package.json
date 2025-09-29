@@ -22,7 +22,7 @@
     "reflect-metadata": "^0.2.2",
     "sortablejs": "^1.15.6",
     "tslib": "^2.8.1",
-    "version-clean": "^1.9.0",
+    "version-clean": "^1.10.0",
     "version-compare": "^3.11.0",
     "vue": "^3.5.14",
     "vue-i18n": "^11.1.4",

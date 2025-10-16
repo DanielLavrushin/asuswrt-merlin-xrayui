@@ -1,5 +1,12 @@
 # XRAYUI Changelog
 
+## [0.6x.x] - 2025-10-xx
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- FIXED: `Logrotate` no longer spams errors in `syslog` when xray-core logs are disabled.
+- IMPROVED: `Scribe` integration check now happens earlier to avoid unnecessary warnings when disabled.
+
 ## [0.60.0] - 2025-09-08
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

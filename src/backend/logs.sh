@@ -206,6 +206,14 @@ EOF
 }
 
 logs_scribe_integration() {
+  load_xrayui_config
+  # Check if integration is enabled first, before any other checks
+  if [ "$integration_scribe" != "true" ]; then
+    log_debug "Scribe integration is disabled in the configuration."
+    rm -f /opt/etc/syslog-ng.d/xrayui 2>/dev/null
+    return 0
+  fi
+
   log_info "Setting up XRAYUI syslog integration for Scribe..."
 
   if [ ! -f /jffs/scripts/scribe ]; then
@@ -218,10 +226,9 @@ logs_scribe_integration() {
     return 0
   fi
 
-  load_xrayui_config
-  if [ "$integration_scribe" = "true" ]; then
-    log_debug "Scribe integration is enabled in the configuration. Creating syslog-ng configuration for XRAYUI."
-    cat >/opt/etc/syslog-ng.d/xrayui <<EOF
+  log_debug "Scribe integration is enabled. Creating syslog-ng configuration for XRAYUI."
+
+  cat >/opt/etc/syslog-ng.d/xrayui <<EOF
 # syslog-ng configuration for XRAYUI
 destination d_xrayui { 
     file("/opt/var/log/xrayui.log");
@@ -241,13 +248,7 @@ log {
 #eof
 EOF
 
-  else
-    rm -f /opt/etc/syslog-ng.d/xrayui
-    log_debug "Scribe integration is disabled in the configuration. Removing syslog-ng configuration for XRAYUI."
-  fi
-
   /jffs/scripts/scribe restart || { log_error "Failed to reload Scribe configuration." && return 1; }
 
   log_ok "Scribe integration for XRAYUI logs configured successfully."
-
 }

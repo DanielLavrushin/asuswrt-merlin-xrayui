@@ -146,7 +146,7 @@ regexp:^netflix\\.com$    # Соответствие регулярному вы
 
 ```bash
 # Проверить, находится ли youtube.com в категории youtube
-/opt/share/xrayui/v2dat unpack geosite -p -f youtube /opt/sbin/geosite.dat | grep "youtube.com"
+/opt/share/xrayui/v2dat unpack geosite -p -f youtube /opt/sbin/geosite.dat | grep "^youtube.com$"
 ```
 
 ### Сценарий 2: Какая категория содержит мой домен?
@@ -154,19 +154,10 @@ regexp:^netflix\\.com$    # Соответствие регулярному вы
 Поиск по всем категориям:
 
 ```bash
-# Извлечь все категории
-/opt/share/xrayui/v2dat unpack geosite -o /tmp/search /opt/sbin/geosite.dat
+# Извлечь все категории в `/opt/share/xrayui/extract`
+mkdir -p /opt/share/xrayui/extract
+/opt/share/xrayui/v2dat unpack geosite -o /opt/share/xrayui/extract /opt/sbin/geosite.dat
 
-# Искать ваш домен
-grep -l "mydomain.com" /tmp/search/*.txt
-
-# Или более конкретно
-for file in /tmp/search/*.txt; do
-  if grep -q "mydomain.com" "$file"; then
-    echo "Найдено в: $(basename $file .txt)"
-    grep "mydomain.com" "$file"
-  fi
-done
 ```
 
 ### Сценарий 3: Проверка пользовательской компиляции geosite
@@ -181,17 +172,17 @@ done
 /opt/share/xrayui/v2dat unpack geosite -p -f mylist /opt/sbin/xrayui
 ```
 
-### Сценарий 4: Сравнение категорий
-
-Посмотреть, что уникально между категориями:
+### Сценарий 4: Выгрузка категорий
 
 ```bash
-# Извлечь две категории
-/opt/share/xrayui/v2dat unpack geosite -o /tmp -f google /opt/sbin/geosite.dat
-/opt/share/xrayui/v2dat unpack geosite -o /tmp -f youtube /opt/sbin/geosite.dat
+# Извлечь две категории в `/opt/share/xrayui`
+/opt/share/xrayui/v2dat unpack geosite -o /opt/share/xrayui -f google -f youtube /opt/sbin/geosite.dat
 
-# Найти домены в обеих
-comm -12 <(sort /tmp/geosite_google.txt) <(sort /tmp/geosite_youtube.txt)
+# Извлечь две категории и вывести содержимое в консоль
+/opt/share/xrayui/v2dat unpack geosite -p -f google -f youtube /opt/sbin/geosite.dat
+
+# Извлечь две категории и сохранить содержимое в файл `/opt/share/xrayui/domains.txt`
+/opt/share/xrayui/v2dat unpack geosite -p -f google -f youtube /opt/sbin/geosite.dat >/opt/share/xrayui/domains.txt
 ```
 
 ## Краткий справочник
@@ -204,12 +195,12 @@ v2dat unpack [geosite|geoip] [options] <dat_file>
 
 ### Общие опции
 
-| Опция      | Описание          | Пример                                            |
-| ---------- | ----------------- | ------------------------------------------------- |
-| `-t`       | Список всех тегов | `v2dat unpack geosite -t file.dat`                |
-| `-p`       | Вывод в stdout    | `v2dat unpack geosite -p -f google file.dat`      |
-| `-o <dir>` | Директория вывода | `v2dat unpack geosite -o /tmp -f google file.dat` |
-| `-f <tag>` | Фильтр по тегу    | `v2dat unpack geosite -f netflix file.dat`        |
+| Опция      | Описание                         | Пример                                            |
+| ---------- | -------------------------------- | ------------------------------------------------- |
+| `-t`       | Список всех тегов                | `v2dat unpack geosite -t file.dat`                |
+| `-p`       | Вывод в stdout                   | `v2dat unpack geosite -p -f google file.dat`      |
+| `-o <dir>` | Директория вывода                | `v2dat unpack geosite -o /tmp -f google file.dat` |
+| `-f <tag>` | Фильтр по тегу (можно несколько) | `v2dat unpack geosite -f netflix file.dat`        |
 
 ### Справочник расположения файлов
 

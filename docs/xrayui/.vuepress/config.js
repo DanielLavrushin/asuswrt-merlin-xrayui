@@ -17,7 +17,8 @@ const links_en = [
   { text: 'Transparent Proxy (TPROXY)', link: '/en/tproxy.md' },
   { text: 'Reality TLS Scanner', link: '/en/rtls-scanner.md' },
   { text: 'Custom Geosite Files', link: '/en/custom-geodata.md' },
-  { text: 'Inspect Geosite and GeoIP Databases', link: '/en/v2dat.md' }
+  { text: 'Inspect Geosite and GeoIP Databases', link: '/en/v2dat.md' },
+  { text: 'B4SNI Inspection', link: '/en/b4sni.md' }
 ];
 const links_ru = [
   { text: 'Как установить', link: '/ru/install.md' },
@@ -32,7 +33,8 @@ const links_ru = [
   { text: 'Прозрачный прокси (TPROXY)', link: '/ru/tproxy.md' },
   { text: 'Сканер Reality TLS', link: '/ru/rtls-scanner.md' },
   { text: 'Пользовательские файлы геоданных', link: '/ru/custom-geodata.md' },
-  { text: 'Инспекция баз данных Geosite и GeoIP', link: '/ru/v2dat.md' }
+  { text: 'Инспекция баз данных Geosite и GeoIP', link: '/ru/v2dat.md' },
+  { text: 'B4SNI: Инспекция SNI', link: '/ru/b4sni.md' }
 ];
 export default defineUserConfig({
   base: '/asuswrt-merlin-xrayui/',

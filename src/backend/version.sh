@@ -144,8 +144,16 @@ switch_xray_version() {
 
 version_get_arch_name() {
 
-    local archname="$1"
+    local packname="$1"
+
     local arch=$(uname -m)
+
+    # if os provided
+    if [ -n "$2" ]; then
+        local archname="${packname}-$2"
+    else
+        local archname="$packname"
+    fi
 
     local asset_name=""
     case "$arch" in
@@ -159,7 +167,14 @@ version_get_arch_name() {
         asset_name="$archname-armv5.tar.gz"
         ;;
     aarch64 | arm64)
-        asset_name="$archname-arm64v8.tar.gz"
+        case "$packname" in
+        b4sni)
+            asset_name="$archname-arm64.tar.gz"
+            ;;
+        *)
+            asset_name="$archname-arm64v8.tar.gz"
+            ;;
+        esac
         ;;
     mips)
         asset_name="$archname-mips.tar.gz"

@@ -650,6 +650,16 @@
       "countries": "Страны",
       "closest": "Ближайший домен",
       "scan_progress": "Сканирование в процессе..."
+    },
+    "SniLogs": {
+      "title": "SNI логи",
+      "display": "показать",
+      "clear_logs": "очистить логи",
+      "no_logs": "SNI логи недоступны",
+      "total": "всего",
+      "unique_sni": "уникальных SNI",
+      "export_csv": "экспорт CSV",
+      "raw": "исходные данные"
     }
   }
 }

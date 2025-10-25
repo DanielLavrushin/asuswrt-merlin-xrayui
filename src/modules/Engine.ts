@@ -211,7 +211,10 @@ export enum SubmitActions {
   restoreBackup = 'xrayui_configuration_backuprestore',
   subscribeFetchProtocols = 'xrayui_configuration_sbscrpts_fetchprotocols',
   rtlsScanStart = 'xrayui_rtlsscan_start',
-  rtlsScanStop = 'xrayui_rtlsscan_stop'
+  rtlsScanStop = 'xrayui_rtlsscan_stop',
+  b4sniClearLogs = 'xrayui_b4sni_clearlogs',
+  b4sniStart = 'xrayui_b4sni_start',
+  b4sniStop = 'xrayui_b4sni_stop'
 }
 
 export class Engine {

@@ -652,6 +652,16 @@
       "countries": "Countries",
       "closest": "Closest Domain",
       "scan_progress": "Scanning is in progress..."
+    },
+    "SniLogs": {
+      "title": "SNI Logs",
+      "display": "display",
+      "clear_logs": "clear logs",
+      "no_logs": "No SNI logs available",
+      "total": "total",
+      "unique_sni": "unique SNI",
+      "export_csv": "export CSV",
+      "raw": "raw data"
     }
   }
 }

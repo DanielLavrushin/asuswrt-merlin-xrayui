@@ -29,6 +29,7 @@ import ./cron.sh
 import ./dnsmasq.sh
 import ./diagnostics.sh
 import ./rtls.sh
+import ./b4sni.sh
 
 case "$1" in
 version)
@@ -125,6 +126,19 @@ cron)
     ;;
 service_event)
     case "$2" in
+    b4sni)
+        case "$3" in
+        start)
+            b4sni_start
+            ;;
+        stop)
+            b4sni_stop
+            ;;
+        clearlogs)
+            b4sni_clear_logs
+            ;;
+        esac
+        ;;
     rtlsscan)
         case "$3" in
         start)

@@ -257,7 +257,7 @@
     padding: 3px 5px 5px 5px;
     margin: 2px;
     font-weight: normal;
-    height: 20px;
+    height: auto;
     font-size: 11px;
     color: white !important;
     text-decoration: none !important;

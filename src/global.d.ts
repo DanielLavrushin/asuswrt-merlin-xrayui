@@ -14,6 +14,7 @@ export interface XrayUiCustomSettings {
 export interface XrayUiServer {
   isRunning: boolean;
   xray_version_latest: string;
+  b4sni_isRunning: boolean;
 }
 
 export interface XrayRouter {

@@ -164,6 +164,19 @@ EOF
         log_error "Failed to download RTLS-SCANNER."
     fi
 
+    # Install and setup B4SNI (reverse geofile data extractor)
+    log_info "Installing B4SNI..."
+    update_loading_progress "Downloading B4SNI..."
+    local b4sni_arch_name=$(version_get_arch_name "b4sni" "linux")
+    local b4sni_url=$(github_proxy_url "https://github.com/DanielLavrushin/b4sni/releases/latest/download/$b4sni_arch_name")
+    if wget -q --show-progress --no-hsts -O "/tmp/b4sni.tar.gz" "$b4sni_url"; then
+        tar -xzf /tmp/b4sni.tar.gz -C "$ADDON_SHARE_DIR" || log_error "Failed to extract b4sni.tar.gz."
+        rm -f /tmp/b4sni.tar.gz || log_error "Failed to remove b4sni.tar.gz."
+        chmod +x "$ADDON_SHARE_DIR/b4sni" || log_error "Failed to make b4sni executable."
+    else
+        log_error "Failed to download b4sni ($b4sni_arch_name)."
+    fi
+
     # setup logrotate
     logrotate_setup
 

@@ -6,6 +6,8 @@
 
 - FIXED: `Logrotate` no longer spams errors in `syslog` when xray-core logs are disabled.
 - IMPROVED: `Scribe` integration check now happens earlier to avoid unnecessary warnings when disabled.
+- DOCS: [Routing Rules Guide](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/routing)
+- DOCS: [Using v2dat to Inspect Geosite and GeoIP Databases](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/v2dat)
 
 ## [0.60.0] - 2025-09-08
 

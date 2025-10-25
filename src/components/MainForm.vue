@@ -54,6 +54,7 @@
                                 v-if="isAdvanced && (config.log?.access != 'none' || config.log?.error != 'none')"
                                 v-model:logs="config.log!"
                               ></logs-manager>
+                              <sni-logs v-if="isAdvanced"></sni-logs>
                               <version></version>
                             </div>
                           </td>
@@ -97,6 +98,7 @@
   import TabMenu from './asus/TabMenu.vue';
   import SubMenu from './asus/SubMenu.vue';
   import SimpleMode from './SimpleMode.vue';
+  import SniLogs from './SniLogs.vue';
 
   export default defineComponent({
     name: 'MainForm',
@@ -116,7 +118,8 @@
       StreamSettingsModal,
       LogsManager,
       ReverseProxy,
-      SimpleMode
+      SimpleMode,
+      SniLogs
     },
 
     setup() {

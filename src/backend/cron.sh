@@ -31,6 +31,16 @@ cron_logrotate_add() {
 # Run logrotate once (called by CRU)
 #
 cron_logrotate_run() {
+
+    #Check if logs are actually enabled
+    load_xrayui_config
+    local log_access="$(jq -r '.log.access // "none"' "$XRAY_CONFIG_FILE")"
+    local log_error="$(jq -r '.log.error // "none"' "$XRAY_CONFIG_FILE")"
+    if [ "$log_access" = "none" ] && [ "$log_error" = "none" ]; then
+        log_debug "Both access and error logs are disabled. Skipping logrotate."
+        return 0
+    fi
+
     log_info "Running logrotate for $ADDON_TITLE"
 
     [ -f "$LR_CONF" ] || {

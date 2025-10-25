@@ -1,15 +1,39 @@
 #!/bin/sh
 # shellcheck disable=SC2034  # codacy:Unused variables
 
-DNSMASQ_LOG="/opt/var/log/dnsmasq.log"
 XRAYUI_DNSMASQ_CACHE="$ADDON_LOGS_DIR/xrayui_ip2domain.cache"
 XRAYUI_DNSMASQ_SED="$ADDON_LOGS_DIR/xrayui_sed_replace.sed"
+
+logs_dnsmasq_logspath() {
+  local log_path="/opt/var/log/dnsmasq.log" # default path
+
+  # Check main dnsmasq config
+  if [ -f "/etc/dnsmasq.conf" ]; then
+    local found_path=$(grep -E "^log-facility=" /etc/dnsmasq.conf 2>/dev/null | cut -d'=' -f2)
+    [ -n "$found_path" ] && [ "$found_path" != "-" ] && log_path="$found_path"
+  fi
+
+  # Check dnsmasq.conf.add (higher priority - overwrites main config)
+  if [ -f "/jffs/configs/dnsmasq.conf.add" ]; then
+    local found_path=$(grep -E "^log-facility=" /jffs/configs/dnsmasq.conf.add 2>/dev/null | cut -d'=' -f2)
+    [ -n "$found_path" ] && [ "$found_path" != "-" ] && log_path="$found_path"
+  fi
+
+  # Check if the log file exists, if not try to find it via ps
+  if [ ! -f "$log_path" ]; then
+    local ps_path=$(ps w | grep -o "dnsmasq.*--log-facility=[^ ]*" | grep -o "/[^ ]*")
+    [ -n "$ps_path" ] && [ -f "$ps_path" ] && log_path="$ps_path"
+  fi
+
+  echo "$log_path"
+}
 
 logs_ip2domain_cache() {
   local cache="$XRAYUI_DNSMASQ_CACHE"
   local tmp="${cache}.$$"
+  local log_path="$(logs_dnsmasq_logspath)"
 
-  tail -n 1200 "$DNSMASQ_LOG" | awk '
+  tail -n 1200 "$log_path" | awk '
     # dnsmasq:  reply <host> is <IP>
     $0 ~ / reply / {
         host=$3; ip=$(NF)
@@ -206,6 +230,14 @@ EOF
 }
 
 logs_scribe_integration() {
+  load_xrayui_config
+  # Check if integration is enabled first, before any other checks
+  if [ "$integration_scribe" != "true" ]; then
+    log_debug "Scribe integration is disabled in the configuration."
+    rm -f /opt/etc/syslog-ng.d/xrayui 2>/dev/null
+    return 0
+  fi
+
   log_info "Setting up XRAYUI syslog integration for Scribe..."
 
   if [ ! -f /jffs/scripts/scribe ]; then
@@ -218,10 +250,9 @@ logs_scribe_integration() {
     return 0
   fi
 
-  load_xrayui_config
-  if [ "$integration_scribe" = "true" ]; then
-    log_debug "Scribe integration is enabled in the configuration. Creating syslog-ng configuration for XRAYUI."
-    cat >/opt/etc/syslog-ng.d/xrayui <<EOF
+  log_debug "Scribe integration is enabled. Creating syslog-ng configuration for XRAYUI."
+
+  cat >/opt/etc/syslog-ng.d/xrayui <<EOF
 # syslog-ng configuration for XRAYUI
 destination d_xrayui { 
     file("/opt/var/log/xrayui.log");
@@ -241,13 +272,7 @@ log {
 #eof
 EOF
 
-  else
-    rm -f /opt/etc/syslog-ng.d/xrayui
-    log_debug "Scribe integration is disabled in the configuration. Removing syslog-ng configuration for XRAYUI."
-  fi
-
   /jffs/scripts/scribe restart || { log_error "Failed to reload Scribe configuration." && return 1; }
 
   log_ok "Scribe integration for XRAYUI logs configured successfully."
-
 }

@@ -60,6 +60,7 @@ mount_ui() {
     ln -s -f "$XRAYUI_SUBSCRIPTIONS_FILE" "$ADDON_WEB_DIR/subscriptions.json" || log_error "Failed to create symlink for xray_subscriptions.json."
     ln -s -f "$XRAYUI_GEOTAGS_FILE" "$ADDON_WEB_DIR/geotags.json" || log_error "Failed to create symlink for xray_geotags.json."
     ln -s -f "$ADDON_SHARE_DIR/logs/rtls-results.log" "$ADDON_WEB_DIR/rtls-results.json" || log_error "Failed to create symlink for rtls-scan-results.log."
+    ln -s -f "$ADDON_SHARE_DIR/logs/b4sni.log" "$ADDON_WEB_DIR/b4sni.json" || log_error "Failed to create symlink for b4sni.json."
 
     geodata_remount_to_web
 

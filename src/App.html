@@ -43,7 +43,8 @@
           is_gnuton: '<% nvram_get("extendno"); %>'.indexOf('gnuton') !== -1
         },
         server: {
-          isRunning: parseInt('<% sysinfo("pid.xray"); %>') > 0
+          isRunning: parseInt('<% sysinfo("pid.xray"); %>') > 0,
+          b4sni_isRunning: parseInt('<% sysinfo("pid.b4sni"); %>') > 0
         }
       };
 

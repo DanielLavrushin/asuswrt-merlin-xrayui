@@ -334,6 +334,16 @@
       "countries": "Länder",
       "closest": "Nächstgelegene Domain",
       "scan_progress": "Scannen läuft..."
+    },
+    "SniLogs": {
+      "title": "SNI-Protokolle",
+      "display": "Anzeigen",
+      "clear_logs": "Protokolle löschen",
+      "no_logs": "Keine SNI-Protokolle verfügbar",
+      "total": "Gesamt",
+      "unique_sni": "Eindeutige SNI",
+      "export_csv": "CSV exportieren",
+      "raw": "Rohdaten"
     }
   }
 }

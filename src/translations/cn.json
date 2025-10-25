@@ -648,6 +648,16 @@
       "countries": "国家",
       "closest": "最近的域名",
       "scan_progress": "扫描进行中..."
+    },
+    "SniLogs": {
+      "title": "SNI 日志",
+      "display": "显示",
+      "clear_logs": "清除日志",
+      "no_logs": "无可用的 SNI 日志",
+      "total": "总计",
+      "unique_sni": "唯一 SNI",
+      "export_csv": "导出 CSV",
+      "raw": "原始数据"
     }
   }
 }

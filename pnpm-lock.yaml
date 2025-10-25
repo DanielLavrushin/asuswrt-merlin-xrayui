@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       axios:
-        specifier: ^1.9.0
+        specifier: ^1.12.0
         version: 1.12.0
       class-transformer:
         specifier: ^0.5.1
@@ -39,8 +39,8 @@ importers:
         specifier: ^1.10.0
         version: 1.10.0
       version-compare:
-        specifier: ^3.11.0
-        version: 3.11.0
+        specifier: ^3.12.0
+        version: 3.12.0
       vue:
         specifier: ^3.5.21
         version: 3.5.22(typescript@5.8.3)
@@ -48,8 +48,8 @@ importers:
         specifier: ^11.1.12
         version: 11.1.12(vue@3.5.22(typescript@5.8.3))
       vue-json-pretty:
-        specifier: ^2.4.0
-        version: 2.4.0(vue@3.5.22(typescript@5.8.3))
+        specifier: ^2.5.0
+        version: 2.5.0(vue@3.5.22(typescript@5.8.3))
       vuedraggable:
         specifier: ^4.1.0
         version: 4.1.0(vue@3.5.22(typescript@5.8.3))
@@ -1932,10 +1932,6 @@ packages:
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
 
-  editions@6.21.0:
-    resolution: {integrity: sha512-ofkXJtn7z0urokN62DI3SBo/5xAtF0rR7tn+S/bSYV79Ka8pTajIIl+fFQ1q88DQEImymmo97M4azY3WX/nUdg==}
-    engines: {node: '>=4'}
-
   editions@6.22.0:
     resolution: {integrity: sha512-UgGlf8IW75je7HZjNDpJdCv4cGJWIi6yumFdZ0R7A8/CIhQiWUjyGLCxdHpd8bmyD1gnkfUNK0oeOXqUS2cpfQ==}
     engines: {ecmascript: '>= es5', node: '>=4'}
@@ -3162,12 +3158,8 @@ packages:
     resolution: {integrity: sha512-ec0GBmvFd0UbJMjorf9TCfbhoftaenc0EZBTtuxpM3jJ+imNQ9lLemL+VAhZq03NdJ9hQDgydaOEn+lRHcMZOA==}
     engines: {node: '>=4'}
 
-  version-compare@3.11.0:
-    resolution: {integrity: sha512-sufLk/bD3oq+iLzWk8FOHfYwVIaC3NLJcvMqnggmakwNskyKyM+u8x1F8NdwjlLVgC8oYSTgB0RK68VCT6wQOg==}
-    engines: {node: '>=4'}
-
-  version-range@4.14.0:
-    resolution: {integrity: sha512-gjb0ARm9qlcBAonU4zPwkl9ecKkas+tC2CGwFfptTCWWIVTWY1YUbT2zZKsOAF1jR/tNxxyLwwG0cb42XlYcTg==}
+  version-compare@3.12.0:
+    resolution: {integrity: sha512-okm2QaHSGDCOH58HGbfv7aWDVDvJouaZmzJF126CkWsZ7x5fQA/3pSACHM9gXPKfOvV3oOnb5gYyt8feSJqGrw==}
     engines: {node: '>=4'}
 
   version-range@4.15.0:
@@ -3228,8 +3220,8 @@ packages:
     peerDependencies:
       vue: ^3.0.0
 
-  vue-json-pretty@2.4.0:
-    resolution: {integrity: sha512-e9bP41DYYIc2tWaB6KuwqFJq5odZ8/GkE6vHQuGcbPn37kGk4a3n1RNw3ZYeDrl66NWXgTlOfS+M6NKkowmkWw==}
+  vue-json-pretty@2.5.0:
+    resolution: {integrity: sha512-nZA6qXYaiMaE2J0HkKtkrLcPJoN03SDSBdZWEPiRwoOVySWOfoZCyadhBwBN6wAHTga+c/R49ExGWoKFXnu37A==}
     engines: {node: '>= 10.0.0', npm: '>= 5.0.0'}
     peerDependencies:
       vue: '>=3.0.0'
@@ -5276,10 +5268,6 @@ snapshots:
 
   eastasianwidth@0.2.0: {}
 
-  editions@6.21.0:
-    dependencies:
-      version-range: 4.14.0
-
   editions@6.22.0:
     dependencies:
       version-range: 4.15.0
@@ -6662,11 +6650,9 @@ snapshots:
     dependencies:
       editions: 6.22.0
 
-  version-compare@3.11.0:
+  version-compare@3.12.0:
     dependencies:
-      editions: 6.21.0
-
-  version-range@4.14.0: {}
+      editions: 6.22.0
 
   version-range@4.15.0: {}
 
@@ -6696,7 +6682,7 @@ snapshots:
       '@vue/devtools-api': 6.6.4
       vue: 3.5.22(typescript@5.8.3)
 
-  vue-json-pretty@2.4.0(vue@3.5.22(typescript@5.8.3)):
+  vue-json-pretty@2.5.0(vue@3.5.22(typescript@5.8.3)):
     dependencies:
       vue: 3.5.22(typescript@5.8.3)
 

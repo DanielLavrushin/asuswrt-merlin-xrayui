@@ -6,7 +6,9 @@
 
 - ADDED: `B4SNI` [Support](https://github.com/DanielLavrushin/b4sni). Introduce a new way of monitoring and inspecting SNI extraction.
 - FIXED: `Logrotate` no longer spams errors in `syslog` when xray-core logs are disabled.
+- FIXED: `DNSMasq logs` - IP-to-domain resolution now works correctly with custom dnsmasq log locations set via `dnsmasq.conf.add`
 - IMPROVED: `Scribe` integration check now happens earlier to avoid unnecessary warnings when disabled.
+- IMPROVED: When uninstalling, ask for removing the `/opt/etc/xrayui.conf`
 - DOCS: [Routing Rules Guide](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/routing)
 - DOCS: [Using v2dat to Inspect Geosite and GeoIP Databases](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/v2dat)
 - DOCS: [Using b4sni tool to Inspect SNI](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/b4sni)

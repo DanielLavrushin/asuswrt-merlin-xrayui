@@ -334,6 +334,17 @@ uninstall() {
         log_info "Keeping XRAY and its configuration files."
     fi
 
+    # Ask user to remove xrayui settings
+    echo
+    log_warn "Do you want to remove XRAYUI settings (/opt/etc/xrayui.conf)? (yes/no)"
+    read -r user_input
+    if [ "$user_input" = "yes" ] || [ "$user_input" = "y" ]; then
+        log_info "Removing XRAYUI settings..."
+        rm -f /opt/etc/xrayui.conf || log_debug "Failed to remove /opt/etc/xrayui.conf."
+    else
+        log_info "Keeping XRAYUI (/opt/etc/xrayui.conf) settings."
+    fi
+
     cron_jobs_clear
 
     rm -rf /opt/etc/logrotate.d/xrayui || log_debug "Failed to remove /opt/etc/logrotate.d/xrayui."

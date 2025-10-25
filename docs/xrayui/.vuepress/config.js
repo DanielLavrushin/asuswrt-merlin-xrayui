@@ -7,6 +7,7 @@ import { removeHtmlExtensionPlugin } from 'vuepress-plugin-remove-html-extension
 const links_en = [
   { text: 'How to install', link: '/en/install.md' },
   { text: 'Interface Overview', link: '/en/interface.md' },
+  { text: 'Routing Rules Guide', link: '/en/routing.md' },
   { text: 'General Options', link: '/en/general-options.md' },
   { text: 'Importing the Configuration', link: '/en/import-config.md' },
   { text: 'Bypass/Redirect Policy', link: '/en/br-policy.md' },
@@ -15,11 +16,13 @@ const links_en = [
   { text: 'Securely Share Config', link: '/en/share-config.md' },
   { text: 'Transparent Proxy (TPROXY)', link: '/en/tproxy.md' },
   { text: 'Reality TLS Scanner', link: '/en/rtls-scanner.md' },
-  { text: 'Custom Geosite Files', link: '/en/custom-geodata.md' }
+  { text: 'Custom Geosite Files', link: '/en/custom-geodata.md' },
+  { text: 'Inspect Geosite and GeoIP Databases', link: '/en/v2dat.md' }
 ];
 const links_ru = [
   { text: 'Как установить', link: '/ru/install.md' },
   { text: 'Обзор интерфейса', link: '/ru/interface.md' },
+  { text: 'Руководство по правилам маршрутизации', link: '/ru/routing.md' },
   { text: 'Общие параметры', link: '/ru/general-options.md' },
   { text: 'Импорт конфигурации', link: '/ru/import-config.md' },
   { text: 'Политика обхода/перенаправления', link: '/ru/br-policy.md' },
@@ -28,7 +31,8 @@ const links_ru = [
   { text: 'Безопасный обмен конфигом', link: '/ru/share-config.md' },
   { text: 'Прозрачный прокси (TPROXY)', link: '/ru/tproxy.md' },
   { text: 'Сканер Reality TLS', link: '/ru/rtls-scanner.md' },
-  { text: 'Пользовательские файлы геоданных', link: '/ru/custom-geodata.md' }
+  { text: 'Пользовательские файлы геоданных', link: '/ru/custom-geodata.md' },
+  { text: 'Инспекция баз данных Geosite и GeoIP', link: '/ru/v2dat.md' }
 ];
 export default defineUserConfig({
   base: '/asuswrt-merlin-xrayui/',

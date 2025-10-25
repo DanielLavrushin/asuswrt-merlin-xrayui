@@ -4,10 +4,12 @@
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
+- ADDED: `B4SNI` [Support](https://github.com/DanielLavrushin/b4sni). Introduce a new way of monitoring and inspecting SNI extraction.
 - FIXED: `Logrotate` no longer spams errors in `syslog` when xray-core logs are disabled.
 - IMPROVED: `Scribe` integration check now happens earlier to avoid unnecessary warnings when disabled.
 - DOCS: [Routing Rules Guide](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/routing)
 - DOCS: [Using v2dat to Inspect Geosite and GeoIP Databases](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/v2dat)
+- DOCS: [Using b4sni tool to Inspect SNI](https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/b4sni)
 
 ## [0.60.0] - 2025-09-08
 

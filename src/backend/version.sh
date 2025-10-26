@@ -55,6 +55,9 @@ switch_xray_version() {
     update_loading_progress "Stopping Xray service..."
     stop
 
+    log_info "Sleeping for 3 seconds to ensure dnsmasq has restarted..."
+    sleep 3
+
     update_loading_progress "Downloading Xray release version..."
     log_ok "Downloading Xray asset metadata $version_url"
 

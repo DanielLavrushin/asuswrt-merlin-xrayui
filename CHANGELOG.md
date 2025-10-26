@@ -1,5 +1,11 @@
 # XRAYUI Changelog
 
+## [0.61.x] - 2025-1x-xx
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- IMPROVED: Add a small delay (3 seconds) when performing XRAY update to ensure `dnsmasq` got restarted before downloading XRAY assets.
+
 ## [0.61.0] - 2025-10-25
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

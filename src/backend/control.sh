@@ -35,6 +35,7 @@ start() {
         rm -f "$ADDON_LOGS_DIR/xray_access.log"
         rm -f "$ADDON_LOGS_DIR/xray_error.log"
         rm -f "$ADDON_LOGS_DIR/xrayui_ip2domain.cache"
+        rm -f "$ADDON_LOGS_DIR/b4sni.log*"
     fi
 
     if [ ! -d "$ADDON_LOGS_DIR" ]; then

@@ -2,7 +2,10 @@
   <div class="formfontdesc">
     <div class="log-card">
       <header class="log-card-bar">
-        <h3>{{ $t('com.SniLogs.title') }}</h3>
+        <h3>
+          {{ $t('com.SniLogs.title') }}
+          <span class="label label-success" v-if="isb4sniRunning">on</span>
+        </h3>
         <div class="actions">
           <input class="button_gen button_gen_small" type="button" v-if="!isb4sniRunning" :value="$t('labels.start')" @click.prevent="start()" />
           <input class="button_gen button_gen_small" type="button" v-if="isb4sniRunning" :value="$t('labels.stop')" @click.prevent="stop()" />
@@ -208,7 +211,7 @@
         const destinationPort = destination.substring(destColonIndex + 1);
 
         // Format time (remove milliseconds)
-        const formattedTime = timestamp.split('.')[0];
+        const formattedTime = convertToLocalTime(timestamp.split('.')[0]);
 
         // Look up device name
         const deviceInfo = devices.value[sourceIp];
@@ -310,7 +313,18 @@
 
     refreshInterval.value = window.setInterval(fetchLogs, 3000);
   };
+  function convertToLocalTime(timeStr: string, serverTimezone: string = 'UTC'): string {
+    const today = new Date().toISOString().split('T')[0];
 
+    const dateTimeStr = `${today}T${timeStr}Z`;
+    const date = new Date(dateTimeStr);
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+  }
   const exportCsv = () => {
     const headers = ['Time', 'Protocol', 'Source IP', 'Source Port', 'Device', 'Dest IP', 'Dest Port', 'SNI'];
     const rows = filteredLogs.value.map((log) => [log.time, log.protocol, log.sourceIp, log.sourcePort, log.sourceDevice || '', log.destinationIp, log.destinationPort, log.sni]);

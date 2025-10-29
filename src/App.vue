@@ -102,6 +102,24 @@
     }
   }
 
+  span.label {
+    color: white !important;
+    padding: 3px 5px;
+    border-radius: 4px;
+    margin: 4px 0 0 0;
+    font-weight: bold;
+    &.label-error {
+      background-color: red;
+    }
+    &.label-success {
+      background-color: green;
+    }
+    &.label-warning {
+      background-color: $c_yellow;
+      color: #596e74;
+    }
+  }
+
   .hint-small {
     font-size: 8pt;
   }
@@ -168,27 +186,6 @@
     }
 
     td {
-      span.label {
-        color: white;
-        padding: 3px 5px;
-        border-radius: 4px;
-        margin: 4px 0 0 0;
-        font-weight: bold;
-      }
-
-      span {
-        &.label-error {
-          background-color: red;
-        }
-        &.label-success {
-          background-color: green;
-        }
-        &.label-warning {
-          background-color: $c_yellow;
-          color: #596e74;
-        }
-      }
-
       &.height-overflow {
         max-height: 140px;
         overflow: hidden;

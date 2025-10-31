@@ -197,3 +197,28 @@ diagnostics_iptables() {
 
     log_ok "iptables diagnostics completed successfully"
 }
+
+diagnostics_dns() {
+    log_info_box "Running DNS diagnostics for $ADDON_TITLE"
+    log_info
+
+    load_xrayui_config
+
+    log_info $(diagnostics_hdr "dnsmasq.conf xrayui section:")
+    sed -n '/#xrayui start/,/#xrayui end/p' /etc/dnsmasq.conf 2>&1
+
+    log_info "--------------------------------------------------------"
+    log_info
+
+    log_info $(diagnostics_hdr "Testing google.com:")
+    dig @127.0.0.1 google.com +short
+    log_info "--------------------------------------------------------"
+    log_info
+
+    log_info $(diagnostics_hdr "Xray config - DNS inbound:")
+    jq '.inbounds[] | select(.settings.port==53)' $XRAY_CONFIG_FILE
+    log_info "--------------------------------------------------------"
+    log_info
+
+    log_ok "DNS diagnostics completed successfully"
+}

@@ -87,6 +87,9 @@ diagnostics)
     env)
         diagnostics_env
         ;;
+    dns)
+        diagnostics_dns
+        ;;
     xrayui)
         diagnostics_xrayui
         ;;

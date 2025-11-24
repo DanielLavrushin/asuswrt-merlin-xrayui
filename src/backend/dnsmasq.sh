@@ -175,7 +175,7 @@ EOF
         index($0,":") {print > "'"$G6"'" ; next}
         {print > "'"$G4"'"}'
 
-            IPSET_CONF_NEW="$IPSET_CONF.$$"
+            IPSET_CONF_NEW="/tmp/xrayui_ipset_conf.$$"
             : >"$IPSET_CONF_NEW"
 
             dnsmasq_nets_to_ipset_bulk "$SET_V4" inet "$G4" "$IPSET_CONF_NEW"

@@ -38,6 +38,9 @@ start() {
         rm -f "$ADDON_LOGS_DIR/b4sni.log*"
     fi
 
+    # Clean up ASUS backup daemon leftovers
+    rm -f /jffs/.asdbk/xrayui_* 2>/dev/null
+
     if [ ! -d "$ADDON_LOGS_DIR" ]; then
         mkdir -p "$ADDON_LOGS_DIR"
     fi

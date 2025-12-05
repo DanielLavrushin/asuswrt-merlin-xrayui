@@ -10,9 +10,15 @@ reality_generate_keys() {
         return 1
     fi
 
-    local private_key=$(echo "$xray_output" | grep 'Private key:' | awk -F'Private key: ' '{print $2}')
-    local public_key=$(echo "$xray_output" | grep 'Public key:' | awk -F'Public key: ' '{print $2}')
+    # Try new format first (PrivateKey/Password)
+    local private_key=$(echo "$xray_output" | grep 'PrivateKey:' | awk '{print $2}')
+    local public_key=$(echo "$xray_output" | grep 'Password:' | awk '{print $2}')
 
+    # Fallback to legacy format (Private key/Public key)
+    if [ -z "$private_key" ] || [ -z "$public_key" ]; then
+        private_key=$(echo "$xray_output" | grep 'Private key:' | awk -F'Private key: ' '{print $2}')
+        public_key=$(echo "$xray_output" | grep 'Public key:' | awk -F'Public key: ' '{print $2}')
+    fi
     if [ -z "$private_key" ] || [ -z "$public_key" ]; then
         log_error "Failed to extract Reality keys from xray x25519 output."
         return 1

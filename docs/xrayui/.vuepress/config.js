@@ -34,6 +34,7 @@ const links_ru = [
   { text: 'Сканер Reality TLS', link: '/ru/rtls-scanner.md' },
   { text: 'Пользовательские файлы геоданных', link: '/ru/custom-geodata.md' },
   { text: 'Инспекция баз данных Geosite и GeoIP', link: '/ru/v2dat.md' },
+  { text: 'Логирование в XRAY', link: '/ru/logs.md' },
   { text: 'B4SNI: Инспекция SNI', link: '/ru/b4sni.md' }
 ];
 export default defineUserConfig({

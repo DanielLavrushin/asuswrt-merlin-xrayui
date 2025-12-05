@@ -330,11 +330,25 @@ remove_loading_progress() {
 fixme() {
     log_info "Attempting to fix XRAY UI issues..."
 
+    # Check disk space first
+    local jffs_usage=$(df /jffs 2>/dev/null | awk 'NR==2 {print $5}' | tr -d '%')
+    if [ -n "$jffs_usage" ] && [ "$jffs_usage" -gt 90 ]; then
+        log_warn "/jffs is ${jffs_usage}% full! Listing large files:"
+        find /jffs -type f -size +100k -exec ls -lh {} \; 2>/dev/null | head -20
+        log_warn "Consider removing old backups or logs before proceeding."
+    fi
+
     log_info "Removing XRAY broken payload settings..."
-    sed -i '/^xray_payload/d' /jffs/addons/custom_settings.txt || log_warn "Failed to remove broken payload settings"
+    if grep -q '^xray_payload' /jffs/addons/custom_settings.txt 2>/dev/null; then
+        grep -v '^xray_payload' /jffs/addons/custom_settings.txt >/tmp/custom_settings.tmp &&
+            mv /tmp/custom_settings.tmp /jffs/addons/custom_settings.txt ||
+            log_warn "Failed to remove broken payload settings"
+    else
+        log_info "No broken payload settings found."
+    fi
 
     log_info "Removing file $UI_RESPONSE_FILE..."
-    rm -f $UI_RESPONSE_FILE || log_warn "Failed to remove $UI_RESPONSE_FILE"
+    rm -f "$UI_RESPONSE_FILE" || log_warn "Failed to remove $UI_RESPONSE_FILE"
 
     log_ok "Done with fixme function."
 }

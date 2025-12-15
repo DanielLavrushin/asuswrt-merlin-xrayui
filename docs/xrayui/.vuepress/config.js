@@ -35,7 +35,8 @@ const links_ru = [
   { text: 'Пользовательские файлы геоданных', link: '/ru/custom-geodata.md' },
   { text: 'Инспекция баз данных Geosite и GeoIP', link: '/ru/v2dat.md' },
   { text: 'Логирование в XRAY', link: '/ru/logs.md' },
-  { text: 'B4SNI: Инспекция SNI', link: '/ru/b4sni.md' }
+  { text: 'B4SNI: Инспекция SNI', link: '/ru/b4sni.md' },
+  { text: 'Включение Swap', link: '/ru/swap.md' }
 ];
 export default defineUserConfig({
   base: '/asuswrt-merlin-xrayui/',

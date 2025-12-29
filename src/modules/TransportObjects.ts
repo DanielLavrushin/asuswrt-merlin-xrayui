@@ -1,5 +1,13 @@
 import { plainToInstance } from 'class-transformer';
-import { XrayHeaderObject, XrayParsedUrlObject, XrayXmuxObject, isObjectEmpty } from './CommonObjects';
+import {
+  XrayHeaderObject,
+  XrayParsedUrlObject,
+  XrayXmuxObject,
+  XraySockoptObject,
+  XrayStreamTlsSettingsObject,
+  XrayStreamRealitySettingsObject,
+  isObjectEmpty
+} from './CommonObjects';
 import { ITransportNetwork } from './Interfaces';
 
 export class XrayStreamTcpSettingsObject implements ITransportNetwork {
@@ -73,7 +81,7 @@ export class XrayStreamWsSettingsObject implements ITransportNetwork {
 }
 
 export class XrayStreamHttpSettingsObject implements ITransportNetwork {
-  static modes = ['auto', 'stream-up', 'stream-one'];
+  static modes = ['auto', 'packet-up', 'stream-up', 'stream-one'];
   public host?: string;
   public path? = '/';
   public mode? = 'auto';
@@ -115,6 +123,89 @@ export class XrayStreamHttpSettingsObject implements ITransportNetwork {
   };
 }
 
+export class XrayXhttpDownloadSettingsObject {
+  public address?: string;
+  public port?: number = 443;
+  public network?: string = 'xhttp';
+  public security?: string = 'tls';
+  public tlsSettings?: XrayStreamTlsSettingsObject;
+  public realitySettings?: XrayStreamRealitySettingsObject;
+  public xhttpSettings?: XrayXhttpDownloadXhttpSettingsObject;
+  public sockopt?: XraySockoptObject;
+
+  normalize = (): this | undefined => {
+    this.address = !this.address || this.address === '' ? undefined : this.address;
+    this.port = !this.port || this.port === 443 ? undefined : this.port;
+    // network must always be "xhttp" per XHTTP spec - cannot be omitted
+    this.network = 'xhttp';
+    this.security = !this.security || this.security === '' ? undefined : this.security;
+
+    if (this.tlsSettings && typeof this.tlsSettings.normalize === 'function') {
+      this.tlsSettings = this.tlsSettings.normalize();
+    }
+    if (!this.tlsSettings || isObjectEmpty(this.tlsSettings)) {
+      this.tlsSettings = undefined;
+    }
+
+    if (this.realitySettings && typeof this.realitySettings.normalize === 'function') {
+      this.realitySettings = this.realitySettings.normalize();
+    }
+    if (!this.realitySettings || isObjectEmpty(this.realitySettings)) {
+      this.realitySettings = undefined;
+    }
+
+    if (this.xhttpSettings && typeof this.xhttpSettings.normalize === 'function') {
+      this.xhttpSettings = this.xhttpSettings.normalize();
+    }
+    if (!this.xhttpSettings || isObjectEmpty(this.xhttpSettings)) {
+      this.xhttpSettings = undefined;
+    }
+
+    if (this.sockopt && typeof this.sockopt.normalize === 'function') {
+      this.sockopt = this.sockopt.normalize();
+    }
+    if (!this.sockopt || isObjectEmpty(this.sockopt)) {
+      this.sockopt = undefined;
+    }
+
+    return isObjectEmpty(this) ? undefined : this;
+  };
+}
+
+export class XrayXhttpDownloadXhttpSettingsObject {
+  public host?: string;
+  public path?: string = '/';
+  public mode?: string = 'auto';
+  public extra?: XrayXhttpDownloadExtraObject;
+
+  normalize = (): this | undefined => {
+    this.host = !this.host || this.host === '' ? undefined : this.host;
+    this.path = this.path === '/' ? undefined : this.path;
+    this.mode = this.mode === 'auto' ? undefined : this.mode;
+    if (this.extra) {
+      this.extra = plainToInstance(XrayXhttpDownloadExtraObject, this.extra);
+      this.extra = this.extra.normalize();
+    }
+    return isObjectEmpty(this) ? undefined : this;
+  };
+}
+
+export class XrayXhttpDownloadExtraObject {
+  xPaddingBytes?: string = '100-1000';
+  noSSEHeader?: boolean = false;
+  xmux?: XrayXmuxObject;
+
+  normalize = (): this | undefined => {
+    this.xPaddingBytes = this.xPaddingBytes === '100-1000' ? undefined : this.xPaddingBytes;
+    this.noSSEHeader = !this.noSSEHeader ? undefined : this.noSSEHeader;
+    if (this.xmux) {
+      this.xmux = plainToInstance(XrayXmuxObject, this.xmux);
+      this.xmux = this.xmux.normalize();
+    }
+    return isObjectEmpty(this) ? undefined : this;
+  };
+}
+
 export class XrayXhttpExtraObject {
   xPaddingBytes? = '100-1000';
   noGRPCHeader? = false;
@@ -124,6 +215,7 @@ export class XrayXhttpExtraObject {
   scMaxBufferedPosts? = 30;
   scStreamUpServerSecs? = '20-80';
   xmux?: XrayXmuxObject = new XrayXmuxObject();
+  downloadSettings?: XrayXhttpDownloadSettingsObject;
 
   normalize = (): this | undefined => {
     this.xPaddingBytes = this.xPaddingBytes === '100-1000' ? undefined : this.xPaddingBytes;
@@ -135,6 +227,10 @@ export class XrayXhttpExtraObject {
     this.scStreamUpServerSecs = this.scStreamUpServerSecs === '20-80' ? undefined : this.scStreamUpServerSecs;
     this.xmux = plainToInstance(XrayXmuxObject, this.xmux ?? {});
     this.xmux = this.xmux ? this.xmux.normalize() : undefined;
+    if (this.downloadSettings) {
+      this.downloadSettings = plainToInstance(XrayXhttpDownloadSettingsObject, this.downloadSettings);
+      this.downloadSettings = this.downloadSettings.normalize();
+    }
     return isObjectEmpty(this) ? undefined : this;
   };
 }

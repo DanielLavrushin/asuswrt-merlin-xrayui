@@ -8,29 +8,71 @@ import {
   XrayStreamHttpSettingsObject
 } from '@/modules/TransportObjects';
 
-const ensureXhttpSettings = (transportValue: XrayStreamSettingsObject): { xhttpSettings: XrayStreamHttpSettingsObject; extra: XrayXhttpExtraObject; xmux: XrayXmuxObject } => {
-  const xhttpSettings = transportValue.xhttpSettings ?? (transportValue.xhttpSettings = new XrayStreamHttpSettingsObject());
-  const extra = xhttpSettings.extra ?? (xhttpSettings.extra = new XrayXhttpExtraObject());
-  const xmux = extra.xmux ?? (extra.xmux = new XrayXmuxObject());
-  return { xhttpSettings, extra, xmux };
-};
+interface XhttpSettingsResult {
+  xhttpSettings: XrayStreamHttpSettingsObject;
+  extra: XrayXhttpExtraObject;
+  xmux: XrayXmuxObject;
+}
 
-const ensureDownloadSettings = (
-  extraValue: XrayXhttpExtraObject
-): {
+interface DownloadSettingsResult {
   settings: XrayXhttpDownloadSettingsObject;
   tls: XrayStreamTlsSettingsObject;
   reality: XrayStreamRealitySettingsObject;
   dxhttp: XrayXhttpDownloadXhttpSettingsObject;
   dxExtra: XrayXhttpDownloadExtraObject;
   dxMux: XrayXmuxObject;
-} => {
-  const settings = extraValue.downloadSettings ?? (extraValue.downloadSettings = new XrayXhttpDownloadSettingsObject());
-  const tls = settings.tlsSettings ?? (settings.tlsSettings = new XrayStreamTlsSettingsObject());
-  const reality = settings.realitySettings ?? (settings.realitySettings = new XrayStreamRealitySettingsObject());
-  const dxhttp = settings.xhttpSettings ?? (settings.xhttpSettings = new XrayXhttpDownloadXhttpSettingsObject());
-  const dxExtra = dxhttp.extra ?? (dxhttp.extra = new XrayXhttpDownloadExtraObject());
-  const dxMux = dxExtra.xmux ?? (dxExtra.xmux = new XrayXmuxObject());
+}
+
+const ensureXhttpSettings = (transportValue: XrayStreamSettingsObject): XhttpSettingsResult => {
+  if (!transportValue.xhttpSettings) {
+    transportValue.xhttpSettings = new XrayStreamHttpSettingsObject();
+  }
+  const xhttpSettings = transportValue.xhttpSettings;
+
+  if (!xhttpSettings.extra) {
+    xhttpSettings.extra = new XrayXhttpExtraObject();
+  }
+  const extra = xhttpSettings.extra;
+
+  if (!extra.xmux) {
+    extra.xmux = new XrayXmuxObject();
+  }
+  const xmux = extra.xmux;
+
+  return { xhttpSettings, extra, xmux };
+};
+
+const ensureDownloadSettings = (extraValue: XrayXhttpExtraObject): DownloadSettingsResult => {
+  if (!extraValue.downloadSettings) {
+    extraValue.downloadSettings = new XrayXhttpDownloadSettingsObject();
+  }
+  const settings = extraValue.downloadSettings;
+
+  if (!settings.tlsSettings) {
+    settings.tlsSettings = new XrayStreamTlsSettingsObject();
+  }
+  const tls = settings.tlsSettings;
+
+  if (!settings.realitySettings) {
+    settings.realitySettings = new XrayStreamRealitySettingsObject();
+  }
+  const reality = settings.realitySettings;
+
+  if (!settings.xhttpSettings) {
+    settings.xhttpSettings = new XrayXhttpDownloadXhttpSettingsObject();
+  }
+  const dxhttp = settings.xhttpSettings;
+
+  if (!dxhttp.extra) {
+    dxhttp.extra = new XrayXhttpDownloadExtraObject();
+  }
+  const dxExtra = dxhttp.extra;
+
+  if (!dxExtra.xmux) {
+    dxExtra.xmux = new XrayXmuxObject();
+  }
+  const dxMux = dxExtra.xmux;
+
   return { settings, tls, reality, dxhttp, dxExtra, dxMux };
 };
 
@@ -41,8 +83,9 @@ export function useXhttp(transport: Ref<XrayStreamSettingsObject>) {
   const xmux = ref<XrayXmuxObject>(ensuredXmux);
 
   const onHeaderUpdate = (headers: Record<string, unknown>): void => {
-    if (transport.value.xhttpSettings) {
-      transport.value.xhttpSettings.headers = headers;
+    const xhttpSettings = transport.value.xhttpSettings;
+    if (xhttpSettings) {
+      xhttpSettings.headers = headers;
     }
   };
 

@@ -116,8 +116,8 @@ export class XrayStreamHttpSettingsObject implements ITransportNetwork {
     this.scMaxBufferedPosts = this.scMaxBufferedPosts == 30 ? undefined : this.scMaxBufferedPosts;
     this.scStreamUpServerSecs = this.scStreamUpServerSecs === '20-80' ? undefined : this.scStreamUpServerSecs;
     this.headers = isObjectEmpty(this.headers) ? undefined : this.headers;
-    this.extra = plainToInstance<XrayXhttpExtraObject, XrayXhttpExtraObject>(XrayXhttpExtraObject, this.extra ?? {});
-    this.extra = this.extra ? this.extra.normalize() : undefined;
+    const extraInstance = plainToInstance(XrayXhttpExtraObject, this.extra ?? {});
+    this.extra = extraInstance ? extraInstance.normalize() : undefined;
 
     return isObjectEmpty(this) ? undefined : this;
   };
@@ -183,8 +183,8 @@ export class XrayXhttpDownloadXhttpSettingsObject {
     this.path = this.path === '/' ? undefined : this.path;
     this.mode = this.mode === 'auto' ? undefined : this.mode;
     if (this.extra) {
-      this.extra = plainToInstance<XrayXhttpDownloadExtraObject, XrayXhttpDownloadExtraObject>(XrayXhttpDownloadExtraObject, this.extra);
-      this.extra = this.extra.normalize();
+      const extraInstance = plainToInstance(XrayXhttpDownloadExtraObject, this.extra);
+      this.extra = extraInstance ? extraInstance.normalize() : undefined;
     }
     return isObjectEmpty(this) ? undefined : this;
   };
@@ -199,8 +199,8 @@ export class XrayXhttpDownloadExtraObject {
     this.xPaddingBytes = this.xPaddingBytes === '100-1000' ? undefined : this.xPaddingBytes;
     this.noSSEHeader = !this.noSSEHeader ? undefined : this.noSSEHeader;
     if (this.xmux) {
-      this.xmux = plainToInstance<XrayXmuxObject, XrayXmuxObject>(XrayXmuxObject, this.xmux ?? {});
-      this.xmux = this.xmux.normalize();
+      const xmuxInstance = plainToInstance(XrayXmuxObject, this.xmux);
+      this.xmux = xmuxInstance ? xmuxInstance.normalize() : undefined;
     }
     return isObjectEmpty(this) ? undefined : this;
   };
@@ -225,11 +225,11 @@ export class XrayXhttpExtraObject {
     this.scMinPostsIntervalMs = this.scMinPostsIntervalMs == 30 ? undefined : this.scMinPostsIntervalMs;
     this.scMaxBufferedPosts = this.scMaxBufferedPosts == 30 ? undefined : this.scMaxBufferedPosts;
     this.scStreamUpServerSecs = this.scStreamUpServerSecs === '20-80' ? undefined : this.scStreamUpServerSecs;
-    this.xmux = plainToInstance<XrayXmuxObject, XrayXmuxObject>(XrayXmuxObject, this.xmux ?? {});
-    this.xmux = this.xmux ? this.xmux.normalize() : undefined;
+    const xmuxInstance = plainToInstance(XrayXmuxObject, this.xmux ?? {});
+    this.xmux = xmuxInstance ? xmuxInstance.normalize() : undefined;
     if (this.downloadSettings) {
-      this.downloadSettings = plainToInstance<XrayXhttpDownloadSettingsObject, XrayXhttpDownloadSettingsObject>(XrayXhttpDownloadSettingsObject, this.downloadSettings);
-      this.downloadSettings = this.downloadSettings.normalize();
+      const downloadInstance = plainToInstance(XrayXhttpDownloadSettingsObject, this.downloadSettings);
+      this.downloadSettings = downloadInstance ? downloadInstance.normalize() : undefined;
     }
     return isObjectEmpty(this) ? undefined : this;
   };

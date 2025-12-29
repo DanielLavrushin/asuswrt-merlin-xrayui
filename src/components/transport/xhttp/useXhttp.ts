@@ -1,126 +1,149 @@
 import { computed, ref, watch, Ref } from 'vue';
 import { XrayStreamSettingsObject, XrayXmuxObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject } from '@/modules/CommonObjects';
 import {
-    XrayXhttpExtraObject,
-    XrayXhttpDownloadSettingsObject,
-    XrayXhttpDownloadXhttpSettingsObject,
-    XrayXhttpDownloadExtraObject
+  XrayXhttpExtraObject,
+  XrayXhttpDownloadSettingsObject,
+  XrayXhttpDownloadXhttpSettingsObject,
+  XrayXhttpDownloadExtraObject,
+  XrayStreamHttpSettingsObject
 } from '@/modules/TransportObjects';
 
 export function useXhttp(transport: Ref<XrayStreamSettingsObject>) {
-    // Core XHTTP settings
-    const extra = computed(() => {
-        if (!transport.value.xhttpSettings!.extra) {
-            transport.value.xhttpSettings!.extra = new XrayXhttpExtraObject();
-        }
-        return transport.value.xhttpSettings!.extra;
-    });
+  // Ensure xhttpSettings exists
+  const ensureXhttpSettings = (): XrayStreamHttpSettingsObject => {
+    if (!transport.value.xhttpSettings) {
+      transport.value.xhttpSettings = new XrayStreamHttpSettingsObject();
+    }
+    return transport.value.xhttpSettings;
+  };
 
-    const xmux = computed(() => {
-        if (!extra.value.xmux) {
-            extra.value.xmux = new XrayXmuxObject();
-        }
-        return extra.value.xmux;
-    });
+  // Core XHTTP settings
+  const extra = computed<XrayXhttpExtraObject>(() => {
+    const xhttpSettings = ensureXhttpSettings();
+    if (!xhttpSettings.extra) {
+      xhttpSettings.extra = new XrayXhttpExtraObject();
+    }
+    return xhttpSettings.extra;
+  });
 
-    const onHeaderUpdate = (headers: Record<string, unknown>) => {
-        if (transport.value.xhttpSettings) {
-            transport.value.xhttpSettings.headers = headers;
-        }
-    };
+  const xmux = computed<XrayXmuxObject>(() => {
+    const extraValue = extra.value;
+    if (!extraValue.xmux) {
+      extraValue.xmux = new XrayXmuxObject();
+    }
+    return extraValue.xmux;
+  });
 
-    return {
-        extra,
-        xmux,
-        onHeaderUpdate
-    };
+  const onHeaderUpdate = (headers: Record<string, unknown>): void => {
+    const xhttpSettings = transport.value.xhttpSettings;
+    if (xhttpSettings) {
+      xhttpSettings.headers = headers;
+    }
+  };
+
+  return {
+    extra,
+    xmux,
+    onHeaderUpdate
+  };
 }
 
 export function useXhttpDownload(extra: Ref<XrayXhttpExtraObject>) {
-    // Download Settings UI state
-    const showDownloadSettings = ref(false);
-    const enableDownloadSettings = ref(!!extra.value.downloadSettings?.address);
+  // Download Settings UI state
+  const showDownloadSettings = ref(false);
+  const initialAddress = extra.value.downloadSettings?.address;
+  const enableDownloadSettings = ref(!!initialAddress);
 
-    const toggleDownloadSettings = () => {
-        showDownloadSettings.value = !showDownloadSettings.value;
-    };
+  const toggleDownloadSettings = (): void => {
+    showDownloadSettings.value = !showDownloadSettings.value;
+  };
 
-    // Download Settings computed properties
-    const downloadSettings = computed(() => {
-        if (!extra.value.downloadSettings) {
-            extra.value.downloadSettings = new XrayXhttpDownloadSettingsObject();
-        }
-        return extra.value.downloadSettings;
-    });
+  // Ensure downloadSettings exists
+  const ensureDownloadSettings = (): XrayXhttpDownloadSettingsObject => {
+    if (!extra.value.downloadSettings) {
+      extra.value.downloadSettings = new XrayXhttpDownloadSettingsObject();
+    }
+    return extra.value.downloadSettings;
+  };
 
-    const downloadTlsSettings = computed(() => {
-        if (!downloadSettings.value.tlsSettings) {
-            downloadSettings.value.tlsSettings = new XrayStreamTlsSettingsObject();
-        }
-        return downloadSettings.value.tlsSettings;
-    });
+  // Download Settings computed properties
+  const downloadSettings = computed<XrayXhttpDownloadSettingsObject>(() => {
+    return ensureDownloadSettings();
+  });
 
-    const downloadRealitySettings = computed(() => {
-        if (!downloadSettings.value.realitySettings) {
-            downloadSettings.value.realitySettings = new XrayStreamRealitySettingsObject();
-        }
-        return downloadSettings.value.realitySettings;
-    });
+  const downloadTlsSettings = computed<XrayStreamTlsSettingsObject>(() => {
+    const settings = ensureDownloadSettings();
+    if (!settings.tlsSettings) {
+      settings.tlsSettings = new XrayStreamTlsSettingsObject();
+    }
+    return settings.tlsSettings;
+  });
 
-    const downloadXhttpSettings = computed(() => {
-        if (!downloadSettings.value.xhttpSettings) {
-            downloadSettings.value.xhttpSettings = new XrayXhttpDownloadXhttpSettingsObject();
-        }
-        return downloadSettings.value.xhttpSettings;
-    });
+  const downloadRealitySettings = computed<XrayStreamRealitySettingsObject>(() => {
+    const settings = ensureDownloadSettings();
+    if (!settings.realitySettings) {
+      settings.realitySettings = new XrayStreamRealitySettingsObject();
+    }
+    return settings.realitySettings;
+  });
 
-    const downloadXhttpExtra = computed(() => {
-        if (!downloadXhttpSettings.value.extra) {
-            downloadXhttpSettings.value.extra = new XrayXhttpDownloadExtraObject();
-        }
-        return downloadXhttpSettings.value.extra;
-    });
+  const downloadXhttpSettings = computed<XrayXhttpDownloadXhttpSettingsObject>(() => {
+    const settings = ensureDownloadSettings();
+    if (!settings.xhttpSettings) {
+      settings.xhttpSettings = new XrayXhttpDownloadXhttpSettingsObject();
+    }
+    return settings.xhttpSettings;
+  });
 
-    const downloadXmux = computed(() => {
-        if (!downloadXhttpExtra.value.xmux) {
-            downloadXhttpExtra.value.xmux = new XrayXmuxObject();
-        }
-        return downloadXhttpExtra.value.xmux;
-    });
+  const downloadXhttpExtra = computed<XrayXhttpDownloadExtraObject>(() => {
+    const xhttpSettings = downloadXhttpSettings.value;
+    if (!xhttpSettings.extra) {
+      xhttpSettings.extra = new XrayXhttpDownloadExtraObject();
+    }
+    return xhttpSettings.extra;
+  });
 
-    // Watch for enableDownloadSettings toggle
-    watch(
-        () => enableDownloadSettings.value,
-        (enabled) => {
-            if (!enabled) {
-                extra.value.downloadSettings = undefined;
-            } else if (!extra.value.downloadSettings) {
-                extra.value.downloadSettings = new XrayXhttpDownloadSettingsObject();
-            }
-        }
-    );
+  const downloadXmux = computed<XrayXmuxObject>(() => {
+    const extraValue = downloadXhttpExtra.value;
+    if (!extraValue.xmux) {
+      extraValue.xmux = new XrayXmuxObject();
+    }
+    return extraValue.xmux;
+  });
 
-    // Auto-expand download settings if already configured
-    watch(
-        () => extra.value.downloadSettings?.address,
-        (address) => {
-            if (address) {
-                showDownloadSettings.value = true;
-                enableDownloadSettings.value = true;
-            }
-        },
-        { immediate: true }
-    );
+  // Watch for enableDownloadSettings toggle
+  watch(
+    () => enableDownloadSettings.value,
+    (enabled) => {
+      if (!enabled) {
+        extra.value.downloadSettings = undefined;
+      } else if (!extra.value.downloadSettings) {
+        extra.value.downloadSettings = new XrayXhttpDownloadSettingsObject();
+      }
+    }
+  );
 
-    return {
-        showDownloadSettings,
-        enableDownloadSettings,
-        toggleDownloadSettings,
-        downloadSettings,
-        downloadTlsSettings,
-        downloadRealitySettings,
-        downloadXhttpSettings,
-        downloadXhttpExtra,
-        downloadXmux
-    };
+  // Auto-expand download settings if already configured
+  watch(
+    () => extra.value.downloadSettings?.address,
+    (address) => {
+      if (address) {
+        showDownloadSettings.value = true;
+        enableDownloadSettings.value = true;
+      }
+    },
+    { immediate: true }
+  );
+
+  return {
+    showDownloadSettings,
+    enableDownloadSettings,
+    toggleDownloadSettings,
+    downloadSettings,
+    downloadTlsSettings,
+    downloadRealitySettings,
+    downloadXhttpSettings,
+    downloadXhttpExtra,
+    downloadXmux
+  };
 }

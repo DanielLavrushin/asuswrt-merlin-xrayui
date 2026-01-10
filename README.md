@@ -19,6 +19,7 @@ This repository provides a lightweight and efficient UI to manage your [X-RAY Co
 
 - RT-AC66U
 - RT-AC68U
+- RT-AC86U
 - RT-AX58U
 - TUF-AX5400
 - RT-AX92U

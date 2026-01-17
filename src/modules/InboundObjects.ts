@@ -113,7 +113,7 @@ export class XrayShadowsocksInboundObject implements IProtocolType {
   normalize = (): this | undefined => {
     this.network = this.network && this.network !== 'tcp' ? this.network : undefined;
     this.password = this.password && this.password !== '' ? this.password : undefined;
-    this.method = this.method && this.method !== '' ? this.method : undefined;
+    this.method = this.method && this.method !== '' && this.method !== 'aes-256-gcm' ? this.method : undefined;
     this.email = this.email && this.email !== '' ? this.email : undefined;
     return isObjectEmpty(this) ? undefined : this;
   };

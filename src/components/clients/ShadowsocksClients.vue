@@ -53,7 +53,6 @@
   import { XrayShadowsocksClientObject } from '@/modules/ClientsObjects';
   import { defineComponent, ref } from 'vue';
   import engine from '@/modules/Engine';
-  import xrayConfig from '@/modules/XrayConfig';
   import QrcodeVue from 'qrcode.vue';
 
   import modal from '@main/Modal.vue';
@@ -76,8 +75,23 @@
       },
 
       showQrCode(client: XrayShadowsocksClientObject) {
-        this.qr_content = JSON.stringify(xrayConfig);
-        this.modalQr.value?.show();
+        if (!this.proxy) {
+          alert('Proxy configuration is not available');
+          return;
+        }
+
+        const wanip = window.xray.router.wan_ip;
+        const port = this.proxy.port;
+        const method = client.method || 'aes-256-gcm';
+        const password = client.password;
+        const remark = client.email || window.xray.router.name;
+
+        // Shadowsocks URI format: ss://base64(method:password)@server:port#remark
+        const userInfo = `${method}:${password}`;
+        const base64UserInfo = btoa(userInfo);
+
+        this.qr_content = `ss://${base64UserInfo}@${wanip}:${port}#${encodeURIComponent(remark)}`;
+        this.modalQr?.show();
       },
 
       removeClient(client: XrayShadowsocksClientObject) {
@@ -103,7 +117,11 @@
       }
     },
     props: {
-      clients: Array<XrayShadowsocksClientObject>
+      clients: Array<XrayShadowsocksClientObject>,
+      proxy: {
+        type: Object as () => any,
+        required: false
+      }
     },
 
     setup(props) {
@@ -120,7 +138,8 @@
         qr_content,
         qr_size: 500,
         newClient,
-        modalQr
+        modalQr,
+        proxy: props.proxy
       };
     }
   });

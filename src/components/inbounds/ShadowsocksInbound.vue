@@ -52,7 +52,7 @@
         </tr>
       </tbody>
     </table>
-    <clients :clients="inbound.settings.clients"></clients>
+    <clients :clients="inbound.settings.clients" :proxy="inbound"></clients>
   </div>
 </template>
 

@@ -370,6 +370,18 @@
       "export_csv": "CSV exportieren",
       "raw": "Rohdaten"
     },
+    "ShadowsocksInbound": {
+      "modal_title": "Shadowsocks",
+      "modal_desc": "Das Shadowsocks-Protokoll ist mit den meisten anderen Shadowsocks-Implementierungen kompatibel. Der Server unterstützt TCP- und UDP-Paketweiterleitung mit der Option, UDP selektiv zu deaktivieren.",
+      "label_network": "Netzwerk",
+      "label_method": "Verschlüsselungsmethode",
+      "label_password": "Passwort",
+      "label_email": "E-Mail",
+      "hint_network": "Der unterstützte Netzwerkprotokolltyp. Wenn beispielsweise `tcp` angegeben ist, wird nur TCP-Verkehr verarbeitet. Der Standardwert ist `tcp`.",
+      "hint_method": "Die für diese eingehende Verbindung zu verwendende Verschlüsselungsmethode. Für Shadowsocks 2022-Protokolle (2022-blake3-*) verwenden Sie `openssl rand -base64 32`, um ein sicheres Passwort zu generieren. Empfohlene Methoden: 2022-blake3-aes-128-gcm, 2022-blake3-aes-256-gcm, 2022-blake3-chacha20-poly1305",
+      "hint_password": "Der Passwortparameter kann für den Server als Ganzes angegeben werden, aber auch im ClientObject für den jeweiligen Benutzer. Das Passwort auf Serverebene überschreibt nicht garantiert das clientspezifische Passwort.",
+      "hint_email": "Die E-Mail des Benutzers, die verwendet wird, um den Verkehr verschiedener Benutzer für Protokolle oder Statistiken zu unterscheiden."
+    },
     "HysteriaOutbound": {
       "modal_title": "Hysteria",
       "modal_desc": "Hysteria ist ein funktionsreiches Proxy- und Relay-Tool, das für verlustbehaftete, instabile Verbindungen optimiert ist (z. B. Satellitennetzwerke, überlastetes öffentliches WLAN, Verbindungen zu ausländischen Servern aus China). Es verwendet ein benutzerdefiniertes Protokoll basierend auf QUIC.",

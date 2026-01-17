@@ -480,6 +480,18 @@
       "hint_routes": "Routes to add for the TUN interface. Enter one route per line in CIDR notation (e.g., `0.0.0.0/0` for all IPv4 traffic, `10.0.0.0/8` for specific networks).<hr/><blockquote>**Warning**: Routing `0.0.0.0/0` through the TUN interface without proper upstream routing can cause network loops. Ensure static routes to Xray upstreams exist, or use separate routing tables.</blockquote>",
       "hint_routes_placeholder": "Example: 10.0.0.0/8"
     },
+    "ShadowsocksInbound": {
+      "modal_title": "Shadowsocks",
+      "modal_desc": "The Shadowsocks protocol is compatible with most other implementations of Shadowsocks. The server supports TCP and UDP packet forwarding, with an option to selectively disable UDP.",
+      "label_network": "Network",
+      "label_method": "Encryption Method",
+      "label_password": "Password",
+      "label_email": "Email",
+      "hint_network": "The supported network protocol type. For example, when specified as `tcp`, it will only handle TCP traffic. The default value is `tcp`.",
+      "hint_method": "The encryption method to use for this inbound. For Shadowsocks 2022 protocols (2022-blake3-*), use `openssl rand -base64 32` to generate a secure password. Recommended methods: 2022-blake3-aes-128-gcm, 2022-blake3-aes-256-gcm, 2022-blake3-chacha20-poly1305",
+      "hint_password": "The password parameter can be specified for the server at all, but also in the ClientObject being dedicated to the given user. Server-level password is not guaranteed to override the client-specific one.",
+      "hint_email": "The user's email, used to differentiate traffic from different users for logs or statistics."
+    },
     "OutboundCommon": {
       "label_tag": "Tag",
       "label_send_through": "Send through",

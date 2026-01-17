@@ -477,6 +477,18 @@
       "hint_routes": "为 TUN 接口添加的路由。每行输入一个 CIDR 表示法的路由（例如，`0.0.0.0/0` 表示所有 IPv4 流量，`10.0.0.0/8` 表示特定网络）。<hr/><blockquote>**警告**：在没有适当的上游路由的情况下，通过 TUN 接口路由 `0.0.0.0/0` 可能导致网络环路。确保存在到 Xray 上游的静态路由，或使用单独的路由表。</blockquote>",
       "hint_routes_placeholder": "示例：10.0.0.0/8"
     },
+    "ShadowsocksInbound": {
+      "modal_title": "Shadowsocks",
+      "modal_desc": "Shadowsocks 协议与大多数其他 Shadowsocks 实现兼容。服务器支持 TCP 和 UDP 数据包转发，并可选择性地禁用 UDP。",
+      "label_network": "网络",
+      "label_method": "加密方法",
+      "label_password": "密码",
+      "label_email": "邮箱",
+      "hint_network": "支持的网络协议类型。例如，指定为 `tcp` 时，仅处理 TCP 流量。默认值为 `tcp`。",
+      "hint_method": "此入站连接使用的加密方法。对于 Shadowsocks 2022 协议（2022-blake3-*），使用 `openssl rand -base64 32` 生成安全密码。推荐方法：2022-blake3-aes-128-gcm、2022-blake3-aes-256-gcm、2022-blake3-chacha20-poly1305",
+      "hint_password": "密码参数可以为整个服务器指定，也可以在 ClientObject 中为特定用户指定。服务器级密码不保证覆盖客户端特定密码。",
+      "hint_email": "用户的邮箱，用于在日志或统计中区分不同用户的流量。"
+    },
     "OutboundCommon": {
       "label_tag": "标签",
       "label_send_through": "源地址",

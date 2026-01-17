@@ -107,10 +107,14 @@ export class XrayHttpInboundObject implements IProtocolType {
 export class XrayShadowsocksInboundObject implements IProtocolType {
   public network? = 'tcp';
   public password? = '';
+  public method? = 'aes-256-gcm';
+  public email? = '';
   public clients: XrayShadowsocksClientObject[] = [];
   normalize = (): this | undefined => {
     this.network = this.network && this.network !== 'tcp' ? this.network : undefined;
     this.password = this.password && this.password !== '' ? this.password : undefined;
+    this.method = this.method && this.method !== '' ? this.method : undefined;
+    this.email = this.email && this.email !== '' ? this.email : undefined;
     return isObjectEmpty(this) ? undefined : this;
   };
 

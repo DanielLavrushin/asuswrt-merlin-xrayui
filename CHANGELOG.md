@@ -11,6 +11,8 @@
 - ADDED: `TLS` security settings now support `PinnedPeerCertificateSha256` field for certificate pinning (outbound only).
 - IMPROVED: Geodata files are now automatically updated when geosite or geoip URLs are changed in general settings.
 - FIXED: Backend scripts no longer create backup files in `/jffs/.asdbk/`, preventing JFFS partition overflow over time.
+- FIXED: `Shadowsocks` inbound now includes top-level `method` and `email` fields, resolving "unsupported cipher method" errors when using Shadowsocks 2022 protocols (fixes #259).
+- IMPROVED: `Shadowsocks` inbound UI now fully supports multi-language translations (EN, RU, UK, DE, CN).
 
 ## [0.61.0] - 2025-10-25
 

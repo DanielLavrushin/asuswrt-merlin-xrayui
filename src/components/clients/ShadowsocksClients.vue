@@ -37,15 +37,12 @@
         <td>{{ client.password }}</td>
         <td>{{ client.method }}</td>
         <td>
-          <button @click.prevent="showQrCode(client)" class="button_gen button_gen_small" title="open user's configuration">QR</button>
+          <qr :client="client" :proxy="proxy"></qr>
           <button @click.prevent="removeClient(client)" class="button_gen button_gen_small" title="delete">&#10005;</button>
         </td>
       </tr>
     </tbody>
   </table>
-  <modal ref="modalQr" title="QR Code Modal">
-    <qrcode-vue :value="qr_content" :size="qr_size" level="H" render-as="svg" />
-  </modal>
 </template>
 
 <script lang="ts">
@@ -53,15 +50,12 @@
   import { XrayShadowsocksClientObject } from '@/modules/ClientsObjects';
   import { defineComponent, ref } from 'vue';
   import engine from '@/modules/Engine';
-  import QrcodeVue from 'qrcode.vue';
-
-  import modal from '@main/Modal.vue';
+  import Qr from './QrCodeClient.vue';
 
   export default defineComponent({
     name: 'ShadowsocksClients',
     components: {
-      QrcodeVue,
-      modal
+      Qr
     },
     methods: {
       regenerate() {
@@ -72,26 +66,6 @@
         this.newClient.password = engine.generateRandomBase64();
         this.newClient.email = '';
         this.newClient.method = 'aes-256-gcm';
-      },
-
-      showQrCode(client: XrayShadowsocksClientObject) {
-        if (!this.proxy) {
-          alert('Proxy configuration is not available');
-          return;
-        }
-
-        const wanip = window.xray.router.wan_ip;
-        const port = this.proxy.port;
-        const method = client.method || 'aes-256-gcm';
-        const password = client.password;
-        const remark = client.email || window.xray.router.name;
-
-        // Shadowsocks URI format: ss://base64(method:password)@server:port#remark
-        const userInfo = `${method}:${password}`;
-        const base64UserInfo = btoa(userInfo);
-
-        this.qr_content = `ss://${base64UserInfo}@${wanip}:${port}#${encodeURIComponent(remark)}`;
-        this.modalQr?.show();
       },
 
       removeClient(client: XrayShadowsocksClientObject) {
@@ -128,17 +102,12 @@
       const clients = ref<XrayShadowsocksClientObject[]>(props.clients ?? []);
       const newClient = ref<XrayShadowsocksClientObject>(new XrayShadowsocksClientObject());
       newClient.value.password = engine.generateRandomBase64();
-      const modalQr = ref();
-      let qr_content = ref('');
 
       return {
         flows: XrayOptions.clientFlowOptions,
         encryptions: XrayOptions.encryptionOptions,
         clients,
-        qr_content,
-        qr_size: 500,
         newClient,
-        modalQr,
         proxy: props.proxy
       };
     }

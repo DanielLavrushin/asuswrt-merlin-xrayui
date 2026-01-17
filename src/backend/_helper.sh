@@ -180,7 +180,7 @@ get_webui_page() {
 
 am_settings_del() {
     local key="$1"
-    sed -i "/$key/d" /jffs/addons/custom_settings.txt
+    sed "/$key/d" /jffs/addons/custom_settings.txt > /tmp/custom_settings.$$ && mv /tmp/custom_settings.$$ /jffs/addons/custom_settings.txt
 }
 
 remove_json_comments() {
@@ -211,7 +211,7 @@ reconstruct_payload() {
 
 cleanup_payload() {
     # clean up all payload chunks from the custom settings
-    sed -i '/^xray_payload/d' /jffs/addons/custom_settings.txt
+    sed '/^xray_payload/d' /jffs/addons/custom_settings.txt > /tmp/custom_settings.$$ && mv /tmp/custom_settings.$$ /jffs/addons/custom_settings.txt
 }
 
 load_ui_response() {
@@ -349,6 +349,15 @@ fixme() {
 
     log_info "Removing file $UI_RESPONSE_FILE..."
     rm -f "$UI_RESPONSE_FILE" || log_warn "Failed to remove $UI_RESPONSE_FILE"
+
+    log_info "Cleaning up xrayui backup files from /jffs/.asdbk..."
+    if [ -d /jffs/.asdbk ]; then
+        rm -f /jffs/.asdbk/xrayui_*_bk /jffs/.asdbk/*xrayui*.tmp.*_bk 2>/dev/null && \
+            log_ok "Removed xrayui backup files from /jffs/.asdbk" || \
+            log_debug "No xrayui backup files found in /jffs/.asdbk"
+    else
+        log_debug "/jffs/.asdbk directory does not exist"
+    fi
 
     log_ok "Done with fixme function."
 }

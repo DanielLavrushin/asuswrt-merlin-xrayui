@@ -186,6 +186,15 @@ EOF
 
     update_community_geodata
 
+    log_info "Cleaning up xrayui backup files..."
+    if [ -d /jffs/.asdbk ]; then
+        rm -f /jffs/.asdbk/xrayui_*_bk /jffs/.asdbk/*xrayui*.tmp.*_bk 2>/dev/null &&
+            log_ok "Removed xrayui backup files from /jffs/.asdbk" ||
+            log_debug "No xrayui backup files found in /jffs/.asdbk"
+    else
+        log_debug "/jffs/.asdbk directory does not exist"
+    fi
+
     # ---------------------------------------------------------
     # performing version updates
 
@@ -404,10 +413,10 @@ setup_script_file() {
 clear_script_entries() {
 
     log_info "Removing existing $ADDON_TITLE entries from scripts."
-    sed -i '/#xrayui/d' /jffs/scripts/services-start >/dev/null 2>&1 || log_debug "Failed to remove entry from /jffs/scripts/services-start."
-    sed -i '/#xrayui/d' /jffs/scripts/nat-start >/dev/null 2>&1 || log_debug "Failed to remove entry from /jffs/scripts/nat-start."
-    sed -i '/#xrayui/d' /jffs/scripts/post-mount >/dev/null 2>&1 || log_debug "Failed to remove entry from /jffs/scripts/post-mount."
-    sed -i '/#xrayui/d' /jffs/scripts/service-event >/dev/null 2>&1 || log_debug "Failed to remove entry from /jffs/scripts/service-event."
-    sed -i '/#xrayui/d' /jffs/scripts/dnsmasq.postconf >/dev/null 2>&1 || log_debug "Failed to remove entry from /jffs/scripts/dnsmasq.postconf."
-    sed -i '/#xrayui/d' /jffs/scripts/wan-start >/dev/null 2>&1 || log_debug "Failed to remove entry from /jffs/scripts/wan-start."
+    sed '/#xrayui/d' /jffs/scripts/services-start >/tmp/xrayui_script.$$ 2>/dev/null && mv /tmp/xrayui_script.$$ /jffs/scripts/services-start || log_debug "Failed to remove entry from /jffs/scripts/services-start."
+    sed '/#xrayui/d' /jffs/scripts/nat-start >/tmp/xrayui_script.$$ 2>/dev/null && mv /tmp/xrayui_script.$$ /jffs/scripts/nat-start || log_debug "Failed to remove entry from /jffs/scripts/nat-start."
+    sed '/#xrayui/d' /jffs/scripts/post-mount >/tmp/xrayui_script.$$ 2>/dev/null && mv /tmp/xrayui_script.$$ /jffs/scripts/post-mount || log_debug "Failed to remove entry from /jffs/scripts/post-mount."
+    sed '/#xrayui/d' /jffs/scripts/service-event >/tmp/xrayui_script.$$ 2>/dev/null && mv /tmp/xrayui_script.$$ /jffs/scripts/service-event || log_debug "Failed to remove entry from /jffs/scripts/service-event."
+    sed '/#xrayui/d' /jffs/scripts/dnsmasq.postconf >/tmp/xrayui_script.$$ 2>/dev/null && mv /tmp/xrayui_script.$$ /jffs/scripts/dnsmasq.postconf || log_debug "Failed to remove entry from /jffs/scripts/dnsmasq.postconf."
+    sed '/#xrayui/d' /jffs/scripts/wan-start >/tmp/xrayui_script.$$ 2>/dev/null && mv /tmp/xrayui_script.$$ /jffs/scripts/wan-start || log_debug "Failed to remove entry from /jffs/scripts/wan-start."
 }

@@ -7,6 +7,7 @@
 - ADDED: `TUN` inbound support. Network layer 3 interface for routing raw network traffic through Xray on router devices, enabling proxy support for applications/devices without built-in proxy capabilities.
 - IMPROVED: `XHTTP` transport UI now includes "Uplink/Downlink Separation" configuration option (outbound only).
 - ADDED: `TLS` security settings now support `PinnedPeerCertificateSha256` field for certificate pinning (outbound only).
+- FIXED: Backend scripts no longer create backup files in `/jffs/.asdbk/`, preventing JFFS partition overflow over time.
 
 ## [0.61.0] - 2025-10-25
 

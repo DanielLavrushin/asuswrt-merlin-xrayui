@@ -34,10 +34,10 @@ mount_ui() {
         mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
     fi
 
-    sed -i '/index: "menu_VPN"/,/index:/ {
+    sed '/index: "menu_VPN"/,/index:/ {
   /url:\s*"NULL",\s*tabName:\s*"__INHERIT__"/ i \
     { url: "'"$ADDON_USER_PAGE"'", tabName: "X-RAY" },
-}' /tmp/menuTree.js
+}' /tmp/menuTree.js > /tmp/menuTree.$$ && mv /tmp/menuTree.$$ /tmp/menuTree.js
 
     umount /www/require/modules/menuTree.js && mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
 

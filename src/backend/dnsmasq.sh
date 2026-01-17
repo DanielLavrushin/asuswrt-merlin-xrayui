@@ -21,7 +21,7 @@ dnsmasq_configure() {
     log_debug "logs_dnsmasq setting: $logs_dnsmasq"
 
     touch "$CONFIG"
-    sed -i "/^#${ADDON_TAG} start$/,/^#${ADDON_TAG} end$/d" "$CONFIG"
+    sed "/^#${ADDON_TAG} start$/,/^#${ADDON_TAG} end$/d" "$CONFIG" > "/tmp/xrayui_config.$$" && mv "/tmp/xrayui_config.$$" "$CONFIG"
 
     pc_append "" "$CONFIG"
     pc_append "#$ADDON_TAG start" "$CONFIG"
@@ -56,7 +56,7 @@ dnsmasq_configure() {
 
     if [ "$xray_dns_only" = "true" ] && [ "$has_dnsmasq_servers" = "true" ]; then
         log_debug "dnsmasq: xray_dns_only is enabled, disabling all other DNS"
-        sed -i '/^[[:space:]]*servers-file=/ s/^/#/' "$CONFIG" && log_debug "dnsmasq: commented servers-file"
+        sed '/^[[:space:]]*servers-file=/ s/^/#/' "$CONFIG" > "/tmp/xrayui_config.$$" && mv "/tmp/xrayui_config.$$" "$CONFIG" && log_debug "dnsmasq: commented servers-file"
     fi
 
     dnsmasq_xray_ipset_domains $CONFIG

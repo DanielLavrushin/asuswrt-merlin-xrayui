@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/prefer-literal-enum-member */
 export const XrayOptions = {
-  transportOptions: ['tcp', 'kcp', 'ws', 'xhttp', 'grpc', 'httpupgrade', 'splithttp'],
+  transportOptions: ['tcp', 'kcp', 'ws', 'xhttp', 'grpc', 'httpupgrade', 'splithttp', 'hysteria'],
   securityOptions: ['none', 'tls', 'reality'],
   logOptions: ['debug', 'info', 'warning', 'error', 'none'],
   networkOptions: ['tcp', 'udp', 'tcp,udp'],
@@ -31,7 +31,8 @@ export const XrayProtocol = {
   FREEDOM: 'freedom',
   BLACKHOLE: 'blackhole',
   LOOPBACK: 'loopback',
-  TUN: 'tun'
+  TUN: 'tun',
+  HYSTERIA: 'hysteria'
 };
 export enum XrayProtocolMode {
   Inbound = 1 << 0,

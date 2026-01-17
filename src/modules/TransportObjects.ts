@@ -225,3 +225,54 @@ export class XrayStreamSplitHttpSettingsObject implements ITransportNetwork {
     return this;
   };
 }
+
+export class XrayUdpHopObject {
+  public port?: string;
+  public interval? = 30;
+
+  normalize = (): this | undefined => {
+    this.port = !this.port || this.port === '' ? undefined : this.port;
+    this.interval = this.interval === 30 ? undefined : this.interval;
+    return isObjectEmpty(this) ? undefined : this;
+  };
+}
+
+export class XraySalamanderObject {
+  public type = 'salamander';
+  public password?: string;
+
+  normalize = (): this | undefined => {
+    this.password = !this.password || this.password === '' ? undefined : this.password;
+    return isObjectEmpty(this) ? undefined : this;
+  };
+}
+
+export class XrayStreamHysteriaSettingsObject implements ITransportNetwork {
+  static readonly congestionOptions = ['brutal', 'bbr'];
+
+  public version? = 2;
+  public auth?: string;
+  public congestion? = 'brutal';
+  public up?: string;
+  public down?: string;
+  public udphop?: XrayUdpHopObject;
+
+  constructor() {
+    this.version = 2;
+    this.congestion = 'brutal';
+  }
+
+  normalize = (): this | undefined => {
+    this.version = this.version === 2 ? undefined : this.version;
+    this.auth = !this.auth || this.auth === '' ? undefined : this.auth;
+    this.congestion = this.congestion === 'brutal' ? undefined : this.congestion;
+    this.up = !this.up || this.up === '' ? undefined : this.up;
+    this.down = !this.down || this.down === '' ? undefined : this.down;
+
+    if (this.udphop && typeof this.udphop.normalize === 'function') {
+      this.udphop = this.udphop.normalize();
+    }
+
+    return isObjectEmpty(this) ? undefined : this;
+  };
+}

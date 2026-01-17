@@ -19,7 +19,8 @@ import {
   XrayVmessOutboundObject,
   XrayVlessOutboundObject,
   XrayHttpOutboundObject,
-  XrayShadowsocksOutboundObject
+  XrayShadowsocksOutboundObject,
+  XrayHysteriaOutboundObject
 } from './OutboundObjects';
 import {
   XrayDnsObject,
@@ -644,6 +645,10 @@ export class Engine {
           case XrayProtocol.SHADOWSOCKS:
             proxy = plainToInstance(XrayOutboundObject<XrayShadowsocksOutboundObject>, proxy);
             proxy.settings = plainToInstance(XrayShadowsocksOutboundObject, proxy.settings) ?? new XrayShadowsocksOutboundObject();
+            break;
+          case XrayProtocol.HYSTERIA:
+            proxy = plainToInstance(XrayOutboundObject<XrayHysteriaOutboundObject>, proxy);
+            proxy.settings = plainToInstance(XrayHysteriaOutboundObject, proxy.settings) ?? new XrayHysteriaOutboundObject();
             break;
         }
 

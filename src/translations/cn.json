@@ -535,6 +535,16 @@
       "hint_address": "指向服务器，支持域名、 `IPv4` 和 `IPv6`。",
       "hint_port": "通常与服务器监听端口一致。"
     },
+    "HysteriaOutbound": {
+      "modal_title": "Hysteria",
+      "modal_desc": "Hysteria 是一款功能丰富的代理和中继工具，专为有损、不稳定的连接（例如卫星网络、拥挤的公共Wi-Fi、从中国连接国外服务器）优化。它使用基于 QUIC 的自定义协议。",
+      "label_version": "Hysteria 版本",
+      "label_address": "服务器地址",
+      "label_port": "服务器端口",
+      "hint_version": "选择 Hysteria 协议版本（1 或 2）。建议新部署使用版本 2。",
+      "hint_address": "Hysteria 服务器地址，支持域名、IPv4 和 IPv6。",
+      "hint_port": "服务器端口，通常与 Hysteria 服务器监听端口一致。"
+    },
     "CertificatesModal": {
       "modal_title": "管理 TLS 证书",
       "label_ocsp_stapling": "OCSP 装订",
@@ -638,6 +648,31 @@
       "label_pool_size": "池大小",
       "hint_pool_size": "指定 FakeDNS 存储的域名 - IP 映射最大数量，超出后按 LRU 规则淘汰，默认65535。",
       "fakedns": "fakedns"
+    },
+    "NetworkHysteria": {
+      "title": "Hysteria 传输设置",
+      "label_version": "Hysteria 版本",
+      "hint_version": "选择 Hysteria 协议版本（1 或 2）。建议新部署使用版本 2，具有改进的性能和功能。",
+      "label_auth": "认证字符串",
+      "hint_auth": "Hysteria 连接的认证字符串。必须与服务器配置匹配。",
+      "label_congestion": "拥塞控制",
+      "hint_congestion": "拥塞控制算法。<ul><li>`brutal`: 优化最大吞吐量</li><li>`bbr`: 瓶颈带宽和往返传播时间</li></ul>",
+      "label_up": "上传带宽",
+      "hint_up": "最大上传带宽（例如 `100mbps`、`1gbps`）。由拥塞控制算法使用。",
+      "label_down": "下载带宽",
+      "hint_down": "最大下载带宽（例如 `100mbps`、`1gbps`）。由拥塞控制算法使用。",
+      "udphop_title": "UDP Hop 配置",
+      "label_udphop_enabled": "启用 UDP Hop",
+      "hint_udphop_enabled": "UDP Hop 允许在多个端口之间跳转 UDP 数据包，以避免检测和封锁。",
+      "label_udphop_port": "端口范围",
+      "hint_udphop_port": "UDP 跳跃的端口范围（例如 `20000-50000`）。数据包将在此范围内的端口之间跳转。",
+      "label_udphop_interval": "跳跃间隔",
+      "hint_udphop_interval": "端口跳跃之间的时间间隔（秒）。默认为 30 秒。",
+      "salamander_title": "Salamander 混淆",
+      "label_salamander_enabled": "启用 Salamander",
+      "hint_salamander_enabled": "Salamander 是一种 UDP 掩码/混淆协议，可以伪装 Hysteria 流量特征以避免检测。",
+      "label_salamander_password": "混淆密码",
+      "hint_salamander_password": "Salamander 混淆的密码。必须与服务器配置匹配。"
     },
     "SockOpt": {
       "label": "透明代理设置",

@@ -6,6 +6,7 @@ import VlessParser from './VlessParser';
 import VmessParser from './VmessParser';
 import TrojanParser from './TrojanParser';
 import ShadowsocksParser from './ShadowsocksParser';
+import HysteriaParser from './HysteriaParser';
 
 export default class ProxyParser {
   private readonly parsedObject!: XrayParsedUrlObject;
@@ -30,9 +31,18 @@ export default class ProxyParser {
       case 'ss':
         proxy = ShadowsocksParser(this.parsedObject);
         break;
+      case 'hy2':
+      case 'hysteria':
+        proxy = HysteriaParser(this.parsedObject);
+        break;
     }
 
     if (proxy) {
+      // Hysteria parser handles its own stream settings, so skip post-processing
+      if (this.parsedObject.protocol === 'hy2' || this.parsedObject.protocol === 'hysteria') {
+        return proxy;
+      }
+
       if (proxy.streamSettings) {
         proxy.streamSettings.network = this.parsedObject.network;
         proxy.streamSettings.security = this.parsedObject.security;

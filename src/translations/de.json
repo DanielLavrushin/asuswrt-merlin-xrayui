@@ -369,6 +369,41 @@
       "unique_sni": "Eindeutige SNI",
       "export_csv": "CSV exportieren",
       "raw": "Rohdaten"
+    },
+    "HysteriaOutbound": {
+      "modal_title": "Hysteria",
+      "modal_desc": "Hysteria ist ein funktionsreiches Proxy- und Relay-Tool, das für verlustbehaftete, instabile Verbindungen optimiert ist (z. B. Satellitennetzwerke, überlastetes öffentliches WLAN, Verbindungen zu ausländischen Servern aus China). Es verwendet ein benutzerdefiniertes Protokoll basierend auf QUIC.",
+      "label_version": "Hysteria-Version",
+      "label_address": "Serveradresse",
+      "label_port": "Server-Port",
+      "hint_version": "Wählen Sie die Hysteria-Protokollversion (1 oder 2). Version 2 wird für neue Bereitstellungen empfohlen.",
+      "hint_address": "Serveradresse, die auf den Hysteria-Server verweist; unterstützt Domainnamen, IPv4 und IPv6.",
+      "hint_port": "Server-Port, normalerweise derselbe Port, auf dem der Hysteria-Server lauscht."
+    },
+    "NetworkHysteria": {
+      "title": "Hysteria-Transporteinstellungen",
+      "label_version": "Hysteria-Version",
+      "hint_version": "Wählen Sie die Hysteria-Protokollversion (1 oder 2). Version 2 wird für neue Bereitstellungen mit verbesserter Leistung und Funktionen empfohlen.",
+      "label_auth": "Authentifizierungszeichenfolge",
+      "hint_auth": "Authentifizierungszeichenfolge für die Hysteria-Verbindung. Muss mit der Serverkonfiguration übereinstimmen.",
+      "label_congestion": "Überlastungskontrolle",
+      "hint_congestion": "Algorithmus zur Überlastungskontrolle. <ul><li>`brutal`: Optimiert für maximalen Durchsatz</li><li>`bbr`: Bottleneck Bandwidth and Round-trip propagation time</li></ul>",
+      "label_up": "Upload-Bandbreite",
+      "hint_up": "Maximale Upload-Bandbreite (z. B. `100mbps`, `1gbps`). Wird vom Überlastungskontrollalgorithmus verwendet.",
+      "label_down": "Download-Bandbreite",
+      "hint_down": "Maximale Download-Bandbreite (z. B. `100mbps`, `1gbps`). Wird vom Überlastungskontrollalgorithmus verwendet.",
+      "udphop_title": "UDP-Hop-Konfiguration",
+      "label_udphop_enabled": "UDP-Hop aktivieren",
+      "hint_udphop_enabled": "UDP-Hop ermöglicht das Springen von UDP-Paketen über mehrere Ports, um Erkennung und Blockierung zu umgehen.",
+      "label_udphop_port": "Portbereich",
+      "hint_udphop_port": "Portbereich für UDP-Hopping (z. B. `20000-50000`). Pakete wechseln zwischen Ports in diesem Bereich.",
+      "label_udphop_interval": "Hop-Intervall",
+      "hint_udphop_interval": "Zeitintervall in Sekunden zwischen Port-Wechseln. Standard ist 30 Sekunden.",
+      "salamander_title": "Salamander-Verschleierung",
+      "label_salamander_enabled": "Salamander aktivieren",
+      "hint_salamander_enabled": "Salamander ist ein UDP-Maskierungs-/Verschleierungsprotokoll, das die Verkehrsmerkmale von Hysteria verschleiert, um Erkennung zu vermeiden.",
+      "label_salamander_password": "Verschleierungspasswort",
+      "hint_salamander_password": "Passwort für die Salamander-Verschleierung. Muss mit der Serverkonfiguration übereinstimmen."
     }
   }
 }

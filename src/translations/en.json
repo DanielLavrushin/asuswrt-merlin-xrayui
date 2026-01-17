@@ -538,6 +538,16 @@
       "hint_address": "Server address, pointing to the server, supporting domain names, `IPv4` and `IPv6`.",
       "hint_port": "Server port, usually the same as the port listened by the server."
     },
+    "HysteriaOutbound": {
+      "modal_title": "Hysteria",
+      "modal_desc": "Hysteria is a feature-packed proxy & relay tool optimized for lossy, unstable connections (e.g. satellite networks, congested public Wi-Fi, connecting to foreign servers from China). It uses a custom protocol based on QUIC.",
+      "label_version": "Hysteria version",
+      "label_address": "Server address",
+      "label_port": "Server port",
+      "hint_version": "Select Hysteria protocol version (1 or 2). Version 2 is recommended for new deployments.",
+      "hint_address": "Server address, pointing to the Hysteria server, supporting domain names, `IPv4` and `IPv6`.",
+      "hint_port": "Server port, usually the same as the port listened by the Hysteria server."
+    },
     "CertificatesModal": {
       "modal_title": "Manage TLS Certificate",
       "label_ocsp_stapling": "OCSP stapling",
@@ -641,6 +651,31 @@
       "label_pool_size": "Pool Size",
       "hint_pool_size": "Specifies the maximum number of domain name-IP mappings stored by `FakeDNS`. When the number of mappings exceeds this value, mappings will be eliminated according to the LRU rule. The default is `65535`.",
       "fakedns": "fakedns"
+    },
+    "NetworkHysteria": {
+      "title": "Hysteria Transport Settings",
+      "label_version": "Hysteria Version",
+      "hint_version": "Select Hysteria protocol version (1 or 2). Version 2 is recommended for new deployments with improved performance and features.",
+      "label_auth": "Authentication String",
+      "hint_auth": "Authentication string for Hysteria connection. This must match the server configuration.",
+      "label_congestion": "Congestion Control",
+      "hint_congestion": "Congestion control algorithm. <ul><li>`brutal`: Optimized for maximum throughput</li><li>`bbr`: Bottleneck Bandwidth and Round-trip propagation time</li></ul>",
+      "label_up": "Upload Bandwidth",
+      "hint_up": "Maximum upload bandwidth (e.g., `100mbps`, `1gbps`). Used by the congestion control algorithm.",
+      "label_down": "Download Bandwidth",
+      "hint_down": "Maximum download bandwidth (e.g., `100mbps`, `1gbps`). Used by the congestion control algorithm.",
+      "udphop_title": "UDP Hop Configuration",
+      "label_udphop_enabled": "Enable UDP Hop",
+      "hint_udphop_enabled": "UDP Hop allows bouncing UDP packets across multiple ports to avoid detection and blocking.",
+      "label_udphop_port": "Port Range",
+      "hint_udphop_port": "Port range for UDP hopping (e.g., `20000-50000`). Packets will hop between ports in this range.",
+      "label_udphop_interval": "Hop Interval",
+      "hint_udphop_interval": "Time interval in seconds between port hops. Default is 30 seconds.",
+      "salamander_title": "Salamander Obfuscation",
+      "label_salamander_enabled": "Enable Salamander",
+      "hint_salamander_enabled": "Salamander is a UDP masking/obfuscation protocol that disguises Hysteria traffic characteristics to avoid detection.",
+      "label_salamander_password": "Obfuscation Password",
+      "hint_salamander_password": "Password for Salamander obfuscation. This must match the server configuration."
     },
     "SockOpt": {
       "label": "Transparent Proxy Settings",

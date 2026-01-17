@@ -99,6 +99,7 @@
   import ShadowsocksOutbound from '@obd/ShadowsocksOutbound.vue';
   import TrojanOutbound from '@obd/TrojanOutbound.vue';
   import WireguardOutbound from '@obd/WireguardOutbound.vue';
+  import HysteriaOutbound from '@obd/HysteriaOutbound.vue';
   import draggable from 'vuedraggable';
   import { useI18n } from 'vue-i18n';
   import RtlsScanner from './RtlsScanner.vue';
@@ -254,6 +255,8 @@
             return TrojanOutbound;
           case XrayProtocol.WIREGUARD:
             return WireguardOutbound;
+          case XrayProtocol.HYSTERIA:
+            return HysteriaOutbound;
           default:
             return null;
         }

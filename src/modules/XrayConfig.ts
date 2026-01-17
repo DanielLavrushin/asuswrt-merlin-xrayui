@@ -67,6 +67,10 @@ export const xrayProtocols: XrayProtocolOption[] = [
   {
     protocol: XrayProtocol.DNS,
     modes: XrayProtocolMode.Outbound | XrayProtocolMode.BothModes
+  },
+  {
+    protocol: XrayProtocol.HYSTERIA,
+    modes: XrayProtocolMode.Outbound | XrayProtocolMode.BothModes
   }
 ];
 

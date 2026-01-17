@@ -17,6 +17,14 @@
               <input v-model="customName" type="text" class="input_20_table" />
             </td>
           </tr>
+          <tr>
+            <th>URL</th>
+            <td style="text-align: left">
+              <div class="textarea-wrapper">
+                <textarea ref="urlTextarea" v-model="link" readonly rows="25" @focus="selectUrl"></textarea>
+              </div>
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -68,8 +76,13 @@
     },
     setup(props) {
       const modalQr = ref<InstanceType<typeof Modal> | null>(null);
+      const urlTextarea = ref<HTMLTextAreaElement | null>(null);
       const customAddress = ref('');
       const customName = ref('');
+
+      const selectUrl = () => {
+        urlTextarea.value?.select();
+      };
 
       const buildQrLink = () => {
         const p = props.proxy;
@@ -152,8 +165,10 @@
         showQrCode,
         link,
         modalQr,
+        urlTextarea,
         customAddress,
-        customName
+        customName,
+        selectUrl
       };
     }
   });

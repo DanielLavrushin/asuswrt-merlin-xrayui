@@ -30,7 +30,8 @@ export const XrayProtocol = {
   DOKODEMODOOR: 'dokodemo-door',
   FREEDOM: 'freedom',
   BLACKHOLE: 'blackhole',
-  LOOPBACK: 'loopback'
+  LOOPBACK: 'loopback',
+  TUN: 'tun'
 };
 export enum XrayProtocolMode {
   Inbound = 1 << 0,

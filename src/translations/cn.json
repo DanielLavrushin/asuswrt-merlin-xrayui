@@ -456,10 +456,26 @@
       "label_port": "目标端口",
       "label_network": "网络协议",
       "label_follow_redirect": "跟随重定向",
-      "hint_address": "将流量转发到此地址。可以是一个 IP 地址，形如 `1.2.3.4`，或者一个域名，形如 `xray.com`。字符串类型。<hr/>启用 “跟随重定向” 时地址可为空。",
+      "hint_address": "将流量转发到此地址。可以是一个 IP 地址，形如 `1.2.3.4`，或者一个域名，形如 `xray.com`。字符串类型。<hr/>启用「跟随重定向」时地址可为空。",
       "hint_port": "将流量转发到目标地址的指定端口，范围 [1, 65535]，数值类型。**必填** ",
       "hint_network": "可接收的网络协议类型。比如当指定为 `tcp` 时，仅会接收 TCP 流量。默认值为 `tcp`。",
       "hint_follow_redirect": "启用时，dokodemo-door 会识别出由 iptables 转发而来的数据，并转发到相应的目标地址。详见传输配置中的tproxy设置。"
+    },
+    "TunInbound": {
+      "modal_title": "TUN",
+      "modal_desc": "TUN 接口支持连接网络第 3 层和第 7 层，引入原始网络输入。此功能旨在帮助不支持代理的应用程序/设备，使得可以在网络边缘设备（路由器）上运行 Xray 代理以路由原始网络流量。<blockquote>**重要提示**：这是面向网络专业人员的高级功能。配置不当可能导致网络环路或连接问题。TUN 接口需要操作系统级别的路由配置才能正常工作。</blockquote>",
+      "label_name": "接口名称",
+      "label_mtu": "MTU",
+      "label_gso": "启用 GSO",
+      "label_address": "IP 地址",
+      "label_routes": "路由",
+      "hint_name": "要创建的 TUN 接口的名称（例如，`xray0`、`tun0`）。此接口将由 Xray 创建，必须在操作系统级别配置路由规则。",
+      "hint_mtu": "TUN 接口的最大传输单元。标准网络通常为 `1500`，但根据网络配置和封装开销，可能需要更低的值（例如，`1492`、`1420`）。",
+      "hint_gso": "启用通用分段卸载。对于路由器设备上转发的流量，通常应禁用（`false`），因为它可能不会提供性能优势并增加复杂性。",
+      "hint_address": "分配给 TUN 接口的 IP 地址。每行输入一个 CIDR 表示法的地址（例如，IPv4 为 `192.168.10.1/24`，IPv6 为 `fd00::1/64`）。<hr/>这些地址是可选的，可以由操作系统级别的网络配置来管理。",
+      "hint_address_placeholder": "示例：192.168.10.1/24",
+      "hint_routes": "为 TUN 接口添加的路由。每行输入一个 CIDR 表示法的路由（例如，`0.0.0.0/0` 表示所有 IPv4 流量，`10.0.0.0/8` 表示特定网络）。<hr/><blockquote>**警告**：在没有适当的上游路由的情况下，通过 TUN 接口路由 `0.0.0.0/0` 可能导致网络环路。确保存在到 Xray 上游的静态路由，或使用单独的路由表。</blockquote>",
+      "hint_routes_placeholder": "示例：10.0.0.0/8"
     },
     "OutboundCommon": {
       "label_tag": "标签",

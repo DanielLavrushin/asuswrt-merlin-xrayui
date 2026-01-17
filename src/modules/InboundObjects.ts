@@ -156,3 +156,20 @@ export class XrayWireguardInboundObject implements IProtocolType {
     return this;
   };
 }
+
+export class XrayTunInboundObject implements IProtocolType {
+  public name? = 'xray0';
+  public mtu? = 1500;
+  public gso? = false;
+  public address?: string[];
+  public routes?: string[];
+
+  normalize = (): this | undefined => {
+    this.name = this.name === '' ? undefined : this.name;
+    this.mtu = this.mtu && this.mtu > 0 && this.mtu !== 1500 ? this.mtu : undefined;
+    this.gso = this.gso ? this.gso : undefined;
+    this.address = this.address && this.address.length > 0 ? this.address : undefined;
+    this.routes = this.routes && this.routes.length > 0 ? this.routes : undefined;
+    return isObjectEmpty(this) ? undefined : this;
+  };
+}

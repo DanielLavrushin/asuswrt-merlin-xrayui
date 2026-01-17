@@ -464,6 +464,22 @@
       "hint_network": "The supported network protocol type. For example, when specified as `tcp`, it will only receive TCP traffic. The default value is `tcp`.",
       "hint_follow_redirect": "When set to `true`, dokodemo-door will recognize data forwarded by `iptables` and forward it to the corresponding destination address.<hr/>Refer to the `tproxy` setting in the `Transport Configuration`"
     },
+    "TunInbound": {
+      "modal_title": "TUN",
+      "modal_desc": "TUN interface support bridges the gap between network layer 3 and layer 7, introducing raw network input. This functionality is targeted to assist applications/devices that don't have proxy support, making it possible to run Xray proxy on network edge devices (routers) to route raw network traffic. <blockquote>**Important**: This is an advanced feature intended for network professionals. Improper configuration may result in network loops or connectivity issues. The TUN interface requires OS-level routing configuration to function properly.</blockquote>",
+      "label_name": "Interface name",
+      "label_mtu": "MTU",
+      "label_gso": "Enable GSO",
+      "label_address": "IP addresses",
+      "label_routes": "Routes",
+      "hint_name": "The name of the TUN interface to create (e.g., `xray0`, `tun0`). This interface will be created by Xray and must be configured at the OS level with routing rules.",
+      "hint_mtu": "Maximum Transmission Unit for the TUN interface. Typically `1500` for standard networks, but may need to be lower (e.g., `1492`, `1420`) depending on your network configuration and encapsulation overhead.",
+      "hint_gso": "Enable Generic Segmentation Offload. Generally should be disabled (`false`) for forwarded traffic on router devices as it may not provide performance benefits and can add complexity.",
+      "hint_address": "IP addresses to assign to the TUN interface. Enter one address per line in CIDR notation (e.g., `192.168.10.1/24` for IPv4 or `fd00::1/64` for IPv6).<hr/>These addresses are optional and can be managed by OS-level network configuration instead.",
+      "hint_address_placeholder": "Example: 192.168.10.1/24",
+      "hint_routes": "Routes to add for the TUN interface. Enter one route per line in CIDR notation (e.g., `0.0.0.0/0` for all IPv4 traffic, `10.0.0.0/8` for specific networks).<hr/><blockquote>**Warning**: Routing `0.0.0.0/0` through the TUN interface without proper upstream routing can cause network loops. Ensure static routes to Xray upstreams exist, or use separate routing tables.</blockquote>",
+      "hint_routes_placeholder": "Example: 10.0.0.0/8"
+    },
     "OutboundCommon": {
       "label_tag": "Tag",
       "label_send_through": "Send through",

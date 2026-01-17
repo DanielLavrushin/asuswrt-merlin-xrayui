@@ -78,7 +78,8 @@
     XrayStreamHttpSettingsObject,
     XrayStreamWsSettingsObject,
     XrayStreamHttpUpgradeSettingsObject,
-    XrayStreamSplitHttpSettingsObject
+    XrayStreamSplitHttpSettingsObject,
+    XrayStreamHysteriaSettingsObject
   } from '@/modules/TransportObjects';
   import { XrayStreamSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject } from '@/modules/CommonObjects';
 
@@ -91,6 +92,7 @@
   import NetworkHttp from '../transport/Http.vue';
   import NetworkHttpUpgrade from '../transport/HttpUpgrade.vue';
   import NetworkGrpc from '../transport/Grpc.vue';
+  import NetworkHysteria from '../transport/Hysteria.vue';
   import Sockopt from '../transport/Sockopt.vue';
 
   import SecurityTls from '../security/Tls.vue';
@@ -138,6 +140,9 @@
           case 'grpc':
             transport.value.grpcSettings = transport.value.grpcSettings ?? new XrayStreamGrpcSettingsObject();
             return NetworkGrpc;
+          case 'hysteria':
+            transport.value.hysteriaSettings = transport.value.hysteriaSettings ?? new XrayStreamHysteriaSettingsObject();
+            return NetworkHysteria;
           default:
             return null;
         }

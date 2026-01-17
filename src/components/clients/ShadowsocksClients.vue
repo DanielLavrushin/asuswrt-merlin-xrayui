@@ -37,15 +37,12 @@
         <td>{{ client.password }}</td>
         <td>{{ client.method }}</td>
         <td>
-          <button @click.prevent="showQrCode(client)" class="button_gen button_gen_small" title="open user's configuration">QR</button>
+          <qr :client="client" :proxy="proxy"></qr>
           <button @click.prevent="removeClient(client)" class="button_gen button_gen_small" title="delete">&#10005;</button>
         </td>
       </tr>
     </tbody>
   </table>
-  <modal ref="modalQr" title="QR Code Modal">
-    <qrcode-vue :value="qr_content" :size="qr_size" level="H" render-as="svg" />
-  </modal>
 </template>
 
 <script lang="ts">
@@ -53,16 +50,12 @@
   import { XrayShadowsocksClientObject } from '@/modules/ClientsObjects';
   import { defineComponent, ref } from 'vue';
   import engine from '@/modules/Engine';
-  import xrayConfig from '@/modules/XrayConfig';
-  import QrcodeVue from 'qrcode.vue';
-
-  import modal from '@main/Modal.vue';
+  import Qr from './QrCodeClient.vue';
 
   export default defineComponent({
     name: 'ShadowsocksClients',
     components: {
-      QrcodeVue,
-      modal
+      Qr
     },
     methods: {
       regenerate() {
@@ -73,11 +66,6 @@
         this.newClient.password = engine.generateRandomBase64();
         this.newClient.email = '';
         this.newClient.method = 'aes-256-gcm';
-      },
-
-      showQrCode(client: XrayShadowsocksClientObject) {
-        this.qr_content = JSON.stringify(xrayConfig);
-        this.modalQr.value?.show();
       },
 
       removeClient(client: XrayShadowsocksClientObject) {
@@ -103,24 +91,24 @@
       }
     },
     props: {
-      clients: Array<XrayShadowsocksClientObject>
+      clients: Array<XrayShadowsocksClientObject>,
+      proxy: {
+        type: Object as () => any,
+        required: false
+      }
     },
 
     setup(props) {
       const clients = ref<XrayShadowsocksClientObject[]>(props.clients ?? []);
       const newClient = ref<XrayShadowsocksClientObject>(new XrayShadowsocksClientObject());
       newClient.value.password = engine.generateRandomBase64();
-      const modalQr = ref();
-      let qr_content = ref('');
 
       return {
         flows: XrayOptions.clientFlowOptions,
         encryptions: XrayOptions.encryptionOptions,
         clients,
-        qr_content,
-        qr_size: 500,
         newClient,
-        modalQr
+        proxy: props.proxy
       };
     }
   });

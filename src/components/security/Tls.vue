@@ -105,6 +105,18 @@
             <span class="hint-color">optional</span>
           </td>
         </tr>
+        <tr v-if="proxyType === 'outbound'">
+          <th>
+            {{ $t('com.Tls.label_pinned_peer_certificate') }}
+            <hint v-html="$t('com.Tls.hint_pinned_peer_certificate')"></hint>
+          </th>
+          <td>
+            <div class="textarea-wrapper">
+              <textarea rows="25" v-model.trim="pinnedCertificatesText" placeholder="AE243D668EC9C7F74A0DCD1AD21C6676B4EFE30C39728934B362093AF886BF77"></textarea>
+            </div>
+            <span class="hint-color">SHA256 fingerprints, one per line (optional)</span>
+          </td>
+        </tr>
         <tr v-if="proxyType === 'inbound'">
           <th>
             {{ $t('com.Tls.label_certificate') }}
@@ -122,7 +134,7 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, watch } from 'vue';
+  import { defineComponent, ref, watch, computed } from 'vue';
   import engine, { SubmitActions } from '@/modules/Engine';
   import CertificatesModal from '@modal/CertificatesModal.vue';
   import { XrayStreamSettingsObject, XrayStreamTlsSettingsObject, XrayStreamTlsCertificateObject } from '@/modules/CommonObjects';
@@ -184,6 +196,21 @@
         }
       );
 
+      const pinnedCertificatesText = computed({
+        get: () => {
+          return transport.value.tlsSettings?.pinnedPeerCertificateSha256?.join('\n') || '';
+        },
+        set: (value: string) => {
+          if (transport.value.tlsSettings) {
+            const lines = value
+              .split('\n')
+              .map((line) => line.trim().toUpperCase())
+              .filter((line) => line.length > 0);
+            transport.value.tlsSettings.pinnedPeerCertificateSha256 = lines.length > 0 ? lines : undefined;
+          }
+        }
+      });
+
       return {
         transport,
         certificatesModal,
@@ -194,7 +221,8 @@
         alpnOptions: XrayOptions.alpnOptions,
         proxyType,
         certificate_manage,
-        certificate_renew
+        certificate_renew,
+        pinnedCertificatesText
       };
     }
   });

@@ -231,3 +231,20 @@ export class XraySocksOutboundObject implements IProtocolType {
     return this;
   };
 }
+
+export class XrayHysteriaOutboundObject implements IProtocolType {
+  public version? = 2;
+  public address!: string;
+  public port!: number;
+
+  constructor() {
+    this.version = 2;
+    this.address = '';
+    this.port = 443;
+  }
+
+  normalize = (): this | undefined => {
+    this.version = this.version === 2 ? undefined : this.version;
+    return isObjectEmpty(this) ? undefined : this;
+  };
+}

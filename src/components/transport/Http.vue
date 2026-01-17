@@ -111,18 +111,40 @@
       </td>
     </tr>
   </tbody>
+  <tbody class="unlocked" v-if="proxyType === 'outbound'">
+    <tr>
+      <th>
+        {{ $t('com.DownloadSettings.label_uplink_downlink') }}
+        <hint v-html="$t('com.DownloadSettings.hint_uplink_downlink')"></hint>
+      </th>
+      <td>
+        <span class="row-buttons">
+          <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click="manage_download_settings" />
+        </span>
+        <modal ref="downloadSettingsModal" :title="$t('com.DownloadSettings.modal_title')" width="800">
+          <download-settings v-if="extra.downloadSettings" :downloadSettings="extra.downloadSettings" />
+        </modal>
+      </td>
+    </tr>
+  </tbody>
 </template>
 <script lang="ts">
-  import { computed, defineComponent, ref, watch } from 'vue';
+  import { computed, defineComponent, ref } from 'vue';
   import { XrayStreamSettingsObject, XrayXmuxObject } from '@/modules/CommonObjects';
   import { XrayOptions } from '@/modules/Options';
   import HeadersMapping from './HeadersMapping.vue';
-  import { XrayStreamHttpSettingsObject, XrayXhttpExtraObject } from '@/modules/TransportObjects';
+  import Modal from '@main/Modal.vue';
+  import Hint from '@main/Hint.vue';
+  import DownloadSettings from './DownloadSettings.vue';
+  import { XrayStreamHttpSettingsObject, XrayXhttpExtraObject, XrayDownloadSettingsObject } from '@/modules/TransportObjects';
 
   export default defineComponent({
     name: 'Http',
     components: {
-      HeadersMapping
+      HeadersMapping,
+      Modal,
+      Hint,
+      DownloadSettings
     },
     props: {
       transport: XrayStreamSettingsObject,
@@ -130,18 +152,31 @@
     },
     setup(props) {
       const transport = ref<XrayStreamSettingsObject>(props.transport ?? new XrayStreamSettingsObject());
+      const downloadSettingsModal = ref();
       const extra = computed(() => transport.value.xhttpSettings!.extra ?? (transport.value.xhttpSettings!.extra = new XrayXhttpExtraObject()));
       const xmux = computed(() => extra.value.xmux ?? (extra.value.xmux = new XrayXmuxObject()));
+
       const onheaderapupdate = (headers: any) => {
         if (transport.value.xhttpSettings) transport.value.xhttpSettings.headers = headers;
       };
+
+      const manage_download_settings = () => {
+        // Initialize downloadSettings if it doesn't exist
+        if (!extra.value.downloadSettings) {
+          extra.value.downloadSettings = new XrayDownloadSettingsObject();
+        }
+        downloadSettingsModal.value.show();
+      };
+
       return {
         transport,
         modes: XrayStreamHttpSettingsObject.modes,
         methods: XrayOptions.httpMethods,
         extra,
         xmux,
-        onheaderapupdate
+        downloadSettingsModal,
+        onheaderapupdate,
+        manage_download_settings
       };
     }
   });

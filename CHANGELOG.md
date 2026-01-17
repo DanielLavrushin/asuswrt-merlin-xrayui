@@ -1,5 +1,22 @@
 # XRAYUI Changelog
 
+## [0.62.0] - 2026-01-17
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- ADDED: `TUN` inbound support. Network layer 3 interface for routing raw network traffic through Xray on router devices, enabling proxy support for applications/devices without built-in proxy capabilities.
+- ADDED: `Hysteria` outbound protocol and transport support (versions 1 and 2).
+- ADDED: `Hysteria` URL import support for `hy2://` and `hysteria://` protocols with TLS and Salamander obfuscation parsing.
+- IMPROVED: `XHTTP` transport UI now includes "Uplink/Downlink Separation" configuration option (outbound only).
+- ADDED: `TLS` security settings now support `PinnedPeerCertificateSha256` field for certificate pinning (outbound only).
+- IMPROVED: Geodata files are now automatically updated when geosite or geoip URLs are changed in general settings.
+- FIXED: Backend scripts no longer create backup files in `/jffs/.asdbk/`, preventing JFFS partition overflow over time.
+- FIXED: `Shadowsocks` inbound now includes top-level `method` and `email` fields, resolving "unsupported cipher method" errors when using Shadowsocks 2022 protocols (fixes #259).
+- FIXED: `Shadowsocks` inbound QR code generation now works correctly, generating proper Shadowsocks URI format (fixes #260).
+- IMPROVED: `Shadowsocks` inbound UI now fully supports multi-language translations (EN, RU, UK, DE, CN).
+- IMPROVED: QR code generation now includes editable server address and connection name fields, allowing customization for DDNS or custom naming (fixes #262).
+- IMPROVED: QR code modal now displays the full connection URL in a copyable text area for easier sharing without additional tools (fixes #261).
+
 ## [0.61.0] - 2025-10-25
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

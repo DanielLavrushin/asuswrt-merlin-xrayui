@@ -95,6 +95,7 @@
   import SocksInbound from '@ibd/SocksInbound.vue';
   import TrojanInbound from '@ibd/TrojanInbound.vue';
   import WireguardInbound from '@ibd/WireguardInbound.vue';
+  import TunInbound from '@ibd/TunInbound.vue';
   import draggable from 'vuedraggable';
 
   import { useI18n } from 'vue-i18n';
@@ -133,6 +134,8 @@
             return TrojanInbound;
           case XrayProtocol.WIREGUARD:
             return WireguardInbound;
+          case XrayProtocol.TUN:
+            return TunInbound;
           default:
             return null;
         }

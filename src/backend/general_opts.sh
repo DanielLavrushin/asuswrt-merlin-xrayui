@@ -7,6 +7,10 @@ apply_general_options() {
 
     load_xrayui_config
 
+    # Store old geodata URLs before updating
+    local old_geosite_url="${geosite_url:-$DEFAULT_GEOSITE_URL}"
+    local old_geoip_url="${geoip_url:-$DEFAULT_GEOIP_URL}"
+
     local temp_config="/tmp/xray_server_config_new.json"
     local json_content=$(cat "$XRAY_CONFIG_FILE")
 
@@ -98,7 +102,17 @@ apply_general_options() {
     # integration scribe
     logs_scribe_integration
 
-    if [ -f "$XRAY_PIDFILE" ]; then
+    # Check if geodata URLs have changed and update if necessary
+    local geodata_updated=false
+    if [ "$old_geosite_url" != "$geosite_url" ] || [ "$old_geoip_url" != "$geoip_url" ]; then
+        log_info "Geodata URLs have changed. Updating geodata files..."
+        log_debug "Old geosite URL: $old_geosite_url, New: $geosite_url"
+        log_debug "Old geoip URL: $old_geoip_url, New: $geoip_url"
+        update_community_geodata
+        geodata_updated=true
+    fi
+
+    if [ -f "$XRAY_PIDFILE" ] && [ "$geodata_updated" = false ]; then
         update_loading_progress "Restarting Xray service..."
         restart
     fi

@@ -77,7 +77,7 @@ export class XrayVlessInboundObject implements IProtocolType {
   public decryption = 'none';
   public clients: XrayVlessClientObject[] = [];
   getUserNames = (): string[] => {
-    return this.clients.map((c) => c.email);
+    return this.clients.map((c) => c.email).filter((email): email is string => email !== undefined);
   };
   normalize = (): this | undefined => {
     return this;
@@ -87,7 +87,7 @@ export class XrayVlessInboundObject implements IProtocolType {
 export class XrayVmessInboundObject implements IProtocolType {
   public clients: XrayVmessClientObject[] = [];
   getUserNames = (): string[] => {
-    return this.clients.map((c) => c.email);
+    return this.clients.map((c) => c.email).filter((email): email is string => email !== undefined);
   };
 }
 
@@ -107,10 +107,14 @@ export class XrayHttpInboundObject implements IProtocolType {
 export class XrayShadowsocksInboundObject implements IProtocolType {
   public network? = 'tcp';
   public password? = '';
+  public method? = 'aes-256-gcm';
+  public email? = '';
   public clients: XrayShadowsocksClientObject[] = [];
   normalize = (): this | undefined => {
     this.network = this.network && this.network !== 'tcp' ? this.network : undefined;
     this.password = this.password && this.password !== '' ? this.password : undefined;
+    this.method = this.method && this.method !== '' ? this.method : undefined;
+    this.email = this.email && this.email !== '' ? this.email : undefined;
     return isObjectEmpty(this) ? undefined : this;
   };
 
@@ -154,5 +158,22 @@ export class XrayWireguardInboundObject implements IProtocolType {
 
   normalize = (): this | undefined => {
     return this;
+  };
+}
+
+export class XrayTunInboundObject implements IProtocolType {
+  public name? = 'xray0';
+  public mtu? = 1500;
+  public gso? = false;
+  public address?: string[];
+  public routes?: string[];
+
+  normalize = (): this | undefined => {
+    this.name = this.name === '' ? undefined : this.name;
+    this.mtu = this.mtu && this.mtu > 0 && this.mtu !== 1500 ? this.mtu : undefined;
+    this.gso = this.gso ? this.gso : undefined;
+    this.address = this.address && this.address.length > 0 ? this.address : undefined;
+    this.routes = this.routes && this.routes.length > 0 ? this.routes : undefined;
+    return isObjectEmpty(this) ? undefined : this;
   };
 }

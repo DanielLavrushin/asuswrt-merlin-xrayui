@@ -1,5 +1,13 @@
 import { plainToInstance } from 'class-transformer';
-import { XrayHeaderObject, XrayParsedUrlObject, XrayXmuxObject, isObjectEmpty } from './CommonObjects';
+import {
+  XrayHeaderObject,
+  XrayParsedUrlObject,
+  XrayXmuxObject,
+  XraySockoptObject,
+  XrayStreamTlsSettingsObject,
+  XrayStreamRealitySettingsObject,
+  isObjectEmpty
+} from './CommonObjects';
 import { ITransportNetwork } from './Interfaces';
 
 export class XrayStreamTcpSettingsObject implements ITransportNetwork {
@@ -115,6 +123,46 @@ export class XrayStreamHttpSettingsObject implements ITransportNetwork {
   };
 }
 
+export class XrayDownloadSettingsObject {
+  public address?: string;
+  public port?: number;
+  public network = 'xhttp'; // must be "xhttp"
+  public security?: string; // 'tls' | 'reality'
+  public tlsSettings?: XrayStreamTlsSettingsObject;
+  public realitySettings?: XrayStreamRealitySettingsObject;
+  public xhttpSettings?: XrayStreamHttpSettingsObject;
+  public sockopt?: XraySockoptObject;
+
+  normalize = (): this | undefined => {
+    if (!this.address || this.address === '') {
+      return undefined;
+    }
+
+    this.port = !this.port ? undefined : this.port;
+
+    if (this.security === 'tls') {
+      this.tlsSettings = plainToInstance(XrayStreamTlsSettingsObject, this.tlsSettings ?? {});
+      this.tlsSettings = this.tlsSettings ? this.tlsSettings.normalize() : undefined;
+      this.realitySettings = undefined;
+    } else if (this.security === 'reality') {
+      this.realitySettings = plainToInstance(XrayStreamRealitySettingsObject, this.realitySettings ?? {});
+      this.realitySettings = this.realitySettings ? this.realitySettings.normalize() : undefined;
+      this.tlsSettings = undefined;
+    } else {
+      this.tlsSettings = undefined;
+      this.realitySettings = undefined;
+    }
+
+    this.xhttpSettings = plainToInstance(XrayStreamHttpSettingsObject, this.xhttpSettings ?? {});
+    this.xhttpSettings = this.xhttpSettings ? this.xhttpSettings.normalize() : undefined;
+
+    this.sockopt = plainToInstance(XraySockoptObject, this.sockopt ?? {});
+    this.sockopt = this.sockopt ? this.sockopt.normalize() : undefined;
+
+    return isObjectEmpty(this) ? undefined : this;
+  };
+}
+
 export class XrayXhttpExtraObject {
   xPaddingBytes? = '100-1000';
   noGRPCHeader? = false;
@@ -124,6 +172,7 @@ export class XrayXhttpExtraObject {
   scMaxBufferedPosts? = 30;
   scStreamUpServerSecs? = '20-80';
   xmux?: XrayXmuxObject = new XrayXmuxObject();
+  downloadSettings?: XrayDownloadSettingsObject;
 
   normalize = (): this | undefined => {
     this.xPaddingBytes = this.xPaddingBytes === '100-1000' ? undefined : this.xPaddingBytes;
@@ -135,6 +184,8 @@ export class XrayXhttpExtraObject {
     this.scStreamUpServerSecs = this.scStreamUpServerSecs === '20-80' ? undefined : this.scStreamUpServerSecs;
     this.xmux = plainToInstance(XrayXmuxObject, this.xmux ?? {});
     this.xmux = this.xmux ? this.xmux.normalize() : undefined;
+    this.downloadSettings = plainToInstance(XrayDownloadSettingsObject, this.downloadSettings ?? {});
+    this.downloadSettings = this.downloadSettings ? this.downloadSettings.normalize() : undefined;
     return isObjectEmpty(this) ? undefined : this;
   };
 }
@@ -172,5 +223,56 @@ export class XrayStreamSplitHttpSettingsObject implements ITransportNetwork {
   public xmux: XrayXmuxObject = new XrayXmuxObject();
   normalize = (): this => {
     return this;
+  };
+}
+
+export class XrayUdpHopObject {
+  public port?: string;
+  public interval? = 30;
+
+  normalize = (): this | undefined => {
+    this.port = !this.port || this.port === '' ? undefined : this.port;
+    this.interval = this.interval === 30 ? undefined : this.interval;
+    return isObjectEmpty(this) ? undefined : this;
+  };
+}
+
+export class XraySalamanderObject {
+  public type = 'salamander';
+  public password?: string;
+
+  normalize = (): this | undefined => {
+    this.password = !this.password || this.password === '' ? undefined : this.password;
+    return isObjectEmpty(this) ? undefined : this;
+  };
+}
+
+export class XrayStreamHysteriaSettingsObject implements ITransportNetwork {
+  static readonly congestionOptions = ['brutal', 'bbr'];
+
+  public version? = 2;
+  public auth?: string;
+  public congestion? = 'brutal';
+  public up?: string;
+  public down?: string;
+  public udphop?: XrayUdpHopObject;
+
+  constructor() {
+    this.version = 2;
+    this.congestion = 'brutal';
+  }
+
+  normalize = (): this | undefined => {
+    this.version = this.version === 2 ? undefined : this.version;
+    this.auth = !this.auth || this.auth === '' ? undefined : this.auth;
+    this.congestion = this.congestion === 'brutal' ? undefined : this.congestion;
+    this.up = !this.up || this.up === '' ? undefined : this.up;
+    this.down = !this.down || this.down === '' ? undefined : this.down;
+
+    if (this.udphop && typeof this.udphop.normalize === 'function') {
+      this.udphop = this.udphop.normalize();
+    }
+
+    return isObjectEmpty(this) ? undefined : this;
   };
 }

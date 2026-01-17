@@ -29,17 +29,14 @@ update_community_geodata() {
     mv -f "$ADDON_TMP_DIR/geosite.dat" "$xray_dir/geosite.dat"
     mv -f "$ADDON_TMP_DIR/geoip.dat" "$xray_dir/geoip.dat"
 
-    geodata_recompile_all
-
     if [ -f "$xray_dir/geosite.dat" ] && [ -f "$xray_dir/geoip.dat" ]; then
         log_ok "Files successfully placed in $xray_dir."
-        if [ -f "$XRAY_PIDFILE" ]; then
-            update_loading_progress "Restarting Xray service..."
-            restart
-        fi
     else
         log_error "Failed to place geosite.dat/geoip.dat in $xray_dir."
+        return 1
     fi
+
+    geodata_recompile_all
 }
 
 geodata_unpack_tags() {

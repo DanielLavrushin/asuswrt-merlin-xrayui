@@ -47,6 +47,7 @@ import {
   XrayShadowsocksInboundObject,
   XraySocksInboundObject,
   XrayTrojanInboundObject,
+  XrayTunInboundObject,
   XrayVlessInboundObject,
   XrayVmessInboundObject,
   XrayWireguardInboundObject
@@ -580,6 +581,10 @@ export class Engine {
           case XrayProtocol.TROJAN:
             proxy = plainToInstance(XrayInboundObject<XrayTrojanInboundObject>, proxy);
             proxy.settings = plainToInstance(XrayTrojanInboundObject, proxy.settings) ?? new XrayTrojanInboundObject();
+            break;
+          case XrayProtocol.TUN:
+            proxy = plainToInstance(XrayInboundObject<XrayTunInboundObject>, proxy);
+            proxy.settings = plainToInstance(XrayTunInboundObject, proxy.settings) ?? new XrayTunInboundObject();
             break;
         }
 

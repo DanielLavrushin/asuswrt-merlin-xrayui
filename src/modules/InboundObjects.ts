@@ -77,7 +77,7 @@ export class XrayVlessInboundObject implements IProtocolType {
   public decryption = 'none';
   public clients: XrayVlessClientObject[] = [];
   getUserNames = (): string[] => {
-    return this.clients.map((c) => c.email);
+    return this.clients.map((c) => c.email).filter((email): email is string => email !== undefined);
   };
   normalize = (): this | undefined => {
     return this;
@@ -87,7 +87,7 @@ export class XrayVlessInboundObject implements IProtocolType {
 export class XrayVmessInboundObject implements IProtocolType {
   public clients: XrayVmessClientObject[] = [];
   getUserNames = (): string[] => {
-    return this.clients.map((c) => c.email);
+    return this.clients.map((c) => c.email).filter((email): email is string => email !== undefined);
   };
 }
 

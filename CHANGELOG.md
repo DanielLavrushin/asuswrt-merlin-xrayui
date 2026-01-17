@@ -9,6 +9,7 @@
 - ADDED: `Hysteria` URL import support for `hy2://` and `hysteria://` protocols with TLS and Salamander obfuscation parsing.
 - IMPROVED: `XHTTP` transport UI now includes "Uplink/Downlink Separation" configuration option (outbound only).
 - ADDED: `TLS` security settings now support `PinnedPeerCertificateSha256` field for certificate pinning (outbound only).
+- IMPROVED: Geodata files are now automatically updated when geosite or geoip URLs are changed in general settings.
 - FIXED: Backend scripts no longer create backup files in `/jffs/.asdbk/`, preventing JFFS partition overflow over time.
 
 ## [0.61.0] - 2025-10-25

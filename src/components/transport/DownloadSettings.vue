@@ -146,7 +146,6 @@
       downloadTransport.value.realitySettings = props.downloadSettings.realitySettings;
       downloadTransport.value.sockopt = props.downloadSettings.sockopt;
 
-      // Watch for changes in downloadTransport and sync back to downloadSettings
       watch(
         () => downloadTransport.value.security,
         (newSecurity) => {

@@ -5,6 +5,7 @@
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - IMPROVED: `XHTTP` transport UI now includes "Uplink/Downlink Separation" configuration option (outbound only).
+- ADDED: `TLS` security settings now support `PinnedPeerCertificateSha256` field for certificate pinning (outbound only).
 
 ## [0.61.0] - 2025-10-25
 

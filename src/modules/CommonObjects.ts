@@ -134,7 +134,7 @@ export class XrayStreamTlsSettingsObject implements ISecurityProtocol {
   public maxVersion?: string;
   public certificates?: XrayStreamTlsCertificateObject[] | undefined = [];
   public fingerprint?: string;
-  public pinnedPeerCertificateChainSha256?: string;
+  public pinnedPeerCertificateSha256?: string[];
   public masterKeyLog?: string;
 
   constructor(parsedObject?: XrayParsedUrlObject | undefined) {

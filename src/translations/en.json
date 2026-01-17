@@ -313,6 +313,7 @@
       "label_tls_version": "TLS version",
       "label_certificate": "Certificate",
       "label_fingerprint": "Fingerprint",
+      "label_pinned_peer_certificate": "Pinned Peer Certificate",
       "label_session_resumption": "Session resumption",
       "hint_server_name": "Specifies the domain of the server-side certificate, useful when connecting only via IP addresses.<br />When the target is specified by domains, like when the domain is received by `SOCKS` inbounds or detected via sniffing, the extracted domain will automatically be used as `serverName`, without any need for manual configuration.",
       "hint_alpn": "An array of strings specifying the ALPN values used in TLS handshakes. Defaults to `['h2', 'http/1.1']`.<br />Application-Layer Protocol Negotiation (ALPN) is a TLS extension that allows the application to negotiate which protocol should be performed over a secure connection in a manner that is more efficient than sending multiple requests over the same connection.",
@@ -322,6 +323,7 @@
       "hint_tls_version": "Specifies the `minimum` and `maximum` version of the TLS protocol.",
       "hint_certificate": "Certificate",
       "hint_fingerprint": "Specifies the fingerprint of the TLS Client Hello message. When empty, fingerprint simulation will not be enabled. When enabled, Xray will simulate the TLS fingerprint through the uTLS library or have it generated randomly. ",
+      "hint_pinned_peer_certificate": "SHA256 certificate fingerprints for certificate pinning. Enter one fingerprint per line (e.g., `AE243D668EC9C7F74A0DCD1AD21C6676B4EFE30C39728934B362093AF886BF77`).<br /><br />**Leaf Certificate**: Specifying a leaf certificate allows hashes within the same certificate chain to pass verification directly.<br /><br />**CA Certificate**: Specifying a CA certificate temporarily passes verification and adds the verified CA to the certificate pool. Use with `serverName` for custom self-signed CAs.<blockquote>If neither is specified, verification will fail.</blockquote>",
       "hint_session_resumption": "When `false`, the `session_ticket` extension will not be included in `ClientHello`. Oftentimes the `ClientHello` in Go programs does not have this extension enabled, so it is recommended to leave it as-is. Defaults to `false`."
     },
     "DownloadSettings": {

@@ -310,6 +310,7 @@
       "label_tls_version": "TLS 版本",
       "label_certificate": "CA 证书",
       "label_fingerprint": "TLS 指纹",
+      "label_pinned_peer_certificate": "固定对等证书",
       "label_session_resumption": "会话恢复",
       "hint_server_name": "指定服务端证书的域名（仅通过 IP 连接时有用）。<br />若目标通过域名指定（如 `SOCKS` 入站接收或嗅探检测到的域名），提取的域名将自动作为 `serverName` ,，无需手动配置。",
       "hint_alpn": "TLS 握手时使用的 ALPN 值数组，默认为 `['h2', 'http/1.1']`。<br />应用层协议（ALPN） 是 TLS 扩展，允许应用通过安全连接协商协议，比同一连接发送多请求更高效。",
@@ -319,6 +320,7 @@
       "hint_tls_version": "指定 TLS 协议的最小和最大版本。",
       "hint_certificate": "证书文件",
       "hint_fingerprint": "指定 TLS 客户端指纹。留空时不启用指纹模拟；启用时 Xray 通过 uTLS 库模拟或随机生成。 ",
+      "hint_pinned_peer_certificate": "用于证书固定的 SHA256 证书指纹。每行输入一个指纹（例如，`AE243D668EC9C7F74A0DCD1AD21C6676B4EFE30C39728934B362093AF886BF77`）。<br /><br />**叶证书**：指定叶证书后，同一证书链中的哈希将直接通过验证。<br /><br />**CA 证书**：指定 CA 证书会临时通过验证，并将已验证的 CA 添加到证书池中。与 `serverName` 配合使用可支持自定义自签名 CA。<blockquote>如果未指定任何内容，验证将失败。</blockquote>",
       "hint_session_resumption": "设为 `false` 时，`ClientHello` 不包含 `session_ticket` 扩展。Go 程序通常不启用此扩展，建议保持默认 `false`。"
     },
     "DownloadSettings": {

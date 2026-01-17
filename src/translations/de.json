@@ -273,6 +273,7 @@
       "label_tls_version": "TLS-Version",
       "label_certificate": "Zertifikat",
       "label_fingerprint": "Fingerabdruck",
+      "label_pinned_peer_certificate": "Angeheftetes Peer-Zertifikat",
       "label_session_resumption": "Sitzungsfortsetzung",
       "hint_server_name": "Gibt die Domain des serverseitigen Zertifikats an, was besonders nützlich ist, wenn ausschließlich über IP-Adressen verbunden wird.<br>Wenn das Ziel über Domains spezifiziert wird, beispielsweise wenn das Domainfeld bei SOCKS-Eingängen empfangen oder per Sniffing erkannt wird, wird die extrahierte Domain automatisch als `serverName` verwendet, ohne dass eine manuelle Konfiguration erforderlich ist.",
       "hint_alpn": "Ein Array von Zeichenketten, das die ALPN-Werte angibt, die bei TLS-Handshake-Vorgängen verwendet werden. Standardmäßig: `['h2', 'http/1.1']`.<br>Application-Layer Protocol Negotiation (ALPN) ist eine TLS-Erweiterung, die es der Anwendung ermöglicht, effizient zu verhandeln, welcher Protokolltyp über eine sichere Verbindung verwendet wird, ohne dass mehrere Anfragen über dieselbe Verbindung gesendet werden müssen.",
@@ -282,6 +283,7 @@
       "hint_tls_version": "Gibt die minimale und maximale Version des TLS-Protokolls an.",
       "hint_certificate": "Zertifikat",
       "hint_fingerprint": "Gibt den Fingerabdruck der TLS Client Hello-Nachricht an. Wenn leer, wird die Fingerabdrucksimulation nicht aktiviert. Bei Aktivierung simuliert Xray den TLS-Fingerabdruck mithilfe der uTLS-Bibliothek oder generiert ihn zufällig.",
+      "hint_pinned_peer_certificate": "SHA256-Zertifikats-Fingerabdrücke für Certificate Pinning. Geben Sie einen Fingerabdruck pro Zeile ein (z.B. `AE243D668EC9C7F74A0DCD1AD21C6676B4EFE30C39728934B362093AF886BF77`).<br /><br />**Leaf-Zertifikat**: Die Angabe eines Leaf-Zertifikats ermöglicht, dass Hashes innerhalb derselben Zertifikatskette direkt die Überprüfung bestehen.<br /><br />**CA-Zertifikat**: Die Angabe eines CA-Zertifikats führt zu einer vorübergehenden Überprüfung und fügt das verifizierte CA dem Zertifikatspool hinzu. Verwenden Sie dies mit `serverName` für benutzerdefinierte selbstsignierte CAs.<blockquote>Wenn nichts angegeben ist, schlägt die Überprüfung fehl.</blockquote>",
       "hint_session_resumption": "Wenn `false`, wird die Erweiterung `session_ticket` nicht in `ClientHello` aufgenommen. Häufig ist diese Erweiterung in Go-Programmen nicht aktiviert, daher wird empfohlen, den Standardwert beizubehalten. Standardmäßig `false`."
     },
     "DownloadSettings": {

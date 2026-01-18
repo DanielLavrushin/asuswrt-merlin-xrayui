@@ -52,9 +52,6 @@ switch_xray_version() {
 
     fi
 
-    update_loading_progress "Stopping Xray service..."
-    stop
-
     update_loading_progress "Downloading Xray release version..."
     log_ok "Downloading Xray asset metadata $version_url"
 
@@ -118,6 +115,10 @@ switch_xray_version() {
         return 1
     fi
 
+    update_loading_progress "Stopping Xray service..."
+    POST_RESTART_DNSMASQ="true"
+    stop
+
     update_loading_progress "Unpacking $asset_name ..."
     log_ok "Unpacking $asset_name..."
     mkdir -p "$xray_tmp_dir"
@@ -135,7 +136,10 @@ switch_xray_version() {
     rm -rf "$xray_tmp_dir"
     rm -f "$tmp_zip"
 
-    restart
+    start
+
+    dnsmasq_restart
+    POST_RESTART_DNSMASQ="false"
 
     log_ok "Xray version updated!"
     log_ok $(show_version)

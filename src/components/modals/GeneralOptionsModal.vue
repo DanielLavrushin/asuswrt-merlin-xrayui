@@ -308,6 +308,7 @@
   const currentTab = ref(tabs[0]);
 
   const gh_proxies = [
+    'https://proxy.lavrush.in/xray/',
     'https://ghfast.top/',
     'https://ghproxy.net/',
     'https://jiashu.1win.eu.org/',

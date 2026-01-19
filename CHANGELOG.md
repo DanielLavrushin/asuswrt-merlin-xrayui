@@ -1,15 +1,10 @@
 # XRAYUI Changelog
 
-## [0.62.3] - 2026-01-xx
+## [0.62.2] - 2026-01-xx
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - FIXED: `Shadowsocks` 2022 multi-user mode now works correctly - server method is preserved and client methods are properly cleared when using `2022-blake3-*` encryption methods.
-
-## [0.62.2] - 2026-01-18
-
-> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
-
 - FIXED: Xray version switching no longer attempts to download from invalid URLs when `github_proxy` is set to `null`.
 - ADDED: `proxy.lavrush.in` to the github proxies list.
 

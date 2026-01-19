@@ -15,7 +15,21 @@ export const XrayOptions = {
   headerTypes: ['none', 'http', 'srtp', 'utp', 'wechat-video', 'dtls', 'wireguard'],
   httpMethods: ['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT', 'PATCH'],
   clientFlowOptions: ['none', 'xtls-rprx-vision'],
-  encryptionOptions: ['none', 'plain', 'aes-128-gcm', 'aes-256-gcm', 'chacha20-ietf-poly1305', '2022-blake3-aes-128-gcm', '2022-blake3-aes-256-gcm', '2022-blake3-chacha20-poly1305']
+  encryptionOptions: [
+    // Recommended encryption methods
+    '2022-blake3-aes-128-gcm',
+    '2022-blake3-aes-256-gcm',
+    '2022-blake3-chacha20-poly1305',
+    // Other encryption methods
+    'aes-256-gcm',
+    'aes-128-gcm',
+    'chacha20-poly1305',
+    'chacha20-ietf-poly1305',
+    'xchacha20-poly1305',
+    'xchacha20-ietf-poly1305',
+    'none',
+    'plain'
+  ]
 };
 
 export const XrayProtocol = {

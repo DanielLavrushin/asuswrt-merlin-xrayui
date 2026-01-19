@@ -13,7 +13,7 @@
 - FIXED: Xray version switching no longer attempts to download from invalid URLs when `github_proxy` is set to `null`.
 - ADDED: `proxy.lavrush.in` to the github proxies list.
 
-## [0.62.0] - 2026-01-17
+## [0.62.1] - 2026-01-17
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 

@@ -112,9 +112,24 @@ export class XrayShadowsocksInboundObject implements IProtocolType {
   public clients: XrayShadowsocksClientObject[] = [];
   normalize = (): this | undefined => {
     this.network = this.network && this.network !== 'tcp' ? this.network : undefined;
-    this.password = this.password && this.password !== '' ? this.password : undefined;
-    this.method = this.method && this.method !== '' && this.method !== 'aes-256-gcm' ? this.method : undefined;
+
+    // For Shadowsocks 2022 multi-user mode, client methods must be empty
+    const is2022Method = this.method?.startsWith('2022-blake3-');
+    if (is2022Method) {
+      // Keep the server method for 2022 ciphers, clear client methods
+      // Server password is REQUIRED for 2022 multi-user mode
+      this.clients.forEach((client) => {
+        client.method = undefined;
+      });
+    } else {
+      // For non-2022 methods, use default normalization
+      this.method = this.method && this.method !== '' && this.method !== 'aes-256-gcm' ? this.method : undefined;
+      // For legacy Shadowsocks, password can be optional (client-only mode)
+      this.password = this.password && this.password !== '' ? this.password : undefined;
+    }
+
     this.email = this.email && this.email !== '' ? this.email : undefined;
+
     return isObjectEmpty(this) ? undefined : this;
   };
 

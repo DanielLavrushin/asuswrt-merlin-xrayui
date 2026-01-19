@@ -51,6 +51,9 @@
     protocol: string;
     port: number | string;
     tag?: string;
+    settings?: {
+      method?: string;
+    };
     streamSettings?: {
       security?: string;
       realitySettings?: XrayStreamRealitySettingsObject;
@@ -91,7 +94,7 @@
 
         // Handle Shadowsocks protocol
         if (p.protocol === 'shadowsocks') {
-          const method = props.client.method || 'aes-256-gcm';
+          const method = props.client.method || p.settings?.method || 'aes-256-gcm';
           const password = props.client.password || '';
 
           // Shadowsocks URI format: ss://base64(method:password)@server:port#remark

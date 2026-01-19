@@ -102,6 +102,7 @@ switch_xray_version() {
 
     if [ -z "$asset_url" ] || [ "$asset_url" = "null" ]; then
         log_error "Error: could not find asset '$asset_name' in the release data"
+        return 1
     fi
 
     update_loading_progress "Downloading $asset_name ..."

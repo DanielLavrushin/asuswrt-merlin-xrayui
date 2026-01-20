@@ -6,6 +6,7 @@
 
 - FIXED: `Hysteria` outbound now correctly saves version field and properly removes empty configuration values.
 - IMPROVED: `Hysteria` transport now supports all congestion control algorithms (`auto`, `reno`, `bbr`, `brutal`, `force-brutal`).
+- IMPROVED: Added support for Hysteria subscription links (`hysteria://`, `hy2://`, `hysteria2://`).
 - REMOVED: `Hysteria` version selector removed from UI as only Hysteria 2 is supported by Xray-core.
 
 ## [0.62.2] - 2026-01-19

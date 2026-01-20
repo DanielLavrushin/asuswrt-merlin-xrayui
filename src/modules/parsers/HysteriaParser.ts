@@ -3,8 +3,8 @@ import { XrayOutboundObject, XrayHysteriaOutboundObject } from '../OutboundObjec
 import { XrayStreamHysteriaSettingsObject, XraySalamanderObject } from '../TransportObjects';
 
 export default function HysteriaParser(parsedObj: XrayParsedUrlObject): XrayOutboundObject<XrayHysteriaOutboundObject> | null {
-  // Support both hy2:// (Hysteria 2) and hysteria://
-  if (parsedObj.protocol !== 'hy2' && parsedObj.protocol !== 'hysteria') return null;
+  // Support hy2://, hysteria2://, and hysteria://
+  if (parsedObj.protocol !== 'hy2' && parsedObj.protocol !== 'hysteria2' && parsedObj.protocol !== 'hysteria') return null;
 
   const proxy = new XrayOutboundObject<XrayHysteriaOutboundObject>();
   proxy.tag = parsedObj.tag;
@@ -13,8 +13,8 @@ export default function HysteriaParser(parsedObj: XrayParsedUrlObject): XrayOutb
   proxy.settings.address = parsedObj.server;
   proxy.settings.port = parsedObj.port;
 
-  // Determine version from protocol (hy2:// = version 2, hysteria:// could be version 1)
-  if (parsedObj.protocol === 'hy2') {
+  // Determine version from protocol (hy2:// and hysteria2:// = version 2, hysteria:// could be version 1)
+  if (parsedObj.protocol === 'hy2' || parsedObj.protocol === 'hysteria2') {
     proxy.settings.version = 2;
   } else if (parsedObj.parsedParams.version) {
     proxy.settings.version = parseInt(parsedObj.parsedParams.version);

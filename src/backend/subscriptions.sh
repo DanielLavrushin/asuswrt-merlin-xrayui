@@ -64,6 +64,9 @@ subscription_parse_link_to_outbound() {
     vless://*) subscription_parse_vless "$link" ;;
     trojan://*) subscription_parse_trojan "$link" ;;
     ss://*) subscription_parse_shadowsocks "$link" ;;
+    hy2://*) subscription_parse_hysteria "$link" ;;
+    hysteria://*) subscription_parse_hysteria "$link" ;;
+    hysteria2://*) subscription_parse_hysteria "$link" ;;
     *) return 1 ;;
     esac
 }
@@ -435,6 +438,154 @@ subscription_parse_shadowsocks() {
     }'
 }
 
+subscription_parse_hysteria() {
+    local link="$1"
+    local rest proto
+
+    # Determine protocol and extract rest of URL
+    case "$link" in
+    hy2://*)
+        proto="hy2"
+        rest="${link#hy2://}"
+        ;;
+    hysteria2://*)
+        proto="hysteria2"
+        rest="${link#hysteria2://}"
+        ;;
+    hysteria://*)
+        proto="hysteria"
+        rest="${link#hysteria://}"
+        ;;
+    *)
+        return 1
+        ;;
+    esac
+
+    local userhostport="${rest%%\?*}"
+    local qs="${rest#*\?}"
+    qs="${qs%%#*}"
+
+    # Extract auth (password) from user@host:port or from query params
+    local auth=""
+    if echo "$userhostport" | grep -q '@'; then
+        auth="${userhostport%%@*}"
+        # If auth contains username:password format, extract password
+        if echo "$auth" | grep -q ':'; then
+            auth="${auth#*:}"
+        fi
+    fi
+
+    local hostport
+    hostport=$(subscription_parse_hostport "$userhostport")
+    local host="${hostport%%:*}"
+    local port="${hostport##*:}"
+
+    local tag_raw
+    tag_raw=$(printf '%s' "$link" | awk -F'#' '{print $2}')
+    local tag="$(urldecode "${tag_raw:-hysteria}")"
+
+    # Extract parameters
+    local auth_param
+    auth_param=$(urldecode "$(subscription_parse_kv "$qs" "auth")")
+    local password_param
+    password_param=$(urldecode "$(subscription_parse_kv "$qs" "password")")
+    local version
+    version=$(urldecode "$(subscription_parse_kv "$qs" "version")")
+    local congestion
+    congestion=$(urldecode "$(subscription_parse_kv "$qs" "congestion")")
+    local up
+    up=$(urldecode "$(subscription_parse_kv "$qs" "up")")
+    local upmbps
+    upmbps=$(urldecode "$(subscription_parse_kv "$qs" "upmbps")")
+    local down
+    down=$(urldecode "$(subscription_parse_kv "$qs" "down")")
+    local downmbps
+    downmbps=$(urldecode "$(subscription_parse_kv "$qs" "downmbps")")
+    local insecure
+    insecure=$(urldecode "$(subscription_parse_kv "$qs" "insecure")")
+    local sni
+    sni=$(urldecode "$(subscription_parse_kv "$qs" "sni")")
+    local peer
+    peer=$(urldecode "$(subscription_parse_kv "$qs" "peer")")
+    local alpn
+    alpn=$(urldecode "$(subscription_parse_kv "$qs" "alpn")")
+    local pinSHA256
+    pinSHA256=$(urldecode "$(subscription_parse_kv "$qs" "pinSHA256")")
+    local obfs
+    obfs=$(urldecode "$(subscription_parse_kv "$qs" "obfs")")
+    local obfsPassword
+    obfsPassword=$(urldecode "$(subscription_parse_kv "$qs" "obfs-password")")
+    [ -z "$obfsPassword" ] && obfsPassword=$(urldecode "$(subscription_parse_kv "$qs" "obfsPassword")")
+
+    # Determine final auth value
+    [ -n "$auth_param" ] && auth="$auth_param"
+    [ -n "$password_param" ] && auth="$password_param"
+
+    # Determine version (hy2:// and hysteria2:// = version 2 by default)
+    [ "$proto" = "hy2" ] || [ "$proto" = "hysteria2" ] && [ -z "$version" ] && version="2"
+
+    # Determine SNI
+    local final_sni="${sni:-$peer}"
+
+    # Build hysteria settings
+    local hysteria_settings
+    hysteria_settings=$(jq -nc \
+        --arg auth "$auth" \
+        --arg version "$version" \
+        --arg congestion "$congestion" \
+        --arg up "${up:-$upmbps}" \
+        --arg down "${down:-$downmbps}" '
+        {}
+        | if ($auth|length)>0 then .auth=$auth else . end
+        | if ($version|length)>0 then .version=($version|tonumber) else . end
+        | if ($congestion|length)>0 then .congestion=$congestion else . end
+        | if ($up|length)>0 then .up=$up else . end
+        | if ($down|length)>0 then .down=$down else . end
+    ')
+
+    # Build TLS settings if needed
+    local tls_settings="null"
+    if [ -n "$final_sni" ] || [ "$insecure" = "1" ] || [ "$insecure" = "true" ] || [ -n "$alpn" ] || [ -n "$pinSHA256" ]; then
+        tls_settings=$(jq -nc \
+            --arg sni "$final_sni" \
+            --arg insecure "$insecure" \
+            --arg alpn "$alpn" \
+            --arg pin "$pinSHA256" '
+            {}
+            | if ($sni|length)>0 then .serverName=$sni else . end
+            | if ($insecure=="1" or $insecure=="true") then .allowInsecure=true else . end
+            | if ($alpn|length)>0 then .alpn=($alpn|split(",")) else . end
+            | if ($pin|length)>0 then .pinnedPeerCertificateSha256=($pin|split(",")) else . end
+        ')
+    fi
+
+    # Build salamander obfuscation if present
+    local udpmasks="null"
+    if [ "$obfs" = "salamander" ] && [ -n "$obfsPassword" ]; then
+        udpmasks=$(jq -nc --arg pwd "$obfsPassword" '[{type:"salamander",password:$pwd}]')
+    fi
+
+    jq -nc --arg tag "$tag" --arg host "$host" --arg port "$port" \
+        --arg version "$version" \
+        --argjson hysteria "$hysteria_settings" \
+        --argjson tls "$tls_settings" \
+        --argjson udpmasks "$udpmasks" '
+    {
+        protocol:"hysteria",
+        tag:$tag,
+        settings:{
+            address:$host,
+            port:($port|tonumber)
+        }
+        + (if ($version|length)>0 then {version:($version|tonumber)} else {} end),
+        streamSettings:(
+            {network:"hysteria",hysteriaSettings:$hysteria}
+            + (if $tls!=null then {security:"tls",tlsSettings:$tls} else {} end)
+            + (if $udpmasks!=null then {udpmasks:$udpmasks} else {} end)
+        )
+    }'
+}
+
 subscription_parse_kv() { printf '%s' "$1" | tr '&' '\n' | awk -F= -v k="$2" '$1==k{print $2}'; }
 
 subscription_parse_hostport() { printf '%s' "$1" | awk -F@ '{print $NF}' | awk -F/ '{print $1}'; }
@@ -519,6 +670,7 @@ subscription_fetch_protocols() {
         vmess) key=vmess ;;
         trojan) key=trojan ;;
         ss) key=shadowsocks ;; # keep ss:// link, key is "shadowsocks"
+        hy2 | hysteria | hysteria2) key=hysteria ;;
         wireguard | wg | wgcf) key=wireguard ;;
         *) continue ;;
         esac

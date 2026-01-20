@@ -11,18 +11,6 @@
         <outbound-common v-model:proxy="proxy"></outbound-common>
         <tr>
           <th>
-            {{ $t('com.HysteriaOutbound.label_version') }}
-            <hint v-html="$t('com.HysteriaOutbound.hint_version')"></hint>
-          </th>
-          <td>
-            <select class="input_option" v-model.number="proxy.settings.version">
-              <option :value="1">Hysteria 1</option>
-              <option :value="2">Hysteria 2</option>
-            </select>
-          </td>
-        </tr>
-        <tr>
-          <th>
             {{ $t('com.HysteriaOutbound.label_address') }}
             <hint v-html="$t('com.HysteriaOutbound.hint_address')"></hint>
           </th>
@@ -44,7 +32,7 @@
               v-model.number="proxy.settings.port"
               autocorrect="off"
               autocapitalize="off"
-              onkeypress="return validator.isNumber(this,event);"
+              onkeypress="return validator.isNumber(this, event);"
             />
           </td>
         </tr>
@@ -55,7 +43,8 @@
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
   import { XrayOutboundObject, XrayHysteriaOutboundObject } from '@/modules/OutboundObjects';
-  import { XrayProtocol } from '@/modules/CommonObjects';
+  import { XrayProtocol, XrayStreamSettingsObject } from '@/modules/CommonObjects';
+  import { XrayStreamHysteriaSettingsObject } from '@/modules/TransportObjects';
   import OutboundCommon from './OutboundCommon.vue';
   import Hint from '@main/Hint.vue';
 
@@ -74,10 +63,20 @@
       );
 
       if (!proxy.value.streamSettings) {
-        proxy.value.streamSettings = {
-          network: 'hysteria',
-          security: 'tls'
-        };
+        proxy.value.streamSettings = new XrayStreamSettingsObject();
+        proxy.value.streamSettings.network = 'hysteria';
+        proxy.value.streamSettings.security = 'tls';
+      }
+
+      if (!proxy.value.streamSettings.hysteriaSettings) {
+        proxy.value.streamSettings.hysteriaSettings = new XrayStreamHysteriaSettingsObject();
+      }
+
+      if (proxy.value.settings) {
+        proxy.value.settings.version = 2;
+      }
+      if (proxy.value.streamSettings.hysteriaSettings) {
+        proxy.value.streamSettings.hysteriaSettings.version = 2;
       }
 
       return {

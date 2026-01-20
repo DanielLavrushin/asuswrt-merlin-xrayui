@@ -57,6 +57,7 @@ import {
   XrayStreamHttpSettingsObject,
   XrayStreamGrpcSettingsObject,
   XrayStreamHttpUpgradeSettingsObject,
+  XrayStreamHysteriaSettingsObject,
   XrayStreamKcpSettingsObject,
   XrayStreamTcpSettingsObject,
   XrayStreamWsSettingsObject
@@ -788,6 +789,9 @@ function transformStreamSettings(streamSettings: XrayStreamSettingsObject | unde
   }
   if (streamSettings.xhttpSettings) {
     settings.xhttpSettings = plainToInstance(XrayStreamHttpSettingsObject, streamSettings.xhttpSettings);
+  }
+  if (streamSettings.hysteriaSettings) {
+    settings.hysteriaSettings = plainToInstance(XrayStreamHysteriaSettingsObject, streamSettings.hysteriaSettings);
   }
   return settings;
 }

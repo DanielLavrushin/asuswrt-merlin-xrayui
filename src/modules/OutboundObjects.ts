@@ -244,7 +244,6 @@ export class XrayHysteriaOutboundObject implements IProtocolType {
   }
 
   normalize = (): this | undefined => {
-    this.version = this.version === 2 ? undefined : this.version;
     return isObjectEmpty(this) ? undefined : this;
   };
 }

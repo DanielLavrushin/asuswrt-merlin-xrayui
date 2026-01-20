@@ -53,6 +53,7 @@
     tag?: string;
     settings?: {
       method?: string;
+      password?: string;
     };
     streamSettings?: {
       security?: string;
@@ -95,9 +96,22 @@
         // Handle Shadowsocks protocol
         if (p.protocol === 'shadowsocks') {
           const method = props.client.method || p.settings?.method || 'aes-256-gcm';
-          const password = props.client.password || '';
+          const clientPassword = props.client.password || '';
+          const is2022Method = method.startsWith('2022-blake3-');
 
-          // Shadowsocks URI format: ss://base64(method:password)@server:port#remark
+          let password = clientPassword;
+          if (is2022Method && p.settings?.password) {
+            password = `${p.settings.password}:${clientPassword}`;
+          }
+
+          //  https://shadowsocks.org/doc/sip002.html
+          if (is2022Method) {
+            const encodedMethod = encodeURIComponent(method);
+            const encodedPassword = encodeURIComponent(password);
+            return `ss://${encodedMethod}:${encodedPassword}@${address}:${p.port}#${encodeURIComponent(remark)}`;
+          }
+
+          // Legacy Shadowsocks URI format: ss://base64(method:password)@server:port#remark
           const userInfo = `${method}:${password}`;
           const base64UserInfo = btoa(userInfo);
 

@@ -354,16 +354,17 @@ subscription_parse_shadowsocks() {
     tag_raw=$(printf '%s' "$link" | awk -F'#' '{print $2}')
     local tag="$(urldecode "${tag_raw:-ss}")"
 
-    local methodpass hostport
+    local methodpass hostport is_2022_format=""
     if echo "$before_hash" | grep -q '@'; then
         local left="${before_hash%@*}"
         local right="${before_hash#*@}"
         local decoded_left
-        decoded_left=$(echo "$left" | base64 -d 2>/dev/null) || decoded_left="$left"
-        if echo "$decoded_left" | grep -q ':'; then
+        decoded_left=$(echo "$left" | base64 -d 2>/dev/null) || decoded_left=""
+        if [ -n "$decoded_left" ] && echo "$decoded_left" | grep -q ':'; then
             methodpass="$decoded_left"
         else
-            methodpass="$left"
+            methodpass=$(urldecode "$left")
+            is_2022_format="1"
         fi
         hostport="$right"
     else

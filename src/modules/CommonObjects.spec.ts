@@ -233,6 +233,35 @@ describe('CommonObjects', () => {
       expect(p.parsedParams.method).toBe(method);
       expect(p.parsedParams.pass).toBe(pass);
     });
+
+    it('parses a Shadowsocks 2022 URL with plain-text format', () => {
+      const method = '2022-blake3-aes-256-gcm';
+      const serverPsk = 'abc123serverkey==';
+      const userPsk = 'xyz789userkey==';
+      const combinedPass = `${serverPsk}:${userPsk}`;
+      const encodedMethod = encodeURIComponent(method);
+      const encodedPass = encodeURIComponent(combinedPass);
+      const url = `ss://${encodedMethod}:${encodedPass}@shadow.example:8388#SS2022`;
+      const p = new XrayParsedUrlObject(url);
+      expect(p.protocol).toBe('ss');
+      expect(p.server).toBe('shadow.example');
+      expect(p.port).toBe(8388);
+      expect(p.tag).toBe('SS2022');
+      expect(p.parsedParams.method).toBe(method);
+      expect(p.parsedParams.pass).toBe(combinedPass);
+    });
+
+    it('parses a Shadowsocks 2022 URL with single PSK', () => {
+      const method = '2022-blake3-aes-128-gcm';
+      const pass = 'singlePskKey123==';
+      const url = `ss://${encodeURIComponent(method)}:${encodeURIComponent(pass)}@example.com:443#SinglePSK`;
+      const p = new XrayParsedUrlObject(url);
+      expect(p.protocol).toBe('ss');
+      expect(p.server).toBe('example.com');
+      expect(p.port).toBe(443);
+      expect(p.parsedParams.method).toBe(method);
+      expect(p.parsedParams.pass).toBe(pass);
+    });
   });
 
   describe('XrayStreamSettingsObject', () => {

@@ -2,19 +2,6 @@
   <tbody v-if="transport.hysteriaSettings">
     <tr>
       <th>
-        {{ $t('com.NetworkHysteria.label_version') }}
-        <hint v-html="$t('com.NetworkHysteria.hint_version')"></hint>
-      </th>
-      <td>
-        <select class="input_option" v-model.number="transport.hysteriaSettings.version">
-          <option :value="1">Hysteria 1</option>
-          <option :value="2">Hysteria 2</option>
-        </select>
-        <span class="hint-color">default: 2</span>
-      </td>
-    </tr>
-    <tr>
-      <th>
         {{ $t('com.NetworkHysteria.label_auth') }}
         <hint v-html="$t('com.NetworkHysteria.hint_auth')"></hint>
       </th>
@@ -29,9 +16,9 @@
       </th>
       <td>
         <select class="input_option" v-model="transport.hysteriaSettings.congestion">
-          <option v-for="(opt, index) in congestionOptions" :key="index" :value="opt">{{ opt }}</option>
+          <option v-for="(opt, index) in congestionOptions" :key="index" :value="opt">{{ opt === '' ? 'auto' : opt }}</option>
         </select>
-        <span class="hint-color">default: brutal</span>
+        <span class="hint-color">auto: brutal (with up) or bbr (without up)</span>
       </td>
     </tr>
     <tr>
@@ -121,6 +108,11 @@
     setup(props) {
       const transport = ref<XrayStreamSettingsObject>(props.transport ?? new XrayStreamSettingsObject());
       const congestionOptions = XrayStreamHysteriaSettingsObject.congestionOptions;
+
+      // Ensure congestion defaults to '' (auto) when undefined
+      if (transport.value.hysteriaSettings && transport.value.hysteriaSettings.congestion === undefined) {
+        transport.value.hysteriaSettings.congestion = '';
+      }
 
       const udphopEnabled = computed({
         get: () => !!transport.value.hysteriaSettings?.udphop,

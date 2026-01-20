@@ -248,24 +248,23 @@ export class XraySalamanderObject {
 }
 
 export class XrayStreamHysteriaSettingsObject implements ITransportNetwork {
-  static readonly congestionOptions = ['brutal', 'bbr'];
+  static readonly congestionOptions = ['', 'reno', 'bbr', 'brutal', 'force-brutal'];
 
   public version? = 2;
   public auth?: string;
-  public congestion? = 'brutal';
+  public congestion? = '';
   public up?: string;
   public down?: string;
   public udphop?: XrayUdpHopObject;
 
   constructor() {
     this.version = 2;
-    this.congestion = 'brutal';
+    this.congestion = '';
   }
 
   normalize = (): this | undefined => {
-    this.version = this.version === 2 ? undefined : this.version;
     this.auth = !this.auth || this.auth === '' ? undefined : this.auth;
-    this.congestion = this.congestion === 'brutal' ? undefined : this.congestion;
+    this.congestion = !this.congestion || this.congestion === '' ? undefined : this.congestion;
     this.up = !this.up || this.up === '' ? undefined : this.up;
     this.down = !this.down || this.down === '' ? undefined : this.down;
 

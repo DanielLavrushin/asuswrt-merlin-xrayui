@@ -765,28 +765,40 @@ export class XrayParsedUrlObject {
       const hashIdx = afterScheme.indexOf('#');
       const restNoFrag = hashIdx >= 0 ? afterScheme.slice(0, hashIdx) : afterScheme;
       const [authHost] = restNoFrag.split('?');
-      const [uuid] = authHost.split('@');
-      const ssDecoded = atob(uuid);
-      const [method, pass, port] = ssDecoded.split(':');
-      const [_, server] = ssDecoded.split('@');
-      extraParams.method = method;
+      const [userinfo] = authHost.split('@');
 
-      const [pass2] = pass.split('@');
+      const is2022Format = userinfo.startsWith('2022-blake3-');
 
-      extraParams.pass = pass2 ?? pass;
+      let method: string;
+      let pass: string;
 
-      if (port) {
-        this.port = parseInt(port, 10);
-      }
-      if (server) {
-        const [server2, port2] = server.split(':');
-        if (port2) {
-          this.port = parseInt(port2, 10);
-          this.server = server2;
-        } else {
-          this.server = server;
+      if (is2022Format) {
+        const decoded = decodeURIComponent(userinfo);
+        const colonIdx = decoded.indexOf(':');
+        method = decoded.slice(0, colonIdx);
+        pass = decoded.slice(colonIdx + 1);
+      } else {
+        const ssDecoded = atob(userinfo);
+        const [decodedMethod, ...passParts] = ssDecoded.split(':');
+        method = decodedMethod;
+        const fullPass = passParts.join(':');
+        const [pass2] = fullPass.split('@');
+        pass = pass2 ?? fullPass;
+
+        const [, server] = ssDecoded.split('@');
+        if (server) {
+          const [server2, port2] = server.split(':');
+          if (port2) {
+            this.port = parseInt(port2, 10);
+            this.server = server2;
+          } else {
+            this.server = server;
+          }
         }
       }
+
+      extraParams.method = method;
+      extraParams.pass = pass;
     }
 
     const hashIdx = afterScheme.indexOf('#');

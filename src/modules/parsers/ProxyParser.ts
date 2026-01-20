@@ -33,13 +33,14 @@ export default class ProxyParser {
         break;
       case 'hy2':
       case 'hysteria':
+      case 'hysteria2':
         proxy = HysteriaParser(this.parsedObject);
         break;
     }
 
     if (proxy) {
       // Hysteria parser handles its own stream settings, so skip post-processing
-      if (this.parsedObject.protocol === 'hy2' || this.parsedObject.protocol === 'hysteria') {
+      if (this.parsedObject.protocol === 'hy2' || this.parsedObject.protocol === 'hysteria' || this.parsedObject.protocol === 'hysteria2') {
         return proxy;
       }
 

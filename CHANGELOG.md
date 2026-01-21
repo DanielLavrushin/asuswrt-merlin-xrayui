@@ -1,5 +1,9 @@
 # XRAYUI Changelog
 
+## [0.62.4] - 2026-xx-xx
+
+- FIXED: Double starting the xray process after booting the router [#273](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/273)
+
 ## [0.62.3] - 2026-01-19
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

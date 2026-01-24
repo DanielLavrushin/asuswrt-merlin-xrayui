@@ -60,7 +60,9 @@ import {
   XrayStreamHysteriaSettingsObject,
   XrayStreamKcpSettingsObject,
   XrayStreamTcpSettingsObject,
-  XrayStreamWsSettingsObject
+  XrayStreamWsSettingsObject,
+  XrayFinalMaskObject,
+  XraySalamanderObject
 } from './TransportObjects';
 import { XrayProtocol } from './Options';
 
@@ -792,6 +794,18 @@ function transformStreamSettings(streamSettings: XrayStreamSettingsObject | unde
   }
   if (streamSettings.hysteriaSettings) {
     settings.hysteriaSettings = plainToInstance(XrayStreamHysteriaSettingsObject, streamSettings.hysteriaSettings);
+  }
+  if (streamSettings.udpmasks && streamSettings.udpmasks.length > 0) {
+    settings.udpmasks = streamSettings.udpmasks.map((mask: XrayFinalMaskObject & { password?: string }) => {
+      const finalMask = plainToInstance(XrayFinalMaskObject, mask);
+      if (mask.password && !mask.settings) {
+        finalMask.settings = new XraySalamanderObject();
+        finalMask.settings.password = mask.password;
+      } else if (mask.settings) {
+        finalMask.settings = plainToInstance(XraySalamanderObject, mask.settings);
+      }
+      return finalMask;
+    });
   }
   return settings;
 }

@@ -5,6 +5,13 @@ start() {
 
     load_xrayui_config
 
+    # Prevent duplicate starts - check if Xray is already running
+    local existing_pid=$(get_proc "xray")
+    if [ -n "$existing_pid" ]; then
+        log_warn "Xray is already running (PID: $existing_pid). Skipping start."
+        return 0
+    fi
+
     local skip_test="${skip_test:-false}"
 
     if [ "$skip_test" = "true" ]; then

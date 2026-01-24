@@ -118,6 +118,15 @@ ensure_hashnet() {
 }
 
 configure_firewall() {
+    local STARTUP_LOCK="/tmp/xrayui_startup.lock"
+    if [ -f "$STARTUP_LOCK" ]; then
+        local lock_pid=$(cat "$STARTUP_LOCK" 2>/dev/null)
+        if [ -n "$lock_pid" ] && kill -0 "$lock_pid" 2>/dev/null; then
+            log_info "Startup in progress (PID: $lock_pid). Firewall will be configured after Xray starts."
+            return 0
+        fi
+    fi
+
     log_info "Configuring Xray firewall rules..."
     update_loading_progress "Configuring Xray firewall rules..."
     load_xrayui_config

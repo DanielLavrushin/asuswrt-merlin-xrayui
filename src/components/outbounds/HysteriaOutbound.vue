@@ -8,7 +8,7 @@
         </tr>
       </thead>
       <tbody>
-        <outbound-common v-model:proxy="proxy"></outbound-common>
+        <outbound-common v-model:proxy="proxy" @apply-parsed="applyParsed"></outbound-common>
         <tr>
           <th>
             {{ $t('com.HysteriaOutbound.label_address') }}
@@ -57,7 +57,7 @@
     props: {
       proxy: XrayOutboundObject<XrayHysteriaOutboundObject>
     },
-    setup(props) {
+    setup(props, { emit }) {
       const proxy = ref<XrayOutboundObject<XrayHysteriaOutboundObject>>(
         props.proxy ?? new XrayOutboundObject<XrayHysteriaOutboundObject>(XrayProtocol.HYSTERIA, new XrayHysteriaOutboundObject())
       );
@@ -79,8 +79,25 @@
         proxy.value.streamSettings.hysteriaSettings.version = 2;
       }
 
+      const applyParsed = (parsed: XrayOutboundObject<XrayHysteriaOutboundObject>) => {
+        proxy.value.tag = proxy.value.tag || parsed.tag;
+        proxy.value.surl = undefined;
+
+        if (parsed.settings && proxy.value.settings) {
+          proxy.value.settings.address = parsed.settings.address;
+          proxy.value.settings.port = parsed.settings.port;
+        }
+
+        if (parsed.streamSettings) {
+          proxy.value.streamSettings = parsed.streamSettings;
+        }
+
+        emit('update:proxy', proxy.value);
+      };
+
       return {
-        proxy
+        proxy,
+        applyParsed
       };
     }
   });

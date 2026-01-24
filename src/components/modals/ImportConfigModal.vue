@@ -71,34 +71,26 @@
         </tbody>
 
         <tbody v-show="state.completeSetup && !isFile">
-          <tr v-show="!isFile">
+          <tr>
             <th>
-              {{ $t('com.ImportConfigModal.label_keep_existing_rules') }}
-              <hint v-html="$t('com.ImportConfigModal.hint_keep_existing_rules')"></hint>
+              {{ $t('com.ImportConfigModal.label_routing_mode') }}
+              <hint v-html="$t('com.ImportConfigModal.hint_routing_mode')"></hint>
             </th>
             <td>
-              <input type="checkbox" v-model="state.keepExistingRules" />
-            </td>
-          </tr>
-          <tr v-show="!state.keepExistingRules">
-            <th>
-              {{ $t('com.ImportConfigModal.label_unblock') }}
-              <hint v-html="$t('com.ImportConfigModal.hint_unblock')"></hint>
-            </th>
-            <td class="flex-checkbox">
-              <div v-for="(opt, index) in unblockItemsList" :key="index">
-                <input type="checkbox" v-model="state.unblockItems" class="input" :value="opt" :id="'destopt-' + index" />
-                <label :for="'destopt-' + index" class="settingvalue">{{ opt }}</label>
+              <div class="radio-group">
+                <div>
+                  <input type="radio" v-model="state.routingMode" value="basic" id="routing-basic" />
+                  <label for="routing-basic">{{ $t('com.ImportConfigModal.opt_routing_basic') }}</label>
+                </div>
+                <div>
+                  <input type="radio" v-model="state.routingMode" value="none" id="routing-none" />
+                  <label for="routing-none">{{ $t('com.ImportConfigModal.opt_routing_none') }}</label>
+                </div>
+                <div>
+                  <input type="radio" v-model="state.routingMode" value="keep" id="routing-keep" />
+                  <label for="routing-keep">{{ $t('com.ImportConfigModal.opt_routing_keep') }}</label>
+                </div>
               </div>
-            </td>
-          </tr>
-          <tr v-show="!state.keepExistingRules">
-            <th>
-              {{ $t('com.ImportConfigModal.label_dont_break') }}
-              <hint v-html="$t('com.ImportConfigModal.hint_dont_break')"></hint>
-            </th>
-            <td>
-              <input type="checkbox" v-model="state.bypassMode" />
             </td>
           </tr>
         </tbody>
@@ -119,7 +111,7 @@
   import ProxyParser from '@/modules/parsers/ProxyParser';
   import Hint from '@main/Hint.vue';
   import { plainToInstance } from 'class-transformer';
-  import { XrayDnsObject, XrayLogObject, XrayRoutingPolicy, XrayRoutingObject, XraySniffingObject, XraySockoptObject } from '@/modules/CommonObjects';
+  import { XrayDnsObject, XrayLogObject, XrayRoutingObject, XraySniffingObject, XraySockoptObject } from '@/modules/CommonObjects';
   import { XrayDokodemoDoorInboundObject, XrayInboundObject } from '@/modules/InboundObjects';
   import {
     XrayBlackholeOutboundObject,
@@ -161,35 +153,8 @@
           file: '' as string
         },
         completeSetup: true,
-        bypassMode: true,
-        keepExistingRules: false,
-        unblockItems: ['Youtube'] as string[]
+        routingMode: 'basic' as 'basic' | 'none' | 'keep'
       });
-
-      const unblockItemsList = [
-        'Github',
-        'Google',
-        'Youtube',
-        'Telegram',
-        'TikTok',
-        'Reddit',
-        'LinkedIn',
-        'DeviantArt',
-        'Flibusta',
-        'Wikipedia',
-        'Twitch',
-        'Disney',
-        'Netflix',
-        'Discord',
-        'Instagram',
-        'Twitter',
-        'Patreon',
-        'Metacritic',
-        'Envato',
-        'SoundCloud',
-        'Kinopub',
-        'Facebook'
-      ].sort();
 
       const isQr = computed(() => state.importType === 'qr');
       const isUrl = computed(() => state.importType === 'url');
@@ -285,10 +250,12 @@
 
         const proxyTag = cfg.outbounds.find((o) => o.tag && o.protocol != XrayProtocol.FREEDOM && o.protocol != XrayProtocol.BLACKHOLE)?.tag ?? 'proxy';
 
-        if (!state.keepExistingRules) {
-          cfg.routing = new XrayRoutingObject().default(proxyTag, state.unblockItems).normalize();
-          if (state.bypassMode) cfg.routing.policies = [new XrayRoutingPolicy().default().normalize()!];
+        if (state.routingMode === 'basic') {
+          cfg.routing = new XrayRoutingObject().basicBypass(proxyTag).normalize();
+        } else if (state.routingMode === 'none') {
+          cfg.routing = new XrayRoutingObject().normalize();
         }
+        // 'keep' mode: don't modify routing at all
       };
 
       const onImport = async () => {
@@ -319,7 +286,7 @@
 
         let primaryOutbound: XrayOutboundObject<IProtocolType> | null = null;
 
-        if (isUrl.value) {
+        if (isUrl.value || isQr.value) {
           try {
             const parser = new ProxyParser(state.protocol.url);
             primaryOutbound = parser.getOutbound();
@@ -399,7 +366,6 @@
       return {
         importModal,
         state,
-        unblockItemsList,
         isQr,
         isUrl,
         isJson,

@@ -472,6 +472,51 @@ export class XrayRoutingObject {
 
     return this;
   };
+
+  /**
+   * Creates a basic bypass configuration with the most common services.
+   * Uses 2 consolidated rules:
+   * 1. Domain rule: All geosites combined
+   * 2. IP rule: GeoIP for services that need IP-based matching (e.g., Telegram)
+   */
+  public basicBypass = (outboundTag: string): this => {
+    this.rules = [];
+
+    // Consolidated domain rule with all common geosites
+    const domainRule = this.create_rule('Common services (domains)', outboundTag, 'tcp,udp', [
+      // Google (includes YouTube, Google Play, etc.)
+      'geosite:google',
+      'geosite:google-play',
+      'geosite:google-registry',
+      'geosite:google-ads',
+      'geosite:google-trust-services',
+      'geosite:google-scholar',
+      'geosite:youtube',
+      // Social & Messaging
+      'geosite:telegram',
+      'geosite:twitter',
+      'geosite:instagram',
+      'geosite:facebook',
+      'geosite:facebook-dev',
+      'geosite:discord',
+      'geosite:tiktok',
+      // Streaming
+      'geosite:netflix',
+      // Development
+      'geosite:github'
+    ]);
+    this.rules.push(domainRule);
+
+    // IP rule for Telegram (they use IP ranges that may not resolve via DNS)
+    const ipRule = this.create_rule('Common services (IPs)', outboundTag, 'tcp,udp', [], ['geoip:telegram']);
+    this.rules.push(ipRule);
+
+    // Discord voice/video uses specific UDP ports
+    const discordPortsRule = this.create_rule('Discord voice/video', outboundTag, 'udp', [], [], '50000-50100,6463-6472');
+    this.rules.push(discordPortsRule);
+
+    return this;
+  };
 }
 
 export class XrayRoutingPolicy {

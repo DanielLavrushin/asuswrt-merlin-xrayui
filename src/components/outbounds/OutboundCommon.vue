@@ -48,17 +48,13 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, computed, watch, nextTick, inject, Ref, triggerRef } from 'vue';
-  import { XrayOutboundObject, XrayShadowsocksOutboundObject, XrayTrojanOutboundObject, XrayVlessOutboundObject, XrayVmessOutboundObject } from '@/modules/OutboundObjects';
+  import { defineComponent, ref, computed, watch, nextTick, inject, Ref } from 'vue';
+  import { XrayOutboundObject } from '@/modules/OutboundObjects';
   import { IProtocolType } from '@/modules/Interfaces';
   import AllocateModal from '@modal/AllocateModal.vue';
   import Hint from '@main/Hint.vue';
   import { EngineResponseConfig } from '@modules/Engine';
-  import { XrayParsedUrlObject, XrayProtocol } from '@modules/CommonObjects';
-  import VlessParser from '@modules/parsers/VlessParser';
-  import VmessParser from '@modules/parsers/VmessParser';
-  import ShadowsocksParser from '@modules/parsers/ShadowsocksParser';
-  import TrojanParser from '@modules/parsers/TrojanParser';
+  import { XrayParsedUrlObject } from '@modules/CommonObjects';
   import ProxyParser from '@modules/parsers/ProxyParser';
 
   export default defineComponent({

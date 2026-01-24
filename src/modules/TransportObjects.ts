@@ -238,12 +238,24 @@ export class XrayUdpHopObject {
 }
 
 export class XraySalamanderObject {
-  public type = 'salamander';
   public password?: string;
 
   normalize = (): this | undefined => {
     this.password = !this.password || this.password === '' ? undefined : this.password;
     return isObjectEmpty(this) ? undefined : this;
+  };
+}
+
+export class XrayFinalMaskObject {
+  public type = 'salamander';
+  public settings?: XraySalamanderObject;
+
+  normalize = (): this | undefined => {
+    if (this.settings && typeof this.settings.normalize === 'function') {
+      this.settings = this.settings.normalize();
+    }
+    if (!this.settings) return undefined;
+    return this;
   };
 }
 

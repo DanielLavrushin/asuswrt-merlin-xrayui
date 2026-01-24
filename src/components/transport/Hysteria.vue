@@ -95,7 +95,7 @@
   import { defineComponent, ref, watch, computed } from 'vue';
   import Hint from '@main/Hint.vue';
   import { XrayStreamSettingsObject } from '@/modules/CommonObjects';
-  import { XrayStreamHysteriaSettingsObject, XrayUdpHopObject, XraySalamanderObject } from '@/modules/TransportObjects';
+  import { XrayStreamHysteriaSettingsObject, XrayUdpHopObject, XrayFinalMaskObject, XraySalamanderObject } from '@/modules/TransportObjects';
 
   export default defineComponent({
     name: 'NetworkHysteria',
@@ -130,8 +130,9 @@
         get: () => !!(transport.value.udpmasks && transport.value.udpmasks.length > 0),
         set: (val) => {
           if (val) {
-            const salamander = new XraySalamanderObject();
-            transport.value.udpmasks = [salamander];
+            const finalMask = new XrayFinalMaskObject();
+            finalMask.settings = new XraySalamanderObject();
+            transport.value.udpmasks = [finalMask];
           } else {
             transport.value.udpmasks = undefined;
           }
@@ -139,10 +140,13 @@
       });
 
       const salamanderPassword = computed({
-        get: () => transport.value.udpmasks?.[0]?.password ?? '',
+        get: () => transport.value.udpmasks?.[0]?.settings?.password ?? '',
         set: (val) => {
           if (transport.value.udpmasks && transport.value.udpmasks.length > 0) {
-            transport.value.udpmasks[0].password = val;
+            if (!transport.value.udpmasks[0].settings) {
+              transport.value.udpmasks[0].settings = new XraySalamanderObject();
+            }
+            transport.value.udpmasks[0].settings.password = val;
           }
         }
       });

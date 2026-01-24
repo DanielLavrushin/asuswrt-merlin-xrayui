@@ -5,6 +5,7 @@
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - ADDED: Full `TUN` inbound routing support. When you configure a TUN inbound (e.g., `xray0`), XRAYUI now automatically handles all the network setup: assigning IP addresses to the TUN interface, creating routing rules so your LAN traffic flows through the VPN tunnel, and adding bypass routes for VPN server IPs to prevent connection loops. Everything is cleaned up automatically when you stop Xray.
+- FIXED: `Hysteria` Salamander obfuscation now works correctly when importing subscription URLs.
 
 ## [0.62.3] - 2026-01-19
 

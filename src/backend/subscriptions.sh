@@ -563,7 +563,7 @@ subscription_parse_hysteria() {
     # Build salamander obfuscation if present
     local udpmasks="null"
     if [ "$obfs" = "salamander" ] && [ -n "$obfsPassword" ]; then
-        udpmasks=$(jq -nc --arg pwd "$obfsPassword" '[{type:"salamander",password:$pwd}]')
+        udpmasks=$(jq -nc --arg pwd "$obfsPassword" '[{type:"salamander",settings:{password:$pwd}}]')
     fi
 
     jq -nc --arg tag "$tag" --arg host "$host" --arg port "$port" \

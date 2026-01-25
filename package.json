@@ -51,7 +51,7 @@
     "jest-junit": "^16.0.0",
     "jest-serializer-vue": "^3.1.0",
     "lodash": "^4.17.23",
-    "sass": "^1.97.2",
+    "sass": "^1.97.3",
     "ssh2-sftp-client": "^12.0.1",
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",

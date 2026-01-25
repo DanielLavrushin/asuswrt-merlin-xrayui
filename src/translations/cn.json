@@ -115,7 +115,7 @@
       "hint_proxy_uri": "通过分享链接快速配置。通常以 `vless://` 或 `vmess://` 开头。",
       "hint_complete_setup": "启用后 Xrayui 自动配置并覆盖当前配置文件。<hr />这会创建默认路由测试出站连接。配置生效后访问 `https://ip-api.com/`查看服务器 IP。<hr />建议自定义流量路由规则。",
       "label_routing_mode": "路由模式",
-      "hint_routing_mode": "选择如何配置导入配置的路由规则。<hr/><b>基本绕过</b>：为最常用的服务创建路由规则（Google、YouTube、Telegram、Twitter、Instagram、Facebook、Discord、TikTok、Netflix、Github）。这些服务的流量将通过代理。<hr/><b>无路由规则</b>：不创建路由规则。除非您手动配置规则，否则所有流量将转到第一个出站（直连）。<hr/><b>保留现有规则</b>：保留您当前的路由规则。如果您已有自定义规则配置，请使用此选项。",
+      "hint_routing_mode": "选择如何配置导入配置的路由规则。<hr/><b>基本绕过</b>：为最常用的服务创建路由规则（Google、Meta、Telegram、Twitter、Discord、TikTok、Netflix、Github、Cloudflare）。这些服务的流量将通过代理。<hr/><b>无路由规则</b>：不创建路由规则。除非您手动配置规则，否则所有流量将转到第一个出站（直连）。<hr/><b>保留现有规则</b>：保留您当前的路由规则。如果您已有自定义规则配置，请使用此选项。",
       "opt_routing_basic": "基本绕过（推荐）",
       "opt_routing_none": "无路由规则",
       "opt_routing_keep": "保留现有路由规则",

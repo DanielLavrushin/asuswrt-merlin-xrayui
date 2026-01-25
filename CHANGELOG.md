@@ -1,5 +1,12 @@
 # XRAYUI Changelog
 
+## [0.63.3] - 2026-01-25
+>
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- IMPROVED: Simplified import wizard with new "Basic bypass" routing option for common services (Google, Meta, Telegram, Twitter, Discord, TikTok, Netflix, Github, Cloudflare).
+- FIXED: Import URL tags now display correctly instead of showing encoded characters.
+
 ## [0.63.2] - 2026-01-25
 >
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

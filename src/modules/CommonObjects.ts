@@ -491,7 +491,6 @@ export class XrayRoutingObject {
       'geosite:kinopub',
       'geosite:akamai',
       'domain:themoviedb.org',
-      'geosite:github',
       'domain:ntc.party'
     ]);
     this.rules.push(domainRule);

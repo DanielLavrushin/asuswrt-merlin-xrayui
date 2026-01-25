@@ -1,6 +1,6 @@
 # XRAYUI Changelog
 
-## [0.63.3] - 2026-01-25
+## [0.63.4] - 2026-01-25
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 

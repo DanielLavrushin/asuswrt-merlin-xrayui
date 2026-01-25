@@ -2,6 +2,23 @@
 # shellcheck disable=SC2034  # codacy:Unused variables
 
 startup() {
+    # Use a lock file to prevent concurrent startup executions
+    local STARTUP_LOCK="/tmp/xrayui_startup.lock"
+
+    # Check if startup is already in progress
+    if [ -f "$STARTUP_LOCK" ]; then
+        local lock_pid=$(cat "$STARTUP_LOCK" 2>/dev/null)
+        if [ -n "$lock_pid" ] && kill -0 "$lock_pid" 2>/dev/null; then
+            log_warn "Startup already in progress (PID: $lock_pid). Skipping duplicate startup."
+            return 0
+        fi
+        rm -f "$STARTUP_LOCK"
+    fi
+
+    echo $$ >"$STARTUP_LOCK"
+
+    trap 'rm -f "$STARTUP_LOCK"' EXIT
+
     log_ok "Starting $ADDON_TITLE..."
 
     load_xrayui_config
@@ -30,4 +47,8 @@ startup() {
     else
         log_ok "Xray service is disabled by XRAYUI. Xray service is not running."
     fi
+
+    # Remove lock file
+    rm -f "$STARTUP_LOCK"
+    trap - EXIT
 }

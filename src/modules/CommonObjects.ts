@@ -10,7 +10,7 @@ import {
   XrayStreamHttpUpgradeSettingsObject,
   XrayStreamSplitHttpSettingsObject,
   XrayStreamHysteriaSettingsObject,
-  XraySalamanderObject
+  XrayFinalMaskObject
 } from './TransportObjects';
 
 export const isObjectEmpty = (obj: any): boolean => {
@@ -472,6 +472,38 @@ export class XrayRoutingObject {
 
     return this;
   };
+
+  public basicBypass = (outboundTag: string): this => {
+    this.rules = [];
+
+    const domainRule = this.create_rule('Common services (domains)', outboundTag, 'tcp,udp', [
+      'geosite:google',
+      'geosite:meta',
+      'geosite:telegram',
+      'geosite:x',
+      'geosite:discord',
+      'geosite:rutracker',
+      'geosite:tiktok',
+      'geosite:netflix',
+      'geosite:github',
+      'geosite:cloudflare',
+      'geosite:category-media-ru',
+      'geosite:kinopub',
+      'geosite:akamai',
+      'domain:themoviedb.org',
+      'geosite:github',
+      'domain:ntc.party'
+    ]);
+    this.rules.push(domainRule);
+
+    const ipRule = this.create_rule('Common services (IPs)', outboundTag, 'tcp,udp', [], ['geoip:telegram', 'geoip:cloudflare', '130.255.77.28']);
+    this.rules.push(ipRule);
+
+    const discordPortsRule = this.create_rule('Discord voice/video', outboundTag, 'udp', [], [], '50000-51000,1400,3478-3481,5349,19294-19344');
+    this.rules.push(discordPortsRule);
+
+    return this;
+  };
 }
 
 export class XrayRoutingPolicy {
@@ -598,7 +630,7 @@ export class XrayStreamSettingsObject {
   public httpupgradeSettings?: XrayStreamHttpUpgradeSettingsObject;
   public splithttpSettings?: XrayStreamSplitHttpSettingsObject;
   public hysteriaSettings?: XrayStreamHysteriaSettingsObject;
-  public udpmasks?: XraySalamanderObject[];
+  public udpmasks?: XrayFinalMaskObject[];
   public sockopt?: XraySockoptObject;
 
   public normalize(): this | undefined {
@@ -618,7 +650,7 @@ export class XrayStreamSettingsObject {
     if (this.udpmasks && this.udpmasks.length > 0) {
       this.udpmasks = this.udpmasks
         .map((mask) => (typeof mask.normalize === 'function' ? mask.normalize() : mask))
-        .filter((mask): mask is XraySalamanderObject => mask !== undefined);
+        .filter((mask): mask is XrayFinalMaskObject => mask !== undefined);
       if (this.udpmasks.length === 0) this.udpmasks = undefined;
     } else {
       this.udpmasks = undefined;
@@ -811,7 +843,7 @@ export class XrayParsedUrlObject {
     let queryRaw = queryFragmentRaw || '';
 
     this.server = this.server ?? server;
-    let tag = fragment || this.server;
+    let tag = fragment ? decodeURIComponent(fragment) : this.server;
 
     if (!queryRaw) {
       queryRaw = 'type=tcp&security=none';

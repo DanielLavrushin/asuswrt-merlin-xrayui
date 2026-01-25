@@ -6,6 +6,8 @@ tproxy_mask=0x10000
 tproxy_table=77
 IP6NAT_LOADED="0"
 
+import ./tun.sh
+
 ipt() { # ipt <table> <args…>
     local tbl=$1
     shift
@@ -116,6 +118,15 @@ ensure_hashnet() {
 }
 
 configure_firewall() {
+    local STARTUP_LOCK="/tmp/xrayui_startup.lock"
+    if [ -f "$STARTUP_LOCK" ]; then
+        local lock_pid=$(cat "$STARTUP_LOCK" 2>/dev/null)
+        if [ -n "$lock_pid" ] && kill -0 "$lock_pid" 2>/dev/null; then
+            log_info "Startup in progress (PID: $lock_pid). Firewall will be configured after Xray starts."
+            return 0
+        fi
+    fi
+
     log_info "Configuring Xray firewall rules..."
     update_loading_progress "Configuring Xray firewall rules..."
     load_xrayui_config
@@ -233,6 +244,9 @@ configure_firewall() {
     fi
 
     configure_inbounds
+
+    # Configure TUN inbounds (IP assignment, routing rules)
+    configure_tun_inbounds
 
     # Execute custom scripts for firewall rules after start
     local fw_after_script="$ADDON_USER_SCRIPTS_DIR/firewall_after_start"
@@ -684,6 +698,9 @@ cleanup_firewall() {
     update_loading_progress "Cleaning up Xray Client firewall rules..."
 
     load_xrayui_config
+
+    # Clean up TUN inbounds
+    cleanup_tun_inbounds
 
     # we need to collect iptables collection for ipt function
     IPT_LIST="iptables"

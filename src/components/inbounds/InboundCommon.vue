@@ -44,7 +44,7 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, watch } from 'vue';
+  import { defineComponent, ref } from 'vue';
   import AllocateModal from '@modal/AllocateModal.vue';
   import { XrayInboundObject } from '@/modules/InboundObjects';
   import { IProtocolType } from '@/modules/Interfaces';

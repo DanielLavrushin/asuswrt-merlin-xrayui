@@ -1,5 +1,16 @@
 # XRAYUI Changelog
 
+## [0.63.3] - 2026-01-25
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- ADDED: Full `TUN` inbound routing support. When you configure a TUN inbound (e.g., `xray0`), XRAYUI now automatically handles all the network setup: assigning IP addresses to the TUN interface, creating routing rules so your LAN traffic flows through the VPN tunnel, and adding bypass routes for VPN server IPs to prevent connection loops. Everything is cleaned up automatically when you stop Xray.
+- FIXED: Import URL tags now display correctly instead of showing encoded characters.
+- FIXED: `Hysteria` Salamander obfuscation now works correctly when importing subscription URLs [#275](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/275).
+- FIXED: Double starting the `XRAY` process after booting the router [#273](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/273)
+- IMPROVED: Simplified import wizard - replaced "Keep existing rules", "Unblock", and "Don't break" options with a single "Routing mode" selector.
+- REMOVED: Individual service selection (Youtube, Google, etc.) during import - replaced with automatic "Basic bypass" preset that covers common services.
+
 ## [0.62.3] - 2026-01-19
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

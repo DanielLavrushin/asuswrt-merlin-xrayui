@@ -40,6 +40,10 @@ startup() {
                 sleep "$startup_delay"
             fi
         fi
+
+        rm -f "$STARTUP_LOCK"
+        trap - EXIT
+
         restart
     elif [ -n "$xray_pid" ]; then
         log_ok "Xray service is disabled by XRAYUI. Force stopping Xray service..."

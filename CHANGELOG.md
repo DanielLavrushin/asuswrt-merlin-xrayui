@@ -1,5 +1,10 @@
 # XRAYUI Changelog
 
+## [0.63.5] - 2026-02-04
+
+- FIXED: Script files in `/jffs/scripts/` no longer lose execute permissions after update or reinstall.
+- FIXED: Firewall rules now properly configure on router reboot (was broken since 0.63.4).
+
 ## [0.63.4] - 2026-01-25
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

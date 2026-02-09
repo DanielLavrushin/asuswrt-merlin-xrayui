@@ -31,15 +31,30 @@
 
       onMounted(async () => {
         try {
-          // Ensure window.show_menu exists before calling
           if (typeof window.show_menu === 'function') {
             window.show_menu();
           }
           await engine.loadXrayConfig();
           await engine.submit(SubmitActions.initResponse, null, 0);
-          // Use our delay helper instead of setTimeout inside an async function.
-          await engine.delay(1000);
-          uiResponse.value = await engine.getXrayResponse();
+
+          const maxRetries = 10;
+          for (let i = 0; i < maxRetries; i++) {
+            await engine.delay(1000);
+            try {
+              const response = await engine.getXrayResponse();
+              if (response?.xray?.core_version) {
+                uiResponse.value = response;
+                break;
+              }
+              if (i === maxRetries - 1) {
+                uiResponse.value = response;
+              }
+            } catch {
+              if (i === maxRetries - 1) {
+                console.error('Failed to load initial response after retries');
+              }
+            }
+          }
         } catch (error) {
           console.error('Error during initialization:', error);
         }
@@ -109,7 +124,6 @@
   .FormTable {
     margin-bottom: 14px;
 
-    // Proxy label styles
     .proxy-label {
       color: white;
       padding: 2px 10px;
@@ -197,7 +211,6 @@
         scrollbar-color: #ffffff #576d73;
       }
 
-      // Hint colors inside td
       .hint-color {
         margin-left: 5px;
         vertical-align: middle;
@@ -275,7 +288,10 @@
     color: #ffffff;
     background: #596d74;
     border: 1px solid #929ea1;
-    font-family: Courier New, Courier, monospace;
+    font-family:
+      Courier New,
+      Courier,
+      monospace;
     font-size: 13px;
     width: 100%;
     padding: 3px;
@@ -367,7 +383,6 @@
     }
   }
 
-  /* ROG OVERRIDES  */
   .xrayui-rog {
     textarea {
       background: rgb(62, 3, 13) !important;
@@ -415,7 +430,6 @@
     }
   }
 
-  /* TUF OVERRIDES  */
   .xrayui-tuf {
     textarea {
       color: #ffffff !important;

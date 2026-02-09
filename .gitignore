@@ -9,3 +9,7 @@ addons/*
 scripts/*
 dist/
 *.tar.gz
+
+
+#Ignore vscode AI rules
+.github/instructions/codacy.instructions.md

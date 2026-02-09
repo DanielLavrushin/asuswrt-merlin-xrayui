@@ -125,9 +125,14 @@ get_proc() {
 }
 
 get_proc_uptime() {
-    local uptime_s=$(cut -d. -f1 /proc/uptime)
     local pid=$(pidof "$1")
 
+    if [ -z "$pid" ] || [ ! -f "/proc/$pid/stat" ]; then
+        echo 0
+        return
+    fi
+
+    local uptime_s=$(cut -d. -f1 /proc/uptime)
     local localstart_time_jiffies=$(awk '{print $22}' /proc/$pid/stat)
 
     local jiffies_per_sec=100

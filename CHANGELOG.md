@@ -1,5 +1,9 @@
 # XRAYUI Changelog
 
+## [0.63.6] - 2026-02-09
+
+- FIXED: Xray not working after scheduled or manual router reboot on some models (e.g. RT-AX58U).
+
 ## [0.63.5] - 2026-02-04
 
 - FIXED: Script files in `/jffs/scripts/` no longer lose execute permissions after update or reinstall.

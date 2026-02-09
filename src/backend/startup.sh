@@ -52,6 +52,8 @@ startup() {
         log_ok "Xray service is disabled by XRAYUI. Xray service is not running."
     fi
 
+    initial_response
+
     # Remove lock file
     rm -f "$STARTUP_LOCK"
     trap - EXIT

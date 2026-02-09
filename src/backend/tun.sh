@@ -24,6 +24,15 @@ configure_tun_inbounds() {
         return 0
     fi
 
+    # Ensure TUN kernel module is loaded
+    if [ ! -c /dev/net/tun ]; then
+        modprobe tun 2>/dev/null || {
+            log_error "Failed to load TUN kernel module. TUN inbound requires kernel TUN support."
+            rm -f "$tun_inbounds_file"
+            return 1
+        }
+    fi
+
     local source_nets_v4 source_nets_v6
     source_nets_v4=$(ip -4 route show scope link | awk '$1 ~ /\// && $1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/ {print $1}')
     source_nets_v4=$(printf '%s\n' $source_nets_v4 | sort -u)

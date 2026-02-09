@@ -3,6 +3,7 @@
 ## [0.63.6] - 2026-02-09
 
 - FIXED: Xray not working after scheduled or manual router reboot on some models (e.g. RT-AX58U).
+- FIXED: `TUN` inbound now automatically loads the `TUN` kernel module if it is not already available, preventing silent failures on routers where the module is not loaded by default.
 
 ## [0.63.5] - 2026-02-04
 

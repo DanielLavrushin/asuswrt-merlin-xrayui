@@ -1,6 +1,16 @@
 #!/bin/sh
 # shellcheck disable=SC2034
 
+subscription_curl() {
+    local hwid
+    hwid=$(get_or_create_hwid)
+    curl -fsL --max-time 20 \
+        -A "xrayui/$XRAYUI_VERSION" \
+        -H "x-hwid: $hwid" \
+        -H "x-device-os: ASUSWRT-Merlin" \
+        "$@"
+}
+
 process_subscriptions() {
     local config_file="$1"
     local cfg=$(cat "$1")
@@ -12,7 +22,7 @@ process_subscriptions() {
         url=$(printf '%s' "$entry" | jq -r '.url')
         proto=$(printf '%s' "$entry" | jq -r '.proto')
         tag=$(printf '%s' "$entry" | jq -r '.tag')
-        fetched=$(curl -fsL "$url") || continue
+        fetched=$(subscription_curl "$url") || continue
         if is_json "$fetched"; then
             rep=$(printf '%s' "$fetched" | jq -c --arg t "$tag" --arg p "$proto" '
                 (.outbounds // [])
@@ -623,7 +633,7 @@ subscription_fetch_protocols() {
 
         update_loading_progress "Fetching content from $url ..."
         log_debug "Fetching content from $url ..."
-        curl -fsL --max-time 20 -A xrayui/1.0 "$url" </dev/null >"$tmpc" 2>/dev/null || true
+        subscription_curl "$url" </dev/null >"$tmpc" 2>/dev/null || true
 
         sz=$(wc -c <"$tmpc")
         if [ "$sz" -eq 0 ]; then

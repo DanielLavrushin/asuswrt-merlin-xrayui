@@ -380,6 +380,22 @@ b64d() {
     echo "$1" | base64 -d 2>/dev/null
 }
 
+get_or_create_hwid() {
+    local hwid_file="$ADDON_SHARE_DIR/.hwid"
+    if [ -f "$hwid_file" ]; then
+        cat "$hwid_file"
+        return
+    fi
+    local hwid=""
+    if [ -f /proc/sys/kernel/random/uuid ]; then
+        hwid=$(cat /proc/sys/kernel/random/uuid)
+    else
+        hwid=$(openssl rand -hex 16 | sed 's/\(.\{8\}\)\(.\{4\}\)\(.\{4\}\)\(.\{4\}\)\(.\{12\}\)/\1-\2-\3-\4-\5/')
+    fi
+    printf '%s' "$hwid" >"$hwid_file"
+    printf '%s' "$hwid"
+}
+
 urldecode_pct() {
     s=$(printf '%s' "$1" | sed 's/\\/\\\\/g')
     s=$(printf '%s' "$s" | sed -e 's/%\([0-9A-Fa-f][0-9A-Fa-f]\)/\\x\1/g')

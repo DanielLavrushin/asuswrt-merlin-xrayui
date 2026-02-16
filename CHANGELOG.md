@@ -1,5 +1,9 @@
 # XRAYUI Changelog
 
+## [0.64.0] - 2026-02-16
+
+- IMPROVED: Subscription fetching now works with panels that require device identification (e.g. Remnawave, V2Board). Previously, some subscription services would reject requests silently.
+
 ## [0.63.7] - 2026-02-09
 
 - FIXED: Xray not working after scheduled or manual router reboot on some slow models (e.g. RT-AX58U).

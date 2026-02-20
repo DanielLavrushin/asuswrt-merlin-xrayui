@@ -34,6 +34,17 @@
       </select>
     </td>
   </tr>
+  <tr class="unlocked" v-if="showSubPoolToggle">
+    <th>
+      {{ $t('com.OutboundCommon.label_auto_fallback') }}
+      <hint v-html="$t('com.OutboundCommon.hint_auto_fallback')"></hint>
+    </th>
+    <td>
+      <label class="go-option">
+        <input type="checkbox" v-model="subPoolEnabled" />
+      </label>
+    </td>
+  </tr>
 
   <tr class="unlocked">
     <th>
@@ -96,18 +107,40 @@
         return [];
       });
 
+      const showSubPoolToggle = computed(() => {
+        return protocols.value.length > 0 || !!proxy.value.subPool?.enabled;
+      });
+
+      const subPoolEnabled = computed({
+        get: () => proxy.value.subPool?.enabled ?? false,
+        set: (val: boolean) => {
+          if (val) {
+            proxy.value.subPool = { enabled: true, active: proxy.value.subPool?.active };
+          } else {
+            proxy.value.subPool = undefined;
+          }
+        }
+      });
+
       const apply_subscription = () => {
         if (subscription.value) {
           const parser = new ProxyParser(subscription.value.url);
           const parsedProxy = parser.getOutbound();
 
-          if (parsedProxy) emit('apply-parsed', parsedProxy);
+          if (parsedProxy) {
+            emit('apply-parsed', parsedProxy);
+            if (proxy.value.subPool) {
+              proxy.value.subPool.active = subscription.value.url;
+            } else {
+              proxy.value.subPool = { enabled: false, active: subscription.value.url };
+            }
+          }
         }
       };
 
       watch(isLocked, toggle, { immediate: true });
 
-      return { protocols, subscription, proxy, isLocked, rowRef, clear_url, apply_subscription };
+      return { protocols, subscription, proxy, isLocked, rowRef, clear_url, apply_subscription, showSubPoolToggle, subPoolEnabled };
     }
   });
 </script>
@@ -117,4 +150,5 @@
       max-width: 200px;
     }
   }
+
 </style>

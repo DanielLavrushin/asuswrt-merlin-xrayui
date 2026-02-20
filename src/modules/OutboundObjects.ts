@@ -17,11 +17,17 @@ import {
 import { plainToInstance } from 'class-transformer';
 import { XrayVlessClientObject, XrayVmessClientObject } from './ClientsObjects';
 
+export interface SubPoolMetadata {
+  enabled: boolean;
+  active?: string;
+}
+
 export class XrayOutboundObject<TProxy extends IProtocolType> {
   public protocol!: string;
   public sendThrough? = '0.0.0.0';
   public tag?: string;
   public surl?: string;
+  public subPool?: SubPoolMetadata;
   public settings?: TProxy;
 
   public streamSettings?: XrayStreamSettingsObject = new XrayStreamSettingsObject();
@@ -41,6 +47,9 @@ export class XrayOutboundObject<TProxy extends IProtocolType> {
   normalize = (): this | undefined => {
     this.sendThrough = this.sendThrough === '0.0.0.0' ? undefined : this.sendThrough;
     this.tag = this.tag === '' ? undefined : this.tag;
+    if (this.subPool && !this.subPool.enabled) {
+      this.subPool = undefined;
+    }
 
     this.streamSettings = plainToInstance(XrayStreamSettingsObject, this.streamSettings);
     this.streamSettings = this.streamSettings ? this.streamSettings.normalize() : undefined;

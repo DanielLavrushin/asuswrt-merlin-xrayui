@@ -34,7 +34,7 @@
           <tr v-show="!proxy.isSystem()" class="proxy-row">
             <th class="drag-handle" aria-label="Drag to reorder">
               <span class="grip drag-handle" aria-hidden="true"></span>
-              {{ proxy.surl ? '🔗' : '' }}
+              {{ proxy.surl ? '🔗' : '' }}{{ proxy.subPool?.enabled ? '🔄' : '' }}
               {{ proxy.tag == '' ? 'no tag' : proxy.tag! }}
               <span v-if="isRunning && check_connection && connectionStatus[proxy.tag]" class="connection-status">
                 {{ connectionStatus[proxy.tag]?.alive ? '🟢' : connectionStatus[proxy.tag]?.alive === false ? '🔴' : '🟡' }}

@@ -1,7 +1,12 @@
 # XRAYUI Changelog
 
-## [0.64.0] - 2026-02-16
+## [0.64.0] - 2026-02-21
 
+- ADDED: Automatic subscription refresh — your subscription sources can now be re-fetched on a schedule (every 3, 6, or 12 hours) so your server list stays up to date without manual action.
+- ADDED: Auto-fallback when a proxy goes down — when enabled, XRAYUI periodically checks if your active proxy is reachable. If it detects that your connection is blocked, it automatically switches to the next working server from your subscription pool. Your routing rules and DNS settings stay intact.
+- ADDED: Per-outbound auto-fallback toggle — each outbound can individually opt in to auto-fallback. After selecting a server from the subscription dropdown, enable the "Auto-fallback" checkbox to link it back to the subscription pool for automatic recovery.
+- ADDED: Health check interval setting — configure how often the system checks your endpoints (every 2, 5, or 10 minutes). A built-in safety limit prevents excessive switching when all endpoints are unavailable.
+- IMPROVED: Subscription dropdown in outbound settings now loads reliably after fetching subscription sources.
 - ADDED: `Encrypted Client Hello (ECH)` support in Transport > Security > TLS settings. Generate `ECH` keys for your server directly from the UI, or configure ECH on the client side with a config list and query strategy.
 - IMPROVED: Subscription fetching now works with panels that require device identification (e.g. Remnawave, V2Board). Previously, some subscription services would reject requests silently.
 

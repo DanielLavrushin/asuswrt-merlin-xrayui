@@ -103,7 +103,16 @@
       "label_dns_leak": "Prevent DNS leaks",
       "hint_dns_leak": "Enable this option to prevent DNS leaks.<blockquote>**Important!** Do not turn this option `on` without proper xray configuration. Click help next to the checkbox to learn more about DNS leaks and how to configure them properly.</blockquote>",
       "label_logs_scribe": "Integrate XRAYUI logs with Scribe",
-      "hint_logs_scribe": "Enabling this option will integrate XRAYUI logs with `Scribe`. This allows you to view XRAYUI logs in the `Scribe` web interface in a dedicated window.<hr/>You can install `Scribe` from the `AMTM`"
+      "hint_logs_scribe": "Enabling this option will integrate XRAYUI logs with `Scribe`. This allows you to view XRAYUI logs in the `Scribe` web interface in a dedicated window.<hr/>You can install `Scribe` from the `AMTM`",
+      "label_subscription_auto_refresh": "Auto-refresh subscriptions",
+      "hint_subscription_auto_refresh": "Periodically re-fetch subscription sources to keep the endpoint pool up to date.",
+      "sub_refresh_3h": "Every 3 hours",
+      "sub_refresh_6h": "Every 6 hours",
+      "sub_refresh_12h": "Every 12 hours",
+      "label_subscription_auto_fallback": "Auto-fallback",
+      "hint_subscription_auto_fallback": "When enabled, outbounds with the auto-fallback option will be periodically checked and automatically rotated to an alive endpoint if the current one is unreachable.",
+      "label_subscription_fallback_interval": "Health check interval",
+      "hint_subscription_fallback_interval": "How often to check the health of pool-managed outbounds."
     },
     "ImportConfig": {
       "import_config_file": "Import config file"
@@ -508,7 +517,9 @@
       "label_subscription_url": "Subscription URL",
       "hint_subscription_url": "Enter the subscription URL that fetches updates for this outbound configuration.<hr/>Updates are applied on every service restart.<hr/>While a URL is set, certain settings are disabled because they are managed by the subscription.",
       "label_subscription_type": "Available Subscription Configuration",
-      "hint_subscription_type": "The type of the subscription configuration. <ul> <li>`xray`: Xray subscription configuration</li> <li>`clash`: Clash subscription configuration</li> </ul><hr/>This setting is only effective when the `subscriptionUrl` is not set."
+      "hint_subscription_type": "The type of the subscription configuration. <ul> <li>`xray`: Xray subscription configuration</li> <li>`clash`: Clash subscription configuration</li> </ul><hr/>This setting is only effective when the `subscriptionUrl` is not set.",
+      "label_auto_fallback": "Auto-fallback pool",
+      "hint_auto_fallback": "Enable to include this outbound in the auto-fallback pool. When the active endpoint becomes unreachable, it will be automatically rotated to the next alive endpoint from the subscription pool.<hr/>Requires the global auto-fallback option to be enabled in General Settings."
     },
     "FreedomOutbound": {
       "modal_title": "Freedom",

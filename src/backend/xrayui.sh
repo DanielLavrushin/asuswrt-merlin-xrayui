@@ -27,6 +27,7 @@ import ./profile.sh
 import ./logs.sh
 import ./backup.sh
 import ./cron.sh
+import ./failover.sh
 import ./dnsmasq.sh
 import ./diagnostics.sh
 import ./rtls.sh
@@ -120,6 +121,12 @@ cron)
         ;;
     geodata)
         update_community_geodata
+        ;;
+    subscription_refresh)
+        cron_subscription_refresh_run
+        ;;
+    subscription_fallback)
+        failover_check
         ;;
     *) ;;
     esac

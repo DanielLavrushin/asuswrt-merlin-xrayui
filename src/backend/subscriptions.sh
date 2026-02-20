@@ -601,6 +601,13 @@ subscription_parse_kv() { printf '%s' "$1" | tr '&' '\n' | awk -F= -v k="$2" '$1
 
 subscription_parse_hostport() { printf '%s' "$1" | awk -F@ '{print $NF}' | awk -F/ '{print $1}'; }
 
+cron_subscription_refresh_run() {
+    # Override update_loading_progress to no-op during cron execution
+    # to avoid triggering the UI loading dialog in the background
+    update_loading_progress() { :; }
+    subscription_fetch_protocols
+}
+
 subscription_fetch_protocols() {
     load_xrayui_config
     load_ui_response

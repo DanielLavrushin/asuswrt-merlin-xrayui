@@ -268,6 +268,42 @@
                 </div>
               </td>
             </tr>
+            <tr>
+              <th>
+                {{ $t('com.GeneralOptionsModal.label_subscription_auto_refresh') }}
+                <hint v-html="$t('com.GeneralOptionsModal.hint_subscription_auto_refresh')"></hint>
+              </th>
+              <td>
+                <select class="input_option" v-model="options.subscription_auto_refresh">
+                  <option value="disabled">{{ $t('labels.disabled') }}</option>
+                  <option value="3h">{{ $t('com.GeneralOptionsModal.sub_refresh_3h') }}</option>
+                  <option value="6h">{{ $t('com.GeneralOptionsModal.sub_refresh_6h') }}</option>
+                  <option value="12h">{{ $t('com.GeneralOptionsModal.sub_refresh_12h') }}</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <th>
+                {{ $t('com.GeneralOptionsModal.label_subscription_auto_fallback') }}
+                <hint v-html="$t('com.GeneralOptionsModal.hint_subscription_auto_fallback')"></hint>
+              </th>
+              <td>
+                <label class="go-option"><input type="checkbox" v-model="options.subscription_auto_fallback" /></label>
+              </td>
+            </tr>
+            <tr v-if="options.subscription_auto_fallback">
+              <th>
+                {{ $t('com.GeneralOptionsModal.label_subscription_fallback_interval') }}
+                <hint v-html="$t('com.GeneralOptionsModal.hint_subscription_fallback_interval')"></hint>
+              </th>
+              <td>
+                <select class="input_option" v-model.number="options.subscription_fallback_interval">
+                  <option :value="2">2 min</option>
+                  <option :value="5">5 min</option>
+                  <option :value="10">10 min</option>
+                </select>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -288,6 +324,7 @@
   import { EngineResponseConfig, EngineSubscriptions } from '@/modules/Engine';
   import engine, { SubmitActions } from '@/modules/Engine';
   import { XrayProtocol } from '@/modules/Options';
+  import axios from 'axios';
 
   const props = defineProps<{ config: XrayObject }>();
   const ui = inject<Ref<EngineResponseConfig>>('uiResponse')!;
@@ -391,7 +428,19 @@
     await engine.executeWithLoadingProgress(async () => {
       await engine.submit(SubmitActions.subscribeFetchProtocols, options.subscriptions?.links?.join('|'));
     }, false);
-    await engine.getXrayResponse();
+    try {
+      const subsResp = await axios.get<Record<string, string[]>>(`/ext/xrayui/subscriptions.json?_=${Date.now()}`, {
+        headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache', Expires: '0' }
+      });
+      if (ui.value.xray) {
+        if (!ui.value.xray.subscriptions) {
+          ui.value.xray.subscriptions = new EngineSubscriptions();
+        }
+        ui.value.xray.subscriptions.protocols = subsResp.data;
+      }
+    } catch (e) {
+      console.error('Error loading subscriptions after fetch:', e);
+    }
   };
 
   const show = () => {

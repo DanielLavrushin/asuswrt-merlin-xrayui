@@ -41,6 +41,9 @@ apply_general_options() {
     local subscriptionLinks=$(echo "$genopts" | jq -r '(.subscriptions.links // []) | join("|")')
     local xray_dns_only=$(echo "$genopts" | jq -r '.dns_only // "false"')
     local integration_scribe=$(echo "$genopts" | jq -r '.logs_scribe // "false"')
+    local subscription_auto_refresh=$(echo "$genopts" | jq -r '.subscription_auto_refresh // "disabled"')
+    local subscription_auto_fallback=$(echo "$genopts" | jq -r '.subscription_auto_fallback // "false"')
+    local subscription_fallback_interval=$(echo "$genopts" | jq -r '.subscription_fallback_interval // "5"')
 
     if [ ! -d "$ADDON_LOGS_DIR" ]; then
         mkdir -p "$ADDON_LOGS_DIR"
@@ -90,14 +93,19 @@ apply_general_options() {
     update_xrayui_config "subscriptionLinks" "$subscriptionLinks"
     update_xrayui_config "xray_dns_only" "$xray_dns_only"
     update_xrayui_config "integration_scribe" "$integration_scribe"
+    update_xrayui_config "subscription_auto_refresh" "$subscription_auto_refresh"
+    update_xrayui_config "subscription_auto_fallback" "$subscription_auto_fallback"
+    update_xrayui_config "subscription_fallback_interval" "$subscription_fallback_interval"
 
     apply_general_options_hooks "$hooks"
 
     # Update the logrotate configuration with the new max size
     logrotate_setup
 
-    # Update the cron job for geodata update
+    # Update cron jobs
     cron_geodata_add
+    cron_subscription_refresh_add
+    cron_subscription_fallback_add
 
     # integration scribe
     logs_scribe_integration

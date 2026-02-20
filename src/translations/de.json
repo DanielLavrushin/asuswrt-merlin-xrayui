@@ -99,7 +99,16 @@
       "label_dns_leak": "DNS-Lecks verhindern",
       "hint_dns_leak": "Aktivieren Sie diese Option, um DNS-Lecks zu verhindern.<blockquote>**Wichtig!** Aktivieren Sie diese Option nicht (`on`), ohne Xray vorher korrekt zu konfigurieren. Klicken Sie auf „Hilfe“ neben dem Kontrollkästchen, um mehr über DNS-Lecks und die richtige Konfiguration zu erfahren.</blockquote>",
       "label_logs_scribe": "XRAYUI-Protokolle mit Scribe integrieren",
-      "hint_logs_scribe": "Durch Aktivieren dieser Option werden die XRAYUI-Protokolle in `Scribe` integriert. Dadurch können Sie die XRAYUI-Protokolle in der Weboberfläche von `Scribe` in einem eigenen Fenster anzeigen.<hr/>Sie können `Scribe` über das `AMTM` installieren"
+      "hint_logs_scribe": "Durch Aktivieren dieser Option werden die XRAYUI-Protokolle in `Scribe` integriert. Dadurch können Sie die XRAYUI-Protokolle in der Weboberfläche von `Scribe` in einem eigenen Fenster anzeigen.<hr/>Sie können `Scribe` über das `AMTM` installieren",
+      "label_subscription_auto_refresh": "Abonnements automatisch aktualisieren",
+      "hint_subscription_auto_refresh": "Regelmäßig Abonnementquellen erneut abrufen, um den Endpunkt-Pool aktuell zu halten.",
+      "sub_refresh_3h": "Alle 3 Stunden",
+      "sub_refresh_6h": "Alle 6 Stunden",
+      "sub_refresh_12h": "Alle 12 Stunden",
+      "label_subscription_auto_fallback": "Auto-Fallback",
+      "hint_subscription_auto_fallback": "Wenn aktiviert, werden Outbounds mit der Auto-Fallback-Option regelmäßig überprüft und automatisch auf einen erreichbaren Endpunkt umgeschaltet, wenn der aktuelle nicht erreichbar ist.",
+      "label_subscription_fallback_interval": "Prüfintervall",
+      "hint_subscription_fallback_interval": "Wie oft die Erreichbarkeit der Pool-verwalteten Outbounds überprüft werden soll."
     },
     "ImportConfig": {
       "import_config_file": "Konfigurationsdatei importieren"

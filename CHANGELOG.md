@@ -1,6 +1,6 @@
 # XRAYUI Changelog
 
-## [0.64.0] - 2026-02-21
+## [0.64.1] - 2026-02-21
 
 - ADDED: Automatic subscription refresh — your subscription sources can now be re-fetched on a schedule (every 3, 6, or 12 hours) so your server list stays up to date without manual action.
 - ADDED: Auto-fallback when a proxy goes down — when enabled, XRAYUI periodically checks if your active proxy is reachable. If it detects that your connection is blocked, it automatically switches to the next working server from your subscription pool. Your routing rules and DNS settings stay intact.

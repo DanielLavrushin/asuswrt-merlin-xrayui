@@ -80,6 +80,11 @@ export class EngineSsl {
   public certificateFile!: string;
   public keyFile!: string;
 }
+
+export class EngineEch {
+  public configList!: string;
+  public serverKeys!: string;
+}
 export class EngineClientConnectionStatus {
   public ipAddress?: string;
   public countryName?: string;
@@ -132,6 +137,7 @@ export class EngineResponseConfig {
   public wireguard?: EngineWireguard;
   public reality?: EngineReality;
   public certificates?: EngineSsl;
+  public ech?: EngineEch;
   public integration?: {
     scribe?: {
       enabled: boolean;
@@ -193,6 +199,7 @@ export enum SubmitActions {
   regenerateRealityKeys = 'xrayui_regenerate_realitykeys',
   regenerateWireguardKeys = 'xrayui_regenerate_wgkeys',
   regenerateSslCertificates = 'xrayui_regenerate_sslcertificates',
+  generateEchKeys = 'xrayui_regenerate_echkeys',
   enableLogs = 'xrayui_configuration_logs',
   performUpdate = 'xrayui_update',
   toggleStartupOption = 'xrayui_configuration_togglestartup',
@@ -392,6 +399,11 @@ export class Engine {
   async getSslCertificates(): Promise<EngineSsl | undefined> {
     const response = await this.getXrayResponse();
     return response.certificates;
+  }
+
+  async getEchKeys(): Promise<EngineEch | undefined> {
+    const response = await this.getXrayResponse();
+    return response.ech;
   }
 
   async getClientConnectionStatus(): Promise<EngineClientConnectionStatus | undefined> {

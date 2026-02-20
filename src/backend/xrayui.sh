@@ -17,6 +17,7 @@ import ./firewall.sh
 import ./certificates.sh
 import ./reality.sh
 import ./wireguard.sh
+import ./ech.sh
 import ./general_opts.sh
 import ./response.sh
 import ./subscriptions.sh
@@ -206,6 +207,9 @@ service_event)
             ;;
         sslcertificates)
             regenerate_ssl_certificates
+            ;;
+        echkeys)
+            ech_generate_keys
             ;;
         esac
         ;;

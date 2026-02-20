@@ -12,6 +12,7 @@ export const XrayOptions = {
   alpnOptions: ['h3', 'h2', 'http/1.1'],
   fingerprintOptions: ['randomized', 'random', 'chrome', 'firefox', 'ios', 'android', 'safari', 'edge', '360', 'qq'],
   tlsVersionsOptions: ['1.0', '1.1', '1.2', '1.3'],
+  echForceQueryOptions: ['none', 'half', 'full'],
   headerTypes: ['none', 'http', 'srtp', 'utp', 'wechat-video', 'dtls', 'wireguard'],
   httpMethods: ['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT', 'PATCH'],
   clientFlowOptions: ['none', 'xtls-rprx-vision'],

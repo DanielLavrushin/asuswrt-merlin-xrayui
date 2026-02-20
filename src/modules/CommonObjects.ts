@@ -35,9 +35,9 @@ export class XraySniffingObject {
   normalize(): this | undefined {
     this.destOverride = !this.destOverride || this.destOverride.length == 0 ? undefined : this.destOverride;
     this.domainsExcluded = !this.domainsExcluded || this.domainsExcluded.length == 0 ? undefined : this.domainsExcluded;
-    this.enabled = !this.enabled ? undefined : this.enabled;
-    this.metadataOnly = !this.metadataOnly ? undefined : this.metadataOnly;
-    this.routeOnly = !this.routeOnly ? undefined : this.routeOnly;
+    this.enabled = this.enabled ? this.enabled : undefined;
+    this.metadataOnly = this.metadataOnly ? this.metadataOnly : undefined;
+    this.routeOnly = this.routeOnly ? this.routeOnly : undefined;
     return this.enabled ? this : undefined;
   }
 }
@@ -84,8 +84,8 @@ export class XrayXmuxObject {
 }
 
 export class XrayAllocateObject {
-  static defaultRefresh = 5;
-  static defaultConcurrency = 3;
+  static readonly defaultRefresh = 5;
+  static readonly defaultConcurrency = 3;
 
   public strategy = 'always';
   public refresh? = this.strategy == 'random' ? XrayAllocateObject.defaultRefresh : undefined;
@@ -101,7 +101,7 @@ export class XrayAllocateObject {
 }
 
 export class XrayStreamTlsCertificateObject {
-  static usageOptions = XrayOptions.usageOptions;
+  static readonly usageOptions = XrayOptions.usageOptions;
 
   public ocspStapling? = 3600;
   public oneTimeLoading? = false;
@@ -122,7 +122,7 @@ export class XrayStreamTlsCertificateObject {
 }
 
 export class XrayStreamTlsSettingsObject implements ISecurityProtocol {
-  static alpnOptions = XrayOptions.alpnOptions;
+  static readonly alpnOptions = XrayOptions.alpnOptions;
   static readonly fingerprintOptions = ['', 'randomized', 'random', 'chrome', 'firefox', 'ios', 'android', 'safari', 'edge', '360', 'qq'];
   static readonly tlsVersionsOptions = ['1.0', '1.1', '1.2', '1.3'];
 
@@ -138,6 +138,9 @@ export class XrayStreamTlsSettingsObject implements ISecurityProtocol {
   public fingerprint?: string;
   public pinnedPeerCertificateSha256?: string[];
   public masterKeyLog?: string;
+  public echConfigList?: string;
+  public echForceQuery?: string;
+  public echServerKeys?: string;
 
   constructor(parsedObject?: XrayParsedUrlObject | undefined) {
     this.certificates = [];
@@ -148,12 +151,15 @@ export class XrayStreamTlsSettingsObject implements ISecurityProtocol {
   }
 
   normalize(): this {
-    this.rejectUnknownSni = !this.rejectUnknownSni ? undefined : this.rejectUnknownSni;
-    this.allowInsecure = !this.allowInsecure ? undefined : this.allowInsecure;
-    this.disableSystemRoot = !this.disableSystemRoot ? undefined : this.disableSystemRoot;
-    this.enableSessionResumption = !this.enableSessionResumption ? undefined : this.enableSessionResumption;
+    this.rejectUnknownSni = this.rejectUnknownSni ? this.rejectUnknownSni : undefined;
+    this.allowInsecure = this.allowInsecure ? this.allowInsecure : undefined;
+    this.disableSystemRoot = this.disableSystemRoot ? this.disableSystemRoot : undefined;
+    this.enableSessionResumption = this.enableSessionResumption ? this.enableSessionResumption : undefined;
 
     this.alpn = this.alpn?.length == 0 || this.alpn == XrayStreamTlsSettingsObject.alpnOptions ? undefined : this.alpn;
+    this.echConfigList = !this.echConfigList || this.echConfigList === '' ? undefined : this.echConfigList;
+    this.echForceQuery = !this.echForceQuery || this.echForceQuery === 'none' || this.echForceQuery === '' ? undefined : this.echForceQuery;
+    this.echServerKeys = !this.echServerKeys || this.echServerKeys === '' ? undefined : this.echServerKeys;
     if (this.certificates && this.certificates.length > 0) {
       this.certificates.forEach((cert) => {
         const c = cert.normalize();
@@ -199,7 +205,7 @@ export class XrayStreamRealitySettingsObject implements ISecurityProtocol {
   }
 
   public normalize(): this {
-    this.show = !this.show ? undefined : this.show;
+    this.show = this.show ? this.show : undefined;
     this.dest = !this.dest || this.dest === '' ? undefined : this.dest;
     this.privateKey = !this.privateKey || this.privateKey === '' ? undefined : this.privateKey;
     this.serverName = !this.serverName || this.serverName === '' ? undefined : this.serverName;
@@ -227,7 +233,7 @@ export class XrayLogObject {
     this.access = this.access == '' ? undefined : this.access;
     this.error = this.error == '' ? undefined : this.error;
     this.loglevel = this.loglevel == 'none' ? undefined : this.loglevel;
-    this.dnsLog = !this.dnsLog ? undefined : this.dnsLog;
+    this.dnsLog = this.dnsLog ? this.dnsLog : undefined;
     this.maskAddress = this.maskAddress == '' ? undefined : this.maskAddress;
 
     return this;

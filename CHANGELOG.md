@@ -2,6 +2,7 @@
 
 ## [0.64.0] - 2026-02-16
 
+- ADDED: `Encrypted Client Hello (ECH)` support in Transport > Security > TLS settings. Generate `ECH` keys for your server directly from the UI, or configure ECH on the client side with a config list and query strategy.
 - IMPROVED: Subscription fetching now works with panels that require device identification (e.g. Remnawave, V2Board). Previously, some subscription services would reject requests silently.
 
 ## [0.63.7] - 2026-02-09

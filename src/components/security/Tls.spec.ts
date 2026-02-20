@@ -102,7 +102,7 @@ describe('Tls.vue', () => {
       transport.tlsSettings = new XrayStreamTlsSettingsObject();
       const wrapper = mountComponent('outbound', transport);
 
-      const input = wrapper.find('input[placeholder="udp://1.1.1.1 or base64 ECHConfig"]');
+      const input = wrapper.find('textarea[placeholder="udp://1.1.1.1 or base64 ECHConfig"]');
       expect(input.exists()).toBe(true);
 
       await input.setValue('udp://1.1.1.1');
@@ -115,8 +115,8 @@ describe('Tls.vue', () => {
       transport.tlsSettings.echConfigList = 'https://1.1.1.1/dns-query';
       const wrapper = mountComponent('outbound', transport);
 
-      const input = wrapper.find('input[placeholder="udp://1.1.1.1 or base64 ECHConfig"]');
-      expect((input.element as HTMLInputElement).value).toBe('https://1.1.1.1/dns-query');
+      const input = wrapper.find('textarea[placeholder="udp://1.1.1.1 or base64 ECHConfig"]');
+      expect((input.element as HTMLTextAreaElement).value).toBe('https://1.1.1.1/dns-query');
     });
   });
 
@@ -179,7 +179,7 @@ describe('Tls.vue', () => {
     it('renders echServerKeys input and generate button for inbound', () => {
       const wrapper = mountComponent('inbound');
       expect(wrapper.text()).toContain('com.Tls.label_ech_server_keys');
-      const serverNameInput = wrapper.find('input.input_12_table[placeholder="example.com"]');
+      const serverNameInput = wrapper.find('input.input_20_table[placeholder="example.com"]');
       expect(serverNameInput.exists()).toBe(true);
       const genBtn = wrapper.find('.button_gen_small');
       expect(genBtn.exists()).toBe(true);
@@ -190,7 +190,7 @@ describe('Tls.vue', () => {
       transport.tlsSettings = new XrayStreamTlsSettingsObject();
       const wrapper = mountComponent('inbound', transport);
 
-      const input = wrapper.find('input.input_30_table');
+      const input = wrapper.find('.textarea-wrapper textarea');
       await input.setValue('my-server-key-value');
       expect(wrapper.vm.transport.tlsSettings!.echServerKeys).toBe('my-server-key-value');
     });

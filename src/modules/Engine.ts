@@ -166,6 +166,9 @@ export class EngineResponseConfig {
     subscriptions?: EngineSubscriptions;
     dns_only?: boolean;
     logs_scribe?: boolean;
+    subscription_auto_refresh?: string;
+    subscription_auto_fallback?: boolean;
+    subscription_fallback_interval?: number;
   };
   public geodata?: EngineGeodatConfig = new EngineGeodatConfig();
   public loading?: EngineLoadingProgress;
@@ -438,26 +441,21 @@ export class Engine {
   }
 
   async loadSubscriptions(resp: EngineResponseConfig): Promise<EngineSubscriptions | undefined> {
-    if (resp.xray?.subscriptions?.links && resp.xray?.subscriptions?.links.length > 0) {
-      try {
-        const response = await axios.get<EngineResponseConfig>(`/ext/xrayui/subscriptions.json?_=${Date.now()}`, {
-          headers: {
-            'Cache-Control': 'no-cache',
-            Pragma: 'no-cache',
-            Expires: '0'
-          }
-        });
-        if (resp.xray && !resp.xray.subscriptions) {
-          resp.xray.subscriptions = new EngineSubscriptions();
+    try {
+      const response = await axios.get<Record<string, string[]>>(`/ext/xrayui/subscriptions.json?_=${Date.now()}`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+          Expires: '0'
         }
-        if (resp.xray?.subscriptions) {
-          resp.xray.subscriptions.protocols = response.data as Record<string, string[]>;
-          return resp.xray.subscriptions;
-        }
-      } catch (e) {
-        console.error('Error loading subscriptions:', e);
-        return new EngineSubscriptions();
+      });
+      if (resp.xray) {
+        resp.xray.subscriptions ??= new EngineSubscriptions();
+        resp.xray.subscriptions.protocols = response.data;
+        return resp.xray.subscriptions;
       }
+    } catch {
+      // subscriptions.json may not exist yet — not an error
     }
     return new EngineSubscriptions();
   }

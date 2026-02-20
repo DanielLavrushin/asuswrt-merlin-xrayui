@@ -82,6 +82,55 @@ However, if you create a new outbound proxy, you will get a list of available su
 
 Now you can select the subscription object from the drop-down and apply the configuration settings automatically.
 
-> [!warning]  
-> The difference between subscription source and subscription protocol is granularity. If the link contains one item - you can insert it into the Subscription URL field and this will perform an automatic reload during service restart.  
+> [!warning]
+> The difference between subscription source and subscription protocol is granularity. If the link contains one item - you can insert it into the Subscription URL field and this will perform an automatic reload during service restart.
 > Conversely, when it contains more than one source, it will display a drop-down list per outbound connection. This will require you to reapply the settings when changes are performed on the remote side.
+
+## Automatic Subscription Refresh
+
+By default, subscription sources are only fetched when you manually press the `Fetch` button. If your subscription provider updates server endpoints frequently, you can enable automatic refresh so your server list stays up to date without manual intervention.
+
+In `General Options` → `Subscriptions` tab, find the **Auto-refresh interval** setting and choose a schedule:
+
+- **Disabled** — manual refresh only (default)
+- **3 hours** — re-fetches your subscription sources every 3 hours
+- **6 hours** — every 6 hours
+- **12 hours** — every 12 hours
+
+![autosubs](../.vuepress/public/images/subscriptions/20260220235552.png)
+
+The refresh runs silently in the background via a cron job. It uses the same subscription links you already configured in the text area above.
+
+## Auto-Fallback
+
+Auto-fallback is designed for situations where your ISP or network blocks a proxy endpoint. When enabled, XRAYUI will periodically check whether your active proxy is reachable. If it detects that the endpoint is down, it will automatically switch to the next working server from your subscription pool. Your routing rules, DNS settings, and everything else stay intact — only the connection details change.
+
+![autofall](../.vuepress/public/images/subscriptions/20260220235709.png)
+
+### How to Enable
+
+There are two parts to the setup:
+
+**1. Global toggle** — In `General Options` → `Subscriptions` tab:
+
+- Enable the **Auto-fallback** checkbox. This turns on the health monitoring system.
+- Choose a **Health check interval** (2, 5, or 10 minutes). This controls how often the system checks if your endpoints are still alive.
+
+**2. Per-outbound opt-in** — In each outbound's settings:
+
+- First, select an endpoint from the `Available Subscription Configuration` dropdown (this requires subscription sources to be fetched).
+- Then enable the **Auto-fallback pool** checkbox. This links the outbound back to the subscription pool for automatic recovery.
+
+> [!info]
+> Only outbounds that have the **Auto-fallback pool** checkbox enabled will participate in automatic switching. Other outbounds are left untouched.
+
+### How It Works
+
+The system checks your pool-enabled outbounds on the schedule you configured. For each one:
+
+1. It first checks whether the endpoint is alive. If you have the **Connection check** feature enabled (in General Options), it uses the Observatory data from Xray itself — the most accurate method. Otherwise, it falls back to a simple TCP probe.
+2. If a check fails, it does not switch immediately. It waits for **3 consecutive failures** to avoid reacting to temporary network glitches.
+3. After 3 failures, it looks through your subscription pool for the same protocol, probes each candidate, and switches to the first one that responds.
+4. Xray is restarted automatically after a switch.
+
+A built-in safety limit prevents excessive switching — no more than 5 switches per hour per outbound. If all endpoints in the pool are unreachable, the system clears its failed list and retries on the next cycle.

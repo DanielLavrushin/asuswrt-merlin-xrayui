@@ -17,6 +17,9 @@ export default function useGeneralOptions(cfg: XrayObject, ui: Ref<EngineRespons
     geo_auto_update: ui.value?.geodata?.auto_update ?? false,
     hooks: ui.value?.xray?.hooks ?? new EngineHooks(),
     subscriptions: ui.value?.xray?.subscriptions ?? new EngineSubscriptions(),
+    subscription_auto_refresh: ui.value?.xray?.subscription_auto_refresh ?? 'disabled',
+    subscription_auto_fallback: ui.value?.xray?.subscription_auto_fallback ?? false,
+    subscription_fallback_interval: ui.value?.xray?.subscription_fallback_interval ?? 5,
     logs_scribe: ui.value?.integration?.scribe?.enabled ?? false,
     normalise: function () {
       this.subscriptions.protocols = undefined;

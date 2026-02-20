@@ -53,6 +53,60 @@ describe('XrayOutboundObject', () => {
     });
   });
 
+  describe('subPool metadata', () => {
+    it('preserves subPool through normalize when enabled', () => {
+      const vless = new XrayVlessOutboundObject();
+      const ob = new XrayOutboundObject('vless', vless);
+      ob.tag = 'my-proxy';
+      ob.subPool = { enabled: true, active: 'vless://uuid@host:443' };
+      ob.streamSettings = new XrayStreamSettingsObject();
+      jest.spyOn(ob.streamSettings, 'normalize').mockReturnValue(ob.streamSettings);
+      jest.spyOn(vless as any, 'normalize').mockReturnValue(vless);
+      const result = ob.normalize();
+      expect(result).toBe(ob);
+      expect(result!.subPool).toEqual({ enabled: true, active: 'vless://uuid@host:443' });
+    });
+
+    it('strips subPool when enabled is false', () => {
+      const vless = new XrayVlessOutboundObject();
+      const ob = new XrayOutboundObject('vless', vless);
+      ob.tag = 'my-proxy';
+      ob.subPool = { enabled: false, active: 'vless://uuid@host:443' };
+      ob.streamSettings = new XrayStreamSettingsObject();
+      jest.spyOn(ob.streamSettings, 'normalize').mockReturnValue(ob.streamSettings);
+      jest.spyOn(vless as any, 'normalize').mockReturnValue(vless);
+      const result = ob.normalize();
+      expect(result).toBe(ob);
+      expect(result!.subPool).toBeUndefined();
+    });
+
+    it('is not affected by surl normalization', () => {
+      const vless = new XrayVlessOutboundObject();
+      const ob = new XrayOutboundObject('vless', vless);
+      ob.tag = 'my-proxy';
+      ob.surl = 'https://example.com/sub';
+      ob.subPool = { enabled: true, active: 'vless://uuid@host:443' };
+      ob.streamSettings = new XrayStreamSettingsObject();
+      jest.spyOn(ob.streamSettings, 'normalize').mockReturnValue(ob.streamSettings);
+      const result = ob.normalize();
+      expect(result).toBe(ob);
+      expect(result!.subPool).toEqual({ enabled: true, active: 'vless://uuid@host:443' });
+      expect(result!.settings).toBeUndefined();
+    });
+
+    it('handles outbound without subPool', () => {
+      const vless = new XrayVlessOutboundObject();
+      const ob = new XrayOutboundObject('vless', vless);
+      ob.tag = 'my-proxy';
+      ob.streamSettings = new XrayStreamSettingsObject();
+      jest.spyOn(ob.streamSettings, 'normalize').mockReturnValue(ob.streamSettings);
+      jest.spyOn(vless as any, 'normalize').mockReturnValue(vless);
+      const result = ob.normalize();
+      expect(result).toBe(ob);
+      expect(result!.subPool).toBeUndefined();
+    });
+  });
+
   describe('XrayFreedomOutboundObject', () => {
     it('normalizes and returns itself', () => {
       const freedom = new XrayFreedomOutboundObject();

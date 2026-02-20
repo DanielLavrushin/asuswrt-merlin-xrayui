@@ -100,7 +100,16 @@
       "label_dns_leak": "防止 DNS 泄漏",
       "hint_dns_leak": "启用此选项以防止 DNS 泄漏。<blockquote>**重要！** 在未正确配置 Xray 之前，请不要将此选项设置为 `on`。单击复选框旁的“帮助”以了解有关 DNS 泄漏及其正确配置的更多信息。</blockquote>",
       "label_logs_scribe": "将 XRAYUI 日志集成到 Scribe",
-      "hint_logs_scribe": "启用此选项将 XRAYUI 日志与 `Scribe` 集成。这允许您在 `Scribe` 的 Web 界面中专用窗口查看 XRAYUI 日志。<hr/>您可以通过 `AMTM` 安装 `Scribe`"
+      "hint_logs_scribe": "启用此选项将 XRAYUI 日志与 `Scribe` 集成。这允许您在 `Scribe` 的 Web 界面中专用窗口查看 XRAYUI 日志。<hr/>您可以通过 `AMTM` 安装 `Scribe`",
+      "label_subscription_auto_refresh": "自动刷新订阅",
+      "hint_subscription_auto_refresh": "定期重新获取订阅源，保持端点池为最新状态。",
+      "sub_refresh_3h": "每 3 小时",
+      "sub_refresh_6h": "每 6 小时",
+      "sub_refresh_12h": "每 12 小时",
+      "label_subscription_auto_fallback": "自动故障转移",
+      "hint_subscription_auto_fallback": "启用后，开启了自动故障转移的出站将定期检查，当前端点不可达时自动切换到可用端点。",
+      "label_subscription_fallback_interval": "健康检查间隔",
+      "hint_subscription_fallback_interval": "检查池管理出站健康状态的频率。"
     },
     "ImportConfig": {
       "import_config_file": "导入配置"
@@ -505,7 +514,9 @@
       "label_subscription_url": "订阅 URL",
       "hint_subscription_url": "输入用于获取此出站配置更新的订阅 URL。<hr/>更新将在每次重启服务时应用。<hr/>设置了 URL 后，某些设置将被禁用，因为它们由订阅管理。",
       "label_subscription_type": "可用订阅配置",
-      "hint_subscription_type": "订阅配置的类型。<ul> <li>`xray`：Xray 订阅配置</li> <li>`clash`：Clash 订阅配置</li> </ul><hr/>仅当未设置 `subscriptionUrl` 时，此设置才会生效。"
+      "hint_subscription_type": "订阅配置的类型。<ul> <li>`xray`：Xray 订阅配置</li> <li>`clash`：Clash 订阅配置</li> </ul><hr/>仅当未设置 `subscriptionUrl` 时，此设置才会生效。",
+      "label_auto_fallback": "自动故障转移池",
+      "hint_auto_fallback": "启用后将此出站加入自动故障转移池。当活跃端点不可达时，将自动切换到订阅池中的下一个可用端点。<hr/>需要在通用设置中启用全局自动故障转移选项。"
     },
     "FreedomOutbound": {
       "modal_title": "直连（Freedom）",

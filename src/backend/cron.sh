@@ -3,6 +3,8 @@
 
 CRU_GEOUPD_ID="xrayui_geodataupdate"
 CRU_LR_ID="xrayui_logrotate"
+CRU_SUB_REFRESH_ID="xrayui_subscription_refresh"
+CRU_SUB_FALLBACK_ID="xrayui_subscription_fallback"
 LR_STATUS="/tmp/logrotate.status"
 LR_BIN="/opt/sbin/logrotate"
 LR_CONF="/opt/etc/logrotate.conf"
@@ -99,9 +101,55 @@ cron_jobs_clear() {
         done
 }
 
+cron_subscription_refresh_add() {
+    log_info "Configuring $CRU_SUB_REFRESH_ID cron job for $ADDON_TITLE"
+
+    load_xrayui_config
+    local subscription_auto_refresh="${subscription_auto_refresh:-disabled}"
+    cron_job_delete "$CRU_SUB_REFRESH_ID"
+
+    local cron_expr=""
+    case "$subscription_auto_refresh" in
+        3h)  cron_expr="0 */3 * * *" ;;
+        6h)  cron_expr="0 */6 * * *" ;;
+        12h) cron_expr="0 */12 * * *" ;;
+        *)
+            log_warn "CRON job $CRU_SUB_REFRESH_ID not added (subscription_auto_refresh=$subscription_auto_refresh)"
+            return
+            ;;
+    esac
+
+    cru a "$CRU_SUB_REFRESH_ID" "$cron_expr flock -n /tmp/${CRU_SUB_REFRESH_ID}.lock $ADDON_SCRIPT cron subscription_refresh" || {
+        log_error "Failed to add CRU job $CRU_SUB_REFRESH_ID"
+        return
+    }
+    log_ok "CRON job $CRU_SUB_REFRESH_ID for $ADDON_TITLE added successfully"
+}
+
+cron_subscription_fallback_add() {
+    log_info "Configuring $CRU_SUB_FALLBACK_ID cron job for $ADDON_TITLE"
+
+    load_xrayui_config
+    local subscription_auto_fallback="${subscription_auto_fallback:-false}"
+    local subscription_fallback_interval="${subscription_fallback_interval:-5}"
+    cron_job_delete "$CRU_SUB_FALLBACK_ID"
+
+    if [ "$subscription_auto_fallback" = "true" ]; then
+        cru a "$CRU_SUB_FALLBACK_ID" "*/$subscription_fallback_interval * * * * flock -n /tmp/${CRU_SUB_FALLBACK_ID}.lock $ADDON_SCRIPT cron subscription_fallback" || {
+            log_error "Failed to add CRU job $CRU_SUB_FALLBACK_ID"
+            return
+        }
+        log_ok "CRON job $CRU_SUB_FALLBACK_ID for $ADDON_TITLE added successfully"
+    else
+        log_warn "CRON job $CRU_SUB_FALLBACK_ID not added (subscription_auto_fallback is false)"
+    fi
+}
+
 cron_jobs_add() {
 
     log_info "Adding cron jobs for $ADDON_TITLE"
     cron_logrotate_add
     cron_geodata_add
+    cron_subscription_refresh_add
+    cron_subscription_fallback_add
 }

@@ -113,6 +113,69 @@ describe('CommonObjects', () => {
       expect(res?.allowInsecure).toBe(true);
       expect(res?.certificates).toHaveLength(1);
     });
+
+    it('normalizes echConfigList empty string to undefined', () => {
+      const tls = new XrayStreamTlsSettingsObject();
+      tls.echConfigList = '';
+      tls.normalize();
+      expect(tls.echConfigList).toBeUndefined();
+    });
+
+    it('retains echConfigList when set to a DNS URL', () => {
+      const tls = new XrayStreamTlsSettingsObject();
+      tls.echConfigList = 'udp://1.1.1.1';
+      tls.normalize();
+      expect(tls.echConfigList).toBe('udp://1.1.1.1');
+    });
+
+    it('retains echConfigList when set to a fixed base64 string', () => {
+      const tls = new XrayStreamTlsSettingsObject();
+      tls.echConfigList = 'AF7+DQBaAAAgACA51i3Ssu4wUMV4FNCc8iRX5J';
+      tls.normalize();
+      expect(tls.echConfigList).toBe('AF7+DQBaAAAgACA51i3Ssu4wUMV4FNCc8iRX5J');
+    });
+
+    it('normalizes echForceQuery "none" to undefined', () => {
+      const tls = new XrayStreamTlsSettingsObject();
+      tls.echForceQuery = 'none';
+      tls.normalize();
+      expect(tls.echForceQuery).toBeUndefined();
+    });
+
+    it('normalizes echForceQuery empty string to undefined', () => {
+      const tls = new XrayStreamTlsSettingsObject();
+      tls.echForceQuery = '';
+      tls.normalize();
+      expect(tls.echForceQuery).toBeUndefined();
+    });
+
+    it('retains echForceQuery "half"', () => {
+      const tls = new XrayStreamTlsSettingsObject();
+      tls.echForceQuery = 'half';
+      tls.normalize();
+      expect(tls.echForceQuery).toBe('half');
+    });
+
+    it('retains echForceQuery "full"', () => {
+      const tls = new XrayStreamTlsSettingsObject();
+      tls.echForceQuery = 'full';
+      tls.normalize();
+      expect(tls.echForceQuery).toBe('full');
+    });
+
+    it('normalizes echServerKeys empty string to undefined', () => {
+      const tls = new XrayStreamTlsSettingsObject();
+      tls.echServerKeys = '';
+      tls.normalize();
+      expect(tls.echServerKeys).toBeUndefined();
+    });
+
+    it('retains echServerKeys when set', () => {
+      const tls = new XrayStreamTlsSettingsObject();
+      tls.echServerKeys = 'my-server-key';
+      tls.normalize();
+      expect(tls.echServerKeys).toBe('my-server-key');
+    });
   });
 
   describe('XrayRoutingObject', () => {

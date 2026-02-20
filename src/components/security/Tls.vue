@@ -117,6 +117,58 @@
             <span class="hint-color">SHA256 fingerprints, one per line (optional)</span>
           </td>
         </tr>
+        <tr v-if="proxyType === 'outbound'">
+          <th>
+            {{ $t('com.Tls.label_ech_config_list') }}
+            <hint v-html="$t('com.Tls.hint_ech_config_list')"></hint>
+          </th>
+          <td>
+            <div class="textarea-wrapper">
+              <textarea rows="3" v-model.trim="transport.tlsSettings.echConfigList" placeholder="udp://1.1.1.1 or base64 ECHConfig"></textarea>
+            </div>
+            <span class="hint-color">optional</span>
+          </td>
+        </tr>
+        <tr v-if="proxyType === 'outbound' && isDnsEchConfig">
+          <th>
+            {{ $t('com.Tls.label_ech_force_query') }}
+            <hint v-html="$t('com.Tls.hint_ech_force_query')"></hint>
+          </th>
+          <td>
+            <select class="input_option" v-model="transport.tlsSettings.echForceQuery">
+              <option v-for="(opt, index) in echForceQueryOptions" :key="index" :value="opt">
+                {{ opt }}
+              </option>
+            </select>
+            <span class="hint-color">default: none</span>
+          </td>
+        </tr>
+        <tr v-if="proxyType === 'inbound'">
+          <th>
+            {{ $t('com.Tls.label_ech_server_name') }}
+            <hint v-html="$t('com.Tls.hint_ech_server_name')"></hint>
+          </th>
+          <td>
+            <input v-model.trim="echServerName" type="text" class="input_20_table" placeholder="example.com" />
+            <span v-if="echServerName" class="row-buttons">
+              <input class="button_gen button_gen_small" type="button" :value="$t('labels.regenerate')" @click.prevent="generate_ech_keys()" />
+            </span>
+          </td>
+        </tr>
+        <tr v-if="proxyType === 'inbound'">
+          <th>
+            {{ $t('com.Tls.label_ech_server_keys') }}
+            <hint v-html="$t('com.Tls.hint_ech_server_keys')"></hint>
+          </th>
+          <td>
+            <div class="textarea-wrapper">
+              <textarea rows="3" v-model.trim="transport.tlsSettings.echServerKeys"></textarea>
+            </div>
+            <span v-if="generatedEchConfigList" class="hint-color" style="word-break: break-all;">
+              {{ $t('com.Tls.label_ech_config_list') }}: {{ generatedEchConfigList }}
+            </span>
+          </td>
+        </tr>
         <tr v-if="proxyType === 'inbound'">
           <th>
             {{ $t('com.Tls.label_certificate') }}
@@ -160,6 +212,24 @@
       const transport = ref<XrayStreamSettingsObject>(props.transport ?? new XrayStreamSettingsObject());
       transport.value.tlsSettings = transport.value.tlsSettings ?? new XrayStreamTlsSettingsObject();
 
+      const echServerName = ref('');
+      const generatedEchConfigList = ref('');
+
+      const generate_ech_keys = async () => {
+        if (!echServerName.value) {
+          alert('Server name is required for ECH key generation.');
+          return;
+        }
+        window.showLoading();
+        await engine.submit(SubmitActions.generateEchKeys, { serverName: echServerName.value }, 1000);
+        const result = await engine.getEchKeys();
+        if (result && transport.value.tlsSettings) {
+          transport.value.tlsSettings.echServerKeys = result.serverKeys;
+          generatedEchConfigList.value = result.configList;
+        }
+        window.hideLoading();
+      };
+
       const certificate_manage = () => {
         certificatesModal.value.show();
       };
@@ -196,6 +266,11 @@
         }
       );
 
+      const isDnsEchConfig = computed(() => {
+        const val = transport.value.tlsSettings?.echConfigList;
+        return val ? val.includes('://') : false;
+      });
+
       const pinnedCertificatesText = computed({
         get: () => {
           return transport.value.tlsSettings?.pinnedPeerCertificateSha256?.join('\n') || '';
@@ -222,7 +297,12 @@
         proxyType,
         certificate_manage,
         certificate_renew,
-        pinnedCertificatesText
+        pinnedCertificatesText,
+        isDnsEchConfig,
+        echForceQueryOptions: XrayOptions.echForceQueryOptions,
+        echServerName,
+        generatedEchConfigList,
+        generate_ech_keys
       };
     }
   });

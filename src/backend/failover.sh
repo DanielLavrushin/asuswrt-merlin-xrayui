@@ -33,8 +33,8 @@ failover_check() {
 
     [ -z "$pool_outbounds" ] && return 0
 
-    local needs_restart_flag="/tmp/failover_needs_restart.$$"
-    rm -f "$needs_restart_flag"
+    local rotated_list="/tmp/failover_rotated.$$"
+    rm -f "$rotated_list"
 
     # Use here-doc to avoid subshell variable propagation issues
     while IFS= read -r entry; do
@@ -67,7 +67,7 @@ failover_check() {
 
         log_info "Failover: rotating outbound '$tag' after $failures consecutive failures"
         if failover_rotate_outbound "$tag" "$protocol" "$idx" "$active"; then
-            touch "$needs_restart_flag"
+            printf '%s\t%s\n' "$tag" "$idx" >>"$rotated_list"
             failover_state_record_switch "$tag"
             failover_state_reset_failures "$tag"
         fi
@@ -75,10 +75,33 @@ failover_check() {
 $pool_outbounds
 EOF
 
-    if [ -f "$needs_restart_flag" ]; then
-        rm -f "$needs_restart_flag"
-        log_info "Failover: restarting Xray after rotation"
-        restart
+    if [ -f "$rotated_list" ]; then
+        # Try zero-downtime API hot-swap first, fall back to full restart
+        local swap_failed="false"
+        local api_addr
+        api_addr=$(api_get_listen_address 2>/dev/null) || swap_failed="true"
+
+        if [ "$swap_failed" = "false" ]; then
+            log_info "Failover: attempting API hot-swap (zero-downtime)"
+            while IFS="$(printf '\t')" read -r swap_tag swap_idx; do
+                [ -z "$swap_tag" ] && continue
+                local swap_outbound
+                swap_outbound=$(jq -c --arg i "$swap_idx" \
+                    '.outbounds[($i | tonumber)]' "$XRAY_CONFIG_FILE")
+
+                if ! api_swap_outbound "$swap_tag" "$swap_outbound"; then
+                    swap_failed="true"
+                    break
+                fi
+            done <"$rotated_list"
+        fi
+
+        if [ "$swap_failed" = "true" ]; then
+            log_info "Failover: falling back to full restart"
+            restart
+        fi
+
+        rm -f "$rotated_list"
         initial_response
     fi
 }

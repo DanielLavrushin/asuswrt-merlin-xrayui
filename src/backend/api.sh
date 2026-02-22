@@ -6,6 +6,64 @@ api_get_current_config() {
   echo "/opt/etc/xray/xrayui/${xray_config_name%.json}-api.json"
 }
 
+# Get the gRPC API listen address from the API config file.
+api_get_listen_address() {
+  local cfg
+  cfg=$(api_get_current_config)
+  [ -f "$cfg" ] || return 1
+  jq -r '.api.listen // empty' "$cfg"
+}
+
+# Remove an outbound by tag via xray gRPC API.
+api_remove_outbound() {
+  local tag="$1"
+  local api_addr
+  api_addr=$(api_get_listen_address) || return 1
+
+  if ! xray api rmo -s "$api_addr" "$tag" >/dev/null 2>&1; then
+    log_error "API: failed to remove outbound '$tag'"
+    return 1
+  fi
+  log_debug "API: removed outbound '$tag'"
+}
+
+# Add an outbound via xray gRPC API.
+# $1 = outbound JSON object (xrayui-specific fields are stripped automatically)
+api_add_outbound() {
+  local outbound_json="$1"
+  local api_addr tmp_file
+  api_addr=$(api_get_listen_address) || return 1
+
+  tmp_file="/tmp/xray_api_ado.$$.json"
+  printf '%s' "$outbound_json" |
+    jq -c '{outbounds: [del(.subPool, .surl)]}' >"$tmp_file" 2>/dev/null || {
+    rm -f "$tmp_file"
+    log_error "API: failed to prepare outbound JSON"
+    return 1
+  }
+
+  if ! xray api ado -s "$api_addr" "$tmp_file" >/dev/null 2>&1; then
+    rm -f "$tmp_file"
+    log_error "API: failed to add outbound"
+    return 1
+  fi
+
+  rm -f "$tmp_file"
+  log_debug "API: added outbound"
+}
+
+# Hot-swap an outbound: remove old, add replacement.
+# $1 = tag to replace
+# $2 = full outbound JSON (subPool/surl will be stripped for the API call)
+api_swap_outbound() {
+  local tag="$1"
+  local outbound_json="$2"
+
+  api_remove_outbound "$tag" || return 1
+  api_add_outbound "$outbound_json" || return 1
+  log_info "API: hot-swapped outbound '$tag'"
+}
+
 api_write_config() {
   log_info "Writing API configuration..."
   mkdir -p /opt/etc/xray/xrayui
@@ -59,7 +117,7 @@ EOF
 
 api_get_connected_clients() {
   load_xrayui_config
-  api_addr=$(jq -r '.api.listen' "$(api_get_current_config)")
+  api_addr=$(api_get_listen_address)
   stats_json="$ADDON_SHARE_DIR/xray_stats.json"
   out_json="$XRAYUI_CLIENTS_FILE"
 

@@ -69,7 +69,7 @@ logs_build_sed_script() {
 
   awk '
         NR==FNR          { want[$1]=1; next }          # first file = .ips
-        ($1 in want)     { printf "s|%s|%s|g\n", $1, $2 }
+        ($1 in want)     { printf "s|%s|%s{{%s}}|g\n", $1, $2, $1 }
     ' "$script.ips" "$XRAYUI_DNSMASQ_CACHE" >"$script"
 
   rm -f "$script.ips"

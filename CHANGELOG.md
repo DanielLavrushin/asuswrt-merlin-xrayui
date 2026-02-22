@@ -6,7 +6,9 @@
 - FIXED: Auto-fallback rotation now works — previously all candidate servers were rejected during probing due to a compatibility issue with the router's network tools. The system now simply switches to the next server in your subscription list and lets Observatory verify it on the next check cycle.
 - FIXED: Subscription pool settings are no longer lost after restarting Xray.
 - IMPROVED: Auto-fallback options now show a helpful message when Xray Connection Check is disabled, instead of being hidden without explanation.
+- IMPROVED: Auto-fallback now switches servers instantly using the Xray API instead of performing a full restart. This reduces downtime from ~15 seconds to near-zero. If the API is unavailable, it falls back to a full restart automatically.
 - IMPROVED: Access log viewer now filters out internal metrics traffic (`sys:metrics_in -> sys:metrics_out`) to reduce noise when Connection Check is enabled.
+- IMPROVED: When `dnsmasq` IP-to-domain resolution is enabled, the access log viewer now shows the original IP alongside the resolved domain. Click any resolved domain to toggle between domain and IP; hover to see the alternate value in a tooltip.
 - ADDED: Configurable Observatory probe URL in General Settings. Previously hardcoded to `https://www.google.com/generate_204`, it can now be changed to any endpoint that returns HTTP 204.
 
 ## [0.64.1] - 2026-02-21

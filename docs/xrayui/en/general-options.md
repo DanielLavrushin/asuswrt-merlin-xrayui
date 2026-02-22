@@ -118,7 +118,7 @@ Common sources included in the dropdown:
 
 ### Auto-update geodata files
 
-Periodically refreshes geodata files in the background. This option will also recompile [your custom geodat file](custom-geodata#interface-overview).
+Periodically refreshes geodata files in the background. This option will also recompile [your custom geodata files](custom-geodata#managing-files-via-the-ui).
 
 ::: info
 A cron job is created to download fresh geodata every night at **03:00**.

@@ -16,7 +16,7 @@ const links_en = [
   { text: 'Securely Share Config', link: '/en/share-config.md' },
   { text: 'Transparent Proxy (TPROXY)', link: '/en/tproxy.md' },
   { text: 'Reality TLS Scanner', link: '/en/rtls-scanner.md' },
-  { text: 'Custom Geosite Files', link: '/en/custom-geodata.md' },
+  { text: 'Geodata Files Manager', link: '/en/custom-geodata.md' },
   { text: 'Inspect Geosite and GeoIP Databases', link: '/en/v2dat.md' },
   { text: 'B4SNI Inspection', link: '/en/b4sni.md' }
 ];
@@ -32,7 +32,7 @@ const links_ru = [
   { text: 'Безопасный обмен конфигом', link: '/ru/share-config.md' },
   { text: 'Прозрачный прокси (TPROXY)', link: '/ru/tproxy.md' },
   { text: 'Сканер Reality TLS', link: '/ru/rtls-scanner.md' },
-  { text: 'Пользовательские файлы геоданных', link: '/ru/custom-geodata.md' },
+  { text: 'Менеджер файлов геоданных', link: '/ru/custom-geodata.md' },
   { text: 'Инспекция баз данных Geosite и GeoIP', link: '/ru/v2dat.md' },
   { text: 'Логирование в XRAY', link: '/ru/logs.md' },
   { text: 'B4SNI: Инспекция SNI', link: '/ru/b4sni.md' },

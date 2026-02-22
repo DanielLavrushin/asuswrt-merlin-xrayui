@@ -1,6 +1,6 @@
 # XRAYUI Changelog
 
-## [0.64.2] - 2026-02-22
+## [0.65.0] - 2026-02-22
 
 - IMPROVED: SNI Logs redesigned with three view modes — **By Device** (collapsible cards grouping domains per LAN device), **By Domain** (aggregated table with hit counts, protocol badges, and device tags), and **Live Stream** (enhanced real-time log). Includes bulk domain selection, enhanced stats (top domain, most active device), and view-aware CSV export.
 - ADDED: Add domains directly from SNI logs to routing rules — click **+ Rule** on any domain to add it to an existing rule or create a new one, without leaving the SNI logs modal. Supports bulk selection for adding multiple domains at once.

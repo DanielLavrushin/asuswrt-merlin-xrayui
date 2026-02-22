@@ -2,6 +2,8 @@
 
 ## [0.65.0] - 2026-02-22
 
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
 - IMPROVED: SNI Logs redesigned with three view modes — **By Device** (collapsible cards grouping domains per LAN device), **By Domain** (aggregated table with hit counts, protocol badges, and device tags), and **Live Stream** (enhanced real-time log). Includes bulk domain selection, enhanced stats (top domain, most active device), and view-aware CSV export.
 - ADDED: Add domains directly from SNI logs to routing rules — click **+ Rule** on any domain to add it to an existing rule or create a new one, without leaving the SNI logs modal. Supports bulk selection for adding multiple domains at once.
 - FIXED: Auto-fallback now correctly detects when a proxy is down. Previously, health checks could report a dead server as reachable. Now uses Xray's built-in Observatory for reliable detection.
@@ -19,6 +21,8 @@
 
 ## [0.64.1] - 2026-02-21
 
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
 - ADDED: Automatic subscription refresh — your subscription sources can now be re-fetched on a schedule (every 3, 6, or 12 hours) so your server list stays up to date without manual action.
 - ADDED: Auto-fallback when a proxy goes down — when enabled, XRAYUI periodically checks if your active proxy is reachable. If it detects that your connection is blocked, it automatically switches to the next working server from your subscription pool. Your routing rules and DNS settings stay intact.
 - ADDED: Per-outbound auto-fallback toggle — each outbound can individually opt in to auto-fallback. After selecting a server from the subscription dropdown, enable the "Auto-fallback" checkbox to link it back to the subscription pool for automatic recovery.
@@ -29,10 +33,14 @@
 
 ## [0.63.7] - 2026-02-09
 
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
 - FIXED: Xray not working after scheduled or manual router reboot on some slow models (e.g. RT-AX58U).
 - FIXED: `TUN` inbound now automatically loads the `TUN` kernel module if it is not already available, preventing silent failures on routers where the module is not loaded by default.
 
 ## [0.63.5] - 2026-02-04
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - FIXED: Script files in `/jffs/scripts/` no longer lose execute permissions after update or reinstall.
 - FIXED: Firewall rules now properly configure on router reboot (was broken since 0.63.4).

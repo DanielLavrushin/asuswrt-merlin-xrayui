@@ -458,7 +458,8 @@
   function parseLinkLabel(url: string): string {
     const hash = url.indexOf('#');
     if (hash !== -1 && hash < url.length - 1) {
-      return decodeURIComponent(url.substring(hash + 1));
+      const fragment = url.substring(hash + 1);
+      try { return decodeURIComponent(fragment); } catch { return fragment; }
     }
     const match = url.match(/@([^/?#]+)/);
     return match ? match[1] : url.substring(0, 40) + '...';

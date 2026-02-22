@@ -8,10 +8,12 @@ api_get_current_config() {
 
 # Get the gRPC API listen address from the API config file.
 api_get_listen_address() {
-  local cfg
+  local cfg addr
   cfg=$(api_get_current_config)
   [ -f "$cfg" ] || return 1
-  jq -r '.api.listen // empty' "$cfg"
+  addr=$(jq -r '.api.listen // empty' "$cfg") || return 1
+  [ -n "$addr" ] || return 1
+  printf '%s\n' "$addr"
 }
 
 # Remove an outbound by tag via xray gRPC API.
@@ -69,7 +71,8 @@ api_write_config() {
   mkdir -p /opt/etc/xray/xrayui
 
   local xray_api_config=$(api_get_current_config)
-  local observatory_probe_url="${probe_url:-https://www.google.com/generate_204}"
+  local observatory_probe_url
+  observatory_probe_url=$(printf '%s' "${probe_url:-https://www.google.com/generate_204}" | jq -Rs '.')
   local outbound_tags
   outbound_tags=$(
     jq -c '
@@ -106,7 +109,7 @@ api_write_config() {
   },
   "observatory": {
     "subjectSelector": $outbound_tags,
-    "probeUrl": "$observatory_probe_url",
+    "probeUrl": $observatory_probe_url,
     "probeInterval": "10s",
     "enableConcurrency": true
   },

@@ -18,11 +18,11 @@
     "@vuepress/bundler-vite": "2.0.0-rc.24",
     "@vuepress/plugin-markdown-hint": "2.0.0-rc.42",
     "@vuepress/theme-default": "2.0.0-rc.112",
-    "anywhere": "^1.6.0",
-    "vue": "^3.5.18",
+    "anywhere": "^1.7.0",
+    "sass-embedded": "^1.97.3",
+    "vue": "^3.5.28",
     "vuepress": "2.0.0-rc.24",
-    "vuepress-plugin-remove-html-extension": "^1.21.0",
-    "sass-embedded": "^1.7.2"
+    "vuepress-plugin-remove-html-extension": "^1.23.0"
   },
   "keywords": [],
   "packageManager": "pnpm@10.12.1",

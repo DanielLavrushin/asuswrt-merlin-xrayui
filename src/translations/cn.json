@@ -59,6 +59,8 @@
       "label_logs_enable_error": "错误日志",
       "label_logs_enable_dns": "DNS 日志",
       "label_logs_level": "日志级别",
+      "label_probe_url": "Observatory 探测 URL",
+      "hint_probe_url": "Xray Observatory 用于探测出站连接健康状态的 URL。该端点应返回 HTTP 204（No Content）。",
       "label_gh_proxy": "GitHub 代理",
       "hint_gh_proxy": "当地无法访问 GitHub 时，用此功能下载 GitHub 文件（含 Xray 更新、Geo 库等）",
       "geodad_header": "GeoIP 与 GeoSite 库",
@@ -109,7 +111,8 @@
       "label_subscription_auto_fallback": "自动故障转移",
       "hint_subscription_auto_fallback": "启用后，开启了自动故障转移的出站将定期检查，当前端点不可达时自动切换到可用端点。",
       "label_subscription_fallback_interval": "健康检查间隔",
-      "hint_subscription_fallback_interval": "检查池管理出站健康状态的频率。"
+      "hint_subscription_fallback_interval": "检查池管理出站健康状态的频率。",
+      "warn_auto_fallback_requires_observatory": "需要在「通用」选项卡中启用 Xray 连接检查。"
     },
     "ImportConfig": {
       "import_config_file": "导入配置"
@@ -516,7 +519,8 @@
       "label_subscription_type": "可用订阅配置",
       "hint_subscription_type": "订阅配置的类型。<ul> <li>`xray`：Xray 订阅配置</li> <li>`clash`：Clash 订阅配置</li> </ul><hr/>仅当未设置 `subscriptionUrl` 时，此设置才会生效。",
       "label_auto_fallback": "自动故障转移池",
-      "hint_auto_fallback": "启用后将此出站加入自动故障转移池。当活跃端点不可达时，将自动切换到订阅池中的下一个可用端点。<hr/>需要在通用设置中启用全局自动故障转移选项。"
+      "hint_auto_fallback": "启用后将此出站加入自动故障转移池。当活跃端点不可达时，将自动切换到订阅池中的下一个可用端点。<hr/>需要在通用设置中启用全局自动故障转移选项。",
+      "warn_auto_fallback_requires_observatory": "需要在通用设置中启用 Xray 连接检查。"
     },
     "FreedomOutbound": {
       "modal_title": "直连（Freedom）",

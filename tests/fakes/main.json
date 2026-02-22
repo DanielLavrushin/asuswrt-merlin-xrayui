@@ -26,7 +26,11 @@
       },
       "sniffing": {
         "enabled": true,
-        "destOverride": ["http", "tls", "quic"]
+        "destOverride": [
+          "http",
+          "tls",
+          "quic"
+        ]
       }
     },
     {
@@ -49,9 +53,15 @@
         "realitySettings": {
           "show": false,
           "dest": "dl.google.com:443",
-          "serverNames": ["dl.google.com"],
+          "serverNames": [
+            "dl.google.com"
+          ],
           "privateKey": "0JAmj_P2Z4Gw547e84-3vbnfKkhePjOBCp-R87zr6kk",
-          "shortIds": ["ffb40259c97a0a99", "7ace47e53232e787", "10dc68b79c2d19d3"],
+          "shortIds": [
+            "ffb40259c97a0a99",
+            "7ace47e53232e787",
+            "10dc68b79c2d19d3"
+          ],
           "publicKey": "_GK1HpPnKgIgs_KdX4QxdjEpC3_XPFfrh_aUoSwxMJH4",
           "spiderX": "/"
         },
@@ -59,7 +69,12 @@
       },
       "sniffing": {
         "enabled": true,
-        "destOverride": ["http", "tls", "quic", "fakedns"]
+        "destOverride": [
+          "http",
+          "tls",
+          "quic",
+          "fakedns"
+        ]
       }
     },
     {
@@ -221,7 +236,9 @@
       {
         "idx": 0,
         "name": "sys:connection-check",
-        "domain": ["ip-api.com"],
+        "domain": [
+          "ip-api.com"
+        ],
         "type": "field",
         "outboundTag": "proxy"
       },
@@ -229,20 +246,26 @@
         "idx": 1,
         "name": "server to direct",
         "type": "field",
-        "inboundTag": ["in-proxy"],
+        "inboundTag": [
+          "in-proxy"
+        ],
         "outboundTag": "proxy"
       },
       {
         "idx": 2,
         "name": "block torrent traffic",
         "type": "field",
-        "protocol": ["bittorrent"],
+        "protocol": [
+          "bittorrent"
+        ],
         "outboundTag": "block-torrent"
       },
       {
         "idx": 3,
         "name": "block ads&crap",
-        "domain": ["geosite:category-ads-all"],
+        "domain": [
+          "geosite:category-ads-all"
+        ],
         "type": "field",
         "outboundTag": "block-ads"
       },
@@ -308,10 +331,6 @@
           "geosite:aws",
           "geosite:apple",
           "geosite:google",
-          "geosite:google-play",
-          "geosite:google-registry-tld",
-          "geosite:google-ads",
-          "geosite:google-gemini",
           "geosite:telegram",
           "geosite:twitter",
           "geosite:microsoft",
@@ -332,34 +351,45 @@
         "idx": 6,
         "name": "dolcevita to proxy",
         "type": "field",
-        "source": ["10.8.0.2"],
+        "source": [
+          "10.8.0.2"
+        ],
         "outboundTag": "proxy3"
       },
       {
         "idx": 7,
         "name": "ilya to proxy",
         "type": "field",
-        "source": ["10.8.0.5"],
+        "source": [
+          "10.8.0.5"
+        ],
         "outboundTag": "proxy2"
       },
       {
         "idx": 8,
         "name": "olala to proxy",
         "type": "field",
-        "source": ["10.8.0.6"],
+        "source": [
+          "10.8.0.6"
+        ],
         "outboundTag": "proxy4"
       },
       {
         "idx": 9,
         "name": "ovpn to xray proxy",
         "type": "field",
-        "source": ["10.8.0.0/24"],
+        "source": [
+          "10.8.0.0/24"
+        ],
         "outboundTag": "proxy3"
       },
       {
         "idx": 10,
         "name": "geoip:ru to proxy",
-        "ip": ["geoip:ru", "geoip:cn"],
+        "ip": [
+          "geoip:ru",
+          "geoip:cn"
+        ],
         "type": "field",
         "outboundTag": "proxy"
       }
@@ -367,7 +397,12 @@
     "policies": [
       {
         "name": "bypass xray",
-        "mac": ["2C:4D:54:21:57:80", "2C:4D:54:21:57:81", "2C:4D:54:21:57:82", "2C:4D:54:21:57:83"],
+        "mac": [
+          "2C:4D:54:21:57:80",
+          "2C:4D:54:21:57:81",
+          "2C:4D:54:21:57:82",
+          "2C:4D:54:21:57:83"
+        ],
         "mode": "bypass",
         "enabled": true
       },
@@ -385,7 +420,9 @@
       },
       {
         "name": "ac88u bypass",
-        "mac": ["2C:4D:54:21:57:84"],
+        "mac": [
+          "2C:4D:54:21:57:84"
+        ],
         "mode": "bypass",
         "enabled": false
       }

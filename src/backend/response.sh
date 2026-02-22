@@ -43,6 +43,7 @@ initial_response() {
     local subscription_auto_refresh="${subscription_auto_refresh:-disabled}"
     local subscription_auto_fallback="${subscription_auto_fallback:-false}"
     local subscription_fallback_interval="${subscription_fallback_interval:-5}"
+    local probe_url="${probe_url:-https://www.google.com/generate_204}"
 
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg geoip "$geoip_date" --arg geosite "$geosite_date" --arg geoipurl "$geoipurl" --arg geositeurl "$geositeurl" \
         '.geodata.geoip_url = $geoipurl | .geodata.geosite_url = $geositeurl | .geodata.community["geoip.dat"] = $geoip | .geodata.community["geosite.dat"] = $geosite')
@@ -58,6 +59,7 @@ initial_response() {
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson skip_test "$skip_test" '.xray.skip_test = $skip_test')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson clients_check "$clients_check" '.xray.clients_check = $clients_check')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson check_connection "$check_connection" '.xray.check_connection = $check_connection')
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg probe_url "$probe_url" '.xray.probe_url = $probe_url')
 
     local github_proxy="${github_proxy:-""}"
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg github_proxy "$github_proxy" '.xray.github_proxy = $github_proxy')

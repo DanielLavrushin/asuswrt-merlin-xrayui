@@ -1,5 +1,14 @@
 # XRAYUI Changelog
 
+## [0.64.2] - 2026-02-22
+
+- FIXED: Auto-fallback now correctly detects when a proxy is down. Previously, health checks could bypass Xray entirely and report a server as reachable even when it was actually blocked. Now uses Xray's built-in Observatory for reliable detection.
+- FIXED: Auto-fallback now works with all subscription types including VMess and Shadowsocks links.
+- FIXED: Subscription pool settings are no longer lost after restarting Xray.
+- IMPROVED: Auto-fallback options now show a helpful message when Xray Connection Check is disabled, instead of being hidden without explanation.
+- IMPROVED: Access log viewer now filters out internal metrics traffic (`sys:metrics_in -> sys:metrics_out`) to reduce noise when Connection Check is enabled.
+- ADDED: Configurable Observatory probe URL in General Settings. Previously hardcoded to `https://www.google.com/generate_204`, it can now be changed to any endpoint that returns HTTP 204.
+
 ## [0.64.1] - 2026-02-21
 
 - ADDED: Automatic subscription refresh — your subscription sources can now be re-fetched on a schedule (every 3, 6, or 12 hours) so your server list stays up to date without manual action.

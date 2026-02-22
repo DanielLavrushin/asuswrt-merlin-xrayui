@@ -44,6 +44,7 @@ apply_general_options() {
     local subscription_auto_refresh=$(echo "$genopts" | jq -r '.subscription_auto_refresh // "disabled"')
     local subscription_auto_fallback=$(echo "$genopts" | jq -r '.subscription_auto_fallback // "false"')
     local subscription_fallback_interval=$(echo "$genopts" | jq -r '.subscription_fallback_interval // "5"')
+    local probe_url=$(echo "$genopts" | jq -r '.probe_url // "https://www.google.com/generate_204"')
 
     if [ ! -d "$ADDON_LOGS_DIR" ]; then
         mkdir -p "$ADDON_LOGS_DIR"
@@ -96,6 +97,7 @@ apply_general_options() {
     update_xrayui_config "subscription_auto_refresh" "$subscription_auto_refresh"
     update_xrayui_config "subscription_auto_fallback" "$subscription_auto_fallback"
     update_xrayui_config "subscription_fallback_interval" "$subscription_fallback_interval"
+    update_xrayui_config "probe_url" "$probe_url"
 
     apply_general_options_hooks "$hooks"
 

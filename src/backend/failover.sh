@@ -9,6 +9,13 @@ failover_check() {
     local subscription_auto_fallback="${subscription_auto_fallback:-false}"
     [ "$subscription_auto_fallback" = "true" ] || return 0
 
+    # Failover requires Observatory (check_connection) for reliable health checks
+    local check_connection="${check_connection:-false}"
+    if [ "$check_connection" != "true" ]; then
+        log_debug "Failover: check_connection is disabled - skipping (Observatory required)"
+        return 0
+    fi
+
     [ -f "$XRAYUI_SUBSCRIPTIONS_FILE" ] || return 0
     [ -f "$XRAY_CONFIG_FILE" ] || return 0
     [ -f "$XRAY_PIDFILE" ] || return 0
@@ -40,10 +47,7 @@ failover_check() {
 
         log_debug "Failover: checking outbound '$tag' (proto=$protocol, idx=$idx)"
 
-        local is_alive
-        is_alive=$(failover_check_alive "$tag" "$active")
-
-        if [ "$is_alive" = "true" ]; then
+        if failover_check_alive "$tag"; then
             failover_state_reset_failures "$tag"
             continue
         fi
@@ -75,46 +79,41 @@ EOF
         rm -f "$needs_restart_flag"
         log_info "Failover: restarting Xray after rotation"
         restart
+        initial_response
     fi
 }
 
 failover_check_alive() {
     local tag="$1"
-    local active_link="$2"
 
-    # Strategy 1: Use Observatory if check_connection is enabled
-    local check_connection="${check_connection:-false}"
-    if [ "$check_connection" = "true" ] && [ -f "$XRAYUI_CONNECTION_STATUS_FILE" ]; then
-        local obs_alive
-        obs_alive=$(jq -r --arg tag "$tag" '
-            to_entries[]
-            | select(.value.outbound_tag == $tag)
-            | .value.alive
-        ' "$XRAYUI_CONNECTION_STATUS_FILE" 2>/dev/null)
-
-        if [ "$obs_alive" = "true" ]; then
-            echo "true"
-            return
-        elif [ "$obs_alive" = "false" ]; then
-            echo "false"
-            return
-        fi
+    # Use Observatory data exclusively for health checks.
+    # Observatory probes through xray's actual outbound path, making it
+    # the only reliable way to detect protocol-level and routing failures.
+    #
+    # Returns 0 (alive) or 1 (dead) via exit code — never echo,
+    # because log_* functions write to stdout and would contaminate
+    # any captured output.
+    if [ ! -f "$XRAYUI_CONNECTION_STATUS_FILE" ]; then
+        log_debug "Failover: no Observatory data yet for '$tag' - assuming alive"
+        return 0
     fi
 
-    # Strategy 2: TCP probe the active endpoint
-    if [ -n "$active_link" ] && [ "$active_link" != "null" ] && [ "$active_link" != "" ]; then
-        local host port
-        host=$(failover_parse_host "$active_link")
-        port=$(failover_parse_port "$active_link")
-        if [ -n "$host" ] && [ -n "$port" ]; then
-            if failover_probe_tcp "$host" "$port"; then
-                echo "true"
-                return
-            fi
-        fi
-    fi
+    local obs_alive
+    obs_alive=$(jq -r --arg tag "$tag" '
+        to_entries[]
+        | select(.value.outbound_tag == $tag)
+        | .value.alive // false
+    ' "$XRAYUI_CONNECTION_STATUS_FILE" 2>/dev/null)
 
-    echo "false"
+    if [ "$obs_alive" = "true" ]; then
+        return 0
+    elif [ "$obs_alive" = "false" ]; then
+        return 1
+    else
+        # No Observatory entry for this tag — data not available yet
+        log_debug "Failover: no Observatory entry for '$tag' - assuming alive"
+        return 0
+    fi
 }
 
 failover_probe_tcp() {
@@ -125,9 +124,39 @@ failover_probe_tcp() {
 
 failover_parse_host() {
     local link="$1"
-    # Strip protocol prefix, get user@host:port part, extract host
+
+    case "$link" in
+    vmess://*)
+        # VMess: base64-encoded JSON with "add" field
+        local payload="${link#vmess://}"
+        printf '%s' "$payload" | base64 -d 2>/dev/null | jq -r '.add // empty' 2>/dev/null
+        return
+        ;;
+    ss://*)
+        # Shadowsocks: base64(method:pass@host:port)#tag  (legacy format)
+        #          or: base64(method:pass)@host:port#tag   (SIP002 format)
+        local payload="${link#ss://}"
+        payload=$(printf '%s' "$payload" | awk -F'#' '{print $1}')
+        local hostport
+        if printf '%s' "$payload" | grep -q '@'; then
+            # SIP002: visible @host:port in URI
+            hostport=$(printf '%s' "$payload" | awk -F@ '{print $NF}')
+        else
+            # Legacy: entire payload is base64, decode to get method:pass@host:port
+            hostport=$(printf '%s' "$payload" | base64 -d 2>/dev/null | awk -F@ '{print $NF}')
+        fi
+        if printf '%s' "$hostport" | grep -q '^\['; then
+            printf '%s' "$hostport" | sed 's/^\[\(.*\)\].*/\1/'
+        else
+            printf '%s' "$hostport" | sed 's/:[0-9]*$//'
+        fi
+        return
+        ;;
+    esac
+
+    # Standard URI: strip scheme, take user@host:port, strip query and fragment
     local hostport
-    hostport=$(printf '%s' "$link" | sed 's|^[a-z0-9]*://||' | awk -F@ '{print $NF}' | awk -F/ '{print $1}' | awk -F'?' '{print $1}')
+    hostport=$(printf '%s' "$link" | sed 's|^[a-z0-9]*://||' | awk -F@ '{print $NF}' | awk -F/ '{print $1}' | awk -F'?' '{print $1}' | awk -F'#' '{print $1}')
     # Handle IPv6 [host]:port
     if printf '%s' "$hostport" | grep -q '^\['; then
         printf '%s' "$hostport" | sed 's/^\[\(.*\)\].*/\1/'
@@ -138,8 +167,36 @@ failover_parse_host() {
 
 failover_parse_port() {
     local link="$1"
+
+    case "$link" in
+    vmess://*)
+        # VMess: base64-encoded JSON with "port" field
+        local payload="${link#vmess://}"
+        printf '%s' "$payload" | base64 -d 2>/dev/null | jq -r '.port // empty' 2>/dev/null
+        return
+        ;;
+    ss://*)
+        # Shadowsocks: legacy or SIP002 (same logic as parse_host)
+        local payload="${link#ss://}"
+        payload=$(printf '%s' "$payload" | awk -F'#' '{print $1}')
+        local hostport
+        if printf '%s' "$payload" | grep -q '@'; then
+            hostport=$(printf '%s' "$payload" | awk -F@ '{print $NF}')
+        else
+            hostport=$(printf '%s' "$payload" | base64 -d 2>/dev/null | awk -F@ '{print $NF}')
+        fi
+        if printf '%s' "$hostport" | grep -q '^\['; then
+            printf '%s' "$hostport" | sed 's/^.*\]://'
+        else
+            printf '%s' "$hostport" | awk -F: '{print $NF}'
+        fi
+        return
+        ;;
+    esac
+
+    # Standard URI: strip scheme, take user@host:port, strip query and fragment
     local hostport
-    hostport=$(printf '%s' "$link" | sed 's|^[a-z0-9]*://||' | awk -F@ '{print $NF}' | awk -F/ '{print $1}' | awk -F'?' '{print $1}')
+    hostport=$(printf '%s' "$link" | sed 's|^[a-z0-9]*://||' | awk -F@ '{print $NF}' | awk -F/ '{print $1}' | awk -F'?' '{print $1}' | awk -F'#' '{print $1}')
     # Handle IPv6 [host]:port
     if printf '%s' "$hostport" | grep -q '^\['; then
         printf '%s' "$hostport" | sed 's/^.*\]://'

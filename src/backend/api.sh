@@ -11,6 +11,7 @@ api_write_config() {
   mkdir -p /opt/etc/xray/xrayui
 
   local xray_api_config=$(api_get_current_config)
+  local observatory_probe_url="${probe_url:-https://www.google.com/generate_204}"
   local outbound_tags
   outbound_tags=$(
     jq -c '
@@ -47,7 +48,7 @@ api_write_config() {
   },
   "observatory": {
     "subjectSelector": $outbound_tags,
-    "probeUrl": "https://www.google.com/generate_204",
+    "probeUrl": "$observatory_probe_url",
     "probeInterval": "10s",
     "enableConcurrency": true
   },
@@ -104,7 +105,7 @@ api_get_connection_status() {
 
   api_addr="${host}:${port}"
   url="http://${api_addr}/debug/vars"
-  log_debug "Fetching observatory from $url"
+
   if ! curl -fsS "$url" |
     jq '.observatory' \
       >"$XRAYUI_CONNECTION_STATUS_FILE"; then

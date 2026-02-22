@@ -62,6 +62,8 @@
       "label_logs_enable_error": "Включить логи ошибок",
       "label_logs_enable_dns": "Включить логи DNS",
       "label_logs_level": "Уровень логирования",
+      "label_probe_url": "URL проверки Observatory",
+      "hint_probe_url": "URL, используемый Xray Observatory для проверки доступности исходящих подключений. Эндпоинт должен возвращать HTTP 204 (No Content).",
       "label_gh_proxy": "Использовать прокси GitHub",
       "hint_gh_proxy": "Использовать прокси-сервер GitHub для загрузки файлов с GitHub (обновления Xray, файлы геоданных и т.д.), если GitHub заблокирован в вашем регионе.",
       "geodad_header": "GeoIP/GeoSite данные",
@@ -112,7 +114,8 @@
       "label_subscription_auto_fallback": "Авто-переключение",
       "hint_subscription_auto_fallback": "При включении outbound'ы с опцией авто-переключения будут периодически проверяться и автоматически переключаться на живой эндпоинт, если текущий недоступен.",
       "label_subscription_fallback_interval": "Интервал проверки",
-      "hint_subscription_fallback_interval": "Как часто проверять доступность outbound'ов из пула подписок."
+      "hint_subscription_fallback_interval": "Как часто проверять доступность outbound'ов из пула подписок.",
+      "warn_auto_fallback_requires_observatory": "Требуется включение проверки соединений Xray во вкладке «Общие»."
     },
     "ImportConfig": {
       "import_config_file": "Импорт файла конфигурации"
@@ -519,7 +522,8 @@
       "label_subscription_type": "Доступная конфигурация подписки",
       "hint_subscription_type": "Тип конфигурации подписки. <ul> <li>`xray`: конфигурация подписки Xray</li> <li>`clash`: конфигурация подписки Clash</li> </ul><hr/>Этот параметр действует только когда `subscriptionUrl` не задан.",
       "label_auto_fallback": "Пул авто-переключения",
-      "hint_auto_fallback": "Включите, чтобы добавить этот outbound в пул авто-переключения. Когда текущий эндпоинт станет недоступен, он будет автоматически заменён на следующий живой эндпоинт из пула подписок.<hr/>Требуется включение глобальной опции авто-переключения в общих настройках."
+      "hint_auto_fallback": "Включите, чтобы добавить этот outbound в пул авто-переключения. Когда текущий эндпоинт станет недоступен, он будет автоматически заменён на следующий живой эндпоинт из пула подписок.<hr/>Требуется включение глобальной опции авто-переключения в общих настройках.",
+      "warn_auto_fallback_requires_observatory": "Требуется включение проверки соединений Xray в общих настройках."
     },
     "FreedomOutbound": {
       "modal_title": "Freedom",

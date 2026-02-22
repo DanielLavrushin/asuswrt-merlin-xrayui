@@ -456,16 +456,7 @@ export class XrayRoutingObject {
               this.rules.push(this.create_rule(`${gs} to ${outboundTag}`, outboundTag, 'tcp,udp', [`geosite:wikimedia`]));
               break;
             case 'google':
-              this.rules.push(
-                this.create_rule(`${gs} to ${outboundTag}`, outboundTag, 'tcp,udp', [
-                  `geosite:google`,
-                  `geosite:google-play`,
-                  `geosite:google-registry`,
-                  `geosite:google-ads`,
-                  `geosite:google-trust-services`,
-                  `geosite:google-scholar`
-                ])
-              );
+              this.rules.push(this.create_rule(`${gs} to ${outboundTag}`, outboundTag, 'tcp,udp', [`geosite:google`]));
               break;
             default: {
               this.rules.push(this.create_rule(`${gs} to ${outboundTag}`, outboundTag, 'tcp,udp', [`geosite:${gs}`]));

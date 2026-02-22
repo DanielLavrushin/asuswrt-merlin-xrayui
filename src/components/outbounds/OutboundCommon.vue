@@ -45,6 +45,14 @@
       </label>
     </td>
   </tr>
+  <tr class="unlocked" v-else-if="showSubPoolWarning">
+    <th>
+      {{ $t('com.OutboundCommon.label_auto_fallback') }}
+    </th>
+    <td style="color: #ffcc00">
+      {{ $t('com.OutboundCommon.warn_auto_fallback_requires_observatory') }}
+    </td>
+  </tr>
 
   <tr class="unlocked">
     <th>
@@ -107,8 +115,16 @@
         return [];
       });
 
-      const showSubPoolToggle = computed(() => {
+      const hasSubPool = computed(() => {
         return protocols.value.length > 0 || !!proxy.value.subPool?.enabled;
+      });
+
+      const showSubPoolToggle = computed(() => {
+        return hasSubPool.value && !!ui.value.xray?.check_connection;
+      });
+
+      const showSubPoolWarning = computed(() => {
+        return hasSubPool.value && !ui.value.xray?.check_connection;
       });
 
       const subPoolEnabled = computed({
@@ -140,7 +156,7 @@
 
       watch(isLocked, toggle, { immediate: true });
 
-      return { protocols, subscription, proxy, isLocked, rowRef, clear_url, apply_subscription, showSubPoolToggle, subPoolEnabled };
+      return { protocols, subscription, proxy, isLocked, rowRef, clear_url, apply_subscription, showSubPoolToggle, showSubPoolWarning, subPoolEnabled };
     }
   });
 </script>

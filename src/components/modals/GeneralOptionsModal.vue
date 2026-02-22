@@ -48,6 +48,15 @@
                 <label class="go-option"><input type="checkbox" v-model="options.check_connection" /></label>
               </td>
             </tr>
+            <tr v-if="options.check_connection">
+              <th>
+                {{ $t('com.GeneralOptionsModal.label_probe_url') }}
+                <hint v-html="$t('com.GeneralOptionsModal.hint_probe_url')"></hint>
+              </th>
+              <td>
+                <input v-model="options.probe_url" type="text" class="input_32_table" />
+              </td>
+            </tr>
             <tr>
               <th>
                 {{ $t('com.GeneralOptionsModal.label_gh_proxy') }}
@@ -282,7 +291,7 @@
                 </select>
               </td>
             </tr>
-            <tr>
+            <tr v-if="options.check_connection">
               <th>
                 {{ $t('com.GeneralOptionsModal.label_subscription_auto_fallback') }}
                 <hint v-html="$t('com.GeneralOptionsModal.hint_subscription_auto_fallback')"></hint>
@@ -291,7 +300,15 @@
                 <label class="go-option"><input type="checkbox" v-model="options.subscription_auto_fallback" /></label>
               </td>
             </tr>
-            <tr v-if="options.subscription_auto_fallback">
+            <tr v-else>
+              <th>
+                {{ $t('com.GeneralOptionsModal.label_subscription_auto_fallback') }}
+              </th>
+              <td style="color: #ffcc00">
+                {{ $t('com.GeneralOptionsModal.warn_auto_fallback_requires_observatory') }}
+              </td>
+            </tr>
+            <tr v-if="options.check_connection && options.subscription_auto_fallback">
               <th>
                 {{ $t('com.GeneralOptionsModal.label_subscription_fallback_interval') }}
                 <hint v-html="$t('com.GeneralOptionsModal.hint_subscription_fallback_interval')"></hint>

@@ -110,7 +110,7 @@ logs_fetch() {
   local tmp_access="${pub_access}.$$"
 
   tail -n 200 "$log_error" >"$tmp_error"
-  tail -n 200 "$log_access" >"$tmp_access"
+  grep -v '\[sys:metrics_in -> sys:metrics_out\]' "$log_access" | tail -n 200 >"$tmp_access"
 
   if [ "$logs_dnsmasq" = "true" ]; then
     replace_ips_with_domains "$tmp_access"

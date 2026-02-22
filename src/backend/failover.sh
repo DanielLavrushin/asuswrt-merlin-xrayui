@@ -116,95 +116,6 @@ failover_check_alive() {
     fi
 }
 
-failover_probe_tcp() {
-    local host="$1"
-    local port="$2"
-    nc -z -w 5 "$host" "$port" >/dev/null 2>&1
-}
-
-failover_parse_host() {
-    local link="$1"
-
-    case "$link" in
-    vmess://*)
-        # VMess: base64-encoded JSON with "add" field
-        local payload="${link#vmess://}"
-        printf '%s' "$payload" | base64 -d 2>/dev/null | jq -r '.add // empty' 2>/dev/null
-        return
-        ;;
-    ss://*)
-        # Shadowsocks: base64(method:pass@host:port)#tag  (legacy format)
-        #          or: base64(method:pass)@host:port#tag   (SIP002 format)
-        local payload="${link#ss://}"
-        payload=$(printf '%s' "$payload" | awk -F'#' '{print $1}')
-        local hostport
-        if printf '%s' "$payload" | grep -q '@'; then
-            # SIP002: visible @host:port in URI
-            hostport=$(printf '%s' "$payload" | awk -F@ '{print $NF}')
-        else
-            # Legacy: entire payload is base64, decode to get method:pass@host:port
-            hostport=$(printf '%s' "$payload" | base64 -d 2>/dev/null | awk -F@ '{print $NF}')
-        fi
-        if printf '%s' "$hostport" | grep -q '^\['; then
-            printf '%s' "$hostport" | sed 's/^\[\(.*\)\].*/\1/'
-        else
-            printf '%s' "$hostport" | sed 's/:[0-9]*$//'
-        fi
-        return
-        ;;
-    esac
-
-    # Standard URI: strip scheme, take user@host:port, strip query and fragment
-    local hostport
-    hostport=$(printf '%s' "$link" | sed 's|^[a-z0-9]*://||' | awk -F@ '{print $NF}' | awk -F/ '{print $1}' | awk -F'?' '{print $1}' | awk -F'#' '{print $1}')
-    # Handle IPv6 [host]:port
-    if printf '%s' "$hostport" | grep -q '^\['; then
-        printf '%s' "$hostport" | sed 's/^\[\(.*\)\].*/\1/'
-    else
-        printf '%s' "$hostport" | sed 's/:[0-9]*$//'
-    fi
-}
-
-failover_parse_port() {
-    local link="$1"
-
-    case "$link" in
-    vmess://*)
-        # VMess: base64-encoded JSON with "port" field
-        local payload="${link#vmess://}"
-        printf '%s' "$payload" | base64 -d 2>/dev/null | jq -r '.port // empty' 2>/dev/null
-        return
-        ;;
-    ss://*)
-        # Shadowsocks: legacy or SIP002 (same logic as parse_host)
-        local payload="${link#ss://}"
-        payload=$(printf '%s' "$payload" | awk -F'#' '{print $1}')
-        local hostport
-        if printf '%s' "$payload" | grep -q '@'; then
-            hostport=$(printf '%s' "$payload" | awk -F@ '{print $NF}')
-        else
-            hostport=$(printf '%s' "$payload" | base64 -d 2>/dev/null | awk -F@ '{print $NF}')
-        fi
-        if printf '%s' "$hostport" | grep -q '^\['; then
-            printf '%s' "$hostport" | sed 's/^.*\]://'
-        else
-            printf '%s' "$hostport" | awk -F: '{print $NF}'
-        fi
-        return
-        ;;
-    esac
-
-    # Standard URI: strip scheme, take user@host:port, strip query and fragment
-    local hostport
-    hostport=$(printf '%s' "$link" | sed 's|^[a-z0-9]*://||' | awk -F@ '{print $NF}' | awk -F/ '{print $1}' | awk -F'?' '{print $1}' | awk -F'#' '{print $1}')
-    # Handle IPv6 [host]:port
-    if printf '%s' "$hostport" | grep -q '^\['; then
-        printf '%s' "$hostport" | sed 's/^.*\]://'
-    else
-        printf '%s' "$hostport" | awk -F: '{print $NF}'
-    fi
-}
-
 failover_rotate_outbound() {
     local tag="$1"
     local protocol="$2"
@@ -216,46 +127,41 @@ failover_rotate_outbound() {
     candidates=$(jq -r --arg proto "$protocol" '.[$proto] // [] | .[]' "$XRAYUI_SUBSCRIPTIONS_FILE" 2>/dev/null)
     [ -z "$candidates" ] && { log_warn "Failover: no candidates for protocol=$protocol"; return 1; }
 
-    # Get recently failed endpoints from state
-    local failed_list
-    failed_list=$(jq -r --arg tag "$tag" '.[$tag].failed_endpoints // [] | .[]' "$XRAYUI_FAILOVER_STATE_FILE" 2>/dev/null)
-
-    # Build list of viable candidates (filtering out current + failed)
-    local viable_file="/tmp/failover_viable.$$"
-    : >"$viable_file"
-    printf '%s\n' "$candidates" | while IFS= read -r link; do
-        [ -z "$link" ] && continue
-        [ "$link" = "$current_active" ] && continue
-        if [ -n "$failed_list" ] && printf '%s\n' "$failed_list" | grep -qF "$link"; then
-            continue
-        fi
-        printf '%s\n' "$link" >>"$viable_file"
-    done
-
-    # Probe each viable candidate
+    # Pick the next candidate after the current active one.
+    # No TCP probing — Observatory will verify the new endpoint on the
+    # next cycle and rotate again if it is also dead.
     local chosen=""
-    while IFS= read -r link; do
-        [ -z "$link" ] && continue
-        local host port
-        host=$(failover_parse_host "$link")
-        port=$(failover_parse_port "$link")
-        log_debug "Failover: probing candidate $host:$port"
-        if failover_probe_tcp "$host" "$port"; then
-            chosen="$link"
+
+    # Try to find the entry after current_active in the list
+    chosen=$(printf '%s\n' "$candidates" | {
+        found="false"
+        while IFS= read -r link; do
+            [ -z "$link" ] && continue
+            if [ "$found" = "true" ]; then
+                printf '%s' "$link"
+                exit 0
+            fi
+            [ "$link" = "$current_active" ] && found="true"
+        done
+        exit 1
+    })
+
+    # If not found (current was last or not in list), wrap to first different candidate
+    if [ -z "$chosen" ]; then
+        chosen=$(printf '%s\n' "$candidates" | while IFS= read -r link; do
+            [ -z "$link" ] && continue
+            [ "$link" = "$current_active" ] && continue
+            printf '%s' "$link"
             break
-        else
-            failover_state_add_failed "$tag" "$link"
-        fi
-    done <"$viable_file"
-    rm -f "$viable_file"
+        done)
+    fi
 
     if [ -z "$chosen" ]; then
-        log_warn "Failover: all candidates exhausted for '$tag'; clearing failed list for next cycle"
-        failover_state_clear_failed "$tag"
+        log_warn "Failover: no alternative candidates for '$tag'"
         return 1
     fi
 
-    log_info "Failover: rotating '$tag' to $(failover_parse_host "$chosen"):$(failover_parse_port "$chosen")"
+    log_info "Failover: switching '$tag' to next candidate"
 
     # Parse the chosen link into an outbound JSON object
     # Reuses existing parser from subscriptions.sh
@@ -322,25 +228,6 @@ failover_state_record_switch() {
         | .[$t].last_switch = $now
         | .[$t].switches_this_hour = ((.[$t].switches_this_hour // 0) + 1)
     ' >"$XRAYUI_FAILOVER_STATE_FILE"
-}
-
-failover_state_add_failed() {
-    local tag="$1"
-    local link="$2"
-    local state
-    state=$(cat "$XRAYUI_FAILOVER_STATE_FILE")
-    printf '%s' "$state" | jq --arg t "$tag" --arg l "$link" '
-        if .[$t] == null then .[$t] = {} else . end
-        | .[$t].failed_endpoints = ((.[$t].failed_endpoints // []) + [$l] | unique)
-    ' >"$XRAYUI_FAILOVER_STATE_FILE"
-}
-
-failover_state_clear_failed() {
-    local tag="$1"
-    local state
-    state=$(cat "$XRAYUI_FAILOVER_STATE_FILE")
-    printf '%s' "$state" | jq --arg t "$tag" \
-        'if .[$t] != null then .[$t].failed_endpoints = [] else . end' >"$XRAYUI_FAILOVER_STATE_FILE"
 }
 
 failover_circuit_breaker_ok() {

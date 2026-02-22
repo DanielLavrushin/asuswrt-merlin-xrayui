@@ -2,8 +2,8 @@
 
 ## [0.64.2] - 2026-02-22
 
-- FIXED: Auto-fallback now correctly detects when a proxy is down. Previously, health checks could bypass Xray entirely and report a server as reachable even when it was actually blocked. Now uses Xray's built-in Observatory for reliable detection.
-- FIXED: Auto-fallback now works with all subscription types including VMess and Shadowsocks links.
+- FIXED: Auto-fallback now correctly detects when a proxy is down. Previously, health checks could report a dead server as reachable. Now uses Xray's built-in Observatory for reliable detection.
+- FIXED: Auto-fallback rotation now works — previously all candidate servers were rejected during probing due to a compatibility issue with the router's network tools. The system now simply switches to the next server in your subscription list and lets Observatory verify it on the next check cycle.
 - FIXED: Subscription pool settings are no longer lost after restarting Xray.
 - IMPROVED: Auto-fallback options now show a helpful message when Xray Connection Check is disabled, instead of being hidden without explanation.
 - IMPROVED: Access log viewer now filters out internal metrics traffic (`sys:metrics_in -> sys:metrics_out`) to reduce noise when Connection Check is enabled.

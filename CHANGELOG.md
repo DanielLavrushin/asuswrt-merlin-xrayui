@@ -10,6 +10,9 @@
 - IMPROVED: Access log viewer now filters out internal metrics traffic (`sys:metrics_in -> sys:metrics_out`) to reduce noise when Connection Check is enabled.
 - IMPROVED: When `dnsmasq` IP-to-domain resolution is enabled, the access log viewer now shows the original IP alongside the resolved domain. Click any resolved domain to toggle between domain and IP; hover to see the alternate value in a tooltip.
 - ADDED: Configurable Observatory probe URL in General Settings. Previously hardcoded to `https://www.google.com/generate_204`, it can now be changed to any endpoint that returns HTTP 204.
+- ADDED: Subscription rotation filters — type comma-separated keywords (e.g., `Canada, Denmark`) to limit auto-fallback rotation to matching subscription links only. Unmatched links are excluded from rotation. If no filters are set or nothing matches, the full subscription pool is used as before.
+- FIXED: Unable to clear subscription sources — removing all subscription URLs and saving would silently restore the previous values. The empty string was incorrectly split into a single-element array instead of an empty array.
+- FIXED: Subscription data files (`xray_subscriptions.json`) are now cleaned up when all subscription sources are removed.
 
 ## [0.64.1] - 2026-02-21
 

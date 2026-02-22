@@ -108,7 +108,10 @@
       "label_subscription_auto_fallback": "Auto-Fallback",
       "hint_subscription_auto_fallback": "Wenn aktiviert, werden Outbounds mit der Auto-Fallback-Option regelmäßig überprüft und automatisch auf einen erreichbaren Endpunkt umgeschaltet, wenn der aktuelle nicht erreichbar ist.",
       "label_subscription_fallback_interval": "Prüfintervall",
-      "hint_subscription_fallback_interval": "Wie oft die Erreichbarkeit der Pool-verwalteten Outbounds überprüft werden soll."
+      "hint_subscription_fallback_interval": "Wie oft die Erreichbarkeit der Pool-verwalteten Outbounds überprüft werden soll.",
+      "label_subscription_filters": "Rotationsfilter",
+      "hint_subscription_filters": "Abonnement-Links für die automatische Failover-Rotation nach Name filtern.<hr/>Geben Sie kommagetrennte Schlüsselwörter ein (z.B. <code>Canada, Denmark</code>).<hr/>Nur Links, deren Name mindestens ein Schlüsselwort enthält, werden verwendet.<hr/>Wenn leer, wird der gesamte Abonnement-Pool verwendet.",
+      "placeholder_subscription_filters": "z.B. Canada, Denmark, Japan"
     },
     "ImportConfig": {
       "import_config_file": "Konfigurationsdatei importieren"

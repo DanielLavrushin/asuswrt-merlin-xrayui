@@ -112,7 +112,10 @@
       "hint_subscription_auto_fallback": "启用后，开启了自动故障转移的出站将定期检查，当前端点不可达时自动切换到可用端点。",
       "label_subscription_fallback_interval": "健康检查间隔",
       "hint_subscription_fallback_interval": "检查池管理出站健康状态的频率。",
-      "warn_auto_fallback_requires_observatory": "需要在「通用」选项卡中启用 Xray 连接检查。"
+      "warn_auto_fallback_requires_observatory": "需要在「通用」选项卡中启用 Xray 连接检查。",
+      "label_subscription_filters": "轮换过滤器",
+      "hint_subscription_filters": "按名称过滤用于自动故障转移轮换的订阅链接。<hr/>输入逗号分隔的关键词（例如 <code>Canada, Denmark</code>）。<hr/>仅使用名称包含至少一个关键词的链接。<hr/>如果为空，则使用完整的订阅池。",
+      "placeholder_subscription_filters": "例如 Canada, Denmark, Japan"
     },
     "ImportConfig": {
       "import_config_file": "导入配置"

@@ -115,7 +115,10 @@
       "hint_subscription_auto_fallback": "При включении outbound'ы с опцией авто-переключения будут периодически проверяться и автоматически переключаться на живой эндпоинт, если текущий недоступен.",
       "label_subscription_fallback_interval": "Интервал проверки",
       "hint_subscription_fallback_interval": "Как часто проверять доступность outbound'ов из пула подписок.",
-      "warn_auto_fallback_requires_observatory": "Требуется включение проверки соединений Xray во вкладке «Общие»."
+      "warn_auto_fallback_requires_observatory": "Требуется включение проверки соединений Xray во вкладке «Общие».",
+      "label_subscription_filters": "Фильтры ротации",
+      "hint_subscription_filters": "Фильтровать ссылки подписок для авто-ротации по имени.<hr/>Введите ключевые слова через запятую (напр. <code>Canada, Denmark</code>).<hr/>Будут использоваться только ссылки, содержащие хотя бы одно ключевое слово.<hr/>Если пусто, используется весь пул подписок.",
+      "placeholder_subscription_filters": "напр. Canada, Denmark, Japan"
     },
     "ImportConfig": {
       "import_config_file": "Импорт файла конфигурации"

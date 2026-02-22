@@ -321,6 +321,17 @@
                 </select>
               </td>
             </tr>
+            <tr v-if="hasProtocols">
+              <th>
+                {{ $t('com.GeneralOptionsModal.label_subscription_filters') }}
+                <hint v-html="$t('com.GeneralOptionsModal.hint_subscription_filters')"></hint>
+              </th>
+              <td>
+                <input type="text" class="input_32_table" v-model="subscriptionFilters"
+                  :placeholder="$t('com.GeneralOptionsModal.placeholder_subscription_filters')" />
+                <div v-if="filterMatchSummary" class="filter-match-summary">{{ filterMatchSummary }}</div>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -424,6 +435,54 @@
     }
   });
 
+  // --- Subscription filters ---
+  const hasProtocols = computed(() => {
+    const protocols = options.subscriptions?.protocols;
+    return protocols && Object.keys(protocols).length > 0;
+  });
+
+  const subscriptionFilters = computed({
+    get() {
+      return options.subscriptions?.filters?.join(', ') || '';
+    },
+    set(newValue: string) {
+      if (!options.subscriptions) options.subscriptions = new EngineSubscriptions();
+      const filters = newValue
+        .split(',')
+        .map((f: string) => f.trim())
+        .filter((f: string) => f.length > 0);
+      options.subscriptions.filters = filters.length > 0 ? filters : undefined;
+    }
+  });
+
+  function parseLinkLabel(url: string): string {
+    const hash = url.indexOf('#');
+    if (hash !== -1 && hash < url.length - 1) {
+      return decodeURIComponent(url.substring(hash + 1));
+    }
+    const match = url.match(/@([^/?#]+)/);
+    return match ? match[1] : url.substring(0, 40) + '...';
+  }
+
+  const filterMatchSummary = computed(() => {
+    const protocols = options.subscriptions?.protocols;
+    const filters = options.subscriptions?.filters;
+    if (!protocols || !filters || filters.length === 0) return '';
+
+    let total = 0;
+    let matched = 0;
+    for (const links of Object.values(protocols)) {
+      for (const url of links) {
+        total++;
+        const label = parseLinkLabel(url).toLowerCase();
+        if (filters.some((f: string) => label.includes(f.toLowerCase()))) {
+          matched++;
+        }
+      }
+    }
+    return `${matched} / ${total} links matched`;
+  });
+
   const setwellknown = () => {
     if (selected_wellknown.value) {
       options.geo_ip_url = selected_wellknown.value.geoip_url;
@@ -454,6 +513,7 @@
           ui.value.xray.subscriptions = new EngineSubscriptions();
         }
         ui.value.xray.subscriptions.protocols = subsResp.data;
+        options.subscriptions.protocols = subsResp.data;
       }
     } catch (e) {
       console.error('Error loading subscriptions after fetch:', e);
@@ -510,5 +570,11 @@
   }
   .go-option:hover {
     text-shadow: 0 0 5px #000;
+  }
+
+  .filter-match-summary {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #fc0;
   }
 </style>

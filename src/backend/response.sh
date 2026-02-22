@@ -43,6 +43,7 @@ initial_response() {
     local subscription_auto_refresh="${subscription_auto_refresh:-disabled}"
     local subscription_auto_fallback="${subscription_auto_fallback:-false}"
     local subscription_fallback_interval="${subscription_fallback_interval:-5}"
+    local subscription_filters="${subscription_filters:-""}"
     local probe_url="${probe_url:-https://www.google.com/generate_204}"
 
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg geoip "$geoip_date" --arg geosite "$geosite_date" --arg geoipurl "$geoipurl" --arg geositeurl "$geositeurl" \
@@ -83,15 +84,17 @@ initial_response() {
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg ipsec "$ipsec" '.xray.ipsec = $ipsec')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson startup_delay "$startup_delay" '.xray.startup_delay = $startup_delay')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson sleep_time "$xray_sleep_time" '.xray.sleep_time = $sleep_time')
-    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg subscriptionLinks "$subscriptionLinks" '.xray.subscriptions.links = ($subscriptionLinks | split("|"))')
+    UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --arg subscriptionLinks "$subscriptionLinks" '.xray.subscriptions.links = (if $subscriptionLinks == "" then [] else ($subscriptionLinks | split("|")) end)')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson xray_dns_only "$xray_dns_only" '.xray.dns_only = $xray_dns_only')
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq \
         --arg sar "$subscription_auto_refresh" \
         --arg saf "$subscription_auto_fallback" \
         --arg sfi "$subscription_fallback_interval" \
+        --arg sf "$subscription_filters" \
         '.xray.subscription_auto_refresh = $sar
          | .xray.subscription_auto_fallback = ($saf == "true")
-         | .xray.subscription_fallback_interval = ($sfi | tonumber)')
+         | .xray.subscription_fallback_interval = ($sfi | tonumber)
+         | .xray.subscriptions.filters = (if $sf == "" then [] else ($sf | split("|")) end)')
 
     # grab firewall hooks
     local hook_before_firewall_start=$(sed '1{/^#!/d}' "$ADDON_USER_SCRIPTS_DIR/firewall_before_start" 2>/dev/null || echo "")

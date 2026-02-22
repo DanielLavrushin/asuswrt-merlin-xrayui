@@ -115,7 +115,10 @@
       "hint_subscription_auto_fallback": "When enabled, outbounds with the auto-fallback option will be periodically checked and automatically rotated to an alive endpoint if the current one is unreachable.",
       "label_subscription_fallback_interval": "Health check interval",
       "hint_subscription_fallback_interval": "How often to check the health of pool-managed outbounds.",
-      "warn_auto_fallback_requires_observatory": "Requires Xray Connection Check to be enabled in the General tab."
+      "warn_auto_fallback_requires_observatory": "Requires Xray Connection Check to be enabled in the General tab.",
+      "label_subscription_filters": "Rotation Filters",
+      "hint_subscription_filters": "Filter subscription links for auto-failover rotation by name.<hr/>Enter comma-separated keywords (e.g. <code>Canada, Denmark</code>).<hr/>Only links whose name contains at least one keyword will be used.<hr/>If empty, the full subscription pool is used.",
+      "placeholder_subscription_filters": "e.g. Canada, Denmark, Japan"
     },
     "ImportConfig": {
       "import_config_file": "Import config file"

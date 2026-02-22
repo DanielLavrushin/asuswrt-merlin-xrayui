@@ -145,10 +145,42 @@ failover_rotate_outbound() {
     local idx="$3"
     local current_active="$4"
 
-    # Get all links for this protocol from subscriptions
-    local candidates
-    candidates=$(jq -r --arg proto "$protocol" '.[$proto] // [] | .[]' "$XRAYUI_SUBSCRIPTIONS_FILE" 2>/dev/null)
-    [ -z "$candidates" ] && { log_warn "Failover: no candidates for protocol=$protocol"; return 1; }
+    # Get all candidates for this protocol from the subscription pool
+    local all_candidates
+    all_candidates=$(jq -r --arg proto "$protocol" '.[$proto] // [] | .[]' "$XRAYUI_SUBSCRIPTIONS_FILE" 2>/dev/null)
+    [ -z "$all_candidates" ] && { log_warn "Failover: no candidates for protocol=$protocol"; return 1; }
+
+    # Apply subscription filters if configured (case-insensitive match on link label)
+    local candidates="$all_candidates"
+    local filters="${subscription_filters:-}"
+    if [ -n "$filters" ]; then
+        local filtered=""
+        local IFS_SAVE="$IFS"
+        printf '%s\n' "$all_candidates" | while IFS= read -r link; do
+            [ -z "$link" ] && continue
+            # Extract label from URL fragment (#tag)
+            local label
+            label=$(printf '%s' "$link" | sed 's/.*#//' | sed 's/%..\|+/ /g')
+            # Check each filter pattern (pipe-delimited, case-insensitive)
+            printf '%s' "$filters" | tr '|' '\n' | while IFS= read -r pattern; do
+                [ -z "$pattern" ] && continue
+                case "$(printf '%s' "$label" | tr '[:upper:]' '[:lower:]')" in
+                    *$(printf '%s' "$pattern" | tr '[:upper:]' '[:lower:]')*)
+                        printf '%s\n' "$link"
+                        break
+                        ;;
+                esac
+            done
+        done > /tmp/failover_filtered.$$
+        filtered=$(cat /tmp/failover_filtered.$$ 2>/dev/null)
+        rm -f /tmp/failover_filtered.$$
+        if [ -n "$filtered" ]; then
+            candidates="$filtered"
+            log_debug "Failover: filters matched $(printf '%s\n' "$filtered" | wc -l | tr -d ' ') candidates for protocol=$protocol"
+        else
+            log_debug "Failover: no filter matches for protocol=$protocol, using full pool"
+        fi
+    fi
 
     # Pick the next candidate after the current active one.
     # No TCP probing — Observatory will verify the new endpoint on the

@@ -97,7 +97,7 @@ In `General Options` → `Subscriptions` tab, find the **Auto-refresh interval**
 - **6 hours** — every 6 hours
 - **12 hours** — every 12 hours
 
-![autosubs](../.vuepress/public/images/subscriptions/20260220235552.png)
+![autosubs](../.vuepress/public/images/subscriptions/20260222194646.png)
 
 The refresh runs silently in the background via a cron job. It uses the same subscription links you already configured in the text area above.
 
@@ -116,6 +116,9 @@ There are two parts to the setup:
 - Enable the **Auto-fallback** checkbox. This turns on the health monitoring system.
 - Choose a **Health check interval** (2, 5, or 10 minutes). This controls how often the system checks if your endpoints are still alive.
 
+> [!important]
+> Auto-fallback requires the **Connection Check** feature to be enabled in General Options. Connection Check is what allows Xray to monitor whether your endpoints are alive. If it is disabled, the auto-fallback options will show a message explaining this requirement.
+
 **2. Per-outbound opt-in** — In each outbound's settings:
 
 - First, select an endpoint from the `Available Subscription Configuration` dropdown (this requires subscription sources to be fetched).
@@ -124,13 +127,32 @@ There are two parts to the setup:
 > [!info]
 > Only outbounds that have the **Auto-fallback pool** checkbox enabled will participate in automatic switching. Other outbounds are left untouched.
 
+### Probe URL
+
+By default, the Connection Check verifies endpoint health by sending a request to `https://www.google.com/generate_204`. If this URL is not suitable for your environment (for example, if it is blocked in your region), you can change it in `General Options` → `Subscriptions` tab under **Probe URL**.
+
+![prob](../.vuepress/public/images/subscriptions/20260222194527.png)
+
+The probe URL must return an HTTP `204 No Content` response to be considered successful. Any endpoint that returns 204 will work.
+
+### Rotation Filters
+
+If your subscription pool contains servers in many regions but you only want to rotate through a subset, you can set **Rotation filters** in `General Options` → `Subscriptions` tab.
+
+Enter comma-separated keywords (e.g., `Canada, Denmark`). When auto-fallback rotates to a new server, only subscription links whose name or URL contains at least one of these keywords will be considered. Links that do not match any keyword are skipped.
+
+If no filters are set, or if none of the keywords match any links in the pool, the full subscription pool is used as before.
+
 ### How It Works
 
 The system checks your pool-enabled outbounds on the schedule you configured. For each one:
 
-1. It first checks whether the endpoint is alive. If you have the **Connection check** feature enabled (in General Options), it uses the Observatory data from Xray itself — the most accurate method. Otherwise, it falls back to a simple TCP probe.
+1. It checks whether the endpoint is alive using the **Connection Check** feature. Xray continuously probes your configured endpoints and provides reliable, up-to-date health status.
 2. If a check fails, it does not switch immediately. It waits for **3 consecutive failures** to avoid reacting to temporary network glitches.
-3. After 3 failures, it looks through your subscription pool for the same protocol, probes each candidate, and switches to the first one that responds.
-4. Xray is restarted automatically after a switch.
+3. After 3 failures, it switches to the next server in your subscription pool (filtered by your rotation filters, if any). The Connection Check will verify the new server's health on the next check cycle.
+4. The switch is performed instantly via the **Xray API** with near-zero downtime. If the API is unavailable, the system falls back to a full Xray restart automatically.
+
+> [!info]
+> Subscription pool settings are preserved across Xray restarts. You do not need to reconfigure the pool after restarting the service.
 
 A built-in safety limit prevents excessive switching — no more than 5 switches per hour per outbound. If all endpoints in the pool are unreachable, the system clears its failed list and retries on the next cycle.

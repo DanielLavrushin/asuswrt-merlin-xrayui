@@ -62,6 +62,8 @@
       "label_logs_enable_error": "Enable error logs",
       "label_logs_enable_dns": "Enable DNS logs",
       "label_logs_level": "Log level",
+      "label_probe_url": "Observatory probe URL",
+      "hint_probe_url": "The URL used by the Xray Observatory to probe outbound health. The endpoint should return HTTP 204 (No Content).",
       "label_gh_proxy": "Use GitHub Proxy",
       "hint_gh_proxy": "Use a GitHub proxy to download files from GitHub (Xray updates, geodata files, etc.) when GitHub is blocked in your region.",
       "geodad_header": "GeoIP/GeoSite Metadata",
@@ -112,7 +114,11 @@
       "label_subscription_auto_fallback": "Auto-fallback",
       "hint_subscription_auto_fallback": "When enabled, outbounds with the auto-fallback option will be periodically checked and automatically rotated to an alive endpoint if the current one is unreachable.",
       "label_subscription_fallback_interval": "Health check interval",
-      "hint_subscription_fallback_interval": "How often to check the health of pool-managed outbounds."
+      "hint_subscription_fallback_interval": "How often to check the health of pool-managed outbounds.",
+      "warn_auto_fallback_requires_observatory": "Requires Xray Connection Check to be enabled in the General tab.",
+      "label_subscription_filters": "Rotation Filters",
+      "hint_subscription_filters": "Filter subscription links for auto-failover rotation by name.<hr/>Enter comma-separated keywords (e.g. <code>Canada, Denmark</code>).<hr/>Only links whose name contains at least one keyword will be used.<hr/>If empty, the full subscription pool is used.",
+      "placeholder_subscription_filters": "e.g. Canada, Denmark, Japan"
     },
     "ImportConfig": {
       "import_config_file": "Import config file"
@@ -519,7 +525,8 @@
       "label_subscription_type": "Available Subscription Configuration",
       "hint_subscription_type": "The type of the subscription configuration. <ul> <li>`xray`: Xray subscription configuration</li> <li>`clash`: Clash subscription configuration</li> </ul><hr/>This setting is only effective when the `subscriptionUrl` is not set.",
       "label_auto_fallback": "Auto-fallback pool",
-      "hint_auto_fallback": "Enable to include this outbound in the auto-fallback pool. When the active endpoint becomes unreachable, it will be automatically rotated to the next alive endpoint from the subscription pool.<hr/>Requires the global auto-fallback option to be enabled in General Settings."
+      "hint_auto_fallback": "Enable to include this outbound in the auto-fallback pool. When the active endpoint becomes unreachable, it will be automatically rotated to the next alive endpoint from the subscription pool.<hr/>Requires the global auto-fallback option to be enabled in General Settings.",
+      "warn_auto_fallback_requires_observatory": "Requires Xray Connection Check to be enabled in General Settings."
     },
     "FreedomOutbound": {
       "modal_title": "Freedom",
@@ -760,6 +767,40 @@
       "closest": "Closest Domain",
       "scan_progress": "Scanning is in progress..."
     },
+    "Xhttp": {
+      "modal_anti_detection": "Anti-Detection Settings",
+      "hint_anti_detection": "Configure padding obfuscation, HTTP method, and session/sequence placement to bypass CDN-based traffic filtering.",
+      "modal_performance": "Performance Tuning",
+      "hint_performance": "Configure POST sizes, intervals, buffering, and uplink data placement for optimal throughput.",
+      "modal_xmux": "XMUX Settings",
+      "hint_xmux": "Configure XMUX connection multiplexing parameters for HTTP/2 stream management.",
+      "label_xPaddingObfsMode": "Enable padding obfuscation",
+      "hint_xPaddingObfsMode": "Enables the X-Padding anti-detection mechanism. When active, Xray customizes how padding is placed in requests to defeat traffic fingerprinting by CDNs.",
+      "label_xPaddingPlacement": "Padding placement",
+      "hint_xPaddingPlacement": "Where the padding is placed in the HTTP request. <ul><li><code>queryInHeader</code> (default) - in the URL query string within the header</li><li><code>cookie</code> - in a Cookie header</li><li><code>header</code> - in a custom HTTP header</li><li><code>query</code> - in the URL query string</li></ul>",
+      "label_xPaddingMethod": "Padding method",
+      "hint_xPaddingMethod": "The algorithm for generating padding content.<ul><li><code>repeat-x</code> (default) - repeats X/Z character pattern</li><li><code>tokenish</code> - generates token-like random strings that look like cache busters</li></ul>",
+      "label_xPaddingKey": "Padding query key",
+      "hint_xPaddingKey": "The query parameter or cookie name used for the padding value. Default: <code>x_padding</code>.",
+      "label_xPaddingHeader": "Padding HTTP header",
+      "hint_xPaddingHeader": "The HTTP header name carrying the padding value. Default: <code>X-Padding</code>.",
+      "label_uplinkHTTPMethod": "Uplink HTTP method",
+      "hint_uplinkHTTPMethod": "The HTTP method used for uplink requests. Some CDNs block POST but allow PUT or PATCH. Default: <code>POST</code>.",
+      "label_uplinkDataPlacement": "Uplink data placement",
+      "hint_uplinkDataPlacement": "Where the uplink payload data is placed.<ul><li><code>body</code> (default) - in the request body</li><li><code>cookie</code> - in a Cookie header (packet-up mode only)</li><li><code>header</code> - in a custom HTTP header (packet-up mode only)</li></ul>",
+      "label_uplinkDataKey": "Uplink data key",
+      "hint_uplinkDataKey": "The key name for the uplink data when placement is cookie or header. Auto-generated if empty.",
+      "label_uplinkChunkSize": "Uplink chunk size (bytes)",
+      "hint_uplinkChunkSize": "Maximum size in bytes of each uplink data chunk. Minimum 64 bytes. Auto-calculated based on placement if not set (3KB for cookie, 4KB for header).",
+      "label_sessionPlacement": "Session ID placement",
+      "hint_sessionPlacement": "Where the session identifier is placed in requests.<ul><li><code>path</code> (default) - in the URL path</li><li><code>cookie</code> - in a Cookie header</li><li><code>header</code> - in a custom HTTP header</li><li><code>query</code> - in the URL query string</li></ul>",
+      "label_sessionKey": "Session key name",
+      "hint_sessionKey": "The key name for the session ID. Auto-generated if empty. Ignored when placement is <code>path</code>.",
+      "label_seqPlacement": "Sequence number placement",
+      "hint_seqPlacement": "Where the request sequence number is placed.<ul><li><code>path</code> (default) - in the URL path</li><li><code>cookie</code> - in a Cookie header</li><li><code>header</code> - in a custom HTTP header</li><li><code>query</code> - in the URL query string</li></ul>",
+      "label_seqKey": "Sequence key name",
+      "hint_seqKey": "The key name for the sequence number. Auto-generated if empty. Ignored when placement is <code>path</code>."
+    },
     "SniLogs": {
       "title": "SNI Logs",
       "display": "display",
@@ -768,7 +809,25 @@
       "total": "total",
       "unique_sni": "unique SNI",
       "export_csv": "export CSV",
-      "raw": "raw data"
+      "raw": "raw data",
+      "tab_by_device": "By Device",
+      "tab_by_domain": "By Domain",
+      "tab_live": "Live Stream",
+      "hits": "hits",
+      "last_seen": "last seen",
+      "protocols": "protocols",
+      "devices": "devices",
+      "domain": "domain",
+      "domains_count": "domains",
+      "add_to_rule": "+ Rule",
+      "add_selected_to_rule": "add selected to rule",
+      "create_new_rule": "New rule",
+      "rule_name": "Rule name",
+      "outbound": "Outbound",
+      "added_to_rule": "Added to \"{0}\"",
+      "no_rules_available": "No routing rules defined. Create a new one.",
+      "top_domain": "top",
+      "most_active": "most active"
     }
   }
 }

@@ -5,6 +5,7 @@
   "scripts": {
     "build": "cross-env NODE_ENV=production vite build",
     "watch": "cross-env NODE_ENV=development VITE_WATCH=1 vite build --watch --mode development",
+    "dev": "pnpm run watch",
     "watch-prod": "cross-env NODE_ENV=production VITE_WATCH=1 vite build --watch --mode production",
     "test": "jest --clearCache && jest --config ./jest.config.ts --coverage"
   },

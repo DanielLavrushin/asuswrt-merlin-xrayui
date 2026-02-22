@@ -62,6 +62,8 @@
       "label_logs_enable_error": "Включить логи ошибок",
       "label_logs_enable_dns": "Включить логи DNS",
       "label_logs_level": "Уровень логирования",
+      "label_probe_url": "URL проверки Observatory",
+      "hint_probe_url": "URL, используемый Xray Observatory для проверки доступности исходящих подключений. Эндпоинт должен возвращать HTTP 204 (No Content).",
       "label_gh_proxy": "Использовать прокси GitHub",
       "hint_gh_proxy": "Использовать прокси-сервер GitHub для загрузки файлов с GitHub (обновления Xray, файлы геоданных и т.д.), если GitHub заблокирован в вашем регионе.",
       "geodad_header": "GeoIP/GeoSite данные",
@@ -79,8 +81,8 @@
       "label_clients_check": "Проверка статуса клиентов онлайн",
       "hint_clients_check": "Если вы включите эту опцию, XRAYUI будет проверять онлайн-статус подключённых клиентов.<hr/>Эта опция полезна для отслеживания того, какие клиенты в данный момент подключены к Xray.<hr/>Однако она может потреблять дополнительные ресурсы, поэтому рекомендуется отключить её на маршрутизаторах с низкой производительностью.",
       "label_enable_debug": "Отображать debug логи",
-      "label_ipsec": "Включить DNS-обход (ipset)",
-      "hint_ipsec": "*OFF* - отключает функцию DNS → ipset; маршрутизация работает так, будто опция вовсе не включена.<hr />*BYPASS* - домены, направленные в outbound `FREEDOM`, идут напрямую в интернет, минуя Xray; весь остальной трафик проходит через прокси.<hr/>*REDIRECT* – наоборот: проксируется только то, что не связано с `FREEDOM`; любой другой трафик уходит напрямую.<blockquote>Важно: домены в формате `regexp` нельзя добавить в ipset, поэтому здесь они игнорируются.</blockquote>",
+      "label_ipset": "Включить DNS-обход (ipset)",
+      "hint_ipset": "*OFF* - отключает функцию DNS → ipset; маршрутизация работает так, будто опция вовсе не включена.<hr />*BYPASS* - домены, направленные в outbound `FREEDOM`, идут напрямую в интернет, минуя Xray; весь остальной трафик проходит через прокси.<hr/>*REDIRECT* – наоборот: проксируется только то, что не связано с `FREEDOM`; любой другой трафик уходит напрямую.<blockquote>Важно: домены в формате `regexp` нельзя добавить в ipset, поэтому здесь они игнорируются.</blockquote>",
       "startup_delay": "Задержка после перезагрузки роутера",
       "hint_startup_delay": "После рестарта роутера XRAYUI запустится спустя указанное время (в секундах). Это может помочь избежать проблем с зависанием XRAY при запуске. <hr />Д.И.М.А.: `Долгожданная Инициализация Медленного Автозапуска`",
       "sleep_time": "Задержка после запуска XRAY",
@@ -112,7 +114,11 @@
       "label_subscription_auto_fallback": "Авто-переключение",
       "hint_subscription_auto_fallback": "При включении outbound'ы с опцией авто-переключения будут периодически проверяться и автоматически переключаться на живой эндпоинт, если текущий недоступен.",
       "label_subscription_fallback_interval": "Интервал проверки",
-      "hint_subscription_fallback_interval": "Как часто проверять доступность outbound'ов из пула подписок."
+      "hint_subscription_fallback_interval": "Как часто проверять доступность outbound'ов из пула подписок.",
+      "warn_auto_fallback_requires_observatory": "Требуется включение проверки соединений Xray во вкладке «Общие».",
+      "label_subscription_filters": "Фильтры ротации",
+      "hint_subscription_filters": "Фильтровать ссылки подписок для авто-ротации по имени.<hr/>Введите ключевые слова через запятую (напр. <code>Canada, Denmark</code>).<hr/>Будут использоваться только ссылки, содержащие хотя бы одно ключевое слово.<hr/>Если пусто, используется весь пул подписок.",
+      "placeholder_subscription_filters": "напр. Canada, Denmark, Japan"
     },
     "ImportConfig": {
       "import_config_file": "Импорт файла конфигурации"
@@ -519,7 +525,8 @@
       "label_subscription_type": "Доступная конфигурация подписки",
       "hint_subscription_type": "Тип конфигурации подписки. <ul> <li>`xray`: конфигурация подписки Xray</li> <li>`clash`: конфигурация подписки Clash</li> </ul><hr/>Этот параметр действует только когда `subscriptionUrl` не задан.",
       "label_auto_fallback": "Пул авто-переключения",
-      "hint_auto_fallback": "Включите, чтобы добавить этот outbound в пул авто-переключения. Когда текущий эндпоинт станет недоступен, он будет автоматически заменён на следующий живой эндпоинт из пула подписок.<hr/>Требуется включение глобальной опции авто-переключения в общих настройках."
+      "hint_auto_fallback": "Включите, чтобы добавить этот outbound в пул авто-переключения. Когда текущий эндпоинт станет недоступен, он будет автоматически заменён на следующий живой эндпоинт из пула подписок.<hr/>Требуется включение глобальной опции авто-переключения в общих настройках.",
+      "warn_auto_fallback_requires_observatory": "Требуется включение проверки соединений Xray в общих настройках."
     },
     "FreedomOutbound": {
       "modal_title": "Freedom",
@@ -758,6 +765,40 @@
       "closest": "Ближайший домен",
       "scan_progress": "Сканирование в процессе..."
     },
+    "Xhttp": {
+      "modal_anti_detection": "Настройки анти-обнаружения",
+      "hint_anti_detection": "Настройка обфускации padding, HTTP-метода и размещения сессии/последовательности для обхода фильтрации CDN.",
+      "modal_performance": "Настройка производительности",
+      "hint_performance": "Настройка размеров POST, интервалов, буферизации и размещения данных uplink для оптимальной пропускной способности.",
+      "modal_xmux": "Настройки XMUX",
+      "hint_xmux": "Настройка параметров мультиплексирования XMUX для управления потоками HTTP/2.",
+      "label_xPaddingObfsMode": "Включить обфускацию padding",
+      "hint_xPaddingObfsMode": "Включает механизм анти-обнаружения X-Padding. При активации Xray настраивает размещение padding в запросах для обхода фильтрации CDN.",
+      "label_xPaddingPlacement": "Размещение padding",
+      "hint_xPaddingPlacement": "Где размещается padding в HTTP-запросе. <ul><li><code>queryInHeader</code> (по умолчанию) - в строке запроса URL внутри заголовка</li><li><code>cookie</code> - в заголовке Cookie</li><li><code>header</code> - в пользовательском HTTP-заголовке</li><li><code>query</code> - в строке запроса URL</li></ul>",
+      "label_xPaddingMethod": "Метод padding",
+      "hint_xPaddingMethod": "Алгоритм генерации содержимого padding.<ul><li><code>repeat-x</code> (по умолчанию) - повторяет паттерн символов X/Z</li><li><code>tokenish</code> - генерирует случайные строки, похожие на токены</li></ul>",
+      "label_xPaddingKey": "Ключ параметра padding",
+      "hint_xPaddingKey": "Имя параметра запроса или cookie, используемое для значения padding. По умолчанию: <code>x_padding</code>.",
+      "label_xPaddingHeader": "HTTP-заголовок padding",
+      "hint_xPaddingHeader": "Имя HTTP-заголовка, несущего значение padding. По умолчанию: <code>X-Padding</code>.",
+      "label_uplinkHTTPMethod": "HTTP-метод uplink",
+      "hint_uplinkHTTPMethod": "HTTP-метод, используемый для uplink-запросов. Некоторые CDN блокируют POST, но разрешают PUT или PATCH. По умолчанию: <code>POST</code>.",
+      "label_uplinkDataPlacement": "Размещение данных uplink",
+      "hint_uplinkDataPlacement": "Где размещаются данные uplink.<ul><li><code>body</code> (по умолчанию) - в теле запроса</li><li><code>cookie</code> - в заголовке Cookie (только режим packet-up)</li><li><code>header</code> - в пользовательском HTTP-заголовке (только режим packet-up)</li></ul>",
+      "label_uplinkDataKey": "Ключ данных uplink",
+      "hint_uplinkDataKey": "Имя ключа для данных uplink при размещении в cookie или header. Генерируется автоматически, если пусто.",
+      "label_uplinkChunkSize": "Размер чанка uplink (байт)",
+      "hint_uplinkChunkSize": "Максимальный размер в байтах каждого чанка данных uplink. Минимум 64 байта. Автоматически рассчитывается в зависимости от размещения (3КБ для cookie, 4КБ для header).",
+      "label_sessionPlacement": "Размещение ID сессии",
+      "hint_sessionPlacement": "Где размещается идентификатор сессии в запросах.<ul><li><code>path</code> (по умолчанию) - в пути URL</li><li><code>cookie</code> - в заголовке Cookie</li><li><code>header</code> - в пользовательском HTTP-заголовке</li><li><code>query</code> - в строке запроса URL</li></ul>",
+      "label_sessionKey": "Имя ключа сессии",
+      "hint_sessionKey": "Имя ключа для ID сессии. Генерируется автоматически, если пусто. Игнорируется при размещении <code>path</code>.",
+      "label_seqPlacement": "Размещение номера последовательности",
+      "hint_seqPlacement": "Где размещается номер последовательности запроса.<ul><li><code>path</code> (по умолчанию) - в пути URL</li><li><code>cookie</code> - в заголовке Cookie</li><li><code>header</code> - в пользовательском HTTP-заголовке</li><li><code>query</code> - в строке запроса URL</li></ul>",
+      "label_seqKey": "Имя ключа последовательности",
+      "hint_seqKey": "Имя ключа для номера последовательности. Генерируется автоматически, если пусто. Игнорируется при размещении <code>path</code>."
+    },
     "SniLogs": {
       "title": "SNI логи",
       "display": "показать",
@@ -766,7 +807,25 @@
       "total": "всего",
       "unique_sni": "уникальных SNI",
       "export_csv": "экспорт CSV",
-      "raw": "исходные данные"
+      "raw": "исходные данные",
+      "tab_by_device": "По устройствам",
+      "tab_by_domain": "По доменам",
+      "tab_live": "Поток",
+      "hits": "запросов",
+      "last_seen": "последний",
+      "protocols": "протоколы",
+      "devices": "устройства",
+      "domain": "домен",
+      "domains_count": "доменов",
+      "add_to_rule": "+ Правило",
+      "add_selected_to_rule": "добавить выбранные в правило",
+      "create_new_rule": "Новое правило",
+      "rule_name": "Имя правила",
+      "outbound": "Исходящий",
+      "added_to_rule": "Добавлено в \"{0}\"",
+      "no_rules_available": "Правила маршрутизации не определены. Создайте новое.",
+      "top_domain": "топ",
+      "most_active": "самый активный"
     }
   }
 }

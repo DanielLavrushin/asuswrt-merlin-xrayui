@@ -37,19 +37,25 @@
               </thead>
 
               <tbody>
-                <tr v-for="log in filteredLogs" :key="log.line" :class="[{ parsed: log.parsed, unparsed: !log.parsed }, log.kind]">
+                <tr v-for="(log, idx) in filteredLogs" :key="idx" :class="[{ parsed: log.parsed, unparsed: !log.parsed }, log.kind]">
                   <td v-if="!log.parsed" colspan="5">{{ log.line }}</td>
 
                   <template v-else-if="log.kind === 'access'">
                     <td>{{ log.time }}</td>
                     <td>
                       <span v-if="log.user" class="badge user">{{ log.user }}</span>
-                      <span v-if="!log.source_device">{{ log.source }}</span>
-                      <a v-else class="device" :title="log.source">{{ log.source_device }}</a>
+                      <span v-if="!log.source_device && log.source_ip" class="resolved"
+                        :title="showIp.has('s:' + idx) ? log.source : log.source_ip"
+                        @click="toggleIp('s:' + idx)">{{ showIp.has('s:' + idx) ? log.source_ip : log.source }}</span>
+                      <span v-else-if="!log.source_device">{{ log.source }}</span>
+                      <a v-else class="device" :title="log.source_ip || log.source">{{ log.source_device }}</a>
                     </td>
                     <td>
                       <span :class="['badge', log.type]"> <b :class="log.type === 'tcp' ? 'i-tcp' : 'i-udp'"></b>{{ log.type }} </span>
-                      {{ log.target }}:{{ log.target_port }}
+                      <span v-if="log.target_ip" class="resolved"
+                        :title="showIp.has('t:' + idx) ? log.target : log.target_ip"
+                        @click="toggleIp('t:' + idx)">{{ showIp.has('t:' + idx) ? log.target_ip : log.target }}:{{ log.target_port }}</span>
+                      <span v-else>{{ log.target }}:{{ log.target_port }}</span>
                     </td>
                     <td>{{ log.inbound }}</td>
                     <td>
@@ -116,6 +122,13 @@
   const DNS_RE =
     /^(?<time>.+)\.\d+\s+(?:UDP|DOH|DOHL|localhost)(?:\:)*(?<dns>.+)\s.*(?<type>answer|cache).*:\s(?<host>.+)\s->\s\[(?<answers>.*)\](?:\s(?<latency>[\d\.]+)ms)*(?:\s\<)*(?<code>.*?)>*$/;
 
+  const RESOLVED_RE = /^(.+?)\{\{(.+)\}\}$/;
+
+  function stripResolved(value: string): { display: string; ip: string } | null {
+    const m = value.match(RESOLVED_RE);
+    return m ? { display: m[1], ip: m[2] } : null;
+  }
+
   class DnsLogEntry {
     kind = 'dns' as const;
     parsed = false;
@@ -146,10 +159,12 @@
     kind = 'access' as const;
     time?: string;
     source?: string;
+    source_ip?: string;
     source_port?: string;
     source_device?: string;
     type?: string;
     target?: string;
+    target_ip?: string;
     target_port?: string;
     inbound?: string;
     routing?: string;
@@ -168,8 +183,21 @@
         this.time = new Date(iso).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
       }
       if (groups.routing) this.routing = groups.routing === '>>' ? 'direct' : 'rule';
+
+      const srcResolved = this.source ? stripResolved(this.source) : null;
+      if (srcResolved) {
+        this.source = srcResolved.display;
+        this.source_ip = srcResolved.ip;
+      }
+      const tgtResolved = this.target ? stripResolved(this.target) : null;
+      if (tgtResolved) {
+        this.target = tgtResolved.display;
+        this.target_ip = tgtResolved.ip;
+      }
+
       if (this.source) {
-        const dev = devices[this.source.trim()];
+        const lookupKey = this.source_ip || this.source;
+        const dev = devices[lookupKey.trim()];
         const name = dev?.nickName?.trim() ? dev.nickName : dev?.name;
         this.source_device = name;
       }
@@ -180,6 +208,11 @@
   type LogEntry = AccessLogEntry | DnsLogEntry;
 
   const filters = reactive({ source: '', target: '', inbound: '', outbound: '' });
+  const showIp = reactive(new Set<string>());
+
+  function toggleIp(key: string) {
+    showIp.has(key) ? showIp.delete(key) : showIp.add(key);
+  }
 
   const devices = computed(() => {
     const pairs = Object.values((window as any).xray.router.devices_online).flatMap((device: any) => [
@@ -210,8 +243,8 @@
       const inbound = filters.inbound.trim().toLowerCase();
       const outbound = filters.outbound.trim().toLowerCase();
       return (
-        (!src || [l.source, l.source_device].filter(Boolean).some((v) => v!.toLowerCase().includes(src))) &&
-        (!tgt || `${l.target}:${l.target_port}`.toLowerCase().includes(tgt)) &&
+        (!src || [l.source, l.source_ip, l.source_device].filter(Boolean).some((v) => v!.toLowerCase().includes(src))) &&
+        (!tgt || [l.target, l.target_ip].filter(Boolean).some((v) => `${v}:${l.target_port}`.toLowerCase().includes(tgt))) &&
         (!inbound || l.inbound?.toLowerCase().includes(inbound)) &&
         (!outbound || l.outbound?.toLowerCase().includes(outbound))
       );
@@ -317,6 +350,10 @@
 
           .device {
             color: #00ff7f;
+          }
+          .resolved {
+            border-bottom: 1px dotted rgba(255, 255, 255, 0.4);
+            cursor: pointer;
           }
         }
       }

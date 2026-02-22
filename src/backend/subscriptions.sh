@@ -51,8 +51,10 @@ process_subscriptions() {
                 . as $root
                 | ($pos|tonumber) as $i
                 | (try $root.outbounds[$i].streamSettings.sockopt catch null) as $sock
+                | (try $root.outbounds[$i].subPool catch null) as $pool
                 | .outbounds[$i] = (
                     ($rep + {surl:$url, tag:$tag})
+                    | if $pool != null then .subPool = $pool else . end
                     | if $sock != null
                         then .streamSettings = ((.streamSettings // {}) + {sockopt:$sock})
                         else .

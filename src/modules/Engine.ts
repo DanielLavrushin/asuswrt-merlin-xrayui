@@ -125,6 +125,7 @@ export class EngineHooks {
 export class EngineSubscriptions {
   public links?: string[] = [];
   public protocols?: Record<string, string[]> = {};
+  public filters?: string[] = [];
 }
 
 export class EngineGeoTags {

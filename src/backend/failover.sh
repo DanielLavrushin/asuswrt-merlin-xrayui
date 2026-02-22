@@ -9,6 +9,13 @@ failover_check() {
     local subscription_auto_fallback="${subscription_auto_fallback:-false}"
     [ "$subscription_auto_fallback" = "true" ] || return 0
 
+    # Failover requires Observatory (check_connection) for reliable health checks
+    local check_connection="${check_connection:-false}"
+    if [ "$check_connection" != "true" ]; then
+        log_debug "Failover: check_connection is disabled - skipping (Observatory required)"
+        return 0
+    fi
+
     [ -f "$XRAYUI_SUBSCRIPTIONS_FILE" ] || return 0
     [ -f "$XRAY_CONFIG_FILE" ] || return 0
     [ -f "$XRAY_PIDFILE" ] || return 0
@@ -26,8 +33,8 @@ failover_check() {
 
     [ -z "$pool_outbounds" ] && return 0
 
-    local needs_restart_flag="/tmp/failover_needs_restart.$$"
-    rm -f "$needs_restart_flag"
+    local rotated_list="/tmp/failover_rotated.$$"
+    rm -f "$rotated_list"
 
     # Use here-doc to avoid subshell variable propagation issues
     while IFS= read -r entry; do
@@ -40,10 +47,7 @@ failover_check() {
 
         log_debug "Failover: checking outbound '$tag' (proto=$protocol, idx=$idx)"
 
-        local is_alive
-        is_alive=$(failover_check_alive "$tag" "$active")
-
-        if [ "$is_alive" = "true" ]; then
+        if failover_check_alive "$tag"; then
             failover_state_reset_failures "$tag"
             continue
         fi
@@ -63,7 +67,7 @@ failover_check() {
 
         log_info "Failover: rotating outbound '$tag' after $failures consecutive failures"
         if failover_rotate_outbound "$tag" "$protocol" "$idx" "$active"; then
-            touch "$needs_restart_flag"
+            printf '%s\t%s\n' "$tag" "$idx" >>"$rotated_list"
             failover_state_record_switch "$tag"
             failover_state_reset_failures "$tag"
         fi
@@ -71,80 +75,67 @@ failover_check() {
 $pool_outbounds
 EOF
 
-    if [ -f "$needs_restart_flag" ]; then
-        rm -f "$needs_restart_flag"
-        log_info "Failover: restarting Xray after rotation"
-        restart
+    if [ -f "$rotated_list" ]; then
+        # Try zero-downtime API hot-swap first, fall back to full restart
+        local swap_failed="false"
+        local api_addr
+        api_addr=$(api_get_listen_address 2>/dev/null) || swap_failed="true"
+
+        if [ "$swap_failed" = "false" ]; then
+            log_info "Failover: attempting API hot-swap (zero-downtime)"
+            while IFS="$(printf '\t')" read -r swap_tag swap_idx; do
+                [ -z "$swap_tag" ] && continue
+                local swap_outbound
+                swap_outbound=$(jq -c --arg i "$swap_idx" \
+                    '.outbounds[($i | tonumber)]' "$XRAY_CONFIG_FILE")
+
+                if ! api_swap_outbound "$swap_tag" "$swap_outbound"; then
+                    swap_failed="true"
+                    break
+                fi
+            done <"$rotated_list"
+        fi
+
+        if [ "$swap_failed" = "true" ]; then
+            log_info "Failover: falling back to full restart"
+            restart
+        fi
+
+        rm -f "$rotated_list"
+        initial_response
     fi
 }
 
 failover_check_alive() {
     local tag="$1"
-    local active_link="$2"
 
-    # Strategy 1: Use Observatory if check_connection is enabled
-    local check_connection="${check_connection:-false}"
-    if [ "$check_connection" = "true" ] && [ -f "$XRAYUI_CONNECTION_STATUS_FILE" ]; then
-        local obs_alive
-        obs_alive=$(jq -r --arg tag "$tag" '
-            to_entries[]
-            | select(.value.outbound_tag == $tag)
-            | .value.alive
-        ' "$XRAYUI_CONNECTION_STATUS_FILE" 2>/dev/null)
-
-        if [ "$obs_alive" = "true" ]; then
-            echo "true"
-            return
-        elif [ "$obs_alive" = "false" ]; then
-            echo "false"
-            return
-        fi
+    # Use Observatory data exclusively for health checks.
+    # Observatory probes through xray's actual outbound path, making it
+    # the only reliable way to detect protocol-level and routing failures.
+    #
+    # Returns 0 (alive) or 1 (dead) via exit code — never echo,
+    # because log_* functions write to stdout and would contaminate
+    # any captured output.
+    if [ ! -f "$XRAYUI_CONNECTION_STATUS_FILE" ]; then
+        log_debug "Failover: no Observatory data yet for '$tag' - assuming alive"
+        return 0
     fi
 
-    # Strategy 2: TCP probe the active endpoint
-    if [ -n "$active_link" ] && [ "$active_link" != "null" ] && [ "$active_link" != "" ]; then
-        local host port
-        host=$(failover_parse_host "$active_link")
-        port=$(failover_parse_port "$active_link")
-        if [ -n "$host" ] && [ -n "$port" ]; then
-            if failover_probe_tcp "$host" "$port"; then
-                echo "true"
-                return
-            fi
-        fi
-    fi
+    local obs_alive
+    obs_alive=$(jq -r --arg tag "$tag" '
+        to_entries[]
+        | select(.value.outbound_tag == $tag)
+        | .value.alive // false
+    ' "$XRAYUI_CONNECTION_STATUS_FILE" 2>/dev/null)
 
-    echo "false"
-}
-
-failover_probe_tcp() {
-    local host="$1"
-    local port="$2"
-    nc -z -w 5 "$host" "$port" >/dev/null 2>&1
-}
-
-failover_parse_host() {
-    local link="$1"
-    # Strip protocol prefix, get user@host:port part, extract host
-    local hostport
-    hostport=$(printf '%s' "$link" | sed 's|^[a-z0-9]*://||' | awk -F@ '{print $NF}' | awk -F/ '{print $1}' | awk -F'?' '{print $1}')
-    # Handle IPv6 [host]:port
-    if printf '%s' "$hostport" | grep -q '^\['; then
-        printf '%s' "$hostport" | sed 's/^\[\(.*\)\].*/\1/'
+    if [ "$obs_alive" = "true" ]; then
+        return 0
+    elif [ "$obs_alive" = "false" ]; then
+        return 1
     else
-        printf '%s' "$hostport" | sed 's/:[0-9]*$//'
-    fi
-}
-
-failover_parse_port() {
-    local link="$1"
-    local hostport
-    hostport=$(printf '%s' "$link" | sed 's|^[a-z0-9]*://||' | awk -F@ '{print $NF}' | awk -F/ '{print $1}' | awk -F'?' '{print $1}')
-    # Handle IPv6 [host]:port
-    if printf '%s' "$hostport" | grep -q '^\['; then
-        printf '%s' "$hostport" | sed 's/^.*\]://'
-    else
-        printf '%s' "$hostport" | awk -F: '{print $NF}'
+        # No Observatory entry for this tag — data not available yet
+        log_debug "Failover: no Observatory entry for '$tag' - assuming alive"
+        return 0
     fi
 }
 
@@ -154,51 +145,78 @@ failover_rotate_outbound() {
     local idx="$3"
     local current_active="$4"
 
-    # Get all links for this protocol from subscriptions
-    local candidates
-    candidates=$(jq -r --arg proto "$protocol" '.[$proto] // [] | .[]' "$XRAYUI_SUBSCRIPTIONS_FILE" 2>/dev/null)
-    [ -z "$candidates" ] && { log_warn "Failover: no candidates for protocol=$protocol"; return 1; }
+    # Get all candidates for this protocol from the subscription pool
+    local all_candidates
+    all_candidates=$(jq -r --arg proto "$protocol" '.[$proto] // [] | .[]' "$XRAYUI_SUBSCRIPTIONS_FILE" 2>/dev/null)
+    [ -z "$all_candidates" ] && { log_warn "Failover: no candidates for protocol=$protocol"; return 1; }
 
-    # Get recently failed endpoints from state
-    local failed_list
-    failed_list=$(jq -r --arg tag "$tag" '.[$tag].failed_endpoints // [] | .[]' "$XRAYUI_FAILOVER_STATE_FILE" 2>/dev/null)
-
-    # Build list of viable candidates (filtering out current + failed)
-    local viable_file="/tmp/failover_viable.$$"
-    : >"$viable_file"
-    printf '%s\n' "$candidates" | while IFS= read -r link; do
-        [ -z "$link" ] && continue
-        [ "$link" = "$current_active" ] && continue
-        if [ -n "$failed_list" ] && printf '%s\n' "$failed_list" | grep -qF "$link"; then
-            continue
-        fi
-        printf '%s\n' "$link" >>"$viable_file"
-    done
-
-    # Probe each viable candidate
-    local chosen=""
-    while IFS= read -r link; do
-        [ -z "$link" ] && continue
-        local host port
-        host=$(failover_parse_host "$link")
-        port=$(failover_parse_port "$link")
-        log_debug "Failover: probing candidate $host:$port"
-        if failover_probe_tcp "$host" "$port"; then
-            chosen="$link"
-            break
+    # Apply subscription filters if configured (case-insensitive match on link label)
+    local candidates="$all_candidates"
+    local filters="${subscription_filters:-}"
+    if [ -n "$filters" ]; then
+        local filtered=""
+        local IFS_SAVE="$IFS"
+        printf '%s\n' "$all_candidates" | while IFS= read -r link; do
+            [ -z "$link" ] && continue
+            # Extract label from URL fragment (#tag)
+            local label
+            label=$(printf '%s' "$link" | sed 's/.*#//' | sed 's/%..\|+/ /g')
+            # Check each filter pattern (pipe-delimited, case-insensitive)
+            printf '%s' "$filters" | tr '|' '\n' | while IFS= read -r pattern; do
+                [ -z "$pattern" ] && continue
+                case "$(printf '%s' "$label" | tr '[:upper:]' '[:lower:]')" in
+                    *$(printf '%s' "$pattern" | tr '[:upper:]' '[:lower:]')*)
+                        printf '%s\n' "$link"
+                        break
+                        ;;
+                esac
+            done
+        done > /tmp/failover_filtered.$$
+        filtered=$(cat /tmp/failover_filtered.$$ 2>/dev/null)
+        rm -f /tmp/failover_filtered.$$
+        if [ -n "$filtered" ]; then
+            candidates="$filtered"
+            log_debug "Failover: filters matched $(printf '%s\n' "$filtered" | wc -l | tr -d ' ') candidates for protocol=$protocol"
         else
-            failover_state_add_failed "$tag" "$link"
+            log_debug "Failover: no filter matches for protocol=$protocol, using full pool"
         fi
-    done <"$viable_file"
-    rm -f "$viable_file"
+    fi
+
+    # Pick the next candidate after the current active one.
+    # No TCP probing — Observatory will verify the new endpoint on the
+    # next cycle and rotate again if it is also dead.
+    local chosen=""
+
+    # Try to find the entry after current_active in the list
+    chosen=$(printf '%s\n' "$candidates" | {
+        found="false"
+        while IFS= read -r link; do
+            [ -z "$link" ] && continue
+            if [ "$found" = "true" ]; then
+                printf '%s' "$link"
+                exit 0
+            fi
+            [ "$link" = "$current_active" ] && found="true"
+        done
+        exit 1
+    })
+
+    # If not found (current was last or not in list), wrap to first different candidate
+    if [ -z "$chosen" ]; then
+        chosen=$(printf '%s\n' "$candidates" | while IFS= read -r link; do
+            [ -z "$link" ] && continue
+            [ "$link" = "$current_active" ] && continue
+            printf '%s' "$link"
+            break
+        done)
+    fi
 
     if [ -z "$chosen" ]; then
-        log_warn "Failover: all candidates exhausted for '$tag'; clearing failed list for next cycle"
-        failover_state_clear_failed "$tag"
+        log_warn "Failover: no alternative candidates for '$tag'"
         return 1
     fi
 
-    log_info "Failover: rotating '$tag' to $(failover_parse_host "$chosen"):$(failover_parse_port "$chosen")"
+    log_info "Failover: switching '$tag' to next candidate"
 
     # Parse the chosen link into an outbound JSON object
     # Reuses existing parser from subscriptions.sh
@@ -265,25 +283,6 @@ failover_state_record_switch() {
         | .[$t].last_switch = $now
         | .[$t].switches_this_hour = ((.[$t].switches_this_hour // 0) + 1)
     ' >"$XRAYUI_FAILOVER_STATE_FILE"
-}
-
-failover_state_add_failed() {
-    local tag="$1"
-    local link="$2"
-    local state
-    state=$(cat "$XRAYUI_FAILOVER_STATE_FILE")
-    printf '%s' "$state" | jq --arg t "$tag" --arg l "$link" '
-        if .[$t] == null then .[$t] = {} else . end
-        | .[$t].failed_endpoints = ((.[$t].failed_endpoints // []) + [$l] | unique)
-    ' >"$XRAYUI_FAILOVER_STATE_FILE"
-}
-
-failover_state_clear_failed() {
-    local tag="$1"
-    local state
-    state=$(cat "$XRAYUI_FAILOVER_STATE_FILE")
-    printf '%s' "$state" | jq --arg t "$tag" \
-        'if .[$t] != null then .[$t].failed_endpoints = [] else . end' >"$XRAYUI_FAILOVER_STATE_FILE"
 }
 
 failover_circuit_breaker_ok() {

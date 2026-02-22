@@ -1,6 +1,27 @@
 # XRAYUI Changelog
 
+## [0.65.0] - 2026-02-22
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- IMPROVED: SNI Logs redesigned with three view modes — **By Device** (collapsible cards grouping domains per LAN device), **By Domain** (aggregated table with hit counts, protocol badges, and device tags), and **Live Stream** (enhanced real-time log). Includes bulk domain selection, enhanced stats (top domain, most active device), and view-aware CSV export.
+- ADDED: Add domains directly from SNI logs to routing rules — click **+ Rule** on any domain to add it to an existing rule or create a new one, without leaving the SNI logs modal. Supports bulk selection for adding multiple domains at once.
+- FIXED: Auto-fallback now correctly detects when a proxy is down. Previously, health checks could report a dead server as reachable. Now uses Xray's built-in Observatory for reliable detection.
+- FIXED: Auto-fallback rotation now works — previously all candidate servers were rejected during probing due to a compatibility issue with the router's network tools. The system now simply switches to the next server in your subscription list and lets Observatory verify it on the next check cycle.
+- FIXED: Subscription pool settings are no longer lost after restarting Xray.
+- IMPROVED: Auto-fallback options now show a helpful message when Xray Connection Check is disabled, instead of being hidden without explanation.
+- IMPROVED: Auto-fallback now switches servers instantly using the Xray API instead of performing a full restart. This reduces downtime from ~15 seconds to near-zero. If the API is unavailable, it falls back to a full restart automatically.
+- IMPROVED: Access log viewer now filters out internal metrics traffic (`sys:metrics_in -> sys:metrics_out`) to reduce noise when Connection Check is enabled.
+- IMPROVED: When `dnsmasq` IP-to-domain resolution is enabled, the access log viewer now shows the original IP alongside the resolved domain. Click any resolved domain to toggle between domain and IP; hover to see the alternate value in a tooltip.
+- ADDED: Configurable Observatory probe URL in General Settings. Previously hardcoded to `https://www.google.com/generate_204`, it can now be changed to any endpoint that returns HTTP 204.
+- ADDED: Subscription rotation filters — type comma-separated keywords (e.g., `Canada, Denmark`) to limit auto-fallback rotation to matching subscription links only. Unmatched links are excluded from rotation. If no filters are set or nothing matches, the full subscription pool is used as before.
+- ADDED: XHTTP transport anti-detection settings (Xray-core PR #5414). New "Anti-Detection" modal lets you customize padding obfuscation (placement, method, key, header), uplink HTTP method, session/sequence placement, and uplink data placement — critical for bypassing CDN-based fingerprinting. New "Performance" and "XMUX" modals organize existing stream tuning and multiplexing settings.
+- FIXED: Unable to clear subscription sources — removing all subscription URLs and saving would silently restore the previous values. The empty string was incorrectly split into a single-element array instead of an empty array.
+- FIXED: Subscription data files (`xray_subscriptions.json`) are now cleaned up when all subscription sources are removed.
+
 ## [0.64.1] - 2026-02-21
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - ADDED: Automatic subscription refresh — your subscription sources can now be re-fetched on a schedule (every 3, 6, or 12 hours) so your server list stays up to date without manual action.
 - ADDED: Auto-fallback when a proxy goes down — when enabled, XRAYUI periodically checks if your active proxy is reachable. If it detects that your connection is blocked, it automatically switches to the next working server from your subscription pool. Your routing rules and DNS settings stay intact.
@@ -12,10 +33,14 @@
 
 ## [0.63.7] - 2026-02-09
 
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
 - FIXED: Xray not working after scheduled or manual router reboot on some slow models (e.g. RT-AX58U).
 - FIXED: `TUN` inbound now automatically loads the `TUN` kernel module if it is not already available, preventing silent failures on routers where the module is not loaded by default.
 
 ## [0.63.5] - 2026-02-04
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - FIXED: Script files in `/jffs/scripts/` no longer lose execute permissions after update or reinstall.
 - FIXED: Firewall rules now properly configure on router reboot (was broken since 0.63.4).

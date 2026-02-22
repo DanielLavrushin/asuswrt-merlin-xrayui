@@ -69,7 +69,7 @@ logs_build_sed_script() {
 
   awk '
         NR==FNR          { want[$1]=1; next }          # first file = .ips
-        ($1 in want)     { printf "s|%s|%s|g\n", $1, $2 }
+        ($1 in want)     { printf "s|%s|%s{{%s}}|g\n", $1, $2, $1 }
     ' "$script.ips" "$XRAYUI_DNSMASQ_CACHE" >"$script"
 
   rm -f "$script.ips"
@@ -110,7 +110,7 @@ logs_fetch() {
   local tmp_access="${pub_access}.$$"
 
   tail -n 200 "$log_error" >"$tmp_error"
-  tail -n 200 "$log_access" >"$tmp_access"
+  tail -n 500 "$log_access" | grep -v '\[sys:metrics_in -> sys:metrics_out\]' | tail -n 200 >"$tmp_access"
 
   if [ "$logs_dnsmasq" = "true" ]; then
     replace_ips_with_domains "$tmp_access"

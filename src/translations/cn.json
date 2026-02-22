@@ -59,6 +59,8 @@
       "label_logs_enable_error": "错误日志",
       "label_logs_enable_dns": "DNS 日志",
       "label_logs_level": "日志级别",
+      "label_probe_url": "Observatory 探测 URL",
+      "hint_probe_url": "Xray Observatory 用于探测出站连接健康状态的 URL。该端点应返回 HTTP 204（No Content）。",
       "label_gh_proxy": "GitHub 代理",
       "hint_gh_proxy": "当地无法访问 GitHub 时，用此功能下载 GitHub 文件（含 Xray 更新、Geo 库等）",
       "geodad_header": "GeoIP 与 GeoSite 库",
@@ -78,8 +80,8 @@
       "sleep_time": "XRAY 启动后的延迟",
       "hint_sleep_time": "XRAYUI 在启动 XRAY 后会等待指定时间（秒）再继续执行后续操作（如应用防火墙规则等）。",
       "label_enable_debug": "调试日志",
-      "label_ipsec": "DNS 转发服务（ipset）",
-      "hint_ipsec": "*OFF* - 关闭转发服务，路由规则保持网络默认。<hr />*BYPASS* - 映射至 `FREEDOM` 出站端口的流量将直接访问（跳过 Xray），其他流量仍走出站端口。<hr/>*REDIRECT* – 与 BYPASS 相反，将未映射至 FREEDOM 的流量走代理，其余流量直接从路由器出站。<blockquote>重要提示：基于正则表达式 `regexp` 的流量无法推入 ipset ，此处将被忽略。</blockquote>",
+      "label_ipset": "DNS 转发服务（ipset）",
+      "hint_ipset": "*OFF* - 关闭转发服务，路由规则保持网络默认。<hr />*BYPASS* - 映射至 `FREEDOM` 出站端口的流量将直接访问（跳过 Xray），其他流量仍走出站端口。<hr/>*REDIRECT* – 与 BYPASS 相反，将未映射至 FREEDOM 的流量走代理，其余流量直接从路由器出站。<blockquote>重要提示：基于正则表达式 `regexp` 的流量无法推入 ipset ，此处将被忽略。</blockquote>",
       "startup_delay": "启动延迟",
       "hint_startup_delay": "路由器重启后，XRAY 将在指定时间（秒）后启动。这有助于避免 XRAY 启动时挂起。",
       "tab_general": "常规",
@@ -109,7 +111,11 @@
       "label_subscription_auto_fallback": "自动故障转移",
       "hint_subscription_auto_fallback": "启用后，开启了自动故障转移的出站将定期检查，当前端点不可达时自动切换到可用端点。",
       "label_subscription_fallback_interval": "健康检查间隔",
-      "hint_subscription_fallback_interval": "检查池管理出站健康状态的频率。"
+      "hint_subscription_fallback_interval": "检查池管理出站健康状态的频率。",
+      "warn_auto_fallback_requires_observatory": "需要在「通用」选项卡中启用 Xray 连接检查。",
+      "label_subscription_filters": "轮换过滤器",
+      "hint_subscription_filters": "按名称过滤用于自动故障转移轮换的订阅链接。<hr/>输入逗号分隔的关键词（例如 <code>Canada, Denmark</code>）。<hr/>仅使用名称包含至少一个关键词的链接。<hr/>如果为空，则使用完整的订阅池。",
+      "placeholder_subscription_filters": "例如 Canada, Denmark, Japan"
     },
     "ImportConfig": {
       "import_config_file": "导入配置"
@@ -516,7 +522,8 @@
       "label_subscription_type": "可用订阅配置",
       "hint_subscription_type": "订阅配置的类型。<ul> <li>`xray`：Xray 订阅配置</li> <li>`clash`：Clash 订阅配置</li> </ul><hr/>仅当未设置 `subscriptionUrl` 时，此设置才会生效。",
       "label_auto_fallback": "自动故障转移池",
-      "hint_auto_fallback": "启用后将此出站加入自动故障转移池。当活跃端点不可达时，将自动切换到订阅池中的下一个可用端点。<hr/>需要在通用设置中启用全局自动故障转移选项。"
+      "hint_auto_fallback": "启用后将此出站加入自动故障转移池。当活跃端点不可达时，将自动切换到订阅池中的下一个可用端点。<hr/>需要在通用设置中启用全局自动故障转移选项。",
+      "warn_auto_fallback_requires_observatory": "需要在通用设置中启用 Xray 连接检查。"
     },
     "FreedomOutbound": {
       "modal_title": "直连（Freedom）",
@@ -756,6 +763,40 @@
       "closest": "最近的域名",
       "scan_progress": "扫描进行中..."
     },
+    "Xhttp": {
+      "modal_anti_detection": "反检测设置",
+      "hint_anti_detection": "配置填充混淆、HTTP方法和会话/序列放置，以绕过基于CDN的流量过滤。",
+      "modal_performance": "性能调优",
+      "hint_performance": "配置POST大小、间隔、缓冲和上行数据放置以获得最佳吞吐量。",
+      "modal_xmux": "XMUX 设置",
+      "hint_xmux": "配置XMUX连接多路复用参数以管理HTTP/2流。",
+      "label_xPaddingObfsMode": "启用填充混淆",
+      "hint_xPaddingObfsMode": "启用 X-Padding 反检测机制。激活后，Xray 会自定义填充在请求中的放置方式，以对抗 CDN 的流量指纹识别。",
+      "label_xPaddingPlacement": "填充放置位置",
+      "hint_xPaddingPlacement": "填充在 HTTP 请求中的放置位置。<ul><li><code>queryInHeader</code>（默认）- 在头部内的 URL 查询字符串中</li><li><code>cookie</code> - 在 Cookie 头部中</li><li><code>header</code> - 在自定义 HTTP 头部中</li><li><code>query</code> - 在 URL 查询字符串中</li></ul>",
+      "label_xPaddingMethod": "填充方法",
+      "hint_xPaddingMethod": "生成填充内容的算法。<ul><li><code>repeat-x</code>（默认）- 重复 X/Z 字符模式</li><li><code>tokenish</code> - 生成类似令牌的随机字符串</li></ul>",
+      "label_xPaddingKey": "填充查询键名",
+      "hint_xPaddingKey": "用于填充值的查询参数或 cookie 名称。默认：<code>x_padding</code>。",
+      "label_xPaddingHeader": "填充 HTTP 头部",
+      "hint_xPaddingHeader": "承载填充值的 HTTP 头部名称。默认：<code>X-Padding</code>。",
+      "label_uplinkHTTPMethod": "上行 HTTP 方法",
+      "hint_uplinkHTTPMethod": "用于上行请求的 HTTP 方法。某些 CDN 阻止 POST 但允许 PUT 或 PATCH。默认：<code>POST</code>。",
+      "label_uplinkDataPlacement": "上行数据放置位置",
+      "hint_uplinkDataPlacement": "上行负载数据的放置位置。<ul><li><code>body</code>（默认）- 在请求正文中</li><li><code>cookie</code> - 在 Cookie 头部中（仅 packet-up 模式）</li><li><code>header</code> - 在自定义 HTTP 头部中（仅 packet-up 模式）</li></ul>",
+      "label_uplinkDataKey": "上行数据键名",
+      "hint_uplinkDataKey": "当放置位置为 cookie 或 header 时的上行数据键名。为空时自动生成。",
+      "label_uplinkChunkSize": "上行块大小（字节）",
+      "hint_uplinkChunkSize": "每个上行数据块的最大字节数。最小 64 字节。未设置时根据放置位置自动计算（cookie 为 3KB，header 为 4KB）。",
+      "label_sessionPlacement": "会话 ID 放置位置",
+      "hint_sessionPlacement": "会话标识符在请求中的放置位置。<ul><li><code>path</code>（默认）- 在 URL 路径中</li><li><code>cookie</code> - 在 Cookie 头部中</li><li><code>header</code> - 在自定义 HTTP 头部中</li><li><code>query</code> - 在 URL 查询字符串中</li></ul>",
+      "label_sessionKey": "会话键名",
+      "hint_sessionKey": "会话 ID 的键名。为空时自动生成。当放置位置为 <code>path</code> 时忽略。",
+      "label_seqPlacement": "序列号放置位置",
+      "hint_seqPlacement": "请求序列号的放置位置。<ul><li><code>path</code>（默认）- 在 URL 路径中</li><li><code>cookie</code> - 在 Cookie 头部中</li><li><code>header</code> - 在自定义 HTTP 头部中</li><li><code>query</code> - 在 URL 查询字符串中</li></ul>",
+      "label_seqKey": "序列键名",
+      "hint_seqKey": "序列号的键名。为空时自动生成。当放置位置为 <code>path</code> 时忽略。"
+    },
     "SniLogs": {
       "title": "SNI 日志",
       "display": "显示",
@@ -764,7 +805,25 @@
       "total": "总计",
       "unique_sni": "唯一 SNI",
       "export_csv": "导出 CSV",
-      "raw": "原始数据"
+      "raw": "原始数据",
+      "tab_by_device": "按设备",
+      "tab_by_domain": "按域名",
+      "tab_live": "实时流",
+      "hits": "次数",
+      "last_seen": "最后出现",
+      "protocols": "协议",
+      "devices": "设备",
+      "domain": "域名",
+      "domains_count": "个域名",
+      "add_to_rule": "+ 规则",
+      "add_selected_to_rule": "将选中项添加到规则",
+      "create_new_rule": "新规则",
+      "rule_name": "规则名称",
+      "outbound": "出站",
+      "added_to_rule": "已添加到 \"{0}\"",
+      "no_rules_available": "未定义路由规则。请创建新规则。",
+      "top_domain": "最多",
+      "most_active": "最活跃"
     }
   }
 }

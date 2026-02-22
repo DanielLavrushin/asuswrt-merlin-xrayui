@@ -149,6 +149,103 @@ describe('TransportObjects', () => {
         expect(http.host).toBe('example.com');
         expect(http.mode).toBe('stream-one');
       });
+
+      it('clears all padding fields when xPaddingObfsMode is false (default)', () => {
+        http.normalize();
+        expect(http.xPaddingObfsMode).toBeUndefined();
+        expect(http.xPaddingKey).toBeUndefined();
+        expect(http.xPaddingHeader).toBeUndefined();
+        expect(http.xPaddingPlacement).toBeUndefined();
+        expect(http.xPaddingMethod).toBeUndefined();
+      });
+
+      it('retains non-default padding fields when xPaddingObfsMode is true', () => {
+        http.xPaddingObfsMode = true;
+        http.xPaddingKey = 'my_key';
+        http.xPaddingHeader = 'My-Header';
+        http.xPaddingPlacement = 'cookie';
+        http.xPaddingMethod = 'tokenish';
+        http.normalize();
+        expect(http.xPaddingObfsMode).toBe(true);
+        expect(http.xPaddingKey).toBe('my_key');
+        expect(http.xPaddingHeader).toBe('My-Header');
+        expect(http.xPaddingPlacement).toBe('cookie');
+        expect(http.xPaddingMethod).toBe('tokenish');
+      });
+
+      it('clears default padding sub-fields even when obfs is enabled', () => {
+        http.xPaddingObfsMode = true;
+        http.normalize();
+        expect(http.xPaddingObfsMode).toBe(true);
+        expect(http.xPaddingKey).toBeUndefined();
+        expect(http.xPaddingHeader).toBeUndefined();
+        expect(http.xPaddingPlacement).toBeUndefined();
+        expect(http.xPaddingMethod).toBeUndefined();
+      });
+
+      it('clears uplinkHTTPMethod when POST (default)', () => {
+        http.normalize();
+        expect(http.uplinkHTTPMethod).toBeUndefined();
+      });
+
+      it('retains non-default uplinkHTTPMethod', () => {
+        http.uplinkHTTPMethod = 'PUT';
+        http.normalize();
+        expect(http.uplinkHTTPMethod).toBe('PUT');
+      });
+
+      it('clears sessionKey when sessionPlacement is path (default)', () => {
+        http.sessionKey = 'my_session';
+        http.normalize();
+        expect(http.sessionPlacement).toBeUndefined();
+        expect(http.sessionKey).toBeUndefined();
+      });
+
+      it('retains sessionKey when sessionPlacement is not path', () => {
+        http.sessionPlacement = 'cookie';
+        http.sessionKey = 'sid';
+        http.normalize();
+        expect(http.sessionPlacement).toBe('cookie');
+        expect(http.sessionKey).toBe('sid');
+      });
+
+      it('clears seqKey when seqPlacement is path (default)', () => {
+        http.seqKey = 'my_seq';
+        http.normalize();
+        expect(http.seqPlacement).toBeUndefined();
+        expect(http.seqKey).toBeUndefined();
+      });
+
+      it('retains seqKey when seqPlacement is not path', () => {
+        http.seqPlacement = 'header';
+        http.seqKey = 'x-seq';
+        http.normalize();
+        expect(http.seqPlacement).toBe('header');
+        expect(http.seqKey).toBe('x-seq');
+      });
+
+      it('clears uplinkDataPlacement when body (default)', () => {
+        http.normalize();
+        expect(http.uplinkDataPlacement).toBeUndefined();
+      });
+
+      it('retains non-default uplinkDataPlacement', () => {
+        http.uplinkDataPlacement = 'cookie';
+        http.normalize();
+        expect(http.uplinkDataPlacement).toBe('cookie');
+      });
+
+      it('clears uplinkChunkSize when below minimum (64)', () => {
+        http.uplinkChunkSize = 32;
+        http.normalize();
+        expect(http.uplinkChunkSize).toBeUndefined();
+      });
+
+      it('retains valid uplinkChunkSize', () => {
+        http.uplinkChunkSize = 3072;
+        http.normalize();
+        expect(http.uplinkChunkSize).toBe(3072);
+      });
     });
 
     describe('XrayStreamGrpcSettingsObject', () => {

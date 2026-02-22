@@ -92,6 +92,22 @@ export class XrayStreamHttpSettingsObject implements ITransportNetwork {
   scMinPostsIntervalMs? = 30;
   scMaxBufferedPosts? = 30;
   scStreamUpServerSecs? = '20-80';
+
+  // Anti-detection / obfuscation fields (Xray-core PR #5414)
+  xPaddingObfsMode? = false;
+  xPaddingKey? = 'x_padding';
+  xPaddingHeader? = 'X-Padding';
+  xPaddingPlacement? = 'queryInHeader';
+  xPaddingMethod? = 'repeat-x';
+  uplinkHTTPMethod? = 'POST';
+  sessionPlacement? = 'path';
+  sessionKey?: string;
+  seqPlacement? = 'path';
+  seqKey?: string;
+  uplinkDataPlacement? = 'body';
+  uplinkDataKey?: string;
+  uplinkChunkSize?: number;
+
   public headers? = {};
 
   public extra?: XrayXhttpExtraObject = new XrayXhttpExtraObject();
@@ -115,6 +131,35 @@ export class XrayStreamHttpSettingsObject implements ITransportNetwork {
     this.scMinPostsIntervalMs = this.scMinPostsIntervalMs == 30 ? undefined : this.scMinPostsIntervalMs;
     this.scMaxBufferedPosts = this.scMaxBufferedPosts == 30 ? undefined : this.scMaxBufferedPosts;
     this.scStreamUpServerSecs = this.scStreamUpServerSecs === '20-80' ? undefined : this.scStreamUpServerSecs;
+
+    // Anti-detection fields normalization
+    this.xPaddingObfsMode = !this.xPaddingObfsMode ? undefined : this.xPaddingObfsMode;
+    if (!this.xPaddingObfsMode) {
+      this.xPaddingKey = undefined;
+      this.xPaddingHeader = undefined;
+      this.xPaddingPlacement = undefined;
+      this.xPaddingMethod = undefined;
+    } else {
+      this.xPaddingKey = !this.xPaddingKey || this.xPaddingKey === 'x_padding' ? undefined : this.xPaddingKey;
+      this.xPaddingHeader = !this.xPaddingHeader || this.xPaddingHeader === 'X-Padding' ? undefined : this.xPaddingHeader;
+      this.xPaddingPlacement = this.xPaddingPlacement === 'queryInHeader' ? undefined : this.xPaddingPlacement;
+      this.xPaddingMethod = this.xPaddingMethod === 'repeat-x' ? undefined : this.xPaddingMethod;
+    }
+
+    this.uplinkHTTPMethod = !this.uplinkHTTPMethod || this.uplinkHTTPMethod === 'POST' ? undefined : this.uplinkHTTPMethod;
+
+    this.sessionPlacement = this.sessionPlacement === 'path' ? undefined : this.sessionPlacement;
+    if (!this.sessionPlacement) this.sessionKey = undefined;
+    else this.sessionKey = !this.sessionKey || this.sessionKey === '' ? undefined : this.sessionKey;
+
+    this.seqPlacement = this.seqPlacement === 'path' ? undefined : this.seqPlacement;
+    if (!this.seqPlacement) this.seqKey = undefined;
+    else this.seqKey = !this.seqKey || this.seqKey === '' ? undefined : this.seqKey;
+
+    this.uplinkDataPlacement = this.uplinkDataPlacement === 'body' ? undefined : this.uplinkDataPlacement;
+    this.uplinkDataKey = !this.uplinkDataKey || this.uplinkDataKey === '' ? undefined : this.uplinkDataKey;
+    this.uplinkChunkSize = !this.uplinkChunkSize || this.uplinkChunkSize < 64 ? undefined : this.uplinkChunkSize;
+
     this.headers = isObjectEmpty(this.headers) ? undefined : this.headers;
     this.extra = plainToInstance(XrayXhttpExtraObject, this.extra ?? {});
     this.extra = this.extra ? this.extra.normalize() : undefined;

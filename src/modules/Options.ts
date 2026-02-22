@@ -15,6 +15,10 @@ export const XrayOptions = {
   echForceQueryOptions: ['none', 'half', 'full'],
   headerTypes: ['none', 'http', 'srtp', 'utp', 'wechat-video', 'dtls', 'wireguard'],
   httpMethods: ['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT', 'PATCH'],
+  xhttpPaddingPlacements: ['queryInHeader', 'cookie', 'header', 'query'],
+  xhttpPaddingMethods: ['repeat-x', 'tokenish'],
+  xhttpSessionPlacements: ['path', 'cookie', 'header', 'query'],
+  xhttpUplinkDataPlacements: ['body', 'cookie', 'header'],
   clientFlowOptions: ['none', 'xtls-rprx-vision'],
   encryptionOptions: [
     // Recommended encryption methods

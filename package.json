@@ -14,11 +14,11 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "axios": "^1.13.2",
+    "axios": "^1.13.5",
     "class-transformer": "^0.5.1",
     "jsqr": "^1.4.0",
     "lodash-es": "^4.17.23",
-    "markdown-it": "^14.1.0",
+    "markdown-it": "^14.1.1",
     "qrcode.vue": "^3.6.0",
     "reflect-metadata": "^0.2.2",
     "sortablejs": "^1.15.6",

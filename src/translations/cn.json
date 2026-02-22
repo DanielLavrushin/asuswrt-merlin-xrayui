@@ -771,7 +771,25 @@
       "total": "总计",
       "unique_sni": "唯一 SNI",
       "export_csv": "导出 CSV",
-      "raw": "原始数据"
+      "raw": "原始数据",
+      "tab_by_device": "按设备",
+      "tab_by_domain": "按域名",
+      "tab_live": "实时流",
+      "hits": "次数",
+      "last_seen": "最后出现",
+      "protocols": "协议",
+      "devices": "设备",
+      "domain": "域名",
+      "domains_count": "个域名",
+      "add_to_rule": "+ 规则",
+      "add_selected_to_rule": "将选中项添加到规则",
+      "create_new_rule": "新规则",
+      "rule_name": "规则名称",
+      "outbound": "出站",
+      "added_to_rule": "已添加到 \"{0}\"",
+      "no_rules_available": "未定义路由规则。请创建新规则。",
+      "top_domain": "最多",
+      "most_active": "最活跃"
     }
   }
 }

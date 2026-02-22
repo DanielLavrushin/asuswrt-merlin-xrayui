@@ -2,6 +2,8 @@
 
 ## [0.64.2] - 2026-02-22
 
+- IMPROVED: SNI Logs redesigned with three view modes — **By Device** (collapsible cards grouping domains per LAN device), **By Domain** (aggregated table with hit counts, protocol badges, and device tags), and **Live Stream** (enhanced real-time log). Includes bulk domain selection, enhanced stats (top domain, most active device), and view-aware CSV export.
+- ADDED: Add domains directly from SNI logs to routing rules — click **+ Rule** on any domain to add it to an existing rule or create a new one, without leaving the SNI logs modal. Supports bulk selection for adding multiple domains at once.
 - FIXED: Auto-fallback now correctly detects when a proxy is down. Previously, health checks could report a dead server as reachable. Now uses Xray's built-in Observatory for reliable detection.
 - FIXED: Auto-fallback rotation now works — previously all candidate servers were rejected during probing due to a compatibility issue with the router's network tools. The system now simply switches to the next server in your subscription list and lets Observatory verify it on the next check cycle.
 - FIXED: Subscription pool settings are no longer lost after restarting Xray.

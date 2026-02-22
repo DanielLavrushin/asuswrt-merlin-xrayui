@@ -770,7 +770,25 @@
       "total": "всього",
       "unique_sni": "унікальних SNI",
       "export_csv": "експорт CSV",
-      "raw": "вихідні дані"
+      "raw": "вихідні дані",
+      "tab_by_device": "По пристроях",
+      "tab_by_domain": "По доменах",
+      "tab_live": "Потік",
+      "hits": "запитів",
+      "last_seen": "останній",
+      "protocols": "протоколи",
+      "devices": "пристрої",
+      "domain": "домен",
+      "domains_count": "доменів",
+      "add_to_rule": "+ Правило",
+      "add_selected_to_rule": "додати вибрані до правила",
+      "create_new_rule": "Нове правило",
+      "rule_name": "Назва правила",
+      "outbound": "Вихідний",
+      "added_to_rule": "Додано до \"{0}\"",
+      "no_rules_available": "Правила маршрутизації не визначені. Створіть нове.",
+      "top_domain": "топ",
+      "most_active": "найактивніший"
     }
   }
 }

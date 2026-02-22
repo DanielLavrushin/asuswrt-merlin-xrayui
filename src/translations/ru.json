@@ -773,7 +773,25 @@
       "total": "всего",
       "unique_sni": "уникальных SNI",
       "export_csv": "экспорт CSV",
-      "raw": "исходные данные"
+      "raw": "исходные данные",
+      "tab_by_device": "По устройствам",
+      "tab_by_domain": "По доменам",
+      "tab_live": "Поток",
+      "hits": "запросов",
+      "last_seen": "последний",
+      "protocols": "протоколы",
+      "devices": "устройства",
+      "domain": "домен",
+      "domains_count": "доменов",
+      "add_to_rule": "+ Правило",
+      "add_selected_to_rule": "добавить выбранные в правило",
+      "create_new_rule": "Новое правило",
+      "rule_name": "Имя правила",
+      "outbound": "Исходящий",
+      "added_to_rule": "Добавлено в \"{0}\"",
+      "no_rules_available": "Правила маршрутизации не определены. Создайте новое.",
+      "top_domain": "топ",
+      "most_active": "самый активный"
     }
   }
 }

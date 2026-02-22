@@ -775,7 +775,25 @@
       "total": "total",
       "unique_sni": "unique SNI",
       "export_csv": "export CSV",
-      "raw": "raw data"
+      "raw": "raw data",
+      "tab_by_device": "By Device",
+      "tab_by_domain": "By Domain",
+      "tab_live": "Live Stream",
+      "hits": "hits",
+      "last_seen": "last seen",
+      "protocols": "protocols",
+      "devices": "devices",
+      "domain": "domain",
+      "domains_count": "domains",
+      "add_to_rule": "+ Rule",
+      "add_selected_to_rule": "add selected to rule",
+      "create_new_rule": "New rule",
+      "rule_name": "Rule name",
+      "outbound": "Outbound",
+      "added_to_rule": "Added to \"{0}\"",
+      "no_rules_available": "No routing rules defined. Create a new one.",
+      "top_domain": "top",
+      "most_active": "most active"
     }
   }
 }

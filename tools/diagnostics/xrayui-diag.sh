@@ -26,11 +26,46 @@ else
     C_RED='' C_GRN='' C_YLW='' C_CYN='' C_RST=''
 fi
 
-ok()   { printf "${C_GRN}[OK]${C_RST}   %s\n" "$*"; }
+ok() { printf "${C_GRN}[OK]${C_RST}   %s\n" "$*"; }
 fail() { printf "${C_RED}[FAIL]${C_RST} %s\n" "$*"; }
 warn() { printf "${C_YLW}[WARN]${C_RST} %s\n" "$*"; }
 info() { printf "${C_CYN}[INFO]${C_RST} %s\n" "$*"; }
-hdr()  { printf "\n========== %s ==========\n" "$*"; }
+hdr() { printf "\n========== %s ==========\n" "$*"; }
+
+# ldd wrapper — BusyBox may not have ldd
+check_libs() {
+    local bin_path="$1"
+    if command -v ldd >/dev/null 2>&1; then
+        local ldd_out=$(ldd "$bin_path" 2>&1)
+        if echo "$ldd_out" | grep -q "not found"; then
+            fail "$bin_path has MISSING shared libraries:"
+            echo "$ldd_out" | grep "not found" | while read -r line; do
+                echo "       $line"
+            done
+            return 1
+        elif echo "$ldd_out" | grep -qi "not a dynamic executable\|statically linked"; then
+            ok "$(basename "$bin_path"): statically linked"
+        else
+            ok "$(basename "$bin_path") shared libraries: all present"
+        fi
+    elif [ -d /proc ] && command -v readelf >/dev/null 2>&1; then
+        local missing=""
+        for lib in $(readelf -d "$bin_path" 2>/dev/null | grep NEEDED | sed 's/.*\[//;s/\]//'); do
+            if ! find /opt/lib /lib /usr/lib -name "$lib" 2>/dev/null | grep -q .; then
+                missing="$missing $lib"
+            fi
+        done
+        if [ -n "$missing" ]; then
+            fail "$(basename "$bin_path") has MISSING libraries:$missing"
+            return 1
+        else
+            ok "$(basename "$bin_path") shared libraries: all found"
+        fi
+    else
+        info "$(basename "$bin_path"): ldd not available, skipping library check"
+    fi
+    return 0
+}
 
 # ── Run all checks, tee to file ──
 run_diagnostics() {
@@ -89,16 +124,7 @@ run_diagnostics() {
             info "jq binary: $(file "$jq_path" 2>/dev/null)"
         fi
 
-        # library deps
-        jq_ldd=$(ldd "$jq_path" 2>&1)
-        if echo "$jq_ldd" | grep -q "not found"; then
-            fail "jq has MISSING shared libraries:"
-            echo "$jq_ldd" | grep "not found" | while read -r line; do
-                echo "       $line"
-            done
-        else
-            ok "jq shared libraries: all present"
-        fi
+        check_libs "$jq_path"
 
         # functional tests
         t1=$(echo '{"a":"b"}' | jq -r '.a' 2>&1)
@@ -144,16 +170,7 @@ run_diagnostics() {
             info "sed binary: $(file "$sed_path" 2>/dev/null)"
         fi
 
-        # library deps
-        sed_ldd=$(ldd "$sed_path" 2>&1)
-        if echo "$sed_ldd" | grep -q "not found"; then
-            fail "sed has MISSING shared libraries:"
-            echo "$sed_ldd" | grep "not found" | while read -r line; do
-                echo "       $line"
-            done
-        else
-            ok "sed shared libraries: all present"
-        fi
+        check_libs "$sed_path"
 
         # functional tests
         s1=$(echo "hello world" | sed 's/world/test/' 2>&1)
@@ -198,16 +215,7 @@ run_diagnostics() {
         info "grep path: $grep_path"
         info "grep version: $(grep --version 2>&1 | head -1)"
 
-        # library deps
-        grep_ldd=$(ldd "$grep_path" 2>&1)
-        if echo "$grep_ldd" | grep -q "not found"; then
-            fail "grep has MISSING shared libraries:"
-            echo "$grep_ldd" | grep "not found" | while read -r line; do
-                echo "       $line"
-            done
-        else
-            ok "grep shared libraries: all present"
-        fi
+        check_libs "$grep_path"
 
         # test grep -oE (used for xray version parsing)
         g1=$(echo "Xray 1.8.24 (Xray, Penetrates Everything.)" | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" 2>&1 | head -n 1)
@@ -231,13 +239,7 @@ run_diagnostics() {
             if [ ! -x /opt/sbin/xray ]; then
                 fail "/opt/sbin/xray is NOT executable"
             fi
-            xray_ldd=$(ldd /opt/sbin/xray 2>&1)
-            if echo "$xray_ldd" | grep -q "not found"; then
-                fail "/opt/sbin/xray has MISSING libraries:"
-                echo "$xray_ldd" | grep "not found" | while read -r line; do
-                    echo "       $line"
-                done
-            fi
+            check_libs /opt/sbin/xray
         else
             fail "/opt/sbin/xray does NOT exist on disk"
         fi
@@ -249,17 +251,7 @@ run_diagnostics() {
             info "xray binary: $(file "$xray_path" 2>/dev/null)"
         fi
 
-        xray_ldd=$(ldd "$xray_path" 2>&1)
-        if echo "$xray_ldd" | grep -q "not found"; then
-            fail "xray has MISSING shared libraries:"
-            echo "$xray_ldd" | grep "not found" | while read -r line; do
-                echo "       $line"
-            done
-        elif echo "$xray_ldd" | grep -qi "not a dynamic executable\|statically linked"; then
-            ok "xray is statically linked (good)"
-        else
-            ok "xray shared libraries: all present"
-        fi
+        check_libs "$xray_path"
 
         info "--- xray version (raw output) ---"
         xray version 2>&1
@@ -295,8 +287,8 @@ run_diagnostics() {
     if [ -f /opt/etc/xrayui.conf ]; then
         ok "/opt/etc/xrayui.conf exists"
         ls -la /opt/etc/xrayui.conf
-        echo "--- contents ---"
-        cat /opt/etc/xrayui.conf
+        echo "--- contents (sensitive values redacted) ---"
+        sed 's/\(qrcode_settings=\).*/\1[REDACTED]/' /opt/etc/xrayui.conf
         echo "--- end ---"
     else
         warn "/opt/etc/xrayui.conf: MISSING"
@@ -310,7 +302,7 @@ run_diagnostics() {
 
     if [ -f "$resp_file" ]; then
         ls -la "$resp_file"
-        fsize=$(wc -c < "$resp_file")
+        fsize=$(wc -c <"$resp_file")
         info "Size: $fsize bytes"
 
         if [ "$fsize" -lt 5 ]; then
@@ -404,19 +396,27 @@ run_diagnostics() {
 
     # ── Script hooks ──
     hdr "SCRIPT HOOKS"
-    for script in /jffs/scripts/xrayui /jffs/scripts/post-mount /jffs/scripts/service-event /jffs/scripts/nat-start /jffs/scripts/dnsmasq.postconf; do
+    # Check main script exists
+    if [ -f /jffs/scripts/xrayui ]; then
+        ok "/jffs/scripts/xrayui exists ($(wc -c </jffs/scripts/xrayui) bytes)"
+        ls -la /jffs/scripts/xrayui
+    else
+        fail "/jffs/scripts/xrayui: MISSING (critical!)"
+    fi
+    # Check hook scripts
+    for script in /jffs/scripts/post-mount /jffs/scripts/service-event /jffs/scripts/nat-start /jffs/scripts/dnsmasq.postconf; do
         if [ -f "$script" ]; then
-            xrayui_lines=$(grep -c "xrayui" "$script" 2>/dev/null || echo "0")
-            ok "$script ($xrayui_lines xrayui entries)"
-            grep "xrayui" "$script" 2>/dev/null | while read -r line; do
-                echo "       $line"
-            done
-        else
-            if [ "$script" = "/jffs/scripts/xrayui" ]; then
-                fail "$script: MISSING (critical!)"
+            hook_line=$(grep "xrayui" "$script" 2>/dev/null | head -3)
+            if [ -n "$hook_line" ]; then
+                ok "$script:"
+                echo "$hook_line" | while read -r line; do
+                    echo "       $line"
+                done
             else
-                info "$script: not present"
+                warn "$script exists but has NO xrayui entries"
             fi
+        else
+            info "$script: not present"
         fi
     done
     echo ""
@@ -487,7 +487,7 @@ run_diagnostics() {
 
     # Step 6: write to temp file
     if [ "$sim_ok" = true ]; then
-        echo "$SIM_RESP" > /tmp/xrayui_diag_test.json 2>&1
+        echo "$SIM_RESP" >/tmp/xrayui_diag_test.json 2>&1
         if [ $? -ne 0 ]; then
             fail "Step 6 (write to /tmp): FAILED"
             sim_ok=false
@@ -535,7 +535,6 @@ echo ""
 echo "=============================================="
 echo "Diagnostics saved to: $DIAG_FILE"
 echo ""
-echo "Please share this file with the developer."
 echo "You can copy-paste the output above, or run:"
 echo "  cat $DIAG_FILE"
 echo "=============================================="

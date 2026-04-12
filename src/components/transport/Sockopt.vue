@@ -14,10 +14,11 @@
             <hint v-html="$t('com.SockOpt.hint_tproxy_enable')"></hint>
           </th>
           <td>
-            <select class="input_option" v-model="sockopt.tproxy">
+            <select class="input_option" v-model="sockopt.tproxy" :disabled="isHysteria">
               <option v-for="(opt, index) in tproxyOptions" :key="index" :value="opt">{{ opt }}</option>
             </select>
-            <span class="hint-color">default: off</span>
+            <span class="hint-color" v-if="isHysteria">not supported on Hysteria (QUIC) inbounds</span>
+            <span class="hint-color" v-else>default: off</span>
           </td>
         </tr>
         <tr>
@@ -103,6 +104,18 @@
     setup(props) {
       const sockopt = ref<XraySockoptObject>(props.transport?.sockopt ?? new XraySockoptObject());
 
+      const isHysteria = computed(() => props.transport?.network === 'hysteria');
+
+      watch(
+        isHysteria,
+        (val) => {
+          if (val && sockopt.value.tproxy === 'tproxy') {
+            sockopt.value.tproxy = undefined;
+          }
+        },
+        { immediate: true }
+      );
+
       const outboundOptions = computed(() => {
         return xrayConfig.outbounds.filter((outbound) => outbound.tag).map((outbound) => outbound.tag);
       });
@@ -119,6 +132,7 @@
 
       return {
         sockopt,
+        isHysteria,
         domainStrategyOptions: XraySockoptObject.domainStrategyOptions,
         tproxyOptions: XraySockoptObject.tproxyOptions,
         outboundOptions

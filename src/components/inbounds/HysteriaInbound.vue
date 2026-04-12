@@ -43,6 +43,13 @@
       inbound.value.streamSettings.network = 'hysteria';
       inbound.value.streamSettings.security = 'tls';
 
+      // Hysteria is QUIC/UDP — sniffing is TCP-stream oriented and can interfere with the handshake.
+      inbound.value.sniffing = undefined;
+      // tproxy on a QUIC listener breaks reply routing (IP_TRANSPARENT reverse path).
+      if (inbound.value.streamSettings.sockopt?.tproxy === 'tproxy') {
+        inbound.value.streamSettings.sockopt.tproxy = undefined;
+      }
+
       if (!inbound.value.streamSettings.hysteriaSettings) {
         inbound.value.streamSettings.hysteriaSettings = new XrayStreamHysteriaSettingsObject();
       }

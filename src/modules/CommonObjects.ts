@@ -10,7 +10,9 @@ import {
   XrayStreamHttpUpgradeSettingsObject,
   XrayStreamSplitHttpSettingsObject,
   XrayStreamHysteriaSettingsObject,
-  XrayFinalMaskSettingsObject
+  XrayFinalMaskSettingsObject,
+  XrayQuicParamsObject,
+  XrayQuicParamsUdpHopObject
 } from './TransportObjects';
 
 export const isObjectEmpty = (obj: any): boolean => {
@@ -681,13 +683,44 @@ export class XrayStreamSettingsObject {
 
     if (this.normalizeAllSettings) this.normalizeAllSettings();
 
+    if (this.network === 'hysteria' && this.migrateDeprecatedHysteriaFields) this.migrateDeprecatedHysteriaFields();
+
     if (this.finalmask && typeof this.finalmask.normalize === 'function') {
       this.finalmask = this.finalmask.normalize();
+    }
+
+    if (this.network === 'hysteria' && this.sockopt?.tproxy === 'tproxy') {
+      this.sockopt.tproxy = undefined;
     }
 
     if (this.sockopt && typeof this.sockopt.normalize === 'function') this.sockopt = this.sockopt.normalize();
 
     return isObjectEmpty(this) ? undefined : this;
+  }
+
+  private migrateDeprecatedHysteriaFields?(): void {
+    const hs = this.hysteriaSettings;
+    if (!hs) return;
+    if (!hs.up && !hs.down && !hs.congestion && !hs.udphop) return;
+
+    this.finalmask ??= new XrayFinalMaskSettingsObject();
+    this.finalmask.quicParams ??= new XrayQuicParamsObject();
+    const qp = this.finalmask.quicParams;
+
+    if (hs.congestion && !qp.congestion) qp.congestion = hs.congestion;
+    if (hs.up && qp.brutalUp == null) qp.brutalUp = hs.up;
+    if (hs.down && qp.brutalDown == null) qp.brutalDown = hs.down;
+    if (hs.udphop && !qp.udpHop) {
+      const hop = new XrayQuicParamsUdpHopObject();
+      hop.ports = hs.udphop.port;
+      if (hs.udphop.interval != null) hop.interval = String(hs.udphop.interval);
+      qp.udpHop = hop;
+    }
+
+    hs.up = undefined;
+    hs.down = undefined;
+    hs.congestion = undefined;
+    hs.udphop = undefined;
   }
 
   private normalizeAllSettings?(): void {

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <!--page:xrayui-->
@@ -21,11 +21,20 @@
     <script language="JavaScript" type="text/javascript" src="/popup.js"></script>
     <script language="JavaScript" type="text/javascript" src="/help.js"></script>
     <script language="JavaScript" type="text/javascript" src="/validator.js"></script>
+    <script id="xrayui-custom-settings" type="application/json">
+      <% get_custom_settings(); %>
+    </script>
     <script>
-      const custom_settings_raw = '<% get_custom_settings(); %>';
       const stripAnsi = /\u001b\[[0-9;]*m/g;
       const stripControls = /[\u0000-\u001F]+/g;
-      const custom_settings = JSON.parse(custom_settings_raw.replace(stripAnsi, '').replace(stripControls, ''));
+      let custom_settings = {};
+      try {
+        const raw = (document.getElementById('xrayui-custom-settings').textContent || '{}').replaceAll(stripAnsi, '').replaceAll(stripControls, '');
+        custom_settings = JSON.parse(raw);
+      } catch (e) {
+        console.error('xrayui: failed to parse custom_settings, falling back to {}', e);
+        custom_settings = {};
+      }
 
       var xray = {
         router: {

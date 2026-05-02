@@ -173,10 +173,12 @@ export class XrayWireguardOutboundObject implements IProtocolType {
   public mtu = 1420;
   public reserved?: number[];
   public workers? = window.xray.router.cpu;
+  public noKernelTun?: boolean;
 
   public domainStrategy = 'ForceIP';
 
   normalize = (): this | undefined => {
+    this.noKernelTun = this.noKernelTun ? true : undefined;
     return this;
   };
 }

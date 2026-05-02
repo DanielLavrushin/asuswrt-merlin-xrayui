@@ -38,6 +38,23 @@ start() {
         ulimit -Sn 65535
     fi
 
+    local HAS_WG_OUTBOUND=$(
+        jq -r '
+    .outbounds? // []
+    | map(.protocol? // "")
+    | if any(. == "wireguard") then "yes" else "no" end
+  ' "$XRAY_CONFIG_FILE"
+    )
+
+    if [ "$HAS_WG_OUTBOUND" = "yes" ]; then
+        local current_svm=$(cat /proc/sys/net/ipv4/conf/all/src_valid_mark 2>/dev/null)
+        if [ "$current_svm" != "1" ]; then
+            log_info "WireGuard outbound detected. Setting net.ipv4.conf.all.src_valid_mark=1."
+            sysctl -w net.ipv4.conf.all.src_valid_mark=1 >/dev/null 2>&1 ||
+                echo 1 >/proc/sys/net/ipv4/conf/all/src_valid_mark 2>/dev/null
+        fi
+    fi
+
     local xray_clear_logs=${logs_dor:-false}
     if [ "$xray_clear_logs" = "true" ]; then
         log_info "Clearing Xray logs..."

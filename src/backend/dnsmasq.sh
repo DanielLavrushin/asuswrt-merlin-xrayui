@@ -42,11 +42,13 @@ dnsmasq_configure() {
     local SRV_LIST
     SRV_LIST=$(jq -r '
         .inbounds[]
-        | select(.protocol == "dokodemo-door")
-        | select(.listen // "127.0.0.1")
-        | select(.settings and (.settings | length > 0))
-        | select(.settings.followRedirect != true)
-        | select((.settings.port // 0) == 53)
+        | select(
+            (.protocol == "dokodemo-door"
+              and (.settings and (.settings | length > 0))
+              and (.settings.followRedirect != true)
+              and ((.settings.port // 0) == 53))
+            or .protocol == "dns"
+          )
         | "\(.listen // "127.0.0.1")#\(.port)"
  ' "$XRAY_CONFIG_FILE")
 

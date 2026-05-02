@@ -253,6 +253,9 @@ configure_firewall() {
     # Configure TUN inbounds (IP assignment, routing rules)
     configure_tun_inbounds
 
+    # Lock down DNS port 53 when "Prevent DNS leaks" is enabled
+    configure_dns_leak_lock
+
     # Execute custom scripts for firewall rules after start
     local fw_after_script="$ADDON_USER_SCRIPTS_DIR/firewall_after_start"
     if [ -x "$fw_after_script" ]; then
@@ -290,6 +293,55 @@ configure_inbounds() {
     if [ -n "$tproxy_inbounds" ]; then
         configure_firewall_client "TPROXY" "$tproxy_inbounds"
     fi
+}
+
+# Drop UDP/TCP destined to port 53 anywhere except the dedicated Xray DNS
+# inbound. Hooks the XRAYUI_DNS_LOCK chain into filter:OUTPUT (router
+# itself, e.g. dnsmasq forwarders) and filter:FORWARD (LAN clients that
+# slip past TPROXY).
+configure_dns_leak_lock() {
+    [ "$xray_dns_only" = "true" ] || return 0
+
+    # Mirror dnsmasq.sh discovery: either a dokodemo-door:53 (followRedirect off)
+    # or an xray "dns" protocol inbound counts as a DNS-eligible entry point.
+    local dns_inbounds
+    dns_inbounds=$(jq -r '
+        .inbounds[]
+        | select(
+            (.protocol == "dokodemo-door"
+              and (.settings and (.settings | length > 0))
+              and (.settings.followRedirect != true)
+              and ((.settings.port // 0) == 53))
+            or .protocol == "dns"
+          )
+        | "\(.listen // "127.0.0.1")#\(.port)"
+    ' "$XRAY_CONFIG_FILE" 2>/dev/null)
+
+    if [ -z "$dns_inbounds" ]; then
+        log_warn "DNS leak lock: xray_dns_only=true but no dedicated DNS inbound found; skipping firewall lock to avoid breaking name resolution"
+        return 0
+    fi
+
+    log_info "DNS leak lock: dropping UDP/TCP 53 except to dedicated DNS inbound"
+
+    for IPT in $IPT_LIST; do
+        $IPT -w -t filter -N XRAYUI_DNS_LOCK 2>/dev/null || $IPT -w -t filter -F XRAYUI_DNS_LOCK
+    done
+
+    # Drop all DNS bound for port 53. Traffic to the DNS inbound itself uses
+    # a non-53 listen port, so it's not matched here. Xray's outbound proxy
+    # leaves the router as the proxy protocol (e.g. TCP/443), not UDP 53,
+    # so legitimate proxied DNS queries are unaffected.
+    ipt filter -A XRAYUI_DNS_LOCK -p udp --dport 53 -j DROP
+    ipt filter -A XRAYUI_DNS_LOCK -p tcp --dport 53 -j DROP
+
+    # OUTPUT covers router-originated traffic (dnsmasq, system).
+    # FORWARD is a safety net for LAN clients that bypass TPROXY.
+    for hook in OUTPUT FORWARD; do
+        ipt filter -C $hook -j XRAYUI_DNS_LOCK 2>/dev/null || ipt filter -I $hook 1 -j XRAYUI_DNS_LOCK
+    done
+
+    log_ok "DNS leak lock applied"
 }
 
 configure_firewall_server() {
@@ -748,6 +800,15 @@ cleanup_firewall() {
         ipt $tbl -F XRAYUI 2>/dev/null
         ipt $tbl -X XRAYUI 2>/dev/null
     done
+
+    # Tear down the DNS leak lock (filter:OUTPUT, filter:FORWARD)
+    for hook in OUTPUT FORWARD; do
+        while ipt filter -C $hook -j XRAYUI_DNS_LOCK 2>/dev/null; do
+            ipt filter -D $hook -j XRAYUI_DNS_LOCK 2>/dev/null || break
+        done
+    done
+    ipt filter -F XRAYUI_DNS_LOCK 2>/dev/null
+    ipt filter -X XRAYUI_DNS_LOCK 2>/dev/null
 
     # destroy ipsets
     ipset list -n 2>/dev/null | awk '/^XRAYUI_/{print $1}' | while read -r s; do

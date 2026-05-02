@@ -81,12 +81,20 @@ describe('HysteriaParser', () => {
       expect(result?.streamSettings?.hysteriaSettings?.auth).toBe('secretpass');
     });
 
-    it('extracts password after colon in auth', () => {
+    it('preserves full user:password auth string', () => {
       const url = 'hysteria2://user:actualpassword@server.com:443#proxy';
       const parsed = new XrayParsedUrlObject(url);
       const result = HysteriaParser(parsed);
 
-      expect(result?.streamSettings?.hysteriaSettings?.auth).toBe('actualpassword');
+      expect(result?.streamSettings?.hysteriaSettings?.auth).toBe('user:actualpassword');
+    });
+
+    it('decodes percent-encoded auth string', () => {
+      const url = 'hy2://testtest%3AHaMMMrkZa16gKPGeKVlUW4dHv8RX1OlY@192.236.233.176:443#proxy';
+      const parsed = new XrayParsedUrlObject(url);
+      const result = HysteriaParser(parsed);
+
+      expect(result?.streamSettings?.hysteriaSettings?.auth).toBe('testtest:HaMMMrkZa16gKPGeKVlUW4dHv8RX1OlY');
     });
   });
 

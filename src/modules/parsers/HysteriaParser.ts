@@ -27,10 +27,12 @@ export default function HysteriaParser(parsedObj: XrayParsedUrlObject): XrayOutb
   }
 
   let auth = parsedObj.parsedParams.auth || parsedObj.parsedParams.password || parsedObj.uuid;
-  if (auth && auth.includes(':')) {
-    auth = auth.split(':')[1];
-  }
   if (auth) {
+    try {
+      auth = decodeURIComponent(auth);
+    } catch {
+      // keep raw value if not a valid percent-encoded string
+    }
     proxy.streamSettings.hysteriaSettings.auth = auth;
   }
 

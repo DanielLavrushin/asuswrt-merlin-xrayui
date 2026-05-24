@@ -675,43 +675,32 @@ describe('TransportObjects', () => {
     it('has correct defaults', () => {
       const hysteria = new XrayStreamHysteriaSettingsObject();
       expect(hysteria.version).toBe(2);
-      expect(hysteria.congestion).toBe('');
     });
 
-    it('has correct congestion options', () => {
-      expect(XrayStreamHysteriaSettingsObject.congestionOptions).toEqual([
-        '',
-        'reno',
-        'bbr',
-        'brutal',
-        'force-brutal'
-      ]);
-    });
-
-    it('clears empty string fields on normalize', () => {
+    it('clears empty string auth on normalize', () => {
       const hysteria = new XrayStreamHysteriaSettingsObject();
       hysteria.auth = '';
-      hysteria.congestion = '';
-      hysteria.up = '';
-      hysteria.down = '';
       hysteria.normalize();
       expect(hysteria.auth).toBeUndefined();
-      expect(hysteria.congestion).toBeUndefined();
-      expect(hysteria.up).toBeUndefined();
-      expect(hysteria.down).toBeUndefined();
     });
 
     it('retains non-empty fields', () => {
       const hysteria = new XrayStreamHysteriaSettingsObject();
       hysteria.auth = 'password123';
-      hysteria.congestion = 'bbr';
-      hysteria.up = '100';
-      hysteria.down = '200';
       hysteria.normalize();
       expect(hysteria.auth).toBe('password123');
-      expect(hysteria.congestion).toBe('bbr');
-      expect(hysteria.up).toBe('100');
-      expect(hysteria.down).toBe('200');
+    });
+
+    it('strips legacy congestion/up/down fields left over from older configs', () => {
+      const hysteria = new XrayStreamHysteriaSettingsObject();
+      hysteria.auth = 'auth';
+      (hysteria as any).congestion = 'bbr';
+      (hysteria as any).up = '100';
+      (hysteria as any).down = '200';
+      hysteria.normalize();
+      expect((hysteria as any).congestion).toBeUndefined();
+      expect((hysteria as any).up).toBeUndefined();
+      expect((hysteria as any).down).toBeUndefined();
     });
 
     it('normalizes udphop when present', () => {

@@ -611,27 +611,20 @@ export class XrayHysteriaMasqueradeObject {
 }
 
 export class XrayStreamHysteriaSettingsObject implements ITransportNetwork {
-  static readonly congestionOptions = ['', 'reno', 'bbr', 'brutal', 'force-brutal'];
-
   public version? = 2;
   public auth?: string;
-  public congestion? = '';
-  public up?: string;
-  public down?: string;
   public udphop?: XrayUdpHopObject;
   public udpIdleTimeout?: number;
   public masquerade?: XrayHysteriaMasqueradeObject;
 
-  constructor() {
-    this.version = 2;
-    this.congestion = '';
-  }
-
   normalize = (): this | undefined => {
+    // Xray-core 26.3.27+: congestion/brutalUp/brutalDown live under streamSettings.finalmask.quicParams.
+    // Strip any stale fields that may exist on objects loaded from older configs.
+    delete (this as any).congestion;
+    delete (this as any).up;
+    delete (this as any).down;
+
     this.auth = !this.auth || this.auth === '' ? undefined : this.auth;
-    this.congestion = !this.congestion || this.congestion === '' ? undefined : this.congestion;
-    this.up = !this.up || this.up === '' ? undefined : this.up;
-    this.down = !this.down || this.down === '' ? undefined : this.down;
     this.udpIdleTimeout = this.udpIdleTimeout && this.udpIdleTimeout !== 60 ? this.udpIdleTimeout : undefined;
 
     if (this.udphop && typeof this.udphop.normalize === 'function') {

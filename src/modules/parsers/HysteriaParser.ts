@@ -1,6 +1,12 @@
 import { XrayParsedUrlObject, XrayStreamSettingsObject, XrayStreamTlsSettingsObject } from '../CommonObjects';
 import { XrayOutboundObject, XrayHysteriaOutboundObject } from '../OutboundObjects';
-import { XrayStreamHysteriaSettingsObject, XrayFinalMaskObject, XrayFinalMaskSettingsObject, XraySalamanderObject } from '../TransportObjects';
+import { XrayStreamHysteriaSettingsObject, XrayFinalMaskObject, XrayFinalMaskSettingsObject, XrayQuicParamsObject, XraySalamanderObject } from '../TransportObjects';
+
+// Xray 26.3.27+ expects brutal bandwidth strings like "100 mbps".
+// URL convention: `up`/`down`/`upmbps`/`downmbps` carry a bare number in mbps.
+function toBrutalBandwidth(raw: string): string {
+  return /\D/.test(raw) ? raw : `${raw} mbps`;
+}
 
 export default function HysteriaParser(parsedObj: XrayParsedUrlObject): XrayOutboundObject<XrayHysteriaOutboundObject> | null {
   if (parsedObj.protocol !== 'hy2' && parsedObj.protocol !== 'hysteria2' && parsedObj.protocol !== 'hysteria') return null;
@@ -36,15 +42,17 @@ export default function HysteriaParser(parsedObj: XrayParsedUrlObject): XrayOutb
     proxy.streamSettings.hysteriaSettings.auth = auth;
   }
 
-  if (parsedObj.parsedParams.congestion) {
-    proxy.streamSettings.hysteriaSettings.congestion = parsedObj.parsedParams.congestion;
-  }
+  const up = parsedObj.parsedParams.up || parsedObj.parsedParams.upmbps;
+  const down = parsedObj.parsedParams.down || parsedObj.parsedParams.downmbps;
+  const congestion = parsedObj.parsedParams.congestion;
 
-  if (parsedObj.parsedParams.up || parsedObj.parsedParams.upmbps) {
-    proxy.streamSettings.hysteriaSettings.up = parsedObj.parsedParams.up || parsedObj.parsedParams.upmbps;
-  }
-  if (parsedObj.parsedParams.down || parsedObj.parsedParams.downmbps) {
-    proxy.streamSettings.hysteriaSettings.down = parsedObj.parsedParams.down || parsedObj.parsedParams.downmbps;
+  if (congestion || up || down) {
+    const quicParams = new XrayQuicParamsObject();
+    if (congestion) quicParams.congestion = congestion;
+    if (up) quicParams.brutalUp = toBrutalBandwidth(up);
+    if (down) quicParams.brutalDown = toBrutalBandwidth(down);
+    proxy.streamSettings.finalmask = new XrayFinalMaskSettingsObject();
+    proxy.streamSettings.finalmask.quicParams = quicParams;
   }
 
   const insecure = parsedObj.parsedParams.insecure === '1' || parsedObj.parsedParams.insecure === 'true';
@@ -78,7 +86,7 @@ export default function HysteriaParser(parsedObj: XrayParsedUrlObject): XrayOutb
     const salamander = new XraySalamanderObject();
     salamander.password = obfsPassword;
     finalMask.settings = salamander;
-    proxy.streamSettings.finalmask = new XrayFinalMaskSettingsObject();
+    proxy.streamSettings.finalmask ??= new XrayFinalMaskSettingsObject();
     proxy.streamSettings.finalmask.udp = [finalMask];
   }
 

@@ -11,6 +11,7 @@
 - FIXED: Hysteria2 speed and congestion control settings stopped taking effect after upgrading Xray to 26.3.27 or newer. Now stored where the new Xray expects them. ([#347](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/347)) **Note:** after updating, please re-enter your Hysteria2 speed (up/down) and congestion values once.
 - ADDED: Wireguard outbound settings are now fully translated into Russian, Ukrainian, German, and Simplified Chinese.
 - FIXED: Installing or updating XRAYUI could run the router out of memory on devices with limited RAM. Large downloads are now staged on the USB drive instead of router RAM.
+- FIXED: If you set a GitHub proxy in General Options, the **XRAYUI update check** and the **Xray-core version list** still went directly to GitHub and would silently fail in regions where GitHub is blocked. Both now respect the configured proxy and fall back to a direct connection if the proxy doesn't respond.
 
 ## [0.66.5] - 2026-04-12
 

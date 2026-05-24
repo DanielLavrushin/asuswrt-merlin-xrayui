@@ -330,6 +330,26 @@ export class Engine {
     document.cookie = name + '=; expires=' + date.toUTCString() + '; path=/';
   };
 
+  public githubProxyUrl = (url: string, proxy: string | undefined | null): string => {
+    if (!url || !proxy || proxy === 'null') return url;
+    if (!url.includes('github.com')) return url;
+    return proxy + url;
+  };
+
+  public async fetchGithubJson<T = any>(url: string, proxy: string | undefined | null, config?: any): Promise<T> {
+    const proxied = this.githubProxyUrl(url, proxy);
+    if (proxied !== url) {
+      try {
+        const r = await axios.get<T>(proxied, config);
+        return r.data;
+      } catch (e) {
+        console.warn('[xrayui] github proxy failed, falling back to direct:', proxied, e);
+      }
+    }
+    const r = await axios.get<T>(url, config);
+    return r.data;
+  }
+
   public submit(action: string, payload: object | string | number | null | undefined = undefined, delay = 1000): Promise<void> {
     return new Promise((resolve) => {
       const iframeName = 'hidden_frame_' + Math.random().toString(36).substring(2, 9);

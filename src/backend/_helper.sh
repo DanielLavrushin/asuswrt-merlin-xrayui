@@ -194,7 +194,17 @@ remove_json_comments() {
     echo $tempconfig
 }
 
+XRAYUI_STAGING_DIR="/tmp/xrayui-staging"
+
 reconstruct_payload() {
+
+    local session
+    session=$(am_settings_get xray_staged_session)
+
+    if [ -n "$session" ]; then
+        reconstruct_staged_payload "$session"
+        return
+    fi
 
     local idx=0
     local chunk
@@ -210,13 +220,159 @@ reconstruct_payload() {
 
     cleanup_payload
 
-    echo "$payload"
+    decode_payload "$payload"
 
+}
+
+# Decompress payloads that carry a "gz:" magic prefix (base64-encoded gzip from the frontend).
+# Anything without the prefix is returned unchanged so legacy callers keep working.
+# Called via $(...) — only data goes to stdout, errors to stderr.
+decode_payload() {
+    local raw="$1"
+    case "$raw" in
+        gz:*)
+            local decoded
+            decoded=$(printf '%s' "${raw#gz:}" | base64 -d 2>/dev/null | gunzip 2>/dev/null)
+            if [ -z "$decoded" ]; then
+                log_error "decode_payload: failed to decompress gz: payload (base64/gunzip pipeline failed or produced empty output)" >&2
+                return 1
+            fi
+            printf '%s' "$decoded"
+            ;;
+        *)
+            printf '%s' "$raw"
+            ;;
+    esac
+}
+
+reconstruct_staged_payload() {
+    # NOTE: this function is called via $(...) substitution; ALL log output MUST go to stderr,
+    # otherwise it gets captured as part of the returned payload and corrupts the assembled JSON.
+    local session="$1"
+    local safe_session
+    safe_session=$(printf '%s' "$session" | tr -cd 'A-Za-z0-9_-' | cut -c1-64)
+
+    if [ -z "$safe_session" ] || [ "$safe_session" != "$session" ]; then
+        log_error "Invalid staged session id: '$session'" >&2
+        cleanup_staged_marker >&2
+        return 1
+    fi
+
+    local dir="$XRAYUI_STAGING_DIR/$safe_session"
+    if [ ! -d "$dir" ]; then
+        log_error "Staged session directory missing: $dir" >&2
+        cleanup_staged_marker >&2
+        return 1
+    fi
+
+    local total
+    total=$(cat "$dir/total" 2>/dev/null)
+    if [ -z "$total" ] || ! [ "$total" -gt 0 ] 2>/dev/null; then
+        log_error "Staged session $safe_session has invalid total: '$total'" >&2
+        cleanup_staging "$safe_session" >&2
+        cleanup_staged_marker >&2
+        return 1
+    fi
+
+    local tmp_assembly="/tmp/xrayui-staged-assembly.$$"
+    : >"$tmp_assembly"
+
+    local idx=0
+    while [ "$idx" -lt "$total" ]; do
+        local chunk_file="$dir/chunk-$idx"
+        if [ ! -f "$chunk_file" ]; then
+            log_error "Staged chunk $idx of $total missing for session $safe_session" >&2
+            rm -f "$tmp_assembly"
+            cleanup_staging "$safe_session" >&2
+            cleanup_staged_marker >&2
+            return 1
+        fi
+        cat "$chunk_file" >>"$tmp_assembly"
+        idx=$((idx + 1))
+    done
+
+    local assembled_size
+    assembled_size=$(wc -c <"$tmp_assembly" 2>/dev/null)
+    log_info "reconstruct_staged_payload: session $safe_session, $total chunks → $assembled_size bytes assembled" >&2
+
+    cleanup_staging "$safe_session" >&2
+    cleanup_staged_marker >&2
+    cleanup_payload >&2
+
+    local assembled
+    assembled=$(cat "$tmp_assembly")
+    rm -f "$tmp_assembly"
+    decode_payload "$assembled"
 }
 
 cleanup_payload() {
     # clean up all payload chunks from the custom settings
     sed '/^xray_payload/d' /jffs/addons/custom_settings.txt >/tmp/custom_settings.$$ && mv /tmp/custom_settings.$$ /jffs/addons/custom_settings.txt
+}
+
+cleanup_staged_marker() {
+    sed '/^xray_staged_session/d;/^xray_stage_/d' /jffs/addons/custom_settings.txt >/tmp/custom_settings.$$ && mv /tmp/custom_settings.$$ /jffs/addons/custom_settings.txt
+}
+
+cleanup_staging() {
+    local session="$1"
+    if [ -n "$session" ]; then
+        rm -rf "$XRAYUI_STAGING_DIR/$session"
+    fi
+    # sweep stale sessions older than 5 minutes
+    if [ -d "$XRAYUI_STAGING_DIR" ]; then
+        find "$XRAYUI_STAGING_DIR" -maxdepth 1 -mindepth 1 -type d -mmin +5 -exec rm -rf {} \; 2>/dev/null
+    fi
+}
+
+stage_chunk() {
+    local session
+    local index
+    local total
+    local data
+
+    session=$(am_settings_get xray_stage_session)
+    index=$(am_settings_get xray_stage_index)
+    total=$(am_settings_get xray_stage_total)
+    data=$(am_settings_get xray_stage_data)
+
+    local safe_session
+    safe_session=$(printf '%s' "$session" | tr -cd 'A-Za-z0-9_-' | cut -c1-64)
+
+    if [ -z "$safe_session" ] || [ "$safe_session" != "$session" ]; then
+        log_error "stage_chunk: invalid session id: '$session'"
+        cleanup_staged_marker
+        return 1
+    fi
+
+    if ! [ "$index" -ge 0 ] 2>/dev/null || ! [ "$total" -gt 0 ] 2>/dev/null; then
+        log_error "stage_chunk: invalid index/total ($index/$total) for session $safe_session"
+        cleanup_staged_marker
+        return 1
+    fi
+
+    if [ "$index" -ge "$total" ]; then
+        log_error "stage_chunk: index $index out of range (total $total)"
+        cleanup_staged_marker
+        return 1
+    fi
+
+    mkdir -p "$XRAYUI_STAGING_DIR/$safe_session"
+    chmod 700 "$XRAYUI_STAGING_DIR" "$XRAYUI_STAGING_DIR/$safe_session" 2>/dev/null
+
+    echo "$total" >"$XRAYUI_STAGING_DIR/$safe_session/total"
+    printf '%s' "$data" >"$XRAYUI_STAGING_DIR/$safe_session/chunk-$index"
+
+    local stored_size
+    stored_size=$(wc -c <"$XRAYUI_STAGING_DIR/$safe_session/chunk-$index" 2>/dev/null)
+    log_info "stage_chunk: stored chunk $index/$total ($stored_size bytes) for session $safe_session"
+
+    cleanup_staged_marker
+
+    # opportunistic sweep of stale sessions
+    find "$XRAYUI_STAGING_DIR" -maxdepth 1 -mindepth 1 -type d -mmin +5 -exec rm -rf {} \; 2>/dev/null
+
+    return 0
 }
 
 load_ui_response() {

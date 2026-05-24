@@ -12,6 +12,7 @@
 - ADDED: Wireguard outbound settings are now fully translated into Russian, Ukrainian, German, and Simplified Chinese.
 - FIXED: Installing or updating XRAYUI could run the router out of memory on devices with limited RAM. Large downloads are now staged on the USB drive instead of router RAM.
 - FIXED: If you set a GitHub proxy in General Options, the **XRAYUI update check** and the **Xray-core version list** still went directly to GitHub and would silently fail in regions where GitHub is blocked. Both now respect the configured proxy and fall back to a direct connection if the proxy doesn't respond.
+- FIXED: Saving a large Xray configuration could fail with a "Configuration is too large to submit" error on the **Apply** button. Configurations are now compressed before being uploaded, which lets typical configurations stay on the fast single-request path even when they grow large. Truly oversized configurations transparently fall back to a multi-part upload, so there is effectively no size limit.
 
 ## [0.66.5] - 2026-04-12
 

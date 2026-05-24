@@ -227,6 +227,10 @@ service_event)
             update_loading_progress "Configuration applied successfully." 100
             exit 0
             ;;
+        stagechunk)
+            stage_chunk
+            exit 0
+            ;;
         sbscrpts)
             case "$4" in
             fetchprotocols)

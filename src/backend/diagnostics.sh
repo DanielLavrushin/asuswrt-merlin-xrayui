@@ -132,9 +132,6 @@ diagnostics_iptables() {
     for tbl in mangle filter; do
         for ch in PREROUTING INPUT FORWARD OUTPUT; do
             if iptables -w -t "$tbl" -C "$ch" -j XRAYUI 2>/dev/null; then
-                # Sum hits and count refs across all -j XRAYUI rules in the
-                # chain so duplicated hooks (a past bug — see firewall.sh)
-                # are visible instead of hidden by an `exit` on the first hit.
                 stats=$(iptables -w -t "$tbl" -nvL "$ch" |
                     awk '$3=="XRAYUI" {p+=$1; b+=$2; n++} END {printf "refs=%d pkts=%d bytes=%d", n+0, p+0, b+0}')
                 echo "$tbl/$ch  $stats"

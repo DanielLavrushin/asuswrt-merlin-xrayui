@@ -195,7 +195,6 @@ configure_firewall() {
 
     configure_firewall_server
 
-    # Hook filter-table XRAYUI (idempotent — repeated reconfigs must not duplicate)
     ipt filter -C INPUT -j XRAYUI 2>/dev/null || ipt filter -I INPUT 1 -j XRAYUI
     ipt filter -C FORWARD -j XRAYUI 2>/dev/null || ipt filter -I FORWARD 1 -j XRAYUI
 
@@ -800,8 +799,6 @@ cleanup_firewall() {
 
     for tbl in filter mangle nat; do
         for hook in INPUT FORWARD PREROUTING OUTPUT; do
-            # Loop the delete so stray duplicates from prior buggy runs get
-            # swept up; a single -D would only remove the first match.
             while ipt $tbl -C $hook -j XRAYUI 2>/dev/null; do
                 ipt $tbl -D $hook -j XRAYUI 2>/dev/null || break
             done
@@ -832,9 +829,6 @@ cleanup_firewall() {
         ipt mangle -D OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null || break
     done
 
-    # owner-uid OUTPUT RETURN — added when xray runs as non-root. The UID isn't
-    # known at cleanup time (xray may be stopping), so match by rule signature
-    # via -S and convert -A to -D.
     for IPT in $IPT_LIST; do
         $IPT -w -t mangle -S OUTPUT 2>/dev/null |
             grep -E -- '^-A OUTPUT -m owner --uid-owner [0-9]+ -j RETURN' |

@@ -517,7 +517,6 @@
   const hasDnsInbound = computed(() => {
     return (
       props.config.inbounds?.some((i) => {
-        if (i.protocol === XrayProtocol.DNS) return true;
         if (i.protocol !== XrayProtocol.DOKODEMODOOR) return false;
         const s = i.settings as XrayDokodemoDoorInboundObject | undefined;
         return !!s && s.followRedirect !== true && Number(s.port) === 53;

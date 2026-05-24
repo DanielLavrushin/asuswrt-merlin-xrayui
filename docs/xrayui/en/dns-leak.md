@@ -79,10 +79,6 @@ Your main inbound (e.g., dokodemo-door with `Follow redirect` = ON) is for trans
 
 ### Create a dedicated DNS inbound
 
-XRAYUI accepts **either** of two inbound shapes as a valid DNS entry point:
-
-**Pattern A — `dokodemo-door` (transparent forwarder)**
-
 Add a new DOKODEMO inbound:
 
 - Port: choose a local port for DNS inbound (e.g., 55100)
@@ -96,12 +92,6 @@ Add a new DOKODEMO inbound:
 
 > [!note]
 > Notice the checkbox `Follow redirect` is unchecked. This is important setting to make DNS not to leak. Dont't turn it on for this inbound configuration.
-
-**Pattern B — xray `dns` protocol inbound (lighter alternative)**
-
-If you prefer xray to handle DNS internally via its `dns.servers[]` block, you can use the `dns` protocol inbound instead. Add an inbound with `protocol: "dns"` (e.g., on port 5353), populate `dns.servers[]` at the top of the config, and add a routing rule that sends the dns inbound's tag to your proxy outbound. This skips the tproxy step entirely — xray's DNS subsystem resolves queries using `dns.servers[]` and the answers travel through the proxy outbound.
-
-Either pattern satisfies the "Prevent DNS leaks" guard. The rest of this guide assumes Pattern A; if you went with Pattern B, you can skip the next section (transport/tproxy) since `dns` inbounds don't need it.
 
 ### Configure transport (tproxy) and dialer
 

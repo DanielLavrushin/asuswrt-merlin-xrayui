@@ -302,18 +302,14 @@ configure_inbounds() {
 configure_dns_leak_lock() {
     [ "$xray_dns_only" = "true" ] || return 0
 
-    # Mirror dnsmasq.sh discovery: either a dokodemo-door:53 (followRedirect off)
-    # or an xray "dns" protocol inbound counts as a DNS-eligible entry point.
+    # Mirror dnsmasq.sh discovery: dokodemo-door, port 53, follow redirect off.
     local dns_inbounds
     dns_inbounds=$(jq -r '
         .inbounds[]
-        | select(
-            (.protocol == "dokodemo-door"
-              and (.settings and (.settings | length > 0))
-              and (.settings.followRedirect != true)
-              and ((.settings.port // 0) == 53))
-            or .protocol == "dns"
-          )
+        | select(.protocol == "dokodemo-door")
+        | select(.settings and (.settings | length > 0))
+        | select(.settings.followRedirect != true)
+        | select((.settings.port // 0) == 53)
         | "\(.listen // "127.0.0.1")#\(.port)"
     ' "$XRAY_CONFIG_FILE" 2>/dev/null)
 

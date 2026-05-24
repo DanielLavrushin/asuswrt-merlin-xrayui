@@ -43,12 +43,11 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref } from 'vue';
+  import { defineComponent, ref, inject, Ref, watch } from 'vue';
   import Modal from '@main/Modal.vue';
-  import axios from 'axios';
   import vClean from 'version-clean';
   import vCompare from 'version-compare';
-  import engine, { SubmitActions } from '@/modules/Engine';
+  import engine, { SubmitActions, EngineResponseConfig } from '@/modules/Engine';
   import markdownit from 'markdown-it';
 
   export default defineComponent({
@@ -70,13 +69,13 @@
       const hasUpdate = ref(false);
       const changelog = ref<string>('');
       const refusedToUpdateVersion = ref(engine.getCookie(COOKIE_NAME));
+      const ui = inject<Ref<EngineResponseConfig>>('uiResponse');
 
-      setTimeout(async () => {
+      const checkLatest = async (proxy?: string) => {
         const gh_releases_url = 'https://api.github.com/repos/daniellavrushin/asuswrt-merlin-xrayui/releases/latest';
-
-        const response = await axios.get(gh_releases_url);
-        const latestRelease = response.data;
-        if (latestRelease) {
+        try {
+          const latestRelease = await engine.fetchGithubJson<any>(gh_releases_url, proxy);
+          if (!latestRelease) return;
           latest_version.value = vClean(latestRelease.tag_name)!;
           hasUpdate.value = vCompare(latest_version.value, current_version.value) === 1;
           if (hasUpdate.value === true) {
@@ -85,10 +84,25 @@
               updateModal.value.show();
             }
           }
-
           changelog.value = md.render(latestRelease.body);
+        } catch (e) {
+          console.warn('[xrayui] failed to load latest release info:', e);
         }
-      }, 2000);
+      };
+
+      const stop = watch(
+        () => ui?.value?.xray,
+        (x) => {
+          if (!x) return;
+          stop();
+          checkLatest(x.github_proxy);
+        },
+        { immediate: true }
+      );
+
+      setTimeout(() => {
+        if (!latest_version.value && !ui?.value?.xray) checkLatest();
+      }, 8000);
 
       const open_update = () => {
         updateModal.value.show();

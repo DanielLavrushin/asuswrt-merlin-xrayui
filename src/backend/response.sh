@@ -238,7 +238,8 @@ apply_config() {
     update_loading_progress "Checking incoming configuration..." 5
 
     if [ -z "$incoming_config" ]; then
-        log_info "No new server configuration provided."
+        log_error "No new server configuration provided (reconstruct_payload returned empty)."
+        update_loading_progress "Error: incoming configuration is empty or upload failed." 100
         exit 1
     fi
 
@@ -248,12 +249,16 @@ apply_config() {
     echo "$incoming_config" >"$temp_config"
     if [ $? -ne 0 ]; then
         log_error "Failed to write incoming configuration to $temp_config."
+        update_loading_progress "Error: failed to write incoming configuration." 100
         exit 1
     fi
 
     jq empty "$temp_config" >/dev/null 2>&1
     if [ $? -ne 0 ]; then
-        log_error "Invalid JSON format in incoming server configuration."
+        local debug_copy="/tmp/xray_server_config_invalid.json"
+        cp "$temp_config" "$debug_copy" 2>/dev/null
+        log_error "Invalid JSON format in incoming server configuration ($(wc -c <"$temp_config") bytes). Bad copy preserved at $debug_copy"
+        update_loading_progress "Error: configuration upload was corrupted (invalid JSON). Try again." 100
         rm -f "$temp_config"
         exit 1
     fi

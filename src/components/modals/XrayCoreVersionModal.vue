@@ -60,11 +60,10 @@
 </template>
 
 <script lang="ts">
-  import { computed, defineComponent, nextTick, ref } from 'vue';
-  import axios from 'axios';
+  import { computed, defineComponent, nextTick, ref, inject, Ref } from 'vue';
   import Modal from '@main/Modal.vue';
   import Hint from '@main/Hint.vue';
-  import engine, { SubmitActions } from '@/modules/Engine';
+  import engine, { SubmitActions, EngineResponseConfig } from '@/modules/Engine';
   import { useI18n } from 'vue-i18n';
 
   interface XrayVersion {
@@ -91,6 +90,7 @@
     },
     setup(props) {
       const { t } = useI18n();
+      const ui = inject<Ref<EngineResponseConfig>>('uiResponse');
       const modal = ref<InstanceType<typeof Modal> | null>(null);
       const custom_input = ref<HTMLInputElement | null>(null);
       const selected_url = ref<string>('');
@@ -114,9 +114,11 @@
 
       const load_xray_versions = async () => {
         try {
-          const response = await axios.get('https://api.github.com/repos/XTLS/Xray-core/releases', { params: { per_page: 30 } });
-
-          xray_versions.value = response.data
+          const releases = await engine.fetchGithubJson<any[]>(
+            'https://api.github.com/repos/XTLS/Xray-core/releases?per_page=30',
+            ui?.value?.xray?.github_proxy
+          );
+          xray_versions.value = releases
             .filter((release: any) => !release.draft)
             .slice(0, VERSIONS_TO_SHOW)
             .map((release: any) => ({

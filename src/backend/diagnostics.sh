@@ -84,53 +84,57 @@ diagnostics_iptables() {
     log_info
 
     log_info $(diagnostics_hdr "raw/PREROUTING (v4):")
-    iptables -w -t raw -nvL PREROUTING --line-numbers
+    iptables -w -t raw -nvL PREROUTING --line-numbers 2>&1
     log_info "--------------------------------------------------------"
     log_info
 
     log_info $(diagnostics_hdr "raw/OUTPUT    (v4):")
-    iptables -t raw -nvL OUTPUT --line-numbers
+    iptables -w -t raw -nvL OUTPUT --line-numbers 2>&1
     log_info "--------------------------------------------------------"
     log_info
 
     log_info $(diagnostics_hdr "iptables -t nat -nvL PREROUTING:")
-    iptables -t nat -nvL PREROUTING --line-numbers 2>&1
+    iptables -w -t nat -nvL PREROUTING --line-numbers 2>&1
     log_info "--------------------------------------------------------"
     log_info
 
     log_info $(diagnostics_hdr "iptables -t nat -nvL XRAYUI:")
-    iptables -t nat -nvL XRAYUI --line-numbers 2>&1
+    iptables -w -t nat -nvL XRAYUI --line-numbers 2>&1
+    log_info "--------------------------------------------------------"
+    log_info
+
+    log_info $(diagnostics_hdr "iptables -t filter -nvL XRAYUI:")
+    iptables -w -t filter -nvL XRAYUI --line-numbers 2>&1
     log_info "--------------------------------------------------------"
     log_info
 
     log_info $(diagnostics_hdr "iptables -t mangle -nvL PREROUTING:")
-    iptables -t mangle -nvL PREROUTING --line-numbers 2>&1
+    iptables -w -t mangle -nvL PREROUTING --line-numbers 2>&1
     log_info "--------------------------------------------------------"
     log_info
 
     log_info $(diagnostics_hdr "iptables -t mangle -nvL XRAYUI:")
-    iptables -t mangle -nvL XRAYUI --line-numbers 2>&1
+    iptables -w -t mangle -nvL XRAYUI --line-numbers 2>&1
     log_info "--------------------------------------------------------"
     log_info
 
     log_info $(diagnostics_hdr "iptables -t mangle -nvL OUTPUT:")
-    iptables -t mangle -nvL OUTPUT --line-numbers 2>&1
+    iptables -w -t mangle -nvL OUTPUT --line-numbers 2>&1
     log_info "--------------------------------------------------------"
     log_info
 
     log_info $(diagnostics_hdr "iptables -t mangle -L XRAYUI --line-numbers:")
-    iptables -t mangle -L XRAYUI --line-numbers 2>&1
+    iptables -w -t mangle -L XRAYUI --line-numbers 2>&1
     log_info "--------------------------------------------------------"
     log_info
 
     log_info $(diagnostics_hdr "PREROUTING INPUT FORWARD OUTPUT:")
     for tbl in mangle filter; do
         for ch in PREROUTING INPUT FORWARD OUTPUT; do
-            if iptables -t "$tbl" -C "$ch" -j XRAYUI 2>/dev/null; then
-                hits=$(iptables -t "$tbl" -nvL "$ch" |
-                    awk '$3=="XRAYUI" {print $1, $2; exit}')
-                hits=${hits:-"0 0"}
-                echo "$tbl/$ch  hits: $hits"
+            if iptables -w -t "$tbl" -C "$ch" -j XRAYUI 2>/dev/null; then
+                stats=$(iptables -w -t "$tbl" -nvL "$ch" |
+                    awk '$3=="XRAYUI" {p+=$1; b+=$2; n++} END {printf "refs=%d pkts=%d bytes=%d", n+0, p+0, b+0}')
+                echo "$tbl/$ch  $stats"
             fi
         done
     done
@@ -159,33 +163,33 @@ diagnostics_iptables() {
     if is_ipv6_enabled; then
 
         log_info $(diagnostics_hdr "ip6tables -t mangle -nvL PREROUTING:")
-        ip6tables -t mangle -nvL PREROUTING --line-numbers 2>&1
+        ip6tables -w -t mangle -nvL PREROUTING --line-numbers 2>&1
         log_info "--------------------------------------------------------"
         log_info
 
         log_info $(diagnostics_hdr "ip6tables -t nat -nvL XRAYUI:")
-        ip6tables -t nat -nvL XRAYUI --line-numbers 2>&1
+        ip6tables -w -t nat -nvL XRAYUI --line-numbers 2>&1
         log_info "--------------------------------------------------------"
         log_info
 
         log_info $(diagnostics_hdr "ip6tables -t filter -nvL XRAYUI:")
-        ip6tables -t filter -nvL XRAYUI --line-numbers 2>&1
+        ip6tables -w -t filter -nvL XRAYUI --line-numbers 2>&1
         log_info "--------------------------------------------------------"
         log_info
 
         log_info $(diagnostics_hdr "ip6tables -t mangle -nvL XRAYUI:")
-        ip6tables -t mangle -nvL XRAYUI --line-numbers 2>&1
+        ip6tables -w -t mangle -nvL XRAYUI --line-numbers 2>&1
         log_info "--------------------------------------------------------"
         log_info
 
         log_info $(diagnostics_hdr "ip6tables -t mangle -L XRAYUI --line-numbers:")
-        ip6tables -t mangle -L XRAYUI --line-numbers 2>&1
+        ip6tables -w -t mangle -L XRAYUI --line-numbers 2>&1
         log_info "--------------------------------------------------------"
         log_info
     fi
 
     log_info $(diagnostics_hdr "ip route show table main:")
-    ip route show table main 2 >&1
+    ip route show table main 2>&1
     log_info "--------------------------------------------------------"
     log_info
 

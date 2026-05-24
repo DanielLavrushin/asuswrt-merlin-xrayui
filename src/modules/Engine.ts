@@ -7,6 +7,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import axios, { AxiosError } from 'axios';
+import { gzip } from 'pako';
 import { xrayConfig, XrayObject } from './XrayConfig';
 import {
   XrayBlackholeOutboundObject,
@@ -252,6 +253,7 @@ export class GeodatTagRequest {
 export enum SubmitActions {
   configurationSetMode = 'xrayui_configuration_mode',
   configurationApply = 'xrayui_configuration_apply',
+  configurationStageChunk = 'xrayui_configuration_stagechunk',
   clientsOnline = 'xrayui_connectedclients',
   refreshConfig = 'xrayui_refreshconfig',
   serverStart = 'xrayui_serverstatus_start',
@@ -330,7 +332,73 @@ export class Engine {
     document.cookie = name + '=; expires=' + date.toUTCString() + '; path=/';
   };
 
-  public submit(action: string, payload: object | string | number | null | undefined = undefined, delay = 1000): Promise<void> {
+  public githubProxyUrl = (url: string, proxy: string | undefined | null): string => {
+    if (!url || !proxy || proxy === 'null') return url;
+    try {
+      const { hostname } = new URL(url);
+      if (hostname !== 'github.com' && !hostname.endsWith('.github.com')) return url;
+      return proxy + url;
+    } catch {
+      return url;
+    }
+  };
+
+  public async fetchGithubJson<T = any>(url: string, proxy: string | undefined | null, config?: any): Promise<T> {
+    const proxied = this.githubProxyUrl(url, proxy);
+    if (proxied !== url) {
+      try {
+        const r = await axios.get<T>(proxied, config);
+        return r.data;
+      } catch (e) {
+        console.warn('[xrayui] github proxy failed, falling back to direct:', proxied, e);
+      }
+    }
+    const r = await axios.get<T>(url, config);
+    return r.data;
+  }
+
+  private readonly amngCustomLimit = 8 * 1024;
+  private readonly nvramChunkSize = 2048;
+  private readonly stagingChunkSize = 2048;
+  private readonly stagingInterChunkDelay = 1200;
+
+  public async submit(action: string, payload: object | string | number | null | undefined = undefined, delay = 1000): Promise<void> {
+    if (payload === undefined || payload === null) {
+      return this.postForm(action, false, delay);
+    }
+
+    const payloadString = this.compressPayload(JSON.stringify(payload));
+    const chunks = this.splitPayload(payloadString, this.nvramChunkSize);
+    chunks.forEach((chunk: string, idx) => {
+      window.xray.custom_settings[`xray_payload${idx}`] = chunk;
+    });
+
+    const serialized = JSON.stringify(window.xray.custom_settings);
+    if (serialized.length <= this.amngCustomLimit) {
+      return this.postForm(action, true, delay);
+    }
+
+    // payload too large for single POST; fall back to chunked staging
+    chunks.forEach((_, idx) => {
+      delete window.xray.custom_settings[`xray_payload${idx}`];
+    });
+    return this.submitStaged(action, payloadString, delay);
+  }
+
+  private compressPayload(raw: string): string {
+    if (raw.length < 512) return raw;
+    try {
+      const compressed = gzip(raw);
+      let binary = '';
+      for (const b of compressed) binary += String.fromCodePoint(b);
+      const encoded = 'gz:' + btoa(binary);
+      return encoded.length < raw.length ? encoded : raw;
+    } catch {
+      return raw;
+    }
+  }
+
+  private postForm(action: string, includeCustomSettings: boolean, delay: number): Promise<void> {
     return new Promise((resolve) => {
       const iframeName = 'hidden_frame_' + Math.random().toString(36).substring(2, 9);
       const iframe = document.createElement('iframe');
@@ -348,24 +416,13 @@ export class Engine {
       this.create_form_element(form, 'hidden', 'action_script', action);
       this.create_form_element(form, 'hidden', 'modified', '0');
       this.create_form_element(form, 'hidden', 'action_wait', '');
-      const amngCustomInput = document.createElement('input');
-      if (payload) {
-        const chunkSize = 2048;
-        const payloadString = JSON.stringify(payload);
-        const chunks = this.splitPayload(payloadString, chunkSize);
-        chunks.forEach((chunk: string, idx) => {
-          window.xray.custom_settings[`xray_payload${idx}`] = chunk;
-        });
 
-        const customSettings = JSON.stringify(window.xray.custom_settings);
-        if (customSettings.length > 8 * 1024) {
-          alert('Configuration is too large to submit via custom settings.');
-          throw new Error('Configuration is too large to submit via custom settings.');
-        }
-
+      let amngCustomInput: HTMLInputElement | null = null;
+      if (includeCustomSettings) {
+        amngCustomInput = document.createElement('input');
         amngCustomInput.type = 'hidden';
         amngCustomInput.name = 'amng_custom';
-        amngCustomInput.value = customSettings;
+        amngCustomInput.value = JSON.stringify(window.xray.custom_settings);
         form.appendChild(amngCustomInput);
       }
 
@@ -380,10 +437,61 @@ export class Engine {
         }, delay);
       };
       form.submit();
-      if (form.contains(amngCustomInput)) {
+      if (amngCustomInput && form.contains(amngCustomInput)) {
         form.removeChild(amngCustomInput);
       }
     });
+  }
+
+  private async submitStaged(action: string, payloadString: string, delay: number): Promise<void> {
+    const stageKeys = ['xray_stage_session', 'xray_stage_index', 'xray_stage_total', 'xray_stage_data', 'xray_staged_session'];
+    const stripStaleKeys = () => {
+      Object.keys(window.xray.custom_settings).forEach((k) => {
+        if (k.startsWith('xray_payload') || stageKeys.includes(k)) {
+          delete (window.xray.custom_settings as Record<string, unknown>)[k];
+        }
+      });
+    };
+
+    stripStaleKeys();
+
+    const chunks = this.splitPayload(payloadString, this.stagingChunkSize);
+    const session = this.generateSessionId();
+
+    try {
+      for (let idx = 0; idx < chunks.length; idx++) {
+        window.xray.custom_settings.xray_stage_session = session;
+        window.xray.custom_settings.xray_stage_index = String(idx);
+        window.xray.custom_settings.xray_stage_total = String(chunks.length);
+        window.xray.custom_settings.xray_stage_data = chunks[idx];
+
+        const serialized = JSON.stringify(window.xray.custom_settings);
+        if (serialized.length > this.amngCustomLimit) {
+          throw new Error(
+            `Staged chunk ${idx + 1}/${chunks.length} (${serialized.length} bytes) exceeds the ${this.amngCustomLimit}-byte ` +
+              `amng_custom limit. Other custom settings are leaving too little headroom for the upload.`
+          );
+        }
+
+        await this.postForm(SubmitActions.configurationStageChunk, true, this.stagingInterChunkDelay);
+      }
+
+      delete window.xray.custom_settings.xray_stage_session;
+      delete window.xray.custom_settings.xray_stage_index;
+      delete window.xray.custom_settings.xray_stage_total;
+      delete window.xray.custom_settings.xray_stage_data;
+      window.xray.custom_settings.xray_staged_session = session;
+
+      await this.postForm(action, true, delay);
+    } finally {
+      stripStaleKeys();
+    }
+  }
+
+  private generateSessionId(): string {
+    const ts = Date.now().toString(36);
+    const rand = Math.random().toString(36).slice(2, 10);
+    return `s${ts}${rand}`;
   }
 
   create_form_element = (form: HTMLFormElement, type: string, name: string, value: string): HTMLInputElement => {

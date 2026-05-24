@@ -40,9 +40,9 @@
                               <simple-mode v-if="isSimple" @show-sniffing="show_sniffing"></simple-mode>
                               <inbounds v-if="isAdvanced" @show-transport="show_transport" @show-sniffing="show_sniffing"></inbounds>
                               <outbounds v-if="isAdvanced" @show-transport="show_transport"></outbounds>
+                              <routing v-if="isAdvanced"></routing>
                               <dns v-if="isAdvanced"></dns>
                               <reverse-proxy v-if="isAdvanced"></reverse-proxy>
-                              <routing v-if="isAdvanced"></routing>
                               <sniffing-modal ref="sniffingModal" />
                               <stream-settings-modal ref="transportModal" />
                               <div class="apply_gen">

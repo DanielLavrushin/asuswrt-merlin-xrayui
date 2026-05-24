@@ -165,7 +165,8 @@ configure_firewall() {
     fi
 
     # Clamp TCP MSS to path-MTU for every forwarded SYN (v4 + v6)
-    ipt mangle -I FORWARD 1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+    ipt mangle -C FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null ||
+        ipt mangle -I FORWARD 1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 
     # create / flush chains (filter + mangle for both families)
     for tbl in filter mangle nat; do
@@ -194,9 +195,8 @@ configure_firewall() {
 
     configure_firewall_server
 
-    # Hook filter-table XRAYUI
-    ipt filter -I INPUT 1 -j XRAYUI
-    ipt filter -I FORWARD 1 -j XRAYUI
+    ipt filter -C INPUT -j XRAYUI 2>/dev/null || ipt filter -I INPUT 1 -j XRAYUI
+    ipt filter -C FORWARD -j XRAYUI 2>/dev/null || ipt filter -I FORWARD 1 -j XRAYUI
 
     # Clamp MSS for Xray-originated flows as well
     local daemon_uid=""
@@ -204,11 +204,13 @@ configure_firewall() {
 
     for IPT in $IPT_LIST; do
         if [ -n "$daemon_uid" ] && [ "$daemon_uid" != "0" ]; then
-            $IPT -t mangle -I OUTPUT 1 -m owner --uid-owner "$daemon_uid" -j RETURN
+            $IPT -w -t mangle -C OUTPUT -m owner --uid-owner "$daemon_uid" -j RETURN 2>/dev/null ||
+                $IPT -w -t mangle -I OUTPUT 1 -m owner --uid-owner "$daemon_uid" -j RETURN
         else
             log_debug "X-ray runs as UID $daemon_uid; skipping owner-match OUTPUT rule"
         fi
-        $IPT -t mangle -I OUTPUT 1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+        $IPT -w -t mangle -C OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null ||
+            $IPT -w -t mangle -I OUTPUT 1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
     done
 
     SERVER_IPS=""
@@ -465,6 +467,8 @@ configure_firewall_client() {
         ipt $IPT_TABLE -I XRAYUI 1 -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
         ipt $IPT_TABLE -I XRAYUI 2 -p tcp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
 
+        insert_rule filter -m mark --mark $tproxy_mark/$tproxy_mask -j ACCEPT
+
         iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -m addrtype --src-type LOCAL -j RETURN
         iptables -w -t "$IPT_TABLE" -I XRAYUI 2 -m addrtype --dst-type LOCAL -j RETURN
 
@@ -670,6 +674,11 @@ configure_firewall_client() {
             continue
         fi
 
+        if [ "$IPT_TYPE" = "DIRECT" ]; then
+            [ "$tcp_enabled" = "yes" ] && insert_rule filter -m addrtype --dst-type LOCAL -p tcp --dport "$dokodemo_port" -j ACCEPT
+            [ "$udp_enabled" = "yes" ] && insert_rule filter -m addrtype --dst-type LOCAL -p udp --dport "$dokodemo_port" -j ACCEPT
+        fi
+
         # Apply policy rules
         log_info "Apply $IPT_TYPE rules for inbound on port $dokodemo_port with protocols '$protocols'."
 
@@ -790,7 +799,9 @@ cleanup_firewall() {
 
     for tbl in filter mangle nat; do
         for hook in INPUT FORWARD PREROUTING OUTPUT; do
-            ipt $tbl -D $hook -j XRAYUI 2>/dev/null
+            while ipt $tbl -C $hook -j XRAYUI 2>/dev/null; do
+                ipt $tbl -D $hook -j XRAYUI 2>/dev/null || break
+            done
         done
 
         ipt $tbl -F XRAYUI 2>/dev/null
@@ -811,8 +822,21 @@ cleanup_firewall() {
         ipset destroy "$s" 2>/dev/null || ipset flush "$s" 2>/dev/null
     done
 
-    ipt mangle -D FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null
-    ipt mangle -D OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null
+    while ipt mangle -C FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null; do
+        ipt mangle -D FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null || break
+    done
+    while ipt mangle -C OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null; do
+        ipt mangle -D OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null || break
+    done
+
+    for IPT in $IPT_LIST; do
+        $IPT -w -t mangle -S OUTPUT 2>/dev/null |
+            grep -E -- '^-A OUTPUT -m owner --uid-owner [0-9]+ -j RETURN' |
+            while read -r rule; do
+                # shellcheck disable=SC2086
+                $IPT -w -t mangle $(echo "$rule" | sed 's/^-A /-D /') 2>/dev/null
+            done
+    done
 
     ipt mangle -D DIVERT -j MARK --set-mark $tproxy_mark/$tproxy_mask 2>/dev/null
     ipt mangle -D DIVERT -j CONNMARK --save-mark --mask $tproxy_mask 2>/dev/null
@@ -924,12 +948,24 @@ set_route_localnet() {
 
     wl_ifs="$(printf '%s\n' $wl_ifs | sed '/^$/d' | sort -u)"
 
-    local if_list="$lan_if $wl_ifs"
+    local guest_ifs=""
+    for n in 1 2 3; do
+        g="$(nvram get "lan${n}_ifname" 2>/dev/null)"
+        [ -n "$g" ] && guest_ifs="$guest_ifs $g"
+    done
+    guest_ifs="$guest_ifs $(ip -4 route show scope link 2>/dev/null |
+        awk -v lan="$lan_if" '$3 ~ /^br[0-9]+$/ && $3 != lan &&
+             $1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/ {print $3}')"
+    guest_ifs="$(printf '%s\n' $guest_ifs | sed '/^$/d' | sort -u)"
+
+    local if_list="$lan_if $wl_ifs $guest_ifs"
 
     # Add tun*/wg* interfaces created by VPN servers
     for itf in $(ip -o link show | awk -F': ' '{print $2}' | grep -E '^(tun[0-9]+|wg[0-9]+)$'); do
         if_list="$if_list $itf"
     done
+
+    if_list="$(printf '%s\n' $if_list | sed '/^$/d' | sort -u)"
 
     # Disable/enable global reverse-path filtering
     if [ "$val" = "1" ]; then

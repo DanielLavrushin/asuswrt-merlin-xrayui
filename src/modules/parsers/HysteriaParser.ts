@@ -21,7 +21,7 @@ export default function HysteriaParser(parsedObj: XrayParsedUrlObject): XrayOutb
   if (parsedObj.protocol === 'hy2' || parsedObj.protocol === 'hysteria2') {
     proxy.settings.version = 2;
   } else if (parsedObj.parsedParams.version) {
-    proxy.settings.version = parseInt(parsedObj.parsedParams.version);
+    proxy.settings.version = Number.parseInt(parsedObj.parsedParams.version);
   }
 
   proxy.streamSettings = new XrayStreamSettingsObject();
@@ -32,13 +32,15 @@ export default function HysteriaParser(parsedObj: XrayParsedUrlObject): XrayOutb
     proxy.streamSettings.hysteriaSettings.version = proxy.settings.version;
   }
 
-  let auth = parsedObj.parsedParams.auth || parsedObj.parsedParams.password || parsedObj.uuid;
-  if (auth) {
+  let auth = parsedObj.parsedParams.auth || parsedObj.parsedParams.password;
+  if (!auth && parsedObj.uuid) {
     try {
-      auth = decodeURIComponent(auth);
+      auth = decodeURIComponent(parsedObj.uuid);
     } catch {
-      // keep raw value if not a valid percent-encoded string
+      auth = parsedObj.uuid;
     }
+  }
+  if (auth) {
     proxy.streamSettings.hysteriaSettings.auth = auth;
   }
 

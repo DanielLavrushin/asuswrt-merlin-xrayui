@@ -5,18 +5,35 @@
       XRAYUI v{{ current_version }}</a
     >
   </div>
-  <modal ref="updateModal" width="600" :title="$t('com.Version.modal_title')">
-    <div class="modal-content">
-      <p class="current-version">{{ $t('com.Version.current_version', [current_version]) }}</p>
-      <div v-if="hasUpdate" class="update-details">
-        <p v-html="$t('com.Version.new_version', [latest_version])"></p>
+  <modal ref="updateModal" width="760" :title="$t('com.Version.modal_title')">
+    <div class="version-modal">
+      <div class="version-status" :class="{ 'has-update': hasUpdate, 'up-to-date': !hasUpdate }">
+        <div class="version-status__pills">
+          <div class="version-pill" :class="{ 'version-pill--muted': hasUpdate }">
+            <span class="version-pill__num">v{{ current_version }}</span>
+          </div>
+          <template v-if="hasUpdate">
+            <span class="version-status__arrow" aria-hidden="true">→</span>
+            <div class="version-pill version-pill--latest">
+              <span class="version-pill__num">v{{ latest_version }}</span>
+            </div>
+          </template>
+        </div>
+        <div class="version-status__badge version-status__badge--ok" v-if="!hasUpdate">
+          <span class="version-status__icon" aria-hidden="true">✓</span>
+          <span>{{ $t('com.Version.version_is_up_to_date') }}</span>
+        </div>
+        <div class="version-status__badge version-status__badge--update" v-else>
+          <span class="version-status__icon" aria-hidden="true">↑</span>
+          <span v-html="$t('com.Version.new_version', [latest_version])"></span>
+        </div>
       </div>
-      <p v-else class="no-updates">{{ $t('com.Version.version_is_up_to_date') }}</p>
 
-      <div class="textarea-wrapper">
+      <div class="changelog-card">
         <div class="changelog" v-html="changelog"></div>
-        <p v-html="$t('com.Version.open_chengelog')"></p>
       </div>
+
+      <p class="changelog-link" v-html="$t('com.Version.open_chengelog')"></p>
     </div>
     <template v-slot:footer v-if="hasUpdate">
       <button class="button_gen button_gen_small" @click.prevent="dont_want_update">{{ $t('com.Version.dont_want_update', [latest_version]) }}</button>
@@ -115,38 +132,217 @@
       right: 5px;
     }
   }
-  .textarea-wrapper {
-    .changelog {
-      text-align: left;
-      background-color: #2f3a3e;
-      border: 1px solid #222;
-      padding: 0 10px;
-      min-height: 150px;
-      font-family: 'Courier New', Courier, monospace;
 
-      :deep(h2) {
-        margin: 5px;
-      }
+  .version-modal {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
 
-      :deep(ul) {
-        margin: 5px;
-        padding: 0 10px;
-      }
+  .version-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 14px;
+    padding: 12px 14px;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.05));
+    border: 1px solid #222;
+    border-left: 3px solid #6b7a7f;
+    border-radius: 4px;
 
-      :deep(ul li) {
-        margin: 5px;
-        padding-bottom: 5px;
-        border-bottom: 1px dashed #222;
-      }
+    &.up-to-date {
+      border-left-color: #4caf50;
+    }
+    &.has-update {
+      border-left-color: #ffcc00;
+    }
+  }
 
-      :deep(ul li):last-child {
-        border-bottom: none;
-      }
+  .version-status__pills {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
 
-      :deep(code) {
-        font-weight: bold;
+  .version-status__arrow {
+    color: #ffcc00;
+    font-weight: bold;
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  .version-pill {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 4px 12px;
+    background-color: #2f3a3e;
+    border: 1px solid #222;
+    border-radius: 999px;
+    font-family: 'Courier New', Courier, monospace;
+    color: #ffffff;
+
+    &__num {
+      font-weight: bold;
+      font-size: 13px;
+      letter-spacing: 0.3px;
+    }
+
+    &--muted {
+      opacity: 0.7;
+      .version-pill__num {
+        font-weight: normal;
       }
     }
+
+    &--latest {
+      border-color: #ffcc00;
+      box-shadow: 0 0 0 1px rgba(255, 204, 0, 0.25);
+      .version-pill__num {
+        color: #ffcc00;
+      }
+    }
+  }
+
+  .version-status__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 1.3;
+
+    &--ok {
+      color: #d4f0d6;
+      background-color: #3d524a;
+      border: 1px solid rgba(76, 175, 80, 0.45);
+    }
+
+    &--update {
+      color: #ffeaa0;
+      background-color: #4d4830;
+      border: 1px solid rgba(255, 204, 0, 0.45);
+
+      :deep(strong) {
+        text-shadow: none;
+        color: #ffe066;
+      }
+    }
+  }
+
+  .version-status__icon {
+    font-weight: bold;
+    font-size: 13px;
+    line-height: 1;
+  }
+
+  .changelog-card {
+    background-color: #2f3a3e;
+    border: 1px solid #222;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .changelog {
+    padding: 12px 14px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    line-height: 1.55;
+    color: #e6e6e6;
+
+    :deep(h1),
+    :deep(h2),
+    :deep(h3) {
+      display: inline-block;
+      margin: 0 0 10px 0;
+      padding: 3px 10px;
+      font-size: 12px;
+      font-family: 'Courier New', Courier, monospace;
+      font-weight: bold;
+      color: #ffe066;
+      background-color: #463e23;
+      border: 1px solid rgba(255, 204, 0, 0.35);
+      border-radius: 3px;
+      letter-spacing: 0.3px;
+    }
+
+    :deep(p) {
+      margin: 6px 0;
+    }
+
+    :deep(blockquote) {
+      margin: 10px 0;
+      padding: 8px 12px;
+      background-color: #3d3a26;
+      border: 1px solid rgba(255, 204, 0, 0.3);
+      border-left: 3px solid #ffcc00;
+      border-radius: 3px;
+      color: #f5e29a;
+      font-size: 12px;
+
+      p {
+        margin: 0;
+      }
+
+      strong,
+      em {
+        color: #ffe066;
+      }
+    }
+
+    :deep(ul),
+    :deep(ol) {
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+
+    :deep(ul li),
+    :deep(ol li) {
+      margin: 4px 0;
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    :deep(code) {
+      padding: 1px 5px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 11px;
+      font-weight: bold;
+      color: #ffcc00;
+      background-color: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 3px;
+    }
+
+    :deep(strong) {
+      color: #ffffff;
+    }
+
+    :deep(p > a > img),
+    :deep(p > img) {
+      vertical-align: middle;
+      margin: 3px 4px 3px 0;
+      border-radius: 3px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+      transition: transform 0.12s ease;
+    }
+    :deep(p > a:hover > img) {
+      transform: translateY(-1px);
+    }
+  }
+
+  .changelog-link {
+    margin: 0;
+    text-align: center;
+    font-size: 11px;
+    color: #a0a8ab;
 
     :deep(a) {
       color: #ffcc00;
@@ -154,8 +350,8 @@
     }
   }
 
-  .modal-content :deep(strong),
-  .modal-content :deep(code) {
-    text-shadow: 1px 1px 2px #ffcc00;
+  .version-modal :deep(a) {
+    color: #ffcc00;
+    text-decoration: underline;
   }
 </style>

@@ -334,8 +334,13 @@ export class Engine {
 
   public githubProxyUrl = (url: string, proxy: string | undefined | null): string => {
     if (!url || !proxy || proxy === 'null') return url;
-    if (!url.includes('github.com')) return url;
-    return proxy + url;
+    try {
+      const { hostname } = new URL(url);
+      if (hostname !== 'github.com' && !hostname.endsWith('.github.com')) return url;
+      return proxy + url;
+    } catch {
+      return url;
+    }
   };
 
   public async fetchGithubJson<T = any>(url: string, proxy: string | undefined | null, config?: any): Promise<T> {

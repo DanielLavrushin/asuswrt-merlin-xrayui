@@ -675,8 +675,8 @@ configure_firewall_client() {
         fi
 
         if [ "$IPT_TYPE" = "DIRECT" ]; then
-            [ "$tcp_enabled" = "yes" ] && insert_rule filter -p tcp --dport "$dokodemo_port" -j ACCEPT
-            [ "$udp_enabled" = "yes" ] && insert_rule filter -p udp --dport "$dokodemo_port" -j ACCEPT
+            [ "$tcp_enabled" = "yes" ] && insert_rule filter -m addrtype --dst-type LOCAL -p tcp --dport "$dokodemo_port" -j ACCEPT
+            [ "$udp_enabled" = "yes" ] && insert_rule filter -m addrtype --dst-type LOCAL -p udp --dport "$dokodemo_port" -j ACCEPT
         fi
 
         # Apply policy rules

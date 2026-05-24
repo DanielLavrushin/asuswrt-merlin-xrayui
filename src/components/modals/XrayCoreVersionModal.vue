@@ -120,7 +120,7 @@
             .filter((release: any) => !release.draft)
             .slice(0, VERSIONS_TO_SHOW)
             .map((release: any) => ({
-              version: release.tag_name.replace(/[^\d.]/g, ''),
+              version: release.tag_name.replace(/^v/i, ''),
               url: release.assets_url,
               prerelease: !!release.prerelease
             }));

@@ -106,7 +106,7 @@
                     </td>
                   </tr>
                   <tr v-if="!proxy.settings.peers.length" class="data_tr">
-                    <td colspan="3" style="color: #ffcc00">{{ $t('com.WireguardOutbound.text_no_peers') }}</td>
+                    <td colspan="2" style="color: #ffcc00">{{ $t('com.WireguardOutbound.text_no_peers') }}</td>
                   </tr>
                 </tbody>
               </table>

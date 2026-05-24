@@ -1,5 +1,11 @@
 # XRAYUI Changelog
 
+## [0.67.x] - 2026-05-xx
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- FIXED: With **Prevent DNS leaks** enabled, Wireguard (and other) outbounds could fail with `failed to lookup DNS` errors a few seconds after Xray started. The DNS leak firewall rule was too strict and also blocked Xray's own queries to the router's local DNS resolver. Router-local DNS traffic is now allowed; queries to upstream DNS servers are still blocked, so leak protection is unchanged.
+
 ## [0.67.0] - 2026-05-25
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

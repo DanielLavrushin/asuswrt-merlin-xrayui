@@ -115,7 +115,7 @@ describe('Backup.vue', () => {
     expect(wrapper.text()).toContain('backup1.json');
     expect(wrapper.text()).toContain('backup2.json');
 
-    await wrapper.vm.clear();
+    await wrapper.vm.clearAll();
     await nextTick();
 
     expect(engine.submit).toHaveBeenCalledTimes(1);

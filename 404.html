@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="generator" content="VuePress 2.0.0-rc.24" />
+    <style>
+      :root {
+        --vp-c-bg: #fff;
+      }
+
+      [data-theme='dark'] {
+        --vp-c-bg: #1b1b1f;
+      }
+
+      html,
+      body {
+        background-color: var(--vp-c-bg);
+      }
+    </style>
+    <script>
+      const useChoice = localStorage.getItem('vuepress-color-scheme')
+      const systemStatus =
+        'matchMedia' in window
+          ? window.matchMedia('(prefers-color-scheme: dark)').matches
+          : false
+
+      if (useChoice === 'light') {
+        document.documentElement.dataset.theme = 'light'
+      } else if (useChoice === 'dark' || systemStatus) {
+        document.documentElement.dataset.theme = 'dark'
+      }
+    </script>
+    <title>XrayUI</title><meta name="description" content="Manage Xray-core from your Asus router">
+    <link rel="preload" href="/asuswrt-merlin-xrayui/assets/style-DhTqPDI4.css" as="style"><link rel="stylesheet" href="/asuswrt-merlin-xrayui/assets/style-DhTqPDI4.css">
+    <link rel="modulepreload" href="/asuswrt-merlin-xrayui/assets/app-DDYAilKQ.js"><link rel="modulepreload" href="/asuswrt-merlin-xrayui/assets/404.html-B0hlY9oU.js">
+    <link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/index.html-DG9f4g86.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/b4sni.html-JyzNKwE4.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/br-policy.html-C4qIShwo.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/changelog.html-COrSiJWM.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/cli.html-DGwNc1_V.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/custom-geodata.html-LhhzOkPK.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/dns-leak.html-sOZKaB9A.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/general-options.html-BDoejEbY.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/import-config.html-CCP9aAmg.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/install.html-DNg_T0Ks.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/interface.html-0LRyJ0cK.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/routing.html-ByhMl7Mp.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/rtls-scanner.html-DhmPHjLc.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/share-config.html-DQipH8so.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/subscriptions.html-D8QN-mrd.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/tproxy.html-B6amH3lC.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/v2dat.html-BQKwru8q.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/b4sni.html-BMeBIwgH.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/br-policy.html-CXN22TQ4.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/changelog.html-R8cCzwHc.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/cli.html-CjCtr7_J.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/custom-geodata.html-BPBUC9T_.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/dns-leak.html-DHUKQdPW.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/general-options.html-CxomZoqD.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/import-config.html-CK0nmZ9z.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/index.html-DnEkkG6N.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/install.html-C9FqZC3l.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/interface.html-Ou85JBsp.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/logs.html-Dg5U-ISn.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/routing.html-DrUR8C4J.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/rtls-scanner.html-BIA9D6sz.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/share-config.html-Dp-Fuxz7.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/subscriptions.html-Dbd-ciGJ.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/swap.html-BvN0yZqi.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/tproxy.html-gD1NXC4k.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/v2dat.html-DanXuAm5.js" as="script"><link rel="prefetch" href="/asuswrt-merlin-xrayui/assets/mermaid.esm.min-BvnOemOa.js" as="script">
+  </head>
+  <body>
+    <div id="app"><!--[--><div class="vp-theme-container" vp-container data-v-22b11468><main class="page" data-v-22b11468><div vp-content data-v-22b11468><h1 data-v-22b11468>404</h1><blockquote data-v-22b11468>There&#39;s nothing here.</blockquote><a class="route-link" href="/asuswrt-merlin-xrayui/" data-v-22b11468>Take me home</a></div></main></div><!--[--><!----><!--]--><!--]--></div>
+    <script type="module" src="/asuswrt-merlin-xrayui/assets/app-DDYAilKQ.js" defer></script>
+  </body>
+</html>

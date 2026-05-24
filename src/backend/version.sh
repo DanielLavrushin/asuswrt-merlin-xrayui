@@ -9,7 +9,8 @@ show_version() {
 switch_xray_version() {
     update_loading_progress "Switching Xray version..." 0
 
-    local xray_tmp_dir="/tmp/xray"
+    mkdir -p "$ADDON_TMP_DIR" 2>/dev/null
+    local xray_tmp_dir="$ADDON_TMP_DIR/xray"
 
     local xray_version="$1"
 
@@ -118,7 +119,7 @@ switch_xray_version() {
     fi
 
     update_loading_progress "Downloading $asset_name ..."
-    local tmp_zip="/tmp/xraycore.zip"
+    local tmp_zip="$ADDON_TMP_DIR/xraycore.zip"
     rm -rf "$tmp_zip"
 
     log_ok "Downloading Xray release version $asset_url into $tmp_zip"

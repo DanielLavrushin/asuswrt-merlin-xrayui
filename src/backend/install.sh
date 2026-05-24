@@ -122,14 +122,15 @@ EOF
     log_info "Installing XRAY UI geodata files builder..."
 
     mkdir -p "$ADDON_SHARE_DIR" || log_error "Failed to create $ADDON_SHARE_DIR."
+    mkdir -p "$ADDON_TMP_DIR" || log_error "Failed to create $ADDON_TMP_DIR."
 
     update_loading_progress "Downloading XRAYUI geodata files builder..."
 
     local release_url=$(github_proxy_url "https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/releases/latest/download/xrayui-datbuilder.tar.gz")
 
-    if wget -q --show-progress --no-hsts -O "/tmp/xraydatbuilder.tar.gz" "$release_url"; then
-        tar -xzf /tmp/xraydatbuilder.tar.gz -C "$ADDON_SHARE_DIR" || log_error "Failed to extract xraydatbuilder.tar.gz."
-        rm -f /tmp/xraydatbuilder.tar.gz || log_error "Failed to remove xraydatbuilder.tar.gz."
+    if wget -q --show-progress --no-hsts -O "$ADDON_TMP_DIR/xraydatbuilder.tar.gz" "$release_url"; then
+        tar -xzf "$ADDON_TMP_DIR/xraydatbuilder.tar.gz" -C "$ADDON_SHARE_DIR" || log_error "Failed to extract xraydatbuilder.tar.gz."
+        rm -f "$ADDON_TMP_DIR/xraydatbuilder.tar.gz" || log_error "Failed to remove xraydatbuilder.tar.gz."
         chmod +x "$ADDON_SHARE_DIR/xraydatbuilder" || log_error "Failed to make xraydatbuilder executable."
     else
         log_error "Failed to download XRAYUI geodata files builder."
@@ -140,9 +141,9 @@ EOF
     update_loading_progress "Downloading v2dat..."
     local v2dat_arch_name=$(version_get_arch_name "v2dat")
     local v2dat_url=$(github_proxy_url "https://github.com/DanielLavrushin/v2dat/releases/latest/download/$v2dat_arch_name")
-    if wget -q --show-progress --no-hsts -O "/tmp/v2dat.tar.gz" "$v2dat_url"; then
-        tar -xzf /tmp/v2dat.tar.gz -C "$ADDON_SHARE_DIR" || log_error "Failed to extract v2dat.tar.gz."
-        rm -f /tmp/v2dat.tar.gz || log_error "Failed to remove v2dat.tar.gz."
+    if wget -q --show-progress --no-hsts -O "$ADDON_TMP_DIR/v2dat.tar.gz" "$v2dat_url"; then
+        tar -xzf "$ADDON_TMP_DIR/v2dat.tar.gz" -C "$ADDON_SHARE_DIR" || log_error "Failed to extract v2dat.tar.gz."
+        rm -f "$ADDON_TMP_DIR/v2dat.tar.gz" || log_error "Failed to remove v2dat.tar.gz."
         chmod +x "$ADDON_SHARE_DIR/v2dat" || log_error "Failed to make v2dat executable."
     else
         log_error "Failed to download v2dat."
@@ -153,9 +154,9 @@ EOF
     local rtls_arch_name=$(version_get_arch_name "rtls-scanner")
     update_loading_progress "Downloading RTLS-SCANNER..."
     local rtls_scan_url=$(github_proxy_url "https://github.com/DanielLavrushin/rtls-scanner/releases/latest/download/$rtls_arch_name")
-    if wget -q --show-progress --no-hsts -O "/tmp/rtls-scanner.tar.gz" "$rtls_scan_url"; then
-        tar -xzf /tmp/rtls-scanner.tar.gz -C "$ADDON_SHARE_DIR" || log_error "Failed to extract rtls-scanner.tar.gz."
-        rm -f /tmp/rtls-scanner.tar.gz || log_error "Failed to remove rtls-scanner.tar.gz."
+    if wget -q --show-progress --no-hsts -O "$ADDON_TMP_DIR/rtls-scanner.tar.gz" "$rtls_scan_url"; then
+        tar -xzf "$ADDON_TMP_DIR/rtls-scanner.tar.gz" -C "$ADDON_SHARE_DIR" || log_error "Failed to extract rtls-scanner.tar.gz."
+        rm -f "$ADDON_TMP_DIR/rtls-scanner.tar.gz" || log_error "Failed to remove rtls-scanner.tar.gz."
         chmod +x "$ADDON_SHARE_DIR/rtls-scanner" || log_error "Failed to make rtls-scanner executable."
 
         local mmdb_url=$(github_proxy_url "https://github.com/Loyalsoldier/geoip/releases/latest/download/Country.mmdb")
@@ -170,9 +171,9 @@ EOF
     update_loading_progress "Downloading B4SNI..."
     local b4sni_arch_name=$(version_get_arch_name "b4sni" "linux")
     local b4sni_url=$(github_proxy_url "https://github.com/DanielLavrushin/b4sni/releases/latest/download/$b4sni_arch_name")
-    if wget -q --show-progress --no-hsts -O "/tmp/b4sni.tar.gz" "$b4sni_url"; then
-        tar -xzf /tmp/b4sni.tar.gz -C "$ADDON_SHARE_DIR" || log_error "Failed to extract b4sni.tar.gz."
-        rm -f /tmp/b4sni.tar.gz || log_error "Failed to remove b4sni.tar.gz."
+    if wget -q --show-progress --no-hsts -O "$ADDON_TMP_DIR/b4sni.tar.gz" "$b4sni_url"; then
+        tar -xzf "$ADDON_TMP_DIR/b4sni.tar.gz" -C "$ADDON_SHARE_DIR" || log_error "Failed to extract b4sni.tar.gz."
+        rm -f "$ADDON_TMP_DIR/b4sni.tar.gz" || log_error "Failed to remove b4sni.tar.gz."
         chmod +x "$ADDON_SHARE_DIR/b4sni" || log_error "Failed to make b4sni executable."
     else
         log_error "Failed to download b4sni ($b4sni_arch_name)."

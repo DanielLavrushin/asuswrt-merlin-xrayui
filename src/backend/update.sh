@@ -15,7 +15,8 @@ update() {
 
     fi
 
-    local temp_file="/tmp/asuswrt-merlin-xrayui.tar.gz"
+    mkdir -p "$ADDON_TMP_DIR" 2>/dev/null
+    local temp_file="$ADDON_TMP_DIR/asuswrt-merlin-xrayui.tar.gz"
     local jffs_addons_path="/jffs/addons"
 
     log_info "Downloading the version:$specific_version..."

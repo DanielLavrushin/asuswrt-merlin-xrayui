@@ -558,20 +558,29 @@ subscription_parse_hysteria() {
     # Determine SNI
     local final_sni="${sni:-$peer}"
 
-    # Build hysteria settings
+    # Build hysteria settings (xray 26.3.27+ moved congestion/up/down to finalmask.quicParams)
     local hysteria_settings
     hysteria_settings=$(jq -nc \
         --arg auth "$auth" \
-        --arg version "$version" \
-        --arg congestion "$congestion" \
-        --arg up "${up:-$upmbps}" \
-        --arg down "${down:-$downmbps}" '
+        --arg version "$version" '
         {}
         | if ($auth|length)>0 then .auth=$auth else . end
         | if ($version|length)>0 then .version=($version|tonumber) else . end
+    ')
+
+    # Build finalmask.quicParams from congestion/up/down (suffix bare numbers with "mbps" for brutal)
+    local up_val="${up:-$upmbps}"
+    local down_val="${down:-$downmbps}"
+    local quic_params
+    quic_params=$(jq -nc \
+        --arg congestion "$congestion" \
+        --arg up "$up_val" \
+        --arg down "$down_val" '
+        def brutal_unit(v): if (v|test("[^0-9]")) then v else "\(v) mbps" end;
+        {}
         | if ($congestion|length)>0 then .congestion=$congestion else . end
-        | if ($up|length)>0 then .up=$up else . end
-        | if ($down|length)>0 then .down=$down else . end
+        | if ($up|length)>0 then .brutalUp=brutal_unit($up) else . end
+        | if ($down|length)>0 then .brutalDown=brutal_unit($down) else . end
     ')
 
     # Build TLS settings if needed
@@ -599,6 +608,7 @@ subscription_parse_hysteria() {
     jq -nc --arg tag "$tag" --arg host "$host" --arg port "$port" \
         --arg version "$version" \
         --argjson hysteria "$hysteria_settings" \
+        --argjson quic "$quic_params" \
         --argjson tls "$tls_settings" \
         --argjson udpmasks "$udpmasks" '
     {
@@ -612,7 +622,12 @@ subscription_parse_hysteria() {
         streamSettings:(
             {network:"hysteria",hysteriaSettings:$hysteria}
             + (if $tls!=null then {security:"tls",tlsSettings:$tls} else {} end)
-            + (if $udpmasks!=null then {udpmasks:$udpmasks} else {} end)
+            + (if (($quic|length)>0) or ($udpmasks!=null) then
+                {finalmask:
+                    (if ($quic|length)>0 then {quicParams:$quic} else {} end)
+                    + (if $udpmasks!=null then {udp:$udpmasks} else {} end)
+                }
+              else {} end)
         )
     }'
 }

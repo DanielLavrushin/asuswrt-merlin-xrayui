@@ -1,18 +1,18 @@
 <template>
   <div class="formfontdesc">
-    <p>Wireguard is a standard implementation of the Wireguard protocol. The Wireguard protocol is not specifically designed for circumvention purposes. If used as the outer layer for circumvention, its characteristics may lead to server blocking.</p>
+    <p>{{ $t('com.WireguardOutbound.modal_desc') }}</p>
     <table width="100%" class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="2">Wireguard</td>
+          <td colspan="2">{{ $t('com.WireguardOutbound.modal_title') }}</td>
         </tr>
       </thead>
       <tbody>
         <outbound-common :proxy="proxy"></outbound-common>
         <tr>
           <th>
-            Secret key
-            <hint> The private key for the Wireguard protocol. **Required**. </hint>
+            {{ $t('com.WireguardOutbound.label_secret_key') }}
+            <hint v-html="$t('com.WireguardOutbound.hint_secret_key')"></hint>
           </th>
           <td>
             <input type="text" class="input_20_table" v-model="proxy.settings.secretKey" autocomplete="off" autocorrect="off" autocapitalize="off" />
@@ -21,8 +21,8 @@
         </tr>
         <tr>
           <th>
-            One or more IP addresses
-            <hint> Wireguard will create a virtual network interface tun locally. Use one or more IP addresses, including `IPv6`. </hint>
+            {{ $t('com.WireguardOutbound.label_address') }}
+            <hint v-html="$t('com.WireguardOutbound.hint_address')"></hint>
           </th>
           <td>
             <div class="textarea-wrapper">
@@ -33,8 +33,8 @@
         </tr>
         <tr>
           <th>
-            MTU
-            <hint> The fragment size of the underlying `tun` device in Wireguard. </hint>
+            {{ $t('com.WireguardOutbound.label_mtu') }}
+            <hint v-html="$t('com.WireguardOutbound.hint_mtu')"></hint>
           </th>
           <td>
             <input v-model="proxy.settings.mtu" type="number" maxlength="4" class="input_6_table" onkeypress="return validator.isNumber(this,event);" />
@@ -43,8 +43,8 @@
         </tr>
         <tr>
           <th>
-            Workers
-            <hint> The number of threads used by Wireguard. </hint>
+            {{ $t('com.WireguardOutbound.label_workers') }}
+            <hint v-html="$t('com.WireguardOutbound.hint_workers')"></hint>
           </th>
           <td>
             <input v-model="proxy.settings.workers" type="number" maxlength="2" min="0" max="32" class="input_6_table" onkeypress="return validator.isNumber(this,event);" />
@@ -53,8 +53,8 @@
         </tr>
         <tr>
           <th>
-            Domain strategy
-            <hint> If you do not write this parameter, or leave it blank, the default value is `ForceIP`. When the destination address is a domain name, use the Xray-core built-in DNS server to get an IP (if no `dns` configuration is written, system DNS is used), and send a connection to this IP via wireguard. </hint>
+            {{ $t('com.WireguardOutbound.label_domain_strategy') }}
+            <hint v-html="$t('com.WireguardOutbound.hint_domain_strategy')"></hint>
           </th>
           <td>
             <select class="input_option" v-model="proxy.settings.domainStrategy">
@@ -67,8 +67,18 @@
         </tr>
         <tr>
           <th>
-            Reserved Bytes
-            <hint> Wireguard Reserved Bytes. When connecting to warp via wireguard, due to cloudflare limitations, some IPs in Hong Kong and Los Angeles need to have a reserved value in order to connect successfully. The value of reserved can be obtained using third-party tools such as `warp-reg`, `warp-reg.sh`. </hint>
+            {{ $t('com.WireguardOutbound.label_no_kernel_tun') }}
+            <hint v-html="$t('com.WireguardOutbound.hint_no_kernel_tun')"></hint>
+          </th>
+          <td>
+            <input type="checkbox" v-model="proxy.settings.noKernelTun" />
+            <span class="hint-color">default: false</span>
+          </td>
+        </tr>
+        <tr>
+          <th>
+            {{ $t('com.WireguardOutbound.label_reserved') }}
+            <hint v-html="$t('com.WireguardOutbound.hint_reserved')"></hint>
           </th>
           <td>
             <input type="text" class="input_20_table" v-model="reserved" autocomplete="off" autocorrect="off" autocapitalize="off" />
@@ -77,41 +87,41 @@
         </tr>
         <tr>
           <th>
-            Peers
-            <hint> A list of Wireguard servers, where each item is a server configuration. </hint>
+            {{ $t('com.WireguardOutbound.label_peers') }}
+            <hint v-html="$t('com.WireguardOutbound.hint_peers')"></hint>
           </th>
           <td>
-            {{ proxy.settings.peers.length }} item(s)
-            <input class="button_gen button_gen_small" type="button" value="manage" @click.prevent="manage_peers" />
-            <modal width="500" ref="modalPeers" title="Manage peers">
+            {{ $t('labels.items', [proxy.settings?.peers.length ?? 0]) }}
+            <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click.prevent="manage_peers" />
+            <modal width="500" ref="modalPeers" :title="$t('com.WireguardOutbound.modal_peers_title')">
               <table class="FormTable modal-form-table">
                 <tbody>
                   <tr v-for="(peer, index) in proxy.settings.peers" :key="index">
                     <td>{{ peer.endpoint }}</td>
                     <td>
                       <span class="row-buttons">
-                        <input class="button_gen button_gen_small" type="button" value="edit" @click.prevent="modal_peer_open(peer)" />
+                        <input class="button_gen button_gen_small" type="button" :value="$t('labels.edit')" @click.prevent="modal_peer_open(peer)" />
                         <input class="button_gen button_gen_small" type="button" :title="$t('labels.delete')" value="&#10005;" @click.prevent="proxy.settings.peers.splice(index, 1)" />
                       </span>
                     </td>
                   </tr>
                   <tr v-if="!proxy.settings.peers.length" class="data_tr">
-                    <td colspan="3" style="color: #ffcc00">no peers</td>
+                    <td colspan="2" style="color: #ffcc00">{{ $t('com.WireguardOutbound.text_no_peers') }}</td>
                   </tr>
                 </tbody>
               </table>
               <template v-slot:footer>
-                <input class="button_gen button_gen_small" type="button" value="add new" @click.prevent="modal_peer_open()" />
-                <input class="button_gen button_gen_small" type="button" value="close" @click.prevent="modal_peers_close()" />
+                <input class="button_gen button_gen_small" type="button" :value="$t('com.WireguardOutbound.text_add_new')" @click.prevent="modal_peer_open()" />
+                <input class="button_gen button_gen_small" type="button" :value="$t('labels.close')" @click.prevent="modal_peers_close()" />
               </template>
             </modal>
-            <modal width="400" ref="modalPeer" title="Peer">
+            <modal width="400" ref="modalPeer" :title="$t('com.WireguardOutbound.modal_peer_title')">
               <table class="FormTable modal-form-table" v-if="peerItem">
                 <tbody>
                   <tr>
                     <th>
-                      Server address
-                      <hint> The server address. **Required**. </hint>
+                      {{ $t('com.WireguardOutbound.label_peer_endpoint') }}
+                      <hint v-html="$t('com.WireguardOutbound.hint_peer_endpoint')"></hint>
                     </th>
                     <td>
                       <input type="text" class="input_20_table" v-model="peerItem.endpoint" autocomplete="off" autocorrect="off" autocapitalize="off" />
@@ -120,8 +130,8 @@
                   </tr>
                   <tr>
                     <th>
-                      Server's public key
-                      <hint> The server's public key used for verification. **Required**. </hint>
+                      {{ $t('com.WireguardOutbound.label_peer_public_key') }}
+                      <hint v-html="$t('com.WireguardOutbound.hint_peer_public_key')"></hint>
                     </th>
                     <td>
                       <input type="text" class="input_20_table" v-model="peerItem.publicKey" autocomplete="off" autocorrect="off" autocapitalize="off" />
@@ -130,8 +140,8 @@
                   </tr>
                   <tr>
                     <th>
-                      Additional symmetric encryption key
-                      <hint> An additional symmetric encryption key.. </hint>
+                      {{ $t('com.WireguardOutbound.label_peer_pre_shared_key') }}
+                      <hint v-html="$t('com.WireguardOutbound.hint_peer_pre_shared_key')"></hint>
                     </th>
                     <td>
                       <input type="text" class="input_20_table" v-model="peerItem.preSharedKey" autocomplete="off" autocorrect="off" autocapitalize="off" />
@@ -140,8 +150,8 @@
                   </tr>
                   <tr>
                     <th>
-                      Keep alive
-                      <hint> The interval of keep-alive packets in seconds. The default is 0, which means no keep-alive. </hint>
+                      {{ $t('com.WireguardOutbound.label_peer_keep_alive') }}
+                      <hint v-html="$t('com.WireguardOutbound.hint_peer_keep_alive')"></hint>
                     </th>
                     <td>
                       <input v-model="peerItem.keepAlive" type="number" maxlength="2" min="0" max="32" class="input_6_table" onkeypress="return validator.isNumber(this,event);" />
@@ -150,8 +160,8 @@
                   </tr>
                   <tr>
                     <th>
-                      Allowed IPs
-                      <hint> Only allow traffic from specific source IP addresses in Wireguard. </hint>
+                      {{ $t('com.WireguardOutbound.label_peer_allowed_ips') }}
+                      <hint v-html="$t('com.WireguardOutbound.hint_peer_allowed_ips')"></hint>
                     </th>
                     <td>
                       <div class="textarea-wrapper">
@@ -163,7 +173,7 @@
                 </tbody>
               </table>
               <template v-slot:footer>
-                <input class="button_gen button_gen_small" type="button" value="save" @click.prevent="modal_save_peer()" />
+                <input class="button_gen button_gen_small" type="button" :value="$t('labels.save')" @click.prevent="modal_save_peer()" />
               </template>
             </modal>
           </td>

@@ -62,11 +62,6 @@
       security?: string;
       realitySettings?: XrayStreamRealitySettingsObject;
       tlsSettings?: XrayStreamTlsSettingsObject;
-      hysteriaSettings?: {
-        congestion?: string;
-        up?: string;
-        down?: string;
-      };
       finalmask?: {
         udp?: Array<{
           type?: string;

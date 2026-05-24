@@ -81,23 +81,31 @@ describe('HysteriaParser', () => {
       expect(result?.streamSettings?.hysteriaSettings?.auth).toBe('secretpass');
     });
 
-    it('extracts password after colon in auth', () => {
+    it('preserves full user:password auth string', () => {
       const url = 'hysteria2://user:actualpassword@server.com:443#proxy';
       const parsed = new XrayParsedUrlObject(url);
       const result = HysteriaParser(parsed);
 
-      expect(result?.streamSettings?.hysteriaSettings?.auth).toBe('actualpassword');
+      expect(result?.streamSettings?.hysteriaSettings?.auth).toBe('user:actualpassword');
+    });
+
+    it('decodes percent-encoded auth string', () => {
+      const url = 'hy2://testtest%3AHaMMMrkZa16gKPGeKVlUW4dHv8RX1OlY@192.236.233.176:443#proxy';
+      const parsed = new XrayParsedUrlObject(url);
+      const result = HysteriaParser(parsed);
+
+      expect(result?.streamSettings?.hysteriaSettings?.auth).toBe('testtest:HaMMMrkZa16gKPGeKVlUW4dHv8RX1OlY');
     });
   });
 
-  describe('bandwidth settings', () => {
-    it('parses up and down params', () => {
+  describe('bandwidth settings (finalmask.quicParams, xray 26.3.27+)', () => {
+    it('parses up and down params into brutalUp/brutalDown with mbps suffix', () => {
       const url = 'hysteria2://pass@server.com:443?up=100&down=200#proxy';
       const parsed = new XrayParsedUrlObject(url);
       const result = HysteriaParser(parsed);
 
-      expect(result?.streamSettings?.hysteriaSettings?.up).toBe('100');
-      expect(result?.streamSettings?.hysteriaSettings?.down).toBe('200');
+      expect(result?.streamSettings?.finalmask?.quicParams?.brutalUp).toBe('100 mbps');
+      expect(result?.streamSettings?.finalmask?.quicParams?.brutalDown).toBe('200 mbps');
     });
 
     it('parses upmbps and downmbps params', () => {
@@ -105,16 +113,33 @@ describe('HysteriaParser', () => {
       const parsed = new XrayParsedUrlObject(url);
       const result = HysteriaParser(parsed);
 
-      expect(result?.streamSettings?.hysteriaSettings?.up).toBe('50');
-      expect(result?.streamSettings?.hysteriaSettings?.down).toBe('100');
+      expect(result?.streamSettings?.finalmask?.quicParams?.brutalUp).toBe('50 mbps');
+      expect(result?.streamSettings?.finalmask?.quicParams?.brutalDown).toBe('100 mbps');
     });
 
-    it('parses congestion param', () => {
+    it('preserves explicit unit suffix in up/down values', () => {
+      const url = 'hysteria2://pass@server.com:443?up=1gbps&down=500mbps#proxy';
+      const parsed = new XrayParsedUrlObject(url);
+      const result = HysteriaParser(parsed);
+
+      expect(result?.streamSettings?.finalmask?.quicParams?.brutalUp).toBe('1gbps');
+      expect(result?.streamSettings?.finalmask?.quicParams?.brutalDown).toBe('500mbps');
+    });
+
+    it('parses congestion param into finalmask.quicParams', () => {
       const url = 'hysteria2://pass@server.com:443?congestion=bbr#proxy';
       const parsed = new XrayParsedUrlObject(url);
       const result = HysteriaParser(parsed);
 
-      expect(result?.streamSettings?.hysteriaSettings?.congestion).toBe('bbr');
+      expect(result?.streamSettings?.finalmask?.quicParams?.congestion).toBe('bbr');
+    });
+
+    it('does not create finalmask when no bandwidth/congestion params are present', () => {
+      const url = 'hysteria2://pass@server.com:443#proxy';
+      const parsed = new XrayParsedUrlObject(url);
+      const result = HysteriaParser(parsed);
+
+      expect(result?.streamSettings?.finalmask).toBeUndefined();
     });
   });
 
@@ -253,9 +278,9 @@ describe('HysteriaParser', () => {
 
       expect(result?.streamSettings?.network).toBe('hysteria');
       expect(result?.streamSettings?.hysteriaSettings?.auth).toBe('myauth');
-      expect(result?.streamSettings?.hysteriaSettings?.up).toBe('100');
-      expect(result?.streamSettings?.hysteriaSettings?.down).toBe('200');
-      expect(result?.streamSettings?.hysteriaSettings?.congestion).toBe('bbr');
+      expect(result?.streamSettings?.finalmask?.quicParams?.brutalUp).toBe('100 mbps');
+      expect(result?.streamSettings?.finalmask?.quicParams?.brutalDown).toBe('200 mbps');
+      expect(result?.streamSettings?.finalmask?.quicParams?.congestion).toBe('bbr');
 
       expect(result?.streamSettings?.security).toBe('tls');
       expect(result?.streamSettings?.tlsSettings?.serverName).toBe('sni.example.com');

@@ -22,9 +22,21 @@ switch_xray_version() {
 
     if [ -z "$xray_version" ]; then
 
-        log_info "Switching Xray version with url from payload"
+        log_info "Switching Xray version using payload"
         local payload=$(reconstruct_payload)
-        local version_url=$(echo "$payload" | jq -r '.url')
+        local version_url=$(echo "$payload" | jq -r '.url // empty')
+        if [ -z "$version_url" ]; then
+            local custom_version=$(echo "$payload" | jq -r '.version // empty')
+            if [ -n "$custom_version" ]; then
+                case $custom_version in
+                v*) : ;;
+                *) custom_version="v$custom_version" ;;
+                esac
+                local release_url="https://api.github.com/repos/XTLS/Xray-core/releases/tags/$custom_version"
+                log_info "Fetching custom Xray version $custom_version from $release_url"
+                version_url=$(curl -sSL "$release_url" | jq -r '.assets_url // empty')
+            fi
+        fi
         if [ -z "$version_url" ] || [ "$version_url" = "null" ]; then
             log_error "Error: version URL is empty"
             return 1

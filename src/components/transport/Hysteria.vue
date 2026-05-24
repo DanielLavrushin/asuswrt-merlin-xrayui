@@ -15,7 +15,7 @@
         <hint v-html="$t('com.NetworkHysteria.hint_congestion')"></hint>
       </th>
       <td>
-        <select class="input_option" v-model="transport.hysteriaSettings.congestion">
+        <select class="input_option" v-model="congestion">
           <option v-for="(opt, index) in congestionOptions" :key="index" :value="opt">{{ opt === '' ? 'auto' : opt }}</option>
         </select>
         <span class="hint-color">auto: brutal (with up) or bbr (without up)</span>
@@ -27,8 +27,8 @@
         <hint v-html="$t('com.NetworkHysteria.hint_up')"></hint>
       </th>
       <td>
-        <input type="text" class="input_15_table" v-model="transport.hysteriaSettings.up" autocomplete="off" autocorrect="off" autocapitalize="off" />
-        <span class="hint-color">e.g., 100mbps</span>
+        <input type="text" class="input_15_table" v-model="brutalUp" autocomplete="off" autocorrect="off" autocapitalize="off" />
+        <span class="hint-color">e.g., 100 mbps</span>
       </td>
     </tr>
     <tr>
@@ -37,8 +37,8 @@
         <hint v-html="$t('com.NetworkHysteria.hint_down')"></hint>
       </th>
       <td>
-        <input type="text" class="input_15_table" v-model="transport.hysteriaSettings.down" autocomplete="off" autocorrect="off" autocapitalize="off" />
-        <span class="hint-color">e.g., 100mbps</span>
+        <input type="text" class="input_15_table" v-model="brutalDown" autocomplete="off" autocorrect="off" autocapitalize="off" />
+        <span class="hint-color">e.g., 100 mbps</span>
       </td>
     </tr>
     <tr>
@@ -246,7 +246,7 @@
   import { defineComponent, ref, computed } from 'vue';
   import Hint from '@main/Hint.vue';
   import { XrayStreamSettingsObject } from '@/modules/CommonObjects';
-  import { XrayStreamHysteriaSettingsObject, XrayHysteriaMasqueradeObject, XrayUdpHopObject, XrayFinalMaskObject, XrayFinalMaskSettingsObject, XraySalamanderObject, XraySudokuObject } from '@/modules/TransportObjects';
+  import { XrayHysteriaMasqueradeObject, XrayUdpHopObject, XrayFinalMaskObject, XrayFinalMaskSettingsObject, XrayQuicParamsObject, XraySalamanderObject, XraySudokuObject } from '@/modules/TransportObjects';
 
   const passwordTypes = new Set(['salamander', 'mkcp-aes128gcm', 'sudoku']);
   const domainTypes = new Set(['header-dns', 'xdns']);
@@ -261,12 +261,46 @@
     },
     setup(props) {
       const transport = ref<XrayStreamSettingsObject>(props.transport ?? new XrayStreamSettingsObject());
-      const congestionOptions = XrayStreamHysteriaSettingsObject.congestionOptions;
+      const congestionOptions = ['', ...XrayQuicParamsObject.congestionOptions];
 
-      // Ensure congestion defaults to '' (auto) when undefined
-      if (transport.value.hysteriaSettings && transport.value.hysteriaSettings.congestion === undefined) {
-        transport.value.hysteriaSettings.congestion = '';
-      }
+      const ensureQuicParams = (): XrayQuicParamsObject => {
+        if (!transport.value.finalmask) transport.value.finalmask = new XrayFinalMaskSettingsObject();
+        if (!transport.value.finalmask.quicParams) transport.value.finalmask.quicParams = new XrayQuicParamsObject();
+        return transport.value.finalmask.quicParams;
+      };
+
+      const congestion = computed({
+        get: () => transport.value.finalmask?.quicParams?.congestion ?? '',
+        set: (val: string) => {
+          if (!val) {
+            if (transport.value.finalmask?.quicParams) transport.value.finalmask.quicParams.congestion = undefined;
+          } else {
+            ensureQuicParams().congestion = val;
+          }
+        }
+      });
+
+      const brutalUp = computed({
+        get: () => (transport.value.finalmask?.quicParams?.brutalUp ?? '').toString(),
+        set: (val: string) => {
+          if (!val) {
+            if (transport.value.finalmask?.quicParams) transport.value.finalmask.quicParams.brutalUp = undefined;
+          } else {
+            ensureQuicParams().brutalUp = val;
+          }
+        }
+      });
+
+      const brutalDown = computed({
+        get: () => (transport.value.finalmask?.quicParams?.brutalDown ?? '').toString(),
+        set: (val: string) => {
+          if (!val) {
+            if (transport.value.finalmask?.quicParams) transport.value.finalmask.quicParams.brutalDown = undefined;
+          } else {
+            ensureQuicParams().brutalDown = val;
+          }
+        }
+      });
 
       const udphopEnabled = computed({
         get: () => !!transport.value.hysteriaSettings?.udphop,
@@ -369,6 +403,9 @@
 
       return {
         transport,
+        congestion,
+        brutalUp,
+        brutalDown,
         congestionOptions,
         udphopEnabled,
         finalmaskEnabled,

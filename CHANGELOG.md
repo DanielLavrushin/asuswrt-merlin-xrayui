@@ -1,5 +1,14 @@
 # XRAYUI Changelog
 
+## [0.67.0] - 2026-05-25
+
+> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
+
+- FIXED: Wireguard outbound failed with _"failed to create virtual tun interface > protocol not supported"_ on some routers (e.g. ASUS GT-BE98 Pro) even when the `tun` and `wireguard` kernel modules were loaded. XRAYUI now exposes the official `noKernelTun` setting in the Wireguard outbound to force gVisor mode, and automatically applies `net.ipv4.conf.all.src_valid_mark=1` whenever a Wireguard outbound is present (required by gVisor for fwmark-based routing).
+- FIXED: Importing a Hysteria2 link with a `user:password` auth string (e.g. `hy2://testtest:HaMMM...@host:443`) only kept the part after the colon, breaking authentication against servers using the `userpass` authenticator. The full auth token is now preserved, and percent-encoded values (`%3A` for `:`) are decoded on import.
+- FIXED: Hysteria2 outbound congestion control and brutal bandwidth (`congestion`, `up`, `down`) were written to the legacy location inside `hysteriaSettings`, where Xray-core 26.3.27+ ignores them. These settings are now written to `streamSettings.finalmask.quicParams` as `congestion`, `brutalUp` and `brutalDown` (with `mbps` suffix), matching the current Xray-core schema. ([#347](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/347)) **Note:** existing configs need their Hysteria2 congestion/bandwidth values re-entered once after upgrade.
+- ADDED: Full localization for the Wireguard outbound modal (English, Russian, Ukrainian, German, Simplified Chinese), with hint copy aligned to the official Xray-core documentation.
+
 ## [0.66.5] - 2026-04-12
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._

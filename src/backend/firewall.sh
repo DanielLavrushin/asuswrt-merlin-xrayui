@@ -326,15 +326,10 @@ configure_dns_leak_lock() {
         $IPT -w -t filter -N XRAYUI_DNS_LOCK 2>/dev/null || $IPT -w -t filter -F XRAYUI_DNS_LOCK
     done
 
-    # Drop all DNS bound for port 53. Traffic to the DNS inbound itself uses
-    # a non-53 listen port, so it's not matched here. Xray's outbound proxy
-    # leaves the router as the proxy protocol (e.g. TCP/443), not UDP 53,
-    # so legitimate proxied DNS queries are unaffected.
+    ipt filter -A XRAYUI_DNS_LOCK -m addrtype --dst-type LOCAL -j RETURN
     ipt filter -A XRAYUI_DNS_LOCK -p udp --dport 53 -j DROP
     ipt filter -A XRAYUI_DNS_LOCK -p tcp --dport 53 -j DROP
 
-    # OUTPUT covers router-originated traffic (dnsmasq, system).
-    # FORWARD is a safety net for LAN clients that bypass TPROXY.
     for hook in OUTPUT FORWARD; do
         ipt filter -C $hook -j XRAYUI_DNS_LOCK 2>/dev/null || ipt filter -I $hook 1 -j XRAYUI_DNS_LOCK
     done

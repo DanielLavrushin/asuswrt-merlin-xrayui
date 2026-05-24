@@ -637,7 +637,7 @@
       "hint_peers": "Wireguard 服务器列表，每一项为一个服务器配置。",
       "modal_peers_title": "管理 Peers",
       "modal_peer_title": "Peer",
-      "text_no_peers": "暂无 peer",
+      "text_no_peers": "暂无 Peer",
       "text_add_new": "新增",
       "label_peer_endpoint": "服务器地址",
       "hint_peer_endpoint": "服务器地址，格式为 `host:port` 或 `IP:port`。**必填**。",
@@ -700,8 +700,19 @@
     },
     "XrayCoreVersionModal": {
       "modal_title": "X-RAY 核心更新",
-      "modal_desc": "选择要切换的版本：",
-      "switch": "切换至此版本"
+      "modal_desc": "从下拉列表中选择一个版本，或选择「自定义版本…」以安装任意 Xray-core 发布标签。",
+      "current_installed": "当前已安装：",
+      "label_version": "版本",
+      "loading": "正在加载版本…",
+      "switch": "切换至此版本",
+      "prerelease_suffix": "（预发布）",
+      "prerelease_warning": "这是预发布版本，可能不稳定。",
+      "custom_option": "自定义版本…",
+      "custom_version_label": "自定义版本",
+      "custom_version_placeholder": "例如 1.8.4",
+      "custom_version_hint": "输入任意 Xray-core 发布标签（可带或不带前导「v」）。只要 GitHub 上存在该标签，旧版本（如 1.8.4）也可使用。",
+      "error_no_version_selected": "请选择一个版本或输入自定义版本。",
+      "error_invalid_custom_version": "版本格式无效。例如 1.8.4 或 1.250.0-rc1。"
     },
     "ReverseProxy": {
       "title": "反向代理",

@@ -47,11 +47,18 @@ start() {
     )
 
     if [ "$HAS_WG_OUTBOUND" = "yes" ]; then
-        local current_svm=$(cat /proc/sys/net/ipv4/conf/all/src_valid_mark 2>/dev/null)
-        if [ "$current_svm" != "1" ]; then
-            log_info "WireGuard outbound detected. Setting net.ipv4.conf.all.src_valid_mark=1."
-            sysctl -w net.ipv4.conf.all.src_valid_mark=1 >/dev/null 2>&1 ||
-                echo 1 >/proc/sys/net/ipv4/conf/all/src_valid_mark 2>/dev/null
+        local svm_path="/proc/sys/net/ipv4/conf/all/src_valid_mark"
+        if [ ! -e "$svm_path" ]; then
+            log_warn "WireGuard outbound detected but $svm_path is unavailable; gVisor outbound may not work."
+        else
+            local current_svm=$(cat "$svm_path" 2>/dev/null)
+            if [ "$current_svm" != "1" ]; then
+                log_info "WireGuard outbound detected. Setting net.ipv4.conf.all.src_valid_mark=1."
+                if ! { sysctl -w net.ipv4.conf.all.src_valid_mark=1 >/dev/null 2>&1 ||
+                    echo 1 >"$svm_path" 2>/dev/null; }; then
+                    log_warn "Failed to set net.ipv4.conf.all.src_valid_mark=1; WireGuard gVisor outbound may not work."
+                fi
+            fi
         fi
     fi
 

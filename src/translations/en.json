@@ -705,8 +705,19 @@
     },
     "XrayCoreVersionModal": {
       "modal_title": "X-RAY Core Update",
-      "modal_desc": "Select a version to switch to:",
-      "switch": "Switch to this version"
+      "modal_desc": "Pick a release from the dropdown, or choose “Custom version…” to install any tagged Xray-core release.",
+      "current_installed": "Currently installed:",
+      "label_version": "Version",
+      "loading": "Loading versions…",
+      "switch": "Switch to this version",
+      "prerelease_suffix": "(prerelease)",
+      "prerelease_warning": "This is a prerelease build — it may be unstable.",
+      "custom_option": "Custom version…",
+      "custom_version_label": "Custom version",
+      "custom_version_placeholder": "e.g. 1.8.4",
+      "custom_version_hint": "Enter any Xray-core release tag (with or without the leading “v”). Older releases like 1.8.4 are supported as long as the tag exists on GitHub.",
+      "error_no_version_selected": "Please select a version or enter a custom one.",
+      "error_invalid_custom_version": "Invalid version format. Expected something like 1.8.4 or 1.250.0-rc1."
     },
     "ReverseProxy": {
       "title": "Reverse Proxy",

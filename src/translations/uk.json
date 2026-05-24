@@ -700,8 +700,19 @@
     },
     "XrayCoreVersionModal": {
       "modal_title": "Оновлення X-RAY Core",
-      "modal_desc": "Виберіть версію для перемикання:",
-      "switch": "Перемкнутися на цю версію"
+      "modal_desc": "Виберіть реліз зі списку або пункт «Своя версія…», щоб встановити будь-який тег релізу Xray-core.",
+      "current_installed": "Зараз встановлено:",
+      "label_version": "Версія",
+      "loading": "Завантаження версій…",
+      "switch": "Перемкнутися на цю версію",
+      "prerelease_suffix": "(передреліз)",
+      "prerelease_warning": "Це передрелізна збірка — можлива нестабільність.",
+      "custom_option": "Своя версія…",
+      "custom_version_label": "Своя версія",
+      "custom_version_placeholder": "напр. 1.8.4",
+      "custom_version_hint": "Введіть будь-який тег релізу Xray-core (з «v» або без). Підтримуються і старі версії, наприклад 1.8.4 — якщо такий тег існує на GitHub.",
+      "error_no_version_selected": "Виберіть версію або вкажіть свою.",
+      "error_invalid_custom_version": "Невірний формат версії. Очікується, наприклад, 1.8.4 або 1.250.0-rc1."
     },
     "ReverseProxy": {
       "title": "Зворотний проксі",

@@ -705,8 +705,19 @@
     },
     "XrayCoreVersionModal": {
       "modal_title": "Обновление X-RAY Core",
-      "modal_desc": "Выберите версию для переключения:",
-      "switch": "Переключиться на эту версию"
+      "modal_desc": "Выберите релиз из списка или пункт «Своя версия…», чтобы установить любой тег релиза Xray-core.",
+      "current_installed": "Сейчас установлено:",
+      "label_version": "Версия",
+      "loading": "Загрузка версий…",
+      "switch": "Переключиться на эту версию",
+      "prerelease_suffix": "(предварительный выпуск)",
+      "prerelease_warning": "Это предварительная сборка — возможны нестабильности.",
+      "custom_option": "Своя версия…",
+      "custom_version_label": "Своя версия",
+      "custom_version_placeholder": "напр. 1.8.4",
+      "custom_version_hint": "Укажите любой тег релиза Xray-core (с «v» или без). Поддерживаются и старые версии, например 1.8.4 — если тег есть на GitHub.",
+      "error_no_version_selected": "Выберите версию или укажите свою.",
+      "error_invalid_custom_version": "Неверный формат версии. Ожидается, например, 1.8.4 или 1.250.0-rc1."
     },
     "ReverseProxy": {
       "title": "Обратный прокси",

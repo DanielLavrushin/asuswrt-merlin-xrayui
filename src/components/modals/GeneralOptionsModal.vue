@@ -387,6 +387,7 @@
 
   const gh_proxies = [
     'https://proxy.lavrush.in/xray/',
+    'https://cdn.gh-proxy.org/',
     'https://ghfast.top/',
     'https://ghproxy.net/',
     'https://jiashu.1win.eu.org/',

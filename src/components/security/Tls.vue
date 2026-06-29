@@ -24,8 +24,9 @@
             <hint v-html="$t('com.Tls.hint_allow_insecure')"></hint>
           </th>
           <td>
-            <input v-model="transport.tlsSettings.allowInsecure" type="checkbox" class="input" />
-            <span class="hint-color">default: false</span>
+            <input v-model="transport.tlsSettings.allowInsecure" type="checkbox" class="input" :disabled="!allowInsecureSupported" />
+            <span class="hint-color" v-if="allowInsecureSupported">default: false</span>
+            <span class="hint-color" v-else v-html="$t('com.Tls.hint_allow_insecure_removed')"></span>
           </td>
         </tr>
         <tr v-if="proxyType === 'inbound'">
@@ -190,6 +191,7 @@
   import engine, { SubmitActions } from '@/modules/Engine';
   import CertificatesModal from '@modal/CertificatesModal.vue';
   import { XrayStreamSettingsObject, XrayStreamTlsSettingsObject, XrayStreamTlsCertificateObject } from '@/modules/CommonObjects';
+  import { coreSupports } from '@/modules/CoreVersion';
   import { XrayOptions } from '@/modules/Options';
   import Hint from '@/components/Hint.vue';
 
@@ -271,9 +273,11 @@
         return val ? val.includes('://') : false;
       });
 
+      const allowInsecureSupported = computed(() => coreSupports('allowInsecure'));
+
       const pinnedCertificatesText = computed({
         get: () => {
-          return transport.value.tlsSettings?.pinnedPeerCertificateSha256?.join('\n') || '';
+          return transport.value.tlsSettings?.pinnedCertificateList().join('\n') || '';
         },
         set: (value: string) => {
           if (transport.value.tlsSettings) {
@@ -282,6 +286,7 @@
               .map((line) => line.trim().toUpperCase())
               .filter((line) => line.length > 0);
             transport.value.tlsSettings.pinnedPeerCertificateSha256 = lines.length > 0 ? lines : undefined;
+            transport.value.tlsSettings.pinnedPeerCertSha256 = undefined;
           }
         }
       });
@@ -299,6 +304,7 @@
         certificate_renew,
         pinnedCertificatesText,
         isDnsEchConfig,
+        allowInsecureSupported,
         echForceQueryOptions: XrayOptions.echForceQueryOptions,
         echServerName,
         generatedEchConfigList,

@@ -18,6 +18,7 @@ import {
   XrayXmuxObject
 } from './CommonObjects';
 import { XrayStreamWsSettingsObject, XrayStreamTcpSettingsObject } from './TransportObjects';
+import { setCoreVersion } from './CoreVersion';
 
 describe('CommonObjects', () => {
   describe('XraySniffingObject', () => {
@@ -140,6 +141,65 @@ describe('CommonObjects', () => {
       tls.echForceQuery = 'none';
       tls.normalize();
       expect(tls.echForceQuery).toBeUndefined();
+    });
+
+    describe('pinned peer certificates', () => {
+      afterEach(() => setCoreVersion('0.0.0'));
+
+      it('serializes the array into a comma-separated pinnedPeerCertSha256 on core 26.3.27+', () => {
+        setCoreVersion('26.3.27');
+        const tls = new XrayStreamTlsSettingsObject();
+        tls.pinnedPeerCertificateSha256 = ['AABB', 'CCDD'];
+        tls.normalize();
+        expect(tls.pinnedPeerCertSha256).toBe('AABB,CCDD');
+        expect(tls.pinnedPeerCertificateSha256).toBeUndefined();
+      });
+
+      it('uses a tilde separator on cores older than 26.3.27', () => {
+        setCoreVersion('26.3.26');
+        const tls = new XrayStreamTlsSettingsObject();
+        tls.pinnedPeerCertificateSha256 = ['AABB', 'CCDD'];
+        tls.normalize();
+        expect(tls.pinnedPeerCertSha256).toBe('AABB~CCDD');
+      });
+
+      it('clears pinnedPeerCertSha256 when there are no hashes', () => {
+        const tls = new XrayStreamTlsSettingsObject();
+        tls.pinnedPeerCertificateSha256 = undefined;
+        tls.normalize();
+        expect(tls.pinnedPeerCertSha256).toBeUndefined();
+      });
+
+      it('hydrates the editable array back from a stored string (either separator)', () => {
+        const tls = new XrayStreamTlsSettingsObject();
+        tls.pinnedPeerCertSha256 = 'aabb, ccdd ~ eeff';
+        tls.hydratePinnedCertificates();
+        expect(tls.pinnedPeerCertificateSha256).toEqual(['AABB', 'CCDD', 'EEFF']);
+        expect(tls.pinnedPeerCertSha256).toBeUndefined();
+      });
+
+      it('is idempotent: repeated normalize keeps the serialized pins', () => {
+        setCoreVersion('26.3.27');
+        const tls = new XrayStreamTlsSettingsObject();
+        tls.pinnedPeerCertificateSha256 = ['AABB', 'CCDD'];
+        tls.normalize();
+        tls.normalize();
+        tls.normalize();
+        expect(tls.pinnedPeerCertSha256).toBe('AABB,CCDD');
+        expect(tls.pinnedPeerCertificateSha256).toBeUndefined();
+      });
+
+      it('pinnedCertificateList reads from either representation', () => {
+        const fromArray = new XrayStreamTlsSettingsObject();
+        fromArray.pinnedPeerCertificateSha256 = ['AABB'];
+        expect(fromArray.pinnedCertificateList()).toEqual(['AABB']);
+
+        const fromString = new XrayStreamTlsSettingsObject();
+        fromString.pinnedPeerCertSha256 = 'aabb~ccdd';
+        expect(fromString.pinnedCertificateList()).toEqual(['AABB', 'CCDD']);
+
+        expect(new XrayStreamTlsSettingsObject().pinnedCertificateList()).toEqual([]);
+      });
     });
 
     it('normalizes echForceQuery empty string to undefined', () => {

@@ -30,7 +30,8 @@
     "xrayui_desc": "This UI control page provides a simple interface to manage and monitor the X-ray Core's configuration and it's status."
   },
   "guide": {
-    "dns_leak": "https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/dns-leak"
+    "dns_leak": "https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/dns-leak",
+    "ipset": "https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/general-options#enable-dns-bypass-ipset"
   },
   "com": {
     "ClientStatus": {
@@ -363,6 +364,7 @@
       "hint_server_name": "Specifies the domain of the server-side certificate, useful when connecting only via IP addresses.<br />When the target is specified by domains, like when the domain is received by `SOCKS` inbounds or detected via sniffing, the extracted domain will automatically be used as `serverName`, without any need for manual configuration.",
       "hint_alpn": "An array of strings specifying the ALPN values used in TLS handshakes. Defaults to `['h2', 'http/1.1']`.<br />Application-Layer Protocol Negotiation (ALPN) is a TLS extension that allows the application to negotiate which protocol should be performed over a secure connection in a manner that is more efficient than sending multiple requests over the same connection.",
       "hint_allow_insecure": "Whether to allow insecure connections (client-only). Defaults to `false`. <br /> When `true`, Xray will not verify the validity of the TLS certificate provided by the outbound. <blockquote>**Danger**: This should not be set to `true` in deployments for security reaons, or it can be susceptible to man-in-the-middle attacks. </blockquote>",
+      "hint_allow_insecure_removed": "removed in Xray-core 26.3.27+ &mdash; pin the certificate hash instead",
       "hint_reject_unknown_sni": "When `true`, the server rejects `TLS` handshakes if the SNI received does not match domains specified in the certificate. The default value is `false`.",
       "hint_dont_use_ca": "Whether to disable the CA certificates provided by the operating system. Defaults to `false`. When `true`, Xray will only use the certificates specified in certificates for TLS handshakes. When `false`, Xray will only use the CA certificates provided by the operating system for TLS handshakes.",
       "hint_tls_version": "Specifies the `minimum` and `maximum` version of the TLS protocol.",

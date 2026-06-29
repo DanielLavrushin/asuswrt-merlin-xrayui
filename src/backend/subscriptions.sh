@@ -434,6 +434,8 @@ subscription_parse_shadowsocks() {
     local ai
     ai=$(urldecode "$(subscription_parse_kv "$qs" "allowInsecure")")
     [ -z "$ai" ] && ai="false"
+    local ai_supported
+    if core_supports_allow_insecure; then ai_supported="1"; else ai_supported="0"; fi
 
     local network
     network=$(subscription_parse_network "$net" "" "$qhost" "$mode" "$path" "$hdr")
@@ -441,7 +443,7 @@ subscription_parse_shadowsocks() {
     jq -nc --arg tag "$tag" --arg host "$host" --arg port "$port" \
         --arg method "$method" --arg password "$password" \
         --arg net "$net" --arg sec "$sec" --arg fp "$fp" --arg sni "$sni" \
-        --arg alpn "$alpn" --arg ai "$ai" --argjson network "$network" '
+        --arg alpn "$alpn" --arg ai "$ai" --arg aisup "$ai_supported" --argjson network "$network" '
     {
         protocol:"shadowsocks",
         tag:$tag,
@@ -458,7 +460,7 @@ subscription_parse_shadowsocks() {
             {network:$net,security:$sec}
             + (if $sec=="tls" then {
                   tlsSettings:{
-                      allowInsecure:($ai=="true" or $ai=="1" or $ai=="yes"),
+                      allowInsecure:($aisup=="1" and ($ai=="true" or $ai=="1" or $ai=="yes")),
                       alpn:(if ($alpn|length)>0 then ($alpn|split(",")) else ["h3","h2","http/1.1"] end),
                       fingerprint:(if ($fp|length)>0 then $fp else "chrome" end),
                       serverName:$sni
@@ -585,17 +587,23 @@ subscription_parse_hysteria() {
 
     # Build TLS settings if needed
     local tls_settings="null"
+    local ai_supported pin_sep core_ver
+    if core_supports_allow_insecure; then ai_supported="1"; else ai_supported="0"; fi
+    core_ver=$(xrayui_core_version)
+    if [ -z "$core_ver" ] || version_ge "$core_ver" "26.3.27"; then pin_sep=","; else pin_sep="~"; fi
     if [ -n "$final_sni" ] || [ "$insecure" = "1" ] || [ "$insecure" = "true" ] || [ -n "$alpn" ] || [ -n "$pinSHA256" ]; then
         tls_settings=$(jq -nc \
             --arg sni "$final_sni" \
             --arg insecure "$insecure" \
+            --arg aisup "$ai_supported" \
             --arg alpn "$alpn" \
-            --arg pin "$pinSHA256" '
+            --arg pin "$pinSHA256" \
+            --arg pinsep "$pin_sep" '
             {}
             | if ($sni|length)>0 then .serverName=$sni else . end
-            | if ($insecure=="1" or $insecure=="true") then .allowInsecure=true else . end
+            | if ($aisup=="1" and ($insecure=="1" or $insecure=="true")) then .allowInsecure=true else . end
             | if ($alpn|length)>0 then .alpn=($alpn|split(",")) else . end
-            | if ($pin|length)>0 then .pinnedPeerCertificateSha256=($pin|split(",")) else . end
+            | if ($pin|length)>0 then .pinnedPeerCertSha256=([$pin|splits("[,~]")|gsub("^\\s+|\\s+$";"")]|map(select(length>0))|join($pinsep)) else . end
         ')
     fi
 

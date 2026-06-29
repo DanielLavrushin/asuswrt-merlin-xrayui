@@ -1,6 +1,7 @@
 import { XrayHttpClientObject, XraySocksClientObject, XrayVlessClientObject, XrayVmessClientObject } from './ClientsObjects';
 import { ISecurityProtocol, IXrayServer } from './Interfaces';
 import XrayOptions, { XrayProtocol, XrayProtocolMode } from './Options';
+import { coreSupports, coreAtLeast } from './CoreVersion';
 import {
   XrayStreamHttpSettingsObject,
   XrayStreamKcpSettingsObject,
@@ -137,6 +138,7 @@ export class XrayStreamTlsSettingsObject implements ISecurityProtocol {
   public certificates?: XrayStreamTlsCertificateObject[] | undefined = [];
   public fingerprint?: string;
   public pinnedPeerCertificateSha256?: string[];
+  public pinnedPeerCertSha256?: string;
   public masterKeyLog?: string;
   public echConfigList?: string;
   public echForceQuery?: string;
@@ -152,7 +154,7 @@ export class XrayStreamTlsSettingsObject implements ISecurityProtocol {
 
   normalize(): this {
     this.rejectUnknownSni = this.rejectUnknownSni ? this.rejectUnknownSni : undefined;
-    this.allowInsecure = this.allowInsecure ? this.allowInsecure : undefined;
+    this.allowInsecure = this.allowInsecure && coreSupports('allowInsecure') ? this.allowInsecure : undefined;
     this.disableSystemRoot = this.disableSystemRoot ? this.disableSystemRoot : undefined;
     this.enableSessionResumption = this.enableSessionResumption ? this.enableSessionResumption : undefined;
 
@@ -173,7 +175,39 @@ export class XrayStreamTlsSettingsObject implements ISecurityProtocol {
     if (this.certificates?.length == 0) {
       this.certificates = undefined;
     }
+
+    if (this.normalizePinnedCertificates) this.normalizePinnedCertificates();
+
     return this;
+  }
+
+  private normalizePinnedCertificates?(): void {
+    if (this.pinnedPeerCertificateSha256?.length) {
+      const separator = coreAtLeast('26.3.27') ? ',' : '~';
+      this.pinnedPeerCertSha256 = this.pinnedPeerCertificateSha256.join(separator);
+      this.pinnedPeerCertificateSha256 = undefined;
+    } else if (!this.pinnedPeerCertSha256?.trim()) {
+      this.pinnedPeerCertSha256 = undefined;
+    }
+  }
+
+  public pinnedCertificateList(): string[] {
+    if (this.pinnedPeerCertificateSha256?.length) {
+      return this.pinnedPeerCertificateSha256;
+    }
+    if (this.pinnedPeerCertSha256?.trim()) {
+      return this.pinnedPeerCertSha256
+        .split(/[,~]/)
+        .map((s) => s.trim().toUpperCase())
+        .filter((s) => s.length > 0);
+    }
+    return [];
+  }
+
+  public hydratePinnedCertificates(): void {
+    const list = this.pinnedCertificateList();
+    this.pinnedPeerCertificateSha256 = list.length > 0 ? list : undefined;
+    this.pinnedPeerCertSha256 = undefined;
   }
 }
 

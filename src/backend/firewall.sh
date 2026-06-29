@@ -323,7 +323,7 @@ configure_dns_leak_lock() {
     log_info "DNS leak lock: dropping UDP/TCP 53 except to dedicated DNS inbound"
 
     local dns_lock_uid=""
-    [ -n "$xray_pid" ] && dns_lock_uid=$(awk '/^Uid:/ {print $2}' /proc/"$xray_pid"/status)
+    [ -n "$xray_pid" ] && dns_lock_uid=$(awk '/^Uid:/ {print $2}' /proc/"$xray_pid"/status 2>/dev/null)
 
     local owner_match_ok=0
     if [ -n "$dns_lock_uid" ]; then

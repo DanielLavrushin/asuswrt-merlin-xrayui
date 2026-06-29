@@ -360,6 +360,7 @@
       "hint_server_name": "指定服务端证书的域名（仅通过 IP 连接时有用）。<br />若目标通过域名指定（如 `SOCKS` 入站接收或嗅探检测到的域名），提取的域名将自动作为 `serverName` ,，无需手动配置。",
       "hint_alpn": "TLS 握手时使用的 ALPN 值数组，默认为 `['h2', 'http/1.1']`。<br />应用层协议（ALPN） 是 TLS 扩展，允许应用通过安全连接协商协议，比同一连接发送多请求更高效。",
       "hint_allow_insecure": "是否允许不安全连接（仅客户端），默认 `false`。<br />设为 `true` 时，Xray 不验证出站 TLS 证书有效性。<blockquote>**危险**: 出于安全考虑，部署时不应启用，否则易受中间人攻击。</blockquote>",
+      "hint_allow_insecure_removed": "已在 Xray-core 26.3.27+ 中移除 &mdash; 请改用固定证书哈希",
       "hint_reject_unknown_sni": "设为 `true`时，若接收的 SNI 与证书域名不匹配，服务器拒绝 `TLS` 握手，默认为 `false`。",
       "hint_dont_use_ca": "是否禁用系统 CA 证书，默认为 `false`。 `true`时 Xray 仅用指定证书， `false`时仅用系统 CA 证书。",
       "hint_tls_version": "指定 TLS 协议的最小和最大版本。",

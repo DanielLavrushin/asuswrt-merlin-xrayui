@@ -837,6 +837,8 @@ function transformStreamSettings(streamSettings: XrayStreamSettingsObject | unde
     }
   }
 
+  settings.tlsSettings?.hydratePinnedCertificates();
+
   if (streamSettings.finalmask) {
     settings.finalmask = plainToInstance(XrayFinalMaskSettingsObject, streamSettings.finalmask);
     settings.finalmask.udp = transformMaskArray(streamSettings.finalmask.udp);

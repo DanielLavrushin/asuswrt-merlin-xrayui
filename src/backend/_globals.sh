@@ -40,6 +40,7 @@ DEFAULT_GEOSITE_URL="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/la
 XRAYUI_CONFIG_FILE="/opt/etc/$ADDON_TAG.conf"
 
 XRAY_VERSION="0.0"
+XRAYUI_CORE_VER_CACHE=""
 XRAY_PIDFILE=/var/run/xray.pid
 XRAY_CONFIG_FILE="/opt/etc/xray/${profile:-$DEFAULT_XRAY_PROFILE_NAME}"
 

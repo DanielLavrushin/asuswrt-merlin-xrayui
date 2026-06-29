@@ -8,6 +8,8 @@
 - FIXED: With **Prevent DNS leaks** enabled, Wireguard (and other) outbounds could fail with `failed to lookup DNS` errors a few seconds after Xray started. The DNS leak firewall rule was too strict and also blocked Xray's own queries to the router's local DNS resolver. Router-local DNS traffic is now allowed; queries to upstream DNS servers are still blocked, so leak protection is unchanged.
 - ADDED: More GitHub proxy mirrors to choose from in General Options, for more reliable downloads in regions where GitHub is blocked. ([#358](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/pull/358))
 - FIXED: The **After firewall cleanup** hook script set in General Options never ran when Xray stopped, because of a filename mismatch between what the UI saved and what the router looked for. The cleanup hook now runs as expected. Thanks to [@xxhhlk](https://github.com/xxhhlk). ([#353](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/pull/353))
+- FIXED: Enabling **Allow insecure** on an outbound (directly or via an imported share link) stopped Xray from starting after upgrading Xray-core to 26.3.27 or newer, which removed that option. XRAYUI now hides the option when the installed Xray-core no longer supports it and no longer writes it into the configuration. ([#359](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/359))
+- FIXED: Pinned peer certificate hashes were saved in a format Xray-core does not read, so certificate pinning never actually took effect. They are now written in the format the installed Xray-core expects.
 
 ## [0.67.0] - 2026-05-25
 

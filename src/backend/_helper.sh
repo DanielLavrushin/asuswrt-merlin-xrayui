@@ -545,6 +545,26 @@ is_json() {
     echo "$1" | jq -e . >/dev/null 2>&1
 }
 
+xrayui_core_version() {
+    if [ -z "$XRAYUI_CORE_VER_CACHE" ]; then
+        XRAYUI_CORE_VER_CACHE=$(xray version 2>/dev/null | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
+        [ -z "$XRAYUI_CORE_VER_CACHE" ] && XRAYUI_CORE_VER_CACHE="-"
+    fi
+    [ "$XRAYUI_CORE_VER_CACHE" = "-" ] || printf '%s' "$XRAYUI_CORE_VER_CACHE"
+}
+
+version_ge() {
+    [ "$(printf '%s\n%s\n' "$2" "$1" | sort -t. -k1,1n -k2,2n -k3,3n | head -n1)" = "$2" ]
+}
+
+core_supports_allow_insecure() {
+    local v
+    v=$(xrayui_core_version)
+    [ -z "$v" ] && return 0
+    version_ge "$v" "26.3.27" && return 1
+    return 0
+}
+
 b64d() {
     echo "$1" | base64 -d 2>/dev/null
 }

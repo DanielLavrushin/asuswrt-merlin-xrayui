@@ -1,9 +1,10 @@
 # XRAYUI Changelog
 
-## [0.67.x] - 2026-05-xx
+## [0.68.0] - 2026-06-30
 
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
+- FIXED: Clicking **Regenerate** for Reality keys did nothing — the private and public key fields stayed empty. The keys are now generated and filled in again. ([#67](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/67))
 - FIXED: With **Prevent DNS leaks** enabled, Wireguard (and other) outbounds could fail with `failed to lookup DNS` errors a few seconds after Xray started. The DNS leak firewall rule was too strict and also blocked Xray's own queries to the router's local DNS resolver. Router-local DNS traffic is now allowed; queries to upstream DNS servers are still blocked, so leak protection is unchanged.
 
 ## [0.67.0] - 2026-05-25

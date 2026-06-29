@@ -37,3 +37,16 @@ export function coreSupports(feature: CoreFeature): boolean {
   if (rule.until && coreAtLeast(rule.until)) return false;
   return true;
 }
+
+export type MkcpMaskingMode = 'legacy' | 'finalmask' | 'finalmask-mkcp-legacy';
+
+export function mkcpMaskingMode(): MkcpMaskingMode {
+  const v = coreVersion.value;
+  if (v !== '0.0.0' && coreBelow('26.1.31')) return 'legacy';
+  if (coreAtLeast('26.6.1')) return 'finalmask-mkcp-legacy';
+  return 'finalmask';
+}
+
+export function coreUsesMkcpLegacyMaskType(): boolean {
+  return coreAtLeast('26.6.1');
+}

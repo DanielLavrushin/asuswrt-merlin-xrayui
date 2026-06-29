@@ -11,7 +11,8 @@ import {
   XrayStreamHttpUpgradeSettingsObject,
   XrayStreamSplitHttpSettingsObject,
   XrayStreamHysteriaSettingsObject,
-  XrayFinalMaskSettingsObject
+  XrayFinalMaskSettingsObject,
+  migrateKcpMaskingForSerialization
 } from './TransportObjects';
 
 export const isObjectEmpty = (obj: any): boolean => {
@@ -711,6 +712,8 @@ export class XrayStreamSettingsObject {
       .forEach((k) => {
         if (!allowed.has(k)) (this as any)[k] = undefined;
       });
+
+    migrateKcpMaskingForSerialization(this);
 
     if (this.normalizeAllSettings) this.normalizeAllSettings();
 

@@ -68,7 +68,9 @@ import {
   XrayStreamWsSettingsObject,
   XrayFinalMaskObject,
   XrayFinalMaskSettingsObject,
-  XrayStreamSplitHttpSettingsObject
+  XrayStreamSplitHttpSettingsObject,
+  maskFromCoreForm,
+  extractKcpMaskingForUi
 } from './TransportObjects';
 import { XrayProtocol } from './Options';
 import * as DnsLeakProtection from './DnsLeakProtection';
@@ -516,6 +518,7 @@ export class Engine {
   };
 
   prepareServerConfig(config: XrayObject): XrayObject {
+    config = this.cloneServerConfig(config);
     DnsLeakProtection.repair(config);
 
     config.inbounds.forEach((proxy) => {
@@ -723,65 +726,7 @@ export class Engine {
         });
         config = plainToInstance(XrayObject, response.data);
       }
-      this.xrayConfig = config;
-      if (this.xrayConfig.log) {
-        this.xrayConfig.log = plainToInstance(XrayLogObject, config.log);
-      }
-
-      this.xrayConfig.reverse = plainToInstance(XrayReverseObject, config.reverse);
-      deserializeArray(this.xrayConfig.reverse?.bridges, XrayReverseItem);
-      deserializeArray(this.xrayConfig.reverse?.portals, XrayReverseItem);
-
-      this.xrayConfig.inbounds.forEach((proxy, index) => {
-        proxy = deserializeProxy(proxy, inboundSettingsMap, XrayInboundObject);
-        proxy.streamSettings = transformStreamSettings(proxy.streamSettings);
-        if (proxy.allocate) proxy.allocate = plainToInstance(XrayAllocateObject, proxy.allocate);
-        if (proxy.sniffing) proxy.sniffing = plainToInstance(XraySniffingObject, proxy.sniffing);
-        this.xrayConfig.inbounds[index] = proxy;
-      });
-
-      this.xrayConfig.outbounds.forEach((proxy, index) => {
-        proxy = deserializeProxy(proxy, outboundSettingsMap, XrayOutboundObject);
-        proxy.streamSettings = transformStreamSettings(proxy.streamSettings);
-        this.xrayConfig.outbounds[index] = proxy;
-      });
-
-      if (config.routing) {
-        this.xrayConfig.routing = plainToInstance(XrayRoutingObject, config.routing);
-        deserializeArray(this.xrayConfig.routing.policies, XrayRoutingPolicy);
-        deserializeArray(this.xrayConfig.routing.rules, XrayRoutingRuleObject);
-        deserializeArray(this.xrayConfig.routing.disabled_rules, XrayRoutingRuleObject);
-        deserializeArray(this.xrayConfig.routing.balancers, XrayBalancerObject);
-        this.xrayConfig.routing.balancers?.forEach((b) => {
-          if (b.strategy) b.strategy = plainToInstance(XrayBalancerStrategyObject, b.strategy);
-        });
-      }
-
-      if (config.dns) {
-        this.xrayConfig.dns = plainToInstance(XrayDnsObject, config.dns);
-        const dnsServers = this.xrayConfig.dns?.servers;
-        if (dnsServers) {
-          const rulesMap = new Map<number, XrayRoutingRuleObject>();
-          [...(this.xrayConfig.routing?.rules ?? []), ...(this.xrayConfig.routing?.disabled_rules ?? [])].forEach((rule) => {
-            rulesMap.set(rule.idx, rule);
-          });
-          dnsServers.forEach((server, index) => {
-            dnsServers[index] = typeof server === 'string' ? server : plainToInstance(XrayDnsServerObject, server);
-            server = dnsServers[index];
-            if (server instanceof XrayDnsServerObject && server.rules?.length) {
-              server.domains = [];
-              server.rules = (server.rules as unknown as number[]).map((ruleIdx) => rulesMap.get(ruleIdx)).filter((r): r is XrayRoutingRuleObject => r !== undefined);
-            }
-          });
-        }
-      }
-
-      if (Array.isArray(config.fakedns)) {
-        this.xrayConfig.fakedns = (config.fakedns as unknown[]).map((entry) => plainToInstance(XrayFakeDnsObject, entry as object));
-      }
-
-      deserializeTlsCertificates(this.xrayConfig.inbounds);
-      deserializeTlsCertificates(this.xrayConfig.outbounds);
+      this.xrayConfig = this.hydrateConfig(config);
       Object.assign(xrayConfig, this.xrayConfig);
       return this.xrayConfig;
     } catch (e) {
@@ -798,6 +743,73 @@ export class Engine {
     }
     return null;
   }
+
+  hydrateConfig(config: XrayObject): XrayObject {
+    if (config.log) {
+      config.log = plainToInstance(XrayLogObject, config.log);
+    }
+
+    config.reverse = plainToInstance(XrayReverseObject, config.reverse);
+    deserializeArray(config.reverse?.bridges, XrayReverseItem);
+    deserializeArray(config.reverse?.portals, XrayReverseItem);
+
+    config.inbounds.forEach((proxy, index) => {
+      proxy = deserializeProxy(proxy, inboundSettingsMap, XrayInboundObject);
+      proxy.streamSettings = transformStreamSettings(proxy.streamSettings);
+      if (proxy.allocate) proxy.allocate = plainToInstance(XrayAllocateObject, proxy.allocate);
+      if (proxy.sniffing) proxy.sniffing = plainToInstance(XraySniffingObject, proxy.sniffing);
+      config.inbounds[index] = proxy;
+    });
+
+    config.outbounds.forEach((proxy, index) => {
+      proxy = deserializeProxy(proxy, outboundSettingsMap, XrayOutboundObject);
+      proxy.streamSettings = transformStreamSettings(proxy.streamSettings);
+      config.outbounds[index] = proxy;
+    });
+
+    if (config.routing) {
+      config.routing = plainToInstance(XrayRoutingObject, config.routing);
+      deserializeArray(config.routing.policies, XrayRoutingPolicy);
+      deserializeArray(config.routing.rules, XrayRoutingRuleObject);
+      deserializeArray(config.routing.disabled_rules, XrayRoutingRuleObject);
+      deserializeArray(config.routing.balancers, XrayBalancerObject);
+      config.routing.balancers?.forEach((b) => {
+        if (b.strategy) b.strategy = plainToInstance(XrayBalancerStrategyObject, b.strategy);
+      });
+    }
+
+    if (config.dns) {
+      config.dns = plainToInstance(XrayDnsObject, config.dns);
+      const dnsServers = config.dns?.servers;
+      if (dnsServers) {
+        const rulesMap = new Map<number, XrayRoutingRuleObject>();
+        [...(config.routing?.rules ?? []), ...(config.routing?.disabled_rules ?? [])].forEach((rule) => {
+          rulesMap.set(rule.idx, rule);
+        });
+        dnsServers.forEach((server, index) => {
+          dnsServers[index] = typeof server === 'string' ? server : plainToInstance(XrayDnsServerObject, server);
+          server = dnsServers[index];
+          if (server instanceof XrayDnsServerObject && server.rules?.length) {
+            server.domains = [];
+            server.rules = (server.rules as unknown as number[]).map((ruleIdx) => rulesMap.get(ruleIdx)).filter((r): r is XrayRoutingRuleObject => r !== undefined);
+          }
+        });
+      }
+    }
+
+    if (Array.isArray(config.fakedns)) {
+      config.fakedns = (config.fakedns as unknown[]).map((entry) => plainToInstance(XrayFakeDnsObject, entry as object));
+    }
+
+    deserializeTlsCertificates(config.inbounds);
+    deserializeTlsCertificates(config.outbounds);
+    return config;
+  }
+
+  cloneServerConfig(config: XrayObject): XrayObject {
+    const plain = JSON.parse(JSON.stringify(config));
+    return this.hydrateConfig(plainToInstance(XrayObject, plain));
+  }
 }
 
 function transformMaskArray(masks: any[] | undefined): XrayFinalMaskObject[] | undefined {
@@ -812,7 +824,7 @@ function transformMaskArray(masks: any[] | undefined): XrayFinalMaskObject[] | u
       if (settings && 'password' in settings) (settings as any).password = mask.password;
       finalMask.settings = settings;
     }
-    return finalMask;
+    return maskFromCoreForm(finalMask);
   });
 }
 
@@ -851,6 +863,8 @@ function transformStreamSettings(streamSettings: XrayStreamSettingsObject | unde
     settings.finalmask = new XrayFinalMaskSettingsObject();
     settings.finalmask.udp = transformMaskArray((streamSettings as any).udpmasks);
   }
+
+  extractKcpMaskingForUi(settings);
 
   return settings;
 }

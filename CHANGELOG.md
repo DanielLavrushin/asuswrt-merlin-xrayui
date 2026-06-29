@@ -13,6 +13,7 @@
 - FIXED: Enabling **Allow insecure** on an outbound (directly or via an imported share link) stopped Xray from starting after upgrading Xray-core to 26.3.27 or newer, which removed that option. XRAYUI now hides the option when the installed Xray-core no longer supports it and no longer writes it into the configuration. ([#359](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/359))
 - FIXED: Pinned peer certificate hashes were saved in a format Xray-core does not read, so certificate pinning never actually took effect. They are now written in the format the installed Xray-core expects.
 - FIXED: The routing rules count showed all rules as enabled (e.g. "12") right after the page loaded, only correcting to the real figure (e.g. "10/12") after opening and closing the Manage dialog. The count is now correct from the start.
+- FIXED: mKCP transports (e.g. VLESS over mKCP) failed to start on newer Xray-core with "The feature mkcp header & seed has been removed and migrated to finalmask". The packet header type and seed you set in the mKCP settings are now written in the format the installed Xray-core expects, so the connection comes up again. Nothing changes in how you configure it.
 
 ## [0.67.0] - 2026-05-25
 

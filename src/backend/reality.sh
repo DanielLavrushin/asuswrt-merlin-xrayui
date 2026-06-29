@@ -10,9 +10,9 @@ reality_generate_keys() {
         return 1
     fi
 
-    # Try new format first (PrivateKey/Password)
-    local private_key=$(echo "$xray_output" | grep 'PrivateKey:' | awk '{print $2}')
-    local public_key=$(echo "$xray_output" | grep 'Password:' | awk '{print $2}')
+    # Try new format first (PrivateKey / Password (PublicKey))
+    local private_key=$(echo "$xray_output" | grep 'PrivateKey:' | awk '{print $NF}')
+    local public_key=$(echo "$xray_output" | grep -i 'Password' | awk '{print $NF}')
 
     # Fallback to legacy format (Private key/Public key)
     if [ -z "$private_key" ] || [ -z "$public_key" ]; then

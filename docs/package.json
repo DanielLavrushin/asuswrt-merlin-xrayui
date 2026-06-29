@@ -20,7 +20,7 @@
     "@vuepress/plugin-markdown-hint": "2.0.0-rc.42",
     "@vuepress/theme-default": "2.0.0-rc.112",
     "anywhere": "^1.7.0",
-    "mermaid": "^11.14.0",
+    "mermaid": "^11.15.0",
     "sass-embedded": "^1.97.3",
     "vue": "^3.5.28",
     "vuepress": "2.0.0-rc.24",

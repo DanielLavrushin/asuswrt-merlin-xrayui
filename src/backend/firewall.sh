@@ -302,7 +302,14 @@ configure_inbounds() {
 # itself, e.g. dnsmasq forwarders) and filter:FORWARD (LAN clients that
 # slip past TPROXY).
 configure_dns_leak_lock() {
-    [ "$xray_dns_only" = "true" ] || return 0
+    # Engage when the user explicitly asked for DNS-only, or when the DNS leak
+    # protection wiring (sys:dns-out outbound) auto-provisioned by the UI is present.
+    local dns_wiring=""
+    jq -e '(.outbounds // []) | any(.tag == "sys:dns-out")' "$XRAY_CONFIG_FILE" >/dev/null 2>&1 && dns_wiring="true"
+
+    if [ "$xray_dns_only" != "true" ] && [ "$dns_wiring" != "true" ]; then
+        return 0
+    fi
 
     # Mirror dnsmasq.sh discovery: dokodemo-door, port 53, follow redirect off.
     local dns_inbounds

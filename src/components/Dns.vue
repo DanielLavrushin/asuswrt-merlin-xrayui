@@ -11,6 +11,22 @@
     <tbody>
       <tr>
         <th>
+          {{ $t('com.Dns.label_leak_protection') }}
+          <hint v-html="$t('com.Dns.hint_leak_protection')"></hint>
+        </th>
+        <td>
+          <input type="checkbox" v-model="leakEnabled" />
+          <span class="hint-color">{{ $t('com.Dns.hint_leak_state') }}</span>
+        </td>
+      </tr>
+      <tr v-if="leakEnabled && !leakHasFallback">
+        <th></th>
+        <td>
+          <span class="hint-color" style="color: #ffcc00">{{ $t('com.Dns.warn_leak_no_fallback') }}</span>
+        </td>
+      </tr>
+      <tr>
+        <th>
           {{ $t('com.Dns.label_tag') }}
           <hint v-html="$t('com.Dns.hint_tag')"></hint>
         </th>
@@ -127,6 +143,7 @@
   import engine from '@/modules/Engine';
   import { XrayDnsObject } from '@/modules/CommonObjects';
   import xrayConfig from '@/modules/XrayConfig';
+  import * as DnsLeakProtection from '@/modules/DnsLeakProtection';
   import DnsHostsModal from '@modal/DnsHostsModal.vue';
   import DnsServersModal from '@modal/DnsServersModal.vue';
   import FakeDnsModal from '@modal/FakeDnsModal.vue';
@@ -162,6 +179,19 @@
         return config.value.inbounds.some((inbound) => inbound.streamSettings?.sockopt?.tproxy === 'tproxy');
       });
 
+      const leakEnabled = computed({
+        get: () => DnsLeakProtection.isEnabled(config.value),
+        set: (val: boolean) => {
+          if (val) {
+            DnsLeakProtection.enable(config.value);
+          } else {
+            DnsLeakProtection.disable(config.value);
+          }
+        }
+      });
+
+      const leakHasFallback = computed(() => DnsLeakProtection.hasFallbackServer(config.value));
+
       const fakeDns = computed({
         get: () => {
           return config.value.fakedns ?? [];
@@ -190,6 +220,8 @@
         modalFakeDns,
         strategyOptions: XrayDnsObject.strategyOptions,
         hasTproxy,
+        leakEnabled,
+        leakHasFallback,
         fakeDns,
         manage_hosts,
         manage_servers,

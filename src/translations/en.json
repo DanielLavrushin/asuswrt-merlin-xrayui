@@ -167,6 +167,10 @@
     },
     "Dns": {
       "title": "DNS",
+      "label_leak_protection": "DNS leak protection",
+      "hint_leak_protection": "When enabled, XRAYUI turns Xray into the resolver for the router. It auto-creates a dedicated DNS inbound (`sys:dns-in`), a DNS outbound (`sys:dns-out`) and the routing rules that hand client queries to Xray's built-in DNS server. Which resolver answers, and where its lookups go, is fully controlled by the **Servers** list below and your normal routing rules — add DoH resolvers and per-domain targets there (for example route `browserleaks.com` to `https://xbox-dns.ru/dns-query`), and keep a catch-all server (no domain rules) as a fallback. The firewall-level hardening (block stray port 53, block QUIC) stays in **General Settings → DNS**.",
+      "hint_leak_state": "auto-provisions the DNS inbound, outbound and routing rules",
+      "warn_leak_no_fallback": "No fallback DNS server defined. Add at least one server with no domain rules in the Servers list below, otherwise names that don't match a server may fail to resolve.",
       "label_tag": "Tag",
       "label_hosts": "Hosts",
       "label_servers": "Servers",

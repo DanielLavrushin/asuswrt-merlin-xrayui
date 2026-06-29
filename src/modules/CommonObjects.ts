@@ -423,8 +423,7 @@ export class XrayRoutingObject {
         })
         .filter((r) => {
           if (!r.isSystem()) return true;
-          const d = r.domain ?? [];
-          return !(d.length === 0 || d.every((s) => s.trim() === ''));
+          return !!(r.domain || r.ip || r.inboundTag || r.source || r.protocol || r.port);
         })
         .sort((a, b) => a.idx - b.idx);
 

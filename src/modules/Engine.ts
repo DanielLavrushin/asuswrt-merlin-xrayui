@@ -71,6 +71,7 @@ import {
   XrayStreamSplitHttpSettingsObject
 } from './TransportObjects';
 import { XrayProtocol } from './Options';
+import * as DnsLeakProtection from './DnsLeakProtection';
 
 // Protocol → settings class mappings for deserialization
 const inboundSettingsMap: Record<string, new () => any> = {
@@ -515,6 +516,8 @@ export class Engine {
   };
 
   prepareServerConfig(config: XrayObject): XrayObject {
+    DnsLeakProtection.repair(config);
+
     config.inbounds.forEach((proxy) => {
       proxy.normalize();
     });

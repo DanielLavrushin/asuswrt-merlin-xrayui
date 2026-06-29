@@ -162,10 +162,10 @@
       };
 
       const countRules = () => {
-        const rules = (routing.value.rules || []).concat(routing.value.disabled_rules || []);
-        const all = rules.filter((r) => !r.isSystem()).length || 0;
-        const enabled = rules.filter((r) => !r.isSystem() && r.enabled).length || 0;
-        return all === enabled ? all : `${enabled}/${all}`;
+        const enabled = (routing.value.rules || []).filter((r) => !r.isSystem()).length;
+        const disabled = (routing.value.disabled_rules || []).filter((r) => !r.isSystem()).length;
+        const all = enabled + disabled;
+        return disabled === 0 ? all : `${enabled}/${all}`;
       };
 
       const countPolicies = () => {

@@ -5,11 +5,13 @@
 > _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
 
 - FIXED: Clicking **Regenerate** for Reality keys did nothing — the private and public key fields stayed empty. The keys are now generated and filled in again. ([#67](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/67))
+- FIXED: With **Prevent DNS leaks** enabled, Xray could not connect to proxy nodes configured by domain name (e.g. `node.example.com`), failing with `operation not permitted` on DNS lookups. The leak rule was blocking Xray's own queries needed to resolve the node address. Xray's queries are now exempted from the lock; on routers that don't support that exemption, the lock is applied to LAN-client traffic only so node names still resolve. ([#362](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/362))
 - FIXED: With **Prevent DNS leaks** enabled, Wireguard (and other) outbounds could fail with `failed to lookup DNS` errors a few seconds after Xray started. The DNS leak firewall rule was too strict and also blocked Xray's own queries to the router's local DNS resolver. Router-local DNS traffic is now allowed; queries to upstream DNS servers are still blocked, so leak protection is unchanged.
 - ADDED: More GitHub proxy mirrors to choose from in General Options, for more reliable downloads in regions where GitHub is blocked. ([#358](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/pull/358))
 - FIXED: The **After firewall cleanup** hook script set in General Options never ran when Xray stopped, because of a filename mismatch between what the UI saved and what the router looked for. The cleanup hook now runs as expected. Thanks to [@xxhhlk](https://github.com/xxhhlk). ([#353](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/pull/353))
 - FIXED: Enabling **Allow insecure** on an outbound (directly or via an imported share link) stopped Xray from starting after upgrading Xray-core to 26.3.27 or newer, which removed that option. XRAYUI now hides the option when the installed Xray-core no longer supports it and no longer writes it into the configuration. ([#359](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/359))
 - FIXED: Pinned peer certificate hashes were saved in a format Xray-core does not read, so certificate pinning never actually took effect. They are now written in the format the installed Xray-core expects.
+- FIXED: The routing rules count showed all rules as enabled (e.g. "12") right after the page loaded, only correcting to the real figure (e.g. "10/12") after opening and closing the Manage dialog. The count is now correct from the start.
 
 ## [0.67.0] - 2026-05-25
 

@@ -30,7 +30,8 @@
     "xrayui_desc": "This UI control page provides a simple interface to manage and monitor the X-ray Core's configuration and it's status."
   },
   "guide": {
-    "dns_leak": "https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/dns-leak"
+    "dns_leak": "https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/dns-leak",
+    "ipset": "https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/general-options#enable-dns-bypass-ipset"
   },
   "com": {
     "ClientStatus": {

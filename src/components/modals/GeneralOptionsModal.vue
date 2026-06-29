@@ -102,6 +102,9 @@
                 <select class="input_option" v-model="options.ipsec">
                   <option v-for="opt in ipset_options" :value="opt">{{ opt }}</option>
                 </select>
+                <span class="hint-color">
+                  <a :href="$t('guide.ipset')" target="_blank">{{ $t('labels.help') }}</a></span
+                >
               </td>
             </tr>
             <tr>

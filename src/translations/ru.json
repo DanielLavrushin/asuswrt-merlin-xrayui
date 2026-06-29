@@ -30,7 +30,8 @@
     "xrayui_desc": "XRAYUI предоставляет простой интерфейс для управления конфигурацией ядра XRAY и мониторинга его состояния.<br/><a href='https://daniellavrushin.github.io/asuswrt-merlin-xrayui/ru/interface' class='hint' target='_blank'>Руководства и помощь</a>"
   },
   "guide": {
-    "dns_leak": "https://daniellavrushin.github.io/asuswrt-merlin-xrayui/ru/dns-leak"
+    "dns_leak": "https://daniellavrushin.github.io/asuswrt-merlin-xrayui/ru/dns-leak",
+    "ipset": "https://daniellavrushin.github.io/asuswrt-merlin-xrayui/ru/general-options#%D0%B2%D0%BA%D0%BB%D1%8E%D1%87%D0%B8%D1%82%D1%8C-dns-%D0%BE%D0%B1%D1%85%D0%BE%D0%B4-ipset"
   },
   "com": {
     "ClientStatus": {

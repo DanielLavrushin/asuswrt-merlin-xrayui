@@ -22,130 +22,107 @@ Use any of these test services:
 - If the listed DNS servers are in your VPS location (or the resolver you chose) and you do not see your ISP’s DNS routed through your home country, you are not leaking to the ISP.
   :::
 
-**Solution**: add a separate DNS inbound that explicitly dials a resolver and sends it via your outbound tunnel.
+## Why a leak happens
 
-## How a leak happens and how to close it
+The leak is **not** about your proxied connections. When you open a site through Xray, the hostname is handed to your VPS and resolved there, so the connection itself doesn’t leak. The leak is a **separate** DNS query: your browser or operating system asks the router (dnsmasq) to resolve a name, and dnsmasq forwards that question to whatever upstream it was given — often your ISP. That upstream query is what leak-test sites measure.
 
-The chart below shows a DNS query's path before and after setting up a dedicated DNS inbound.
+To close it, XRAYUI turns Xray into the **resolver** for the router: it intercepts those queries, answers them with Xray's built-in DNS server, and sends the actual lookups out through your tunnel — optionally using DNS-over-HTTPS (DoH) for specific domains.
 
 ```mermaid
 flowchart TD
     App["📱 Application<br/>(browser, game...)"] -->|"DNS query<br/>example.com"| Dnsmasq["🛜 dnsmasq<br/>on the router"]
+    Dnsmasq -->|"forwarded to<br/>Xray DNS inbound"| DnsIn["🚪 sys:dns-in<br/>dokodemo :53"]
+    Bypass["📟 LAN client hardcoding<br/>8.8.8.8 (bypasses dnsmasq)"] -.->|"hijack rule<br/>port 53"| Resolver
 
-    Dnsmasq --> Decide{"Where to send<br/>upstream?"}
-
-    Decide -->|"❌ Unconfigured:<br/>ISP DNS"| ISP["🏢 ISP DNS<br/>(visible to ISP)"]
-    ISP --> Leak["💧 LEAK<br/>ISP sees the domains"]
-
-    Decide -->|"❌ Public DNS<br/>direct (8.8.8.8)"| QuicLeak["🌐 Packet leaves<br/>via WAN"]
-    QuicLeak --> Leak2["💧 ISP sees you<br/>querying a public<br/>resolver"]
-
-    Decide -->|"✅ With dedicated<br/>DNS inbound"| DnsInbound["🚪 Xray dokodemo-door<br/>:55100<br/>Follow redirect = OFF"]
-
-    DnsInbound --> TProxy["🔀 Transport: tproxy"]
-    TProxy --> Route["📋 Routing rule<br/>inbound: dns<br/>outbound: proxy"]
-    Route --> Proxy["🔐 Proxy outbound<br/>(VLESS/VMess/Trojan)"]
-    Proxy -->|"Encrypted<br/>tunnel"| VPS["☁️ VPS"]
-    VPS --> Resolver["🌍 Public resolver<br/>(8.8.8.8, 1.1.1.1...)"]
-    Resolver -->|"Answer"| VPS
-    VPS -->|"Through tunnel"| App
-
-    QuicBlock["🚫 Block QUIC<br/>(UDP 443 → DROP)"] -.->|"Forces browser<br/>to use TCP HTTPS"| App
+    DnsIn --> Resolver["🧠 sys:dns-out<br/>Xray built-in resolver"]
+    Resolver --> Pick{"Domain matches a<br/>DNS server rule?"}
+    Pick -->|"e.g. browserleaks.com"| Doh["🔐 DoH resolver<br/>(your choice)"]
+    Pick -->|"everything else"| Fallback["🌍 8.8.8.8<br/>fallback"]
+    Doh --> Upstream["📋 upstream lookup (dnsQuery)<br/>follows your routing rules"]
+    Fallback --> Upstream
+    Upstream -->|"encrypted tunnel"| VPS["☁️ VPS"]
+    VPS -->|"answer through tunnel"| App
 
     style App fill:#4a9eff,color:#fff,stroke:none
     style Dnsmasq fill:#4a9eff,color:#fff,stroke:none
-    style Decide fill:#ff9800,color:#fff,stroke:none
-    style ISP fill:#f44336,color:#fff,stroke:none
-    style Leak fill:#f44336,color:#fff,stroke:none
-    style QuicLeak fill:#f44336,color:#fff,stroke:none
-    style Leak2 fill:#f44336,color:#fff,stroke:none
-    style DnsInbound fill:#9c27b0,color:#fff,stroke:none
-    style TProxy fill:#9c27b0,color:#fff,stroke:none
-    style Route fill:#9c27b0,color:#fff,stroke:none
-    style Proxy fill:#4caf50,color:#fff,stroke:none
+    style Bypass fill:#607d8b,color:#fff,stroke:none
+    style DnsIn fill:#9c27b0,color:#fff,stroke:none
+    style Resolver fill:#9c27b0,color:#fff,stroke:none
+    style Pick fill:#ff9800,color:#fff,stroke:none
+    style Doh fill:#4caf50,color:#fff,stroke:none
+    style Fallback fill:#4caf50,color:#fff,stroke:none
+    style Upstream fill:#9c27b0,color:#fff,stroke:none
     style VPS fill:#4caf50,color:#fff,stroke:none
-    style Resolver fill:#4caf50,color:#fff,stroke:none
-    style QuicBlock fill:#607d8b,color:#fff,stroke:none
 ```
-
-The red branches are leak scenarios: queries exit via the ISP link. The green branch is the correct path: the DNS inbound intercepts queries, the routing rule steers them to the proxy outbound, and they reach the public resolver from the VPS side. QUIC blocking isn't strictly a DNS concern — it closes a parallel channel the browser could otherwise use to reveal your real IP around the proxy.
 
 ## How to configure XRAYUI
 
 > [!important]
-> This manual is only applicable to the `XRAYUI v0.58.0` and above. You can check your version by executing the command `xrayui version`.
+> This manual applies to **XRAYUI v0.68.0** and above. You can check your version with `xrayui version`. On older versions DNS leak protection was a manual, multi-step setup; if you followed the old guide, simply enable the switch below — XRAYUI rebuilds the wiring for you.
 
-Your main inbound (e.g., dokodemo-door with `Follow redirect` = ON) is for transparent interception (TPROXY). It forwards to the original destination. When the router’s DNS forwarder (dnsmasq) talks to 127.0.0.1, there is no “original destination,” which can cause loops and cannot reliably forward DNS upstream.
+It is now a single switch. You no longer create a DNS inbound, a DNS outbound, transport settings, or routing rules by hand — XRAYUI provisions and maintains all of that automatically.
 
-### Create a dedicated DNS inbound
+### Enable DNS leak protection
 
-Add a new DOKODEMO inbound:
+Open the **DNS** section (advanced mode) and turn on **DNS leak protection**.
 
-- Port: choose a local port for DNS inbound (e.g., 55100)
-- Follow redirect: **OFF**
-- Destination address: a public resolver you trust (e.g., 8.8.8.8, 1.1.1.1, AdGuard) or your own DNS on the VPS
-- Destination port: 53
-- Network: udp,tcp
-- Save.
+Then choose, in **Route DNS through**, which proxy outbound your DNS should travel through. That’s the tunnel your lookups exit from.
 
-![add dokodemo](../.vuepress/public/images/dns-leak/20250803145430.png)
+That’s it. On apply, XRAYUI creates and keeps in sync:
 
-> [!note]
-> Notice the checkbox `Follow redirect` is unchecked. This is important setting to make DNS not to leak. Dont't turn it on for this inbound configuration.
+- a dedicated DNS inbound (`sys:dns-in`) that dnsmasq forwards the router’s queries to;
+- a DNS outbound (`sys:dns-out`) — Xray’s built-in resolver;
+- routing rules that hand intercepted queries to the resolver and send the resolver’s **own** upstream lookups out through the proxy you picked;
+- a hijack rule that catches LAN clients which bypass dnsmasq with a hardcoded resolver (e.g. `8.8.8.8`) and answers them from the tunnel instead of letting them leak.
 
-### Configure transport (tproxy) and dialer
+### Choose your resolvers (DoH and per-domain targets)
 
-Open Transport for this DNS inbound → Transparent Proxy (tproxy) → Manage:
+In the same DNS section, open **Servers**. This is where you decide *how* names are resolved:
 
-- Enable tproxy for this inbound (select `tproxy`).
-- Close this window and `apply` configuration changes in the main form.
+- Add a **DoH resolver** by entering its URL as the server address, e.g. `https://xbox-dns.ru/dns-query` or `https://cloudflare-dns.com/dns-query`.
+- Give a server **domain rules** to use it only for specific names — for example route `browserleaks.com`, `browserleaks.org`, `browserleaks.net` to a DoH resolver of your choice.
+- Leave a plain resolver such as `8.8.8.8` **at the bottom of the list** as a catch-all fallback. Its lookups still ride the tunnel, so it does not leak.
 
-![tproxy](../.vuepress/public/images/dns-leak/20250803165533.png)
+Order matters: the first server whose domain rules match wins; the fallback (no rules) handles everything else.
 
-This pins the DNS outbound path to your tunnel, independent of routing rules.
+```text
+https://xbox-dns.ru/dns-query     → browserleaks.com, browserleaks.org, browserleaks.net
+8.8.8.8                            → (no rules — fallback for everything else)
+```
 
-### Enable “Prevent DNS leaks”
+When you enable the switch and have no servers yet, XRAYUI adds `8.8.8.8` as a starting fallback. Adjust it to taste.
 
-Go to `General Settings` → `DNS` and turn on `Prevent DNS leaks`.
+### Optional hardening
 
-When enabled, XRAYUI does two things:
+Go to **General Settings → DNS**:
 
-1. **dnsmasq lockdown** — `no-resolv` is appended and `servers-file=` (the WAN-provided resolvers) is commented out. dnsmasq forwards queries only to the dedicated Xray DNS inbound.
-2. **Firewall safety net** — a `XRAYUI_DNS_LOCK` chain is hooked into `filter:OUTPUT` and `filter:FORWARD`, dropping every UDP/TCP packet destined to port 53. The DNS inbound listens on a non-53 port (e.g. 55100) so it is unaffected; legitimate DNS leaving the router does so as the proxy protocol (e.g. TCP/443), not UDP/53. This catches:
-   - dnsmasq misconfigurations or other router-local processes that try to query upstream directly.
-   - LAN clients that hardcode `8.8.8.8` / `1.1.1.1` and slip past TPROXY.
+- **Block QUIC** — see below. Recommended.
 
-![prevent dns leaks](../.vuepress/public/images/dns-leak/20250803154415.png)
-
-> [!important]
-> The toggle is **guarded**: XRAYUI refuses to enable it unless a dedicated DNS inbound (dokodemo-door, destination port 53, follow redirect off) is present in the configuration. Set up the inbound first (steps above), then turn the switch on. If you somehow end up with the toggle on and no DNS inbound (e.g. after editing the config by hand), the firewall lock is skipped — a warning is logged — so you don't lose all DNS resolution. Fix the inbound and re-apply.
+With DNS leak protection on, XRAYUI also locks the router down so stray DNS cannot escape: dnsmasq is told to forward **only** to Xray (`no-resolv`, the WAN-provided resolvers are commented out), and a firewall chain drops any UDP/TCP packet to port 53 that isn’t going to the Xray DNS path. This catches router-local processes and LAN clients that try to reach an upstream resolver directly.
 
 ### Troubleshooting
 
-- **Name resolution stops working after enabling the switch** — check that the dedicated DNS inbound is actually listening (`netstat -lun | grep <port>`) and that its routing rule sends the `dns` inbound through the proxy outbound. Disable the switch, fix the configuration, and re-enable.
-- **A specific device still leaks** — the firewall lock blocks UDP/TCP 53 only. Devices using DoH (HTTPS, port 443) or DoT (TCP 853) bypass the lock. Block QUIC closes the UDP/443 path; for TCP/443 DoH you currently need to block specific resolver IPs at the firewall or via routing rules.
-- **Router itself can't resolve names** — dnsmasq must forward to the inbound. Check `/etc/dnsmasq.conf` for the `server=<ip>#<port>` line generated by XRAYUI; if missing, the inbound discovery jq filter didn't match (verify the inbound's `settings.port` is `53`).
+- **Name resolution stops working after enabling the switch** — make sure you picked a real proxy outbound in **Route DNS through** (if no proxy outbound exists, add a VLESS/VMess/Trojan outbound first). Check that the proxy itself is up; with a catch-all DoH/fallback, all DNS depends on the tunnel being reachable.
+- **A specific device still leaks** — the firewall lock and the hijack rule cover plain UDP/TCP 53. A device using its own DoH (HTTPS, port 443) or DoT (TCP 853) bypasses them. **Block QUIC** closes the UDP/443 path; for TCP/443 DoH you currently need to block the resolver’s IPs at the firewall or via routing rules.
+- **Router itself can’t resolve names** — dnsmasq must forward to the Xray DNS inbound. Check `/etc/dnsmasq.conf` for the `server=127.0.0.1#…` line XRAYUI generates; if it’s missing, the inbound wasn’t discovered — disable and re-enable the switch, then re-apply.
 
 ### Block QUIC
 
 QUIC is a protocol that uses UDP port 443. In some cases, QUIC traffic may bypass the transparent proxy, which can cause your real IP address to leak — especially over IPv6.
 
-Go to `General Settings` → `DNS` and enable **Block QUIC**.
-This will reject all QUIC (UDP 443) traffic at the firewall level, forcing your browser and apps to fall back to regular TCP HTTPS, which is properly proxied through Xray.
+Go to **General Settings → DNS** and enable **Block QUIC**. This rejects all QUIC (UDP 443) traffic at the firewall level, forcing your browser and apps to fall back to regular TCP HTTPS, which is properly proxied through Xray.
 
 > [!note]
 > Blocking QUIC does not break websites. All modern browsers seamlessly fall back to HTTPS over TCP when QUIC is unavailable. You may notice a small initial delay on the first connection to some sites.
 
 ## Testing
 
-For testing, create an additional rule that proxies traffic through your outbound and list the test services in it (for example, `browserleaks.com`).
+1. In **Servers**, add a DoH resolver and give it the test domains as its domain rules:
 
-```text
-browserleaks.com
-browserleaks.org
-browserleaks.net
-```
+   ```text
+   browserleaks.com
+   browserleaks.org
+   browserleaks.net
+   ```
 
-![test dns leak](../.vuepress/public/images/dns-leak/20250803165744.png)
-
-Open `browserleaks.com` and verify that all reported sources come from your VPS.
+2. Apply, then open [browserleaks.com/dns](https://browserleaks.com/dns) and verify that the reported DNS servers come from your VPS / the DoH resolver you chose — not your ISP.

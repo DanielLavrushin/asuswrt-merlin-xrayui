@@ -9,6 +9,7 @@ import {
   isObjectEmpty
 } from './CommonObjects';
 import { ITransportNetwork } from './Interfaces';
+import { coreUsesMkcpLegacyMaskType, mkcpMaskingMode } from './CoreVersion';
 
 export class XrayStreamTcpSettingsObject implements ITransportNetwork {
   public acceptProxyProtocol? = false;
@@ -381,6 +382,17 @@ export class XrayMkcpAes128GcmObject {
   };
 }
 
+export class XrayMkcpLegacyObject {
+  public header?: string;
+  public value?: string;
+
+  normalize = (): this | undefined => {
+    this.header = !this.header || this.header === '' ? undefined : this.header;
+    this.value = !this.value || this.value === '' ? undefined : this.value;
+    return this;
+  };
+}
+
 export class XrayXdnsObject {
   public domain?: string;
 
@@ -409,6 +421,7 @@ export type FinalMaskSettingsType =
   | XrayHeaderCustomSettingsObject
   | XrayHeaderDnsObject
   | XrayMkcpAes128GcmObject
+  | XrayMkcpLegacyObject
   | XrayXdnsObject
   | XrayXicmpObject;
 
@@ -470,6 +483,8 @@ export class XrayFinalMaskObject {
         return new XrayHeaderDnsObject();
       case 'mkcp-aes128gcm':
         return new XrayMkcpAes128GcmObject();
+      case 'mkcp-legacy':
+        return new XrayMkcpLegacyObject();
       case 'xdns':
         return new XrayXdnsObject();
       case 'xicmp':
@@ -496,6 +511,8 @@ export class XrayFinalMaskObject {
         return plainToInstance(XrayHeaderDnsObject, data);
       case 'mkcp-aes128gcm':
         return plainToInstance(XrayMkcpAes128GcmObject, data);
+      case 'mkcp-legacy':
+        return plainToInstance(XrayMkcpLegacyObject, data);
       case 'xdns':
         return plainToInstance(XrayXdnsObject, data);
       case 'xicmp':
@@ -504,6 +521,154 @@ export class XrayFinalMaskObject {
         return undefined;
     }
   }
+}
+
+const CANONICAL_HEADER_TO_MKCP_LEGACY: Record<string, string> = {
+  'header-dns': 'dns',
+  'header-dtls': 'dtls',
+  'header-srtp': 'srtp',
+  'header-utp': 'utp',
+  'header-wechat': 'wechat',
+  'header-wireguard': 'wireguard'
+};
+
+const MKCP_LEGACY_HEADER_TO_CANONICAL: Record<string, string> = Object.fromEntries(
+  Object.entries(CANONICAL_HEADER_TO_MKCP_LEGACY).map(([canonical, legacy]) => [legacy, canonical])
+);
+
+export function maskToCoreForm(mask: XrayFinalMaskObject): XrayFinalMaskObject {
+  if (!coreUsesMkcpLegacyMaskType()) return mask;
+
+  const legacy = new XrayMkcpLegacyObject();
+  if (mask.type in CANONICAL_HEADER_TO_MKCP_LEGACY) {
+    legacy.header = CANONICAL_HEADER_TO_MKCP_LEGACY[mask.type];
+    if (mask.type === 'header-dns') legacy.value = (mask.settings as XrayHeaderDnsObject)?.domain;
+  } else if (mask.type === 'mkcp-aes128gcm') {
+    legacy.value = (mask.settings as XrayMkcpAes128GcmObject)?.password;
+  } else if (mask.type !== 'mkcp-original') {
+    return mask;
+  }
+
+  const converted = new XrayFinalMaskObject();
+  converted.type = 'mkcp-legacy';
+  converted.settings = legacy;
+  return converted;
+}
+
+export function maskFromCoreForm(mask: XrayFinalMaskObject): XrayFinalMaskObject {
+  if (mask.type !== 'mkcp-legacy') return mask;
+
+  const legacy = mask.settings as XrayMkcpLegacyObject;
+  const header = legacy?.header;
+  const value = legacy?.value;
+  const converted = new XrayFinalMaskObject();
+
+  if (header && header in MKCP_LEGACY_HEADER_TO_CANONICAL) {
+    converted.type = MKCP_LEGACY_HEADER_TO_CANONICAL[header];
+    if (header === 'dns') {
+      const dns = new XrayHeaderDnsObject();
+      dns.domain = value;
+      converted.settings = dns;
+    }
+  } else if (value) {
+    converted.type = 'mkcp-aes128gcm';
+    const aes = new XrayMkcpAes128GcmObject();
+    aes.password = value;
+    converted.settings = aes;
+  } else {
+    converted.type = 'mkcp-original';
+  }
+  return converted;
+}
+
+const KCP_UI_HEADER_TO_CANONICAL: Record<string, string> = {
+  srtp: 'header-srtp',
+  utp: 'header-utp',
+  'wechat-video': 'header-wechat',
+  dtls: 'header-dtls',
+  wireguard: 'header-wireguard'
+};
+
+const CANONICAL_TO_KCP_UI_HEADER: Record<string, string> = Object.fromEntries(
+  Object.entries(KCP_UI_HEADER_TO_CANONICAL).map(([ui, canonical]) => [canonical, ui])
+);
+
+function isKcpUiOwnedMask(mask: XrayFinalMaskObject): boolean {
+  return mask.type in CANONICAL_TO_KCP_UI_HEADER || mask.type === 'mkcp-aes128gcm';
+}
+
+interface KcpMaskStreamLike {
+  network?: string;
+  kcpSettings?: XrayStreamKcpSettingsObject;
+  finalmask?: XrayFinalMaskSettingsObject;
+}
+
+export function migrateKcpMaskingForSerialization(stream: KcpMaskStreamLike): void {
+  const kcp = stream.kcpSettings;
+  if (!kcp) return;
+  if (mkcpMaskingMode() === 'legacy') return;
+
+  const headerType = kcp.header?.type;
+  const seed = kcp.seed;
+  kcp.header = undefined;
+  kcp.seed = undefined;
+
+  const built: XrayFinalMaskObject[] = [];
+  if (headerType && headerType in KCP_UI_HEADER_TO_CANONICAL) {
+    const mask = new XrayFinalMaskObject();
+    mask.type = KCP_UI_HEADER_TO_CANONICAL[headerType];
+    built.push(mask);
+  }
+  if (seed) {
+    const mask = new XrayFinalMaskObject();
+    mask.type = 'mkcp-aes128gcm';
+    const aes = new XrayMkcpAes128GcmObject();
+    aes.password = seed;
+    mask.settings = aes;
+    built.push(mask);
+  }
+
+  const preserved = (stream.finalmask?.udp ?? []).filter((mask) => !isKcpUiOwnedMask(mask));
+  const udp = [...built, ...preserved];
+
+  if (udp.length > 0) {
+    if (!stream.finalmask) stream.finalmask = new XrayFinalMaskSettingsObject();
+    stream.finalmask.udp = udp;
+  } else if (stream.finalmask) {
+    stream.finalmask.udp = undefined;
+  }
+}
+
+export function extractKcpMaskingForUi(stream: KcpMaskStreamLike): void {
+  if (stream.network !== 'kcp') return;
+  const udp = stream.finalmask?.udp;
+  if (!udp || udp.length === 0) return;
+
+  let headerType: string | undefined;
+  let seed: string | undefined;
+  const remaining: XrayFinalMaskObject[] = [];
+
+  for (const mask of udp) {
+    if (mask.type in CANONICAL_TO_KCP_UI_HEADER) {
+      headerType = CANONICAL_TO_KCP_UI_HEADER[mask.type];
+    } else if (mask.type === 'mkcp-aes128gcm') {
+      seed = (mask.settings as XrayMkcpAes128GcmObject)?.password;
+    } else {
+      remaining.push(mask);
+    }
+  }
+
+  if (headerType === undefined && seed === undefined) return;
+
+  stream.kcpSettings ??= new XrayStreamKcpSettingsObject();
+  const kcp = stream.kcpSettings;
+  if (headerType !== undefined) {
+    kcp.header ??= new XrayHeaderObject();
+    kcp.header.type = headerType;
+  }
+  if (seed !== undefined) kcp.seed = seed;
+
+  stream.finalmask!.udp = remaining.length > 0 ? remaining : undefined;
 }
 
 export class XrayQuicParamsUdpHopObject {
@@ -564,7 +729,8 @@ export class XrayFinalMaskSettingsObject {
     if (this.udp && this.udp.length > 0) {
       this.udp = this.udp
         .map((mask) => (typeof mask.normalize === 'function' ? mask.normalize() : mask))
-        .filter((mask): mask is XrayFinalMaskObject => mask !== undefined);
+        .filter((mask): mask is XrayFinalMaskObject => mask !== undefined)
+        .map((mask) => maskToCoreForm(mask));
       if (this.udp.length === 0) this.udp = undefined;
     } else {
       this.udp = undefined;

@@ -109,21 +109,6 @@
             </tr>
             <tr>
               <th>
-                {{ $t('com.GeneralOptionsModal.label_dns_leak') }}
-                <hint v-html="$t('com.GeneralOptionsModal.hint_dns_leak')"></hint>
-              </th>
-              <td>
-                <label class="go-option"><input type="checkbox" v-model="options.dns_only" /></label>
-                <span class="hint-color">
-                  <a :href="$t('guide.dns_leak')" target="_blank">{{ $t('labels.help') }}</a></span
-                >
-                <div v-if="options.dns_only && !hasDnsInbound" style="color: #ffcc00; margin-top: 4px">
-                  {{ $t('com.GeneralOptionsModal.warn_dns_leak_no_inbound') }}
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <th>
                 {{ $t('com.GeneralOptionsModal.label_block_quic') }}
                 <hint v-html="$t('com.GeneralOptionsModal.hint_block_quic')"></hint>
               </th>
@@ -367,7 +352,6 @@
   import { EngineResponseConfig, EngineSubscriptions } from '@/modules/Engine';
   import engine, { SubmitActions } from '@/modules/Engine';
   import { XrayProtocol } from '@/modules/Options';
-  import { XrayDokodemoDoorInboundObject } from '@/modules/InboundObjects';
   import axios from 'axios';
 
   const props = defineProps<{ config: XrayObject }>();
@@ -519,16 +503,6 @@
     return outbound !== undefined;
   };
 
-  const hasDnsInbound = computed(() => {
-    return (
-      props.config.inbounds?.some((i) => {
-        if (i.protocol !== XrayProtocol.DOKODEMODOOR) return false;
-        const s = i.settings as XrayDokodemoDoorInboundObject | undefined;
-        return !!s && s.followRedirect !== true && Number(s.port) === 53;
-      }) ?? false
-    );
-  });
-
   const fetch_subscription_protocols = async () => {
     engine.resetSubscriptionsCache();
     await engine.executeWithLoadingProgress(async () => {
@@ -556,10 +530,6 @@
   };
   defineExpose({ show });
   const save = async () => {
-    if (options.dns_only && !hasDnsInbound.value) {
-      alert(t('com.GeneralOptionsModal.alert_dns_leak_no_inbound'));
-      return;
-    }
     await persist();
   };
 </script>

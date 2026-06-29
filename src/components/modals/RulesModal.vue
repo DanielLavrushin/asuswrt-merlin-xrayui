@@ -491,9 +491,23 @@
       };
 
       const reindexRules = () => {
+        const oldToNew = new Map<number, number>();
+        allRules.value.forEach((r, idx) => {
+          oldToNew.set(r.idx, idx);
+        });
+
         allRules.value.forEach((r, idx) => {
           r.idx = idx;
         });
+
+        (xrayConfig.dns?.servers ?? []).forEach((server) => {
+          if (server && typeof server !== 'string' && Array.isArray(server.rules)) {
+            server.rules = (server.rules as (number | XrayRoutingRuleObject)[]).map((ref) =>
+              typeof ref === 'number' ? oldToNew.get(ref) ?? ref : ref
+            ) as number[] | XrayRoutingRuleObject[];
+          }
+        });
+
         rules.value = rules.value.sort((a, b) => (a.idx || 0) - (b.idx || 0));
         disabledRules.value = disabledRules.value.sort((a, b) => (a.idx || 0) - (b.idx || 0));
 

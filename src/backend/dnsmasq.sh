@@ -59,8 +59,11 @@ dnsmasq_configure() {
         has_dnsmasq_servers="true"
     fi
 
-    if [ "$xray_dns_only" = "true" ] && [ "$has_dnsmasq_servers" = "true" ]; then
-        log_debug "dnsmasq: xray_dns_only is enabled, disabling all other DNS"
+    local dns_wiring=""
+    jq -e '(.outbounds // []) | any(.tag == "sys:dns-out")' "$XRAY_CONFIG_FILE" >/dev/null 2>&1 && dns_wiring="true"
+
+    if { [ "$xray_dns_only" = "true" ] || [ "$dns_wiring" = "true" ]; } && [ "$has_dnsmasq_servers" = "true" ]; then
+        log_debug "dnsmasq: DNS-only mode active, disabling all other DNS"
         sed '/^[[:space:]]*servers-file=/ s/^/#/' "$CONFIG" >"$CONFIG_TMP" && mv -f "$CONFIG_TMP" "$CONFIG" && log_debug "dnsmasq: commented servers-file"
     fi
 

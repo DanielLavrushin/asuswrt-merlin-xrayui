@@ -302,7 +302,14 @@ configure_inbounds() {
 # itself, e.g. dnsmasq forwarders) and filter:FORWARD (LAN clients that
 # slip past TPROXY).
 configure_dns_leak_lock() {
-    [ "$xray_dns_only" = "true" ] || return 0
+    # Engage when the user explicitly asked for DNS-only, or when the DNS leak
+    # protection wiring (sys:dns-out outbound) auto-provisioned by the UI is present.
+    local dns_wiring=""
+    jq -e '(.outbounds // []) | any(.tag == "sys:dns-out")' "$XRAY_CONFIG_FILE" >/dev/null 2>&1 && dns_wiring="true"
+
+    if [ "$xray_dns_only" != "true" ] && [ "$dns_wiring" != "true" ]; then
+        return 0
+    fi
 
     # Mirror dnsmasq.sh discovery: dokodemo-door, port 53, follow redirect off.
     local dns_inbounds
@@ -322,15 +329,38 @@ configure_dns_leak_lock() {
 
     log_info "DNS leak lock: dropping UDP/TCP 53 except to dedicated DNS inbound"
 
+    local dns_lock_uid=""
+    [ -n "$xray_pid" ] && dns_lock_uid=$(awk '/^Uid:/ {print $2}' /proc/"$xray_pid"/status 2>/dev/null)
+
+    local owner_match_ok=0
+    if [ -n "$dns_lock_uid" ]; then
+        iptables -w -t filter -F XRAYUI_DNS_OWNERPROBE 2>/dev/null
+        iptables -w -t filter -X XRAYUI_DNS_OWNERPROBE 2>/dev/null
+        if iptables -w -t filter -N XRAYUI_DNS_OWNERPROBE 2>/dev/null; then
+            iptables -w -t filter -A XRAYUI_DNS_OWNERPROBE -m owner --uid-owner "$dns_lock_uid" -j RETURN 2>/dev/null && owner_match_ok=1
+            iptables -w -t filter -F XRAYUI_DNS_OWNERPROBE 2>/dev/null
+            iptables -w -t filter -X XRAYUI_DNS_OWNERPROBE 2>/dev/null
+        fi
+    fi
+
     for IPT in $IPT_LIST; do
         $IPT -w -t filter -N XRAYUI_DNS_LOCK 2>/dev/null || $IPT -w -t filter -F XRAYUI_DNS_LOCK
     done
 
+    if [ "$owner_match_ok" = "1" ]; then
+        ipt filter -A XRAYUI_DNS_LOCK -m owner --uid-owner "$dns_lock_uid" -j RETURN
+    fi
     ipt filter -A XRAYUI_DNS_LOCK -m addrtype --dst-type LOCAL -j RETURN
     ipt filter -A XRAYUI_DNS_LOCK -p udp --dport 53 -j DROP
     ipt filter -A XRAYUI_DNS_LOCK -p tcp --dport 53 -j DROP
 
-    for hook in OUTPUT FORWARD; do
+    local dns_lock_hooks="OUTPUT FORWARD"
+    if [ "$owner_match_ok" != "1" ]; then
+        dns_lock_hooks="FORWARD"
+        log_warn "DNS leak lock: cannot exempt Xray from the OUTPUT lock (owner match unavailable); locking FORWARD only so Xray can resolve proxy node domains. Router-originated DNS is not force-locked."
+    fi
+
+    for hook in $dns_lock_hooks; do
         ipt filter -C $hook -j XRAYUI_DNS_LOCK 2>/dev/null || ipt filter -I $hook 1 -j XRAYUI_DNS_LOCK
     done
 
@@ -811,6 +841,8 @@ cleanup_firewall() {
     done
     ipt filter -F XRAYUI_DNS_LOCK 2>/dev/null
     ipt filter -X XRAYUI_DNS_LOCK 2>/dev/null
+    ipt filter -F XRAYUI_DNS_OWNERPROBE 2>/dev/null
+    ipt filter -X XRAYUI_DNS_OWNERPROBE 2>/dev/null
 
     # destroy ipsets
     ipset list -n 2>/dev/null | awk '/^XRAYUI_/{print $1}' | while read -r s; do

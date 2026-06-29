@@ -185,20 +185,28 @@ export class XrayStreamTlsSettingsObject implements ISecurityProtocol {
     if (this.pinnedPeerCertificateSha256?.length) {
       const separator = coreAtLeast('26.3.27') ? ',' : '~';
       this.pinnedPeerCertSha256 = this.pinnedPeerCertificateSha256.join(separator);
-    } else {
+      this.pinnedPeerCertificateSha256 = undefined;
+    } else if (!this.pinnedPeerCertSha256?.trim()) {
       this.pinnedPeerCertSha256 = undefined;
     }
-    this.pinnedPeerCertificateSha256 = undefined;
   }
 
-  public hydratePinnedCertificates(): void {
-    if (this.pinnedPeerCertSha256 && !this.pinnedPeerCertificateSha256?.length) {
-      const list = this.pinnedPeerCertSha256
+  public pinnedCertificateList(): string[] {
+    if (this.pinnedPeerCertificateSha256?.length) {
+      return this.pinnedPeerCertificateSha256;
+    }
+    if (this.pinnedPeerCertSha256?.trim()) {
+      return this.pinnedPeerCertSha256
         .split(/[,~]/)
         .map((s) => s.trim().toUpperCase())
         .filter((s) => s.length > 0);
-      this.pinnedPeerCertificateSha256 = list.length > 0 ? list : undefined;
     }
+    return [];
+  }
+
+  public hydratePinnedCertificates(): void {
+    const list = this.pinnedCertificateList();
+    this.pinnedPeerCertificateSha256 = list.length > 0 ? list : undefined;
     this.pinnedPeerCertSha256 = undefined;
   }
 }

@@ -177,6 +177,29 @@ describe('CommonObjects', () => {
         expect(tls.pinnedPeerCertificateSha256).toEqual(['AABB', 'CCDD', 'EEFF']);
         expect(tls.pinnedPeerCertSha256).toBeUndefined();
       });
+
+      it('is idempotent: repeated normalize keeps the serialized pins', () => {
+        setCoreVersion('26.3.27');
+        const tls = new XrayStreamTlsSettingsObject();
+        tls.pinnedPeerCertificateSha256 = ['AABB', 'CCDD'];
+        tls.normalize();
+        tls.normalize();
+        tls.normalize();
+        expect(tls.pinnedPeerCertSha256).toBe('AABB,CCDD');
+        expect(tls.pinnedPeerCertificateSha256).toBeUndefined();
+      });
+
+      it('pinnedCertificateList reads from either representation', () => {
+        const fromArray = new XrayStreamTlsSettingsObject();
+        fromArray.pinnedPeerCertificateSha256 = ['AABB'];
+        expect(fromArray.pinnedCertificateList()).toEqual(['AABB']);
+
+        const fromString = new XrayStreamTlsSettingsObject();
+        fromString.pinnedPeerCertSha256 = 'aabb~ccdd';
+        expect(fromString.pinnedCertificateList()).toEqual(['AABB', 'CCDD']);
+
+        expect(new XrayStreamTlsSettingsObject().pinnedCertificateList()).toEqual([]);
+      });
     });
 
     it('normalizes echForceQuery empty string to undefined', () => {

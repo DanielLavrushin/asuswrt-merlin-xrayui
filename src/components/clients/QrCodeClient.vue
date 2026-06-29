@@ -144,8 +144,9 @@
           if (p.streamSettings?.tlsSettings?.alpn?.length) {
             addParam('alpn', p.streamSettings.tlsSettings.alpn.join(','));
           }
-          if (p.streamSettings?.tlsSettings?.pinnedPeerCertificateSha256?.length) {
-            addParam('pinSHA256', p.streamSettings.tlsSettings.pinnedPeerCertificateSha256.join(','));
+          const pinnedCerts = p.streamSettings?.tlsSettings?.pinnedCertificateList() ?? [];
+          if (pinnedCerts.length) {
+            addParam('pinSHA256', pinnedCerts.join(','));
           }
 
           const obfsMask = p.streamSettings?.finalmask?.udp?.[0];

@@ -277,7 +277,7 @@
 
       const pinnedCertificatesText = computed({
         get: () => {
-          return transport.value.tlsSettings?.pinnedPeerCertificateSha256?.join('\n') || '';
+          return transport.value.tlsSettings?.pinnedCertificateList().join('\n') || '';
         },
         set: (value: string) => {
           if (transport.value.tlsSettings) {
@@ -286,6 +286,7 @@
               .map((line) => line.trim().toUpperCase())
               .filter((line) => line.length > 0);
             transport.value.tlsSettings.pinnedPeerCertificateSha256 = lines.length > 0 ? lines : undefined;
+            transport.value.tlsSettings.pinnedPeerCertSha256 = undefined;
           }
         }
       });

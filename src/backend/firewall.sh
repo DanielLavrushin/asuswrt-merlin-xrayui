@@ -892,7 +892,7 @@ cleanup_firewall() {
         fi
     fi
 
-    local script="$ADDON_USER_SCRIPTS_DIR/firewall_cleanup"
+    local script="$ADDON_USER_SCRIPTS_DIR/firewall_after_cleanup"
     if [ -x "$script" ]; then
         log_info "Executing user firewall script: $script"
         "$script" "$XRAY_CONFIG_FILE" || log_error "Error executing $script."

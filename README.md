@@ -78,7 +78,7 @@ These scripts should be placed in the `/jffs/xrayui_custom` directory and named 
 
 - `firewall_before_start` - Executed before Xray sets up the firewall rules.
 - `firewall_after_start` - Executed after Xray set up the firewall rules.
-- `firewall_cleanup` - Executed when Xray stops.
+- `firewall_after_cleanup` - Executed when Xray stops.
   Ensure the scripts are executable (`chmod +x <script>`).
 
 ## FAQ

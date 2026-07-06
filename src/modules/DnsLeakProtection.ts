@@ -31,10 +31,11 @@ export const hasFallbackServer = (config: XrayObject): boolean =>
 const firstProxyTag = (config: XrayObject): string | undefined =>
   config.outbounds.find((o) => !o.isSystem() && o.protocol !== XrayProtocol.FREEDOM && o.protocol !== XrayProtocol.BLACKHOLE && o.protocol !== XrayProtocol.DNS && !!o.tag)?.tag;
 
-const ensureRule = (config: XrayObject, name: string, inboundTag: string, outboundTag: string) => {
+const ensureRule = (config: XrayObject, name: string, inboundTag: string, outboundTag: string, idx: number) => {
   removeRule(config, name);
   const rule = new XrayRoutingRuleObject();
   rule.name = name;
+  rule.idx = idx;
   rule.type = 'field';
   rule.inboundTag = [inboundTag];
   rule.outboundTag = outboundTag;
@@ -69,12 +70,12 @@ export const enable = (config: XrayObject): void => {
   if (!config.routing) config.routing = new XrayRoutingObject();
   if (!config.routing.rules) config.routing.rules = [];
 
-  ensureRule(config, RULE_INTERCEPT, DNS_IN_TAG, DNS_OUT_TAG);
+  ensureRule(config, RULE_INTERCEPT, DNS_IN_TAG, DNS_OUT_TAG, -3);
 
   removeRule(config, RULE_UPSTREAM);
   const proxyTag = firstProxyTag(config);
   if (proxyTag) {
-    ensureRule(config, RULE_UPSTREAM, config.dns.tag!, proxyTag);
+    ensureRule(config, RULE_UPSTREAM, config.dns.tag!, proxyTag, -2);
   }
 
   removeRule(config, RULE_HIJACK);
@@ -82,6 +83,7 @@ export const enable = (config: XrayObject): void => {
   if (tproxyTags.length > 0) {
     const hijack = new XrayRoutingRuleObject();
     hijack.name = RULE_HIJACK;
+    hijack.idx = -1;
     hijack.type = 'field';
     hijack.inboundTag = tproxyTags;
     hijack.port = '53';

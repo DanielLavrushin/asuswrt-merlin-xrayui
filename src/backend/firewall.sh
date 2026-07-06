@@ -333,7 +333,7 @@ configure_dns_leak_lock() {
     [ -n "$xray_pid" ] && dns_lock_uid=$(awk '/^Uid:/ {print $2}' /proc/"$xray_pid"/status 2>/dev/null)
 
     local owner_match_ok=0
-    if [ -n "$dns_lock_uid" ]; then
+    if [ -n "$dns_lock_uid" ] && [ "$dns_lock_uid" != "0" ]; then
         iptables -w -t filter -F XRAYUI_DNS_OWNERPROBE 2>/dev/null
         iptables -w -t filter -X XRAYUI_DNS_OWNERPROBE 2>/dev/null
         if iptables -w -t filter -N XRAYUI_DNS_OWNERPROBE 2>/dev/null; then
@@ -357,7 +357,11 @@ configure_dns_leak_lock() {
     local dns_lock_hooks="OUTPUT FORWARD"
     if [ "$owner_match_ok" != "1" ]; then
         dns_lock_hooks="FORWARD"
-        log_warn "DNS leak lock: cannot exempt Xray from the OUTPUT lock (owner match unavailable); locking FORWARD only so Xray can resolve proxy node domains. Router-originated DNS is not force-locked."
+        if [ "$dns_lock_uid" = "0" ]; then
+            log_warn "DNS leak lock: Xray runs as root, so a uid-owner exemption would also exempt every other router process; locking FORWARD only so Xray can resolve proxy node domains. Router-originated DNS is not force-locked."
+        else
+            log_warn "DNS leak lock: cannot exempt Xray from the OUTPUT lock (owner match unavailable); locking FORWARD only so Xray can resolve proxy node domains. Router-originated DNS is not force-locked."
+        fi
     fi
 
     for hook in $dns_lock_hooks; do

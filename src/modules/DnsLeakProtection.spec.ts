@@ -1,6 +1,7 @@
 import { XrayObject } from './XrayConfig';
 import { XrayOutboundObject, XrayVlessOutboundObject, XrayFreedomOutboundObject } from './OutboundObjects';
 import { XrayInboundObject, XrayDokodemoDoorInboundObject } from './InboundObjects';
+import { XrayRoutingObject, XrayRoutingRuleObject } from './CommonObjects';
 import { XrayProtocol } from './Options';
 import * as DnsLeakProtection from './DnsLeakProtection';
 import { dnsLeakTags } from './DnsLeakProtection';
@@ -48,13 +49,24 @@ describe('DnsLeakProtection', () => {
     expect(upstream?.outboundTag).toBe('proxy');
   });
 
-  it('places the upstream fallback after the user rules (lower priority)', () => {
-    const config = makeConfig();
-    const userRule = { name: 'user', idx: 0, type: 'field', domain: ['x.com'], outboundTag: 'proxy' } as any;
-    config.routing = { rules: [userRule] } as any;
+  it('pins the system DNS rules ahead of user rules after normalize(), even when a user rule has idx 0', () => {
+    const config = makeConfig(true);
+    config.routing = new XrayRoutingObject();
+    const userRule = new XrayRoutingRuleObject();
+    userRule.name = 'user';
+    userRule.idx = 0;
+    userRule.domain = ['x.com'];
+    userRule.outboundTag = 'proxy';
+    config.routing.rules = [userRule];
     DnsLeakProtection.enable(config);
-    const names = config.routing!.rules!.map((r) => r.name);
-    expect(names.indexOf('user')).toBeLessThan(names.indexOf(dnsLeakTags.RULE_UPSTREAM));
+    config.routing.normalize();
+
+    const names = (config.routing.rules ?? []).map((r) => r.name);
+    expect(names.indexOf(dnsLeakTags.RULE_INTERCEPT)).toBeLessThan(names.indexOf('user'));
+    expect(names.indexOf(dnsLeakTags.RULE_UPSTREAM)).toBeLessThan(names.indexOf('user'));
+    expect(names.indexOf(dnsLeakTags.RULE_HIJACK)).toBeLessThan(names.indexOf('user'));
+    expect(names.indexOf(dnsLeakTags.RULE_INTERCEPT)).toBeLessThan(names.indexOf(dnsLeakTags.RULE_UPSTREAM));
+    expect(names.indexOf(dnsLeakTags.RULE_UPSTREAM)).toBeLessThan(names.indexOf(dnsLeakTags.RULE_HIJACK));
   });
 
   it('skips the upstream rule when there is no proxy outbound', () => {

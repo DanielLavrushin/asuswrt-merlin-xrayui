@@ -334,13 +334,18 @@ configure_dns_leak_lock() {
 
     local owner_match_ok=0
     if [ -n "$dns_lock_uid" ] && [ "$dns_lock_uid" != "0" ]; then
-        iptables -w -t filter -F XRAYUI_DNS_OWNERPROBE 2>/dev/null
-        iptables -w -t filter -X XRAYUI_DNS_OWNERPROBE 2>/dev/null
-        if iptables -w -t filter -N XRAYUI_DNS_OWNERPROBE 2>/dev/null; then
-            iptables -w -t filter -A XRAYUI_DNS_OWNERPROBE -m owner --uid-owner "$dns_lock_uid" -j RETURN 2>/dev/null && owner_match_ok=1
-            iptables -w -t filter -F XRAYUI_DNS_OWNERPROBE 2>/dev/null
-            iptables -w -t filter -X XRAYUI_DNS_OWNERPROBE 2>/dev/null
-        fi
+        owner_match_ok=1
+        for IPT in $IPT_LIST; do
+            $IPT -w -t filter -F XRAYUI_DNS_OWNERPROBE 2>/dev/null
+            $IPT -w -t filter -X XRAYUI_DNS_OWNERPROBE 2>/dev/null
+            if $IPT -w -t filter -N XRAYUI_DNS_OWNERPROBE 2>/dev/null; then
+                $IPT -w -t filter -A XRAYUI_DNS_OWNERPROBE -m owner --uid-owner "$dns_lock_uid" -j RETURN 2>/dev/null || owner_match_ok=0
+                $IPT -w -t filter -F XRAYUI_DNS_OWNERPROBE 2>/dev/null
+                $IPT -w -t filter -X XRAYUI_DNS_OWNERPROBE 2>/dev/null
+            else
+                owner_match_ok=0
+            fi
+        done
     fi
 
     for IPT in $IPT_LIST; do

@@ -150,6 +150,7 @@ export class XrayStreamTlsSettingsObject implements ISecurityProtocol {
     this.certificates.push(new XrayStreamTlsCertificateObject());
     if (parsedObject) {
       this.serverName = parsedObject.parsedParams.sni;
+      this.fingerprint = parsedObject.parsedParams.fp;
     }
   }
 
@@ -232,7 +233,7 @@ export class XrayStreamRealitySettingsObject implements ISecurityProtocol {
     if (parsedObject) {
       this.serverName = parsedObject.parsedParams.server;
       this.shortId = parsedObject.parsedParams.sid;
-      this.fingerprint = parsedObject.parsedParams.fp;
+      this.fingerprint = parsedObject.parsedParams.fp || 'firefox';
       this.publicKey = parsedObject.parsedParams.pbk;
       this.spiderX = parsedObject.parsedParams.spx;
       this.serverName = parsedObject.parsedParams.sni;

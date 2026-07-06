@@ -323,7 +323,7 @@ configure_dns_leak_lock() {
     ' "$XRAY_CONFIG_FILE" 2>/dev/null)
 
     if [ -z "$dns_inbounds" ]; then
-        log_warn "DNS leak lock: xray_dns_only=true but no dedicated DNS inbound found; skipping firewall lock to avoid breaking name resolution"
+        log_warn "DNS leak lock requested (xray_dns_only=$xray_dns_only, dns wiring=${dns_wiring:-false}) but no dedicated DNS inbound found; skipping firewall lock to avoid breaking name resolution"
         return 0
     fi
 

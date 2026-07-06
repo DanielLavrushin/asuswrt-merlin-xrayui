@@ -143,6 +143,23 @@ describe('CommonObjects', () => {
       expect(tls.echForceQuery).toBeUndefined();
     });
 
+    it('constructor maps sni and fp from a parsed link', () => {
+      const url = 'vless://00000000-0000-0000-0000-000000000000@xray.test:443?security=tls&fp=firefox&sni=my.domain.com#tag';
+      const parsed = new XrayParsedUrlObject(url);
+      const tls = new XrayStreamTlsSettingsObject(parsed);
+      expect(tls.serverName).toBe('my.domain.com');
+      expect(tls.fingerprint).toBe('firefox');
+    });
+
+    it('normalizes empty fingerprint to undefined', () => {
+      const url = 'vless://00000000-0000-0000-0000-000000000000@xray.test:443?security=tls&fp=&sni=my.domain.com#tag';
+      const parsed = new XrayParsedUrlObject(url);
+      const tls = new XrayStreamTlsSettingsObject(parsed);
+      expect(tls.fingerprint).toBe('');
+      tls.normalize();
+      expect(tls.fingerprint).toBeUndefined();
+    });
+
     describe('pinned peer certificates', () => {
       afterEach(() => setCoreVersion('0.0.0'));
 
@@ -587,6 +604,13 @@ describe('CommonObjects', () => {
       expect(r.spiderX).toBe('spider');
       expect(r.serverName).toBe('my.domain.com');
       expect(r.normalize()).toBe(r);
+    });
+
+    it('defaults fingerprint to firefox when fp is missing from the link', () => {
+      const url = 'vless://00000000-0000-0000-0000-000000000000@xray.test:443?security=reality&sid=abc123&pbk=pubKey&sni=my.domain.com#tag';
+      const parsed = new XrayParsedUrlObject(url);
+      const r = new XrayStreamRealitySettingsObject(parsed);
+      expect(r.fingerprint).toBe('firefox');
     });
   });
 

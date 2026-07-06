@@ -161,6 +161,7 @@ export class XrayStreamTlsSettingsObject implements ISecurityProtocol {
     this.enableSessionResumption = this.enableSessionResumption ? this.enableSessionResumption : undefined;
 
     this.alpn = this.alpn?.length == 0 || this.alpn == XrayStreamTlsSettingsObject.alpnOptions ? undefined : this.alpn;
+    this.fingerprint = !this.fingerprint || this.fingerprint === '' ? undefined : this.fingerprint;
     this.echConfigList = !this.echConfigList || this.echConfigList === '' ? undefined : this.echConfigList;
     this.echForceQuery = !this.echForceQuery || this.echForceQuery === 'none' || this.echForceQuery === '' ? undefined : this.echForceQuery;
     this.echServerKeys = !this.echServerKeys || this.echServerKeys === '' ? undefined : this.echServerKeys;

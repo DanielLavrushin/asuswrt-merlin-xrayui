@@ -290,7 +290,7 @@
       };
 
       const addOutbound = (primaryOutbound: XrayOutboundObject<IProtocolType>) => {
-        const baseTag = primaryOutbound.tag ?? `out-${primaryOutbound.protocol.toLowerCase()}`;
+        const baseTag = primaryOutbound.tag || `out-${primaryOutbound.protocol.toLowerCase()}`;
         let tag = baseTag;
         let suffix = 1;
         while (props.config.outbounds.some((o) => o.tag === tag)) {

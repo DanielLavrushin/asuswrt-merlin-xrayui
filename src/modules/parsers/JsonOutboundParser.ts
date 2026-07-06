@@ -50,7 +50,7 @@ const parseJsonOutbound = (source: XrayOutboundObject<IProtocolType>): XrayOutbo
   }
 
   if (outbound) {
-    outbound.tag = source.tag ?? `out-${source.protocol.toLowerCase()}`;
+    outbound.tag = source.tag || `out-${source.protocol.toLowerCase()}`;
   }
 
   return outbound;

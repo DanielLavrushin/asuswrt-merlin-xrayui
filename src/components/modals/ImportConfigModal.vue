@@ -170,7 +170,7 @@
       const isComplete = computed(() => state.importMode === 'complete');
 
       const replaceableOutbounds = computed(() =>
-        props.config.outbounds.filter((o) => o.tag && ![XrayProtocol.FREEDOM, XrayProtocol.BLACKHOLE].includes(o.protocol))
+        props.config.outbounds.filter((o) => o.tag && !o.isSystem() && ![XrayProtocol.FREEDOM, XrayProtocol.BLACKHOLE].includes(o.protocol))
       );
 
       watch(

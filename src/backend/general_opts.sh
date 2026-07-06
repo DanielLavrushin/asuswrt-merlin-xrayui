@@ -116,7 +116,7 @@ apply_general_options() {
     update_xrayui_config "subscription_auto_fallback" "$subscription_auto_fallback"
     update_xrayui_config "subscription_fallback_interval" "$subscription_fallback_interval"
     update_xrayui_config "probe_url" "$probe_url"
-    update_xrayui_config "probe_interval" "$probe_interval"
+    update_xrayui_config "probe_interval" "$(sanitize_probe_interval "$probe_interval")"
 
     update_xrayui_config "subscription_filters" "$subscription_filters"
 

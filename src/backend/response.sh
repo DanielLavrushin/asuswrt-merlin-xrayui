@@ -48,10 +48,7 @@ initial_response() {
     local subscription_fallback_interval="${subscription_fallback_interval:-5}"
     local subscription_filters="${subscription_filters:-""}"
     local probe_url="${probe_url:-https://www.google.com/generate_204}"
-    local probe_interval="${probe_interval:-30}"
-    case "$probe_interval" in
-    '' | *[!0-9]*) probe_interval=30 ;;
-    esac
+    local probe_interval=$(sanitize_probe_interval "$probe_interval")
 
     local uptime_xray=$(get_proc_uptime "xray")
 

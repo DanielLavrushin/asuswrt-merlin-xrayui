@@ -73,10 +73,7 @@ api_write_config() {
   local xray_api_config=$(api_get_current_config)
   local observatory_probe_url
   observatory_probe_url=$(printf '%s' "${probe_url:-https://www.google.com/generate_204}" | jq -Rs '.')
-  local observatory_probe_interval="${probe_interval:-30}"
-  case "$observatory_probe_interval" in
-  '' | *[!0-9]*) observatory_probe_interval=30 ;;
-  esac
+  local observatory_probe_interval=$(sanitize_probe_interval "$probe_interval")
   local outbound_tags
   outbound_tags=$(
     jq -c '

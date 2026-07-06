@@ -66,13 +66,13 @@ It is now a single switch. You no longer create a DNS inbound, a DNS outbound, t
 
 Open the **DNS** section (advanced mode) and turn on **DNS leak protection**.
 
-Then choose, in **Route DNS through**, which proxy outbound your DNS should travel through. That’s the tunnel your lookups exit from.
+You don’t pick a tunnel: XRAYUI automatically routes the resolver’s upstream lookups through your **first proxy outbound** — the first non-system proxy in the Outbounds list. That’s the tunnel your lookups exit from; if DNS should leave through a specific tunnel, put that outbound first in the list.
 
 That’s it. On apply, XRAYUI creates and keeps in sync:
 
 - a dedicated DNS inbound (`sys:dns-in`) that dnsmasq forwards the router’s queries to;
 - a DNS outbound (`sys:dns-out`) — Xray’s built-in resolver;
-- routing rules that hand intercepted queries to the resolver and send the resolver’s **own** upstream lookups out through the proxy you picked;
+- routing rules that hand intercepted queries to the resolver and send the resolver’s **own** upstream lookups out through your first proxy outbound;
 - a hijack rule that catches LAN clients which bypass dnsmasq with a hardcoded resolver (e.g. `8.8.8.8`) and answers them from the tunnel instead of letting them leak.
 
 ### Choose your resolvers (DoH and per-domain targets)
@@ -106,7 +106,7 @@ With DNS leak protection on, XRAYUI also locks the router down so stray DNS cann
 
 ### Troubleshooting
 
-- **Name resolution stops working after enabling the switch** — make sure you picked a real proxy outbound in **Route DNS through** (if no proxy outbound exists, add a VLESS/VMess/Trojan outbound first). Check that the proxy itself is up; with a catch-all DoH/fallback, all DNS depends on the tunnel being reachable.
+- **Name resolution stops working after enabling the switch** — make sure a real proxy outbound exists (if there is none, add a VLESS/VMess/Trojan outbound first): DNS rides your first proxy outbound. Check that the proxy itself is up; with a catch-all DoH/fallback, all DNS depends on the tunnel being reachable.
 - **A specific device still leaks** — the firewall lock and the hijack rule cover plain UDP/TCP 53. A device using its own DoH (HTTPS, port 443) or DoT (TCP 853) bypasses them. **Block QUIC** closes the UDP/443 path; for TCP/443 DoH you currently need to block the resolver’s IPs at the firewall or via routing rules.
 - **The test shows two resolver sets: your chosen DoH plus datacenter resolvers in your VPS region** (e.g. “Microsoft Corporation” for an Azure VPS, “Amazon” for AWS) — the second set comes from your **exit server**, not from your network. If the server-side Xray inbound has sniffing with `destOverride` (Marzban, x-ui and similar panel templates enable it by default), the server re-resolves every sniffed hostname with its own system DNS — usually the cloud provider’s resolver — so leak tests see both it and your DoH. It also silently overrides the answers of the resolver you picked. Fix it on the VPS: add `"routeOnly": true` next to `destOverride` in the inbound’s `sniffing` block and restart Xray/the panel. The server will then connect to the IPs your router already resolved.
 - **Router itself can’t resolve names** — dnsmasq must forward to the Xray DNS inbound. Check `/etc/dnsmasq.conf` for the `server=127.0.0.1#…` line XRAYUI generates; if it’s missing, the inbound wasn’t discovered — disable and re-enable the switch, then re-apply.

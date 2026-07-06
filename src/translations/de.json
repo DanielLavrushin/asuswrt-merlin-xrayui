@@ -100,10 +100,6 @@
       "hint_subscription_links": "Hier können Sie Ihre Abonnementquellen hinzufügen.<hr/> Es ist möglich, mehrere Links hinzuzufügen, einen pro Zeile.<hr/> Klicken Sie auf die Schaltfläche `Abrufen`, um die Abonnement-Links aus den Quellen abzurufen.<hr/> Danach können Sie das Abonnement‑Outbound in den Outbound‑Einstellungen auswählen.",
       "button_subscription_fetch": "Abrufen",
       "tab_dns": "DNS",
-      "label_dns_leak": "DNS-Lecks verhindern",
-      "hint_dns_leak": "Erzwingt, dass dnsmasq nur den dedizierten Xray-DNS-Inbound verwendet, und installiert Firewall-Regeln, die UDP/TCP-Port 53 zu allen anderen Zielen verwerfen.<blockquote>**Wichtig!** Vor dem Aktivieren dieser Option muss ein dedizierter DNS-Inbound (dokodemo-door, Port 53, Follow Redirect aus) vorhanden sein. Klicken Sie auf \"Hilfe\" neben dem Kontrollkästchen für die Einrichtungsschritte.</blockquote>",
-      "warn_dns_leak_no_inbound": "Kein dedizierter DNS-Inbound gefunden. Fügen Sie einen dokodemo-door-Inbound mit Zielport 53 und deaktiviertem Follow-Redirect hinzu, bevor Sie diese Option aktivieren.",
-      "alert_dns_leak_no_inbound": "DNS-Lecks verhindern kann nicht aktiviert werden: Ein dedizierter DNS-Inbound (dokodemo-door, Zielport 53, Follow Redirect aus) ist erforderlich. Siehe die DNS-Leck-Anleitung für die Einrichtungsschritte.",
       "label_block_quic": "QUIC blockieren",
       "hint_block_quic": "QUIC (UDP 443) blockieren, um das Durchsickern der IP-Adresse zu verhindern. Bei Aktivierung wechseln Clients auf TCP HTTPS, das korrekt über Xray weitergeleitet wird.",
       "label_logs_scribe": "XRAYUI-Protokolle mit Scribe integrieren",
@@ -169,6 +165,10 @@
     },
     "Dns": {
       "title": "DNS",
+      "label_leak_protection": "DNS-Leak-Schutz",
+      "hint_leak_protection": "Wenn aktiviert, macht XRAYUI Xray zum Resolver des Routers: Es erstellt automatisch einen dedizierten DNS-Inbound (`sys:dns-in`), einen DNS-Outbound (`sys:dns-out`) und die Routing-Regeln, die Client-Anfragen an Xrays eingebauten DNS-Server übergeben. Welcher Resolver antwortet und wohin seine Anfragen gehen, steuern Sie vollständig über die **Server**-Liste unten und Ihre normalen Routing-Regeln — fügen Sie dort DoH-Resolver und Domain-Regeln hinzu (z. B. `browserleaks.com` zu `https://xbox-dns.ru/dns-query`) und behalten Sie einen Server ohne Domain-Regeln als Fallback. Die Härtung auf Firewall-Ebene (Blockieren von fremdem Port 53, Blockieren von QUIC) bleibt in **Allgemeine Einstellungen → DNS**.",
+      "hint_leak_state": "erstellt DNS-Inbound, -Outbound und Routing-Regeln automatisch",
+      "warn_leak_no_fallback": "Kein Fallback-DNS-Server definiert. Fügen Sie in der Server-Liste unten mindestens einen Server ohne Domain-Regeln hinzu, sonst können Namen, die auf keinen Server passen, unaufgelöst bleiben.",
       "label_tag": "Tag",
       "label_hosts": "Hosts",
       "label_servers": "Server",
@@ -429,7 +429,8 @@
       "issuers": "Aussteller",
       "countries": "Länder",
       "closest": "Nächstgelegene Domain",
-      "scan_progress": "Scannen läuft..."
+      "scan_progress": "Scannen läuft...",
+      "info": "Der Reality-TLS-Scanner hilft dabei, öffentliche TLS-Endpunkte in einem Subnetz zu finden, und hebt diejenigen hervor, die Ihrer Ziel-IP (z. B. Ihrem VPS) am nächsten liegen. Die Ergebnisse werden auf einem „Radar“ visualisiert und in einer sortierbaren Tabelle aufgelistet, damit Sie schnell passende Hosts für REALITY-basierte Konfigurationen auswählen können."
     },
     "Xhttp": {
       "modal_anti_detection": "Anti-Erkennungs-Einstellungen",
@@ -606,5 +607,9 @@
       "label_masquerade_status_code": "Statuscode",
       "hint_masquerade_status_code": "HTTP-Statuscode, der beim Maskierungstyp `string` zurückgegeben wird."
     }
+  },
+  "guide": {
+    "dns_leak": "https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/dns-leak",
+    "ipset": "https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/general-options#enable-dns-bypass-ipset"
   }
 }

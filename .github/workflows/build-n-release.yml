@@ -89,32 +89,16 @@ jobs:
 
       - name: Create GitHub Release
         id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: v${{ github.event.inputs.version }}
-          release_name: 'Release ${{ github.event.inputs.version }}'
+          name: 'Release ${{ github.event.inputs.version }}'
           draft: ${{ github.event.inputs.draft == 'true' }}
           prerelease: ${{ github.event.inputs.prerelease == 'true' }}
           body: ${{ env.changelog }}
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: asuswrt-merlin-xrayui.tar.gz
-          asset_name: asuswrt-merlin-xrayui.tar.gz
-          asset_content_type: application/gzip
-
-      - name: Upload xrayui-datbuilder Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: xrayui-datbuilder.tar.gz
-          asset_name: xrayui-datbuilder.tar.gz
-          asset_content_type: application/gzip
+          generate_release_notes: true
+          files: |
+            asuswrt-merlin-xrayui.tar.gz
+            xrayui-datbuilder.tar.gz

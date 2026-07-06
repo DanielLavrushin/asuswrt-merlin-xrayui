@@ -854,7 +854,7 @@ export class XrayParsedUrlObject {
       this.port = parseInt(vmessJson.port, 10);
       this.uuid = vmessJson.id;
       this.tag = vmessJson.ps || vmessJson.add;
-      this.network = vmessJson.net;
+      this.network = vmessJson.net || 'tcp';
       this.security = vmessJson.tls;
       this.parsedParams = vmessJson;
       return;
@@ -927,8 +927,8 @@ export class XrayParsedUrlObject {
     this.tag = tag;
     this.port = this.port ?? parseInt(port, 10);
     this.uuid = uuid;
-    this.network = this.parsedParams.type;
-    this.security = this.parsedParams.security;
+    this.network = this.parsedParams.type ?? 'tcp';
+    this.security = this.parsedParams.security ?? 'none';
   }
 }
 

@@ -1,9 +1,10 @@
 # XRAYUI Changelog
 
-## [0.68.0] - 2026-07-07
+## [0.68.1] - unreleased
 
-> _Important: Please clear your browser cache (e.g. **Ctrl+F5**) to ensure outdated files are updated._
-
+- CHANGED: GitHub release notes now automatically include the "What's Changed" section — the list of merged pull requests, linked issues and contributors — in addition to the usual changelog summary.
+- FIXED: The DNS leaks guide described a **Route DNS through** selector that doesn't actually exist in the UI. The guide now correctly explains that DNS queries automatically travel through your first proxy outbound, and that you can reorder outbounds to pick a different tunnel.
+- REMOVED: Leftover texts from the old manual DNS-leak setup were cleaned out of the interface translations.
 - ADDED: New **DNS leak protection** switch in DNS settings. Turn it on and XRAYUI sets up everything needed so your lookups are answered by Xray instead of leaking to your provider — no more hand-building a special DNS inbound. You stay in control of the resolvers: add your DNS servers (for example send `browserleaks.com` to a DNS-over-HTTPS resolver of your choice, and keep a catch-all server as fallback), and your normal routing rules decide which tunnel they exit through. A warning shows if no fallback server is set.
 - FIXED: Clicking **Regenerate** for Reality keys did nothing — the private and public key fields stayed empty. The keys are now generated and filled in again. ([#67](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/67))
 - FIXED: With **Prevent DNS leaks** enabled, Xray could not connect to proxy nodes configured by domain name (e.g. `node.example.com`), failing with `operation not permitted` on DNS lookups. The leak rule was blocking Xray's own queries needed to resolve the node address. Xray's queries are now exempted from the lock; on routers that don't support that exemption, the lock is applied to LAN-client traffic only so node names still resolve. ([#362](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/362))

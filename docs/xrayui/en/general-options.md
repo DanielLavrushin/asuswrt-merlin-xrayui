@@ -50,7 +50,19 @@ Starting Xray and applying XRAYUI rules are both resource-intensive. On some dev
 
 ### Check connection to xray server
 
-Verifies outbound connectivity at startup. XRAYUI temporarily inserts a system rule and a short-lived SOCKS inbound (tagged `sys`, hidden from the UI) and performs a probe via `ip-api.com`. The UI indicates success/failure per outbound.
+Enables live outbound health checks. When on, XRAYUI starts Xray with the built-in **Observatory**, which periodically opens a connection through **every** outbound to the probe URL and records whether it succeeded. The result is shown as a green/red indicator next to each outbound in the **Outbounds** section, and the same data drives the automatic subscription failover. The system pieces XRAYUI adds for this are tagged `sys` and stay hidden in the UI.
+
+#### Observatory probe URL
+
+The URL the Observatory requests through each outbound. The endpoint should return **HTTP 204 (No Content)**. Default: `https://www.google.com/generate_204`.
+
+#### Observatory probe interval
+
+How often (in seconds) the Observatory checks the outbounds. Default is **30** seconds.
+
+::: warning Low-memory routers
+Every check opens a connection through every outbound. With many outbounds (for example, imported from subscriptions) — especially dead or unreachable ones — a short interval can noticeably raise CPU and memory usage and, in the worst case, exhaust the router's RAM. Raise the interval if your configuration has many outbounds.
+:::
 
 ### Use GitHub Proxy
 

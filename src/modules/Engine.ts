@@ -222,6 +222,8 @@ export class EngineResponseConfig {
     logs_dor: boolean;
     skip_test: boolean;
     check_connection: boolean;
+    probe_url?: string;
+    probe_interval?: number;
     startup_delay: number;
     sleep_time: number;
     hooks?: EngineHooks;

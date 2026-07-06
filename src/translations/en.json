@@ -65,6 +65,8 @@
       "label_logs_level": "Log level",
       "label_probe_url": "Observatory probe URL",
       "hint_probe_url": "The URL used by the Xray Observatory to probe outbound health. The endpoint should return HTTP 204 (No Content).",
+      "label_probe_interval": "Observatory probe interval (seconds)",
+      "hint_probe_interval": "How often the Xray Observatory checks each outbound connection. Every check opens a connection through every outbound, so short intervals combined with many outbounds (e.g. from subscriptions) increase CPU and memory usage on the router. Default is 30 seconds.",
       "label_gh_proxy": "Use GitHub Proxy",
       "hint_gh_proxy": "Use a GitHub proxy to download files from GitHub (Xray updates, geodata files, etc.) when GitHub is blocked in your region.",
       "geodad_header": "GeoIP/GeoSite Metadata",

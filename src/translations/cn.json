@@ -61,6 +61,8 @@
       "label_logs_level": "日志级别",
       "label_probe_url": "Observatory 探测 URL",
       "hint_probe_url": "Xray Observatory 用于探测出站连接健康状态的 URL。该端点应返回 HTTP 204（No Content）。",
+      "label_probe_interval": "Observatory 探测间隔（秒）",
+      "hint_probe_interval": "Xray Observatory 检查每个出站连接的频率。每次检查都会通过所有出站建立连接，因此在出站较多（例如来自订阅）时，过短的间隔会增加路由器的 CPU 和内存占用。默认为 30 秒。",
       "label_gh_proxy": "GitHub 代理",
       "hint_gh_proxy": "当地无法访问 GitHub 时，用此功能下载 GitHub 文件（含 Xray 更新、Geo 库等）",
       "geodad_header": "GeoIP 与 GeoSite 库",

@@ -87,6 +87,7 @@
   import { XrayProtocol, XrayProtocolOption } from '@/modules/CommonObjects';
   import { XrayOutboundObject } from '@/modules/OutboundObjects';
   import { XrayProtocolMode } from '@/modules/Options';
+  import { createPoller } from '@/modules/Polling';
 
   import FreedomOutbound from '@obd/FreedomOutbound.vue';
   import BlackholeOutbound from '@obd/BlackholeOutbound.vue';
@@ -127,7 +128,6 @@
       const proxyRef = ref();
       const parserModal = ref();
 
-      let pollHandle: number;
       watch(
         () => config.value.outbounds.length,
         (newVal) => {
@@ -262,12 +262,12 @@
         }
       });
 
+      const statusPoller = createPoller(fetchStatus, 5000);
       onMounted(() => {
-        fetchStatus();
-        pollHandle = window.setInterval(fetchStatus, 5000);
+        statusPoller.start();
       });
       onUnmounted(() => {
-        clearInterval(pollHandle);
+        statusPoller.stop();
       });
 
       return {

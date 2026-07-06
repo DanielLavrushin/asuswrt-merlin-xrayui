@@ -48,6 +48,10 @@ initial_response() {
     local subscription_fallback_interval="${subscription_fallback_interval:-5}"
     local subscription_filters="${subscription_filters:-""}"
     local probe_url="${probe_url:-https://www.google.com/generate_204}"
+    local probe_interval="${probe_interval:-30}"
+    case "$probe_interval" in
+    '' | *[!0-9]*) probe_interval=30 ;;
+    esac
 
     local uptime_xray=$(get_proc_uptime "xray")
 
@@ -109,6 +113,7 @@ initial_response() {
         --argjson clients_check "$clients_check" \
         --argjson check_connection "$check_connection" \
         --arg probe_url "$probe_url" \
+        --argjson probe_interval "$probe_interval" \
         --arg github_proxy "$github_proxy" \
         --argjson dnsmasq "$dnsmasq_enabled" \
         --argjson logs_dor "$logs_dor" \
@@ -145,6 +150,7 @@ initial_response() {
         | .xray.clients_check = $clients_check
         | .xray.check_connection = $check_connection
         | .xray.probe_url = $probe_url
+        | .xray.probe_interval = $probe_interval
         | .xray.github_proxy = $github_proxy
         | .xray.dnsmasq = $dnsmasq
         | .xray.logs_dor = $logs_dor
@@ -186,6 +192,7 @@ initial_response() {
             --argjson clients_check "$clients_check" \
             --argjson check_connection "$check_connection" \
             --arg probe_url "$probe_url" \
+            --argjson probe_interval "$probe_interval" \
             --arg github_proxy "$github_proxy" \
             --argjson dnsmasq "$dnsmasq_enabled" \
             --argjson logs_dor "$logs_dor" \
@@ -205,7 +212,7 @@ initial_response() {
             --argjson debug "$debug" \
             '{
                 geodata: { geoip_url: $geoipurl, geosite_url: $geositeurl, community: { "geoip.dat": $geoip, "geosite.dat": $geosite }, auto_update: $geo_auto_update },
-                xray: { uptime: $uptime, profile: $profile, skip_test: $skip_test, clients_check: $clients_check, check_connection: $check_connection, probe_url: $probe_url, github_proxy: $github_proxy, dnsmasq: $dnsmasq, logs_dor: $logs_dor, logs_max_size: $logs_max_size, ipsec: $ipsec, startup_delay: $startup_delay, sleep_time: $sleep_time, dns_only: $dns_only, block_quic: $block_quic, subscription_auto_refresh: $sar, subscription_auto_fallback: ($saf == "true"), subscription_fallback_interval: ($sfi | tonumber), subscriptions: { links: [], filters: [] }, hooks: {}, ui_version: $xrayui_ver, core_version: $xray_ver, profiles: $profiles, backups: $backups, debug: $debug }
+                xray: { uptime: $uptime, profile: $profile, skip_test: $skip_test, clients_check: $clients_check, check_connection: $check_connection, probe_url: $probe_url, probe_interval: $probe_interval, github_proxy: $github_proxy, dnsmasq: $dnsmasq, logs_dor: $logs_dor, logs_max_size: $logs_max_size, ipsec: $ipsec, startup_delay: $startup_delay, sleep_time: $sleep_time, dns_only: $dns_only, block_quic: $block_quic, subscription_auto_refresh: $sar, subscription_auto_fallback: ($saf == "true"), subscription_fallback_interval: ($sfi | tonumber), subscriptions: { links: [], filters: [] }, hooks: {}, ui_version: $xrayui_ver, core_version: $xray_ver, profiles: $profiles, backups: $backups, debug: $debug }
             }' >"$_tmp_response" 2>"$_jq_err"; then
             log_error "Error: jq -n also failed. jq error: $(cat "$_jq_err" 2>/dev/null). Writing bare minimum response."
             echo '{"xray":{"ui_version":"'"$XRAYUI_VERSION"'","core_version":"","profiles":[],"backups":[]}}' >"$_tmp_response"

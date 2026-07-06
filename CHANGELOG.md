@@ -1,6 +1,6 @@
 # XRAYUI Changelog
 
-## [0.68.1] - unreleased
+## [0.68.1] - 1026-07-07
 
 - CHANGED: GitHub release notes now automatically include the "What's Changed" section — the list of merged pull requests, linked issues and contributors — in addition to the usual changelog summary.
 - FIXED: The DNS leaks guide described a **Route DNS through** selector that doesn't actually exist in the UI. The guide now correctly explains that DNS queries automatically travel through your first proxy outbound, and that you can reorder outbounds to pick a different tunnel.

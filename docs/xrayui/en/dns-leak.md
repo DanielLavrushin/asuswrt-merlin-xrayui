@@ -90,7 +90,7 @@ https://xbox-dns.ru/dns-query     → browserleaks.com, browserleaks.org, browse
 8.8.8.8                            → (no rules — fallback for everything else)
 ```
 
-When you enable the switch and have no servers yet, XRAYUI adds `8.8.8.8` as a starting fallback. Adjust it to taste.
+XRAYUI does not add any servers for you — the list stays fully under your control. Make sure it contains at least one catch-all server (no domain rules) as a fallback; XRAYUI shows a warning while none is set.
 
 ### Optional hardening
 

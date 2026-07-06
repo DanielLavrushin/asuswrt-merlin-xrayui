@@ -11,7 +11,8 @@ import {
   XrayStreamHttpUpgradeSettingsObject,
   XrayStreamSplitHttpSettingsObject,
   XrayStreamHysteriaSettingsObject,
-  XrayFinalMaskSettingsObject
+  XrayFinalMaskSettingsObject,
+  migrateKcpMaskingForSerialization
 } from './TransportObjects';
 
 export const isObjectEmpty = (obj: any): boolean => {
@@ -423,8 +424,7 @@ export class XrayRoutingObject {
         })
         .filter((r) => {
           if (!r.isSystem()) return true;
-          const d = r.domain ?? [];
-          return !(d.length === 0 || d.every((s) => s.trim() === ''));
+          return !!(r.domain || r.ip || r.inboundTag || r.source || r.protocol || r.port);
         })
         .sort((a, b) => a.idx - b.idx);
 
@@ -713,6 +713,8 @@ export class XrayStreamSettingsObject {
         if (!allowed.has(k)) (this as any)[k] = undefined;
       });
 
+    migrateKcpMaskingForSerialization(this);
+
     if (this.normalizeAllSettings) this.normalizeAllSettings();
 
     if (this.finalmask && typeof this.finalmask.normalize === 'function') {
@@ -852,7 +854,7 @@ export class XrayParsedUrlObject {
       this.port = parseInt(vmessJson.port, 10);
       this.uuid = vmessJson.id;
       this.tag = vmessJson.ps || vmessJson.add;
-      this.network = vmessJson.net;
+      this.network = vmessJson.net || 'tcp';
       this.security = vmessJson.tls;
       this.parsedParams = vmessJson;
       return;
@@ -925,8 +927,8 @@ export class XrayParsedUrlObject {
     this.tag = tag;
     this.port = this.port ?? parseInt(port, 10);
     this.uuid = uuid;
-    this.network = this.parsedParams.type;
-    this.security = this.parsedParams.security;
+    this.network = this.parsedParams.type ?? 'tcp';
+    this.security = this.parsedParams.security ?? 'none';
   }
 }
 

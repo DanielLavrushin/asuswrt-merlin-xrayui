@@ -165,6 +165,10 @@
     },
     "Dns": {
       "title": "DNS",
+      "label_leak_protection": "DNS-Leak-Schutz",
+      "hint_leak_protection": "Wenn aktiviert, macht XRAYUI Xray zum Resolver des Routers: Es erstellt automatisch einen dedizierten DNS-Inbound (`sys:dns-in`), einen DNS-Outbound (`sys:dns-out`) und die Routing-Regeln, die Client-Anfragen an Xrays eingebauten DNS-Server übergeben. Welcher Resolver antwortet und wohin seine Anfragen gehen, steuern Sie vollständig über die **Server**-Liste unten und Ihre normalen Routing-Regeln — fügen Sie dort DoH-Resolver und Domain-Regeln hinzu (z. B. `browserleaks.com` zu `https://xbox-dns.ru/dns-query`) und behalten Sie einen Server ohne Domain-Regeln als Fallback. Die Härtung auf Firewall-Ebene (Blockieren von fremdem Port 53, Blockieren von QUIC) bleibt in **Allgemeine Einstellungen → DNS**.",
+      "hint_leak_state": "erstellt DNS-Inbound, -Outbound und Routing-Regeln automatisch",
+      "warn_leak_no_fallback": "Kein Fallback-DNS-Server definiert. Fügen Sie in der Server-Liste unten mindestens einen Server ohne Domain-Regeln hinzu, sonst können Namen, die auf keinen Server passen, unaufgelöst bleiben.",
       "label_tag": "Tag",
       "label_hosts": "Hosts",
       "label_servers": "Server",
@@ -425,7 +429,8 @@
       "issuers": "Aussteller",
       "countries": "Länder",
       "closest": "Nächstgelegene Domain",
-      "scan_progress": "Scannen läuft..."
+      "scan_progress": "Scannen läuft...",
+      "info": "Der Reality-TLS-Scanner hilft dabei, öffentliche TLS-Endpunkte in einem Subnetz zu finden, und hebt diejenigen hervor, die Ihrer Ziel-IP (z. B. Ihrem VPS) am nächsten liegen. Die Ergebnisse werden auf einem „Radar“ visualisiert und in einer sortierbaren Tabelle aufgelistet, damit Sie schnell passende Hosts für REALITY-basierte Konfigurationen auswählen können."
     },
     "Xhttp": {
       "modal_anti_detection": "Anti-Erkennungs-Einstellungen",
@@ -602,5 +607,9 @@
       "label_masquerade_status_code": "Statuscode",
       "hint_masquerade_status_code": "HTTP-Statuscode, der beim Maskierungstyp `string` zurückgegeben wird."
     }
+  },
+  "guide": {
+    "dns_leak": "https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/dns-leak",
+    "ipset": "https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/general-options#enable-dns-bypass-ipset"
   }
 }

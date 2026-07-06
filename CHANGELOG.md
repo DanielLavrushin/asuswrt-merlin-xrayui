@@ -4,6 +4,7 @@
 
 - CHANGED: GitHub release notes now automatically include the "What's Changed" section — the list of merged pull requests, linked issues and contributors — in addition to the usual changelog summary.
 - FIXED: The DNS leaks guide described a **Route DNS through** selector that doesn't actually exist in the UI. The guide now correctly explains that DNS queries automatically travel through your first proxy outbound, and that you can reorder outbounds to pick a different tunnel.
+- FIXED: The new **DNS leak protection** switch and its hints showed up in English no matter which interface language was selected. They are now translated into Russian, Ukrainian, Chinese and German.
 - REMOVED: Leftover texts from the old manual DNS-leak setup were cleaned out of the interface translations.
 - ADDED: New **DNS leak protection** switch in DNS settings. Turn it on and XRAYUI sets up everything needed so your lookups are answered by Xray instead of leaking to your provider — no more hand-building a special DNS inbound. You stay in control of the resolvers: add your DNS servers (for example send `browserleaks.com` to a DNS-over-HTTPS resolver of your choice, and keep a catch-all server as fallback), and your normal routing rules decide which tunnel they exit through. A warning shows if no fallback server is set.
 - FIXED: Clicking **Regenerate** for Reality keys did nothing — the private and public key fields stayed empty. The keys are now generated and filled in again. ([#67](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/67))

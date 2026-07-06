@@ -167,6 +167,10 @@
     },
     "Dns": {
       "title": "DNS",
+      "label_leak_protection": "DNS 泄漏保护",
+      "hint_leak_protection": "启用后，XRAYUI 会让 Xray 成为路由器的解析器：自动创建专用 DNS 入站（`sys:dns-in`）、DNS 出站（`sys:dns-out`），以及将客户端查询交给 Xray 内置 DNS 服务器的路由规则。由哪个解析器应答、其查询发往何处，完全由下方的**服务器**列表和您的常规路由规则控制——在那里添加 DoH 解析器和按域名的规则（例如将 `browserleaks.com` 指向 `https://xbox-dns.ru/dns-query`），并保留一个没有域名规则的服务器作为兜底。防火墙级别的加固（拦截绕行的 53 端口、拦截 QUIC）仍位于**常规设置 → DNS**。",
+      "hint_leak_state": "自动创建 DNS 入站、出站和路由规则",
+      "warn_leak_no_fallback": "未定义兜底 DNS 服务器。请在下方服务器列表中至少添加一个没有域名规则的服务器，否则未匹配任何服务器的域名可能无法解析。",
       "label_tag": "标签",
       "label_hosts": "Hosts",
       "label_servers": "DNS 服务器",
@@ -895,7 +899,8 @@
       "issuers": "颁发者",
       "countries": "国家",
       "closest": "最近的域名",
-      "scan_progress": "扫描进行中..."
+      "scan_progress": "扫描进行中...",
+      "info": "Reality TLS 扫描器帮助您发现子网中的公共 TLS 端点，并突出显示最接近目标 IP（例如您的 VPS）的端点。结果以“雷达”形式可视化，并列在可排序的表格中，便于快速为基于 REALITY 的配置选择合适的主机。"
     },
     "Xhttp": {
       "modal_anti_detection": "反检测设置",
@@ -959,5 +964,9 @@
       "top_domain": "最多",
       "most_active": "最活跃"
     }
+  },
+  "guide": {
+    "dns_leak": "https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/dns-leak",
+    "ipset": "https://daniellavrushin.github.io/asuswrt-merlin-xrayui/en/general-options#enable-dns-bypass-ipset"
   }
 }

@@ -16,7 +16,7 @@ In the `Import Configuration` section, press the **Import** button:
 
 An import manager window will pop up:
 
-![import window](../.vuepress/public/images/import-config/20250729230159.png)
+![20260706212433](../.vuepress/public/images/import-config/20260706212433.png)
 
 XRAYUI supports different methods of import.
 
@@ -47,25 +47,29 @@ If your server provided a JSON-formatted client config (often via AmneziaWG), pa
 This isn’t strictly importing—it’s a full config restore. Select a JSON file from your system, upload it, and it replaces your router’s configuration.
 ![restore from file](../.vuepress/public/images/import-config/20250729231510.png)
 
-## Advanced Options
+## Import Mode
 
-Depending on the import method, you can tweak additional settings:
+For QR, URL and JSON imports you can choose what happens with the imported connection:
 
-### I'd like to have a complete setup
+![20260706212520](../.vuepress/public/images/import-config/20260706212520.png)
 
-Check `I’d like to have a complete setup!` and the import manager will generate all required inbounds and outbounds (`FREEDOM`, `BLACKHOLE`, `DOKODEMO`).
+### Add as a new outbound
+
+The default. The imported connection is added to the Outbounds collection alongside your existing ones; nothing else in your configuration is touched.
+
+### Replace an existing outbound
+
+Pick one of your current outbounds in the `Replace connection` dropdown, and the imported connection will take its place. The new connection inherits the tag of the replaced one, so all your routing rules, balancers and policies keep working without any manual editing. This is the quickest way to switch to a new server while keeping the rest of your setup intact.
+
+### Complete setup
+
+The import manager generates all required inbounds and outbounds (`FREEDOM`, `BLACKHOLE`, `DOKODEMO`) from scratch.
 
 > [!warning]
 > This overrides your current config. If you need to roll back, refresh the page.
 
-### Keep existing routing rules
+With complete setup you also choose a **Routing mode**:
 
-Replace your config but preserve your existing routing rules and policies by migrating them into the new setup.
-
-### Unblock list
-
-Select services or sites to route through your XRAY server proxy. Only choose the services that are blocked in your region.
-
-### Don't break my network devices
-
-By default, XRAY UI redirects all traffic to XRAY, which can disrupt IoT devices, gaming consoles, or other networked hardware. If you’re cautious, check Don’t break my network devices—only ports `80` and `443` get redirected, covering most HTTPS traffic without affecting other devices.
+- **Basic bypass** (recommended) — creates routing rules for the most common services (Google, Meta, Telegram, Twitter, Discord, TikTok, Netflix, Github, Cloudflare) so their traffic goes through the proxy.
+- **No routing rules** — no rules are created; all traffic goes to the first outbound until you configure rules manually.
+- **Keep existing routing rules** — preserves your current routing rules and policies.

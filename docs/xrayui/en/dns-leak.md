@@ -90,6 +90,10 @@ https://xbox-dns.ru/dns-query     → browserleaks.com, browserleaks.org, browse
 8.8.8.8                            → (no rules — fallback for everything else)
 ```
 
+![20260706212130](../.vuepress/public/images/dns-leak/20260706212130.png)
+![20260706212222](../.vuepress/public/images/dns-leak/20260706212222.png)
+![20260706212158](../.vuepress/public/images/dns-leak/20260706212158.png)
+
 XRAYUI does not add any servers for you — the list stays fully under your control. Make sure it contains at least one catch-all server (no domain rules) as a fallback; XRAYUI shows a warning while none is set.
 
 ### Optional hardening

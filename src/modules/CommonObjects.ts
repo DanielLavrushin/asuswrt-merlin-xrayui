@@ -150,6 +150,7 @@ export class XrayStreamTlsSettingsObject implements ISecurityProtocol {
     this.certificates.push(new XrayStreamTlsCertificateObject());
     if (parsedObject) {
       this.serverName = parsedObject.parsedParams.sni;
+      this.fingerprint = parsedObject.parsedParams.fp;
     }
   }
 
@@ -160,6 +161,7 @@ export class XrayStreamTlsSettingsObject implements ISecurityProtocol {
     this.enableSessionResumption = this.enableSessionResumption ? this.enableSessionResumption : undefined;
 
     this.alpn = this.alpn?.length == 0 || this.alpn == XrayStreamTlsSettingsObject.alpnOptions ? undefined : this.alpn;
+    this.fingerprint = !this.fingerprint || this.fingerprint === '' ? undefined : this.fingerprint;
     this.echConfigList = !this.echConfigList || this.echConfigList === '' ? undefined : this.echConfigList;
     this.echForceQuery = !this.echForceQuery || this.echForceQuery === 'none' || this.echForceQuery === '' ? undefined : this.echForceQuery;
     this.echServerKeys = !this.echServerKeys || this.echServerKeys === '' ? undefined : this.echServerKeys;
@@ -232,7 +234,7 @@ export class XrayStreamRealitySettingsObject implements ISecurityProtocol {
     if (parsedObject) {
       this.serverName = parsedObject.parsedParams.server;
       this.shortId = parsedObject.parsedParams.sid;
-      this.fingerprint = parsedObject.parsedParams.fp;
+      this.fingerprint = parsedObject.parsedParams.fp || 'firefox';
       this.publicKey = parsedObject.parsedParams.pbk;
       this.spiderX = parsedObject.parsedParams.spx;
       this.serverName = parsedObject.parsedParams.sni;

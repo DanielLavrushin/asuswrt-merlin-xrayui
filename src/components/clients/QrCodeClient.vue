@@ -177,11 +177,11 @@
           addQueryParam('sni', p.streamSettings.realitySettings.serverNames?.[0]!);
           addQueryParam('pbk', p.streamSettings.realitySettings.publicKey!);
           addQueryParam('sid', p.streamSettings.realitySettings.shortIds?.[0]!);
-          addQueryParam('fp', p.streamSettings.realitySettings.fingerprint ?? 'chrome');
+          addQueryParam('fp', p.streamSettings.realitySettings.fingerprint || 'firefox');
           addQueryParam('spx', p.streamSettings.realitySettings.spiderX ?? '');
         } else if (security === 'tls' && p.streamSettings?.tlsSettings) {
           addQueryParam('sni', p.streamSettings.tlsSettings.serverName!);
-          addQueryParam('fp', p.streamSettings.tlsSettings.fingerprint ?? 'chrome');
+          addQueryParam('fp', p.streamSettings.tlsSettings.fingerprint || 'firefox');
           addQueryParam('alpn', p.streamSettings.tlsSettings.alpn?.join(',')!);
         }
 

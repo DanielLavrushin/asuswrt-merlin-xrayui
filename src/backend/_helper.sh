@@ -143,6 +143,20 @@ get_proc_uptime() {
     echo $proc_uptime
 }
 
+sanitize_probe_interval() {
+    local v="${1:-30}"
+    case "$v" in
+    '' | *[!0-9]*) v=30 ;;
+    esac
+    while [ "${#v}" -gt 1 ] && [ "${v#0}" != "$v" ]; do v="${v#0}"; done
+    if [ "$v" -lt 5 ]; then
+        v=5
+    elif [ "$v" -gt 3600 ]; then
+        v=3600
+    fi
+    echo "$v"
+}
+
 get_webui_page() {
     ADDON_USER_PAGE="none"
     local max_user_page=0

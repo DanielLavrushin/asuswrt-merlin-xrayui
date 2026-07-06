@@ -27,11 +27,12 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, onMounted, onBeforeUnmount, watch } from 'vue';
+  import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue';
   import axios from 'axios';
   import engine, { SubmitActions } from '@/modules/Engine';
   import xrayConfig from '@/modules/XrayConfig';
   import { XrayProtocol } from '@/modules/Options';
+  import { createPoller } from '@/modules/Polling';
 
   interface Client {
     ip: string;
@@ -42,7 +43,6 @@
     name: 'ClientsOnline',
     setup() {
       const clients = ref<Client[]>([]);
-      let pollTimeout: number | null = null;
 
       // Determines if the component should continue polling.
       const enable_check = () =>
@@ -60,36 +60,18 @@
         }
       };
 
-      const pollClients = async () => {
-        if (!enable_check()) {
-          pollTimeout = window.setTimeout(pollClients, 3000);
-          return;
-        }
+      const clientsPoller = createPoller(async () => {
+        if (!enable_check()) return;
+        await engine.submit(SubmitActions.clientsOnline);
+        await fetchClients();
+      }, 3000);
 
-        try {
-          await engine.submit(SubmitActions.clientsOnline);
-          await fetchClients();
-        } catch (error) {
-          console.error('Error during polling:', error);
-        } finally {
-          pollTimeout = window.setTimeout(pollClients, 3000);
-        }
-      };
-
-      onMounted(async () => {
-        try {
-          await engine.submit(SubmitActions.clientsOnline);
-          await fetchClients();
-        } catch (error) {
-          console.error('Error during initial fetch:', error);
-        }
-        pollClients();
+      onMounted(() => {
+        clientsPoller.start();
       });
 
       onBeforeUnmount(() => {
-        if (pollTimeout !== null) {
-          clearTimeout(pollTimeout);
-        }
+        clientsPoller.stop();
       });
 
       return {

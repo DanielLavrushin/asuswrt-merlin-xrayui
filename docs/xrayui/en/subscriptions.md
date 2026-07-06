@@ -129,7 +129,7 @@ There are two parts to the setup:
 
 ### Probe URL
 
-By default, the Connection Check verifies endpoint health by sending a request to `https://www.google.com/generate_204`. If this URL is not suitable for your environment (for example, if it is blocked in your region), you can change it in `General Options` → `Subscriptions` tab under **Probe URL**.
+By default, the Connection Check verifies endpoint health by sending a request to `https://www.google.com/generate_204`. If this URL is not suitable for your environment (for example, if it is blocked in your region), you can change it in `General Options` → `General` tab under **Observatory probe URL** (shown when **Check connection to xray server** is enabled). The **Observatory probe interval** setting next to it controls how often the checks run — consider raising it if your subscriptions bring in many outbounds.
 
 ![prob](../.vuepress/public/images/subscriptions/20260222194527.png)
 

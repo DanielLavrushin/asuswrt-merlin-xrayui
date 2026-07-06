@@ -61,16 +61,31 @@
           </tr>
           <tr v-if="!isFile">
             <th>
-              {{ $t('com.ImportConfigModal.label_complete_setup') }}
-              <hint v-html="$t('com.ImportConfigModal.hint_complete_setup')"></hint>
+              {{ $t('com.ImportConfigModal.label_import_mode') }}
+              <hint v-html="$t('com.ImportConfigModal.hint_import_mode')"></hint>
             </th>
             <td>
-              <input type="checkbox" v-model="state.completeSetup" />
+              <select v-model="state.importMode" class="input_option">
+                <option value="add">{{ $t('com.ImportConfigModal.opt_mode_add') }}</option>
+                <option value="replace" v-if="replaceableOutbounds.length">{{ $t('com.ImportConfigModal.opt_mode_replace') }}</option>
+                <option value="complete">{{ $t('com.ImportConfigModal.opt_mode_complete') }}</option>
+              </select>
+            </td>
+          </tr>
+          <tr v-if="isReplace && !isFile">
+            <th>
+              {{ $t('com.ImportConfigModal.label_replace_target') }}
+              <hint v-html="$t('com.ImportConfigModal.hint_replace_target')"></hint>
+            </th>
+            <td>
+              <select v-model="state.replaceTag" class="input_option">
+                <option v-for="outbound in replaceableOutbounds" :key="outbound.tag" :value="outbound.tag">{{ outbound.tag }} ({{ outbound.protocol }})</option>
+              </select>
             </td>
           </tr>
         </tbody>
 
-        <tbody v-show="state.completeSetup && !isFile">
+        <tbody v-show="isComplete && !isFile">
           <tr>
             <th>
               {{ $t('com.ImportConfigModal.label_routing_mode') }}
@@ -103,34 +118,24 @@
   </modal>
 </template>
 <script lang="ts">
-  import { defineComponent, ref, reactive, computed } from 'vue';
+  import { defineComponent, ref, reactive, computed, watch } from 'vue';
   import engine from '@/modules/Engine';
   import Modal from '@main/Modal.vue';
   import jsQR from 'jsqr';
   import { XrayObject } from '@/modules/XrayConfig';
   import ProxyParser from '@/modules/parsers/ProxyParser';
+  import parseJsonOutbound from '@/modules/parsers/JsonOutboundParser';
   import Hint from '@main/Hint.vue';
   import { plainToInstance } from 'class-transformer';
   import { XrayDnsObject, XrayLogObject, XrayRoutingObject, XraySniffingObject, XraySockoptObject } from '@/modules/CommonObjects';
   import { XrayDokodemoDoorInboundObject, XrayInboundObject } from '@/modules/InboundObjects';
-  import {
-    XrayBlackholeOutboundObject,
-    XrayFreedomOutboundObject,
-    XrayHttpOutboundObject,
-    XrayLoopbackOutboundObject,
-    XrayOutboundObject,
-    XrayShadowsocksOutboundObject,
-    XraySocksOutboundObject,
-    XrayTrojanOutboundObject,
-    XrayVlessOutboundObject,
-    XrayVmessOutboundObject,
-    XrayWireguardOutboundObject
-  } from '@/modules/OutboundObjects';
+  import { XrayBlackholeOutboundObject, XrayFreedomOutboundObject, XrayOutboundObject } from '@/modules/OutboundObjects';
   import { XrayProtocol } from '@/modules/Options';
   import { IProtocolType } from '@/modules/Interfaces';
   import { useI18n } from 'vue-i18n';
 
   type ImportType = 'qr' | 'url' | 'json' | 'file';
+  type ImportMode = 'add' | 'replace' | 'complete';
 
   export default defineComponent({
     name: 'ImportConfigModal',
@@ -152,7 +157,8 @@
           json: '' as string,
           file: '' as string
         },
-        completeSetup: true,
+        importMode: 'add' as ImportMode,
+        replaceTag: '' as string,
         routingMode: 'basic' as 'basic' | 'none' | 'keep'
       });
 
@@ -160,6 +166,21 @@
       const isUrl = computed(() => state.importType === 'url');
       const isJson = computed(() => state.importType === 'json');
       const isFile = computed(() => state.importType === 'file');
+      const isReplace = computed(() => state.importMode === 'replace');
+      const isComplete = computed(() => state.importMode === 'complete');
+
+      const replaceableOutbounds = computed(() =>
+        props.config.outbounds.filter((o) => o.tag && !o.isSystem() && ![XrayProtocol.FREEDOM, XrayProtocol.BLACKHOLE].includes(o.protocol))
+      );
+
+      watch(
+        () => state.importMode,
+        (mode) => {
+          if (mode === 'replace' && !state.replaceTag) {
+            state.replaceTag = replaceableOutbounds.value[0]?.tag ?? '';
+          }
+        }
+      );
 
       const show = () => importModal.value.show();
 
@@ -255,7 +276,28 @@
         } else if (state.routingMode === 'none') {
           cfg.routing = new XrayRoutingObject().normalize();
         }
-        // 'keep' mode: don't modify routing at all
+      };
+
+      const replaceOutbound = (primaryOutbound: XrayOutboundObject<IProtocolType>): boolean => {
+        const index = props.config.outbounds.findIndex((o) => o.tag === state.replaceTag);
+        if (index < 0) {
+          alert(t('com.ImportConfigModal.alert_replace_target_missing'));
+          return false;
+        }
+        primaryOutbound.tag = state.replaceTag;
+        props.config.outbounds.splice(index, 1, primaryOutbound);
+        return true;
+      };
+
+      const addOutbound = (primaryOutbound: XrayOutboundObject<IProtocolType>) => {
+        const baseTag = primaryOutbound.tag || `out-${primaryOutbound.protocol.toLowerCase()}`;
+        let tag = baseTag;
+        let suffix = 1;
+        while (props.config.outbounds.some((o) => o.tag === tag)) {
+          tag = `${baseTag}-${suffix++}`;
+        }
+        primaryOutbound.tag = tag;
+        props.config.outbounds.push(primaryOutbound);
       };
 
       const onImport = async () => {
@@ -264,8 +306,8 @@
           return;
         }
 
-        if (state.completeSetup && !isFile.value) {
-          const proceed = confirm('You selected a complete setup. This will overwrite your current configuration. Are you sure?');
+        if (isComplete.value && !isFile.value) {
+          const proceed = confirm(t('com.ImportConfigModal.alert_complete_setup'));
           if (!proceed) return;
         }
 
@@ -313,49 +355,20 @@
             alert(t('com.ImportConfigModal.alert_not_supported_protocol'));
             return;
           }
-          switch (first.protocol) {
-            case XrayProtocol.VMESS:
-              primaryOutbound = plainToInstance(XrayOutboundObject<XrayVmessOutboundObject>, first);
-              break;
-            case XrayProtocol.VLESS:
-              primaryOutbound = plainToInstance(XrayOutboundObject<XrayVlessOutboundObject>, first, { enableImplicitConversion: true });
-              break;
-            case XrayProtocol.SHADOWSOCKS:
-              primaryOutbound = plainToInstance(XrayOutboundObject<XrayShadowsocksOutboundObject>, first);
-              break;
-            case XrayProtocol.TROJAN:
-              primaryOutbound = plainToInstance(XrayOutboundObject<XrayTrojanOutboundObject>, first);
-              break;
-            case XrayProtocol.WIREGUARD:
-              primaryOutbound = plainToInstance(XrayOutboundObject<XrayWireguardOutboundObject>, first);
-              break;
-            case XrayProtocol.LOOPBACK:
-              primaryOutbound = plainToInstance(XrayOutboundObject<XrayLoopbackOutboundObject>, first);
-              break;
-            case XrayProtocol.HTTP:
-              primaryOutbound = plainToInstance(XrayOutboundObject<XrayHttpOutboundObject>, first, { enableImplicitConversion: true });
-              break;
-            case XrayProtocol.DNS:
-              primaryOutbound = plainToInstance(XrayOutboundObject<XrayFreedomOutboundObject>, first);
-              break;
-            case XrayProtocol.SOCKS:
-              primaryOutbound = plainToInstance(XrayOutboundObject<XraySocksOutboundObject>, first);
-              break;
-            default:
-              break;
-          }
-          if (primaryOutbound) primaryOutbound.tag = first.tag ?? `out-${first.protocol.toLowerCase()}`;
+          primaryOutbound = parseJsonOutbound(first);
         }
 
         if (!primaryOutbound) {
-          alert('Failed to build outbound from the provided data');
+          alert(t('com.ImportConfigModal.alert_not_supported_protocol'));
           return;
         }
 
-        if (state.completeSetup) {
+        if (isComplete.value) {
           rebuildConfig(primaryOutbound);
+        } else if (isReplace.value) {
+          if (!replaceOutbound(primaryOutbound)) return;
         } else {
-          props.config.outbounds.push(primaryOutbound);
+          addOutbound(primaryOutbound);
         }
 
         emit('update:config', props.config);
@@ -370,6 +383,9 @@
         isUrl,
         isJson,
         isFile,
+        isReplace,
+        isComplete,
+        replaceableOutbounds,
         show,
         onImport,
         onQrFile,

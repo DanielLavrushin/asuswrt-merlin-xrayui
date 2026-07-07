@@ -208,6 +208,12 @@
             alert(t('com.Outbounds.alert_delete_tag_in_rules_use', [rulesWithTag.map((rule) => rule.name).join(', '), proxy.tag]));
             return;
           }
+
+          const balancersWithTag = (config.value.routing?.balancers || []).filter((balancer) => balancer.fallbackTag === proxy.tag);
+          if (balancersWithTag.length > 0) {
+            alert(t('com.Outbounds.alert_delete_tag_in_balancer_use', [balancersWithTag.map((balancer) => balancer.tag).join(', '), proxy.tag]));
+            return;
+          }
         }
 
         let index = config.value.outbounds.indexOf(proxy);

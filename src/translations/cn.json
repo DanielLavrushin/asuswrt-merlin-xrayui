@@ -301,7 +301,8 @@
       "label_create_new": "创建新的",
       "alert_tag_exists": "标签已存在，请选择另一个。",
       "alert_delete_confirm": "您确定要删除此出站吗？",
-      "alert_delete_tag_in_rules_use": "此标签 ({1}) 在路由规则 ({0}) 中使用。请在删除出站之前从规则中移除它。"
+      "alert_delete_tag_in_rules_use": "此标签 ({1}) 在路由规则 ({0}) 中使用。请在删除出站之前从规则中移除它。",
+      "alert_delete_tag_in_balancer_use": "此标签 ({1}) 在均衡器 ({0}) 中被用作后备 (fallback)。请在删除出站之前从均衡器中移除它。"
     },
     "StreamSettingsModal": {
       "title": "传输设置",

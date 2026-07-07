@@ -1,5 +1,9 @@
 # XRAYUI Changelog
 
+## [0.68.2] - 1026-07-07
+
+- FIXED: Deleting an outbound that a balancer used as its fallback silently left the deleted tag in the generated config, quietly breaking routing. XRAYUI now warns you which balancers still use the outbound as a fallback and asks you to update them first, just like it already does for routing rules. ([#357](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/357))
+
 ## [0.68.1] - 1026-07-07
 
 - CHANGED: GitHub release notes now automatically include the "What's Changed" section — the list of merged pull requests, linked issues and contributors — in addition to the usual changelog summary.

@@ -1,8 +1,8 @@
 # XRAYUI Changelog
 
-## [0.68.3] - 2026-07-30
+## [0.69.0] - 2026-07-30
 
-- FIXED: Restarting Xray could silently leave you without a working proxy. If the **Clients online** panel was open, XRAYUI mistook its own background status checks for the Xray service itself, decided Xray was already running and skipped the restart — the service stayed down and its firewall rules were never restored, while the interface still reported success. Restarts now wait for the service to actually stop, start it again reliably, and repeated or overlapping restarts queue up instead of interfering with each other. ([#384](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/pull/384))
+- FIXED: Restarting Xray sometimes left you without a working connection, even though the page reported success. Restarts are now reliable, and pressing Restart or Apply several times in a row no longer causes trouble. ([#384](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/pull/384))
 
 ## [0.68.2] - 2026-07-07
 

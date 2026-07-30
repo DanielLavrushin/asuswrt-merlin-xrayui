@@ -7,11 +7,30 @@ start() {
 
     cleanup_stale_asdfiles
 
-    # Prevent duplicate starts - check if Xray is already running
-    local existing_pid=$(get_proc "xray")
+    # Prevent duplicate starts - check if Xray *daemon* is already running
+    # (ignore short-lived "xray api ..." helpers from UI polling)
+    local existing_pid=$(get_xray_daemon_pid)
     if [ -n "$existing_pid" ]; then
-        log_warn "Xray is already running (PID: $existing_pid). Skipping start."
-        return 0
+        if [ "${FORCE_RESTART:-false}" = "true" ]; then
+            local tries=0
+            while [ -n "$existing_pid" ] && [ "$tries" -lt 5 ]; do
+                log_warn "Xray daemon still running (PID: $existing_pid) during restart; forcing stop ($tries/5)"
+                kill_xray_daemon -9
+                rm -f "$XRAY_PIDFILE"
+                sleep 1
+                existing_pid=$(get_xray_daemon_pid)
+                tries=$((tries + 1))
+            done
+            if [ -n "$existing_pid" ]; then
+                log_error "Failed to force-stop Xray daemon (PID: $existing_pid)"
+                return 1
+            fi
+        else
+            log_warn "Xray is already running (PID: $existing_pid). Skipping start."
+            # Safety: if firewall was cleaned by a concurrent stop/restart, restore rules
+            configure_firewall
+            return 0
+        fi
     fi
 
     local skip_test="${skip_test:-false}"
@@ -118,10 +137,37 @@ stop() {
 
     update_loading_progress "Stopping $ADDON_TITLE"
 
-    killall xray
+    if [ -n "$(get_xray_daemon_pid)" ]; then
+        kill_xray_daemon -TERM
+
+        # Wait up to ~10s for daemon exit (ignore "xray api" helpers)
+        local i=0
+        while [ -n "$(get_xray_daemon_pid)" ] && [ "$i" -lt 10 ]; do
+            log_debug "Waiting for Xray to stop... ($i/10)"
+            update_loading_progress "Waiting for Xray to stop... ($i/10)"
+            sleep 1
+            i=$((i + 1))
+        done
+
+        if [ -n "$(get_xray_daemon_pid)" ]; then
+            log_warn "Xray did not stop in time, sending SIGKILL"
+            kill_xray_daemon -9
+            sleep 1
+        fi
+    fi
+
+    # Sweep leftover helpers so they cannot race the upcoming start()
+    killall -9 xray 2>/dev/null
+
+    if [ -n "$(get_xray_daemon_pid)" ]; then
+        log_error "Xray daemon is still running after SIGKILL"
+    fi
+
     if [ -f "$XRAY_PIDFILE" ]; then
         rm -f "$XRAY_PIDFILE"
         log_info "PID file $XRAY_PIDFILE removed successfully."
+    else
+        rm -f "$XRAY_PIDFILE"
     fi
 
     cleanup_firewall
@@ -130,18 +176,32 @@ stop() {
 }
 
 restart() {
+    # Serialize restarts atomically. Wait (do not skip) so UI double-fires
+    # and apply+restart still complete instead of aborting every other click.
+    local RESTART_LOCK="/tmp/xrayui_restart.lock"
+    local RESTART_FD=387
+    eval exec "$RESTART_FD>$RESTART_LOCK"
+    if ! flock -n "$RESTART_FD"; then
+        log_warn "Restart already in progress; waiting for lock..."
+        update_loading_progress "Restart already in progress; waiting..."
+        flock -x "$RESTART_FD"
+    fi
+
     log_info "Restarting $ADDON_TITLE"
 
     POST_RESTART_DNSMASQ="true"
 
     stop
-    log_debug "Waiting for Xray to stop..."
-    sleep 4
-    start
+    # stop() already waits for daemon death / SIGKILL; no blind sleep needed
+    FORCE_RESTART=true start
+    local start_rc=$?
 
     if [ "$POST_RESTART_DNSMASQ" = "true" ]; then
         dnsmasq_restart
     fi
 
     POST_RESTART_DNSMASQ="false"
+
+    flock -u "$RESTART_FD"
+    return "$start_rc"
 }

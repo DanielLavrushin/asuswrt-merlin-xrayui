@@ -124,6 +124,62 @@ get_proc() {
     echo $(/bin/pidof "$proc_name" 2>/dev/null | awk '{print $NF}')
 }
 
+# Only the Xray daemon (xray -c ...), not helper CLIs like "xray api statsquery"
+# which UI polling spawns and which otherwise break stop/restart logic.
+get_xray_daemon_pid() {
+    local pid cmdline
+    if [ -f "$XRAY_PIDFILE" ]; then
+        pid=$(cat "$XRAY_PIDFILE" 2>/dev/null)
+        if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null && [ -r /proc/"$pid"/cmdline ]; then
+            cmdline=$(tr '\0' ' ' </proc/"$pid"/cmdline 2>/dev/null)
+            case "$cmdline" in
+            *" -c "*)
+                echo "$pid"
+                return 0
+                ;;
+            esac
+        fi
+    fi
+    for pid in $(/bin/pidof xray 2>/dev/null); do
+        [ -r /proc/"$pid"/cmdline ] || continue
+        cmdline=$(tr '\0' ' ' </proc/"$pid"/cmdline 2>/dev/null)
+        case "$cmdline" in
+        *" api "*)
+            continue
+            ;;
+        *" -c "*)
+            echo "$pid"
+            return 0
+            ;;
+        esac
+    done
+    return 0
+}
+
+kill_xray_daemon() {
+    local sig="${1:--TERM}"
+    local pid cmdline
+    for pid in $(/bin/pidof xray 2>/dev/null); do
+        [ -r /proc/"$pid"/cmdline ] || continue
+        cmdline=$(tr '\0' ' ' </proc/"$pid"/cmdline 2>/dev/null)
+        case "$cmdline" in
+        *" api "*)
+            continue
+            ;;
+        *)
+            kill "$sig" "$pid" 2>/dev/null
+            ;;
+        esac
+    done
+    if [ -n "$(get_xray_daemon_pid)" ]; then
+        if [ "$sig" = "-9" ] || [ "$sig" = "-KILL" ]; then
+            killall -9 xray 2>/dev/null
+        else
+            killall xray 2>/dev/null
+        fi
+    fi
+}
+
 get_proc_uptime() {
     local pid=$(pidof "$1")
 

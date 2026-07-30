@@ -1,5 +1,9 @@
 # XRAYUI Changelog
 
+## [0.68.3] - 2026-07-30
+
+- FIXED: Restarting Xray from the UI could leave the proxy dead: `stop` cleaned firewall rules, then a blind 4-second wait often wasn't enough for the daemon to exit, so `start` logged `Skipping start` and never restored firewall rules. Concurrent restarts from Save/Restart made this worse. Restart now waits for the real daemon to die (SIGKILL if needed), serializes with `flock`, ignores short-lived `xray api` helpers from UI polling, and restores firewall rules if start is skipped.
+
 ## [0.68.2] - 2026-07-07
 
 - FIXED: Deleting an outbound that a balancer used as its fallback silently left the deleted tag in the generated config, quietly breaking routing. XRAYUI now warns you which balancers still use the outbound as a fallback and asks you to update them first, just like it already does for routing rules. ([#357](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/357))

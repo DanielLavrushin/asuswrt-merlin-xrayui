@@ -138,7 +138,7 @@ configure_firewall() {
     # Check if the 'xray' daemon is running
     local xray_pid=$(get_xray_daemon_pid)
     if [ -z "$xray_pid" ]; then
-        log_warn "Xray process not found. Skipping client firewall configuration."
+        log_warn "Xray daemon not found. Skipping client firewall configuration."
         return
     fi
     log_debug "Xray PID: $xray_pid"

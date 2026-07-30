@@ -179,7 +179,7 @@ restart() {
     local lock_acquired=false
     local waited=0
 
-    if which flock >/dev/null 2>&1; then
+    if which flock >/dev/null 2>&1 && touch "$XRAY_RESTART_LOCKFILE" 2>/dev/null; then
         eval exec "$XRAY_RESTART_LOCK_FD>$XRAY_RESTART_LOCKFILE"
         lock_acquired=true
 

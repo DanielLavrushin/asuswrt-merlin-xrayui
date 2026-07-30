@@ -1,5 +1,9 @@
 # XRAYUI Changelog
 
+## [0.68.3] - 2026-07-30
+
+- FIXED: Restarting Xray could silently leave you without a working proxy. If the **Clients online** panel was open, XRAYUI mistook its own background status checks for the Xray service itself, decided Xray was already running and skipped the restart — the service stayed down and its firewall rules were never restored, while the interface still reported success. Restarts now wait for the service to actually stop, start it again reliably, and repeated or overlapping restarts queue up instead of interfering with each other. ([#384](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/pull/384))
+
 ## [0.68.2] - 2026-07-07
 
 - FIXED: Deleting an outbound that a balancer used as its fallback silently left the deleted tag in the generated config, quietly breaking routing. XRAYUI now warns you which balancers still use the outbound as a fallback and asks you to update them first, just like it already does for routing rules. ([#357](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/357))

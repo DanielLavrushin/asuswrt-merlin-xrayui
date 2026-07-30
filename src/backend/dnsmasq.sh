@@ -11,8 +11,8 @@ dnsmasq_configure() {
 
     log_info "Configuring dnsmasq..."
 
-    # Check if 'xray' process is running
-    local xray_pid=$(get_proc "xray")
+    # Check if the 'xray' daemon is running
+    local xray_pid=$(get_xray_daemon_pid)
     if [ -z "$xray_pid" ]; then
         log_warn "Xray process not found. Skipping client firewall configuration."
         return

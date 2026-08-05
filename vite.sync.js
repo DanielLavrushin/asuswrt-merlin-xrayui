@@ -9,7 +9,7 @@ async function uploadFiles() {
   try {
     await sftp.connect({
       host: process.env.SFTP_ROUTER,
-      port: parseInt(process.env.SFTP_PORT, 10) || 22,
+      port: Number.parseInt(process.env.SFTP_PORT, 10) || 22,
       username: process.env.SFTP_USERNAME,
       password: process.env.SFTP_PASSWORD,
       readyTimeout: 3000

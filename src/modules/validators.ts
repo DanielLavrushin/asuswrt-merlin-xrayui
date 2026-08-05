@@ -38,7 +38,7 @@ export const filterIPAddressKey = (event: KeyboardEvent): void => {
   }
 
   // Allow only IPv4 / IPv6 address characters.
-  if (!/^[0-9.:\[\]a-fA-F]$/.test(key)) {
+  if (!/^[0-9.:[\]a-fA-F]$/.test(key)) {
     event.preventDefault();
   }
 };

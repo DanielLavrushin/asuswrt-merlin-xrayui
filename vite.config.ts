@@ -34,7 +34,7 @@ function inlineShellImports(scriptPath, visited = new Set(), isRoot = true) {
   }
   visited.add(scriptPath);
 
-  let content = fs.readFileSync(scriptPath, 'utf8');
+  let content = fs.readFileSync(scriptPath, 'utf8').replace(/\r\n/g, '\n');
   const dirOfScript = dirname(scriptPath);
 
   const lines = content.split('\n');

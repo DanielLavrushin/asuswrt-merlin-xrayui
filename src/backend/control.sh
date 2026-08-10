@@ -7,11 +7,34 @@ start() {
 
     cleanup_stale_asdfiles
 
-    # Prevent duplicate starts - check if Xray is already running
-    local existing_pid=$(get_proc "xray")
+    # Prevent duplicate starts - check if the Xray daemon is already running
+    local existing_pid=$(get_xray_daemon_pid)
     if [ -n "$existing_pid" ]; then
-        log_warn "Xray is already running (PID: $existing_pid). Skipping start."
-        return 0
+        if [ "${FORCE_RESTART:-false}" = "true" ]; then
+            log_warn "Xray daemon (PID: $existing_pid) is still running during restart. Forcing it to stop."
+            kill_xray_daemon -9
+
+            local tries=0
+            while [ -n "$(get_xray_daemon_pid)" ] && [ "$tries" -lt 5 ]; do
+                sleep 1
+                tries=$((tries + 1))
+            done
+
+            rm -f "$XRAY_PIDFILE"
+
+            existing_pid=$(get_xray_daemon_pid)
+            if [ -n "$existing_pid" ]; then
+                log_error "Failed to force-stop the Xray daemon (PID: $existing_pid). Aborting start."
+                return 1
+            fi
+        else
+            log_warn "Xray is already running (PID: $existing_pid). Skipping start."
+            if ! firewall_is_configured; then
+                log_warn "Xray firewall rules are missing while Xray is running. Restoring them."
+                configure_firewall
+            fi
+            return 0
+        fi
     fi
 
     local skip_test="${skip_test:-false}"
@@ -95,7 +118,7 @@ start() {
 
     XRAY_ARGS="-c $XRAY_CONFIG_FILE $XRAY_EXTRA_CFG"
     log_debug "Starting Xray with args: $XRAY_ARGS"
-    $IONICE $NICE xray $XRAY_ARGS >/dev/null 2>&1 &
+    $IONICE $NICE xray $XRAY_ARGS >/dev/null 2>&1 387>&- 386>&- &
     echo $! >"$XRAY_PIDFILE"
     log_debug "Xray started with PID $(cat "$XRAY_PIDFILE")"
 
@@ -118,7 +141,30 @@ stop() {
 
     update_loading_progress "Stopping $ADDON_TITLE"
 
-    killall xray
+    if [ -n "$(get_xray_daemon_pid)" ]; then
+        kill_xray_daemon -TERM
+
+        local waited=0
+        while [ -n "$(get_xray_daemon_pid)" ] && [ "$waited" -lt 10 ]; do
+            log_debug "Waiting for Xray to stop... ($waited/10)"
+            update_loading_progress "Waiting for Xray to stop... ($waited/10)"
+            sleep 1
+            waited=$((waited + 1))
+        done
+
+        if [ -n "$(get_xray_daemon_pid)" ]; then
+            log_warn "Xray did not stop in time. Sending SIGKILL."
+            kill_xray_daemon -9
+            sleep 1
+        fi
+
+        if [ -n "$(get_xray_daemon_pid)" ]; then
+            log_error "Xray daemon is still running after SIGKILL."
+        fi
+    else
+        log_info "Xray daemon is not running."
+    fi
+
     if [ -f "$XRAY_PIDFILE" ]; then
         rm -f "$XRAY_PIDFILE"
         log_info "PID file $XRAY_PIDFILE removed successfully."
@@ -130,18 +176,48 @@ stop() {
 }
 
 restart() {
+    local lock_acquired=false
+    local waited=0
+
+    if which flock >/dev/null 2>&1 && touch "$XRAY_RESTART_LOCKFILE" 2>/dev/null; then
+        eval exec "$XRAY_RESTART_LOCK_FD>$XRAY_RESTART_LOCKFILE"
+        lock_acquired=true
+
+        while ! flock -n "$XRAY_RESTART_LOCK_FD"; do
+            if [ "$waited" -ge 120 ]; then
+                log_warn "Timed out waiting for the running restart to finish. Restarting anyway."
+                break
+            fi
+            if [ "$waited" -eq 0 ]; then
+                log_warn "Another restart is already in progress. Waiting for it to finish..."
+            fi
+            update_loading_progress "Another restart is in progress. Waiting..."
+            sleep 2
+            waited=$((waited + 2))
+        done
+    fi
+
     log_info "Restarting $ADDON_TITLE"
 
     POST_RESTART_DNSMASQ="true"
 
     stop
-    log_debug "Waiting for Xray to stop..."
-    sleep 4
+
+    FORCE_RESTART=true
     start
+    local start_rc=$?
+    FORCE_RESTART=false
 
     if [ "$POST_RESTART_DNSMASQ" = "true" ]; then
         dnsmasq_restart
     fi
 
     POST_RESTART_DNSMASQ="false"
+
+    if [ "$lock_acquired" = "true" ]; then
+        flock -u "$XRAY_RESTART_LOCK_FD" 2>/dev/null
+        eval exec "$XRAY_RESTART_LOCK_FD>&-"
+    fi
+
+    return "$start_rc"
 }

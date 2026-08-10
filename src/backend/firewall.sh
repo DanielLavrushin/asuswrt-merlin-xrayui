@@ -117,6 +117,10 @@ ensure_hashnet() {
     ipset create "$s" hash:net family "$fam" timeout 86400 -exist
 }
 
+firewall_is_configured() {
+    iptables -w -t filter -n -L XRAYUI >/dev/null 2>&1
+}
+
 configure_firewall() {
     local STARTUP_LOCK="/tmp/xrayui_startup.lock"
     if [ -f "$STARTUP_LOCK" ]; then
@@ -131,10 +135,10 @@ configure_firewall() {
     update_loading_progress "Configuring Xray firewall rules..."
     load_xrayui_config
 
-    # Check if 'xray' process is running
-    local xray_pid=$(get_proc "xray")
+    # Check if the 'xray' daemon is running
+    local xray_pid=$(get_xray_daemon_pid)
     if [ -z "$xray_pid" ]; then
-        log_warn "Xray process not found. Skipping client firewall configuration."
+        log_warn "Xray daemon not found. Skipping client firewall configuration."
         return
     fi
     log_debug "Xray PID: $xray_pid"

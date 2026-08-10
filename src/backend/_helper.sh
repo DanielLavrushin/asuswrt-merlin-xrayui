@@ -124,8 +124,57 @@ get_proc() {
     echo $(/bin/pidof "$proc_name" 2>/dev/null | awk '{print $NF}')
 }
 
+is_xray_daemon_pid() {
+    local cmdline
+    [ -n "$1" ] || return 1
+    [ -r "/proc/$1/cmdline" ] || return 1
+    cmdline=$(tr '\0' ' ' <"/proc/$1/cmdline" 2>/dev/null)
+    case "$cmdline" in
+    *xray*" -c "*) return 0 ;;
+    esac
+    return 1
+}
+
+get_xray_daemon_pids() {
+    local pid
+    for pid in $(/bin/pidof xray 2>/dev/null); do
+        if is_xray_daemon_pid "$pid"; then
+            echo "$pid"
+        fi
+    done
+}
+
+get_xray_daemon_pid() {
+    local pid
+    if [ -f "$XRAY_PIDFILE" ]; then
+        pid=$(cat "$XRAY_PIDFILE" 2>/dev/null)
+        if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null && is_xray_daemon_pid "$pid"; then
+            echo "$pid"
+            return 0
+        fi
+    fi
+
+    pid=$(get_xray_daemon_pids | head -n 1)
+    [ -n "$pid" ] || return 1
+    echo "$pid"
+}
+
+kill_xray_daemon() {
+    local sig="${1:--TERM}"
+    local pid
+    for pid in $(get_xray_daemon_pids); do
+        log_debug "Sending $sig to Xray daemon (PID: $pid)."
+        kill "$sig" "$pid" 2>/dev/null
+    done
+}
+
 get_proc_uptime() {
-    local pid=$(pidof "$1")
+    local pid
+    if [ "$1" = "xray" ]; then
+        pid=$(get_xray_daemon_pid)
+    else
+        pid=$(pidof "$1")
+    fi
 
     if [ -z "$pid" ] || [ ! -f "/proc/$pid/stat" ]; then
         echo 0

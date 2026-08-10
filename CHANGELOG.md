@@ -1,5 +1,9 @@
 # XRAYUI Changelog
 
+## [0.69.0] - 2026-07-30
+
+- FIXED: Restarting Xray sometimes left you without a working connection, even though the page reported success. Restarts are now reliable, and pressing Restart or Apply several times in a row no longer causes trouble. ([#384](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/pull/384))
+
 ## [0.68.2] - 2026-07-07
 
 - FIXED: Deleting an outbound that a balancer used as its fallback silently left the deleted tag in the generated config, quietly breaking routing. XRAYUI now warns you which balancers still use the outbound as a fallback and asks you to update them first, just like it already does for routing rules. ([#357](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/357))

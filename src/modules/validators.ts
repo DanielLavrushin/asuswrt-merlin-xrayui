@@ -14,31 +14,25 @@
  *   - :             IPv6 segment separator
  *   - [ ]           Xray requires IPv6 addresses wrapped as [::]
  *   - a-f / A-F     IPv6 hexadecimal (compressed) notation
- * Control keys (Backspace, arrows, Home/End, Tab) and key combinations with a
- * modifier (copy/paste, etc.) are always allowed.
+ * Every non-printable key (Enter, arrows, Backspace, …) is passed through, and
+ * Ctrl/Cmd shortcuts (copy, paste, select-all) are allowed. Alt/AltGr
+ * combinations are validated like normal input so they cannot inject
+ * characters outside the IPv4/IPv6 character set.
  */
 export const filterIPAddressKey = (event: KeyboardEvent): void => {
-  if (event.ctrlKey || event.altKey || event.metaKey) {
-    return; // Allow Ctrl / Cmd / Alt combinations (copy, paste, etc.)
-  }
-
-  const key = event.key;
-
-  // Non-character editing keys: let the browser handle them.
-  if (
-    key === 'Backspace' ||
-    key === 'Delete' ||
-    key === 'ArrowLeft' ||
-    key === 'ArrowRight' ||
-    key === 'Home' ||
-    key === 'End' ||
-    key === 'Tab'
-  ) {
+  // Allow Ctrl/Cmd shortcuts, but not Alt/AltGr (reported as Ctrl+Alt) which
+  // can emit characters and must be validated.
+  if ((event.ctrlKey || event.metaKey) && !event.altKey) {
     return;
   }
 
-  // Allow only IPv4 / IPv6 address characters.
-  if (!/^[0-9.:[\]a-fA-F]$/.test(key)) {
+  // Pass through every non-printable key (Enter, arrows, editing keys, …).
+  if (event.key.length !== 1) {
+    return;
+  }
+
+  // Block any character that is not part of an IPv4/IPv6 address.
+  if (!/^[0-9.:[\]a-fA-F]$/.test(event.key)) {
     event.preventDefault();
   }
 };

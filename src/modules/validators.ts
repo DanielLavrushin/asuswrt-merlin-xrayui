@@ -12,7 +12,7 @@
  *   - 0-9           digits
  *   - .             IPv4 dotted notation
  *   - :             IPv6 segment separator
- *   - [ ]           Xray requires IPv6 addresses wrapped as [::]
+ *   - [ ]           Xray accepts IPv6 addresses wrapped as [::] (brackets optional)
  *   - a-f / A-F     IPv6 hexadecimal (compressed) notation
  * Every non-printable key (Enter, arrows, Backspace, …) is passed through, and
  * Ctrl/Cmd shortcuts (copy, paste, select-all) are allowed. Alt/AltGr
@@ -27,7 +27,10 @@ export const filterIPAddressKey = (event: KeyboardEvent): void => {
   }
 
   // Pass through every non-printable key (Enter, arrows, editing keys, …).
-  if (event.key.length !== 1) {
+  // Use code-point count, not UTF-16 length: an astral character like an emoji
+  // is one code point but two UTF-16 units, so `event.key.length` would wrongly
+  // treat it as a control key and let it bypass the allowlist below.
+  if ([...event.key].length !== 1) {
     return;
   }
 

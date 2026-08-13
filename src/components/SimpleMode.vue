@@ -7,10 +7,9 @@
         <hint v-html="$t('com.InboundCommon.hint_listen')"></hint>
         <input
           type="text"
-          maxlength="15"
           class="input_20_table"
           v-model="inbound.listen"
-          onkeypress="return validator.isIPAddr(this, event);"
+          @keypress="filterIPAddressKey"
           autocomplete="off"
           autocorrect="off"
           autocapitalize="off"
@@ -99,6 +98,7 @@
   import { XrayVmessClientObject } from '@/modules/ClientsObjects';
   import { IProtocolType } from '@/modules/Interfaces';
   import { XrayRoutingRuleObject } from '@/modules/CommonObjects';
+  import { filterIPAddressKey } from '@/modules/validators';
 
   export default defineComponent({
     name: 'SimpleMode',
@@ -256,7 +256,8 @@
         proxySubscribeUrl,
         flows: ['xtls-rprx-vision', 'xtls-rprx-vision-udp443'],
         show_sniffing,
-        isLocked
+        isLocked,
+        filterIPAddressKey
       };
     }
   });

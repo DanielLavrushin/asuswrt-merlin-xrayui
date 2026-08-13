@@ -17,10 +17,9 @@
     <td>
       <input
         type="text"
-        maxlength="15"
         class="input_20_table"
         v-model="inbound.listen"
-        onkeypress="return validator.isIPAddr(this, event);"
+        @keypress="filterIPAddressKey"
         autocomplete="off"
         autocorrect="off"
         autocapitalize="off"
@@ -50,6 +49,7 @@
   import { IProtocolType } from '@/modules/Interfaces';
   import engine from '@/modules/Engine';
   import Hint from '@main/Hint.vue';
+  import { filterIPAddressKey } from '@/modules/validators';
 
   export default defineComponent({
     name: 'InboundCommon',
@@ -73,7 +73,8 @@
         allocateModal,
         inbound,
         engine,
-        show_allocate
+        show_allocate,
+        filterIPAddressKey
       };
     }
   });

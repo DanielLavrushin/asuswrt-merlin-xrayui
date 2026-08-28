@@ -165,6 +165,13 @@ export class XrayStreamHttpSettingsObject implements ITransportNetwork {
     this.extra = plainToInstance(XrayXhttpExtraObject, this.extra ?? {});
     this.extra = this.extra ? this.extra.normalize() : undefined;
 
+    // If `extra` survived, it will REPLACE this whole object inside xray-core, which carries over
+    // only host/path/mode. Mirror the headers in so they are not lost. When `extra` normalizes away
+    // there is nothing to replace us, and the top-level `headers` applies as written.
+    if (this.extra && this.headers) {
+      this.extra.headers = this.headers as Record<string, string>;
+    }
+
     return isObjectEmpty(this) ? undefined : this;
   };
 }
@@ -210,6 +217,12 @@ export class XrayDownloadSettingsObject {
 }
 
 export class XrayXhttpExtraObject {
+  // Mirrored from the parent XrayStreamHttpSettingsObject during normalize(). Xray-core parses
+  // `extra` as a full SplitHTTPConfig that REPLACES the outer object, carrying over only host,
+  // path and mode (infra/conf/transport_method.go:308-317) -- `headers` is not carried over, so
+  // without this mirror any custom header is silently dropped as soon as `extra` is emitted.
+  // Not defaulted, so it never causes an otherwise-empty `extra` to materialize.
+  headers?: Record<string, string>;
   xPaddingBytes? = '100-1000';
   noGRPCHeader? = false;
   noSSEHeader? = false;

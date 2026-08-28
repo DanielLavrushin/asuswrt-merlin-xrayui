@@ -162,6 +162,38 @@ describe('TransportObjects', () => {
         expect(http.mode).toBe('stream-one');
       });
 
+      // xray-core parses `extra` as a full SplitHTTPConfig that REPLACES the outer object, carrying
+      // over only host/path/mode (infra/conf/transport_method.go:308-317). `headers` is NOT carried
+      // over, so it must be mirrored into `extra` whenever `extra` is emitted.
+      it('mirrors headers into extra when extra is emitted, so core cannot drop them', () => {
+        http.headers = { 'X-Real-IP': '1.2.3.4' };
+        http.extra!.scMaxBufferedPosts = 99; // any non-default value keeps `extra` alive
+        http.normalize();
+
+        expect(http.extra).toBeDefined();
+        expect(http.extra!.headers).toEqual({ 'X-Real-IP': '1.2.3.4' });
+        // the top-level copy stays: it is what applies if `extra` is ever dropped
+        expect(http.headers).toEqual({ 'X-Real-IP': '1.2.3.4' });
+      });
+
+      it('does not materialize extra just to hold headers', () => {
+        http.headers = { 'X-Real-IP': '1.2.3.4' };
+        http.normalize();
+
+        // no non-default extra field was set, so extra normalizes away and the top-level
+        // headers are what core reads -- nothing to mirror into
+        expect(http.extra).toBeUndefined();
+        expect(http.headers).toEqual({ 'X-Real-IP': '1.2.3.4' });
+      });
+
+      it('leaves extra.headers unset when there are no headers', () => {
+        http.extra!.scMaxBufferedPosts = 99;
+        http.normalize();
+
+        expect(http.extra).toBeDefined();
+        expect(http.extra!.headers).toBeUndefined();
+      });
+
       it('clears all padding fields when xPaddingObfsMode is false (default)', () => {
         http.normalize();
         expect(http.xPaddingObfsMode).toBeUndefined();

@@ -22,22 +22,18 @@
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
   import Modal from '@main/Modal.vue';
-  import Hint from '@main/Hint.vue';
   import JsonPretty from 'vue-json-pretty';
   import 'vue-json-pretty/lib/styles.css';
-  import { useI18n } from 'vue-i18n';
   import engine from '@modules/Engine';
   import xrayConfig from '@modules/XrayConfig';
 
   export default defineComponent({
     name: 'ConfigModal',
     components: {
-      Hint,
       Modal,
       JsonPretty
     },
     setup() {
-      const { t } = useI18n();
       const modal = ref<any>(null);
       let originalConfig: any = {};
       const configJson = ref<any>(null);

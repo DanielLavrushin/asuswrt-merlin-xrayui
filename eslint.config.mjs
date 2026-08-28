@@ -7,7 +7,9 @@ import xss from 'eslint-plugin-xss';
 import globals from 'globals';
 
 // Rules the codebase violates today. They are WARNINGS, not errors, so CI is green on day one --
-// but `pnpm lint` pins --max-warnings at the current count, so the debt can shrink and never grow.
+// but `pnpm lint` passes `--max-warnings 1074` (the count at the time this landed), so the debt
+// can shrink and never grow. Lower that number in package.json whenever a phase clears warnings;
+// `pnpm lint` failing with a count BELOW the cap is the signal to do so.
 // Each entry records what it is really telling us; several are tracked fixes in later phases.
 const EXISTING_DEBT = {
   // The `ref(props.x ?? new X())` two-way-mutation idiom, in 37 files. Removed in Phase 7.
@@ -132,7 +134,7 @@ export default tseslint.config(
 
   // ---- Build scripts ------------------------------------------------------
   {
-    files: ['vite.config.ts', 'vite.sync.js', 'jest.config.ts', 'babel.config.js', 'eslint.config.js'],
+    files: ['vite.config.ts', 'vite.sync.js', 'jest.config.ts', 'babel.config.js', 'eslint.config.mjs'],
     languageOptions: {
       globals: { ...globals.node }
     },

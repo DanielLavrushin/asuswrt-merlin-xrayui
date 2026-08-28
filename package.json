@@ -9,7 +9,7 @@
     "watch-prod": "cross-env NODE_ENV=production VITE_WATCH=1 vite build --watch --mode production",
     "test": "jest --clearCache && jest --config ./jest.config.ts --coverage",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 1074",
     "lint:fix": "eslint . --fix",
     "verify": "pnpm run typecheck && pnpm run lint && pnpm run test"
   },

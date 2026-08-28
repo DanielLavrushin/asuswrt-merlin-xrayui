@@ -6,7 +6,6 @@ jest.mock('@modules/Engine', () => {
 
   // 3) the engine object with the properties your setup uses
   const engine = {
-    xrayConfig: {}, // for provide('xrayConfig', …)
     loadXrayConfig: jest.fn().mockResolvedValue(undefined), // for await engine.loadXrayConfig()
     submit: jest.fn().mockResolvedValue(undefined), // for await engine.submit(...)
     delay: jest.fn().mockResolvedValue(undefined), // for await engine.delay(...)

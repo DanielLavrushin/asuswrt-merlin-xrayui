@@ -3,7 +3,6 @@
 export const XrayOptions = {
   transportOptions: ['tcp', 'kcp', 'ws', 'xhttp', 'grpc', 'httpupgrade', 'splithttp', 'hysteria'],
   securityOptions: ['none', 'tls', 'reality'],
-  logOptions: ['debug', 'info', 'warning', 'error', 'none'],
   networkOptions: ['tcp', 'udp', 'tcp,udp'],
   protocolOptions: ['http', 'tls', 'bittorrent'],
   domainStrategyOptions: ['AsIs', 'IPIfNonMatch', 'IPOnDemand'],

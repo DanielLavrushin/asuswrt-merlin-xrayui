@@ -55,7 +55,6 @@
 <script lang="ts">
   import xrayConfig from '@/modules/XrayConfig';
   import { XrayWireguardClientObject } from '@/modules/ClientsObjects';
-  import { XrayOptions } from '@/modules/Options';
   import { defineComponent, ref } from 'vue';
   import Qr from './QrCodeClient.vue';
 
@@ -151,7 +150,6 @@
         editingIndex.value = null;
       };
       return {
-        flows: XrayOptions.clientFlowOptions,
         ips,
         clients,
         modalNewClient,

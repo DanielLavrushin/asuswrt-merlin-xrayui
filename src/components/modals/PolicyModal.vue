@@ -21,7 +21,7 @@
             <th class="drag-handle" aria-label="Drag to reorder">
               <span class="grip drag-handle" aria-hidden="true"></span>
               <label>
-                <input type="checkbox" v-model="r.enabled" @change.prevent="on_off_rule(r, index)" />
+                <input type="checkbox" v-model="r.enabled" />
                 {{ $t('com.PolicyModal.rule_no', [index + 1]) }}
               </label>
             </th>
@@ -229,7 +229,6 @@
         sortDevices();
       };
 
-      const on_off_rule = (rule: XrayRoutingPolicy, index: number) => {};
       const show = () => {
         policies.value = [...props.policies];
         modalList.value.show();
@@ -313,7 +312,6 @@
         deviceFilter,
         show,
         vendorChange,
-        on_off_rule,
         deleteRule,
         addRule,
         editRule,

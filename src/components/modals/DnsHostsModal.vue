@@ -108,5 +108,3 @@
     }
   });
 </script>
-
-<style scoped></style>

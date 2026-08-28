@@ -115,7 +115,6 @@
       };
       const validate_usage = (usage: string) => {
         if (usage == 'issue') {
-          certificate.value.buildChain = certificate.value.buildChain;
           return;
         }
         certificate.value.buildChain = false;

@@ -23,7 +23,6 @@
       "@obd/*": ["src/components/outbounds/*"],
       "@modal/*": ["src/components/modals/*"],
       "@clients/*": ["src/components/clients/*"],
-      "@translations/*": ["src/translations/*"],
       "@/*": ["src/*"]
     }
   },

@@ -256,11 +256,9 @@ export class GeodatTagRequest {
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 export enum SubmitActions {
-  configurationSetMode = 'xrayui_configuration_mode',
   configurationApply = 'xrayui_configuration_apply',
   configurationStageChunk = 'xrayui_configuration_stagechunk',
   clientsOnline = 'xrayui_connectedclients',
-  refreshConfig = 'xrayui_refreshconfig',
   serverStart = 'xrayui_serverstatus_start',
   serverRestart = 'xrayui_serverstatus_restart',
   serverStop = 'xrayui_serverstatus_stop',
@@ -280,7 +278,6 @@ export enum SubmitActions {
   geoDataCustomDeleteTag = 'xrayui_geodata_customdeletetag',
   fetchXrayLogs = 'xrayui_configuration_logs_fetch',
   updateLogsLevel = 'xrayui_configuration_logs_changeloglevel',
-  checkConnection = 'xrayui_configuration_checkconnection',
   checkConnectionStatus = 'xrayui_connectionstatus',
   initResponse = 'xrayui_configuration_initresponse',
   generalOptionsApply = 'xrayui_configuration_applygeneraloptions',

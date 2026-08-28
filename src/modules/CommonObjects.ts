@@ -259,7 +259,6 @@ export class XrayStreamRealitySettingsObject implements ISecurityProtocol {
 }
 
 export class XrayLogObject {
-  static readonly levelOptions = ['debug', 'info', 'warning', 'error', 'none'];
   public access?: string = 'none';
   public error?: string = 'none';
   public loglevel? = 'warning';
@@ -549,7 +548,6 @@ export class XrayRoutingObject {
 }
 
 export class XrayRoutingPolicy {
-  static readonly defaultPorts = ['443', '80', '22'];
   static readonly modes = ['redirect', 'bypass'];
   public name?: string;
   public mac?: string[] = [];

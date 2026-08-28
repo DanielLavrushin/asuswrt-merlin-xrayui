@@ -113,7 +113,6 @@
       });
 
       return {
-        flows: XrayOptions.clientFlowOptions,
         encryptions: clientEncryptions,
         clients,
         newClient,

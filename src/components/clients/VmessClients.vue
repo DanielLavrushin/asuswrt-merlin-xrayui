@@ -54,36 +54,10 @@
   import modal from '@main/Modal.vue';
 
   export default defineComponent({
-    name: 'VlessClients',
+    name: 'VmessClients',
     components: {
       Qr,
       modal
-    },
-    methods: {
-      resetNewForm() {
-        this.newClient.id = engine.uuid();
-        this.newClient.email = '';
-        this.newClient.security = 'auto';
-      },
-
-      removeClient(client: XrayVmessClientObject) {
-        if (!confirm('Are you sure you want to remove this client?')) return;
-        this.clients.splice(this.clients.indexOf(client), 1);
-      },
-
-      addClient() {
-        let client = new XrayVmessClientObject();
-        client.id = this.newClient.id;
-        client.email = this.newClient.email;
-        client.security = this.newClient.security;
-
-        if (!client.id) {
-          alert('Id is required');
-          return;
-        }
-        this.clients.push(client);
-        this.resetNewForm();
-      }
     },
     props: {
       proxy: {

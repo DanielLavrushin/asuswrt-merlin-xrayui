@@ -37,6 +37,17 @@ module.exports = {
   },
 
   collectCoverage: true,
+  // Ratchet set at the coverage measured on 9cc8ab2 (statements 37.21 / branches 23.92 /
+  // functions 19.79 / lines 39.24), rounded down to the whole percent. A threshold below
+  // current coverage is worse than no threshold -- raise these as coverage grows, never lower them.
+  coverageThreshold: {
+    global: {
+      statements: 37,
+      branches: 23,
+      functions: 19,
+      lines: 39
+    }
+  },
   collectCoverageFrom: ['src/**/*.{ts,vue}', 'index.ts', '!**/*.d.ts', '!**/__mocks__/**'],
   coveragePathIgnorePatterns: ['/__mocks__/', '<rootDir>/build/', '<rootDir>/node_modules/', '<rootDir>/out/'],
   coverageDirectory: '<rootDir>/tests/test-results/.nyc_output',

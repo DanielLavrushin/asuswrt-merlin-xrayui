@@ -78,7 +78,6 @@
     XrayStreamHttpSettingsObject,
     XrayStreamWsSettingsObject,
     XrayStreamHttpUpgradeSettingsObject,
-    XrayStreamSplitHttpSettingsObject,
     XrayStreamHysteriaSettingsObject
   } from '@/modules/TransportObjects';
   import { XrayStreamSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject } from '@/modules/CommonObjects';

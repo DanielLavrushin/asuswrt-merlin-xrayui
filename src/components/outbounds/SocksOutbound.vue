@@ -50,7 +50,7 @@
   import Hint from '@main/Hint.vue';
 
   export default defineComponent({
-    name: 'VlessOutbound',
+    name: 'SocksOutbound',
     components: {
       OutboundCommon,
       Clients,

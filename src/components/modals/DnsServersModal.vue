@@ -290,5 +290,3 @@
     }
   });
 </script>
-
-<style scoped></style>

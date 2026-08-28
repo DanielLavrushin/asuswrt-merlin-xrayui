@@ -313,4 +313,3 @@
     }
   });
 </script>
-<style scoped></style>

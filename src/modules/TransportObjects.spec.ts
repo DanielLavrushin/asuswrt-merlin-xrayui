@@ -1,10 +1,10 @@
+import { plainToInstance } from 'class-transformer';
 import { XrayHeaderObject, XrayParsedUrlObject } from './CommonObjects';
 import {
   XrayStreamGrpcSettingsObject,
   XrayStreamHttpSettingsObject,
   XrayStreamHttpUpgradeSettingsObject,
   XrayStreamKcpSettingsObject,
-  XrayStreamSplitHttpSettingsObject,
   XrayStreamTcpSettingsObject,
   XrayStreamWsSettingsObject,
   XrayXhttpExtraObject,
@@ -24,7 +24,8 @@ import {
   XrayQuicParamsObject,
   XrayQuicParamsUdpHopObject,
   XrayStreamHysteriaSettingsObject,
-  XrayUdpHopObject
+  XrayUdpHopObject,
+  canonicalizeXhttpHeaders
 } from './TransportObjects';
 
 describe('TransportObjects', () => {
@@ -162,6 +163,81 @@ describe('TransportObjects', () => {
         expect(http.mode).toBe('stream-one');
       });
 
+      // xray-core parses `extra` as a full SplitHTTPConfig that REPLACES the outer object, carrying
+      // over only host/path/mode (infra/conf/transport_method.go:308-317). `headers` is NOT carried
+      // over, so it must be mirrored into `extra` whenever `extra` is emitted.
+      it('mirrors headers into extra when extra is emitted, so core cannot drop them', () => {
+        http.headers = { 'X-Real-IP': '1.2.3.4' };
+        http.extra!.scMaxBufferedPosts = 99; // any non-default value keeps `extra` alive
+        http.normalize();
+
+        expect(http.extra).toBeDefined();
+        expect(http.extra!.headers).toEqual({ 'X-Real-IP': '1.2.3.4' });
+        // the top-level copy stays: it is what applies if `extra` is ever dropped
+        expect(http.headers).toEqual({ 'X-Real-IP': '1.2.3.4' });
+      });
+
+      it('does not materialize extra just to hold headers', () => {
+        http.headers = { 'X-Real-IP': '1.2.3.4' };
+        http.normalize();
+
+        // no non-default extra field was set, so extra normalizes away and the top-level
+        // headers are what core reads -- nothing to mirror into
+        expect(http.extra).toBeUndefined();
+        expect(http.headers).toEqual({ 'X-Real-IP': '1.2.3.4' });
+      });
+
+      it('leaves extra.headers unset when there are no headers', () => {
+        http.extra!.scMaxBufferedPosts = 99;
+        http.normalize();
+
+        expect(http.extra).toBeDefined();
+        expect(http.extra!.headers).toBeUndefined();
+      });
+
+      // The mirror is derived, so it must be rebuilt on EVERY save. Otherwise a copy written by
+      // an earlier save outlives the headers the user just deleted, and core keeps applying them.
+      it('clears the mirrored copy when the user removes every header', () => {
+        const saved = plainToInstance(XrayStreamHttpSettingsObject, {
+          path: '/x',
+          headers: { 'X-Real-IP': '1.2.3.4' },
+          extra: { scMaxBufferedPosts: 99, headers: { 'X-Real-IP': '1.2.3.4' } }
+        });
+
+        saved.headers = {}; // Http.vue binds the top-level value
+        saved.normalize();
+
+        expect(saved.headers).toBeUndefined();
+        expect(saved.extra!.headers).toBeUndefined();
+        expect(JSON.stringify(saved)).not.toContain('X-Real-IP');
+      });
+
+      it('does not let a stale mirrored copy keep extra alive on its own', () => {
+        const saved = plainToInstance(XrayStreamHttpSettingsObject, {
+          path: '/x',
+          headers: { 'X-Real-IP': '1.2.3.4' },
+          extra: { headers: { 'X-Real-IP': '1.2.3.4' } } // no real extra fields
+        });
+
+        saved.headers = {};
+        saved.normalize();
+
+        // with nothing but the derived copy left, extra should normalize away entirely
+        expect(saved.extra).toBeUndefined();
+      });
+
+      it('replaces the mirrored copy rather than merging into it', () => {
+        const saved = plainToInstance(XrayStreamHttpSettingsObject, {
+          headers: { Old: 'a' },
+          extra: { scMaxBufferedPosts: 99, headers: { Old: 'a' } }
+        });
+
+        saved.headers = { New: 'b' };
+        saved.normalize();
+
+        expect(saved.extra!.headers).toEqual({ New: 'b' });
+      });
+
       it('clears all padding fields when xPaddingObfsMode is false (default)', () => {
         http.normalize();
         expect(http.xPaddingObfsMode).toBeUndefined();
@@ -260,6 +336,44 @@ describe('TransportObjects', () => {
       });
     });
 
+    describe('canonicalizeXhttpHeaders', () => {
+      // A config from an earlier build can carry headers only in `extra`. The editor binds the
+      // top-level value, so without lifting them up they are invisible and the next save drops them.
+      it('lifts headers out of extra when the top level has none', () => {
+        const stream = {
+          xhttpSettings: plainToInstance(XrayStreamHttpSettingsObject, {
+            path: '/x',
+            extra: { scMaxBufferedPosts: 99, headers: { 'X-Real-IP': '1.2.3.4' } }
+          })
+        };
+
+        canonicalizeXhttpHeaders(stream);
+
+        expect(stream.xhttpSettings.headers).toEqual({ 'X-Real-IP': '1.2.3.4' });
+        expect(stream.xhttpSettings.extra!.headers).toBeUndefined();
+      });
+
+      it('keeps the top-level value authoritative when both are present', () => {
+        const stream = {
+          xhttpSettings: plainToInstance(XrayStreamHttpSettingsObject, {
+            headers: { Top: 'wins' },
+            extra: { headers: { Nested: 'loses' } }
+          })
+        };
+
+        canonicalizeXhttpHeaders(stream);
+
+        expect(stream.xhttpSettings.headers).toEqual({ Top: 'wins' });
+        expect(stream.xhttpSettings.extra!.headers).toBeUndefined();
+      });
+
+      it('is a no-op when there is nothing to canonicalize', () => {
+        const stream = { xhttpSettings: new XrayStreamHttpSettingsObject() };
+        expect(() => canonicalizeXhttpHeaders(stream)).not.toThrow();
+        expect(() => canonicalizeXhttpHeaders({})).not.toThrow();
+      });
+    });
+
     describe('XrayStreamGrpcSettingsObject', () => {
       it('normalize returns the same instance', () => {
         const grpc = new XrayStreamGrpcSettingsObject();
@@ -278,15 +392,6 @@ describe('TransportObjects', () => {
       });
     });
 
-    describe('XrayStreamSplitHttpSettingsObject', () => {
-      it('normalize is a no‑op that returns the same object', () => {
-        const split = new XrayStreamSplitHttpSettingsObject();
-        split.host = 'split.host';
-        const result = split.normalize();
-        expect(result).toBe(split);
-        expect(split.host).toBe('split.host');
-      });
-    });
   });
 
   describe('normalize emptiness checks', () => {

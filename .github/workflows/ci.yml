@@ -1,0 +1,95 @@
+name: CI
+
+# The release workflow (build-n-release.yml) also runs tests and build, but only on
+# workflow_dispatch -- so until this file existed, nothing gated a push or a pull request.
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+          cache-dependency-path: |
+            ./pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      # `tsc` does NOT look inside .vue files, so the step above leaves all 90 SFCs unchecked.
+      # vue-tsc does check them, and currently reports 37 errors -- 36 of them a single code
+      # (TS18048) produced by the `ref(props.x ?? new X())` idiom that a later phase removes
+      # wholesale. Making this a hard gate today would mean 37 red errors, and a suppression
+      # baseline carried for weeks is exactly the artifact that rots. So it is ratcheted the same
+      # way lint warnings are: visible on every run, cannot grow, and flips to a plain gate
+      # (`vue-tsc --noEmit` in the verify script) once that idiom is gone.
+      - name: Typecheck Vue SFCs (ratcheted)
+        run: |
+          set -uo pipefail
+          CAP=37
+          pnpm run typecheck:vue > vue-tsc.log 2>&1 || true
+          COUNT=$(grep -cE 'error TS[0-9]+' vue-tsc.log || true)
+          echo "vue-tsc errors: $COUNT (cap $CAP)"
+          grep -oE 'error TS[0-9]+' vue-tsc.log | sort | uniq -c | sort -rn || true
+          if [ "$COUNT" -gt "$CAP" ]; then
+            echo "::error::vue-tsc reports $COUNT errors, above the cap of $CAP"
+            cat vue-tsc.log
+            exit 1
+          fi
+          if [ "$COUNT" -lt "$CAP" ]; then
+            echo "::notice::vue-tsc is down to $COUNT errors - lower CAP in this workflow to $COUNT"
+          fi
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Test
+        run: pnpm run test
+
+      # Proves the bundle still builds, and that the writeBundle hook produces both extra artifacts.
+      - name: Build
+        run: pnpm run build
+
+      - name: Assert build artifacts exist and are minified
+        run: |
+          set -euo pipefail
+          test -f dist/app.js
+          test -f dist/index.asp
+          test -f dist/xrayui
+          size=$(wc -c < dist/app.js)
+          lines=$(wc -l < dist/app.js)
+          echo "dist/app.js = $size bytes, $lines lines"
+          # Measured on this source: unminified 3,036,008 bytes / 68,007 lines;
+          # minified 1,722,655 bytes / 93 lines. Line count is the sharper signal.
+          if [ "$lines" -gt 5000 ]; then
+            echo "::error::dist/app.js has $lines lines - looks unminified (minify flag regressed?)"
+            exit 1
+          fi
+          if [ "$size" -ge 2500000 ]; then
+            echo "::error::dist/app.js is $size bytes - looks unminified (minify flag regressed?)"
+            exit 1
+          fi

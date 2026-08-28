@@ -21,7 +21,7 @@
   import { XrayOptions } from '@/modules/Options';
 
   export default defineComponent({
-    name: 'Http',
+    name: 'HeadersMapping',
     props: {
       headersMap: Object
     },

@@ -68,9 +68,10 @@ import {
   XrayStreamWsSettingsObject,
   XrayFinalMaskObject,
   XrayFinalMaskSettingsObject,
-  XrayStreamSplitHttpSettingsObject,
   maskFromCoreForm,
-  extractKcpMaskingForUi
+  extractKcpMaskingForUi,
+  migrateSplitHttpToXhttp,
+  canonicalizeXhttpHeaders
 } from './TransportObjects';
 import { XrayProtocol } from './Options';
 import * as DnsLeakProtection from './DnsLeakProtection';
@@ -256,11 +257,9 @@ export class GeodatTagRequest {
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 export enum SubmitActions {
-  configurationSetMode = 'xrayui_configuration_mode',
   configurationApply = 'xrayui_configuration_apply',
   configurationStageChunk = 'xrayui_configuration_stagechunk',
   clientsOnline = 'xrayui_connectedclients',
-  refreshConfig = 'xrayui_refreshconfig',
   serverStart = 'xrayui_serverstatus_start',
   serverRestart = 'xrayui_serverstatus_restart',
   serverStop = 'xrayui_serverstatus_stop',
@@ -280,7 +279,6 @@ export enum SubmitActions {
   geoDataCustomDeleteTag = 'xrayui_geodata_customdeletetag',
   fetchXrayLogs = 'xrayui_configuration_logs_fetch',
   updateLogsLevel = 'xrayui_configuration_logs_changeloglevel',
-  checkConnection = 'xrayui_configuration_checkconnection',
   checkConnectionStatus = 'xrayui_connectionstatus',
   initResponse = 'xrayui_configuration_initresponse',
   generalOptionsApply = 'xrayui_configuration_applygeneraloptions',
@@ -840,7 +838,6 @@ const streamSettingsFieldMap: [keyof XrayStreamSettingsObject, new () => any][] 
   ['httpupgradeSettings', XrayStreamHttpUpgradeSettingsObject],
   ['grpcSettings', XrayStreamGrpcSettingsObject],
   ['xhttpSettings', XrayStreamHttpSettingsObject],
-  ['splithttpSettings', XrayStreamSplitHttpSettingsObject],
   ['hysteriaSettings', XrayStreamHysteriaSettingsObject]
 ];
 
@@ -866,6 +863,8 @@ function transformStreamSettings(streamSettings: XrayStreamSettingsObject | unde
     settings.finalmask.udp = transformMaskArray((streamSettings as any).udpmasks);
   }
 
+  migrateSplitHttpToXhttp(settings);
+  canonicalizeXhttpHeaders(settings);
   extractKcpMaskingForUi(settings);
 
   return settings;

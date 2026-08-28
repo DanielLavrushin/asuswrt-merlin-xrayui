@@ -1,9 +1,14 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/prefer-literal-enum-member */
 export const XrayOptions = {
-  transportOptions: ['tcp', 'kcp', 'ws', 'xhttp', 'grpc', 'httpupgrade', 'splithttp', 'hysteria'],
+  // 'splithttp' is deliberately absent: Xray-core 24.10.31 renamed SplitHTTP to XHTTP, and core
+  // treats them as ONE transport with two spellings --
+  //   infra/conf/transport_internet.go: case "xhttp", "splithttp": return "splithttp", nil
+  // with `xhttpSettings` and `splithttpSettings` both typed *SplitHTTPConfig. Listing both here
+  // offered the same transport twice, and the splithttp branch had no editor at all.
+  // Legacy configs are migrated forward on load by migrateSplitHttpToXhttp (TransportObjects.ts).
+  transportOptions: ['tcp', 'kcp', 'ws', 'xhttp', 'grpc', 'httpupgrade', 'hysteria'],
   securityOptions: ['none', 'tls', 'reality'],
-  logOptions: ['debug', 'info', 'warning', 'error', 'none'],
   networkOptions: ['tcp', 'udp', 'tcp,udp'],
   protocolOptions: ['http', 'tls', 'bittorrent'],
   domainStrategyOptions: ['AsIs', 'IPIfNonMatch', 'IPOnDemand'],

@@ -1,3 +1,4 @@
+import { XraySalamanderObject } from '../TransportObjects';
 import { XrayParsedUrlObject } from '../CommonObjects';
 import HysteriaParser from './HysteriaParser';
 
@@ -214,7 +215,7 @@ describe('HysteriaParser', () => {
       expect(result?.streamSettings?.finalmask?.udp).toBeDefined();
       expect(result?.streamSettings?.finalmask?.udp?.length).toBe(1);
       expect(result?.streamSettings?.finalmask?.udp?.[0].type).toBe('salamander');
-      expect(result?.streamSettings?.finalmask?.udp?.[0].settings?.password).toBe('secret');
+      expect((result?.streamSettings?.finalmask?.udp?.[0].settings as XraySalamanderObject | undefined)?.password).toBe('secret');
     });
 
     it('parses salamander obfuscation with obfsPassword', () => {
@@ -222,7 +223,7 @@ describe('HysteriaParser', () => {
       const parsed = new XrayParsedUrlObject(url);
       const result = HysteriaParser(parsed);
 
-      expect(result?.streamSettings?.finalmask?.udp?.[0].settings?.password).toBe('secret');
+      expect((result?.streamSettings?.finalmask?.udp?.[0].settings as XraySalamanderObject | undefined)?.password).toBe('secret');
     });
 
     it('does not set finalmask when obfs is not salamander', () => {
@@ -288,7 +289,7 @@ describe('HysteriaParser', () => {
       expect(result?.streamSettings?.tlsSettings?.alpn).toEqual(['h3']);
 
       expect(result?.streamSettings?.finalmask?.udp?.[0].type).toBe('salamander');
-      expect(result?.streamSettings?.finalmask?.udp?.[0].settings?.password).toBe('obfspass');
+      expect((result?.streamSettings?.finalmask?.udp?.[0].settings as XraySalamanderObject | undefined)?.password).toBe('obfspass');
     });
   });
 });

@@ -22,22 +22,18 @@
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
   import Modal from '@main/Modal.vue';
-  import Hint from '@main/Hint.vue';
   import JsonPretty from 'vue-json-pretty';
   import 'vue-json-pretty/lib/styles.css';
-  import { useI18n } from 'vue-i18n';
   import engine from '@modules/Engine';
   import xrayConfig from '@modules/XrayConfig';
 
   export default defineComponent({
     name: 'ConfigModal',
     components: {
-      Hint,
       Modal,
       JsonPretty
     },
     setup() {
-      const { t } = useI18n();
       const modal = ref<any>(null);
       let originalConfig: any = {};
       const configJson = ref<any>(null);
@@ -132,42 +128,6 @@
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-      };
-
-      // Fallback for copying text to clipboard using a temporary textarea.
-      const fallbackCopyTextToClipboard = (text: string) => {
-        const textArea = document.createElement('textarea');
-        textArea.value = text;
-        Object.assign(textArea.style, {
-          position: 'fixed',
-          top: '0',
-          left: '0',
-          width: '2em',
-          height: '2em',
-          padding: '0',
-          border: 'none',
-          outline: 'none',
-          boxShadow: 'none',
-          background: 'transparent'
-        });
-        document.body.appendChild(textArea);
-        textArea.select();
-        try {
-          const successful = document.execCommand('copy');
-          if (!successful) {
-            alert('Copying to clipboard failed. Please copy the text manually:\n\n' + text);
-          } else {
-            if (hideSenseData.value) {
-              alert(t('com.ConfigModal.alert_copy_ok_hiddendata'));
-            } else {
-              alert(t('com.ConfigModal.alert_copy_ok_nohiddendata'));
-            }
-          }
-        } catch (err) {
-          console.error('Fallback copy error:', err);
-          alert('Copying to clipboard failed. Please copy the text manually:\n\n' + text);
-        }
-        document.body.removeChild(textArea);
       };
 
       const hide_sense_data = () => {

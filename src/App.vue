@@ -27,9 +27,6 @@
       const uiResponse = ref(new EngineResponseConfig());
       window.scrollTo = () => {};
 
-      const xrayConfig = engine.xrayConfig;
-      provide('xrayConfig', xrayConfig);
-
       onMounted(async () => {
         try {
           if (typeof window.show_menu === 'function') {
@@ -65,8 +62,7 @@
       provide('uiResponse', uiResponse);
 
       return {
-        engine,
-        xrayConfig
+        engine
       };
     }
   });
@@ -168,9 +164,6 @@
       }
       &.httpupgrade {
         background-color: rgb(2, 82, 119);
-      }
-      &.splithttp {
-        background-color: rgb(94, 10, 59);
       }
 
       &.tproxy {

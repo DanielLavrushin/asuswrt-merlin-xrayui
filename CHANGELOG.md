@@ -1,8 +1,12 @@
 # XRAYUI Changelog
 
-## [0.69.0] - 2026-07-30
+## [0.69.0] - 2026-xx-xx
 
 - FIXED: Restarting Xray sometimes left you without a working connection, even though the page reported success. Restarts are now reliable, and pressing Restart or Apply several times in a row no longer causes trouble. ([#384](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/pull/384))
+- FIXED: Custom headers set on an **XHTTP** transport were quietly ignored by Xray as soon as you also changed any of its performance or xmux settings. Your headers are now always applied.
+- CHANGED: The **splithttp** transport is no longer offered. Xray renamed it to **xhttp** a while ago and the two have been the same thing ever since, so it was the same transport listed twice — and picking it showed an empty settings page. If you were using it, your settings move over to **xhttp** on their own; there is nothing you need to do.
+- FIXED: The web panel was shipping its script uncompressed — about 3 MB instead of 1.7 MB.
+- CHANGED: General housekeeping under the hood: unused code removed and automatic checks added so problems get caught before a release. Nothing changes in how XRAYUI works.
 
 ## [0.68.2] - 2026-07-07
 

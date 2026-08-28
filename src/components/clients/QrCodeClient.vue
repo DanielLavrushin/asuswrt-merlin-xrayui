@@ -72,7 +72,7 @@
   }
 
   export default defineComponent({
-    name: 'Qr',
+    name: 'QrCodeClient',
     components: {
       Modal,
       QrcodeVue

@@ -252,7 +252,7 @@
   const domainTypes = new Set(['header-dns', 'xdns']);
 
   export default defineComponent({
-    name: 'NetworkHysteria',
+    name: 'Hysteria',
     components: {
       Hint
     },

@@ -60,7 +60,10 @@ describe('Backup.vue', () => {
       dnsmasq: false,
       logs_max_size: 0,
       logs_dor: false,
-      skip_test: false
+      skip_test: false,
+      check_connection: false,
+      startup_delay: 0,
+      sleep_time: 0
     }
   };
 

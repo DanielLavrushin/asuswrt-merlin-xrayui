@@ -193,7 +193,7 @@
   import Hint from '@main/Hint.vue';
 
   export default defineComponent({
-    name: 'HttpOutbound',
+    name: 'WireguardOutbound',
     components: {
       OutboundCommon,
       Modal,

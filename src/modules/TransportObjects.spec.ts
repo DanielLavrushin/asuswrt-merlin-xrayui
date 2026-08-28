@@ -1,3 +1,4 @@
+import { plainToInstance } from 'class-transformer';
 import { XrayHeaderObject, XrayParsedUrlObject } from './CommonObjects';
 import {
   XrayStreamGrpcSettingsObject,
@@ -23,7 +24,8 @@ import {
   XrayQuicParamsObject,
   XrayQuicParamsUdpHopObject,
   XrayStreamHysteriaSettingsObject,
-  XrayUdpHopObject
+  XrayUdpHopObject,
+  canonicalizeXhttpHeaders
 } from './TransportObjects';
 
 describe('TransportObjects', () => {
@@ -193,6 +195,49 @@ describe('TransportObjects', () => {
         expect(http.extra!.headers).toBeUndefined();
       });
 
+      // The mirror is derived, so it must be rebuilt on EVERY save. Otherwise a copy written by
+      // an earlier save outlives the headers the user just deleted, and core keeps applying them.
+      it('clears the mirrored copy when the user removes every header', () => {
+        const saved = plainToInstance(XrayStreamHttpSettingsObject, {
+          path: '/x',
+          headers: { 'X-Real-IP': '1.2.3.4' },
+          extra: { scMaxBufferedPosts: 99, headers: { 'X-Real-IP': '1.2.3.4' } }
+        });
+
+        saved.headers = {}; // Http.vue binds the top-level value
+        saved.normalize();
+
+        expect(saved.headers).toBeUndefined();
+        expect(saved.extra!.headers).toBeUndefined();
+        expect(JSON.stringify(saved)).not.toContain('X-Real-IP');
+      });
+
+      it('does not let a stale mirrored copy keep extra alive on its own', () => {
+        const saved = plainToInstance(XrayStreamHttpSettingsObject, {
+          path: '/x',
+          headers: { 'X-Real-IP': '1.2.3.4' },
+          extra: { headers: { 'X-Real-IP': '1.2.3.4' } } // no real extra fields
+        });
+
+        saved.headers = {};
+        saved.normalize();
+
+        // with nothing but the derived copy left, extra should normalize away entirely
+        expect(saved.extra).toBeUndefined();
+      });
+
+      it('replaces the mirrored copy rather than merging into it', () => {
+        const saved = plainToInstance(XrayStreamHttpSettingsObject, {
+          headers: { Old: 'a' },
+          extra: { scMaxBufferedPosts: 99, headers: { Old: 'a' } }
+        });
+
+        saved.headers = { New: 'b' };
+        saved.normalize();
+
+        expect(saved.extra!.headers).toEqual({ New: 'b' });
+      });
+
       it('clears all padding fields when xPaddingObfsMode is false (default)', () => {
         http.normalize();
         expect(http.xPaddingObfsMode).toBeUndefined();
@@ -288,6 +333,44 @@ describe('TransportObjects', () => {
         http.uplinkChunkSize = 3072;
         http.normalize();
         expect(http.uplinkChunkSize).toBe(3072);
+      });
+    });
+
+    describe('canonicalizeXhttpHeaders', () => {
+      // A config from an earlier build can carry headers only in `extra`. The editor binds the
+      // top-level value, so without lifting them up they are invisible and the next save drops them.
+      it('lifts headers out of extra when the top level has none', () => {
+        const stream = {
+          xhttpSettings: plainToInstance(XrayStreamHttpSettingsObject, {
+            path: '/x',
+            extra: { scMaxBufferedPosts: 99, headers: { 'X-Real-IP': '1.2.3.4' } }
+          })
+        };
+
+        canonicalizeXhttpHeaders(stream);
+
+        expect(stream.xhttpSettings.headers).toEqual({ 'X-Real-IP': '1.2.3.4' });
+        expect(stream.xhttpSettings.extra!.headers).toBeUndefined();
+      });
+
+      it('keeps the top-level value authoritative when both are present', () => {
+        const stream = {
+          xhttpSettings: plainToInstance(XrayStreamHttpSettingsObject, {
+            headers: { Top: 'wins' },
+            extra: { headers: { Nested: 'loses' } }
+          })
+        };
+
+        canonicalizeXhttpHeaders(stream);
+
+        expect(stream.xhttpSettings.headers).toEqual({ Top: 'wins' });
+        expect(stream.xhttpSettings.extra!.headers).toBeUndefined();
+      });
+
+      it('is a no-op when there is nothing to canonicalize', () => {
+        const stream = { xhttpSettings: new XrayStreamHttpSettingsObject() };
+        expect(() => canonicalizeXhttpHeaders(stream)).not.toThrow();
+        expect(() => canonicalizeXhttpHeaders({})).not.toThrow();
       });
     });
 

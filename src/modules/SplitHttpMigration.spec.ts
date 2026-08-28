@@ -71,6 +71,31 @@ describe('migrateSplitHttpToXhttp', () => {
     expect(s.xhttpSettings).toBeUndefined();
   });
 
+  // core lowercases before matching (`switch strings.ToLower(string(p))`), so "SplitHTTP" is a
+  // legitimate spelling in a hand-written or imported config. NET_KEEP's lookup is case-sensitive,
+  // so failing to match it here would prune the migrated settings away entirely.
+  it.each(['SplitHTTP', 'SPLITHTTP', 'SplitHttp'])('migrates the %s spelling too', (spelling) => {
+    const s = { ...legacy(), network: spelling } as SplitHttpMigratableStream;
+    migrateSplitHttpToXhttp(s);
+
+    expect(s.network).toBe('xhttp');
+    expect(s.xhttpSettings!.path).toBe('/legacy');
+  });
+
+  it('survives hydrate -> normalize with mixed-case network intact', () => {
+    const raw: Record<string, unknown> = {
+      network: 'SplitHTTP',
+      splithttpSettings: { path: '/legacy', host: 'old.example.com' }
+    };
+    const stream = plainToInstance(XrayStreamSettingsObject, raw);
+    migrateSplitHttpToXhttp(stream as SplitHttpMigratableStream);
+    const out = JSON.parse(JSON.stringify(stream.normalize()));
+
+    expect(out.network).toBe('xhttp');
+    expect(out.xhttpSettings.path).toBe('/legacy');
+    expect(out.xhttpSettings.host).toBe('old.example.com');
+  });
+
   it('leaves every other transport alone', () => {
     const s = { network: 'ws' } as SplitHttpMigratableStream;
     migrateSplitHttpToXhttp(s);

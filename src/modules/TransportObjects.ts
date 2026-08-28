@@ -163,11 +163,17 @@ export class XrayStreamHttpSettingsObject implements ITransportNetwork {
 
     this.headers = isObjectEmpty(this.headers) ? undefined : this.headers;
     this.extra = plainToInstance(XrayXhttpExtraObject, this.extra ?? {});
-    this.extra = this.extra ? this.extra.normalize() : undefined;
 
-    // If `extra` survived, it will REPLACE this whole object inside xray-core, which carries over
-    // only host/path/mode. Mirror the headers in so they are not lost. When `extra` normalizes away
-    // there is nothing to replace us, and the top-level `headers` applies as written.
+    // `extra.headers` is DERIVED from the top-level value, never a source of truth. Clear it
+    // BEFORE the emptiness check below, so that a copy left by a previous save can neither
+    // resurrect headers the user has just removed, nor keep `extra` alive on its own.
+    this.extra.headers = undefined;
+    this.extra = this.extra.normalize();
+
+    // If `extra` survived, it REPLACES this whole object inside xray-core, which carries over only
+    // host/path/mode (infra/conf/transport_method.go:308-317). Rebuild the mirror so headers are
+    // not lost. When `extra` normalizes away there is nothing to replace us, and the top-level
+    // `headers` applies as written.
     if (this.extra && this.headers) {
       this.extra.headers = this.headers as Record<string, string>;
     }
@@ -293,6 +299,24 @@ export interface SplitHttpMigratableStream {
 }
 
 /**
+ * `xhttpSettings.headers` is the single source of truth; `xhttpSettings.extra.headers` is only a
+ * derived mirror, written on serialization because core's `extra` replaces the outer object.
+ *
+ * A config saved by an earlier build -- or written by hand -- can carry headers ONLY in `extra`.
+ * The editor binds the top-level value (Http.vue), so those headers would be invisible and the
+ * next save would drop them. Lift them up at hydration and clear the mirror; normalize() rebuilds
+ * it from the authoritative value.
+ */
+export function canonicalizeXhttpHeaders(stream: { xhttpSettings?: XrayStreamHttpSettingsObject }): void {
+  const xhttp = stream.xhttpSettings;
+  const extra = xhttp?.extra as XrayXhttpExtraObject | undefined;
+  if (!xhttp || !extra || isObjectEmpty(extra.headers)) return;
+
+  if (isObjectEmpty(xhttp.headers)) xhttp.headers = extra.headers;
+  extra.headers = undefined;
+}
+
+/**
  * Folds a legacy `splithttp` transport into `xhttp`.
  *
  * Xray-core 24.10.31 renamed SplitHTTP to XHTTP and they have been ONE transport ever since:
@@ -308,7 +332,11 @@ export interface SplitHttpMigratableStream {
  */
 export function migrateSplitHttpToXhttp(stream: SplitHttpMigratableStream): void {
   const legacy = stream.splithttpSettings as LegacySplitHttpSettings | undefined;
-  if (stream.network === 'splithttp') stream.network = 'xhttp';
+  // Case-insensitive: core lowercases before matching (`switch strings.ToLower(string(p))`,
+  // infra/conf/transport_internet.go:17), so a hand-written or imported config may legitimately
+  // say "SplitHTTP". Matching only the lowercase spelling would leave `network` untouched, and
+  // normalize() -- whose NET_KEEP lookup IS case-sensitive -- would then prune the settings away.
+  if (stream.network?.toLowerCase() === 'splithttp') stream.network = 'xhttp';
   if (!legacy) return;
 
   delete stream.splithttpSettings;

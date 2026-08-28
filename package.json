@@ -7,7 +7,11 @@
     "watch": "cross-env NODE_ENV=development VITE_WATCH=1 vite build --watch --mode development",
     "dev": "pnpm run watch",
     "watch-prod": "cross-env NODE_ENV=production VITE_WATCH=1 vite build --watch --mode production",
-    "test": "jest --clearCache && jest --config ./jest.config.ts --coverage"
+    "test": "jest --clearCache && jest --config ./jest.config.ts --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "verify": "pnpm run typecheck && pnpm run lint && pnpm run test"
   },
   "keywords": [],
   "author": "",
@@ -34,6 +38,7 @@
   "devDependencies": {
     "@babel/core": "^7.29.7",
     "@babel/preset-env": "^7.29.7",
+    "@eslint/js": "^10.0.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@types/jest": "^30.0.0",
     "@types/lodash-es": "^4.17.12",
@@ -48,6 +53,11 @@
     "babel-jest": "^30.4.1",
     "cross-env": "^7.0.3",
     "dotenv": "^16.6.1",
+    "eslint": "^10.9.1",
+    "eslint-plugin-security": "^4.0.1",
+    "eslint-plugin-vue": "^10.10.0",
+    "eslint-plugin-xss": "^0.1.12",
+    "globals": "^17.11.0",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
@@ -59,8 +69,10 @@
     "ts-jest": "^29.4.11",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.68.0",
     "vite": "^8.1.0",
     "vite-plugin-css-injected-by-js": "^3.5.2",
+    "vue-eslint-parser": "^10.4.1",
     "vue-test": "^1.0.0"
   },
   "pnpm": {

@@ -1,0 +1,71 @@
+name: CI
+
+# The release workflow (build-n-release.yml) also runs tests and build, but only on
+# workflow_dispatch -- so until this file existed, nothing gated a push or a pull request.
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+          cache-dependency-path: |
+            ./pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Test
+        run: pnpm run test
+
+      # Proves the bundle still builds, and that the writeBundle hook produces both extra artifacts.
+      - name: Build
+        run: pnpm run build
+
+      - name: Assert build artifacts exist and are minified
+        run: |
+          set -euo pipefail
+          test -f dist/app.js
+          test -f dist/index.asp
+          test -f dist/xrayui
+          size=$(wc -c < dist/app.js)
+          lines=$(wc -l < dist/app.js)
+          echo "dist/app.js = $size bytes, $lines lines"
+          # Measured on this source: unminified 3,036,008 bytes / 68,007 lines;
+          # minified 1,722,655 bytes / 93 lines. Line count is the sharper signal.
+          if [ "$lines" -gt 5000 ]; then
+            echo "::error::dist/app.js has $lines lines - looks unminified (minify flag regressed?)"
+            exit 1
+          fi
+          if [ "$size" -ge 2500000 ]; then
+            echo "::error::dist/app.js is $size bytes - looks unminified (minify flag regressed?)"
+            exit 1
+          fi

@@ -1,13 +1,12 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/prefer-literal-enum-member */
 export const XrayOptions = {
-  // 'splithttp' is deliberately absent: Xray-core 24.10.31 renamed SplitHTTP to XHTTP, and the
-  // core still treats them as ONE transport with two spellings --
+  // 'splithttp' is deliberately absent: Xray-core 24.10.31 renamed SplitHTTP to XHTTP, and core
+  // treats them as ONE transport with two spellings --
   //   infra/conf/transport_internet.go: case "xhttp", "splithttp": return "splithttp", nil
-  // with `xhttpSettings` and `splithttpSettings` both typed *SplitHTTPConfig. Offering both here
-  // listed the same transport twice, and the splithttp branch had no editor. Existing configs that
-  // still say "splithttp" keep working: core accepts the alias, and NET_KEEP in CommonObjects.ts
-  // still preserves splithttpSettings on round-trip.
+  // with `xhttpSettings` and `splithttpSettings` both typed *SplitHTTPConfig. Listing both here
+  // offered the same transport twice, and the splithttp branch had no editor at all.
+  // Legacy configs are migrated forward on load by migrateSplitHttpToXhttp (TransportObjects.ts).
   transportOptions: ['tcp', 'kcp', 'ws', 'xhttp', 'grpc', 'httpupgrade', 'hysteria'],
   securityOptions: ['none', 'tls', 'reality'],
   networkOptions: ['tcp', 'udp', 'tcp,udp'],

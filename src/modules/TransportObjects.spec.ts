@@ -4,7 +4,6 @@ import {
   XrayStreamHttpSettingsObject,
   XrayStreamHttpUpgradeSettingsObject,
   XrayStreamKcpSettingsObject,
-  XrayStreamSplitHttpSettingsObject,
   XrayStreamTcpSettingsObject,
   XrayStreamWsSettingsObject,
   XrayXhttpExtraObject,
@@ -310,15 +309,6 @@ describe('TransportObjects', () => {
       });
     });
 
-    describe('XrayStreamSplitHttpSettingsObject', () => {
-      it('normalize is a no‑op that returns the same object', () => {
-        const split = new XrayStreamSplitHttpSettingsObject();
-        split.host = 'split.host';
-        const result = split.normalize();
-        expect(result).toBe(split);
-        expect(split.host).toBe('split.host');
-      });
-    });
   });
 
   describe('normalize emptiness checks', () => {

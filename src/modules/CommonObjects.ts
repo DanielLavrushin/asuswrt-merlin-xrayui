@@ -9,7 +9,6 @@ import {
   XrayStreamWsSettingsObject,
   XrayStreamGrpcSettingsObject,
   XrayStreamHttpUpgradeSettingsObject,
-  XrayStreamSplitHttpSettingsObject,
   XrayStreamHysteriaSettingsObject,
   XrayFinalMaskSettingsObject,
   migrateKcpMaskingForSerialization
@@ -676,7 +675,6 @@ const NET_KEEP: Record<string, StreamKey[]> = {
   xhttp: ['xhttpSettings'],
   httpupgrade: ['httpupgradeSettings'],
   grpc: ['grpcSettings'],
-  splithttp: ['splithttpSettings'],
   hysteria: ['hysteriaSettings']
 };
 
@@ -696,7 +694,6 @@ export class XrayStreamSettingsObject {
   public xhttpSettings?: XrayStreamHttpSettingsObject;
   public grpcSettings?: XrayStreamGrpcSettingsObject;
   public httpupgradeSettings?: XrayStreamHttpUpgradeSettingsObject;
-  public splithttpSettings?: XrayStreamSplitHttpSettingsObject;
   public hysteriaSettings?: XrayStreamHysteriaSettingsObject;
   public finalmask?: XrayFinalMaskSettingsObject;
   public sockopt?: XraySockoptObject;

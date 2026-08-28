@@ -271,18 +271,69 @@ export class XrayStreamHttpUpgradeSettingsObject implements ITransportNetwork {
   };
 }
 
-export class XrayStreamSplitHttpSettingsObject implements ITransportNetwork {
-  public path = '/';
-  public host?: string;
-  public headers = {};
-  public scMaxEachPostBytes = 1 * 1024 * 1024;
-  public scMaxConcurrentPosts?: number;
-  public scMinPostsIntervalMs?: number;
-  public noSSEHeader = false;
-  public xmux: XrayXmuxObject = new XrayXmuxObject();
-  normalize = (): this => {
-    return this;
-  };
+/**
+ * The pre-24.10.31 SplitHTTP settings shape. Kept as a migration SOURCE only -- there is no
+ * longer a class, a UI or a serialization path for it. See migrateSplitHttpToXhttp below.
+ */
+interface LegacySplitHttpSettings {
+  path?: string;
+  host?: string;
+  headers?: Record<string, string>;
+  scMaxEachPostBytes?: number;
+  scMaxConcurrentPosts?: number;
+  scMinPostsIntervalMs?: number;
+  noSSEHeader?: boolean;
+  xmux?: XrayXmuxObject;
+}
+
+export interface SplitHttpMigratableStream {
+  network?: string;
+  xhttpSettings?: XrayStreamHttpSettingsObject;
+  splithttpSettings?: unknown;
+}
+
+/**
+ * Folds a legacy `splithttp` transport into `xhttp`.
+ *
+ * Xray-core 24.10.31 renamed SplitHTTP to XHTTP and they have been ONE transport ever since:
+ *   infra/conf/transport_internet.go:20  case "xhttp", "splithttp": return "splithttp", nil
+ *   :55-56  XHTTPSettings / SplitHTTPSettings are both *SplitHTTPConfig
+ * so this is a pure rename on the wire, not a behaviour change. Core still accepts the old
+ * spelling, which is why untouched configs kept working -- but nothing in this codebase can
+ * edit them any more, so hydration normalizes them forward.
+ *
+ * Must run during hydration, BEFORE XrayStreamSettingsObject.normalize(): normalize prunes any
+ * `*Settings` key that NET_KEEP does not list for the current network, so an unmigrated
+ * `splithttpSettings` would be silently dropped on the next save.
+ */
+export function migrateSplitHttpToXhttp(stream: SplitHttpMigratableStream): void {
+  const legacy = stream.splithttpSettings as LegacySplitHttpSettings | undefined;
+  if (stream.network === 'splithttp') stream.network = 'xhttp';
+  if (!legacy) return;
+
+  delete stream.splithttpSettings;
+
+  // Core's precedence: `if c.XHTTPSettings != nil { c.SplitHTTPSettings = c.XHTTPSettings }`
+  // -- xhttpSettings wins outright when both are present. Match that rather than merging.
+  if (stream.xhttpSettings) return;
+
+  const xhttp = new XrayStreamHttpSettingsObject();
+  if (legacy.path !== undefined) xhttp.path = legacy.path;
+  if (legacy.host !== undefined) xhttp.host = legacy.host;
+  if (legacy.headers !== undefined) xhttp.headers = legacy.headers;
+
+  const extra = xhttp.extra ?? (xhttp.extra = new XrayXhttpExtraObject());
+  if (legacy.scMaxEachPostBytes !== undefined) extra.scMaxEachPostBytes = legacy.scMaxEachPostBytes;
+  if (legacy.scMinPostsIntervalMs !== undefined) extra.scMinPostsIntervalMs = legacy.scMinPostsIntervalMs;
+  if (legacy.noSSEHeader !== undefined) extra.noSSEHeader = legacy.noSSEHeader;
+  if (legacy.xmux !== undefined) extra.xmux = plainToInstance(XrayXmuxObject, legacy.xmux);
+
+  // scMaxConcurrentPosts is deliberately dropped: it no longer exists in core's SplitHTTPConfig
+  // (transport_method.go:257-288) and json.Unmarshal ignores it, so it has had no effect for some
+  // time. It is NOT remapped to xmux.maxConcurrency -- that is a different concept (mux streams
+  // per connection), and silently changing its meaning would be worse than losing a dead field.
+
+  stream.xhttpSettings = xhttp;
 }
 
 export class XrayUdpHopObject {

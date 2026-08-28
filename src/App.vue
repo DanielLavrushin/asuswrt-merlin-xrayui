@@ -165,9 +165,6 @@
       &.httpupgrade {
         background-color: rgb(2, 82, 119);
       }
-      &.splithttp {
-        background-color: rgb(94, 10, 59);
-      }
 
       &.tproxy {
         background: rgb(207, 78, 2);

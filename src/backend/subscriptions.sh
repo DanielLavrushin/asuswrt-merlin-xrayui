@@ -4,7 +4,7 @@
 subscription_curl() {
     local hwid
     hwid=$(get_or_create_hwid)
-    curl -fsL --max-time 20 \
+    curl -fsL --compressed --max-time 20 \
         -A "xrayui/$XRAYUI_VERSION" \
         -H "x-hwid: $hwid" \
         -H "x-device-os: ASUSWRT-Merlin" \

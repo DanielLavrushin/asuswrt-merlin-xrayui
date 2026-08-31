@@ -10,7 +10,7 @@
     "test": "jest --clearCache && jest --config ./jest.config.ts --coverage",
     "typecheck": "tsc --noEmit",
     "typecheck:vue": "vue-tsc --noEmit",
-    "lint": "eslint . --max-warnings 1074",
+    "lint": "eslint . --max-warnings 549",
     "lint:fix": "eslint . --fix",
     "verify": "pnpm run typecheck && pnpm run lint && pnpm run test"
   },

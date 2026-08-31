@@ -2,6 +2,12 @@
 
 ## [0.69.0] - 2026-xx-xx
 
+- ADDED: New **TUN routing** option in General Options, shown once a TUN inbound exists. **Full** works as before — the interface is set up and LAN traffic is routed through the tunnel. **Interface only** creates the interface and leaves routing untouched, for setups where another tool (such as [B4](https://docs.b4core.app/)) decides what goes into the tunnel.
+- CHANGED: TUN inbound settings now match what Xray itself offers. **IP addresses** and **Routes** were renamed, and **DNS servers**, **Outbound interface binding**, **Interface description** and **User level** were added. Existing settings are moved over automatically on the next start, after a backup.
+- FIXED: **Routes** on a TUN inbound sent those networks around the tunnel instead of into it — the opposite of what its help text described. Renamed to **Auto system routes**, it now behaves as documented.
+- REMOVED: The **Enable GSO** checkbox on TUN inbounds. Xray never offered that setting, so it had no effect.
+- FIXED: Stopping Xray left TUN routing rules behind on the router, where they accumulated over time.
+- FIXED: A TUN interface named anything other than `xray0` stayed up after Xray stopped.
 - FIXED: Restarting Xray sometimes left you without a working connection, even though the page reported success. Restarts are now reliable, and pressing Restart or Apply several times in a row no longer causes trouble. ([#384](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/pull/384))
 - FIXED: Custom headers set on an **XHTTP** transport were quietly ignored by Xray as soon as you also changed any of its performance or xmux settings. Your headers are now always applied.
 - CHANGED: The **splithttp** transport is no longer offered. Xray renamed it to **xhttp** a while ago and the two have been the same thing ever since, so it was the same transport listed twice — and picking it showed an empty settings page. If you were using it, your settings move over to **xhttp** on their own; there is nothing you need to do.

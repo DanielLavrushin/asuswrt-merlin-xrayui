@@ -5,6 +5,8 @@ start() {
 
     load_xrayui_config
 
+    migrate_tun_inbounds_config
+
     cleanup_stale_asdfiles
 
     # Prevent duplicate starts - check if the Xray daemon is already running

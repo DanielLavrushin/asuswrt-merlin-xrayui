@@ -26,7 +26,10 @@ type CoreFeatureRule = { since?: string; until?: string };
 const CORE_FEATURES = {
   allowInsecure: { until: '26.3.27' },
   pinnedPeerCertSha256: { since: '26.3.27' },
-  verifyPeerCertByName: { since: '26.3.27' }
+  verifyPeerCertByName: { since: '26.3.27' },
+  tunInbound: { since: '26.1.13' },
+  tunGateway: { since: '26.4.13' },
+  tunDesc: { since: '26.7.28' }
 } as const satisfies Record<string, CoreFeatureRule>;
 
 export type CoreFeature = keyof typeof CORE_FEATURES;
@@ -49,4 +52,16 @@ export function mkcpMaskingMode(): MkcpMaskingMode {
 
 export function coreUsesMkcpLegacyMaskType(): boolean {
   return coreAtLeast('26.6.1');
+}
+
+export function tunUsesUppercaseMtu(): boolean {
+  return coreBelow('26.4.13');
+}
+
+export function coreAppliesTunRoutes(): boolean {
+  return coreAtLeast('26.6.27');
+}
+
+export function coreAppliesTunGateway(): boolean {
+  return coreAtLeast('26.7.11');
 }

@@ -39,32 +39,78 @@
         </tr>
         <tr>
           <th>
-            {{ $t('com.TunInbound.label_gso') }}
-            <hint v-html="$t('com.TunInbound.hint_gso')"></hint>
+            {{ $t('com.TunInbound.label_gateway') }}
+            <hint v-html="$t('com.TunInbound.hint_gateway')"></hint>
           </th>
           <td>
-            <input type="checkbox" v-model="inbound.settings.gso" />
-            <span class="hint-color"></span>
+            <textarea class="input_32_table" rows="3" v-model="gatewayList" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+            <span class="hint-color">{{ $t('com.TunInbound.hint_gateway_placeholder') }}</span>
+          </td>
+        </tr>
+        <tr v-if="supportsGateway">
+          <th>
+            {{ $t('com.TunInbound.label_auto_routing') }}
+            <hint v-html="$t('com.TunInbound.hint_auto_routing')"></hint>
+          </th>
+          <td>
+            <textarea class="input_32_table" rows="3" v-model="autoRoutingList" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+            <span class="hint-color">{{ $t('com.TunInbound.hint_auto_routing_placeholder') }}</span>
+            <div v-if="autoRoutingConflict" class="tun-warning" v-html="$t('com.TunInbound.warn_auto_routing_conflict')"></div>
+            <div v-else-if="autoRoutingInert" class="tun-warning" v-html="$t('com.TunInbound.warn_auto_routing_inert')"></div>
+          </td>
+        </tr>
+        <tr v-if="supportsGateway">
+          <th>
+            {{ $t('com.TunInbound.label_auto_outbounds_interface') }}
+            <hint v-html="$t('com.TunInbound.hint_auto_outbounds_interface')"></hint>
+          </th>
+          <td>
+            <input
+              type="text"
+              class="input_20_table"
+              v-model="inbound.settings.autoOutboundsInterface"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
+            />
+            <span class="hint-color">{{ $t('com.TunInbound.hint_auto_outbounds_interface_placeholder') }}</span>
+          </td>
+        </tr>
+        <tr v-if="supportsGateway">
+          <th>
+            {{ $t('com.TunInbound.label_dns') }}
+            <hint v-html="$t('com.TunInbound.hint_dns')"></hint>
+          </th>
+          <td>
+            <textarea class="input_32_table" rows="2" v-model="dnsList" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+            <span class="hint-color">{{ $t('com.TunInbound.hint_dns_placeholder') }}</span>
+          </td>
+        </tr>
+        <tr v-if="supportsDesc">
+          <th>
+            {{ $t('com.TunInbound.label_desc') }}
+            <hint v-html="$t('com.TunInbound.hint_desc')"></hint>
+          </th>
+          <td>
+            <input type="text" class="input_20_table" v-model="inbound.settings.desc" autocomplete="off" autocorrect="off" autocapitalize="off" />
+            <span class="hint-color">default: Wintun</span>
           </td>
         </tr>
         <tr>
           <th>
-            {{ $t('com.TunInbound.label_address') }}
-            <hint v-html="$t('com.TunInbound.hint_address')"></hint>
+            {{ $t('com.TunInbound.label_user_level') }}
+            <hint v-html="$t('com.TunInbound.hint_user_level')"></hint>
           </th>
           <td>
-            <textarea class="input_32_table" rows="3" v-model="addressList" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
-            <span class="hint-color">{{ $t('com.TunInbound.hint_address_placeholder') }}</span>
-          </td>
-        </tr>
-        <tr>
-          <th>
-            {{ $t('com.TunInbound.label_routes') }}
-            <hint v-html="$t('com.TunInbound.hint_routes')"></hint>
-          </th>
-          <td>
-            <textarea class="input_32_table" rows="3" v-model="routesList" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
-            <span class="hint-color">{{ $t('com.TunInbound.hint_routes_placeholder') }}</span>
+            <input
+              type="number"
+              maxlength="3"
+              class="input_6_table"
+              v-model.number="inbound.settings.userLevel"
+              onkeypress="return validator.isNumber(this, event);"
+            />
+            <span class="hint-color">default: 0</span>
           </td>
         </tr>
       </tbody>
@@ -73,10 +119,11 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, computed, watch } from 'vue';
+  import { defineComponent, ref, computed } from 'vue';
   import InboundCommon from './InboundCommon.vue';
   import { XrayProtocol } from '@/modules/CommonObjects';
   import { XrayTunInboundObject, XrayInboundObject } from '@/modules/InboundObjects';
+  import { coreSupports, coreAppliesTunRoutes } from '@/modules/CoreVersion';
   import Hint from '@main/Hint.vue';
 
   export default defineComponent({
@@ -91,35 +138,51 @@
     setup(props) {
       const inbound = ref<XrayInboundObject<XrayTunInboundObject>>(props.inbound ?? new XrayInboundObject<XrayTunInboundObject>(XrayProtocol.TUN, new XrayTunInboundObject()));
 
-      const addressList = computed({
-        get: () => (inbound.value.settings?.address || []).join('\n'),
-        set: (value: string) => {
-          if (inbound.value.settings) {
-            inbound.value.settings.address = value
+      const lines = (field: 'gateway' | 'dns' | 'autoSystemRoutingTable') =>
+        computed({
+          get: () => (inbound.value.settings?.[field] || []).join('\n'),
+          set: (value: string) => {
+            if (!inbound.value.settings) return;
+            inbound.value.settings[field] = value
               .split('\n')
               .map((s) => s.trim())
               .filter((s) => s.length > 0);
           }
-        }
-      });
+        });
 
-      const routesList = computed({
-        get: () => (inbound.value.settings?.routes || []).join('\n'),
-        set: (value: string) => {
-          if (inbound.value.settings) {
-            inbound.value.settings.routes = value
-              .split('\n')
-              .map((s) => s.trim())
-              .filter((s) => s.length > 0);
-          }
-        }
-      });
+      const gatewayList = lines('gateway');
+      const dnsList = lines('dns');
+      const autoRoutingList = lines('autoSystemRoutingTable');
+
+      const supportsGateway = computed(() => coreSupports('tunGateway'));
+      const supportsDesc = computed(() => coreSupports('tunDesc'));
+
+      const hasAutoRouting = computed(() => (inbound.value.settings?.autoSystemRoutingTable?.length ?? 0) > 0);
+      const autoRoutingConflict = computed(() => hasAutoRouting.value && coreAppliesTunRoutes());
+      const autoRoutingInert = computed(() => hasAutoRouting.value && !coreAppliesTunRoutes());
 
       return {
         inbound,
-        addressList,
-        routesList
+        gatewayList,
+        dnsList,
+        autoRoutingList,
+        supportsGateway,
+        supportsDesc,
+        autoRoutingConflict,
+        autoRoutingInert
       };
     }
   });
 </script>
+
+<style scoped>
+  .tun-warning {
+    margin-top: 6px;
+    padding: 6px 8px;
+    border-left: 3px solid #ffcc00;
+    background: #3a2d00;
+    color: #ffe08a;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+</style>

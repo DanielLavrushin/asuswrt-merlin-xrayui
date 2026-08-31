@@ -39,4 +39,3 @@
     }
   });
 </script>
-<style scoped></style>

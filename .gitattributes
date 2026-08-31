@@ -1,1 +1,10 @@
-text eol=LF;
+* text=auto eol=lf
+
+*.sh text eol=lf
+*.conf text eol=lf
+
+*.png binary
+*.ico binary
+*.gz binary
+*.zip binary
+*.dat binary

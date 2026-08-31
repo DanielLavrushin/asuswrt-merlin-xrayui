@@ -7,7 +7,90 @@ tun_table=250
 tun_rule_priority_local=49 # Local traffic stays local
 tun_rule_priority_tun=51   # Other LAN traffic goes to TUN table
 
+tun_routing_marker="/tmp/xrayui-tun-routing-owned"
+
+tun_routing_mode() {
+    case "${tun_routing:-full}" in
+    interface) echo "interface" ;;
+    *) echo "full" ;;
+    esac
+}
+
+is_tun_device() {
+    [ -n "$1" ] && [ -e "/sys/class/net/$1/tun_flags" ]
+}
+
+tun_interface_names() {
+    local configured=""
+    if [ -f "$XRAY_CONFIG_FILE" ]; then
+        configured=$(jq -r '
+            .inbounds[]?
+            | select(.protocol == "tun"
+              and ((.tag // "") | startswith("sys:") | not)
+            )
+            | (.settings.name // "xray0")
+        ' "$XRAY_CONFIG_FILE" 2>/dev/null)
+    fi
+
+    local existing
+    existing=$(ip -o link show 2>/dev/null | awk -F': ' '{print $2}' | grep -E '^xray[0-9]*$')
+
+    printf '%s\n%s\n' "$configured" "$existing" | sed '/^$/d' | sort -u
+}
+
+migrate_tun_inbounds_config() {
+    [ -f "$XRAY_CONFIG_FILE" ] || return 0
+
+    jq -e '
+        (.inbounds // [])
+        | map(select(.protocol == "tun") | .settings // {})
+        | map(select(has("address") or has("routes") or has("gso") or has("MTU")))
+        | length > 0
+    ' "$XRAY_CONFIG_FILE" >/dev/null 2>&1 || return 0
+
+    log_info "Migrating legacy TUN inbound settings to the Xray-core field names..."
+
+    local migrated="/tmp/xrayui-tun-migrate.$$"
+    if ! jq '
+        if (.inbounds | type) == "array" then
+            .inbounds |= map(
+                if .protocol == "tun" and ((.settings | type) == "object") then
+                    .settings |= (
+                        (if has("MTU") and (has("mtu") | not) then .mtu = .MTU else . end)
+                        | (if has("address") and ((.gateway // []) | length) == 0 then .gateway = .address else . end)
+                        | (if has("routes") and ((.autoSystemRoutingTable // []) | length) == 0 then .autoSystemRoutingTable = .routes else . end)
+                        | del(.MTU, .address, .routes, .gso)
+                    )
+                else . end
+            )
+        else . end
+    ' "$XRAY_CONFIG_FILE" >"$migrated" 2>/dev/null; then
+        log_error "Failed to migrate legacy TUN inbound settings. Leaving the configuration untouched."
+        rm -f "$migrated"
+        return 1
+    fi
+
+    if [ ! -s "$migrated" ]; then
+        log_error "Migrated TUN configuration came out empty. Leaving the configuration untouched."
+        rm -f "$migrated"
+        return 1
+    fi
+
+    backup_xray_config
+    if cp -f "$migrated" "$XRAY_CONFIG_FILE"; then
+        log_ok "Legacy TUN inbound settings migrated: address -> gateway, routes -> autoSystemRoutingTable, gso removed."
+    else
+        log_error "Failed to write the migrated configuration to $XRAY_CONFIG_FILE."
+    fi
+    rm -f "$migrated"
+}
+
 configure_tun_inbounds() {
+    load_xrayui_config
+
+    local mode
+    mode=$(tun_routing_mode)
+
     log_info "Scanning for TUN inbounds..."
 
     local tun_inbounds_file="/tmp/xrayui-tun-inbounds.$$"
@@ -33,30 +116,34 @@ configure_tun_inbounds() {
         }
     fi
 
-    local source_nets_v4 source_nets_v6
-    source_nets_v4=$(ip -4 route show scope link | awk '$1 ~ /\// && $1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/ {print $1}')
-    source_nets_v4=$(printf '%s\n' $source_nets_v4 | sort -u)
+    local source_nets_v4 source_nets_v6 default_gw_v4 default_gw_v6
 
-    if is_ipv6_enabled; then
-        for dev in $(nvram get lan_ifname) $(nvram get wl0_ifname) $(nvram get wl1_ifname); do
-            [ -z "$dev" ] && continue
-            source_nets_v6="$source_nets_v6 $(ip -6 route show proto kernel dev "$dev" 2>/dev/null | awk '{print $1}')"
-        done
-        source_nets_v6=$(printf '%s\n' $source_nets_v6 | sort -u)
+    if [ "$mode" = "full" ]; then
+        source_nets_v4=$(ip -4 route show scope link | awk '$1 ~ /\// && $1 ~ /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168\.)/ {print $1}')
+        source_nets_v4=$(printf '%s\n' $source_nets_v4 | sort -u)
+
+        if is_ipv6_enabled; then
+            for dev in $(nvram get lan_ifname) $(nvram get wl0_ifname) $(nvram get wl1_ifname); do
+                [ -z "$dev" ] && continue
+                source_nets_v6="$source_nets_v6 $(ip -6 route show proto kernel dev "$dev" 2>/dev/null | awk '{print $1}')"
+            done
+            source_nets_v6=$(printf '%s\n' $source_nets_v6 | sort -u)
+        fi
+
+        default_gw_v4=$(ip -4 route show default | awk '/default/ {print $3; exit}')
+        if is_ipv6_enabled; then
+            default_gw_v6=$(ip -6 route show default | awk '/default/ {print $3; exit}')
+        fi
+
+        log_debug "TUN config: source_nets_v4=$source_nets_v4, default_gw_v4=$default_gw_v4"
+    else
+        log_info "TUN routing mode is 'interface': XRAYUI will bring the interface up and assign its addresses only."
     fi
-
-    local default_gw_v4 default_gw_v6
-    default_gw_v4=$(ip -4 route show default | awk '/default/ {print $3; exit}')
-    if is_ipv6_enabled; then
-        default_gw_v6=$(ip -6 route show default | awk '/default/ {print $3; exit}')
-    fi
-
-    log_debug "TUN config: source_nets_v4=$source_nets_v4, default_gw_v4=$default_gw_v4"
 
     while IFS= read -r inbound; do
         [ -z "$inbound" ] && continue
 
-        local tun_name tun_addresses tun_routes tag
+        local tun_name tun_addresses tun_auto_routes tag
         local _tun_vars
         if ! _tun_vars=$(echo "$inbound" | jq -r '
             "tag=" + ((.tag // "tun-inbound") | tostring | @sh) + "\n" +
@@ -66,20 +153,24 @@ configure_tun_inbounds() {
             continue
         fi
         eval "$_tun_vars"
-        tun_addresses=$(echo "$inbound" | jq -r '.settings.address // [] | .[]')
-        tun_routes=$(echo "$inbound" | jq -r '.settings.routes // [] | .[]')
+        tun_addresses=$(echo "$inbound" | jq -r '(.settings.gateway // .settings.address // []) | .[]')
+        tun_auto_routes=$(echo "$inbound" | jq -r '.settings.autoSystemRoutingTable // [] | .[]')
 
         log_info "Configuring TUN inbound: $tag (interface: $tun_name)"
 
         local wait_count=0
-        while [ ! -d "/sys/class/net/$tun_name" ] && [ $wait_count -lt 10 ]; do
+        while ! is_tun_device "$tun_name" && [ $wait_count -lt 10 ]; do
             log_debug "Waiting for TUN interface $tun_name to appear... ($wait_count/10)"
             sleep 1
             wait_count=$((wait_count + 1))
         done
 
-        if [ ! -d "/sys/class/net/$tun_name" ]; then
-            log_error "TUN interface $tun_name did not appear after 10 seconds. Skipping configuration."
+        if ! is_tun_device "$tun_name"; then
+            if [ -d "/sys/class/net/$tun_name" ]; then
+                log_error "Interface $tun_name already exists and is not a TUN device. Refusing to reconfigure it. Choose a different interface name for TUN inbound $tag."
+            else
+                log_error "TUN interface $tun_name did not appear after 10 seconds. Skipping configuration."
+            fi
             continue
         fi
 
@@ -101,9 +192,21 @@ configure_tun_inbounds() {
             fi
         done
 
+        if [ "$mode" != "full" ]; then
+            log_ok "TUN inbound $tag: interface $tun_name is up, routing left to the OS."
+            continue
+        fi
+
+        touch "$tun_routing_marker" 2>/dev/null ||
+            log_warn "Could not create $tun_routing_marker; TUN routing rules may be left behind on stop."
+
+        if [ -n "$tun_auto_routes" ]; then
+            log_warn "TUN inbound $tag declares autoSystemRoutingTable. Newer Xray-core builds install those routes in the main table themselves, which conflicts with the XRAYUI TUN routing table. Switch the TUN routing option to 'interface' to let Xray-core own the routing."
+        fi
+
         for net4 in $source_nets_v4; do
             log_debug "Adding local traffic rule for $net4"
-            ip -4 rule list | grep -q "from $net4 to $net4 lookup main" ||
+            ip -4 rule list | grep -qF "from $net4 to $net4 lookup main" ||
                 ip -4 rule add from "$net4" to "$net4" table main priority $tun_rule_priority_local
         done
 
@@ -111,14 +214,14 @@ configure_tun_inbounds() {
             for net6 in $source_nets_v6; do
                 [ -z "$net6" ] && continue
                 log_debug "Adding local IPv6 traffic rule for $net6"
-                ip -6 rule list | grep -q "from $net6 to $net6 lookup main" ||
+                ip -6 rule list | grep -qF "from $net6 to $net6 lookup main" ||
                     ip -6 rule add from "$net6" to "$net6" table main priority $tun_rule_priority_local
             done
         fi
 
         for net4 in $source_nets_v4; do
             log_debug "Adding TUN routing rule for $net4"
-            ip -4 rule list | grep -q "from $net4 lookup $tun_table" ||
+            ip -4 rule list | grep -qF "from $net4 lookup $tun_table" ||
                 ip -4 rule add from "$net4" table $tun_table priority $tun_rule_priority_tun
         done
 
@@ -126,7 +229,7 @@ configure_tun_inbounds() {
             for net6 in $source_nets_v6; do
                 [ -z "$net6" ] && continue
                 log_debug "Adding TUN IPv6 routing rule for $net6"
-                ip -6 rule list | grep -q "from $net6 lookup $tun_table" ||
+                ip -6 rule list | grep -qF "from $net6 lookup $tun_table" ||
                     ip -6 rule add from "$net6" table $tun_table priority $tun_rule_priority_tun
             done
         fi
@@ -140,22 +243,6 @@ configure_tun_inbounds() {
                 log_debug "Adding IPv6 bypass route for server $serverip via $default_gw_v6"
                 ip -6 route add "$serverip" via "$default_gw_v6" table $tun_table 2>/dev/null ||
                     ip -6 route replace "$serverip" via "$default_gw_v6" table $tun_table
-            fi
-        done
-
-        for route in $tun_routes; do
-            [ -z "$route" ] && continue
-            if is_default_route "$route"; then
-                continue
-            fi
-            if contains_ipv4 "$route" && [ -n "$default_gw_v4" ]; then
-                log_debug "Adding user bypass route $route via $default_gw_v4"
-                ip -4 route add "$route" via "$default_gw_v4" table $tun_table 2>/dev/null ||
-                    ip -4 route replace "$route" via "$default_gw_v4" table $tun_table
-            elif contains_ipv6 "$route" && is_ipv6_enabled && [ -n "$default_gw_v6" ]; then
-                log_debug "Adding user IPv6 bypass route $route via $default_gw_v6"
-                ip -6 route add "$route" via "$default_gw_v6" table $tun_table 2>/dev/null ||
-                    ip -6 route replace "$route" via "$default_gw_v6" table $tun_table
             fi
         done
 
@@ -188,29 +275,45 @@ configure_tun_inbounds() {
 cleanup_tun_inbounds() {
     log_info "Cleaning up TUN inbound routing..."
 
-    # Remove IP rules for TUN table (priorities 49 and 51)
-    for fam in -4 -6; do
-        [ "$fam" = "-6" ] && ! is_ipv6_enabled && continue
+    if [ -f "$tun_routing_marker" ]; then
+        # Remove IP rules for TUN table (priorities 49 and 51)
+        for fam in -4 -6; do
+            [ "$fam" = "-6" ] && ! is_ipv6_enabled && continue
 
-        # Remove rules with priority 49 (local traffic)
-        while ip $fam rule list | grep -q "priority $tun_rule_priority_local .* lookup main"; do
-            ip $fam rule del priority $tun_rule_priority_local lookup main 2>/dev/null || break
+            # Remove rules with priority 49 (local traffic)
+            local guard=0
+            while ip $fam rule list | grep -qE "^$tun_rule_priority_local:.*lookup main" && [ $guard -lt 64 ]; do
+                ip $fam rule del priority $tun_rule_priority_local table main 2>/dev/null || break
+                guard=$((guard + 1))
+            done
+
+            # Remove rules with priority 51 (TUN traffic)
+            guard=0
+            while ip $fam rule list | grep -q "lookup $tun_table" && [ $guard -lt 64 ]; do
+                ip $fam rule del table $tun_table 2>/dev/null || break
+                guard=$((guard + 1))
+            done
         done
 
-        # Remove rules with priority 51 (TUN traffic)
-        while ip $fam rule list | grep -q "lookup $tun_table"; do
-            ip $fam rule del table $tun_table 2>/dev/null || break
-        done
-    done
+        # Flush TUN routing table
+        ip -4 route flush table $tun_table 2>/dev/null
+        if is_ipv6_enabled; then
+            ip -6 route flush table $tun_table 2>/dev/null
+        fi
 
-    # Flush TUN routing table
-    ip -4 route flush table $tun_table 2>/dev/null
-    if is_ipv6_enabled; then
-        ip -6 route flush table $tun_table 2>/dev/null
+        rm -f "$tun_routing_marker"
+    else
+        log_debug "XRAYUI did not install TUN policy routing; leaving ip rules and table $tun_table untouched."
     fi
 
     # Remove IP addresses from TUN interfaces and bring them down
-    for tun_if in $(ip -o link show | awk -F': ' '{print $2}' | grep -E '^xray[0-9]*$'); do
+    for tun_if in $(tun_interface_names); do
+        if ! is_tun_device "$tun_if"; then
+            if [ -d "/sys/class/net/$tun_if" ]; then
+                log_warn "Skipping cleanup of $tun_if: it exists but is not a TUN device."
+            fi
+            continue
+        fi
         log_debug "Cleaning up TUN interface $tun_if"
         ip addr flush dev "$tun_if" 2>/dev/null
         ip link set "$tun_if" down 2>/dev/null

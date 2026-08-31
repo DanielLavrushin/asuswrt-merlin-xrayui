@@ -3,8 +3,13 @@
 
 subscription_curl() {
     local hwid
+    local compressed=""
     hwid=$(get_or_create_hwid)
-    curl -fsL --max-time 20 \
+    if curl --version 2>/dev/null | grep -qE 'libz|zlib/'; then
+        compressed="--compressed"
+    fi
+    # shellcheck disable=SC2086
+    curl -fsL $compressed --max-time 20 \
         -A "xrayui/$XRAYUI_VERSION" \
         -H "x-hwid: $hwid" \
         -H "x-device-os: ASUSWRT-Merlin" \
@@ -237,12 +242,17 @@ subscription_parse_vless() {
     [ -z "$sec" ] && sec="none"
     local flow
     flow=$(urldecode "$(subscription_parse_kv "$qs" "flow")")
+    local enc
+    enc=$(urldecode "$(subscription_parse_kv "$qs" "encryption")")
+    [ -z "$enc" ] && enc="none"
     local fp
     fp=$(urldecode "$(subscription_parse_kv "$qs" "fp")")
     local pbk
     pbk=$(urldecode "$(subscription_parse_kv "$qs" "pbk")")
     local sni
     sni=$(urldecode "$(subscription_parse_kv "$qs" "sni")")
+    local alpn
+    alpn=$(urldecode "$(subscription_parse_kv "$qs" "alpn")")
     local seed
     seed=$(urldecode "$(subscription_parse_kv "$qs" "seed")")
     local sid
@@ -262,8 +272,8 @@ subscription_parse_vless() {
     local network
     network=$(subscription_parse_network "$net" "$seed" "$qhost" "$mode" "$path" "$hdr")
     jq -nc --arg tag "$tag" --arg host "$host" --arg port "$port" --arg id "$uuid" \
-        --arg flow "$flow" --arg net "$net" --arg sec "$sec" \
-        --arg fp "$fp" --arg pbk "$pbk" --arg sni "$sni" --arg seed "$seed" --arg sid "$sid" --arg spx "$spx" \
+        --arg flow "$flow" --arg enc "$enc" --arg net "$net" --arg sec "$sec" \
+        --arg fp "$fp" --arg pbk "$pbk" --arg sni "$sni" --arg alpn "$alpn" --arg seed "$seed" --arg sid "$sid" --arg spx "$spx" \
         --argjson network "$network" '
     {
         protocol:"vless",
@@ -272,7 +282,7 @@ subscription_parse_vless() {
             vnext:[{
                 address:$host,
                 port:($port|tonumber),
-                users:[ if ($flow|length)>0 then {id:$id,flow:$flow,encryption:"none"} else {id:$id,encryption:"none"} end ]
+                users:[ if ($flow|length)>0 then {id:$id,flow:$flow,encryption:$enc} else {id:$id,encryption:$enc} end ]
             }]
         },
         streamSettings:(
@@ -285,6 +295,12 @@ subscription_parse_vless() {
                         shortId:$sid,
                         spiderX:$spx
                     }
+               } elif $sec=="tls" then {
+                    tlsSettings:(
+                        (if ($sni|length)>0 then {serverName:$sni} else {} end)
+                        + (if ($fp|length)>0 then {fingerprint:$fp} else {} end)
+                        + (if ($alpn|length)>0 then {alpn:($alpn|split(","))} else {} end)
+                    )
                } else {} end)
             + $network
         )
@@ -640,7 +656,7 @@ subscription_parse_hysteria() {
     }'
 }
 
-subscription_parse_kv() { printf '%s' "$1" | tr '&' '\n' | awk -F= -v k="$2" '$1==k{print $2}'; }
+subscription_parse_kv() { printf '%s' "$1" | tr '&' '\n' | awk -F= -v k="$2" '$1==k{sub(/^[^=]*=/, ""); print}'; }
 
 subscription_parse_hostport() { printf '%s' "$1" | awk -F@ '{print $NF}' | awk -F/ '{print $1}'; }
 

@@ -95,7 +95,7 @@
   import Hint from '@main/Hint.vue';
 
   export default defineComponent({
-    name: 'HttpOutbound',
+    name: 'ShadowsocksOutbound',
     components: {
       OutboundCommon,
       Hint

@@ -1,5 +1,31 @@
 # XRAYUI Changelog
 
+## [0.69.0] - 2026-09-01
+
+- ADDED: New **TUN routing** option in General Options, shown once a TUN inbound exists. **Full** works as before — the interface is set up and LAN traffic is routed through the tunnel. **Interface only** creates the interface and leaves routing untouched, for setups where another tool (such as [B4](https://docs.b4core.app/)) decides what goes into the tunnel.
+- CHANGED: TUN inbound settings now match what Xray itself offers. **IP addresses** and **Routes** were renamed, and **DNS servers**, **Outbound interface binding**, **Interface description** and **User level** were added. Existing settings are moved over automatically on the next start, after a backup.
+- FIXED: **Routes** on a TUN inbound sent those networks around the tunnel instead of into it — the opposite of what its help text described. Renamed to **Auto system routes**, it now behaves as documented.
+- REMOVED: The **Enable GSO** checkbox on TUN inbounds. Xray never offered that setting, so it had no effect.
+- FIXED: Stopping Xray left TUN routing rules behind on the router, where they accumulated over time.
+- FIXED: A TUN interface named anything other than `xray0` stayed up after Xray stopped.
+- FIXED: Restarting Xray sometimes left you without a working connection, even though the page reported success. Restarts are now reliable, and pressing Restart or Apply several times in a row no longer causes trouble. ([#384](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/pull/384))
+- FIXED: Custom headers set on an **XHTTP** transport were quietly ignored by Xray as soon as you also changed any of its performance or xmux settings. Your headers are now always applied.
+- CHANGED: The **splithttp** transport is no longer offered. Xray renamed it to **xhttp** a while ago and the two have been the same thing ever since, so it was the same transport listed twice — and picking it showed an empty settings page. If you were using it, your settings move over to **xhttp** on their own; there is nothing you need to do.
+- FIXED: The web panel was shipping its script uncompressed — about 3 MB instead of 1.7 MB.
+- CHANGED: General housekeeping under the hood: unused code removed and automatic checks added so problems get caught before a release. Nothing changes in how XRAYUI works.
+- FIXED: Subscription links from providers that always send their answer compressed came back empty, so the outbound's subscription selector had nothing to offer. Those subscriptions are now read correctly. ([#396](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/pull/396))
+- FIXED: Turning off only one of the two Xray logs (access or error) broke log rotation completely: the rotation rule was written with the word `none` in place of the disabled log's path, so the remaining log was never rotated and the router log filled up with a rotation failure every 15 minutes. Disabled logs are now simply left out, and if both are off the rotation job is removed instead. ([#389](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/389))
+- FIXED: When log rotation did fail, the router log said `logrotate failed with exit code 0`, which made no sense and hid the real cause. It now reports the real exit code together with logrotate's own explanation. ([#389](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/389))
+- ADDED: A **Fetch from server** button next to the pinned certificate box in the TLS settings. XRAYUI connects to the server, reads its certificate chain and lets you pick which certificate to pin, instead of you having to find and paste the hash by hand. ([#391](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/391))
+- FIXED: Restoring a backup did not switch to the configuration profile saved in it. The profile name was restored and shown as selected, but the page kept showing the previously active profile's rules and outbounds, and Xray kept running it — you had to switch profiles back and forth to get it right. Restoring now applies the saved profile and restarts Xray with it. ([#378](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/378))
+- FIXED: In DNS → Servers → Advanced, the routing rules you tick for a server were thrown away every time you pressed Apply, so the association never stuck. Rules attached to a DNS server are now kept, and the ticked boxes show up again when you reopen the server.
+- FIXED: Opening **Advanced** to add a new DNS server right after editing an existing one could overwrite the server you had just edited.
+- FIXED: A DNS server attached to a routing rule that was later disabled or deleted quietly turned into a catch-all resolver answering every lookup. Such a server is now left out of the generated configuration instead.
+- FIXED: Nodes that use the new **VLESS Encryption** never connected when they came from a subscription, or when their link was pasted into an outbound's **Subscription URL** field. While rebuilding the outbound on the router, XRAYUI threw the encryption key away and replaced it with `none`, so the server refused the connection. The key is now kept. ([#383](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/383))
+- FIXED: Opening a VLESS client for editing on an outbound also erased its **VLESS Encryption** key, so a node that worked right after import stopped working on the next Apply.
+- FIXED: A **TLS** node taken from a subscription lost its server name, fingerprint and ALPN. Only Reality nodes kept theirs, which left TLS nodes connecting with the wrong details or not at all. Those settings are now carried over too.
+- FIXED: Subscription links whose settings contained an `=` sign were cut short when read on the router.
+
 ## [0.68.2] - 2026-07-07
 
 - FIXED: Deleting an outbound that a balancer used as its fallback silently left the deleted tag in the generated config, quietly breaking routing. XRAYUI now warns you which balancers still use the outbound as a fallback and asks you to update them first, just like it already does for routing rules. ([#357](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/357))

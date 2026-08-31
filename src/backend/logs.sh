@@ -213,8 +213,28 @@ logrotate_setup() {
   local log_access="$(jq -r --arg default "$ADDON_LOGS_DIR/xray_access.log" '.log.access // $default' "$XRAY_CONFIG_FILE")"
   local log_error="$(jq -r --arg default "$ADDON_LOGS_DIR/xray_error.log" '.log.error // $default' "$XRAY_CONFIG_FILE")"
 
-  cat >/opt/etc/logrotate.d/xrayui <<EOF
-$log_access $log_error {
+  local log_files=""
+  local candidate=""
+  for candidate in "$log_access" "$log_error"; do
+    case "$candidate" in
+      /*) ;;
+      *) continue ;;
+    esac
+    case " $log_files " in
+      *" $candidate "*) continue ;;
+    esac
+    log_files="${log_files:+$log_files }$candidate"
+  done
+
+  if [ -z "$log_files" ]; then
+    log_warn "No xray log files are enabled - removing logrotate configuration."
+    rm -f "$LR_STANZA"
+    cron_job_delete "$CRU_LR_ID"
+    return 0
+  fi
+
+  cat >"$LR_STANZA" <<EOF
+$log_files {
         size ${logs_max_size}M
         rotate 2
         notifempty
@@ -225,8 +245,9 @@ $log_access $log_error {
 }
 EOF
 
-  chmod 0644 /opt/etc/logrotate.d/xrayui || log_error "Failed to make logrotate executable."
+  chmod 0644 "$LR_STANZA" || log_error "Failed to set permissions on $LR_STANZA."
   log_ok "Logrotate configuration created successfully."
+  cron_logrotate_add
 }
 
 logs_scribe_integration() {

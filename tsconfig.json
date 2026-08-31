@@ -5,6 +5,8 @@
     "module": "esnext",
     "moduleResolution": "node",
     "strict": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
     "jsx": "preserve",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -21,11 +23,8 @@
       "@obd/*": ["src/components/outbounds/*"],
       "@modal/*": ["src/components/modals/*"],
       "@clients/*": ["src/components/clients/*"],
-      "@translations/*": ["src/translations/*"],
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.vue", "src/**/*.d.ts"],
-  "isolatedModules": true,
-  "diagnostics": false
+  "include": ["src/**/*.ts", "src/**/*.vue", "src/**/*.d.ts"]
 }

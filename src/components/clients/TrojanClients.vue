@@ -35,26 +35,15 @@
       </tr>
     </tbody>
   </table>
-  <modal ref="modalQr" title="QR Code Modal">
-    <qrcode-vue :value="qr_content" :size="qr_size" level="H" render-as="svg" />
-  </modal>
 </template>
 
 <script lang="ts">
-  import xrayConfig from '@/modules/XrayConfig';
   import { XrayTrojanClientObject } from '@/modules/ClientsObjects';
-  import { XrayOptions } from '@/modules/Options';
   import { defineComponent, ref } from 'vue';
-  import QrcodeVue from 'qrcode.vue';
-
-  import modal from '@main/Modal.vue';
 
   export default defineComponent({
     name: 'TrojanClients',
-    components: {
-      QrcodeVue,
-      modal
-    },
+    components: {},
     methods: {},
     props: {
       clients: Array<XrayTrojanClientObject>
@@ -64,17 +53,10 @@
       const editingIndex = ref<number | null>(null);
       const clients = ref<XrayTrojanClientObject[]>(props.clients ?? []);
       const newClient = ref<XrayTrojanClientObject>(new XrayTrojanClientObject());
-      const modalQr = ref();
-      let qr_content = ref('');
 
       const resetNewForm = () => {
         newClient.value.email = '';
         newClient.value.password = '';
-      };
-
-      const showQrCode = (client: XrayTrojanClientObject) => {
-        qr_content.value = JSON.stringify(xrayConfig);
-        modalQr.value?.show();
       };
 
       const removeClient = (client: XrayTrojanClientObject) => {
@@ -106,16 +88,11 @@
       };
 
       return {
-        flows: XrayOptions.clientFlowOptions,
         clients,
-        qr_content,
-        qr_size: 500,
         newClient,
-        modalQr,
         addClient,
         editClient,
-        removeClient,
-        showQrCode
+        removeClient
       };
     }
   });

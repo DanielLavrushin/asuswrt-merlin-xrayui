@@ -24,6 +24,7 @@ apply_general_options() {
     local subscriptionLinks xray_dns_only xray_block_quic integration_scribe
     local subscription_auto_refresh subscription_auto_fallback
     local subscription_fallback_interval probe_url probe_interval subscription_filters
+    local tun_routing
     local _genopts_vars
     if ! _genopts_vars=$(echo "$genopts" | jq -r '
         "github_proxy=" + ((.github_proxy // "") | tostring | @sh) + "\n" +
@@ -54,6 +55,7 @@ apply_general_options() {
         "subscription_fallback_interval=" + ((.subscription_fallback_interval // "5") | tostring | @sh) + "\n" +
         "probe_url=" + ((.probe_url // "https://www.google.com/generate_204") | tostring | @sh) + "\n" +
         "probe_interval=" + ((.probe_interval // 30) | tostring | @sh) + "\n" +
+        "tun_routing=" + ((.tun_routing // "full") | tostring | @sh) + "\n" +
         "subscription_filters=" + (((.subscriptions.filters // []) | join("|")) | @sh)
     '); then
         log_error "Failed to parse general options payload."
@@ -117,6 +119,8 @@ apply_general_options() {
     update_xrayui_config "subscription_fallback_interval" "$subscription_fallback_interval"
     update_xrayui_config "probe_url" "$probe_url"
     update_xrayui_config "probe_interval" "$(sanitize_probe_interval "$probe_interval")"
+    [ "$tun_routing" = "interface" ] || tun_routing="full"
+    update_xrayui_config "tun_routing" "$tun_routing"
 
     update_xrayui_config "subscription_filters" "$subscription_filters"
 

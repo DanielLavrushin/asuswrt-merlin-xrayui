@@ -10,7 +10,6 @@ import {
   XrayStreamWsSettingsObject,
   XrayStreamGrpcSettingsObject,
   XrayStreamHttpUpgradeSettingsObject,
-  XrayStreamSplitHttpSettingsObject,
   XrayStreamHysteriaSettingsObject,
   XrayFinalMaskSettingsObject,
   migrateKcpMaskingForSerialization
@@ -260,7 +259,6 @@ export class XrayStreamRealitySettingsObject implements ISecurityProtocol {
 }
 
 export class XrayLogObject {
-  static readonly levelOptions = ['debug', 'info', 'warning', 'error', 'none'];
   public access?: string = 'none';
   public error?: string = 'none';
   public loglevel? = 'warning';
@@ -551,7 +549,6 @@ export class XrayRoutingObject {
 }
 
 export class XrayRoutingPolicy {
-  static readonly defaultPorts = ['443', '80', '22'];
   static readonly modes = ['redirect', 'bypass'];
   public name?: string;
   public mac?: string[] = [];
@@ -680,7 +677,6 @@ const NET_KEEP: Record<string, StreamKey[]> = {
   xhttp: ['xhttpSettings'],
   httpupgrade: ['httpupgradeSettings'],
   grpc: ['grpcSettings'],
-  splithttp: ['splithttpSettings'],
   hysteria: ['hysteriaSettings']
 };
 
@@ -700,7 +696,6 @@ export class XrayStreamSettingsObject {
   public xhttpSettings?: XrayStreamHttpSettingsObject;
   public grpcSettings?: XrayStreamGrpcSettingsObject;
   public httpupgradeSettings?: XrayStreamHttpUpgradeSettingsObject;
-  public splithttpSettings?: XrayStreamSplitHttpSettingsObject;
   public hysteriaSettings?: XrayStreamHysteriaSettingsObject;
   public finalmask?: XrayFinalMaskSettingsObject;
   public sockopt?: XraySockoptObject;

@@ -42,6 +42,7 @@ initial_response() {
     local subscriptionLinks="${subscriptionLinks:-""}"
     local xray_dns_only="${xray_dns_only:-false}"
     local xray_block_quic="${xray_block_quic:-false}"
+    local tun_routing="${tun_routing:-full}"
     local integration_scribe="${integration_scribe:-false}"
     local subscription_auto_refresh="${subscription_auto_refresh:-disabled}"
     local subscription_auto_fallback="${subscription_auto_fallback:-false}"
@@ -121,6 +122,7 @@ initial_response() {
         --arg subscriptionLinks "$subscriptionLinks" \
         --argjson xray_dns_only "$xray_dns_only" \
         --argjson xray_block_quic "$xray_block_quic" \
+        --arg tun_routing "$tun_routing" \
         --arg sar "$subscription_auto_refresh" \
         --arg saf "$subscription_auto_fallback" \
         --arg sfi "$subscription_fallback_interval" \
@@ -158,6 +160,7 @@ initial_response() {
         | .xray.subscriptions.links = (if $subscriptionLinks == "" then [] else ($subscriptionLinks | split("|")) end)
         | .xray.dns_only = $xray_dns_only
         | .xray.block_quic = $xray_block_quic
+        | .xray.tun_routing = $tun_routing
         | .xray.subscription_auto_refresh = $sar
         | .xray.subscription_auto_fallback = ($saf == "true")
         | .xray.subscription_fallback_interval = ($sfi | tonumber)
@@ -199,6 +202,7 @@ initial_response() {
             --argjson sleep_time "$xray_sleep_time" \
             --argjson dns_only "$xray_dns_only" \
             --argjson block_quic "$xray_block_quic" \
+            --arg tun_routing "$tun_routing" \
             --arg sar "$subscription_auto_refresh" \
             --arg saf "$subscription_auto_fallback" \
             --arg sfi "$subscription_fallback_interval" \
@@ -209,7 +213,7 @@ initial_response() {
             --argjson debug "$debug" \
             '{
                 geodata: { geoip_url: $geoipurl, geosite_url: $geositeurl, community: { "geoip.dat": $geoip, "geosite.dat": $geosite }, auto_update: $geo_auto_update },
-                xray: { uptime: $uptime, profile: $profile, skip_test: $skip_test, clients_check: $clients_check, check_connection: $check_connection, probe_url: $probe_url, probe_interval: $probe_interval, github_proxy: $github_proxy, dnsmasq: $dnsmasq, logs_dor: $logs_dor, logs_max_size: $logs_max_size, ipsec: $ipsec, startup_delay: $startup_delay, sleep_time: $sleep_time, dns_only: $dns_only, block_quic: $block_quic, subscription_auto_refresh: $sar, subscription_auto_fallback: ($saf == "true"), subscription_fallback_interval: ($sfi | tonumber), subscriptions: { links: [], filters: [] }, hooks: {}, ui_version: $xrayui_ver, core_version: $xray_ver, profiles: $profiles, backups: $backups, debug: $debug }
+                xray: { uptime: $uptime, profile: $profile, skip_test: $skip_test, clients_check: $clients_check, check_connection: $check_connection, probe_url: $probe_url, probe_interval: $probe_interval, github_proxy: $github_proxy, dnsmasq: $dnsmasq, logs_dor: $logs_dor, logs_max_size: $logs_max_size, ipsec: $ipsec, startup_delay: $startup_delay, sleep_time: $sleep_time, dns_only: $dns_only, block_quic: $block_quic, tun_routing: $tun_routing, subscription_auto_refresh: $sar, subscription_auto_fallback: ($saf == "true"), subscription_fallback_interval: ($sfi | tonumber), subscriptions: { links: [], filters: [] }, hooks: {}, ui_version: $xrayui_ver, core_version: $xray_ver, profiles: $profiles, backups: $backups, debug: $debug }
             }' >"$_tmp_response" 2>"$_jq_err"; then
             log_error "Error: jq -n also failed. jq error: $(cat "$_jq_err" 2>/dev/null). Writing bare minimum response."
             echo '{"xray":{"ui_version":"'"$XRAYUI_VERSION"'","core_version":"","profiles":[],"backups":[]}}' >"$_tmp_response"
@@ -352,6 +356,14 @@ rules_to_dns_domains() {
         end
       )
     )
+    | .dns.servers |= map(
+        select(
+          (type != "object")
+          or ((.rules? | length) == 0)
+          or ((.domains | length) > 0)
+          or ((.expectIPs | length) > 0)
+        )
+      )
     | if (.dns.servers | length) == 0 then del(.dns.servers) else . end
     | if (.dns | keys | length) == 0 then del(.dns) else . end
 ')"

@@ -24,7 +24,7 @@
                 <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click="manage_security" />
               </span>
               <modal ref="securityModal" :title="$t('com.StreamSettingsModal.modal_security_title')" v-if="transport.security != 'none'">
-                <component :is="securityComponent" :transport="transport" v-model:proxyType="proxyType" />
+                <component :is="securityComponent" :transport="transport" v-bind="securityProps" v-model:proxyType="proxyType" />
               </modal>
             </td>
           </tr>
@@ -78,7 +78,6 @@
     XrayStreamHttpSettingsObject,
     XrayStreamWsSettingsObject,
     XrayStreamHttpUpgradeSettingsObject,
-    XrayStreamSplitHttpSettingsObject,
     XrayStreamHysteriaSettingsObject
   } from '@/modules/TransportObjects';
   import { XrayStreamSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject } from '@/modules/CommonObjects';
@@ -97,6 +96,16 @@
 
   import SecurityTls from '../security/Tls.vue';
   import SecurityReality from '../security/Reality.vue';
+
+  interface ProxyEndpoint {
+    address?: string;
+    port?: number;
+  }
+
+  interface ProxyEndpointHolder extends ProxyEndpoint {
+    vnext?: ProxyEndpoint[];
+    servers?: ProxyEndpoint[];
+  }
 
   export default defineComponent({
     name: 'StreamSettingsModal',
@@ -117,6 +126,8 @@
       const network = ref<ITransportNetwork>();
       const proxyType = ref<string>('');
       const proxySubscribeUrl = ref<string>('');
+      const serverAddress = ref<string>('');
+      const serverPort = ref<number>(0);
 
       const isLocked = computed(() => !!proxySubscribeUrl.value?.trim());
 
@@ -162,6 +173,10 @@
         }
       });
 
+      const securityProps = computed(() =>
+        transport.value.security === 'tls' ? { serverAddress: serverAddress.value, serverPort: serverPort.value } : {}
+      );
+
       const manage_security = () => {
         securityModal.value.show();
       };
@@ -172,6 +187,11 @@
       const show = (proxy: XrayInboundObject<IProtocolType> | XrayOutboundObject<IProtocolType>, pxtype: string) => {
         proxy.streamSettings = transport.value = proxy.streamSettings ?? new XrayStreamSettingsObject();
         proxyType.value = pxtype;
+
+        const settings = (proxy as XrayOutboundObject<IProtocolType>).settings as unknown as ProxyEndpointHolder | undefined;
+        const endpoint: ProxyEndpoint | undefined = settings?.vnext?.[0] ?? settings?.servers?.[0] ?? settings;
+        serverAddress.value = pxtype === 'outbound' ? (endpoint?.address ?? '') : '';
+        serverPort.value = pxtype === 'outbound' ? (endpoint?.port ?? 0) : 0;
 
         proxySubscribeUrl.value = (proxy as XrayOutboundObject<IProtocolType>).surl ?? '';
         modal.value.show();
@@ -196,7 +216,8 @@
         manage_sockopt,
         show,
         save,
-        isLocked
+        isLocked,
+        securityProps
       };
     }
   });

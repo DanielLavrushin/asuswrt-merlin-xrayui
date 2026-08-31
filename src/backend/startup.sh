@@ -30,7 +30,7 @@ startup() {
     remount_ui
     cron_jobs_add
 
-    local xray_pid=$(get_proc "xray")
+    local xray_pid=$(get_xray_daemon_pid)
 
     if [ "$(am_settings_get xray_startup)" = "y" ]; then
         log_ok "Xray service is enabled by XRAYUI. Starting Xray service..."

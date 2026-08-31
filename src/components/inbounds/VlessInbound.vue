@@ -23,7 +23,7 @@
   import { XrayVlessInboundObject } from '@/modules/InboundObjects';
 
   export default defineComponent({
-    name: 'VmessInbound',
+    name: 'VlessInbound',
     components: {
       VlessClients,
       InboundCommon

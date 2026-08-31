@@ -4,7 +4,7 @@
 /* eslint-disable  @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable  @typescript-eslint/no-unsafe-return */
 /* eslint-disable  @typescript-eslint/no-unsafe-argument */
-/* eslint-disable  no-explicit-any */
+/* eslint-disable  @typescript-eslint/no-explicit-any */
 
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
@@ -34,7 +34,7 @@ function inlineShellImports(scriptPath, visited = new Set(), isRoot = true) {
   }
   visited.add(scriptPath);
 
-  let content = fs.readFileSync(scriptPath, 'utf8');
+  let content = fs.readFileSync(scriptPath, 'utf8').replaceAll('\r\n', '\n');
   const dirOfScript = dirname(scriptPath);
 
   const lines = content.split('\n');
@@ -65,7 +65,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     build: {
-      minify: !isProduction,
+      minify: isProduction,
       outDir: 'dist',
       rollupOptions: {
         input: 'src/App.ts',
@@ -93,7 +93,6 @@ export default defineConfig(({ mode }) => {
         '@modal': resolve(__dirname, 'src', 'components', 'modals'),
         '@clients': resolve(__dirname, 'src', 'components', 'clients'),
         '@modules': resolve(__dirname, 'src', 'modules'),
-        '@translations': resolve(__dirname, 'src', 'translations'),
         '@': resolve(__dirname, 'src')
       }
     },
@@ -113,7 +112,11 @@ export default defineConfig(({ mode }) => {
           watchAllShFiles(this, backendDir);
         },
         name: 'copy-and-sync',
-        closeBundle: () => {
+        // `writeBundle` only runs after Rollup has successfully written the bundle. `closeBundle`
+        // runs even when the build failed, which meant a broken build still rewrote dist/xrayui and
+        // dist/index.asp -- and, under VITE_WATCH, SFTP-uploaded that mismatched pair to a live router.
+        // Do not move this back to closeBundle.
+        writeBundle() {
           console.log('Vite finished building. Copying extra files...');
 
           try {
@@ -123,10 +126,11 @@ export default defineConfig(({ mode }) => {
             const distScript = join(__dirname, 'dist', 'xrayui');
             fs.writeFileSync(distScript, mergedContent, { mode: 0o755 });
 
-            fs.copyFileSync('src/App.html', 'dist/index.asp');
+            fs.copyFileSync(join(__dirname, 'src', 'App.html'), join(__dirname, 'dist', 'index.asp'));
             console.log('Files copied successfully.');
           } catch (e) {
-            console.error('File copy error:', e);
+            // Fail the build rather than leaving dist/ in a half-written state that would then be deployed.
+            this.error(`File copy error: ${e instanceof Error ? e.message : String(e)}`);
           }
 
           if (!process.env.VITE_WATCH) return;

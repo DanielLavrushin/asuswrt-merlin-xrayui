@@ -56,7 +56,8 @@ import {
   XrayVlessInboundObject,
   XrayVmessInboundObject,
   XrayWireguardInboundObject,
-  XrayHysteriaInboundObject
+  XrayHysteriaInboundObject,
+  migrateTunInbound
 } from './InboundObjects';
 import {
   XrayStreamHttpSettingsObject,
@@ -68,9 +69,10 @@ import {
   XrayStreamWsSettingsObject,
   XrayFinalMaskObject,
   XrayFinalMaskSettingsObject,
-  XrayStreamSplitHttpSettingsObject,
   maskFromCoreForm,
-  extractKcpMaskingForUi
+  extractKcpMaskingForUi,
+  migrateSplitHttpToXhttp,
+  canonicalizeXhttpHeaders
 } from './TransportObjects';
 import { XrayProtocol } from './Options';
 import * as DnsLeakProtection from './DnsLeakProtection';
@@ -146,6 +148,21 @@ export class EngineEch {
   public configList!: string;
   public serverKeys!: string;
 }
+
+export class EngineTlsPingCertificate {
+  public type!: 'leaf' | 'ca';
+  public name!: string;
+  public sha256!: string;
+}
+
+export class EngineTlsPing {
+  public target!: string;
+  public ip!: string;
+  public mode!: string;
+  public error!: string;
+  public sniError!: string;
+  public certificates: EngineTlsPingCertificate[] = [];
+}
 export class EngineClientConnectionStatus {
   public ipAddress?: string;
   public countryName?: string;
@@ -200,6 +217,7 @@ export class EngineResponseConfig {
   public reality?: EngineReality;
   public certificates?: EngineSsl;
   public ech?: EngineEch;
+  public tlsping?: EngineTlsPing;
   public integration?: {
     scribe?: {
       enabled: boolean;
@@ -230,6 +248,7 @@ export class EngineResponseConfig {
     subscriptions?: EngineSubscriptions;
     dns_only?: boolean;
     block_quic?: boolean;
+    tun_routing?: string;
     logs_scribe?: boolean;
     subscription_auto_refresh?: string;
     subscription_auto_fallback?: boolean;
@@ -256,11 +275,9 @@ export class GeodatTagRequest {
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 export enum SubmitActions {
-  configurationSetMode = 'xrayui_configuration_mode',
   configurationApply = 'xrayui_configuration_apply',
   configurationStageChunk = 'xrayui_configuration_stagechunk',
   clientsOnline = 'xrayui_connectedclients',
-  refreshConfig = 'xrayui_refreshconfig',
   serverStart = 'xrayui_serverstatus_start',
   serverRestart = 'xrayui_serverstatus_restart',
   serverStop = 'xrayui_serverstatus_stop',
@@ -280,7 +297,6 @@ export enum SubmitActions {
   geoDataCustomDeleteTag = 'xrayui_geodata_customdeletetag',
   fetchXrayLogs = 'xrayui_configuration_logs_fetch',
   updateLogsLevel = 'xrayui_configuration_logs_changeloglevel',
-  checkConnection = 'xrayui_configuration_checkconnection',
   checkConnectionStatus = 'xrayui_connectionstatus',
   initResponse = 'xrayui_configuration_initresponse',
   generalOptionsApply = 'xrayui_configuration_applygeneraloptions',
@@ -295,7 +311,8 @@ export enum SubmitActions {
   rtlsScanStop = 'xrayui_rtlsscan_stop',
   b4sniClearLogs = 'xrayui_b4sni_clearlogs',
   b4sniStart = 'xrayui_b4sni_start',
-  b4sniStop = 'xrayui_b4sni_stop'
+  b4sniStop = 'xrayui_b4sni_stop',
+  tlsPingFetch = 'xrayui_tlsping'
 }
 
 export class Engine {
@@ -585,6 +602,11 @@ export class Engine {
     return response.ech;
   }
 
+  async getTlsPing(): Promise<EngineTlsPing | undefined> {
+    const response = await this.getXrayResponse({ light: true });
+    return response.tlsping;
+  }
+
   async getClientConnectionStatus(): Promise<EngineClientConnectionStatus | undefined> {
     const response = await this.getXrayResponse();
     return response.connection_check;
@@ -756,6 +778,7 @@ export class Engine {
     deserializeArray(config.reverse?.portals, XrayReverseItem);
 
     config.inbounds.forEach((proxy, index) => {
+      migrateTunInbound(proxy);
       proxy = deserializeProxy(proxy, inboundSettingsMap, XrayInboundObject);
       proxy.streamSettings = transformStreamSettings(proxy.streamSettings);
       if (proxy.allocate) proxy.allocate = plainToInstance(XrayAllocateObject, proxy.allocate);
@@ -793,7 +816,13 @@ export class Engine {
           server = dnsServers[index];
           if (server instanceof XrayDnsServerObject && server.rules?.length) {
             server.domains = [];
-            server.rules = (server.rules as unknown as number[]).map((ruleIdx) => rulesMap.get(ruleIdx)).filter((r): r is XrayRoutingRuleObject => r !== undefined);
+            server.expectIPs = [];
+            server.rules = (server.rules as (number | XrayRoutingRuleObject)[])
+              .map((ref) => {
+                const ruleIdx = typeof ref === 'number' ? ref : ref?.idx;
+                return typeof ruleIdx === 'number' ? rulesMap.get(ruleIdx) : undefined;
+              })
+              .filter((r): r is XrayRoutingRuleObject => r !== undefined);
           }
         });
       }
@@ -840,7 +869,6 @@ const streamSettingsFieldMap: [keyof XrayStreamSettingsObject, new () => any][] 
   ['httpupgradeSettings', XrayStreamHttpUpgradeSettingsObject],
   ['grpcSettings', XrayStreamGrpcSettingsObject],
   ['xhttpSettings', XrayStreamHttpSettingsObject],
-  ['splithttpSettings', XrayStreamSplitHttpSettingsObject],
   ['hysteriaSettings', XrayStreamHysteriaSettingsObject]
 ];
 
@@ -866,6 +894,8 @@ function transformStreamSettings(streamSettings: XrayStreamSettingsObject | unde
     settings.finalmask.udp = transformMaskArray((streamSettings as any).udpmasks);
   }
 
+  migrateSplitHttpToXhttp(settings);
+  canonicalizeXhttpHeaders(settings);
   extractKcpMaskingForUi(settings);
 
   return settings;

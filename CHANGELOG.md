@@ -13,6 +13,7 @@
 - CHANGED: The **splithttp** transport is no longer offered. Xray renamed it to **xhttp** a while ago and the two have been the same thing ever since, so it was the same transport listed twice — and picking it showed an empty settings page. If you were using it, your settings move over to **xhttp** on their own; there is nothing you need to do.
 - FIXED: The web panel was shipping its script uncompressed — about 3 MB instead of 1.7 MB.
 - CHANGED: General housekeeping under the hood: unused code removed and automatic checks added so problems get caught before a release. Nothing changes in how XRAYUI works.
+- FIXED: Subscription links from providers that always send their answer compressed came back empty, so the outbound's subscription selector had nothing to offer. Those subscriptions are now read correctly. ([#396](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/pull/396))
 
 ## [0.68.2] - 2026-07-07
 

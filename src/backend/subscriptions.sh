@@ -3,8 +3,13 @@
 
 subscription_curl() {
     local hwid
+    local compressed=""
     hwid=$(get_or_create_hwid)
-    curl -fsL --compressed --max-time 20 \
+    if curl --version 2>/dev/null | grep -qE 'libz|zlib/'; then
+        compressed="--compressed"
+    fi
+    # shellcheck disable=SC2086
+    curl -fsL $compressed --max-time 20 \
         -A "xrayui/$XRAYUI_VERSION" \
         -H "x-hwid: $hwid" \
         -H "x-device-os: ASUSWRT-Merlin" \

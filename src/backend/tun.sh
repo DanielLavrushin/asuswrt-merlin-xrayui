@@ -14,6 +14,10 @@ tun_routing_mode() {
     esac
 }
 
+is_tun_device() {
+    [ -n "$1" ] && [ -e "/sys/class/net/$1/tun_flags" ]
+}
+
 tun_interface_names() {
     local configured=""
     if [ -f "$XRAY_CONFIG_FILE" ]; then
@@ -106,14 +110,18 @@ configure_tun_inbounds() {
         log_info "Configuring TUN inbound: $tag (interface: $tun_name)"
 
         local wait_count=0
-        while [ ! -d "/sys/class/net/$tun_name" ] && [ $wait_count -lt 10 ]; do
+        while ! is_tun_device "$tun_name" && [ $wait_count -lt 10 ]; do
             log_debug "Waiting for TUN interface $tun_name to appear... ($wait_count/10)"
             sleep 1
             wait_count=$((wait_count + 1))
         done
 
-        if [ ! -d "/sys/class/net/$tun_name" ]; then
-            log_error "TUN interface $tun_name did not appear after 10 seconds. Skipping configuration."
+        if ! is_tun_device "$tun_name"; then
+            if [ -d "/sys/class/net/$tun_name" ]; then
+                log_error "Interface $tun_name already exists and is not a TUN device. Refusing to reconfigure it. Choose a different interface name for TUN inbound $tag."
+            else
+                log_error "TUN interface $tun_name did not appear after 10 seconds. Skipping configuration."
+            fi
             continue
         fi
 
@@ -242,7 +250,12 @@ cleanup_tun_inbounds() {
 
     # Remove IP addresses from TUN interfaces and bring them down
     for tun_if in $(tun_interface_names); do
-        [ -d "/sys/class/net/$tun_if" ] || continue
+        if ! is_tun_device "$tun_if"; then
+            if [ -d "/sys/class/net/$tun_if" ]; then
+                log_warn "Skipping cleanup of $tun_if: it exists but is not a TUN device."
+            fi
+            continue
+        fi
         log_debug "Cleaning up TUN interface $tun_if"
         ip addr flush dev "$tun_if" 2>/dev/null
         ip link set "$tun_if" down 2>/dev/null

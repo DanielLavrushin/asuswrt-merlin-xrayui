@@ -384,6 +384,14 @@
 
       const caPinAllowed = computed(() => (transport.value.tlsSettings?.serverName ?? '').trim().length > 0);
 
+      const readTlsPing = async (): Promise<EngineTlsPing | undefined> => {
+        try {
+          return await engine.getTlsPing();
+        } catch {
+          return undefined;
+        }
+      };
+
       const fetch_fingerprints = async () => {
         if (!tlsPingTarget.value) return;
 
@@ -399,12 +407,15 @@
         }, false);
 
         window.showLoading();
-        tlsPingResult.value = await engine.getTlsPing();
-        for (let attempt = 0; attempt < 20 && !tlsPingResult.value; attempt++) {
-          await engine.delay(500);
-          tlsPingResult.value = await engine.getTlsPing();
+        try {
+          for (let attempt = 0; attempt < 20; attempt++) {
+            if (attempt > 0) await engine.delay(500);
+            tlsPingResult.value = await readTlsPing();
+            if (tlsPingResult.value) break;
+          }
+        } finally {
+          window.hideLoading();
         }
-        window.hideLoading();
 
         tlsPingSelection.value = tlsPingCertificates.value
           .filter((c) => (c.type === 'leaf' || isPinned(c.sha256)) && (c.type !== 'ca' || caPinAllowed.value))

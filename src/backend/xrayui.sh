@@ -131,7 +131,7 @@ cron)
         ;;
     *) ;;
     esac
-    exit 0
+    exit $?
     ;;
 service_event)
     case "$2" in

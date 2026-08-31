@@ -410,5 +410,28 @@ describe('Tls.vue', () => {
       expect(vmOf(wrapper).caPinAllowed).toBe(true);
       expect(vmOf(wrapper).tlsPingSelection.sort()).toEqual([leaf.sha256, ca.sha256].sort());
     });
+
+    it('rides out a transient read failure and still hides the overlay', async () => {
+      setCoreVersion('26.6.1');
+      (engine.getTlsPing as jest.Mock)
+        .mockRejectedValueOnce(new Error('truncated json'))
+        .mockResolvedValueOnce({
+          target: 'example.com:443',
+          ip: '',
+          mode: 'sni',
+          error: '',
+          certificates: [leaf]
+        });
+
+      const transport = new XrayStreamSettingsObject();
+      transport.tlsSettings = new XrayStreamTlsSettingsObject();
+      transport.tlsSettings.serverName = 'example.com';
+      const wrapper = mountComponent('outbound', transport);
+
+      await expect(vmOf(wrapper).fetch_fingerprints()).resolves.toBeUndefined();
+
+      expect(vmOf(wrapper).tlsPingSelection).toEqual([leaf.sha256]);
+      expect(window.hideLoading).toHaveBeenCalled();
+    });
   });
 });

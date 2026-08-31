@@ -359,7 +359,22 @@
       "hint_ech_server_keys": "Nur Server. Wird verwendet, um Encrypted Client Hello auf dem Server zu aktivieren. Generieren mit <code>xray tls ech --serverName example.com</code>. Nach der Konfiguration akzeptiert der Server weiterhin normale Nicht-ECH-Verbindungen.",
       "label_ech_server_name": "ECH-Servername",
       "hint_ech_server_name": "Der Domainname für die ECH-Schlüsselgenerierung. Geben Sie die Domain Ihres Servers ein, bevor Sie oben auf Regenerieren klicken.",
-      "hint_ech_server_name_desc": "erforderlich für ECH-Schlüsselgenerierung"
+      "hint_ech_server_name_desc": "erforderlich für ECH-Schlüsselgenerierung",
+      "label_fetch_fingerprints": "Vom Server abrufen",
+      "label_fetch_certificate": "Zertifikat",
+      "label_fetch_leaf": "Blatt",
+      "label_fetch_ca": "CA",
+      "label_fetch_apply": "Auswahl hinzufügen",
+      "modal_fetch_title": "Zertifikat-Fingerabdrücke des Servers",
+      "modal_fetch_desc": "Der Router hat mit dem Server einen Handshake durchgeführt und dessen Zertifikatskette ausgelesen. Das Anheften des <b>Blatt</b>-Zertifikats ist eine exakte Übereinstimmung &mdash; es bricht, sobald der Server erneuert. Das Anheften einer <b>CA</b> übersteht Erneuerungen.",
+      "hint_fetch_nosni": "Der Handshake gelang nur <b>ohne SNI</b> &mdash; dies sind die Zertifikate, die ohne übermittelten Servernamen zurückkommen. Erwartet dein Server einen, trage oben <b>Server name</b> ein und prüfe erneut.",
+      "hint_fetch_no_target": "zuerst Servernamen oder Adresse angeben",
+      "error_fetch_failed": "Das Serverzertifikat konnte nicht gelesen werden. Details im Protokoll.",
+      "label_fetch_target": "Geprüft",
+      "label_fetch_already_pinned": "bereits angeheftet",
+      "hint_fetch_ca_needs_sni": "Das Anheften einer <b>CA</b> benötigt einen <b>Server name</b> &mdash; Xray-core lehnt einen CA-Pin ab, wenn er leer ist.",
+      "label_fetch_chain": "Zertifikatskette des Servers",
+      "hint_fetch_sni_failed": "Der Handshake mit dem angegebenen <b>Server name</b> schlug fehl, daher stammen diese Zertifikate aus der Verbindung <b>ohne SNI</b> &mdash; möglicherweise ein unbeteiligtes Standardzertifikat. Prüfe den Servernamen, bevor du unten etwas anheftest."
     },
     "DownloadSettings": {
       "modal_title": "Download-Einstellungen",

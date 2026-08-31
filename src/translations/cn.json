@@ -389,7 +389,22 @@
       "hint_ech_server_keys": "仅服务端。用于在服务器上启用加密客户端Hello。使用 <code>xray tls ech --serverName example.com</code> 生成。配置后服务器仍然接受普通的非 ECH 连接。",
       "label_ech_server_name": "ECH 服务器名称",
       "hint_ech_server_name": "用于生成 ECH 密钥的域名。在点击上方的重新生成按钮之前，请输入您服务器的域名。",
-      "hint_ech_server_name_desc": "ECH 密钥生成所需"
+      "hint_ech_server_name_desc": "ECH 密钥生成所需",
+      "label_fetch_fingerprints": "从服务器获取",
+      "label_fetch_certificate": "证书",
+      "label_fetch_leaf": "叶证书",
+      "label_fetch_ca": "CA",
+      "label_fetch_apply": "添加所选",
+      "modal_fetch_title": "服务器证书指纹",
+      "modal_fetch_desc": "路由器已与服务器完成握手并读取了其证书链。固定<b>叶证书</b>为精确匹配 &mdash; 服务器换证后立即失效；固定 <b>CA</b> 证书则可跨续期继续有效。",
+      "hint_fetch_nosni": "仅在<b>不发送 SNI</b> 时握手成功 —— 这些是未收到服务器名称时返回的证书。如果你的服务器需要 SNI，请在上方填写<b>服务器名称</b>后重新探测。",
+      "hint_fetch_no_target": "请先填写服务器名称或地址",
+      "error_fetch_failed": "无法读取服务器证书，详情请查看日志。",
+      "label_fetch_target": "已探测",
+      "label_fetch_already_pinned": "已固定",
+      "hint_fetch_ca_needs_sni": "固定 <b>CA</b> 证书需要<b>服务器名称</b> —— 若留空，Xray-core 会拒绝该固定。",
+      "label_fetch_chain": "服务器证书链",
+      "hint_fetch_sni_failed": "使用所填<b>服务器名称</b>的握手失败，因此下列证书来自<b>不发送 SNI</b> 的连接 —— 很可能是无关的默认证书。固定之前请先核对服务器名称。"
     },
     "DownloadSettings": {
       "modal_title": "下行设置",

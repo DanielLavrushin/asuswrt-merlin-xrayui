@@ -1,6 +1,6 @@
 # XRAYUI Changelog
 
-## [0.69.0] - 2026-xx-xx
+## [0.69.0] - 2026-09-01
 
 - ADDED: New **TUN routing** option in General Options, shown once a TUN inbound exists. **Full** works as before — the interface is set up and LAN traffic is routed through the tunnel. **Interface only** creates the interface and leaves routing untouched, for setups where another tool (such as [B4](https://docs.b4core.app/)) decides what goes into the tunnel.
 - CHANGED: TUN inbound settings now match what Xray itself offers. **IP addresses** and **Routes** were renamed, and **DNS servers**, **Outbound interface binding**, **Interface description** and **User level** were added. Existing settings are moved over automatically on the next start, after a backup.
@@ -14,9 +14,17 @@
 - FIXED: The web panel was shipping its script uncompressed — about 3 MB instead of 1.7 MB.
 - CHANGED: General housekeeping under the hood: unused code removed and automatic checks added so problems get caught before a release. Nothing changes in how XRAYUI works.
 - FIXED: Subscription links from providers that always send their answer compressed came back empty, so the outbound's subscription selector had nothing to offer. Those subscriptions are now read correctly. ([#396](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/pull/396))
+- FIXED: Turning off only one of the two Xray logs (access or error) broke log rotation completely: the rotation rule was written with the word `none` in place of the disabled log's path, so the remaining log was never rotated and the router log filled up with a rotation failure every 15 minutes. Disabled logs are now simply left out, and if both are off the rotation job is removed instead. ([#389](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/389))
+- FIXED: When log rotation did fail, the router log said `logrotate failed with exit code 0`, which made no sense and hid the real cause. It now reports the real exit code together with logrotate's own explanation. ([#389](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/389))
+- ADDED: A **Fetch from server** button next to the pinned certificate box in the TLS settings. XRAYUI connects to the server, reads its certificate chain and lets you pick which certificate to pin, instead of you having to find and paste the hash by hand. ([#391](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/391))
+- FIXED: Restoring a backup did not switch to the configuration profile saved in it. The profile name was restored and shown as selected, but the page kept showing the previously active profile's rules and outbounds, and Xray kept running it — you had to switch profiles back and forth to get it right. Restoring now applies the saved profile and restarts Xray with it. ([#378](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/378))
 - FIXED: In DNS → Servers → Advanced, the routing rules you tick for a server were thrown away every time you pressed Apply, so the association never stuck. Rules attached to a DNS server are now kept, and the ticked boxes show up again when you reopen the server.
 - FIXED: Opening **Advanced** to add a new DNS server right after editing an existing one could overwrite the server you had just edited.
 - FIXED: A DNS server attached to a routing rule that was later disabled or deleted quietly turned into a catch-all resolver answering every lookup. Such a server is now left out of the generated configuration instead.
+- FIXED: Nodes that use the new **VLESS Encryption** never connected when they came from a subscription, or when their link was pasted into an outbound's **Subscription URL** field. While rebuilding the outbound on the router, XRAYUI threw the encryption key away and replaced it with `none`, so the server refused the connection. The key is now kept. ([#383](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/383))
+- FIXED: Opening a VLESS client for editing on an outbound also erased its **VLESS Encryption** key, so a node that worked right after import stopped working on the next Apply.
+- FIXED: A **TLS** node taken from a subscription lost its server name, fingerprint and ALPN. Only Reality nodes kept theirs, which left TLS nodes connecting with the wrong details or not at all. Those settings are now carried over too.
+- FIXED: Subscription links whose settings contained an `=` sign were cut short when read on the router.
 
 ## [0.68.2] - 2026-07-07
 

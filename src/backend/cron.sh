@@ -55,15 +55,22 @@ cron_logrotate_run() {
     }
     if [ ! -x "$LR_BIN" ]; then
         log_error "logrotate binary not found – aborting rotation."
-        exit 1
+        return 1
     fi
 
-    "$LR_BIN" -s "$LR_STATUS" "$LR_CONF" || {
-        log_debug "logrotate: $LR_BIN -s $LR_STATUS $LR_CONF"
-        log_error "logrotate failed with exit code $?"
-        exit 1
-    }
+    local lr_output
+    local lr_rc
+    lr_output="$("$LR_BIN" -s "$LR_STATUS" "$LR_CONF" 2>&1)"
+    lr_rc=$?
+    lr_output="$(printf '%s' "$lr_output" | tr '\n' ' ')"
 
+    if [ "$lr_rc" -ne 0 ]; then
+        log_error "logrotate failed with exit code $lr_rc: $LR_BIN -s $LR_STATUS $LR_CONF"
+        [ -n "$lr_output" ] && log_error "logrotate output: $lr_output"
+        return 1
+    fi
+
+    [ -n "$lr_output" ] && log_debug "logrotate output: $lr_output"
     log_ok "logrotate completed successfully"
 }
 

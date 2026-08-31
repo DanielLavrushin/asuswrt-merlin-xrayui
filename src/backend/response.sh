@@ -356,6 +356,14 @@ rules_to_dns_domains() {
         end
       )
     )
+    | .dns.servers |= map(
+        select(
+          (type != "object")
+          or ((.rules? | length) == 0)
+          or ((.domains | length) > 0)
+          or ((.expectIPs | length) > 0)
+        )
+      )
     | if (.dns.servers | length) == 0 then del(.dns.servers) else . end
     | if (.dns | keys | length) == 0 then del(.dns) else . end
 ')"

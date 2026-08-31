@@ -18,6 +18,9 @@
 - FIXED: When log rotation did fail, the router log said `logrotate failed with exit code 0`, which made no sense and hid the real cause. It now reports the real exit code together with logrotate's own explanation. ([#389](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/389))
 - ADDED: A **Fetch from server** button next to the pinned certificate box in the TLS settings. XRAYUI connects to the server, reads its certificate chain and lets you pick which certificate to pin, instead of you having to find and paste the hash by hand. ([#391](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/391))
 - FIXED: Restoring a backup did not switch to the configuration profile saved in it. The profile name was restored and shown as selected, but the page kept showing the previously active profile's rules and outbounds, and Xray kept running it — you had to switch profiles back and forth to get it right. Restoring now applies the saved profile and restarts Xray with it. ([#378](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/378))
+- FIXED: In DNS → Servers → Advanced, the routing rules you tick for a server were thrown away every time you pressed Apply, so the association never stuck. Rules attached to a DNS server are now kept, and the ticked boxes show up again when you reopen the server.
+- FIXED: Opening **Advanced** to add a new DNS server right after editing an existing one could overwrite the server you had just edited.
+- FIXED: A DNS server attached to a routing rule that was later disabled or deleted quietly turned into a catch-all resolver answering every lookup. Such a server is now left out of the generated configuration instead.
 
 ## [0.68.2] - 2026-07-07
 

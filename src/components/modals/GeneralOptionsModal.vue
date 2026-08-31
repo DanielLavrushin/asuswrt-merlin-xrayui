@@ -96,6 +96,18 @@
                 <label class="go-option"><input type="checkbox" v-model="options.clients_check" /></label>
               </td>
             </tr>
+            <tr v-if="hasTunInbound()">
+              <th>
+                {{ $t('com.GeneralOptionsModal.label_tun_routing') }}
+                <hint v-html="$t('com.GeneralOptionsModal.hint_tun_routing')"></hint>
+              </th>
+              <td>
+                <select class="input_option" v-model="options.tun_routing">
+                  <option value="full">{{ $t('com.GeneralOptionsModal.tun_routing_full') }}</option>
+                  <option value="interface">{{ $t('com.GeneralOptionsModal.tun_routing_interface') }}</option>
+                </select>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -510,6 +522,10 @@
   const validateCheckConOption = () => {
     const outbound = props.config.outbounds?.find((o) => o.protocol !== XrayProtocol.FREEDOM && o.protocol !== XrayProtocol.BLACKHOLE);
     return outbound !== undefined;
+  };
+
+  const hasTunInbound = () => {
+    return props.config.inbounds?.some((i) => i.protocol === XrayProtocol.TUN && !i.isSystem?.()) ?? false;
   };
 
   const fetch_subscription_protocols = async () => {

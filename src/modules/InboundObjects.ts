@@ -12,6 +12,8 @@ import {
   XrayHysteriaClientObject
 } from './ClientsObjects';
 import { plainToInstance } from 'class-transformer';
+import { XrayProtocol } from './Options';
+import { coreSupports, tunUsesUppercaseMtu } from './CoreVersion';
 
 export class XrayInboundObject<TProxy extends IProtocolType> {
   public protocol!: string;
@@ -196,19 +198,70 @@ export class XrayHysteriaInboundObject implements IProtocolType {
   };
 }
 
+const tunList = (value?: string[]): string[] | undefined => (value && value.length > 0 ? value : undefined);
+
 export class XrayTunInboundObject implements IProtocolType {
   public name? = 'xray0';
+  public desc?: string;
   public mtu? = 1500;
-  public gso? = false;
-  public address?: string[];
-  public routes?: string[];
+  public gateway?: string[];
+  public dns?: string[];
+  public userLevel?: number;
+  public autoSystemRoutingTable?: string[];
+  public autoOutboundsInterface?: string;
+
+  stripUnsupported = (): void => {
+    if (!coreSupports('tunDesc')) this.desc = undefined;
+    if (!coreSupports('tunGateway')) {
+      this.dns = undefined;
+      this.autoSystemRoutingTable = undefined;
+      this.autoOutboundsInterface = undefined;
+    }
+    if (this.mtu !== undefined && tunUsesUppercaseMtu()) {
+      (this as unknown as Record<string, unknown>).MTU = this.mtu;
+      this.mtu = undefined;
+    }
+  };
 
   normalize = (): this | undefined => {
     this.name = this.name === '' ? undefined : this.name;
+    this.desc = this.desc === '' ? undefined : this.desc;
     this.mtu = this.mtu && this.mtu > 0 && this.mtu !== 1500 ? this.mtu : undefined;
-    this.gso = this.gso ? this.gso : undefined;
-    this.address = this.address && this.address.length > 0 ? this.address : undefined;
-    this.routes = this.routes && this.routes.length > 0 ? this.routes : undefined;
+    this.userLevel = this.userLevel ? this.userLevel : undefined;
+    this.autoOutboundsInterface = this.autoOutboundsInterface === '' ? undefined : this.autoOutboundsInterface;
+    this.gateway = tunList(this.gateway);
+    this.dns = tunList(this.dns);
+    this.autoSystemRoutingTable = tunList(this.autoSystemRoutingTable);
+    this.stripUnsupported();
     return isObjectEmpty(this) ? undefined : this;
   };
+}
+
+interface LegacyTunSettings {
+  gso?: boolean;
+  address?: string[];
+  routes?: string[];
+}
+
+export function migrateTunInbound(inbound: { protocol?: string; settings?: unknown }): void {
+  if (inbound.protocol !== XrayProtocol.TUN || !inbound.settings) return;
+
+  const settings = inbound.settings as XrayTunInboundObject & LegacyTunSettings & { MTU?: number };
+  const legacy = settings as LegacyTunSettings;
+
+  if (settings.MTU !== undefined) {
+    settings.mtu = settings.MTU;
+    delete settings.MTU;
+  }
+
+  if (legacy.address?.length && !settings.gateway?.length) {
+    settings.gateway = legacy.address;
+  }
+  if (legacy.routes?.length && !settings.autoSystemRoutingTable?.length) {
+    settings.autoSystemRoutingTable = legacy.routes;
+  }
+
+  delete legacy.address;
+  delete legacy.routes;
+  delete legacy.gso;
 }

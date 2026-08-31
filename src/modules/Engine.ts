@@ -56,7 +56,8 @@ import {
   XrayVlessInboundObject,
   XrayVmessInboundObject,
   XrayWireguardInboundObject,
-  XrayHysteriaInboundObject
+  XrayHysteriaInboundObject,
+  migrateTunInbound
 } from './InboundObjects';
 import {
   XrayStreamHttpSettingsObject,
@@ -231,6 +232,7 @@ export class EngineResponseConfig {
     subscriptions?: EngineSubscriptions;
     dns_only?: boolean;
     block_quic?: boolean;
+    tun_routing?: string;
     logs_scribe?: boolean;
     subscription_auto_refresh?: string;
     subscription_auto_fallback?: boolean;
@@ -754,6 +756,7 @@ export class Engine {
     deserializeArray(config.reverse?.portals, XrayReverseItem);
 
     config.inbounds.forEach((proxy, index) => {
+      migrateTunInbound(proxy);
       proxy = deserializeProxy(proxy, inboundSettingsMap, XrayInboundObject);
       proxy.streamSettings = transformStreamSettings(proxy.streamSettings);
       if (proxy.allocate) proxy.allocate = plainToInstance(XrayAllocateObject, proxy.allocate);

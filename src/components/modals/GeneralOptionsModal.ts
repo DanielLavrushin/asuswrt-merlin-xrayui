@@ -22,6 +22,7 @@ export default function useGeneralOptions(cfg: XrayObject, ui: Ref<EngineRespons
     subscription_fallback_interval: ui.value?.xray?.subscription_fallback_interval ?? 5,
     probe_url: ui.value?.xray?.probe_url ?? 'https://www.google.com/generate_204',
     probe_interval: ui.value?.xray?.probe_interval ?? 30,
+    tun_routing: ui.value?.xray?.tun_routing ?? 'full',
     logs_scribe: ui.value?.integration?.scribe?.enabled ?? false,
     normalise: function () {
       this.subscriptions.protocols = undefined;

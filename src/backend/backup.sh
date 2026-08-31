@@ -142,10 +142,22 @@ backup_restore_configuration() {
         return 1
     fi
 
+    unset profile
+    load_xrayui_config
+
+    if [ ! -f "$XRAY_CONFIG_FILE" ]; then
+        log_warn "Restored profile $XRAY_CONFIG_FILE does not exist. Generating default configuration."
+        generate_xray_config
+    fi
+
+    ln -s -f "$XRAY_CONFIG_FILE" "$ADDON_WEB_DIR/xray-config.json" || log_error "Failed to create symlink for xray-config.json."
+
     backup_remount_to_web
 
     log_ok "Restore completed successfully from $backup_file."
 
+    update_loading_progress "Applying restored profile $XRAY_CONFIG_FILE..."
+    restart
 }
 
 backup_xray_config() {

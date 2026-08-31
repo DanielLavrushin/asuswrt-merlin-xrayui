@@ -17,6 +17,7 @@
 - FIXED: Turning off only one of the two Xray logs (access or error) broke log rotation completely: the rotation rule was written with the word `none` in place of the disabled log's path, so the remaining log was never rotated and the router log filled up with a rotation failure every 15 minutes. Disabled logs are now simply left out, and if both are off the rotation job is removed instead. ([#389](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/389))
 - FIXED: When log rotation did fail, the router log said `logrotate failed with exit code 0`, which made no sense and hid the real cause. It now reports the real exit code together with logrotate's own explanation. ([#389](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/389))
 - ADDED: A **Fetch from server** button next to the pinned certificate box in the TLS settings. XRAYUI connects to the server, reads its certificate chain and lets you pick which certificate to pin, instead of you having to find and paste the hash by hand. ([#391](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/391))
+- FIXED: Restoring a backup did not switch to the configuration profile saved in it. The profile name was restored and shown as selected, but the page kept showing the previously active profile's rules and outbounds, and Xray kept running it — you had to switch profiles back and forth to get it right. Restoring now applies the saved profile and restarts Xray with it. ([#378](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/378))
 
 ## [0.68.2] - 2026-07-07
 

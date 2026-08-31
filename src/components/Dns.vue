@@ -79,10 +79,9 @@
         <td>
           <input
             type="text"
-            maxlength="15"
             class="input_20_table"
             v-model="dns.clientIp"
-            onkeypress="return validator.isIPAddr(this, event);"
+            @keypress="filterIPAddressKey"
             autocomplete="off"
             autocorrect="off"
             autocapitalize="off"
@@ -148,6 +147,7 @@
   import DnsServersModal from '@modal/DnsServersModal.vue';
   import FakeDnsModal from '@modal/FakeDnsModal.vue';
   import Hint from '@main/Hint.vue';
+  import { filterIPAddressKey } from '@/modules/validators';
 
   export default defineComponent({
     name: 'Dns',
@@ -225,7 +225,8 @@
         fakeDns,
         manage_hosts,
         manage_servers,
-        manage_fakes
+        manage_fakes,
+        filterIPAddressKey
       };
     }
   });

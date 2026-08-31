@@ -39,3 +39,10 @@ export const filterIPAddressKey = (event: KeyboardEvent): void => {
     event.preventDefault();
   }
 };
+
+export const normalizeIPAddress = (value: string | undefined): string | undefined => {
+  if (value === undefined || value === null) return value ?? undefined;
+  const trimmed = String(value).trim();
+  const unwrapped = /^\[.*\]$/.test(trimmed) ? trimmed.slice(1, -1).trim() : trimmed;
+  return unwrapped;
+};

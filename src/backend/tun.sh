@@ -7,6 +7,8 @@ tun_table=250
 tun_rule_priority_local=49 # Local traffic stays local
 tun_rule_priority_tun=51   # Other LAN traffic goes to TUN table
 
+tun_routing_marker="/tmp/xrayui-tun-routing-owned"
+
 tun_routing_mode() {
     case "${tun_routing:-full}" in
     interface) echo "interface" ;;
@@ -34,6 +36,53 @@ tun_interface_names() {
     existing=$(ip -o link show 2>/dev/null | awk -F': ' '{print $2}' | grep -E '^xray[0-9]*$')
 
     printf '%s\n%s\n' "$configured" "$existing" | sed '/^$/d' | sort -u
+}
+
+migrate_tun_inbounds_config() {
+    [ -f "$XRAY_CONFIG_FILE" ] || return 0
+
+    jq -e '
+        (.inbounds // [])
+        | map(select(.protocol == "tun") | .settings // {})
+        | map(select(has("address") or has("routes") or has("gso") or has("MTU")))
+        | length > 0
+    ' "$XRAY_CONFIG_FILE" >/dev/null 2>&1 || return 0
+
+    log_info "Migrating legacy TUN inbound settings to the Xray-core field names..."
+
+    local migrated="/tmp/xrayui-tun-migrate.$$"
+    if ! jq '
+        if (.inbounds | type) == "array" then
+            .inbounds |= map(
+                if .protocol == "tun" and ((.settings | type) == "object") then
+                    .settings |= (
+                        (if has("MTU") and (has("mtu") | not) then .mtu = .MTU else . end)
+                        | (if has("address") and ((.gateway // []) | length) == 0 then .gateway = .address else . end)
+                        | (if has("routes") and ((.autoSystemRoutingTable // []) | length) == 0 then .autoSystemRoutingTable = .routes else . end)
+                        | del(.MTU, .address, .routes, .gso)
+                    )
+                else . end
+            )
+        else . end
+    ' "$XRAY_CONFIG_FILE" >"$migrated" 2>/dev/null; then
+        log_error "Failed to migrate legacy TUN inbound settings. Leaving the configuration untouched."
+        rm -f "$migrated"
+        return 1
+    fi
+
+    if [ ! -s "$migrated" ]; then
+        log_error "Migrated TUN configuration came out empty. Leaving the configuration untouched."
+        rm -f "$migrated"
+        return 1
+    fi
+
+    backup_xray_config
+    if cp -f "$migrated" "$XRAY_CONFIG_FILE"; then
+        log_ok "Legacy TUN inbound settings migrated: address -> gateway, routes -> autoSystemRoutingTable, gso removed."
+    else
+        log_error "Failed to write the migrated configuration to $XRAY_CONFIG_FILE."
+    fi
+    rm -f "$migrated"
 }
 
 configure_tun_inbounds() {
@@ -148,6 +197,9 @@ configure_tun_inbounds() {
             continue
         fi
 
+        touch "$tun_routing_marker" 2>/dev/null ||
+            log_warn "Could not create $tun_routing_marker; TUN routing rules may be left behind on stop."
+
         if [ -n "$tun_auto_routes" ]; then
             log_warn "TUN inbound $tag declares autoSystemRoutingTable. Newer Xray-core builds install those routes in the main table themselves, which conflicts with the XRAYUI TUN routing table. Switch the TUN routing option to 'interface' to let Xray-core own the routing."
         fi
@@ -223,29 +275,35 @@ configure_tun_inbounds() {
 cleanup_tun_inbounds() {
     log_info "Cleaning up TUN inbound routing..."
 
-    # Remove IP rules for TUN table (priorities 49 and 51)
-    for fam in -4 -6; do
-        [ "$fam" = "-6" ] && ! is_ipv6_enabled && continue
+    if [ -f "$tun_routing_marker" ]; then
+        # Remove IP rules for TUN table (priorities 49 and 51)
+        for fam in -4 -6; do
+            [ "$fam" = "-6" ] && ! is_ipv6_enabled && continue
 
-        # Remove rules with priority 49 (local traffic)
-        local guard=0
-        while ip $fam rule list | grep -qE "^$tun_rule_priority_local:.*lookup main" && [ $guard -lt 64 ]; do
-            ip $fam rule del priority $tun_rule_priority_local table main 2>/dev/null || break
-            guard=$((guard + 1))
+            # Remove rules with priority 49 (local traffic)
+            local guard=0
+            while ip $fam rule list | grep -qE "^$tun_rule_priority_local:.*lookup main" && [ $guard -lt 64 ]; do
+                ip $fam rule del priority $tun_rule_priority_local table main 2>/dev/null || break
+                guard=$((guard + 1))
+            done
+
+            # Remove rules with priority 51 (TUN traffic)
+            guard=0
+            while ip $fam rule list | grep -q "lookup $tun_table" && [ $guard -lt 64 ]; do
+                ip $fam rule del table $tun_table 2>/dev/null || break
+                guard=$((guard + 1))
+            done
         done
 
-        # Remove rules with priority 51 (TUN traffic)
-        guard=0
-        while ip $fam rule list | grep -q "lookup $tun_table" && [ $guard -lt 64 ]; do
-            ip $fam rule del table $tun_table 2>/dev/null || break
-            guard=$((guard + 1))
-        done
-    done
+        # Flush TUN routing table
+        ip -4 route flush table $tun_table 2>/dev/null
+        if is_ipv6_enabled; then
+            ip -6 route flush table $tun_table 2>/dev/null
+        fi
 
-    # Flush TUN routing table
-    ip -4 route flush table $tun_table 2>/dev/null
-    if is_ipv6_enabled; then
-        ip -6 route flush table $tun_table 2>/dev/null
+        rm -f "$tun_routing_marker"
+    else
+        log_debug "XRAYUI did not install TUN policy routing; leaving ip rules and table $tun_table untouched."
     fi
 
     # Remove IP addresses from TUN interfaces and bring them down

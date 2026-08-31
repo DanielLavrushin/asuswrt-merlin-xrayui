@@ -38,7 +38,7 @@
             <hint> When `UDP` is enabled, Xray needs to know the local IP address. The default value is `127.0.0.1`. </hint>
           </th>
           <td>
-            <input type="text" maxlength="15" class="input_20_table" v-model="inbound.settings.ip" onkeypress="return validator.isIPAddr(this, event);" autocomplete="off" autocorrect="off" autocapitalize="off" />
+            <input type="text" class="input_20_table" v-model="inbound.settings.ip" @keypress="filterIPAddressKey" autocomplete="off" autocorrect="off" autocapitalize="off" />
             <span class="hint-color">default: 127.0.0.1</span>
           </td>
         </tr>
@@ -56,6 +56,7 @@
   import { XrayInboundObject } from '@/modules/InboundObjects';
   import { XraySocksInboundObject } from '@/modules/InboundObjects';
   import Hint from '@main/Hint.vue';
+  import { filterIPAddressKey } from '@/modules/validators';
 
   export default defineComponent({
     name: 'SocksInbound',
@@ -71,7 +72,8 @@
       const inbound = ref<XrayInboundObject<XraySocksInboundObject>>(props.inbound ?? new XrayInboundObject<XraySocksInboundObject>(XrayProtocol.SOCKS, new XraySocksInboundObject()));
       return {
         inbound,
-        authentications: ['noauth', 'password']
+        authentications: ['noauth', 'password'],
+        filterIPAddressKey
       };
     }
   });

@@ -2,6 +2,7 @@ import { XrayHttpClientObject, XraySocksClientObject, XrayVlessClientObject, Xra
 import { ISecurityProtocol, IXrayServer } from './Interfaces';
 import XrayOptions, { XrayProtocol, XrayProtocolMode } from './Options';
 import { coreSupports, coreAtLeast } from './CoreVersion';
+import { normalizeIPAddress } from './validators';
 import {
   XrayStreamHttpSettingsObject,
   XrayStreamKcpSettingsObject,
@@ -287,6 +288,7 @@ export class XrayDnsObject {
   public disableFallbackIfMatch?: boolean;
 
   public normalize(): this | undefined {
+    this.clientIp = normalizeIPAddress(this.clientIp);
     this.clientIp = this.clientIp == '' ? undefined : this.clientIp;
     this.queryStrategy = this.queryStrategy == '' || this.queryStrategy == 'UseIP' ? undefined : this.queryStrategy;
     this.disableCache = !this.disableCache ? undefined : this.disableCache;

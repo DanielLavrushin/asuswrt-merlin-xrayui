@@ -12,6 +12,7 @@ import {
   XrayHysteriaClientObject
 } from './ClientsObjects';
 import { plainToInstance } from 'class-transformer';
+import { normalizeIPAddress } from './validators';
 import { XrayProtocol } from './Options';
 import { coreSupports, tunUsesUppercaseMtu } from './CoreVersion';
 
@@ -39,6 +40,7 @@ export class XrayInboundObject<TProxy extends IProtocolType> {
 
   normalize = (): this | undefined => {
     this.tag = this.tag === '' ? undefined : this.tag;
+    this.listen = normalizeIPAddress(this.listen);
     this.listen = this.listen === '' || this.listen === '0.0.0.0' ? undefined : this.listen;
 
     if (this.streamSettings) {
@@ -162,6 +164,7 @@ export class XraySocksInboundObject implements IProtocolType {
   public accounts?: XraySocksClientObject[] = [];
   public udp? = false;
   normalize = (): this | undefined => {
+    this.ip = normalizeIPAddress(this.ip);
     this.ip = !this.ip || this.ip === '127.0.0.1' ? undefined : this.ip;
     this.udp = this.udp ? this.udp : undefined;
     this.auth = this.auth === 'noauth' ? undefined : this.auth;

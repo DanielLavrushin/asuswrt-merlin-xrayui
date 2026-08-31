@@ -18,6 +18,7 @@ import ./certificates.sh
 import ./reality.sh
 import ./wireguard.sh
 import ./ech.sh
+import ./tlsping.sh
 import ./general_opts.sh
 import ./response.sh
 import ./subscriptions.sh
@@ -219,6 +220,10 @@ service_event)
             ech_generate_keys
             ;;
         esac
+        ;;
+    tlsping)
+        tlsping_fetch
+        exit 0
         ;;
     configuration)
         case "$3" in

@@ -148,6 +148,20 @@ export class EngineEch {
   public configList!: string;
   public serverKeys!: string;
 }
+
+export class EngineTlsPingCertificate {
+  public type!: 'leaf' | 'ca';
+  public name!: string;
+  public sha256!: string;
+}
+
+export class EngineTlsPing {
+  public target!: string;
+  public ip!: string;
+  public mode!: string;
+  public error!: string;
+  public certificates: EngineTlsPingCertificate[] = [];
+}
 export class EngineClientConnectionStatus {
   public ipAddress?: string;
   public countryName?: string;
@@ -202,6 +216,7 @@ export class EngineResponseConfig {
   public reality?: EngineReality;
   public certificates?: EngineSsl;
   public ech?: EngineEch;
+  public tlsping?: EngineTlsPing;
   public integration?: {
     scribe?: {
       enabled: boolean;
@@ -295,7 +310,8 @@ export enum SubmitActions {
   rtlsScanStop = 'xrayui_rtlsscan_stop',
   b4sniClearLogs = 'xrayui_b4sni_clearlogs',
   b4sniStart = 'xrayui_b4sni_start',
-  b4sniStop = 'xrayui_b4sni_stop'
+  b4sniStop = 'xrayui_b4sni_stop',
+  tlsPingFetch = 'xrayui_tlsping'
 }
 
 export class Engine {
@@ -583,6 +599,11 @@ export class Engine {
   async getEchKeys(): Promise<EngineEch | undefined> {
     const response = await this.getXrayResponse();
     return response.ech;
+  }
+
+  async getTlsPing(): Promise<EngineTlsPing | undefined> {
+    const response = await this.getXrayResponse({ light: true });
+    return response.tlsping;
   }
 
   async getClientConnectionStatus(): Promise<EngineClientConnectionStatus | undefined> {

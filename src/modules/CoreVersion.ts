@@ -27,6 +27,7 @@ const CORE_FEATURES = {
   allowInsecure: { until: '26.3.27' },
   pinnedPeerCertSha256: { since: '26.3.27' },
   verifyPeerCertByName: { since: '26.3.27' },
+  tlsPingCertHash: { since: '26.2.4' },
   tunInbound: { since: '26.1.13' },
   tunGateway: { since: '26.4.13' },
   tunDesc: { since: '26.7.28' }

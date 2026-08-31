@@ -14,6 +14,9 @@
 - FIXED: The web panel was shipping its script uncompressed — about 3 MB instead of 1.7 MB.
 - CHANGED: General housekeeping under the hood: unused code removed and automatic checks added so problems get caught before a release. Nothing changes in how XRAYUI works.
 - FIXED: Subscription links from providers that always send their answer compressed came back empty, so the outbound's subscription selector had nothing to offer. Those subscriptions are now read correctly. ([#396](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/pull/396))
+- FIXED: Turning off only one of the two Xray logs (access or error) broke log rotation completely: the rotation rule was written with the word `none` in place of the disabled log's path, so the remaining log was never rotated and the router log filled up with a rotation failure every 15 minutes. Disabled logs are now simply left out, and if both are off the rotation job is removed instead. ([#389](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/389))
+- FIXED: When log rotation did fail, the router log said `logrotate failed with exit code 0`, which made no sense and hid the real cause. It now reports the real exit code together with logrotate's own explanation. ([#389](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/389))
+- ADDED: A **Fetch from server** button next to the pinned certificate box in the TLS settings. XRAYUI connects to the server, reads its certificate chain and lets you pick which certificate to pin, instead of you having to find and paste the hash by hand. ([#391](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/391))
 
 ## [0.68.2] - 2026-07-07
 

@@ -359,7 +359,20 @@
       "hint_ech_server_keys": "Nur Server. Wird verwendet, um Encrypted Client Hello auf dem Server zu aktivieren. Generieren mit <code>xray tls ech --serverName example.com</code>. Nach der Konfiguration akzeptiert der Server weiterhin normale Nicht-ECH-Verbindungen.",
       "label_ech_server_name": "ECH-Servername",
       "hint_ech_server_name": "Der Domainname für die ECH-Schlüsselgenerierung. Geben Sie die Domain Ihres Servers ein, bevor Sie oben auf Regenerieren klicken.",
-      "hint_ech_server_name_desc": "erforderlich für ECH-Schlüsselgenerierung"
+      "hint_ech_server_name_desc": "erforderlich für ECH-Schlüsselgenerierung",
+      "label_fetch_fingerprints": "Vom Server abrufen",
+      "label_fetch_certificate": "Zertifikat",
+      "label_fetch_leaf": "Blatt",
+      "label_fetch_ca": "CA",
+      "label_fetch_apply": "Auswahl hinzufügen",
+      "modal_fetch_title": "Zertifikat-Fingerabdrücke des Servers",
+      "modal_fetch_desc": "Der Router hat einen TLS-Handshake mit dem Server durchgeführt und dessen Zertifikatskette ausgelesen. Wähle die Zertifikate aus, die angeheftet werden sollen.<br /><br />Das Anheften des <b>Blatt</b>-Zertifikats ist eine exakte Übereinstimmung &mdash; es funktioniert nicht mehr, sobald der Server sein Zertifikat erneuert. Das Anheften einer <b>CA</b> übersteht Erneuerungen.",
+      "hint_fetch_nosni": "Der Handshake gelang nur <b>ohne SNI</b>. Dies sind die Zertifikate, die der Server ohne übermittelten Servernamen zurückgibt &mdash; erwartet dein Server einen, trage oben <b>Server name</b> ein und prüfe erneut.",
+      "hint_fetch_no_target": "zuerst Servernamen oder Adresse angeben",
+      "error_fetch_failed": "Das Serverzertifikat konnte nicht gelesen werden. Details im Protokoll.",
+      "label_fetch_target": "Geprüft",
+      "label_fetch_already_pinned": "bereits angeheftet",
+      "hint_fetch_ca_needs_sni": "Das Anheften einer <b>CA</b> erfordert einen <b>Server name</b> &mdash; Xray-core lehnt einen CA-Pin ab, wenn er leer ist. Trage oben einen ein, um die CA-Zeilen zu aktivieren."
     },
     "DownloadSettings": {
       "modal_title": "Download-Einstellungen",

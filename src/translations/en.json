@@ -393,7 +393,20 @@
       "hint_ech_server_keys": "Server-only. Used to enable Encrypted Client Hello on the server. Generate with <code>xray tls ech --serverName example.com</code>. After configuring, the server still accepts normal non-ECH connections.",
       "label_ech_server_name": "ECH Server Name",
       "hint_ech_server_name": "The domain name used to generate ECH keys. Enter your server's domain before clicking Regenerate above.",
-      "hint_ech_server_name_desc": "required for ECH key generation"
+      "hint_ech_server_name_desc": "required for ECH key generation",
+      "label_fetch_fingerprints": "Fetch from server",
+      "label_fetch_certificate": "Certificate",
+      "label_fetch_leaf": "Leaf",
+      "label_fetch_ca": "CA",
+      "label_fetch_apply": "Add selected",
+      "modal_fetch_title": "Server certificate fingerprints",
+      "modal_fetch_desc": "The router performed a TLS handshake with the server and read back its certificate chain. Pick the certificates you want to pin.<br /><br />Pinning the <b>leaf</b> is an exact match &mdash; it stops working as soon as the server renews its certificate. Pinning a <b>CA</b> keeps working across renewals.",
+      "hint_fetch_nosni": "The handshake only succeeded <b>without SNI</b>. These are the certificates the server returns when no server name is sent — if your server expects one, set <b>Server name</b> above and probe again.",
+      "hint_fetch_no_target": "set a server name or address first",
+      "error_fetch_failed": "Could not read the server certificate. Check the log for details.",
+      "label_fetch_target": "Probed",
+      "label_fetch_already_pinned": "already pinned",
+      "hint_fetch_ca_needs_sni": "Pinning a <b>CA</b> requires a <b>Server name</b> — Xray-core rejects a CA pin when it is empty. Set one above to enable the CA rows."
     },
     "DownloadSettings": {
       "modal_title": "Download Settings",

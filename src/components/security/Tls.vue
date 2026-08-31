@@ -116,6 +116,70 @@
               <textarea rows="25" v-model.trim="pinnedCertificatesText" placeholder="AE243D668EC9C7F74A0DCD1AD21C6676B4EFE30C39728934B362093AF886BF77"></textarea>
             </div>
             <span class="hint-color">SHA256 fingerprints, one per line (optional)</span>
+            <div class="tlsping-actions" v-if="tlsPingSupported">
+              <input
+                class="button_gen button_gen_small"
+                type="button"
+                :value="$t('com.Tls.label_fetch_fingerprints')"
+                :disabled="!tlsPingTarget"
+                @click.prevent="fetch_fingerprints()"
+              />
+              <span class="tlsping-note" v-if="!tlsPingTarget">{{ $t('com.Tls.hint_fetch_no_target') }}</span>
+            </div>
+            <modal ref="tlsPingModal" :title="$t('com.Tls.modal_fetch_title')">
+              <div class="formfontdesc tlsping-modal">
+                <p v-html="$t('com.Tls.modal_fetch_desc')"></p>
+                <dl class="tlsping-summary" v-if="tlsPingResult">
+                  <dt>{{ $t('com.Tls.label_fetch_target') }}</dt>
+                  <dd>
+                    {{ tlsPingResult.target }}
+                    <span class="tlsping-muted" v-if="probedIp">({{ probedIp }})</span>
+                  </dd>
+                </dl>
+                <p class="tlsping-warning" v-if="tlsPingResult?.error">{{ tlsPingResult.error }}</p>
+                <p class="tlsping-warning" v-else-if="!tlsPingCertificates.length">{{ $t('com.Tls.error_fetch_failed') }}</p>
+                <p class="tlsping-warning" v-else-if="tlsPingResult?.mode === 'nosni'" v-html="$t('com.Tls.hint_fetch_nosni')"></p>
+                <p class="tlsping-warning" v-if="tlsPingCertificates.length && !caPinAllowed" v-html="$t('com.Tls.hint_fetch_ca_needs_sni')"></p>
+                <table width="100%" class="FormTable modal-form-table tlsping-table" v-if="tlsPingCertificates.length">
+                  <thead>
+                    <tr>
+                      <td>{{ $t('com.Tls.label_fetch_certificate') }}</td>
+                      <td>SHA256</td>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(cert, index) in tlsPingCertificates" :key="cert.sha256">
+                      <td class="tlsping-name" :class="{ 'tlsping-disabled': cert.type === 'ca' && !caPinAllowed }">
+                        <input
+                          type="checkbox"
+                          class="input"
+                          :id="'tlsping-' + index"
+                          :value="cert.sha256"
+                          :disabled="cert.type === 'ca' && !caPinAllowed"
+                          v-model="tlsPingSelection"
+                        />
+                        <label :for="'tlsping-' + index" class="settingvalue">
+                          <b>{{ cert.type === 'leaf' ? $t('com.Tls.label_fetch_leaf') : $t('com.Tls.label_fetch_ca') }}</b>
+                          <span class="tlsping-muted" v-if="cert.name">{{ cert.name }}</span>
+                          <span class="tlsping-pinned" v-if="isPinned(cert.sha256)">{{ $t('com.Tls.label_fetch_already_pinned') }}</span>
+                        </label>
+                      </td>
+                      <td class="tlsping-hash">{{ cert.sha256 }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <template #footer>
+                <input
+                  class="button_gen button_gen_small"
+                  type="button"
+                  :value="$t('com.Tls.label_fetch_apply')"
+                  :disabled="!tlsPingSelection.length"
+                  @click.prevent="apply_fingerprints()"
+                />
+                <input class="button_gen button_gen_small" type="button" :value="$t('labels.close')" @click.prevent="tlsPingModal.close()" />
+              </template>
+            </modal>
           </td>
         </tr>
         <tr v-if="proxyType === 'outbound'">
@@ -188,8 +252,9 @@
 
 <script lang="ts">
   import { defineComponent, ref, watch, computed } from 'vue';
-  import engine, { SubmitActions } from '@/modules/Engine';
+  import engine, { SubmitActions, EngineTlsPing } from '@/modules/Engine';
   import CertificatesModal from '@modal/CertificatesModal.vue';
+  import Modal from '@main/Modal.vue';
   import { XrayStreamSettingsObject, XrayStreamTlsSettingsObject, XrayStreamTlsCertificateObject } from '@/modules/CommonObjects';
   import { coreSupports } from '@/modules/CoreVersion';
   import { XrayOptions } from '@/modules/Options';
@@ -199,6 +264,7 @@
     name: 'Tls',
     components: {
       CertificatesModal,
+      Modal,
       Hint
     },
     props: {
@@ -206,7 +272,15 @@
         type: String,
         required: true
       },
-      transport: XrayStreamSettingsObject
+      transport: XrayStreamSettingsObject,
+      serverAddress: {
+        type: String,
+        default: ''
+      },
+      serverPort: {
+        type: Number,
+        default: 0
+      }
     },
     setup(props) {
       const proxyType = ref(props.proxyType);
@@ -291,6 +365,63 @@
         }
       });
 
+      const tlsPingModal = ref();
+      const tlsPingResult = ref<EngineTlsPing | undefined>();
+      const tlsPingSelection = ref<string[]>([]);
+
+      const tlsPingSupported = computed(() => coreSupports('tlsPingCertHash'));
+
+      const tlsPingCertificates = computed(() => tlsPingResult.value?.certificates ?? []);
+
+      const tlsPingTarget = computed(() => (transport.value.tlsSettings?.serverName ?? '').trim() || (props.serverAddress ?? '').trim());
+
+      const probedIp = computed(() => {
+        const ip = tlsPingResult.value?.ip ?? '';
+        return ip && ip !== tlsPingResult.value?.target ? ip : '';
+      });
+
+      const isPinned = (hash: string) => transport.value.tlsSettings?.pinnedCertificateList().includes(hash) ?? false;
+
+      const caPinAllowed = computed(() => (transport.value.tlsSettings?.serverName ?? '').trim().length > 0);
+
+      const fetch_fingerprints = async () => {
+        if (!tlsPingTarget.value) return;
+
+        tlsPingResult.value = undefined;
+        tlsPingSelection.value = [];
+
+        await engine.executeWithLoadingProgress(async () => {
+          await engine.submit(SubmitActions.tlsPingFetch, {
+            serverName: (transport.value.tlsSettings?.serverName ?? '').trim(),
+            address: (props.serverAddress ?? '').trim(),
+            port: props.serverPort || 443
+          });
+        }, false);
+
+        window.showLoading();
+        tlsPingResult.value = await engine.getTlsPing();
+        for (let attempt = 0; attempt < 20 && !tlsPingResult.value; attempt++) {
+          await engine.delay(500);
+          tlsPingResult.value = await engine.getTlsPing();
+        }
+        window.hideLoading();
+
+        tlsPingSelection.value = tlsPingCertificates.value
+          .filter((c) => (c.type === 'leaf' || isPinned(c.sha256)) && (c.type !== 'ca' || caPinAllowed.value))
+          .map((c) => c.sha256);
+        tlsPingModal.value?.show();
+      };
+
+      const apply_fingerprints = () => {
+        const existing = pinnedCertificatesText.value
+          .split('\n')
+          .map((line) => line.trim().toUpperCase())
+          .filter((line) => line.length > 0);
+        const merged = existing.concat(tlsPingSelection.value.filter((hash) => !existing.includes(hash)));
+        pinnedCertificatesText.value = merged.join('\n');
+        tlsPingModal.value?.close();
+      };
+
       return {
         transport,
         certificatesModal,
@@ -308,8 +439,101 @@
         echForceQueryOptions: XrayOptions.echForceQueryOptions,
         echServerName,
         generatedEchConfigList,
-        generate_ech_keys
+        generate_ech_keys,
+        tlsPingModal,
+        tlsPingResult,
+        tlsPingSelection,
+        tlsPingCertificates,
+        tlsPingSupported,
+        tlsPingTarget,
+        probedIp,
+        isPinned,
+        caPinAllowed,
+        fetch_fingerprints,
+        apply_fingerprints
       };
     }
   });
 </script>
+
+<style scoped lang="scss">
+  .tlsping-actions {
+    padding-top: 4px;
+
+    input[type='button'] {
+      margin-left: 0;
+    }
+  }
+
+  .tlsping-note {
+    color: #fc0;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .tlsping-modal {
+    .tlsping-summary {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      gap: 2px 12px;
+      margin: 0 0 10px 0;
+
+      dt {
+        color: #a9b1b3;
+      }
+
+      dd {
+        margin: 0;
+        font-family: 'Courier New', Courier, monospace;
+        word-break: break-all;
+      }
+    }
+
+    .tlsping-muted {
+      color: #a9b1b3;
+      font-family: inherit;
+      font-weight: normal;
+    }
+
+    .tlsping-warning {
+      color: #fc0;
+      border-left: 3px solid #fc0;
+      padding-left: 8px;
+      margin: 0 0 10px 0;
+    }
+
+    .tlsping-table {
+      td {
+        vertical-align: middle;
+      }
+
+      .tlsping-name {
+        width: 45%;
+
+        label {
+          margin-left: 4px;
+          cursor: pointer;
+        }
+      }
+
+      .tlsping-hash {
+        font-family: 'Courier New', Courier, monospace;
+        word-break: break-all;
+      }
+    }
+
+    .tlsping-disabled {
+      opacity: 0.5;
+
+      label {
+        cursor: default;
+      }
+    }
+
+    .tlsping-pinned {
+      color: #7fbf7f;
+      margin-left: 6px;
+      font-weight: normal;
+    }
+  }
+</style>

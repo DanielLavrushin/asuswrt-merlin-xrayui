@@ -185,6 +185,13 @@
       const ips = ref<string>(server.value.expectIPs?.join('\n') ?? '');
       const editIndex = ref<number | null>(null);
       const rules = ref<XrayRoutingRuleObject[]>([]);
+      const resolveRules = (list: (number | XrayRoutingRuleObject)[] | undefined): XrayRoutingRuleObject[] => {
+        const all = [...(xrayConfig.routing?.rules ?? []), ...(xrayConfig.routing?.disabled_rules ?? [])];
+        return (list ?? [])
+          .map((ref) => (typeof ref === 'number' ? all.find((r) => r.idx === ref) : all.find((r) => r.idx === ref?.idx)))
+          .filter((r): r is XrayRoutingRuleObject => r !== undefined);
+      };
+
       const getServer = (server: string | XrayDnsServerObject) => {
         if (typeof server === 'string') {
           return server;
@@ -216,6 +223,9 @@
       const show_advanced = (s?: XrayDnsServerObject) => {
         if (!s) {
           server.value = new XrayDnsServerObject();
+          domains.value = '';
+          ips.value = '';
+          editIndex.value = null;
         }
         rules.value = xrayConfig.routing?.rules?.filter((r) => !r.isSystem() && (r.domain || r.ip)) ?? [];
         modalAdvanced.value.show();
@@ -223,10 +233,13 @@
 
       const manage = (s: string | XrayDnsServerObject, index: number) => {
         server.value = new XrayDnsServerObject();
+        domains.value = '';
+        ips.value = '';
         if (typeof s === 'string') {
           server.value.address = s;
         } else {
-          server.value = { ...s };
+          server.value = plainToInstance(XrayDnsServerObject, { ...s });
+          server.value.rules = resolveRules(s.rules);
           domains.value = (server.value.domains ?? []).join('\n');
           ips.value = (server.value.expectIPs ?? []).join('\n');
         }
@@ -238,6 +251,7 @@
         server.value.domains = domains.value.split('\n').filter(Boolean);
         server.value.expectIPs = ips.value.split('\n').filter(Boolean);
         const serverInstance = plainToInstance(XrayDnsServerObject, { ...server.value });
+        serverInstance.rules = resolveRules(server.value.rules);
         if (editIndex.value !== null) {
           props.servers[editIndex.value] = serverInstance;
         } else {

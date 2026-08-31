@@ -14,6 +14,9 @@
 - FIXED: The web panel was shipping its script uncompressed — about 3 MB instead of 1.7 MB.
 - CHANGED: General housekeeping under the hood: unused code removed and automatic checks added so problems get caught before a release. Nothing changes in how XRAYUI works.
 - FIXED: Subscription links from providers that always send their answer compressed came back empty, so the outbound's subscription selector had nothing to offer. Those subscriptions are now read correctly. ([#396](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/pull/396))
+- FIXED: In DNS → Servers → Advanced, the routing rules you tick for a server were thrown away every time you pressed Apply, so the association never stuck. Rules attached to a DNS server are now kept, and the ticked boxes show up again when you reopen the server.
+- FIXED: Opening **Advanced** to add a new DNS server right after editing an existing one could overwrite the server you had just edited.
+- FIXED: A DNS server attached to a routing rule that was later disabled or deleted quietly turned into a catch-all resolver answering every lookup. Such a server is now left out of the generated configuration instead.
 
 ## [0.68.2] - 2026-07-07
 

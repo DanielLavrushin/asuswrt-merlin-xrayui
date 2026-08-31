@@ -794,7 +794,13 @@ export class Engine {
           server = dnsServers[index];
           if (server instanceof XrayDnsServerObject && server.rules?.length) {
             server.domains = [];
-            server.rules = (server.rules as unknown as number[]).map((ruleIdx) => rulesMap.get(ruleIdx)).filter((r): r is XrayRoutingRuleObject => r !== undefined);
+            server.expectIPs = [];
+            server.rules = (server.rules as (number | XrayRoutingRuleObject)[])
+              .map((ref) => {
+                const ruleIdx = typeof ref === 'number' ? ref : ref?.idx;
+                return typeof ruleIdx === 'number' ? rulesMap.get(ruleIdx) : undefined;
+              })
+              .filter((r): r is XrayRoutingRuleObject => r !== undefined);
           }
         });
       }

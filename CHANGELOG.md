@@ -2,6 +2,7 @@
 
 ## [0.69.0] - 2026-09-01
 
+- FIXED: IPv6 addresses could not be typed into the inbound **Listen** field, the SOCKS **Local IP address** field or the DNS **Client IP** field — the inputs only accepted IPv4 and cut off at 15 characters. All three now accept IPv6, with or without square brackets. Thanks to [@xxhhlk](https://github.com/xxhhlk). ([#386](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/pull/386))
 - ADDED: New **TUN routing** option in General Options, shown once a TUN inbound exists. **Full** works as before — the interface is set up and LAN traffic is routed through the tunnel. **Interface only** creates the interface and leaves routing untouched, for setups where another tool (such as [B4](https://docs.b4core.app/)) decides what goes into the tunnel.
 - CHANGED: TUN inbound settings now match what Xray itself offers. **IP addresses** and **Routes** were renamed, and **DNS servers**, **Outbound interface binding**, **Interface description** and **User level** were added. Existing settings are moved over automatically on the next start, after a backup.
 - FIXED: **Routes** on a TUN inbound sent those networks around the tunnel instead of into it — the opposite of what its help text described. Renamed to **Auto system routes**, it now behaves as documented.

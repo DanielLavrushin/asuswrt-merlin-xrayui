@@ -403,7 +403,8 @@
       "label_fetch_target": "已探测",
       "label_fetch_already_pinned": "已固定",
       "hint_fetch_ca_needs_sni": "固定 <b>CA</b> 证书需要<b>服务器名称</b> —— 若留空，Xray-core 会拒绝该固定。",
-      "label_fetch_chain": "服务器证书链"
+      "label_fetch_chain": "服务器证书链",
+      "hint_fetch_sni_failed": "使用所填<b>服务器名称</b>的握手失败，因此下列证书来自<b>不发送 SNI</b> 的连接 —— 很可能是无关的默认证书。固定之前请先核对服务器名称。"
     },
     "DownloadSettings": {
       "modal_title": "下行设置",

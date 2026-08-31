@@ -407,7 +407,8 @@
       "label_fetch_target": "Probed",
       "label_fetch_already_pinned": "already pinned",
       "hint_fetch_ca_needs_sni": "Pinning a <b>CA</b> needs a <b>Server name</b> — Xray-core rejects a CA pin when it is empty.",
-      "label_fetch_chain": "Server certificate chain"
+      "label_fetch_chain": "Server certificate chain",
+      "hint_fetch_sni_failed": "The handshake using <b>Server name</b> failed, so these are the certificates the server returns <b>without SNI</b> — quite possibly an unrelated default certificate. Check the server name before pinning anything below."
     },
     "DownloadSettings": {
       "modal_title": "Download Settings",

@@ -433,5 +433,48 @@ describe('Tls.vue', () => {
       expect(vmOf(wrapper).tlsPingSelection).toEqual([leaf.sha256]);
       expect(window.hideLoading).toHaveBeenCalled();
     });
+
+    it('blames the server name when the SNI handshake failed with one set', async () => {
+      setCoreVersion('26.6.1');
+      (engine.getTlsPing as jest.Mock).mockResolvedValueOnce({
+        target: 'example.com:443',
+        ip: '1.2.3.4:443',
+        mode: 'nosni',
+        error: '',
+        sniError: 'remote error: tls: unrecognized name',
+        certificates: [leaf]
+      });
+
+      const transport = new XrayStreamSettingsObject();
+      transport.tlsSettings = new XrayStreamTlsSettingsObject();
+      transport.tlsSettings.serverName = 'example.com';
+      const wrapper = mountComponent('outbound', transport);
+
+      await vmOf(wrapper).fetch_fingerprints();
+      await nextTick();
+
+      expect(wrapper.text()).toContain('com.Tls.hint_fetch_sni_failed');
+      expect(wrapper.text()).not.toContain('com.Tls.hint_fetch_nosni');
+      expect(wrapper.text()).toContain('remote error: tls: unrecognized name');
+    });
+
+    it('tells the user to set a server name when none is configured', async () => {
+      setCoreVersion('26.6.1');
+      (engine.getTlsPing as jest.Mock).mockResolvedValueOnce({
+        target: '1.2.3.4:443',
+        ip: '1.2.3.4:443',
+        mode: 'nosni',
+        error: '',
+        sniError: '',
+        certificates: [leaf]
+      });
+
+      const wrapper = mountComponent('outbound', undefined, { serverAddress: '1.2.3.4', serverPort: 443 });
+      await vmOf(wrapper).fetch_fingerprints();
+      await nextTick();
+
+      expect(wrapper.text()).toContain('com.Tls.hint_fetch_nosni');
+      expect(wrapper.text()).not.toContain('com.Tls.hint_fetch_sni_failed');
+    });
   });
 });

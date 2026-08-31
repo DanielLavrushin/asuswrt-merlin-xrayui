@@ -160,6 +160,7 @@ export class EngineTlsPing {
   public ip!: string;
   public mode!: string;
   public error!: string;
+  public sniError!: string;
   public certificates: EngineTlsPingCertificate[] = [];
 }
 export class EngineClientConnectionStatus {

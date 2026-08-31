@@ -131,7 +131,11 @@
                 <p v-html="$t('com.Tls.modal_fetch_desc')"></p>
                 <p class="tlsping-warning" v-if="tlsPingResult?.error">{{ tlsPingResult.error }}</p>
                 <p class="tlsping-warning" v-else-if="!tlsPingCertificates.length">{{ $t('com.Tls.error_fetch_failed') }}</p>
-                <p class="tlsping-warning" v-else-if="tlsPingResult?.mode === 'nosni'" v-html="$t('com.Tls.hint_fetch_nosni')"></p>
+                <p class="tlsping-warning" v-else-if="tlsPingResult?.mode === 'nosni'">
+                  <span v-if="hasServerName" v-html="$t('com.Tls.hint_fetch_sni_failed')"></span>
+                  <span v-else v-html="$t('com.Tls.hint_fetch_nosni')"></span>
+                  <span class="tlsping-reason" v-if="tlsPingResult.sniError">{{ tlsPingResult.sniError }}</span>
+                </p>
                 <p class="tlsping-warning" v-if="hasCaCertificates && !caPinAllowed" v-html="$t('com.Tls.hint_fetch_ca_needs_sni')"></p>
                 <table width="100%" class="FormTable modal-form-table tlsping-table" v-if="tlsPingResult">
                   <thead>
@@ -385,7 +389,9 @@
 
       const isPinned = (hash: string) => transport.value.tlsSettings?.pinnedCertificateList().includes(hash) ?? false;
 
-      const caPinAllowed = computed(() => (transport.value.tlsSettings?.serverName ?? '').trim().length > 0);
+      const hasServerName = computed(() => (transport.value.tlsSettings?.serverName ?? '').trim().length > 0);
+
+      const caPinAllowed = hasServerName;
 
       const hasCaCertificates = computed(() => tlsPingCertificates.value.some((c) => c.type === 'ca'));
 
@@ -465,6 +471,7 @@
         probedIp,
         isPinned,
         caPinAllowed,
+        hasServerName,
         hasCaCertificates,
         fetch_fingerprints,
         apply_fingerprints
@@ -496,6 +503,14 @@
     .tlsping-muted {
       color: #a9b1b3;
       font-weight: normal;
+    }
+
+    .tlsping-reason {
+      display: block;
+      color: #a9b1b3;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 11px;
+      margin-top: 3px;
     }
 
     .tlsping-table {

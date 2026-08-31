@@ -373,7 +373,8 @@
       "label_fetch_target": "Geprüft",
       "label_fetch_already_pinned": "bereits angeheftet",
       "hint_fetch_ca_needs_sni": "Das Anheften einer <b>CA</b> benötigt einen <b>Server name</b> &mdash; Xray-core lehnt einen CA-Pin ab, wenn er leer ist.",
-      "label_fetch_chain": "Zertifikatskette des Servers"
+      "label_fetch_chain": "Zertifikatskette des Servers",
+      "hint_fetch_sni_failed": "Der Handshake mit dem angegebenen <b>Server name</b> schlug fehl, daher stammen diese Zertifikate aus der Verbindung <b>ohne SNI</b> &mdash; möglicherweise ein unbeteiligtes Standardzertifikat. Prüfe den Servernamen, bevor du unten etwas anheftest."
     },
     "DownloadSettings": {
       "modal_title": "Download-Einstellungen",

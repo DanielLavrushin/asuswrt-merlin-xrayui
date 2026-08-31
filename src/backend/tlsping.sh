@@ -3,18 +3,48 @@
 
 TLSPING_TIMEOUT=20
 
-tlsping_resolve_ipv4() {
+tlsping_resolve_ip() {
     nslookup "$1" 2>/dev/null | awk '
+        function colons(s,   n) {
+            n = gsub(/:/, ":", s)
+            return n
+        }
         /^Name:/ { seen = 1 }
         seen && /Address/ {
             for (i = 1; i <= NF; i++) {
-                if ($i ~ /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/) { print $i; exit }
+                if (v4 == "" && $i ~ /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/) {
+                    v4 = $i
+                } else if (v6 == "" && $i ~ /^[0-9A-Fa-f:.]+$/ && colons($i) >= 2) {
+                    v6 = $i
+                }
             }
+        }
+        END {
+            if (v4 != "") print v4
+            else if (v6 != "") print v6
         }'
 }
 
-tlsping_is_ipv4() {
-    echo "$1" | grep -qE '^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$'
+tlsping_strip_brackets() {
+    local v="$1"
+    v="${v#[}"
+    echo "${v%]}"
+}
+
+tlsping_is_ip() {
+    set -- "$(tlsping_strip_brackets "$1")"
+    if echo "$1" | grep -qE '^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$'; then
+        return 0
+    fi
+    echo "$1" | grep -qE '^[0-9A-Fa-f:.]*:[0-9A-Fa-f:.]*:[0-9A-Fa-f:.]*$'
+}
+
+tlsping_target() {
+    case "$1" in
+        \[*\]) echo "$1:$2" ;;
+        *:*) echo "[$1]:$2" ;;
+        *) echo "$1:$2" ;;
+    esac
 }
 
 tlsping_run() {
@@ -95,6 +125,7 @@ tlsping_save() {
     local mode="$3"
     local error="$4"
     local certs="$5"
+    local sni_error="$6"
 
     load_ui_response
 
@@ -103,8 +134,9 @@ tlsping_save() {
         --arg ip "$ip" \
         --arg mode "$mode" \
         --arg error "$error" \
+        --arg sniError "$sni_error" \
         --argjson certs "$certs" \
-        '.tlsping = { target: $target, ip: $ip, mode: $mode, error: $error, certificates: $certs }')
+        '.tlsping = { target: $target, ip: $ip, mode: $mode, error: $error, sniError: $sniError, certificates: $certs }')
 
     if [ -z "$UI_RESPONSE" ]; then
         log_error "Failed to update JSON content with TLS probe results."
@@ -124,7 +156,7 @@ tlsping_fetch() {
     tlsping_clear
     update_loading_progress "Probing the server certificate..." 0
 
-    local payload address server_name port domain dial_ip target outfile used_ip mode section certs domains failure
+    local payload address server_name port domain dial_ip target outfile used_ip mode section certs domains failure sni_error
     local rc=0
 
     payload=$(reconstruct_payload)
@@ -136,13 +168,6 @@ tlsping_fetch() {
 
     if [ -n "$server_name" ]; then
         domain="$server_name"
-        if [ -n "$address" ] && [ "$address" != "$server_name" ]; then
-            if tlsping_is_ipv4 "$address"; then
-                dial_ip="$address"
-            else
-                dial_ip=$(tlsping_resolve_ipv4 "$address")
-            fi
-        fi
     else
         domain="$address"
     fi
@@ -153,7 +178,20 @@ tlsping_fetch() {
         return 1
     fi
 
-    target="$domain:$port"
+    target=$(tlsping_target "$domain" "$port")
+
+    if [ -n "$server_name" ] && [ -n "$address" ] && [ "$address" != "$server_name" ]; then
+        if tlsping_is_ip "$address"; then
+            dial_ip=$(tlsping_strip_brackets "$address")
+        else
+            dial_ip=$(tlsping_resolve_ip "$address")
+        fi
+        if [ -z "$dial_ip" ]; then
+            tlsping_save "$target" "" "" "Could not resolve the outbound address $address. Refusing to probe $domain instead, its certificates would not be the ones this outbound connects to." "[]"
+            update_loading_progress "Could not resolve the outbound address." 100
+            return 1
+        fi
+    fi
     log_info "Probing TLS certificates of $target${dial_ip:+ via $dial_ip}"
 
     outfile="/tmp/xrayui-tlsping.$$"
@@ -172,6 +210,7 @@ tlsping_fetch() {
     mode="sni"
     section=$(tlsping_section "$outfile" "Pinging with SNI")
     if ! printf '%s\n' "$section" | grep -q '^Handshake succeeded'; then
+        sni_error=$(printf '%s\n' "$section" | sed -n 's/^Handshake failure:[[:space:]]*//p' | head -n 1)
         mode="nosni"
         section=$(tlsping_section "$outfile" "Pinging without SNI")
     fi
@@ -196,6 +235,6 @@ tlsping_fetch() {
         return 1
     fi
 
-    tlsping_save "$target" "$used_ip" "$mode" "" "$certs"
+    tlsping_save "$target" "$used_ip" "$mode" "" "$certs" "$sni_error"
     update_loading_progress "Server certificate probed." 100
 }

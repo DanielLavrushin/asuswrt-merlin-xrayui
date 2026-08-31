@@ -1,6 +1,6 @@
 # XRAYUI Changelog
 
-## [0.69.0] - 2026-xx-xx
+## [0.69.0] - 2026-09-01
 
 - ADDED: New **TUN routing** option in General Options, shown once a TUN inbound exists. **Full** works as before — the interface is set up and LAN traffic is routed through the tunnel. **Interface only** creates the interface and leaves routing untouched, for setups where another tool (such as [B4](https://docs.b4core.app/)) decides what goes into the tunnel.
 - CHANGED: TUN inbound settings now match what Xray itself offers. **IP addresses** and **Routes** were renamed, and **DNS servers**, **Outbound interface binding**, **Interface description** and **User level** were added. Existing settings are moved over automatically on the next start, after a backup.
@@ -21,6 +21,10 @@
 - FIXED: In DNS → Servers → Advanced, the routing rules you tick for a server were thrown away every time you pressed Apply, so the association never stuck. Rules attached to a DNS server are now kept, and the ticked boxes show up again when you reopen the server.
 - FIXED: Opening **Advanced** to add a new DNS server right after editing an existing one could overwrite the server you had just edited.
 - FIXED: A DNS server attached to a routing rule that was later disabled or deleted quietly turned into a catch-all resolver answering every lookup. Such a server is now left out of the generated configuration instead.
+- FIXED: Nodes that use the new **VLESS Encryption** never connected when they came from a subscription, or when their link was pasted into an outbound's **Subscription URL** field. While rebuilding the outbound on the router, XRAYUI threw the encryption key away and replaced it with `none`, so the server refused the connection. The key is now kept. ([#383](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/383))
+- FIXED: Opening a VLESS client for editing on an outbound also erased its **VLESS Encryption** key, so a node that worked right after import stopped working on the next Apply.
+- FIXED: A **TLS** node taken from a subscription lost its server name, fingerprint and ALPN. Only Reality nodes kept theirs, which left TLS nodes connecting with the wrong details or not at all. Those settings are now carried over too.
+- FIXED: Subscription links whose settings contained an `=` sign were cut short when read on the router.
 
 ## [0.68.2] - 2026-07-07
 

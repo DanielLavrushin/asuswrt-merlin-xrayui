@@ -400,13 +400,14 @@
       "label_fetch_ca": "CA",
       "label_fetch_apply": "Add selected",
       "modal_fetch_title": "Server certificate fingerprints",
-      "modal_fetch_desc": "The router performed a TLS handshake with the server and read back its certificate chain. Pick the certificates you want to pin.<br /><br />Pinning the <b>leaf</b> is an exact match &mdash; it stops working as soon as the server renews its certificate. Pinning a <b>CA</b> keeps working across renewals.",
-      "hint_fetch_nosni": "The handshake only succeeded <b>without SNI</b>. These are the certificates the server returns when no server name is sent — if your server expects one, set <b>Server name</b> above and probe again.",
+      "modal_fetch_desc": "The router handshook with the server and read back its certificate chain. Pinning the <b>leaf</b> is an exact match &mdash; it breaks as soon as the server renews. Pinning a <b>CA</b> survives renewals.",
+      "hint_fetch_nosni": "Handshake succeeded only <b>without SNI</b> — these are the certificates returned when no server name is sent. If your server expects one, set <b>Server name</b> above and probe again.",
       "hint_fetch_no_target": "set a server name or address first",
       "error_fetch_failed": "Could not read the server certificate. Check the log for details.",
       "label_fetch_target": "Probed",
       "label_fetch_already_pinned": "already pinned",
-      "hint_fetch_ca_needs_sni": "Pinning a <b>CA</b> requires a <b>Server name</b> — Xray-core rejects a CA pin when it is empty. Set one above to enable the CA rows."
+      "hint_fetch_ca_needs_sni": "Pinning a <b>CA</b> needs a <b>Server name</b> — Xray-core rejects a CA pin when it is empty.",
+      "label_fetch_chain": "Server certificate chain"
     },
     "DownloadSettings": {
       "modal_title": "Download Settings",

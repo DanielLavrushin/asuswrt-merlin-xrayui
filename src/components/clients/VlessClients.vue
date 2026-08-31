@@ -91,6 +91,7 @@
         newClient.value.id = engine.uuid();
         newClient.value.email = '';
         newClient.value.flow = XrayOptions.clientFlowOptions[0];
+        newClient.value.encryption = undefined;
       };
 
       const removeClient = (client: XrayVlessClientObject) => {
@@ -110,7 +111,7 @@
         }
 
         if (mode.value == 'outbound') {
-          client.encryption = 'none';
+          client.encryption = newClient.value.encryption || 'none';
         }
 
         clients.value.push(client);
@@ -121,6 +122,7 @@
         newClient.value.id = client.id;
         newClient.value.email = client.email;
         newClient.value.flow = client.flow || XrayOptions.clientFlowOptions[0];
+        newClient.value.encryption = client.encryption;
         editingIndex.value = index;
         clients.value.splice(clients.value.indexOf(client), 1);
       };

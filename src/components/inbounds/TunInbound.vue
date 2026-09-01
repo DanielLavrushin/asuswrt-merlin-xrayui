@@ -55,7 +55,8 @@
           <td>
             <textarea class="input_32_table" rows="3" v-model="autoRoutingList" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
             <span class="hint-color">{{ $t('com.TunInbound.hint_auto_routing_placeholder') }}</span>
-            <div v-if="autoRoutingBindsOutbounds" class="tun-warning" v-html="$t('com.TunInbound.warn_auto_routing_conflict')"></div>
+            <div v-if="autoRoutingConflictsWithFull" class="tun-warning" v-html="$t('com.TunInbound.warn_auto_routing_conflict')"></div>
+            <div v-if="autoRoutingBindsOutbounds" class="tun-warning" v-html="$t('com.TunInbound.warn_auto_routing_binds_outbounds')"></div>
           </td>
         </tr>
         <tr v-if="supportsGateway">
@@ -118,11 +119,12 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, computed } from 'vue';
+  import { defineComponent, ref, computed, inject, Ref } from 'vue';
   import InboundCommon from './InboundCommon.vue';
   import { XrayProtocol } from '@/modules/CommonObjects';
   import { XrayTunInboundObject, XrayInboundObject } from '@/modules/InboundObjects';
   import { coreSupports } from '@/modules/CoreVersion';
+  import { EngineResponseConfig } from '@/modules/Engine';
   import Hint from '@main/Hint.vue';
 
   export default defineComponent({
@@ -135,6 +137,7 @@
       inbound: XrayInboundObject<XrayTunInboundObject>
     },
     setup(props) {
+      const ui = inject<Ref<EngineResponseConfig> | undefined>('uiResponse', undefined);
       const inbound = ref<XrayInboundObject<XrayTunInboundObject>>(props.inbound ?? new XrayInboundObject<XrayTunInboundObject>(XrayProtocol.TUN, new XrayTunInboundObject()));
 
       const lines = (field: 'gateway' | 'dns' | 'autoSystemRoutingTable') =>
@@ -163,6 +166,7 @@
         return !iface || iface === 'auto';
       });
       const autoRoutingBindsOutbounds = computed(() => hasAutoRouting.value && outboundsInterfaceIsAuto.value);
+      const autoRoutingConflictsWithFull = computed(() => hasAutoRouting.value && (ui?.value?.xray?.tun_routing ?? 'full') === 'full');
 
       return {
         inbound,
@@ -172,7 +176,8 @@
         supportsGateway,
         supportsAutoRoute,
         supportsDesc,
-        autoRoutingBindsOutbounds
+        autoRoutingBindsOutbounds,
+        autoRoutingConflictsWithFull
       };
     }
   });

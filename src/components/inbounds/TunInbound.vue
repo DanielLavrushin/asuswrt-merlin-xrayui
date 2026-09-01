@@ -158,7 +158,11 @@
       const supportsDesc = computed(() => coreSupports('tunDesc'));
 
       const hasAutoRouting = computed(() => (inbound.value.settings?.autoSystemRoutingTable?.length ?? 0) > 0);
-      const autoRoutingBindsOutbounds = computed(() => hasAutoRouting.value);
+      const outboundsInterfaceIsAuto = computed(() => {
+        const iface = inbound.value.settings?.autoOutboundsInterface?.trim();
+        return !iface || iface === 'auto';
+      });
+      const autoRoutingBindsOutbounds = computed(() => hasAutoRouting.value && outboundsInterfaceIsAuto.value);
 
       return {
         inbound,

@@ -561,7 +561,7 @@
       "hint_gateway_placeholder": "示例：192.168.10.1/24",
       "hint_auto_routing": "Xray-core 添加到**主**系统路由表的目标前缀，使流量被导入此 TUN 接口。每行一个 CIDR：`0.0.0.0/0` 表示所有 IPv4，`::/0` 表示所有 IPv6。<hr/>从 `26.6.27` 版本起由 Xray-core 自身应用。留空时，路由由 XRAYUI 或其他工具管理。<hr/><blockquote>**警告**：此设置还会让 Xray-core 将**所有**出站连接绑定到一个自动挑选的接口；在未保护 Xray 自身上行链路的情况下将 `0.0.0.0/0` 路由进隧道会造成网络环路。**出站接口绑定**应填入真实的 WAN 接口。</blockquote>",
       "hint_auto_routing_placeholder": "示例：0.0.0.0/0",
-      "warn_auto_routing_conflict": "设置此项会让 Xray-core 将它的<b>所有</b>出站连接绑定到它自动挑选的一个物理接口。在接口众多的路由器上，它经常会选错，于是所有出站都会以 <b>no route to host</b> 失败。<b>出站接口绑定</b>中应填入真实的 WAN 接口（例如 <b>eth0</b>），不要留空。",
+      "warn_auto_routing_conflict": "设置此项会让 Xray-core 将它的<b>所有</b>出站连接绑定到它自动挑选的一个物理接口。在接口众多的路由器上，它经常会选错，于是所有出站都会以 <b>no route to host</b> 失败。<b>出站接口绑定</b>中应填入真实的 WAN 接口（例如 <b>eth0</b>），而不是留空或填 <b>auto</b>。",
       "hint_auto_outbounds_interface": "将 Xray 自身的出站连接绑定到物理接口，使 Xray 产生的流量不会被送回 TUN 接口而形成环路。等同于为所有出站设置 `sockopt.interface`。<hr/>使用 `auto` 让 Xray 自行选择接口，或显式指定接口名称（例如 `eth0`）。留空则禁用。当设置了**自动系统路由**而此项为空时，Xray-core 将其视为 `auto`。",
       "hint_auto_outbounds_interface_placeholder": "示例：auto",
       "hint_dns": "分配给 TUN 接口的 DNS 服务器，每行一个。<hr/><blockquote>**仅 Windows**：此选项在 Linux 路由器上无效。保留它是为了让与桌面客户端共享的配置保持完整。</blockquote>",

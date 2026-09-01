@@ -18,7 +18,7 @@ describe('migrateTunInbound', () => {
     expect(settings.address).toBeUndefined();
   });
 
-  it('drops routes without translating it to autoSystemRoutingTable', () => {
+  it('drops routes without translating them to autoSystemRoutingTable', () => {
     const inbound = legacy({ routes: ['10.0.0.0/8'] });
     migrateTunInbound(inbound);
 

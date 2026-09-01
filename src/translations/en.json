@@ -80,7 +80,7 @@
       "label_logs_dor": "Clear logs on xray restart",
       "label_geosite_autoupdate": "Auto-update geodata files",
       "label_skip_test": "Skip testing  XRAY",
-      "hint_skip_test": "Skips validation of the XRAY configuration file. Keeping it enabled is recommended, so the configuration file is checked before use.<hr/>The test step can consume some resources, so disabling it may be advisable on a low-performance router.",
+      "hint_skip_test": "Skips validation of the XRAY configuration file. Keeping it disabled is recommended, so the configuration file is checked before use.<hr/>The test step can consume some resources, so enabling it may be advisable on a low-performance router.",
       "label_clients_check": "Check clients online status",
       "hint_clients_check": "When enabled, XRAYUI checks the online status of connected clients.<hr/>Useful for keeping track of which clients are currently connected to xray.<hr/> It may consume some resources, so disabling it may be advisable on a low-performance router.",
       "label_tun_routing": "TUN routing",

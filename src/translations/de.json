@@ -75,7 +75,7 @@
       "label_logs_dor": "Protokolle beim XRAY-Neustart löschen",
       "label_geosite_autoupdate": "Geodaten-Dateien automatisch aktualisieren",
       "label_skip_test": "XRAY-Test überspringen",
-      "hint_skip_test": "Überspringt die Prüfung der XRAY-Konfigurationsdatei. Es wird empfohlen, sie aktiviert zu lassen, damit die Konfigurationsdatei vor der Verwendung geprüft wird.<hr/>Der Testschritt kann einige Ressourcen verbrauchen, daher kann es auf einem leistungsschwachen Router ratsam sein, ihn zu deaktivieren.",
+      "hint_skip_test": "Überspringt die Prüfung der XRAY-Konfigurationsdatei. Es wird empfohlen, die Option deaktiviert zu lassen, damit die Konfigurationsdatei vor der Verwendung geprüft wird.<hr/>Der Testschritt kann einige Ressourcen verbrauchen, daher kann es auf einem leistungsschwachen Router ratsam sein, die Option zu aktivieren.",
       "label_clients_check": "Online-Status der Clients überprüfen",
       "hint_clients_check": "Wenn diese Option aktiviert ist, prüft XRAYUI den Online-Status der verbundenen Clients.<hr/>Nützlich, um im Blick zu behalten, welche Clients derzeit mit XRAY verbunden sind.<hr/> Die Option kann einige Ressourcen verbrauchen, daher kann es auf einem leistungsschwachen Router ratsam sein, sie zu deaktivieren.",
       "label_tun_routing": "TUN-Routing",

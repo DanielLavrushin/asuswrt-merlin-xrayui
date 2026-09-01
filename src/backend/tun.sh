@@ -58,7 +58,6 @@ migrate_tun_inbounds_config() {
                     .settings |= (
                         (if has("MTU") and (has("mtu") | not) then .mtu = .MTU else . end)
                         | (if has("address") and ((.gateway // []) | length) == 0 then .gateway = .address else . end)
-                        | (if has("routes") and ((.autoSystemRoutingTable // []) | length) == 0 then .autoSystemRoutingTable = .routes else . end)
                         | del(.MTU, .address, .routes, .gso)
                     )
                 else . end
@@ -78,7 +77,7 @@ migrate_tun_inbounds_config() {
 
     backup_xray_config
     if cp -f "$migrated" "$XRAY_CONFIG_FILE"; then
-        log_ok "Legacy TUN inbound settings migrated: address -> gateway, routes -> autoSystemRoutingTable, gso removed."
+        log_ok "Legacy TUN inbound settings migrated: address -> gateway; routes and gso removed (neither was ever applied by Xray-core)."
     else
         log_error "Failed to write the migrated configuration to $XRAY_CONFIG_FILE."
     fi

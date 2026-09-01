@@ -18,13 +18,33 @@ describe('migrateTunInbound', () => {
     expect(settings.address).toBeUndefined();
   });
 
-  it('moves routes to autoSystemRoutingTable', () => {
+  it('drops routes without translating it to autoSystemRoutingTable', () => {
     const inbound = legacy({ routes: ['10.0.0.0/8'] });
     migrateTunInbound(inbound);
 
     const settings = inbound.settings as Record<string, unknown>;
-    expect(settings.autoSystemRoutingTable).toEqual(['10.0.0.0/8']);
     expect(settings.routes).toBeUndefined();
+    expect(settings.autoSystemRoutingTable).toBeUndefined();
+  });
+
+  it('never enables autoSystemRoutingTable implicitly, since core binds every outbound when it is set', () => {
+    setCoreVersion('26.6.1');
+    const inbound = legacy({ routes: ['10.0.0.0/8'], address: ['192.168.10.1/24'] });
+    migrateTunInbound(inbound);
+    const s = plainToInstance(XrayTunInboundObject, inbound.settings).normalize()!;
+
+    expect(s.autoSystemRoutingTable).toBeUndefined();
+    expect(s.gateway).toEqual(['192.168.10.1/24']);
+  });
+
+  it('strips autoSystemRoutingTable below 26.6.27, where it cannot route but still binds outbounds', () => {
+    setCoreVersion('26.6.1');
+    const s = plainToInstance(XrayTunInboundObject, { name: 'xray0', autoSystemRoutingTable: ['0.0.0.0/0'] }).normalize()!;
+    expect(s.autoSystemRoutingTable).toBeUndefined();
+
+    setCoreVersion('26.6.27');
+    const ok = plainToInstance(XrayTunInboundObject, { name: 'xray0', autoSystemRoutingTable: ['0.0.0.0/0'] }).normalize()!;
+    expect(ok.autoSystemRoutingTable).toEqual(['0.0.0.0/0']);
   });
 
   it('drops gso, which no released core ever accepted', () => {

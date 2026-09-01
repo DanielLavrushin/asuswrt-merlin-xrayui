@@ -217,8 +217,10 @@ export class XrayTunInboundObject implements IProtocolType {
     if (!coreSupports('tunDesc')) this.desc = undefined;
     if (!coreSupports('tunGateway')) {
       this.dns = undefined;
-      this.autoSystemRoutingTable = undefined;
       this.autoOutboundsInterface = undefined;
+    }
+    if (!coreSupports('tunAutoRoute')) {
+      this.autoSystemRoutingTable = undefined;
     }
     if (this.mtu !== undefined && tunUsesUppercaseMtu()) {
       (this as unknown as Record<string, unknown>).MTU = this.mtu;
@@ -260,10 +262,6 @@ export function migrateTunInbound(inbound: { protocol?: string; settings?: unkno
   if (legacy.address?.length && !settings.gateway?.length) {
     settings.gateway = legacy.address;
   }
-  if (legacy.routes?.length && !settings.autoSystemRoutingTable?.length) {
-    settings.autoSystemRoutingTable = legacy.routes;
-  }
-
   delete legacy.address;
   delete legacy.routes;
   delete legacy.gso;

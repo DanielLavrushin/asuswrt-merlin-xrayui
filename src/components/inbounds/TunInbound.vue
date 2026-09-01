@@ -47,7 +47,7 @@
             <span class="hint-color">{{ $t('com.TunInbound.hint_gateway_placeholder') }}</span>
           </td>
         </tr>
-        <tr v-if="supportsGateway">
+        <tr v-if="supportsAutoRoute">
           <th>
             {{ $t('com.TunInbound.label_auto_routing') }}
             <hint v-html="$t('com.TunInbound.hint_auto_routing')"></hint>
@@ -55,8 +55,7 @@
           <td>
             <textarea class="input_32_table" rows="3" v-model="autoRoutingList" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
             <span class="hint-color">{{ $t('com.TunInbound.hint_auto_routing_placeholder') }}</span>
-            <div v-if="autoRoutingConflict" class="tun-warning" v-html="$t('com.TunInbound.warn_auto_routing_conflict')"></div>
-            <div v-else-if="autoRoutingInert" class="tun-warning" v-html="$t('com.TunInbound.warn_auto_routing_inert')"></div>
+            <div v-if="autoRoutingBindsOutbounds" class="tun-warning" v-html="$t('com.TunInbound.warn_auto_routing_conflict')"></div>
           </td>
         </tr>
         <tr v-if="supportsGateway">
@@ -123,7 +122,7 @@
   import InboundCommon from './InboundCommon.vue';
   import { XrayProtocol } from '@/modules/CommonObjects';
   import { XrayTunInboundObject, XrayInboundObject } from '@/modules/InboundObjects';
-  import { coreSupports, coreAppliesTunRoutes } from '@/modules/CoreVersion';
+  import { coreSupports } from '@/modules/CoreVersion';
   import Hint from '@main/Hint.vue';
 
   export default defineComponent({
@@ -155,11 +154,11 @@
       const autoRoutingList = lines('autoSystemRoutingTable');
 
       const supportsGateway = computed(() => coreSupports('tunGateway'));
+      const supportsAutoRoute = computed(() => coreSupports('tunAutoRoute'));
       const supportsDesc = computed(() => coreSupports('tunDesc'));
 
       const hasAutoRouting = computed(() => (inbound.value.settings?.autoSystemRoutingTable?.length ?? 0) > 0);
-      const autoRoutingConflict = computed(() => hasAutoRouting.value && coreAppliesTunRoutes());
-      const autoRoutingInert = computed(() => hasAutoRouting.value && !coreAppliesTunRoutes());
+      const autoRoutingBindsOutbounds = computed(() => hasAutoRouting.value);
 
       return {
         inbound,
@@ -167,9 +166,9 @@
         dnsList,
         autoRoutingList,
         supportsGateway,
+        supportsAutoRoute,
         supportsDesc,
-        autoRoutingConflict,
-        autoRoutingInert
+        autoRoutingBindsOutbounds
       };
     }
   });

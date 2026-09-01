@@ -30,6 +30,7 @@ const CORE_FEATURES = {
   tlsPingCertHash: { since: '26.2.4' },
   tunInbound: { since: '26.1.13' },
   tunGateway: { since: '26.4.13' },
+  tunAutoRoute: { since: '26.6.27' },
   tunDesc: { since: '26.7.28' }
 } as const satisfies Record<string, CoreFeatureRule>;
 

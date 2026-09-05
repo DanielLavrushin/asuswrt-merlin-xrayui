@@ -1,0 +1,1 @@
+import{a as e,c as o,d as n,o as a}from"./app-CsDI5v_v.js";const l={};function r(s,t){return a(),o("div",null,[...t[0]||(t[0]=[n("p",null,"404 Not Found",-1)])])}const d=e(l,[["render",r]]),i=JSON.parse('{"path":"/404.html","title":"","lang":"en-US","frontmatter":{"layout":"NotFound"},"git":{},"filePathRelative":null}');export{d as comp,i as data};

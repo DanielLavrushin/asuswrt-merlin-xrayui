@@ -5,6 +5,7 @@ tproxy_mark=0x10000
 tproxy_mask=0x10000
 tproxy_table=77
 IP6NAT_LOADED="0"
+XRAYUI_FIREWALL_LOCKFILE=/tmp/xrayui.firewall.lock
 
 import ./tun.sh
 
@@ -22,9 +23,13 @@ apply_rule() {
     for IPT in $IPT_LIST; do
         rule="$args"
         if [ "$IPT" = "ip6tables" ]; then
-            rule="$(printf '%s\n' "$rule" | sed 's/\(^\|[[:space:]]\)127\.0\.0\.1\([[:space:]:/]\|$\)/\1::1\2/g')"
+            case "$rule" in
+            *127.0.0.1*) rule="$(printf '%s\n' "$rule" | sed 's/\(^\|[[:space:]]\)127\.0\.0\.1\([[:space:]:/]\|$\)/\1::1\2/g')" ;;
+            esac
         else
-            rule="$(printf '%s\n' "$rule" | sed 's/\(^\|[[:space:]]\)::1\([[:space:]:/]\|$\)/\1127.0.0.1\2/g')"
+            case "$rule" in
+            *::1*) rule="$(printf '%s\n' "$rule" | sed 's/\(^\|[[:space:]]\)::1\([[:space:]:/]\|$\)/\1127.0.0.1\2/g')" ;;
+            esac
         fi
         if [ "$IPT" = "ip6tables" ] && [ "$tbl" = "nat" ]; then
             if [ "$IP6NAT_LOADED" = "0" ]; then
@@ -33,23 +38,63 @@ apply_rule() {
             [ "$IP6NAT_LOADED" != "1" ] && continue
             $IPT -w -t nat -L -n >/dev/null 2>&1 || continue
         fi
-        if [ "$IPT" = "ip6tables" ] && contains_ipv4 "$rule"; then
-            continue
-        fi
-        if [ "$IPT" = "iptables" ]; then
-            if echo "$rule" | grep -qE ':[^[:space:]]*/[0-9]+'; then
-                continue
-            fi
-            if contains_ipv6 "$rule" && ! has_mac_module "$rule"; then
-                continue
-            fi
+        if [ "$IPT" = "ip6tables" ]; then
+            case "$rule" in
+            *[0-9].[0-9]*.[0-9]*.[0-9]*) contains_ipv4 "$rule" && continue ;;
+            esac
+        else
+            case "$rule" in
+            *:*/*) printf '%s\n' "$rule" | grep -qE ':[^[:space:]]*/[0-9]+' && continue ;;
+            esac
+            case "$rule" in
+            *:*:*) contains_ipv6 "$rule" && ! has_mac_module "$rule" && continue ;;
+            esac
         fi
         log_debug " - executing rule: $IPT -w -t $tbl $rule"
-        $IPT -w -t "$tbl" $rule
-        rc=$?
+        $IPT -w -t "$tbl" $rule || rc=$?
         did=1
     done
-    [ $did -eq 1 ] && return $rc || return 0
+    IPT_APPLIED=$did
+    return $rc
+}
+
+ipt_ensure() {
+    local tbl=$1 chain=$2 op=$3 ipt_all="$IPT_LIST" ipt_fam rc=0
+    shift 3
+    for ipt_fam in $ipt_all; do
+        IPT_LIST=$ipt_fam
+        ipt "$tbl" -C "$chain" "$@" 2>/dev/null && continue
+        if [ "$op" = "-I" ]; then
+            ipt "$tbl" -I "$chain" 1 "$@" || rc=1
+        else
+            ipt "$tbl" -A "$chain" "$@" || rc=1
+        fi
+    done
+    IPT_LIST=$ipt_all
+    return $rc
+}
+
+ipt_remove() {
+    local tbl=$1 chain=$2 ipt_all="$IPT_LIST" ipt_fam guard
+    shift 2
+    for ipt_fam in $ipt_all; do
+        IPT_LIST=$ipt_fam
+        guard=0
+        while [ "$guard" -lt 32 ] && ipt "$tbl" -C "$chain" "$@" 2>/dev/null && [ "$IPT_APPLIED" = 1 ]; do
+            ipt "$tbl" -D "$chain" "$@" 2>/dev/null || break
+            guard=$((guard + 1))
+        done
+    done
+    IPT_LIST=$ipt_all
+}
+
+ipt_reset_chain() {
+    local tbl=$1 chain=$2 ipt_all="$IPT_LIST" ipt_fam
+    for ipt_fam in $ipt_all; do
+        IPT_LIST=$ipt_fam
+        ipt "$tbl" -N "$chain" 2>/dev/null || ipt "$tbl" -F "$chain"
+    done
+    IPT_LIST=$ipt_all
 }
 valid_ip_or_cidr() { contains_ipv4 "$1" || contains_ipv6 "$1"; }
 is_default_route() { [ "$1" = "0.0.0.0" ] || [ "$1" = "0.0.0.0/0" ] || [ "$1" = "::/0" ]; }
@@ -67,13 +112,13 @@ has_mac_module() {
 append_rule() {
     local tbl=$1
     shift
-    ipt $tbl -C XRAYUI "$@" 2>/dev/null || ipt $tbl -A XRAYUI "$@"
+    ipt_ensure "$tbl" XRAYUI -A "$@"
 }
 
 insert_rule() {
     local tbl=$1
     shift
-    ipt $tbl -C XRAYUI "$@" 2>/dev/null || ipt $tbl -I XRAYUI 1 "$@"
+    ipt_ensure "$tbl" XRAYUI -I "$@"
 }
 
 contains_ipv4() {
@@ -117,11 +162,59 @@ ensure_hashnet() {
     ipset create "$s" hash:net family "$fam" timeout 86400 -exist
 }
 
+has_loopback_dokodemo() {
+    jq -e '
+        any(.inbounds[]?;
+            .protocol == "dokodemo-door"
+            and ((.tag // "") | tostring | startswith("sys:") | not)
+            and ((.listen // "") | tostring | startswith("127.")))
+    ' "$XRAY_CONFIG_FILE" >/dev/null 2>&1
+}
+
 firewall_is_configured() {
     iptables -w -t filter -n -L XRAYUI >/dev/null 2>&1
 }
 
+firewall_lock() {
+    local waited=0
+    which flock >/dev/null 2>&1 || return 0
+    while ! flock -n 9; do
+        if [ "$waited" -ge 120 ]; then
+            log_warn "Timed out waiting for another firewall update to finish. Continuing anyway."
+            return 0
+        fi
+        if [ "$waited" -eq 0 ]; then
+            log_info "Another firewall update is in progress. Waiting for it to finish..."
+        fi
+        sleep 1
+        waited=$((waited + 1))
+    done
+}
+
+with_firewall_lock() {
+    local rc
+    if ! touch "$XRAYUI_FIREWALL_LOCKFILE" 2>/dev/null; then
+        "$@"
+        return
+    fi
+    {
+        firewall_lock
+        "$@"
+        rc=$?
+        flock -u 9 2>/dev/null
+    } 9>"$XRAYUI_FIREWALL_LOCKFILE"
+    return $rc
+}
+
 configure_firewall() {
+    with_firewall_lock configure_firewall_rules
+}
+
+cleanup_firewall() {
+    with_firewall_lock cleanup_firewall_rules
+}
+
+configure_firewall_rules() {
     local STARTUP_LOCK="/tmp/xrayui_startup.lock"
     if [ -f "$STARTUP_LOCK" ]; then
         local lock_pid=$(cat "$STARTUP_LOCK" 2>/dev/null)
@@ -169,28 +262,20 @@ configure_firewall() {
     fi
 
     # Clamp TCP MSS to path-MTU for every forwarded SYN (v4 + v6)
-    ipt mangle -C FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null ||
-        ipt mangle -I FORWARD 1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+    ipt_ensure mangle FORWARD -I -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 
     # create / flush chains (filter + mangle for both families)
     for tbl in filter mangle nat; do
-        ipt "$tbl" -N XRAYUI 2>/dev/null || ipt "$tbl" -F XRAYUI
+        ipt_reset_chain "$tbl" XRAYUI
     done
 
-    ipt mangle -N DIVERT 2>/dev/null || ipt mangle -F DIVERT
+    ipt_reset_chain mangle DIVERT
     ipt mangle -A DIVERT -j MARK --set-mark $tproxy_mark/$tproxy_mask
     ipt mangle -A DIVERT -j CONNMARK --save-mark --mask $tproxy_mask
     ipt mangle -A DIVERT -j ACCEPT
 
     if lsmod | grep -q '^xt_socket ' || modprobe xt_socket 2>/dev/null; then
-        if ! iptables -t mangle -C PREROUTING -p tcp -m socket --transparent -j DIVERT 2>/dev/null; then
-            iptables -t mangle -I PREROUTING 1 -p tcp -m socket --transparent -j DIVERT
-        fi
-        if is_ipv6_enabled; then
-            if ! ip6tables -t mangle -C PREROUTING -p tcp -m socket --transparent -j DIVERT 2>/dev/null; then
-                ip6tables -t mangle -I PREROUTING 1 -p tcp -m socket --transparent -j DIVERT
-            fi
-        fi
+        ipt_ensure mangle PREROUTING -I -p tcp -m socket --transparent -j DIVERT
     else
         log_warn "xt_socket missing; skipping transparent DIVERT hook"
     fi
@@ -199,8 +284,8 @@ configure_firewall() {
 
     configure_firewall_server
 
-    ipt filter -C INPUT -j XRAYUI 2>/dev/null || ipt filter -I INPUT 1 -j XRAYUI
-    ipt filter -C FORWARD -j XRAYUI 2>/dev/null || ipt filter -I FORWARD 1 -j XRAYUI
+    ipt_ensure filter INPUT -I -j XRAYUI
+    ipt_ensure filter FORWARD -I -j XRAYUI
 
     # Clamp MSS for Xray-originated flows as well
     local daemon_uid=""
@@ -235,15 +320,7 @@ configure_firewall() {
             sort -u
     )"
 
-    if jq -e '
-  .inbounds[]
-  | select(
-      .protocol == "dokodemo-door"
-      and ((.tag // "") | startswith("sys:") | not)
-    )
-  | (.listen // "")
-  | startswith("127.")
-' "$XRAY_CONFIG_FILE" >/dev/null; then
+    if has_loopback_dokodemo; then
         set_route_localnet 1
     fi
 
@@ -251,7 +328,7 @@ configure_firewall() {
     local fw_before_script="$ADDON_USER_SCRIPTS_DIR/firewall_before_start"
     if [ -x "$fw_before_script" ]; then
         log_info "Executing custom  firewall before start script: $fw_before_script"
-        "$fw_before_script" || log_error "Error executing $fw_before_script."
+        "$fw_before_script" 9>&- || log_error "Error executing $fw_before_script."
     fi
 
     configure_inbounds
@@ -266,7 +343,7 @@ configure_firewall() {
     local fw_after_script="$ADDON_USER_SCRIPTS_DIR/firewall_after_start"
     if [ -x "$fw_after_script" ]; then
         log_info "Executing custom  firewall after start script: $fw_after_script"
-        "$fw_after_script" || log_error "Error executing $fw_after_script."
+        "$fw_after_script" 9>&- || log_error "Error executing $fw_after_script."
     fi
 
     log_ok "XRAYUI firewall rules applied successfully."
@@ -374,7 +451,7 @@ configure_dns_leak_lock() {
     fi
 
     for hook in $dns_lock_hooks; do
-        ipt filter -C $hook -j XRAYUI_DNS_LOCK 2>/dev/null || ipt filter -I $hook 1 -j XRAYUI_DNS_LOCK
+        ipt_ensure filter "$hook" -I -j XRAYUI_DNS_LOCK
     done
 
     log_ok "DNS leak lock applied"
@@ -422,8 +499,8 @@ configure_firewall_server() {
         local IPT_LISTEN_FLAGS="$IPT_LISTEN_ADDR_FLAGS --dport $port -j ACCEPT"
 
         log_debug "Adding rules for inbound:$tag $listen_addr $port $IPT_LISTEN_FLAGS"
-        ipt filter -I XRAYUI 1 -p tcp $IPT_LISTEN_FLAGS
-        ipt filter -I XRAYUI 1 -p udp $IPT_LISTEN_FLAGS
+        ipt filter -I XRAYUI 1 -m addrtype --dst-type LOCAL -p tcp $IPT_LISTEN_FLAGS
+        ipt filter -I XRAYUI 1 -m addrtype --dst-type LOCAL -p udp $IPT_LISTEN_FLAGS
 
         log_ok "Firewall SERVER rules applied for inbound:$tag $listen_addr $port"
     done
@@ -433,9 +510,6 @@ configure_firewall_client() {
     local inbounds inbound dokodemo_port protocols tcp_enabled udp_enabled
     local IPT_TYPE=$1
     inbounds=$2
-
-    set_global_redirect=""
-    set_global_bypass=""
 
     log_info "Configuring aggregated $IPT_TYPE rules for dokodemo-door inbounds..."
 
@@ -521,11 +595,6 @@ configure_firewall_client() {
             ip6tables -w -t "$IPT_TABLE" -I XRAYUI 4 -p icmpv6 -j RETURN
         fi
 
-        # Block QUIC (UDP 443)
-        if [ "$xray_block_quic" = "true" ]; then
-            log_info "Blocking QUIC (UDP 443) to prevent IP address leak"
-            ipt "$IPT_TABLE" -I XRAYUI 1 -p udp --dport 443 -j DROP
-        fi
     fi
 
     for net in $source_nets; do
@@ -639,31 +708,33 @@ configure_firewall_client() {
     # Exclude server ports
     server_ports=$(jq -r '.inbounds[]
     | select(.protocol != "dokodemo-door")
-    | .port' "$XRAY_CONFIG_FILE" | sort -u)
+    | (.port | tonumber? // empty)' "$XRAY_CONFIG_FILE" | sort -u)
 
     if [ -n "$server_ports" ]; then
         log_info "Excluding server ports from $IPT_TABLE."
         for port in $server_ports; do
             for proto in tcp udp; do
-                ipt $IPT_BASE_FLAGS -p "$proto" --dport "$port" -j RETURN
+                ipt $IPT_BASE_FLAGS -m addrtype --dst-type LOCAL -p "$proto" --dport "$port" -j RETURN
             done
             log_debug "Excluding server port $port (tcp+udp) from $IPT_TABLE."
         done
     fi
 
-    collected_redirect_rules=""
-
-    # Collect all policies from the xray config file
-    jq -c '
-            (.routing.policies // []) 
-            | map(select(.enabled == true)) 
-            as $enabled
-            | (if ($enabled | length) == 0 
-                then [{ mode: "redirect", enabled: true, name: "all traffic to xray" }] 
-                else $enabled 
-                end)
-            | .[]
-        ' "$XRAY_CONFIG_FILE" >/tmp/xrayui-policies.$$
+    local policies_file="/tmp/xrayui-policies.$$"
+    jq -r '
+        def clean: tostring | split("\n") | join(" ");
+        (.routing.policies // [])
+        | map(select(.enabled == true)) as $enabled
+        | (if ($enabled | length) == 0 then [{ mode: "redirect", name: "all traffic to xray" }] else $enabled end)
+        | .[]
+        | "policy_name=" + ((.name // "") | clean | @sh)
+          + " policy_mode=" + ((.mode // "bypass") | clean | @sh)
+          + " policy_tcp=" + ((.tcp // "") | clean | @sh)
+          + " policy_udp=" + ((.udp // "") | clean | @sh)
+          + " policy_macs=" + ([.mac[]? | tostring | explode
+                | map(select((. >= 48 and . <= 58) or (. >= 65 and . <= 70) or (. >= 97 and . <= 102)))
+                | implode | select(length > 0)] | join(" ") | @sh)
+    ' "$XRAY_CONFIG_FILE" >"$policies_file"
 
     # Start Redirecting traffic to the xray
 
@@ -686,7 +757,7 @@ configure_firewall_client() {
         fi
 
         if [ "$IPT_TYPE" = "TPROXY" ]; then
-            if [ "$dokodemo_addr" != "0.0.0.0" ]; then
+            if [ "$dokodemo_addr" != "0.0.0.0" ] && [ "$dokodemo_addr" != "::" ]; then
                 local IPT_JOURNAL_FLAGS="-j TPROXY --on-port $dokodemo_port --on-ip $dokodemo_addr --tproxy-mark $tproxy_mark/$tproxy_mask"
             else
                 local IPT_JOURNAL_FLAGS="-j TPROXY --on-port $dokodemo_port --tproxy-mark $tproxy_mark/$tproxy_mask"
@@ -694,7 +765,7 @@ configure_firewall_client() {
 
             log_debug "TPROXY  inbound address: $dokodemo_addr:$dokodemo_port"
         else
-            if [ "$dokodemo_addr" != "0.0.0.0" ]; then
+            if [ "$dokodemo_addr" != "0.0.0.0" ] && [ "$dokodemo_addr" != "::" ]; then
                 local IPT_JOURNAL_FLAGS="-j DNAT --to-destination $dokodemo_addr:$dokodemo_port"
                 log_debug "DNAT inbound address: $dokodemo_addr:$dokodemo_port"
             else
@@ -717,84 +788,22 @@ configure_firewall_client() {
             [ "$udp_enabled" = "yes" ] && insert_rule filter -m addrtype --dst-type LOCAL -p udp --dport "$dokodemo_port" -j ACCEPT
         fi
 
-        # Apply policy rules
         log_info "Apply $IPT_TYPE rules for inbound on port $dokodemo_port with protocols '$protocols'."
-
-        while IFS= read -r policy; do
-            local _policy_vars
-            if ! _policy_vars=$(echo "$policy" | jq -r '
-                "policy_name=" + ((.name // "") | tostring | @sh) + "\n" +
-                "policy_mode=" + ((.mode // "bypass") | tostring | @sh) + "\n" +
-                "tcp_ports=" + ((.tcp // "") | tostring | @sh) + "\n" +
-                "udp_ports=" + ((.udp // "") | tostring | @sh) + "\n" +
-                "macs=" + (([.mac[]?] | join("\n")) | @sh)
-            '); then
-                log_warn "Skipping malformed policy: failed to parse JSON"
-                continue
-            fi
-            eval "$_policy_vars"
-
-            [ -z "$macs" ] && macs="ANY"
-
-            log_info "Applying policy: $policy_name, MODE: $policy_mode"
-
-            [ "$tcp_enabled" = "yes" ] && [ -n "$tcp_ports" ] && tcp_flags="-m multiport --dports $tcp_ports"
-            [ "$udp_enabled" = "yes" ] && [ -n "$udp_ports" ] && udp_flags="-m multiport --dports $udp_ports"
-
-            [ -z "$set_global_redirect" ] && [ "$policy_mode" = "redirect" ] && [ "$macs" = "ANY" ] && [ -z "$tcp_ports" ] && [ -z "$udp_ports" ] && set_global_redirect="yes"
-            [ -z "$set_global_bypass" ] && [ "$policy_mode" = "bypass" ] && [ "$macs" = "ANY" ] && [ -z "$tcp_flags" ] && [ -z "$udp_flags" ] && set_global_bypass="yes"
-
-            for src in $source_nets; do
-                base="-s $src"
-                for mac in $macs; do
-                    [ "$mac" = "ANY" ] && mac_flag="" || mac_flag="-m mac --mac-source $mac"
-
-                    if [ "$policy_mode" = "bypass" ]; then
-                        [ -z "$tcp_flags" ] && [ -z "$udp_flags" ] && [ "$mac" != "ANY" ] && insert_rule "$IPT_TABLE" $base $mac_flag -j RETURN && continue
-                        [ -n "$tcp_flags" ] && append_rule "$IPT_TABLE" $base $mac_flag -p tcp -m multiport ! --dports "$tcp_ports" -j RETURN
-                        [ -n "$udp_flags" ] && append_rule "$IPT_TABLE" $base $mac_flag -p udp -m multiport ! --dports "$udp_ports" -j RETURN
-
-                        [ "$mac" = "ANY" ] && [ -n "$tcp_flags" ] && append_rule "$IPT_TABLE" $base $mac_flag -p tcp $IPT_JOURNAL_FLAGS
-                        [ "$mac" = "ANY" ] && [ -n "$udp_flags" ] && append_rule "$IPT_TABLE" $base $mac_flag -p udp $IPT_JOURNAL_FLAGS
-                    fi
-                    if [ "$policy_mode" = "redirect" ]; then
-                        [ -n "$tcp_flags" ] && append_rule "$IPT_TABLE" $base $mac_flag -p tcp -m multiport --dports "$tcp_ports" -j RETURN
-                        [ -n "$udp_flags" ] && append_rule "$IPT_TABLE" $base $mac_flag -p udp -m multiport --dports "$udp_ports" -j RETURN
-
-                        [ "$mac" != "ANY" ] && [ -z "$tcp_flags" ] && append_rule "$IPT_TABLE" $base $mac_flag -p tcp $IPT_JOURNAL_FLAGS && set_global_bypass="yes"
-                        [ "$mac" != "ANY" ] && [ -z "$udp_flags" ] && append_rule "$IPT_TABLE" $base $mac_flag -p udp $IPT_JOURNAL_FLAGS && set_global_bypass="yes"
-                    fi
-                done
-            done
-            unset tcp_flags udp_flags macs tcp_ports udp_ports mac_flag
-        done </tmp/xrayui-policies.$$
-
-        log_debug "Detecting global rules: set_global_bypass=$set_global_bypass, set_global_redirect=$set_global_redirect"
-        if { ! iptables -w -t "$IPT_TABLE" -S XRAYUI | grep -q -E ' -j (TPROXY|DNAT|REDIRECT)' && [ -z "$set_global_bypass" ]; } || { [ -n "$set_global_redirect" ] && [ -z "$set_global_bypass" ]; }; then
-            for src in $source_nets; do
-                append_rule "$IPT_TABLE" -s "$src" -p tcp $IPT_JOURNAL_FLAGS
-                append_rule "$IPT_TABLE" -s "$src" -p udp $IPT_JOURNAL_FLAGS
-            done
-        fi
+        [ "$tcp_enabled" = "yes" ] && apply_policy_rules "$IPT_TABLE" tcp "$policies_file" "$source_nets" $IPT_JOURNAL_FLAGS
+        [ "$udp_enabled" = "yes" ] && apply_policy_rules "$IPT_TABLE" udp "$policies_file" "$source_nets" $IPT_JOURNAL_FLAGS
 
         # Exclude dokodemo-door port from TPROXY  destination
         log_info "Excluding dokodemo-door port $dokodemo_port from $IPT_TABLE."
-        insert_rule "$IPT_TABLE" -p tcp --dport "$dokodemo_port" -j RETURN
-        insert_rule "$IPT_TABLE" -p udp --dport "$dokodemo_port" -j RETURN
+        insert_rule "$IPT_TABLE" -m addrtype --dst-type LOCAL -p tcp --dport "$dokodemo_port" -j RETURN
+        insert_rule "$IPT_TABLE" -m addrtype --dst-type LOCAL -p udp --dport "$dokodemo_port" -j RETURN
 
     done <<EOF
 $inbounds
 EOF
     # --- End Exclusion Rules ---
 
-    rm -f /tmp/xrayui-policies.$$
+    rm -f "$policies_file"
     if [ "$IPT_TYPE" = "TPROXY" ]; then
-        if [ -n "$set_global_bypass" ]; then
-            log_info "Adding global bypass rule for $IPT_TABLE."
-            append_rule "$IPT_TABLE" -j RETURN
-            unset set_global_bypass
-        fi
-
         add_tproxy_routes "$tproxy_mark/$tproxy_mask" "$tproxy_table"
     else
         ipt $IPT_TABLE -A XRAYUI -p tcp -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN
@@ -805,9 +814,7 @@ EOF
 
     # Hook chain into  PREROUTING:
     log_info "Hooking XRAYUI chain into $IPT_TABLE PREROUTING."
-    if ! ipt "$IPT_TABLE" -C PREROUTING -j XRAYUI 2>/dev/null; then
-        ipt "$IPT_TABLE" -A PREROUTING -j XRAYUI
-    fi
+    ipt_ensure "$IPT_TABLE" PREROUTING -A -j XRAYUI
 
     if [ "$POST_RESTART_DNSMASQ" = "false" ]; then
         dnsmasq_restart
@@ -816,7 +823,7 @@ EOF
     log_ok "$IPT_TYPE rules applied."
 }
 
-cleanup_firewall() {
+cleanup_firewall_rules() {
 
     log_info "Cleaning up Xray Client firewall rules..."
     update_loading_progress "Cleaning up Xray Client firewall rules..."
@@ -837,9 +844,7 @@ cleanup_firewall() {
 
     for tbl in filter mangle nat; do
         for hook in INPUT FORWARD PREROUTING OUTPUT; do
-            while ipt $tbl -C $hook -j XRAYUI 2>/dev/null; do
-                ipt $tbl -D $hook -j XRAYUI 2>/dev/null || break
-            done
+            ipt_remove "$tbl" "$hook" -j XRAYUI
         done
 
         ipt $tbl -F XRAYUI 2>/dev/null
@@ -848,9 +853,7 @@ cleanup_firewall() {
 
     # Tear down the DNS leak lock (filter:OUTPUT, filter:FORWARD)
     for hook in OUTPUT FORWARD; do
-        while ipt filter -C $hook -j XRAYUI_DNS_LOCK 2>/dev/null; do
-            ipt filter -D $hook -j XRAYUI_DNS_LOCK 2>/dev/null || break
-        done
+        ipt_remove filter "$hook" -j XRAYUI_DNS_LOCK
     done
     ipt filter -F XRAYUI_DNS_LOCK 2>/dev/null
     ipt filter -X XRAYUI_DNS_LOCK 2>/dev/null
@@ -862,12 +865,8 @@ cleanup_firewall() {
         ipset destroy "$s" 2>/dev/null || ipset flush "$s" 2>/dev/null
     done
 
-    while ipt mangle -C FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null; do
-        ipt mangle -D FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null || break
-    done
-    while ipt mangle -C OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null; do
-        ipt mangle -D OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null || break
-    done
+    ipt_remove mangle FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+    ipt_remove mangle OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 
     for IPT in $IPT_LIST; do
         $IPT -w -t mangle -S OUTPUT 2>/dev/null |
@@ -882,19 +881,13 @@ cleanup_firewall() {
     ipt mangle -D DIVERT -j CONNMARK --save-mark --mask $tproxy_mask 2>/dev/null
     ipt mangle -D DIVERT -j ACCEPT 2>/dev/null
 
-    while iptables -t mangle -C PREROUTING -p tcp -m socket --transparent -j DIVERT 2>/dev/null; do
-        iptables -t mangle -D PREROUTING -p tcp -m socket --transparent -j DIVERT
-    done
-    if is_ipv6_enabled; then
-        while ip6tables -t mangle -C PREROUTING -p tcp -m socket --transparent -j DIVERT 2>/dev/null; do
-            ip6tables -t mangle -D PREROUTING -p tcp -m socket --transparent -j DIVERT
-        done
-    fi
+    ipt_remove mangle PREROUTING -p tcp -m socket --transparent -j DIVERT
 
     for fam in -4 -6; do
         [ "$fam" = "-6" ] && ! is_ipv6_enabled && continue
         while ip $fam rule list | grep -q "fwmark $tproxy_mark.* lookup $tproxy_table"; do
-            ip $fam rule del fwmark $tproxy_mark lookup $tproxy_table 2>/dev/null || break
+            ip $fam rule del fwmark $tproxy_mark/$tproxy_mask lookup $tproxy_table 2>/dev/null ||
+                ip $fam rule del fwmark $tproxy_mark lookup $tproxy_table 2>/dev/null || break
         done
     done
 
@@ -923,24 +916,14 @@ cleanup_firewall() {
         done
     fi
 
-    if [ -f "$XRAY_CONFIG_FILE" ]; then
-        if jq -e '
-  .inbounds[]
-  | select(
-      .protocol == "dokodemo-door"
-      and ((.tag // "") | startswith("sys:") | not)
-    )
-  | (.listen // "")
-  | startswith("127.")
-' "$XRAY_CONFIG_FILE" >/dev/null; then
-            set_route_localnet 0
-        fi
+    if [ -f "$XRAY_CONFIG_FILE" ] && has_loopback_dokodemo; then
+        set_route_localnet 0
     fi
 
     local script="$ADDON_USER_SCRIPTS_DIR/firewall_after_cleanup"
     if [ -x "$script" ]; then
         log_info "Executing user firewall script: $script"
-        "$script" "$XRAY_CONFIG_FILE" || log_error "Error executing $script."
+        "$script" "$XRAY_CONFIG_FILE" 9>&- || log_error "Error executing $script."
     fi
 
     if [ "$POST_RESTART_DNSMASQ" = "false" ]; then
@@ -1049,9 +1032,93 @@ ensure_bypass_ipset() {
     fi
 }
 
-split_ports() {
-    [ -z "$1" ] && return 0
-    printf '%s\n' "$1" | tr ',' '\n' | xargs -n15 | sed 's/ /,/g'
+port_chunks() {
+    [ -n "$1" ] || return 0
+    printf '%s\n' "$1" | sed 's/-/:/g' | tr -cd '0-9,:' | tr ',' '\n' | awk '
+        NF {
+            w = index($0, ":") ? 2 : 1
+            if (n + w > 15) {
+                print s
+                s = ""
+                n = 0
+            }
+            s = (s == "" ? $0 : s "," $0)
+            n += w
+        }
+        END { if (s != "") print s }'
+}
+
+port_list_has() {
+    local port=$1 item lo hi
+    for item in $(printf '%s\n' "$2" | tr ',' ' '); do
+        lo=${item%%:*}
+        hi=${item##*:}
+        [ "$port" -ge "$lo" ] 2>/dev/null && [ "$port" -le "$hi" ] 2>/dev/null && return 0
+    done
+    return 1
+}
+
+emit_policy_rules() {
+    local tbl=$1 proto=$2 mode=$3 ports=$4 devices=$5 nets=$6
+    shift 6
+    local src dev sel chunk chunks block_quic=""
+    [ "$proto" = "udp" ] && [ "$tbl" = "mangle" ] && [ "$xray_block_quic" = "true" ] && block_quic=1
+    chunks=$(port_chunks "$ports")
+    for src in $nets; do
+        for dev in $devices; do
+            sel="-s $src"
+            [ "$dev" = "ANY" ] || sel="$sel -m mac --mac-source $dev"
+            if [ "$mode" = "redirect" ]; then
+                for chunk in $chunks; do
+                    append_rule "$tbl" $sel -p "$proto" -m multiport --dports "$chunk" -j RETURN
+                done
+                [ -n "$block_quic" ] && append_rule "$tbl" $sel -p udp --dport 443 -j DROP
+                append_rule "$tbl" $sel -p "$proto" "$@"
+            else
+                for chunk in $chunks; do
+                    [ -n "$block_quic" ] && port_list_has 443 "$chunk" && append_rule "$tbl" $sel -p udp --dport 443 -j DROP
+                    append_rule "$tbl" $sel -p "$proto" -m multiport --dports "$chunk" "$@"
+                done
+                append_rule "$tbl" $sel -p "$proto" -j RETURN
+            fi
+        done
+    done
+}
+
+apply_policy_rules() {
+    local tbl=$1 proto=$2 policies=$3 nets=$4
+    shift 4
+    local line pass ports everyone_done="" device_redirect=""
+    local policy_name policy_mode policy_tcp policy_udp policy_macs
+    for pass in devices everyone; do
+        while IFS= read -r line; do
+            [ -n "$line" ] || continue
+            eval "$line"
+            case "$policy_mode" in
+            redirect | bypass) ;;
+            *) continue ;;
+            esac
+            if [ "$pass" = "devices" ]; then
+                [ -n "$policy_macs" ] || continue
+                [ "$policy_mode" = "redirect" ] && device_redirect=1
+            else
+                if [ -n "$policy_macs" ] || [ -n "$everyone_done" ]; then
+                    continue
+                fi
+                everyone_done=1
+            fi
+            if [ "$proto" = "tcp" ]; then
+                ports=$policy_tcp
+            else
+                ports=$policy_udp
+            fi
+            log_info "Applying policy: $policy_name, MODE: $policy_mode, protocol: $proto"
+            emit_policy_rules "$tbl" "$proto" "$policy_mode" "$ports" "${policy_macs:-ANY}" "$nets" "$@"
+        done <"$policies"
+    done
+    if [ -z "$everyone_done" ] && [ -z "$device_redirect" ]; then
+        emit_policy_rules "$tbl" "$proto" redirect "" ANY "$nets" "$@"
+    fi
 }
 
 resolve_host_ips() {

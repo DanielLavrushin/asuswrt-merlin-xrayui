@@ -1,0 +1,224 @@
+#!/bin/sh
+fam=${FAKE_IPT_FAMILY:-${0##*/}}
+st=${FW_STATE:?FW_STATE is not set}
+tbl=filter
+want_tbl=0
+for a do
+    shift
+    if [ "$want_tbl" = 1 ]; then
+        tbl=$a
+        want_tbl=0
+        continue
+    fi
+    case "$a" in
+    -w | -n | -v) continue ;;
+    -t)
+        want_tbl=1
+        continue
+        ;;
+    esac
+    set -- "$@" "$a"
+done
+
+printf '%s -t %s %s\n' "$fam" "$tbl" "$*" >>"$st/calls.log"
+
+chains="$st/$fam.$tbl.chains"
+rules="$st/$fam.$tbl.rules"
+if [ ! -f "$chains" ]; then
+    case "$tbl" in
+    filter) printf 'INPUT\nFORWARD\nOUTPUT\n' ;;
+    nat) printf 'PREROUTING\nINPUT\nOUTPUT\nPOSTROUTING\n' ;;
+    mangle) printf 'PREROUTING\nINPUT\nFORWARD\nOUTPUT\nPOSTROUTING\n' ;;
+    raw) printf 'PREROUTING\nOUTPUT\n' ;;
+    *)
+        echo "$fam: can't initialize $fam table \`$tbl': Table does not exist" >&2
+        exit 3
+        ;;
+    esac >"$chains"
+    : >"$rules"
+fi
+
+is_builtin() {
+    case "$1" in
+    PREROUTING | INPUT | FORWARD | OUTPUT | POSTROUTING) return 0 ;;
+    esac
+    return 1
+}
+has_chain() {
+    while IFS= read -r c; do
+        [ "$c" = "$1" ] && return 0
+    done <"$chains"
+    return 1
+}
+has_line() {
+    while IFS= read -r l; do
+        [ "$l" = "$1" ] && return 0
+    done <"$rules"
+    return 1
+}
+rewrite_rules() {
+    out=""
+    nl='
+'
+    done=0
+    n=0
+    while IFS= read -r l; do
+        case "$1" in
+        insert)
+            case "$l" in
+            "$chain	"*)
+                n=$((n + 1))
+                if [ "$n" = "$pos" ] && [ "$done" = 0 ]; then
+                    out="$out$line$nl"
+                    done=1
+                fi
+                ;;
+            esac
+            out="$out$l$nl"
+            ;;
+        delete)
+            if [ "$l" = "$line" ] && [ "$done" = 0 ]; then
+                done=1
+                continue
+            fi
+            out="$out$l$nl"
+            ;;
+        flush)
+            case "$l" in
+            "$chain	"*) continue ;;
+            esac
+            out="$out$l$nl"
+            ;;
+        esac
+    done <"$rules"
+    [ "$1" = insert ] && [ "$done" = 0 ] && out="$out$line$nl"
+    printf '%s' "$out" >"$rules"
+}
+fail() {
+    echo "$fam: $2" >&2
+    exit "$1"
+}
+
+validate() {
+    prev=""
+    for t do
+        case "$prev" in
+        -s | -d | --on-ip)
+            case "$fam:$t" in
+            iptables:*:*) fail 2 "host/network \`$t' not found" ;;
+            ip6tables:*:*) ;;
+            ip6tables:*) fail 2 "host/network \`$t' not found" ;;
+            esac
+            ;;
+        --to-destination)
+            case "$fam:$t" in
+            ip6tables:[0-9]*.*.*.*) fail 2 "Bad IP address \"$t\"" ;;
+            esac
+            ;;
+        --dport | --sport | --on-port | --to-ports)
+            case "$t" in
+            '' | *[!0-9:]*) fail 2 "invalid port/service \`$t' specified" ;;
+            esac
+            ;;
+        --dports | --sports)
+            case "$t" in
+            '' | *[!0-9,:]*) fail 2 "invalid port/service \`$t' specified" ;;
+            esac
+            weight=$(printf '%s\n' "$t" | tr ',' '\n' | awk 'NF { w += index($0, ":") ? 2 : 1 } END { print w + 0 }')
+            [ "$weight" -gt 15 ] && fail 2 "too many ports specified"
+            ;;
+        --mac-source)
+            printf '%s\n' "$t" | grep -Eqx '([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}' || fail 2 "Bad mac address \"$t\""
+            ;;
+        -j)
+            case "$t" in
+            ACCEPT | DROP | RETURN | REJECT | MARK | CONNMARK | TPROXY | DNAT | REDIRECT | TCPMSS | LOG | MASQUERADE | SNAT | NOTRACK) ;;
+            *) has_chain "$t" || fail 1 "Couldn't load target \`$t':No such file or directory" ;;
+            esac
+            ;;
+        esac
+        prev=$t
+    done
+}
+
+op=$1
+[ $# -gt 0 ] && shift
+chain=${1:-}
+
+case "$op" in
+-N)
+    has_chain "$chain" && fail 1 "Chain already exists."
+    printf '%s\n' "$chain" >>"$chains"
+    ;;
+-F)
+    if [ -n "$chain" ]; then
+        has_chain "$chain" || fail 1 "No chain/target/match by that name."
+        rewrite_rules flush
+    else
+        : >"$rules"
+    fi
+    ;;
+-X)
+    has_chain "$chain" || fail 1 "No chain/target/match by that name."
+    is_builtin "$chain" && fail 2 "Can't delete built-in chain"
+    awk -F'\t' -v c="$chain" '{ n = split($2, t, " "); for (i = 1; i < n; i++) if (t[i] == "-j" && t[i + 1] == c) found = 1 } END { exit found ? 0 : 1 }' "$rules" && fail 1 "Too many links."
+    awk -F'\t' -v c="$chain" '$1 == c { found = 1 } END { exit found ? 0 : 1 }' "$rules" && fail 1 "Directory not empty."
+    grep -vx -- "$chain" "$chains" >"$chains.tmp"
+    mv "$chains.tmp" "$chains"
+    ;;
+-A | -I | -C | -D)
+    shift
+    has_chain "$chain" || fail 1 "No chain/target/match by that name."
+    pos=""
+    if [ "$op" = "-I" ]; then
+        case "${1:-}" in
+        '' | *[!0-9]*) pos=1 ;;
+        *)
+            pos=$1
+            shift
+            ;;
+        esac
+    fi
+    validate "$@"
+    rule="$*"
+    line="$chain	$rule"
+    case "$op" in
+    -A) printf '%s\n' "$line" >>"$rules" ;;
+    -I)
+        rewrite_rules insert
+        ;;
+    -C) has_line "$line" || exit 1 ;;
+    -D)
+        has_line "$line" || fail 1 "Bad rule (does a matching rule exist in that chain?)."
+        rewrite_rules delete
+        ;;
+    esac
+    ;;
+-S | -L)
+    want=""
+    case "$chain" in
+    -* | '') ;;
+    *)
+        want=$chain
+        has_chain "$want" || fail 1 "No chain/target/match by that name."
+        ;;
+    esac
+    [ "$op" = "-L" ] && exit 0
+    while IFS= read -r c; do
+        [ -n "$want" ] && [ "$c" != "$want" ] && continue
+        if is_builtin "$c"; then
+            printf -- '-P %s ACCEPT\n' "$c"
+        else
+            printf -- '-N %s\n' "$c"
+        fi
+    done <"$chains"
+    while IFS= read -r c; do
+        [ -n "$want" ] && [ "$c" != "$want" ] && continue
+        awk -F'\t' -v c="$c" '$1 == c { print "-A " $1 " " $2 }' "$rules"
+    done <"$chains"
+    ;;
+*)
+    fail 2 "unsupported operation in fake: $op"
+    ;;
+esac
+exit 0

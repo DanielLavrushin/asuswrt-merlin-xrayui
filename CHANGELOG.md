@@ -1,5 +1,19 @@
 # XRAYUI Changelog
 
+## [0.70.0] - 2026-09-xx
+
+- FIXED: With a server inbound on port 443, HTTPS from LAN devices went around the proxy. Now only connections to the router itself skip the proxy.
+- FIXED: Proxy rules could vanish after the router reconnected to the internet or rebuilt its firewall, leaving LAN traffic unproxied until the next Xray restart. This showed up most often with IPv6 enabled.
+- FIXED: With IPv6 enabled, a server inbound's port was opened not only on the router but on every device in the LAN.
+- FIXED: A transparent inbound set to TCP only broke all UDP traffic of LAN devices, such as games and calls. UDP now goes direct in that case.
+- FIXED: Bypass and redirect policies did not always do what their descriptions say. A device redirected with excluded ports lost its other TCP traffic, a policy for one device switched off an "all devices" policy, and a bypassed device still had its UDP proxied.
+- FIXED: Policies listing more than 15 ports were ignored.
+- FIXED: **Block QUIC** also blocked UDP port 443 arriving from the internet, which broke QUIC-based server inbounds and port forwards on that port. It now affects only traffic that goes through Xray.
+- FIXED: Two firewall updates running at the same time, such as a restart during a reconnect, could leave duplicate or missing rules.
+- FIXED: An inbound listening on `127.0.0.1` got no traffic when another transparent inbound was listed after it.
+- FIXED: A transparent inbound listening on `::` got no IPv4 traffic.
+- FIXED: Stopping Xray left a routing rule behind on the router.
+
 ## [0.69.1] - 2026-09-01
 
 - FIXED: IPv6 addresses could not be typed into the inbound **Listen** field, the SOCKS **Local IP address** field or the DNS **Client IP** field — the inputs only accepted IPv4 and cut off at 15 characters. All three now accept IPv6, with or without square brackets. Thanks to [@xxhhlk](https://github.com/xxhhlk). ([#386](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/pull/386))

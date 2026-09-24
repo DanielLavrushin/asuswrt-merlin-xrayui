@@ -1,0 +1,47 @@
+#!/bin/sh
+st=${FW_STATE:?FW_STATE is not set}
+f="$st/ipset.sets"
+touch "$f"
+printf 'ipset %s\n' "$*" >>"$st/calls.log"
+case "${1:-}" in
+list)
+    if [ "${2:-}" = "-n" ]; then
+        awk '{ print $1 }' "$f"
+        exit 0
+    fi
+    line=$(awk -v n="${2:-}" '$1 == n' "$f")
+    if [ -z "$line" ]; then
+        echo "ipset v7.15: The set with the given name does not exist" >&2
+        exit 1
+    fi
+    set -- $line
+    printf 'Name: %s\nType: %s\nRevision: 7\nHeader: family %s hashsize 1024 maxelem 65536 timeout 86400\nMembers:\n' "$1" "$2" "$3"
+    ;;
+create)
+    name=$2
+    type=$3
+    family=inet
+    exist=0
+    shift 3
+    while [ $# -gt 0 ]; do
+        case "$1" in
+        family)
+            family=$2
+            shift
+            ;;
+        -exist) exist=1 ;;
+        esac
+        shift
+    done
+    if awk -v n="$name" '$1 == n { found = 1 } END { exit found ? 0 : 1 }' "$f"; then
+        [ "$exist" = 1 ] && exit 0
+        echo "ipset v7.15: Set cannot be created: set with the same name already exists" >&2
+        exit 1
+    fi
+    printf '%s %s %s\n' "$name" "$type" "$family" >>"$f"
+    ;;
+destroy)
+    awk -v n="${2:-}" '$1 != n' "$f" >"$f.tmp" && mv "$f.tmp" "$f"
+    ;;
+esac
+exit 0

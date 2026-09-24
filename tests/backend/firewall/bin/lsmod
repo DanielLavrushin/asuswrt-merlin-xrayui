@@ -1,0 +1,2 @@
+#!/bin/sh
+printf "xt_TPROXY 16384 2 - Live 0x0\nxt_socket 16384 2 - Live 0x0\n"

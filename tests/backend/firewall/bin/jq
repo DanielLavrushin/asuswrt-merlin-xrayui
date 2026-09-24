@@ -1,0 +1,10 @@
+#!/bin/sh
+for a do
+    case "$a" in
+    *test\(* | *match\(* | *capture\(* | *scan\(* | *splits\(* | *sub\(*)
+        echo "jq: error: jq was compiled without ONIGURUMA regex library. match/test/sub and related functions are not available." >&2
+        exit 3
+        ;;
+    esac
+done
+PATH=${FW_REAL_PATH:?FW_REAL_PATH is not set} exec jq "$@"

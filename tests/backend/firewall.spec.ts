@@ -106,6 +106,15 @@ const scenarios: Record<string, Scenario> = {
   'policy: bypass everyone except twenty tcp ports': {
     config: config([dokodemo('tproxy')], [policy('bypass', { tcp: manyPorts })])
   },
+  'policy: two bypass everyone policies, udp voice first then web ports': {
+    config: config(
+      [dokodemo('tproxy')],
+      [policy('bypass', { udp: '443,19294:19344,50000:50100' }), policy('bypass', { tcp: '22,80,443,8443', udp: '22,443,17003' })]
+    )
+  },
+  'policy: bypass everyone next to a redirect everyone policy': {
+    config: config([dokodemo('tproxy')], [policy('bypass', { tcp: '443' }), policy('redirect', { tcp: '25' })])
+  },
   'policy: disabled policies fall back to redirecting everything': {
     config: config([dokodemo('tproxy')], [{ ...policy('bypass'), enabled: false }])
   },
@@ -366,6 +375,26 @@ describeOnLinux('firewall.sh behaviour', () => {
     expect(await verdict(name, { dport: 8080 })).toBe('direct');
     expect(await verdict(name, { proto: 'udp', dport: 443 })).toBe('proxy');
     expect(await verdict(name, { proto: 'udp', dport: 53 })).toBe('direct');
+  });
+
+  it('merges the ports of every all-devices bypass policy', async () => {
+    const name = 'policy: two bypass everyone policies, udp voice first then web ports';
+    expect(await verdict(name, { dport: 443 })).toBe('proxy');
+    expect(await verdict(name, { dport: 80 })).toBe('proxy');
+    expect(await verdict(name, { dport: 8080 })).toBe('direct');
+    expect(await verdict(name, { proto: 'udp', dport: 443 })).toBe('proxy');
+    expect(await verdict(name, { proto: 'udp', dport: 19300 })).toBe('proxy');
+    expect(await verdict(name, { proto: 'udp', dport: 17003 })).toBe('proxy');
+    expect(await verdict(name, { proto: 'udp', dport: 53 })).toBe('direct');
+  });
+
+  it('keeps the mode of the first all-devices policy and skips one with the other mode', async () => {
+    const name = 'policy: bypass everyone next to a redirect everyone policy';
+    expect(await verdict(name, { dport: 443 })).toBe('proxy');
+    expect(await verdict(name, { dport: 80 })).toBe('direct');
+    expect(await verdict(name, { dport: 25 })).toBe('direct');
+    const { dump } = await result(name);
+    expect(dump).toMatch(/Skipping policy redirect policy/);
   });
 
   it('keeps the single-device policies working', async () => {

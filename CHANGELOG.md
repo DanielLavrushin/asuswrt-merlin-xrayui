@@ -1,5 +1,9 @@
 # XRAYUI Changelog
 
+## [0.70.1]
+
+- FIXED: With several **Redirect/Bypass policies** for all devices, only the first one worked, so traffic from the others skipped Xray and routing rules seemed to stop working after updating to 0.70.0. All such policies now apply together. A policy for all devices with a different mode than the first one is skipped and noted in the log.
+
 ## [0.70.0] - 2026-09-26
 
 - FIXED: Backups could be downloaded from the router's web address without logging in. A login is now required, and downloading a backup no longer fails after a router restart.

@@ -1,0 +1,59 @@
+#!/bin/sh
+st=${DM_STATE:?DM_STATE is not set}
+printf 'v2dat %s\n' "$*" >>"$st/v2dat.calls"
+
+if [ "${1:-}" != unpack ]; then
+    echo "v2dat mock: unsupported command ${1:-}" >&2
+    exit 2
+fi
+case "${2:-}" in
+geosite) unit=domains ;;
+geoip) unit=cidr ;;
+*)
+    echo "v2dat mock: unsupported unpack target ${2:-}" >&2
+    exit 2
+    ;;
+esac
+shift 2
+
+print=0
+tags=""
+file=""
+while [ $# -gt 0 ]; do
+    case "$1" in
+    -p | --print) print=1 ;;
+    -f | --filter)
+        tags="$tags $2"
+        shift
+        ;;
+    -*)
+        echo "v2dat mock: unsupported flag $1" >&2
+        exit 2
+        ;;
+    *) file=$1 ;;
+    esac
+    shift
+done
+
+if [ "$print" != 1 ]; then
+    echo "v2dat mock: only -p is supported" >&2
+    exit 2
+fi
+if [ ! -f "$file" ]; then
+    echo "Error: open $file: no such file or directory" >&2
+    exit 1
+fi
+
+for t in $tags; do
+    awk -v want="${t%%@*}" -v unit="$unit" '
+        BEGIN { want = tolower(want) }
+        /^\[.*\]$/ { cur = tolower(substr($0, 2, length($0) - 2)); next }
+        cur == want && NF { lines[++n] = $0 }
+        END {
+            if (n) {
+                printf "# %s (%d %s)\n", want, n, unit
+                for (i = 1; i <= n; i++) print lines[i]
+            }
+        }' "$file"
+done
+exit 0

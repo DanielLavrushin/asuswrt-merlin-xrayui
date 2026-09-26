@@ -1,5 +1,76 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
+exports[`firewall.sh generated rules boot in redirect mode restores learned addresses minus the time spent down 1`] = `
+"== iptables -t filter
+-N XRAYUI
+-A INPUT -j XRAYUI
+-A FORWARD -j XRAYUI
+-A XRAYUI -m mark --mark 0x10000/0x10000 -j ACCEPT
+-A XRAYUI -j RETURN
+== iptables -t nat
+-N XRAYUI
+== iptables -t mangle
+-N XRAYUI
+-N DIVERT
+-A PREROUTING -p tcp -m socket --transparent -j DIVERT
+-A PREROUTING -j XRAYUI
+-A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+-A OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+-A XRAYUI -m addrtype --dst-type LOCAL -p udp --dport 12345 -j RETURN
+-A XRAYUI -m addrtype --dst-type LOCAL -p tcp --dport 12345 -j RETURN
+-A XRAYUI -m set ! --match-set XRAYUI_PROXY4 dst -m set ! --match-set XRAYUI_PROXY4_NET dst -j RETURN
+-A XRAYUI -m set --match-set XRAYUI_BYPASS4 dst -j RETURN
+-A XRAYUI -m set --match-set XRAYUI_BYPASS4_NET dst -j RETURN
+-A XRAYUI -m addrtype --src-type LOCAL -j RETURN
+-A XRAYUI -m addrtype --dst-type LOCAL -j RETURN
+-A XRAYUI -p udp -m socket --transparent -j MARK --set-mark 0x10000/0x10000
+-A XRAYUI -p tcp -m socket --transparent -j MARK --set-mark 0x10000/0x10000
+-A XRAYUI -d 10.8.0.0/24 -j RETURN
+-A XRAYUI -d 192.168.1.0/24 -j RETURN
+-A XRAYUI -d 192.168.101.0/24 -j RETURN
+-A XRAYUI -p udp -m multiport --dports 67,68,123,500,4500,4501,51820 -j RETURN
+-A XRAYUI -d 224.0.0.0/4 -j RETURN
+-A XRAYUI -d 239.0.0.0/8 -j RETURN
+-A XRAYUI -m addrtype --dst-type BROADCAST -j RETURN
+-A XRAYUI -m conntrack --ctstate DNAT -j RETURN
+-A XRAYUI -d 203.0.113.10 -j RETURN
+-A XRAYUI -d 192.0.2.3 -j RETURN
+-A XRAYUI -s 10.8.0.0/24 -p tcp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.1.0/24 -p tcp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.101.0/24 -p tcp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 10.8.0.0/24 -p udp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.1.0/24 -p udp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.101.0/24 -p udp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A DIVERT -j MARK --set-mark 0x10000/0x10000
+-A DIVERT -j CONNMARK --save-mark --mask 0x10000
+-A DIVERT -j ACCEPT
+== ip -4 rule
+fwmark 0x10000/0x10000 lookup 77
+== ip -4 route table 77
+local default dev lo proto static
+192.0.2.0/24 dev eth0 proto kernel scope link src 192.0.2.3
+10.8.0.0/24 dev tun21 proto kernel scope link src 10.8.0.1
+127.0.0.0/8 dev lo scope link
+192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1
+192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1
+== ipset
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
+== ipset entries
+XRAYUI_PROXY4 198.51.100.20 timeout 2000
+== learned file
+# 999000
+XRAYUI_PROXY4 198.51.100.20 3000
+XRAYUI_PROXY4 198.51.100.21 500
+XRAYUI_PROXY6 2001:db8::1 3000
+== events
+dnsmasq_restart
+== stderr
+"
+`;
+
 exports[`firewall.sh generated rules cleanup after a dual-stack configure 1`] = `
 "== iptables -t mangle
 -N DIVERT
@@ -14,10 +85,22 @@ WARN: DNS leak lock requested (xray_dns_only=true, dns wiring=false) but no dedi
 "
 `;
 
+exports[`firewall.sh generated rules cleanup in bypass mode drops saved learned addresses 1`] = `
+"== events
+dnsmasq_restart
+== stderr
+"
+`;
+
 exports[`firewall.sh generated rules cleanup when only ipv4 still has the hooks 1`] = `
 "== events
 dnsmasq_restart
 == stderr
+"
+`;
+
+exports[`firewall.sh generated rules cleanup while dnsmasq lacks the xrayui block 1`] = `
+"== stderr
 "
 `;
 
@@ -76,12 +159,140 @@ local default dev lo proto static
 192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1
 192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1
 == ipset
-XRAYUI_BYPASS4 hash:net inet
-XRAYUI_PROXY4 hash:net inet
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
 == events
 dnsmasq_restart
 == messages
 WARN: DNS leak lock: Xray runs as root, so a uid-owner exemption would also exempt every other router process; locking FORWARD only so Xray can resolve proxy node domains. Router-originated DNS is not force-locked.
+== stderr
+"
+`;
+
+exports[`firewall.sh generated rules firewall hook while dnsmasq already has the xrayui block 1`] = `
+"== iptables -t filter
+-N XRAYUI
+-A INPUT -j XRAYUI
+-A FORWARD -j XRAYUI
+-A XRAYUI -m mark --mark 0x10000/0x10000 -j ACCEPT
+-A XRAYUI -j RETURN
+== iptables -t nat
+-N XRAYUI
+== iptables -t mangle
+-N XRAYUI
+-N DIVERT
+-A PREROUTING -p tcp -m socket --transparent -j DIVERT
+-A PREROUTING -j XRAYUI
+-A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+-A OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+-A XRAYUI -m addrtype --dst-type LOCAL -p udp --dport 12345 -j RETURN
+-A XRAYUI -m addrtype --dst-type LOCAL -p tcp --dport 12345 -j RETURN
+-A XRAYUI -m set ! --match-set XRAYUI_PROXY4 dst -m set ! --match-set XRAYUI_PROXY4_NET dst -j RETURN
+-A XRAYUI -m set --match-set XRAYUI_BYPASS4 dst -j RETURN
+-A XRAYUI -m set --match-set XRAYUI_BYPASS4_NET dst -j RETURN
+-A XRAYUI -m addrtype --src-type LOCAL -j RETURN
+-A XRAYUI -m addrtype --dst-type LOCAL -j RETURN
+-A XRAYUI -p udp -m socket --transparent -j MARK --set-mark 0x10000/0x10000
+-A XRAYUI -p tcp -m socket --transparent -j MARK --set-mark 0x10000/0x10000
+-A XRAYUI -d 10.8.0.0/24 -j RETURN
+-A XRAYUI -d 192.168.1.0/24 -j RETURN
+-A XRAYUI -d 192.168.101.0/24 -j RETURN
+-A XRAYUI -p udp -m multiport --dports 67,68,123,500,4500,4501,51820 -j RETURN
+-A XRAYUI -d 224.0.0.0/4 -j RETURN
+-A XRAYUI -d 239.0.0.0/8 -j RETURN
+-A XRAYUI -m addrtype --dst-type BROADCAST -j RETURN
+-A XRAYUI -m conntrack --ctstate DNAT -j RETURN
+-A XRAYUI -d 203.0.113.10 -j RETURN
+-A XRAYUI -d 192.0.2.3 -j RETURN
+-A XRAYUI -s 10.8.0.0/24 -p tcp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.1.0/24 -p tcp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.101.0/24 -p tcp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 10.8.0.0/24 -p udp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.1.0/24 -p udp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.101.0/24 -p udp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A DIVERT -j MARK --set-mark 0x10000/0x10000
+-A DIVERT -j CONNMARK --save-mark --mask 0x10000
+-A DIVERT -j ACCEPT
+== ip -4 rule
+fwmark 0x10000/0x10000 lookup 77
+== ip -4 route table 77
+local default dev lo proto static
+192.0.2.0/24 dev eth0 proto kernel scope link src 192.0.2.3
+10.8.0.0/24 dev tun21 proto kernel scope link src 10.8.0.1
+127.0.0.0/8 dev lo scope link
+192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1
+192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1
+== ipset
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
+== stderr
+"
+`;
+
+exports[`firewall.sh generated rules firewall hook while dnsmasq lacks the xrayui block 1`] = `
+"== iptables -t filter
+-N XRAYUI
+-A INPUT -j XRAYUI
+-A FORWARD -j XRAYUI
+-A XRAYUI -m mark --mark 0x10000/0x10000 -j ACCEPT
+-A XRAYUI -j RETURN
+== iptables -t nat
+-N XRAYUI
+== iptables -t mangle
+-N XRAYUI
+-N DIVERT
+-A PREROUTING -p tcp -m socket --transparent -j DIVERT
+-A PREROUTING -j XRAYUI
+-A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+-A OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+-A XRAYUI -m addrtype --dst-type LOCAL -p udp --dport 12345 -j RETURN
+-A XRAYUI -m addrtype --dst-type LOCAL -p tcp --dport 12345 -j RETURN
+-A XRAYUI -m set ! --match-set XRAYUI_PROXY4 dst -m set ! --match-set XRAYUI_PROXY4_NET dst -j RETURN
+-A XRAYUI -m set --match-set XRAYUI_BYPASS4 dst -j RETURN
+-A XRAYUI -m set --match-set XRAYUI_BYPASS4_NET dst -j RETURN
+-A XRAYUI -m addrtype --src-type LOCAL -j RETURN
+-A XRAYUI -m addrtype --dst-type LOCAL -j RETURN
+-A XRAYUI -p udp -m socket --transparent -j MARK --set-mark 0x10000/0x10000
+-A XRAYUI -p tcp -m socket --transparent -j MARK --set-mark 0x10000/0x10000
+-A XRAYUI -d 10.8.0.0/24 -j RETURN
+-A XRAYUI -d 192.168.1.0/24 -j RETURN
+-A XRAYUI -d 192.168.101.0/24 -j RETURN
+-A XRAYUI -p udp -m multiport --dports 67,68,123,500,4500,4501,51820 -j RETURN
+-A XRAYUI -d 224.0.0.0/4 -j RETURN
+-A XRAYUI -d 239.0.0.0/8 -j RETURN
+-A XRAYUI -m addrtype --dst-type BROADCAST -j RETURN
+-A XRAYUI -m conntrack --ctstate DNAT -j RETURN
+-A XRAYUI -d 203.0.113.10 -j RETURN
+-A XRAYUI -d 192.0.2.3 -j RETURN
+-A XRAYUI -s 10.8.0.0/24 -p tcp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.1.0/24 -p tcp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.101.0/24 -p tcp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 10.8.0.0/24 -p udp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.1.0/24 -p udp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.101.0/24 -p udp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A DIVERT -j MARK --set-mark 0x10000/0x10000
+-A DIVERT -j CONNMARK --save-mark --mask 0x10000
+-A DIVERT -j ACCEPT
+== ip -4 rule
+fwmark 0x10000/0x10000 lookup 77
+== ip -4 route table 77
+local default dev lo proto static
+192.0.2.0/24 dev eth0 proto kernel scope link src 192.0.2.3
+10.8.0.0/24 dev tun21 proto kernel scope link src 10.8.0.1
+127.0.0.0/8 dev lo scope link
+192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1
+192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1
+== ipset
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
+== events
+dnsmasq_restart
 == stderr
 "
 `;
@@ -181,10 +392,14 @@ local default dev lo proto static
 fe80::/64 dev br0 proto kernel metric 256 pref medium
 fe80::/64 dev eth0 proto kernel metric 256 pref medium
 == ipset
-XRAYUI_BYPASS4 hash:net inet
-XRAYUI_PROXY4 hash:net inet
-XRAYUI_BYPASS6 hash:net inet6
-XRAYUI_PROXY6 hash:net inet6
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
+XRAYUI_BYPASS6 hash:net inet6 timeout 86400
+XRAYUI_BYPASS6_NET hash:net inet6
+XRAYUI_PROXY6 hash:net inet6 timeout 86400
+XRAYUI_PROXY6_NET hash:net inet6
 == events
 dnsmasq_restart
 == stderr
@@ -264,8 +479,10 @@ local default dev lo proto static
 192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1
 192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1
 == ipset
-XRAYUI_BYPASS4 hash:net inet
-XRAYUI_PROXY4 hash:net inet
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
 == events
 set_route_localnet 1
 dnsmasq_restart
@@ -331,8 +548,10 @@ local default dev lo proto static
 192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1
 192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1
 == ipset
-XRAYUI_BYPASS4 hash:net inet
-XRAYUI_PROXY4 hash:net inet
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
 == events
 dnsmasq_restart
 == stderr
@@ -396,8 +615,10 @@ local default dev lo proto static
 192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1
 192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1
 == ipset
-XRAYUI_BYPASS4 hash:net inet
-XRAYUI_PROXY4 hash:net inet
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
 == events
 dnsmasq_restart
 == stderr
@@ -461,8 +682,10 @@ local default dev lo proto static
 192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1
 192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1
 == ipset
-XRAYUI_BYPASS4 hash:net inet
-XRAYUI_PROXY4 hash:net inet
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
 == events
 dnsmasq_restart
 == stderr
@@ -529,8 +752,10 @@ local default dev lo proto static
 192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1
 192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1
 == ipset
-XRAYUI_BYPASS4 hash:net inet
-XRAYUI_PROXY4 hash:net inet
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
 == events
 dnsmasq_restart
 == stderr
@@ -588,8 +813,10 @@ local default dev lo proto static
 192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1
 192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1
 == ipset
-XRAYUI_BYPASS4 hash:net inet
-XRAYUI_PROXY4 hash:net inet
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
 == events
 dnsmasq_restart
 == stderr
@@ -650,8 +877,10 @@ local default dev lo proto static
 192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1
 192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1
 == ipset
-XRAYUI_BYPASS4 hash:net inet
-XRAYUI_PROXY4 hash:net inet
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
 == events
 dnsmasq_restart
 == stderr
@@ -718,8 +947,10 @@ local default dev lo proto static
 192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1
 192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1
 == ipset
-XRAYUI_BYPASS4 hash:net inet
-XRAYUI_PROXY4 hash:net inet
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
 == events
 dnsmasq_restart
 == stderr
@@ -777,8 +1008,80 @@ local default dev lo proto static
 192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1
 192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1
 == ipset
-XRAYUI_BYPASS4 hash:net inet
-XRAYUI_PROXY4 hash:net inet
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
+== events
+dnsmasq_restart
+== stderr
+"
+`;
+
+exports[`firewall.sh generated rules reconfigure in redirect mode leaves live learned addresses alone 1`] = `
+"== iptables -t filter
+-N XRAYUI
+-A INPUT -j XRAYUI
+-A FORWARD -j XRAYUI
+-A XRAYUI -m mark --mark 0x10000/0x10000 -j ACCEPT
+-A XRAYUI -j RETURN
+== iptables -t nat
+-N XRAYUI
+== iptables -t mangle
+-N XRAYUI
+-N DIVERT
+-A PREROUTING -p tcp -m socket --transparent -j DIVERT
+-A PREROUTING -j XRAYUI
+-A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+-A OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+-A XRAYUI -m addrtype --dst-type LOCAL -p udp --dport 12345 -j RETURN
+-A XRAYUI -m addrtype --dst-type LOCAL -p tcp --dport 12345 -j RETURN
+-A XRAYUI -m set ! --match-set XRAYUI_PROXY4 dst -m set ! --match-set XRAYUI_PROXY4_NET dst -j RETURN
+-A XRAYUI -m set --match-set XRAYUI_BYPASS4 dst -j RETURN
+-A XRAYUI -m set --match-set XRAYUI_BYPASS4_NET dst -j RETURN
+-A XRAYUI -m addrtype --src-type LOCAL -j RETURN
+-A XRAYUI -m addrtype --dst-type LOCAL -j RETURN
+-A XRAYUI -p udp -m socket --transparent -j MARK --set-mark 0x10000/0x10000
+-A XRAYUI -p tcp -m socket --transparent -j MARK --set-mark 0x10000/0x10000
+-A XRAYUI -d 10.8.0.0/24 -j RETURN
+-A XRAYUI -d 192.168.1.0/24 -j RETURN
+-A XRAYUI -d 192.168.101.0/24 -j RETURN
+-A XRAYUI -p udp -m multiport --dports 67,68,123,500,4500,4501,51820 -j RETURN
+-A XRAYUI -d 224.0.0.0/4 -j RETURN
+-A XRAYUI -d 239.0.0.0/8 -j RETURN
+-A XRAYUI -m addrtype --dst-type BROADCAST -j RETURN
+-A XRAYUI -m conntrack --ctstate DNAT -j RETURN
+-A XRAYUI -d 203.0.113.10 -j RETURN
+-A XRAYUI -d 192.0.2.3 -j RETURN
+-A XRAYUI -s 10.8.0.0/24 -p tcp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.1.0/24 -p tcp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.101.0/24 -p tcp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 10.8.0.0/24 -p udp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.1.0/24 -p udp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.101.0/24 -p udp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A DIVERT -j MARK --set-mark 0x10000/0x10000
+-A DIVERT -j CONNMARK --save-mark --mask 0x10000
+-A DIVERT -j ACCEPT
+== ip -4 rule
+fwmark 0x10000/0x10000 lookup 77
+== ip -4 route table 77
+local default dev lo proto static
+192.0.2.0/24 dev eth0 proto kernel scope link src 192.0.2.3
+10.8.0.0/24 dev tun21 proto kernel scope link src 10.8.0.1
+127.0.0.0/8 dev lo scope link
+192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1
+192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1
+== ipset
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4_NET hash:net inet
+== ipset entries
+XRAYUI_PROXY4 198.51.100.20 timeout 86000
+== learned file
+# 999000
+XRAYUI_PROXY4 198.51.100.20 3000
+XRAYUI_PROXY4 198.51.100.22 3000
 == events
 dnsmasq_restart
 == stderr
@@ -856,10 +1159,14 @@ exports[`firewall.sh generated rules redirect dual-stack with a loopback listene
 -A DIVERT -j CONNMARK --save-mark --mask 0x10000
 -A DIVERT -j ACCEPT
 == ipset
-XRAYUI_BYPASS4 hash:net inet
-XRAYUI_PROXY4 hash:net inet
-XRAYUI_BYPASS6 hash:net inet6
-XRAYUI_PROXY6 hash:net inet6
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
+XRAYUI_BYPASS6 hash:net inet6 timeout 86400
+XRAYUI_BYPASS6_NET hash:net inet6
+XRAYUI_PROXY6 hash:net inet6 timeout 86400
+XRAYUI_PROXY6_NET hash:net inet6
 == events
 set_route_localnet 1
 dnsmasq_restart
@@ -911,9 +1218,174 @@ exports[`firewall.sh generated rules redirect with a server inbound on 443 1`] =
 -A DIVERT -j CONNMARK --save-mark --mask 0x10000
 -A DIVERT -j ACCEPT
 == ipset
-XRAYUI_BYPASS4 hash:net inet
-XRAYUI_PROXY4 hash:net inet
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
 == events
+dnsmasq_restart
+== stderr
+"
+`;
+
+exports[`firewall.sh generated rules redirect with ipset redirect mode dual-stack 1`] = `
+"== iptables -t filter
+-N XRAYUI
+-A INPUT -j XRAYUI
+-A FORWARD -j XRAYUI
+-A XRAYUI -m addrtype --dst-type LOCAL -p udp --dport 12345 -j ACCEPT
+-A XRAYUI -m addrtype --dst-type LOCAL -p tcp --dport 12345 -j ACCEPT
+-A XRAYUI -j RETURN
+== iptables -t nat
+-N XRAYUI
+-A PREROUTING -j XRAYUI
+-A XRAYUI -m addrtype --dst-type LOCAL -p udp --dport 12345 -j RETURN
+-A XRAYUI -m addrtype --dst-type LOCAL -p tcp --dport 12345 -j RETURN
+-A XRAYUI -m set ! --match-set XRAYUI_PROXY4 dst -m set ! --match-set XRAYUI_PROXY4_NET dst -j RETURN
+-A XRAYUI -m set --match-set XRAYUI_BYPASS4 dst -j RETURN
+-A XRAYUI -m set --match-set XRAYUI_BYPASS4_NET dst -j RETURN
+-A XRAYUI -d 10.8.0.0/24 -j RETURN
+-A XRAYUI -d 192.168.1.0/24 -j RETURN
+-A XRAYUI -d 192.168.101.0/24 -j RETURN
+-A XRAYUI -p udp -m multiport --dports 67,68,123,500,4500,4501,51820 -j RETURN
+-A XRAYUI -d 224.0.0.0/4 -j RETURN
+-A XRAYUI -d 239.0.0.0/8 -j RETURN
+-A XRAYUI -m addrtype --dst-type BROADCAST -j RETURN
+-A XRAYUI -m conntrack --ctstate DNAT -j RETURN
+-A XRAYUI -d 203.0.113.10 -j RETURN
+-A XRAYUI -s 10.8.0.0/24 -p tcp -j REDIRECT --to-ports 12345
+-A XRAYUI -s 192.168.1.0/24 -p tcp -j REDIRECT --to-ports 12345
+-A XRAYUI -s 192.168.101.0/24 -p tcp -j REDIRECT --to-ports 12345
+-A XRAYUI -s 10.8.0.0/24 -p udp -j REDIRECT --to-ports 12345
+-A XRAYUI -s 192.168.1.0/24 -p udp -j REDIRECT --to-ports 12345
+-A XRAYUI -s 192.168.101.0/24 -p udp -j REDIRECT --to-ports 12345
+-A XRAYUI -p tcp -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN
+-A XRAYUI -j RETURN
+== iptables -t mangle
+-N XRAYUI
+-N DIVERT
+-A PREROUTING -p tcp -m socket --transparent -j DIVERT
+-A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+-A OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+-A DIVERT -j MARK --set-mark 0x10000/0x10000
+-A DIVERT -j CONNMARK --save-mark --mask 0x10000
+-A DIVERT -j ACCEPT
+== ip6tables -t filter
+-N XRAYUI
+-A INPUT -j XRAYUI
+-A FORWARD -j XRAYUI
+-A XRAYUI -m addrtype --dst-type LOCAL -p udp --dport 12345 -j ACCEPT
+-A XRAYUI -m addrtype --dst-type LOCAL -p tcp --dport 12345 -j ACCEPT
+-A XRAYUI -j RETURN
+== ip6tables -t nat
+-N XRAYUI
+-A PREROUTING -j XRAYUI
+-A XRAYUI -m addrtype --dst-type LOCAL -p udp --dport 12345 -j RETURN
+-A XRAYUI -m addrtype --dst-type LOCAL -p tcp --dport 12345 -j RETURN
+-A XRAYUI -m set ! --match-set XRAYUI_PROXY6 dst -m set ! --match-set XRAYUI_PROXY6_NET dst -j RETURN
+-A XRAYUI -m set --match-set XRAYUI_BYPASS6 dst -j RETURN
+-A XRAYUI -m set --match-set XRAYUI_BYPASS6_NET dst -j RETURN
+-A XRAYUI -d 2001:db8:1::/64 -j RETURN
+-A XRAYUI -d fe80::/64 -j RETURN
+-A XRAYUI -p udp -m multiport --dports 67,68,123,500,4500,4501,51820 -j RETURN
+-A XRAYUI -m conntrack --ctstate DNAT -j RETURN
+-A XRAYUI -s 2001:db8:1::/64 -p tcp -j REDIRECT --to-ports 12345
+-A XRAYUI -s fe80::/64 -p tcp -j REDIRECT --to-ports 12345
+-A XRAYUI -s 2001:db8:1::/64 -p udp -j REDIRECT --to-ports 12345
+-A XRAYUI -s fe80::/64 -p udp -j REDIRECT --to-ports 12345
+-A XRAYUI -p tcp -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN
+-A XRAYUI -j RETURN
+== ip6tables -t mangle
+-N XRAYUI
+-N DIVERT
+-A PREROUTING -p tcp -m socket --transparent -j DIVERT
+-A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+-A OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+-A DIVERT -j MARK --set-mark 0x10000/0x10000
+-A DIVERT -j CONNMARK --save-mark --mask 0x10000
+-A DIVERT -j ACCEPT
+== ipset
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
+XRAYUI_BYPASS6 hash:net inet6 timeout 86400
+XRAYUI_BYPASS6_NET hash:net inet6
+XRAYUI_PROXY6 hash:net inet6 timeout 86400
+XRAYUI_PROXY6_NET hash:net inet6
+== events
+dnsmasq_restart
+== stderr
+"
+`;
+
+exports[`firewall.sh generated rules restart in redirect mode carries learned addresses over 1`] = `
+"== iptables -t filter
+-N XRAYUI
+-A INPUT -j XRAYUI
+-A FORWARD -j XRAYUI
+-A XRAYUI -m mark --mark 0x10000/0x10000 -j ACCEPT
+-A XRAYUI -j RETURN
+== iptables -t nat
+-N XRAYUI
+== iptables -t mangle
+-N XRAYUI
+-N DIVERT
+-A PREROUTING -p tcp -m socket --transparent -j DIVERT
+-A PREROUTING -j XRAYUI
+-A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+-A OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+-A XRAYUI -m addrtype --dst-type LOCAL -p udp --dport 12345 -j RETURN
+-A XRAYUI -m addrtype --dst-type LOCAL -p tcp --dport 12345 -j RETURN
+-A XRAYUI -m set ! --match-set XRAYUI_PROXY4 dst -m set ! --match-set XRAYUI_PROXY4_NET dst -j RETURN
+-A XRAYUI -m set --match-set XRAYUI_BYPASS4 dst -j RETURN
+-A XRAYUI -m set --match-set XRAYUI_BYPASS4_NET dst -j RETURN
+-A XRAYUI -m addrtype --src-type LOCAL -j RETURN
+-A XRAYUI -m addrtype --dst-type LOCAL -j RETURN
+-A XRAYUI -p udp -m socket --transparent -j MARK --set-mark 0x10000/0x10000
+-A XRAYUI -p tcp -m socket --transparent -j MARK --set-mark 0x10000/0x10000
+-A XRAYUI -d 10.8.0.0/24 -j RETURN
+-A XRAYUI -d 192.168.1.0/24 -j RETURN
+-A XRAYUI -d 192.168.101.0/24 -j RETURN
+-A XRAYUI -p udp -m multiport --dports 67,68,123,500,4500,4501,51820 -j RETURN
+-A XRAYUI -d 224.0.0.0/4 -j RETURN
+-A XRAYUI -d 239.0.0.0/8 -j RETURN
+-A XRAYUI -m addrtype --dst-type BROADCAST -j RETURN
+-A XRAYUI -m conntrack --ctstate DNAT -j RETURN
+-A XRAYUI -d 203.0.113.10 -j RETURN
+-A XRAYUI -d 192.0.2.3 -j RETURN
+-A XRAYUI -s 10.8.0.0/24 -p tcp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.1.0/24 -p tcp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.101.0/24 -p tcp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 10.8.0.0/24 -p udp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.1.0/24 -p udp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.101.0/24 -p udp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A DIVERT -j MARK --set-mark 0x10000/0x10000
+-A DIVERT -j CONNMARK --save-mark --mask 0x10000
+-A DIVERT -j ACCEPT
+== ip -4 rule
+fwmark 0x10000/0x10000 lookup 77
+== ip -4 route table 77
+local default dev lo proto static
+192.0.2.0/24 dev eth0 proto kernel scope link src 192.0.2.3
+10.8.0.0/24 dev tun21 proto kernel scope link src 10.8.0.1
+127.0.0.0/8 dev lo scope link
+192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1
+192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1
+== ipset
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
+== ipset entries
+XRAYUI_PROXY4 198.51.100.10 timeout 5000
+XRAYUI_PROXY4 198.51.100.11 timeout 86400
+== learned file
+# 1000000
+XRAYUI_PROXY4 198.51.100.10 5000
+XRAYUI_PROXY4 198.51.100.11 86400
+== events
+dnsmasq_restart
 dnsmasq_restart
 == stderr
 "
@@ -1014,10 +1486,14 @@ local default dev lo proto static
 fe80::/64 dev br0 proto kernel metric 256 pref medium
 fe80::/64 dev eth0 proto kernel metric 256 pref medium
 == ipset
-XRAYUI_BYPASS4 hash:net inet
-XRAYUI_PROXY4 hash:net inet
-XRAYUI_BYPASS6 hash:net inet6
-XRAYUI_PROXY6 hash:net inet6
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
+XRAYUI_BYPASS6 hash:net inet6 timeout 86400
+XRAYUI_BYPASS6_NET hash:net inet6
+XRAYUI_PROXY6 hash:net inet6 timeout 86400
+XRAYUI_PROXY6_NET hash:net inet6
 == events
 dnsmasq_restart
 == stderr
@@ -1132,10 +1608,14 @@ local default dev lo proto static
 fe80::/64 dev br0 proto kernel metric 256 pref medium
 fe80::/64 dev eth0 proto kernel metric 256 pref medium
 == ipset
-XRAYUI_BYPASS4 hash:net inet
-XRAYUI_PROXY4 hash:net inet
-XRAYUI_BYPASS6 hash:net inet6
-XRAYUI_PROXY6 hash:net inet6
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
+XRAYUI_BYPASS6 hash:net inet6 timeout 86400
+XRAYUI_BYPASS6_NET hash:net inet6
+XRAYUI_PROXY6 hash:net inet6 timeout 86400
+XRAYUI_PROXY6_NET hash:net inet6
 == events
 dnsmasq_restart
 == stderr
@@ -1190,8 +1670,10 @@ local default dev lo proto static
 192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1
 192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1
 == ipset
-XRAYUI_BYPASS4 hash:net inet
-XRAYUI_PROXY4 hash:net inet
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
 == events
 dnsmasq_restart
 == stderr
@@ -1249,8 +1731,73 @@ local default dev lo proto static
 192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1
 192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1
 == ipset
-XRAYUI_BYPASS4 hash:net inet
-XRAYUI_PROXY4 hash:net inet
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
+== events
+dnsmasq_restart
+== stderr
+"
+`;
+
+exports[`firewall.sh generated rules tproxy with ipset bypass mode 1`] = `
+"== iptables -t filter
+-N XRAYUI
+-A INPUT -j XRAYUI
+-A FORWARD -j XRAYUI
+-A XRAYUI -m mark --mark 0x10000/0x10000 -j ACCEPT
+-A XRAYUI -j RETURN
+== iptables -t nat
+-N XRAYUI
+== iptables -t mangle
+-N XRAYUI
+-N DIVERT
+-A PREROUTING -p tcp -m socket --transparent -j DIVERT
+-A PREROUTING -j XRAYUI
+-A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+-A OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+-A XRAYUI -m addrtype --dst-type LOCAL -p udp --dport 12345 -j RETURN
+-A XRAYUI -m addrtype --dst-type LOCAL -p tcp --dport 12345 -j RETURN
+-A XRAYUI -m set --match-set XRAYUI_BYPASS4 dst -j RETURN
+-A XRAYUI -m set --match-set XRAYUI_BYPASS4_NET dst -j RETURN
+-A XRAYUI -m addrtype --src-type LOCAL -j RETURN
+-A XRAYUI -m addrtype --dst-type LOCAL -j RETURN
+-A XRAYUI -p udp -m socket --transparent -j MARK --set-mark 0x10000/0x10000
+-A XRAYUI -p tcp -m socket --transparent -j MARK --set-mark 0x10000/0x10000
+-A XRAYUI -d 10.8.0.0/24 -j RETURN
+-A XRAYUI -d 192.168.1.0/24 -j RETURN
+-A XRAYUI -d 192.168.101.0/24 -j RETURN
+-A XRAYUI -p udp -m multiport --dports 67,68,123,500,4500,4501,51820 -j RETURN
+-A XRAYUI -d 224.0.0.0/4 -j RETURN
+-A XRAYUI -d 239.0.0.0/8 -j RETURN
+-A XRAYUI -m addrtype --dst-type BROADCAST -j RETURN
+-A XRAYUI -m conntrack --ctstate DNAT -j RETURN
+-A XRAYUI -d 203.0.113.10 -j RETURN
+-A XRAYUI -d 192.0.2.3 -j RETURN
+-A XRAYUI -s 10.8.0.0/24 -p tcp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.1.0/24 -p tcp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.101.0/24 -p tcp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 10.8.0.0/24 -p udp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.1.0/24 -p udp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.101.0/24 -p udp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A DIVERT -j MARK --set-mark 0x10000/0x10000
+-A DIVERT -j CONNMARK --save-mark --mask 0x10000
+-A DIVERT -j ACCEPT
+== ip -4 rule
+fwmark 0x10000/0x10000 lookup 77
+== ip -4 route table 77
+local default dev lo proto static
+192.0.2.0/24 dev eth0 proto kernel scope link src 192.0.2.3
+10.8.0.0/24 dev tun21 proto kernel scope link src 10.8.0.1
+127.0.0.0/8 dev lo scope link
+192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1
+192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1
+== ipset
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
 == events
 dnsmasq_restart
 == stderr
@@ -1275,8 +1822,9 @@ exports[`firewall.sh generated rules tproxy with ipset redirect mode and QUIC bl
 -A OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 -A XRAYUI -m addrtype --dst-type LOCAL -p udp --dport 12345 -j RETURN
 -A XRAYUI -m addrtype --dst-type LOCAL -p tcp --dport 12345 -j RETURN
--A XRAYUI -m set ! --match-set XRAYUI_PROXY4 dst -j RETURN
+-A XRAYUI -m set ! --match-set XRAYUI_PROXY4 dst -m set ! --match-set XRAYUI_PROXY4_NET dst -j RETURN
 -A XRAYUI -m set --match-set XRAYUI_BYPASS4 dst -j RETURN
+-A XRAYUI -m set --match-set XRAYUI_BYPASS4_NET dst -j RETURN
 -A XRAYUI -m addrtype --src-type LOCAL -j RETURN
 -A XRAYUI -m addrtype --dst-type LOCAL -j RETURN
 -A XRAYUI -p udp -m socket --transparent -j MARK --set-mark 0x10000/0x10000
@@ -1313,8 +1861,10 @@ local default dev lo proto static
 192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1
 192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1
 == ipset
-XRAYUI_BYPASS4 hash:net inet
-XRAYUI_PROXY4 hash:net inet
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
 == events
 dnsmasq_restart
 == stderr
@@ -1374,8 +1924,10 @@ local default dev lo proto static
 192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1
 192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1
 == ipset
-XRAYUI_BYPASS4 hash:net inet
-XRAYUI_PROXY4 hash:net inet
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
 == events
 dnsmasq_restart
 == stderr
@@ -1433,8 +1985,10 @@ local default dev lo proto static
 192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1
 192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1
 == ipset
-XRAYUI_BYPASS4 hash:net inet
-XRAYUI_PROXY4 hash:net inet
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
 == events
 dnsmasq_restart
 == messages

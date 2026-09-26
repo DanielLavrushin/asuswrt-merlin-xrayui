@@ -20,6 +20,12 @@
 - FIXED: With a server inbound on port 443, HTTPS from LAN devices went around the proxy. Now only connections to the router itself skip the proxy.
 - FIXED: Proxy rules could vanish after the router reconnected to the internet or rebuilt its firewall, leaving LAN traffic unproxied until the next Xray restart. This showed up most often with IPv6 enabled.
 - FIXED: With IPv6 enabled, a server inbound's port was opened not only on the router but on every device in the LAN.
+- FIXED: With **DNS bypass (ipset)** set to redirect, sites from proxy rules often went direct for a long time after a restart, a reboot or a router reconnect, until the device looked the site up again. Addresses the router has already learned are now kept across restarts and reboots, and the sites listed in rules are looked up right after a restart. ([#282](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/282))
+- FIXED: With **DNS bypass (ipset)**, large country lists such as `geoip:us` were silently not loaded, so that traffic went direct in redirect mode.
+- FIXED: With **DNS bypass (ipset)**, some sites from geosite lists and entries from custom `ext:` data files were ignored, and a direct outbound with fragment or noises lost those settings in redirect mode. Entries that cannot be used, such as `regexp:` or `keyword:`, are now listed in the log.
+- IMPROVED: The router rebuilding its firewall no longer restarts DNS every time.
+- FIXED: The nightly geodata update restarted Xray even when nothing had changed, and a failed download could replace the geodata files with an error page.
+- FIXED: When the geodata links in **General Options** were changed and the download failed, the other changed options were not applied.
 - FIXED: A transparent inbound set to TCP only broke all UDP traffic of LAN devices, such as games and calls. UDP now goes direct in that case.
 - FIXED: Bypass and redirect policies did not always do what their descriptions say. A device redirected with excluded ports lost its other TCP traffic, a policy for one device switched off an "all devices" policy, and a bypassed device still had its UDP proxied.
 - FIXED: Policies listing more than 15 ports were ignored.

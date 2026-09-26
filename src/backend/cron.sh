@@ -5,6 +5,7 @@ CRU_GEOUPD_ID="xrayui_geodataupdate"
 CRU_LR_ID="xrayui_logrotate"
 CRU_SUB_REFRESH_ID="xrayui_subscription_refresh"
 CRU_SUB_FALLBACK_ID="xrayui_subscription_fallback"
+CRU_IPSET_SAVE_ID="xrayui_ipset_save"
 LR_STATUS="/tmp/logrotate.status"
 LR_BIN="/opt/sbin/logrotate"
 LR_CONF="/opt/etc/logrotate.conf"
@@ -94,6 +95,19 @@ cron_geodata_add() {
 
 }
 
+cron_ipset_save_add() {
+    load_xrayui_config
+    cron_job_delete "$CRU_IPSET_SAVE_ID"
+
+    if [ "${ipsec:-off}" = "redirect" ]; then
+        cru a "$CRU_IPSET_SAVE_ID" "*/30 * * * * $ADDON_SCRIPT cron ipset_save" || {
+            log_error "Failed to add CRU job $CRU_IPSET_SAVE_ID"
+            return
+        }
+        log_ok "CRON job $CRU_IPSET_SAVE_ID for $ADDON_TITLE added successfully"
+    fi
+}
+
 cron_job_delete() {
     local cru_id="$1"
     cru d "$cru_id"
@@ -181,4 +195,5 @@ cron_jobs_add() {
     cron_geodata_add
     cron_subscription_refresh_add
     cron_subscription_fallback_add
+    cron_ipset_save_add
 }

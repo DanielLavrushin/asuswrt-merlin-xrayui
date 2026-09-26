@@ -150,16 +150,47 @@ is_ipv6_enabled() {
 }
 
 ensure_hashnet() {
-    s="$1"
-    fam="$2"
-    if ipset list "$s" >/dev/null 2>&1; then
-        ty=$(ipset list "$s" | sed -n 's/^Type: //p')
-        fa=$(ipset list "$s" | sed -n 's/^Header: family \([^ ]*\).*/\1/p')
-        if [ "$ty" != "hash:net" ] || [ "$fa" != "$fam" ]; then
-            ipset destroy "$s" 2>/dev/null || true
-        fi
+    local s="$1" fam="$2" tmo="$3" hdr ty fa
+    hdr=$(ipset list -t "$s" 2>/dev/null)
+    if [ -n "$hdr" ]; then
+        ty=$(printf '%s\n' "$hdr" | sed -n 's/^Type: //p')
+        fa=$(printf '%s\n' "$hdr" | sed -n 's/^Header: family \([^ ]*\).*/\1/p')
+        [ "$ty" = "hash:net" ] && [ "$fa" = "$fam" ] && return 0
+        ipset destroy "$s" 2>/dev/null || true
     fi
-    ipset create "$s" hash:net family "$fam" timeout 86400 -exist
+    if [ -n "$tmo" ]; then
+        ipset create "$s" hash:net family "$fam" timeout "$tmo" -exist
+    else
+        ipset create "$s" hash:net family "$fam" -exist
+    fi
+}
+
+ipset_learned_save() {
+    local file="$IPSET_LEARNED_FILE" s sets=""
+    for s in "$IPSET_PROXY_V4" "$IPSET_PROXY_V6"; do
+        ipset list -t "$s" >/dev/null 2>&1 && sets="$sets $s"
+    done
+    [ -n "$sets" ] || return 0
+
+    mkdir -p "$(dirname "$file")" 2>/dev/null
+    {
+        printf '# %s\n' "$(date +%s)"
+        for s in $sets; do
+            ipset save "$s" 2>/dev/null | awk '$1 == "add" && $4 == "timeout" && $5 > 0 { print $2, $3, $5 }'
+        done
+    } >"$file.new" && mv -f "$file.new" "$file"
+    log_debug "Saved $(($(wc -l <"$file") - 1)) learned ipset addresses to $file"
+}
+
+ipset_learned_restore() {
+    local file="$IPSET_LEARNED_FILE" sets out
+    [ -s "$file" ] || return 0
+    sets=" $(ipset list -n 2>/dev/null | tr '\n' ' ') "
+    out=$(awk -v now="$(date +%s)" -v sets="$sets" '
+        NR == 1 { el = now - $2; if (el < 0) el = 0; next }
+        index(sets, " " $1 " ") && $3 - el > 0 { printf "add %s %s timeout %d\n", $1, $2, $3 - el }
+    ' "$file" | ipset -exist restore 2>&1) || log_warn "Failed to restore learned ipset addresses: $out"
+    log_debug "Restored learned ipset addresses from $file"
 }
 
 has_loopback_dokodemo() {
@@ -254,11 +285,22 @@ configure_firewall_rules() {
     # ipt raw -C OUTPUT -p udp -m multiport --dports 443,50000:50100 -j NOTRACK 2>/dev/null ||
     #     ipt raw -I OUTPUT 1 -p udp -m multiport --dports 443,50000:50100 -j NOTRACK
 
-    ensure_hashnet "$IPSET_BYPASS_V4" inet
-    ensure_hashnet "$IPSET_PROXY_V4" inet
+    local learned_fresh=""
+    ipset list -t "$IPSET_PROXY_V4" >/dev/null 2>&1 || learned_fresh="true"
+
+    ensure_hashnet "$IPSET_BYPASS_V4" inet 86400
+    ensure_hashnet "$IPSET_BYPASS_NET_V4" inet
+    ensure_hashnet "$IPSET_PROXY_V4" inet 86400
+    ensure_hashnet "$IPSET_PROXY_NET_V4" inet
     if is_ipv6_enabled; then
-        ensure_hashnet "$IPSET_BYPASS_V6" inet6
-        ensure_hashnet "$IPSET_PROXY_V6" inet6
+        ensure_hashnet "$IPSET_BYPASS_V6" inet6 86400
+        ensure_hashnet "$IPSET_BYPASS_NET_V6" inet6
+        ensure_hashnet "$IPSET_PROXY_V6" inet6 86400
+        ensure_hashnet "$IPSET_PROXY_NET_V6" inet6
+    fi
+
+    if [ "$ipsec" = "redirect" ] && [ "$learned_fresh" = "true" ]; then
+        ipset_learned_restore
     fi
 
     # Clamp TCP MSS to path-MTU for every forwarded SYN (v4 + v6)
@@ -602,21 +644,32 @@ configure_firewall_client() {
         ipt $IPT_TABLE -A XRAYUI -d "$net" -j RETURN
     done
 
-    # IPSET FREEDOM eraly return rules
     if [ -n "$ipsec" ] && [ "$ipsec" != "off" ]; then
         log_debug "Adding IPSET rules for $IPT_TABLE."
+        local ipset_names v6_sets=""
+        ipset_names=$(ipset list -n 2>/dev/null)
+        if is_ipv6_enabled &&
+            printf '%s\n' "$ipset_names" | grep -qx "$IPSET_BYPASS_V6" &&
+            printf '%s\n' "$ipset_names" | grep -qx "$IPSET_BYPASS_NET_V6" &&
+            printf '%s\n' "$ipset_names" | grep -qx "$IPSET_PROXY_V6" &&
+            printf '%s\n' "$ipset_names" | grep -qx "$IPSET_PROXY_NET_V6"; then
+            v6_sets="true"
+        fi
+
+        iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set --match-set "$IPSET_BYPASS_NET_V4" dst -j RETURN
         iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set --match-set "$IPSET_BYPASS_V4" dst -j RETURN
 
-        if is_ipv6_enabled && ipset list -n | grep -qx "$IPSET_BYPASS_V6"; then
+        if [ "$v6_sets" = "true" ]; then
             log_debug "Adding IPv6 IPSET rules for $IPT_TABLE."
+            ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set --match-set "$IPSET_BYPASS_NET_V6" dst -j RETURN
             ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set --match-set "$IPSET_BYPASS_V6" dst -j RETURN
         fi
 
         if [ "$ipsec" = "redirect" ]; then
-            iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set ! --match-set "$IPSET_PROXY_V4" dst -j RETURN
+            iptables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set ! --match-set "$IPSET_PROXY_V4" dst -m set ! --match-set "$IPSET_PROXY_NET_V4" dst -j RETURN
 
-            if is_ipv6_enabled && ipset list -n | grep -qx "$IPSET_PROXY_V6"; then
-                ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set ! --match-set "$IPSET_PROXY_V6" dst -j RETURN
+            if [ "$v6_sets" = "true" ]; then
+                ip6tables -w -t "$IPT_TABLE" -I XRAYUI 1 -m set ! --match-set "$IPSET_PROXY_V6" dst -m set ! --match-set "$IPSET_PROXY_NET_V6" dst -j RETURN
             fi
         fi
     fi
@@ -817,7 +870,11 @@ EOF
     ipt_ensure "$IPT_TABLE" PREROUTING -A -j XRAYUI
 
     if [ "$POST_RESTART_DNSMASQ" = "false" ]; then
-        dnsmasq_restart
+        if [ "$FIREWALL_FROM_HOOK" = "true" ] && dnsmasq_has_xrayui_block; then
+            log_debug "dnsmasq already runs with the $ADDON_TITLE configuration; restart skipped."
+        else
+            dnsmasq_restart
+        fi
     fi
 
     log_ok "$IPT_TYPE rules applied."
@@ -860,7 +917,12 @@ cleanup_firewall_rules() {
     ipt filter -F XRAYUI_DNS_OWNERPROBE 2>/dev/null
     ipt filter -X XRAYUI_DNS_OWNERPROBE 2>/dev/null
 
-    # destroy ipsets
+    if [ "$ipsec" = "redirect" ]; then
+        ipset_learned_save
+    else
+        rm -f "$IPSET_LEARNED_FILE"
+    fi
+
     ipset list -n 2>/dev/null | awk '/^XRAYUI_/{print $1}' | while read -r s; do
         ipset destroy "$s" 2>/dev/null || ipset flush "$s" 2>/dev/null
     done
@@ -926,7 +988,7 @@ cleanup_firewall_rules() {
         "$script" "$XRAY_CONFIG_FILE" 9>&- || log_error "Error executing $script."
     fi
 
-    if [ "$POST_RESTART_DNSMASQ" = "false" ]; then
+    if [ "$POST_RESTART_DNSMASQ" = "false" ] && dnsmasq_has_xrayui_block; then
         dnsmasq_restart
     fi
 

@@ -144,21 +144,20 @@ apply_general_options() {
     cron_geodata_add
     cron_subscription_refresh_add
     cron_subscription_fallback_add
+    cron_ipset_save_add
 
     # integration scribe
     logs_scribe_integration
 
-    # Check if geodata URLs have changed and update if necessary
-    local geodata_updated=false
+    GEODATA_RESTARTED="false"
     if [ "$old_geosite_url" != "$geosite_url" ] || [ "$old_geoip_url" != "$geoip_url" ]; then
         log_info "Geodata URLs have changed. Updating geodata files..."
         log_debug "Old geosite URL: $old_geosite_url, New: $geosite_url"
         log_debug "Old geoip URL: $old_geoip_url, New: $geoip_url"
         update_community_geodata
-        geodata_updated=true
     fi
 
-    if [ -f "$XRAY_PIDFILE" ] && [ "$geodata_updated" = false ]; then
+    if [ -f "$XRAY_PIDFILE" ] && [ "$GEODATA_RESTARTED" != "true" ]; then
         update_loading_progress "Restarting Xray service..."
         restart
     fi

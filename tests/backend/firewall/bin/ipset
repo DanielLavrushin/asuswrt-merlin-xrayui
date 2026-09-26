@@ -1,47 +1,159 @@
 #!/bin/sh
 st=${FW_STATE:?FW_STATE is not set}
 f="$st/ipset.sets"
-touch "$f"
+e="$st/ipset.entries"
+touch "$f" "$e"
 printf 'ipset %s\n' "$*" >>"$st/calls.log"
-case "${1:-}" in
-list)
-    if [ "${2:-}" = "-n" ]; then
-        awk '{ print $1 }' "$f"
-        exit 0
-    fi
-    line=$(awk -v n="${2:-}" '$1 == n' "$f")
-    if [ -z "$line" ]; then
-        echo "ipset v7.15: The set with the given name does not exist" >&2
-        exit 1
-    fi
-    set -- $line
-    printf 'Name: %s\nType: %s\nRevision: 7\nHeader: family %s hashsize 1024 maxelem 65536 timeout 86400\nMembers:\n' "$1" "$2" "$3"
-    ;;
-create)
-    name=$2
-    type=$3
+
+exist=0
+args=""
+for a do
+    case "$a" in
+    -exist | -!) exist=1 ;;
+    *) args="$args $a" ;;
+    esac
+done
+set -- $args
+
+missing() {
+    echo "ipset v7.15: The set with the given name does not exist" >&2
+    return 1
+}
+
+has_set() {
+    awk -v n="$1" '$1 == n { found = 1 } END { exit found ? 0 : 1 }' "$f"
+}
+
+has_entry() {
+    awk -v n="$1" -v x="$2" '$1 == n && $2 == x { found = 1 } END { exit found ? 0 : 1 }' "$e"
+}
+
+set_timeout() {
+    awk -v n="$1" '$1 == n && $4 == "timeout" { print $5 }' "$f"
+}
+
+drop_lines() {
+    awk -v n="$1" -v x="${2:-}" '!($1 == n && (x == "" || $2 == x))' "$3" >"$3.tmp" && mv "$3.tmp" "$3"
+}
+
+do_create() {
+    name=$1
+    type=$2
+    shift 2
     family=inet
-    exist=0
-    shift 3
+    timeout=""
     while [ $# -gt 0 ]; do
         case "$1" in
         family)
             family=$2
             shift
             ;;
-        -exist) exist=1 ;;
+        timeout)
+            timeout=$2
+            shift
+            ;;
+        hashsize | maxelem) shift ;;
         esac
         shift
     done
-    if awk -v n="$name" '$1 == n { found = 1 } END { exit found ? 0 : 1 }' "$f"; then
-        [ "$exist" = 1 ] && exit 0
+    if has_set "$name"; then
+        [ "$exist" = 1 ] && return 0
         echo "ipset v7.15: Set cannot be created: set with the same name already exists" >&2
-        exit 1
+        return 1
     fi
-    printf '%s %s %s\n' "$name" "$type" "$family" >>"$f"
-    ;;
-destroy)
-    awk -v n="${2:-}" '$1 != n' "$f" >"$f.tmp" && mv "$f.tmp" "$f"
-    ;;
-esac
-exit 0
+    printf '%s %s %s%s\n' "$name" "$type" "$family" "${timeout:+ timeout $timeout}" >>"$f"
+}
+
+do_add() {
+    name=$1
+    entry=$2
+    shift 2
+    has_set "$name" || missing || return 1
+    t=$(set_timeout "$name")
+    if [ "${1:-}" = "timeout" ]; then
+        if [ -z "$t" ]; then
+            echo "ipset v7.15: Timeout extension is not supported by the set" >&2
+            return 1
+        fi
+        t=$2
+    fi
+    if has_entry "$name" "$entry"; then
+        if [ "$exist" != 1 ]; then
+            echo "ipset v7.15: Element cannot be added to the set: it's already added" >&2
+            return 1
+        fi
+        drop_lines "$name" "$entry" "$e"
+    fi
+    printf '%s %s%s\n' "$name" "$entry" "${t:+ timeout $t}" >>"$e"
+}
+
+do_swap() {
+    has_set "$1" || missing || return 1
+    has_set "$2" || missing || return 1
+    for file in "$f" "$e"; do
+        awk -v a="$1" -v b="$2" '$1 == a { $1 = b; print; next } $1 == b { $1 = a; print; next } { print }' "$file" >"$file.tmp" && mv "$file.tmp" "$file"
+    done
+}
+
+do_save() {
+    awk -v n="$1" '$1 == n { printf "create %s %s family %s%s\n", $1, $2, $3, ($4 == "timeout" ? " timeout " $5 : "") }' "$f"
+    awk -v n="$1" '$1 == n { print "add " $0 }' "$e"
+}
+
+run() {
+    cmd=$1
+    [ $# -gt 0 ] && shift
+    case "$cmd" in
+    list)
+        if [ "${1:-}" = "-n" ]; then
+            awk '{ print $1 }' "$f"
+            return 0
+        fi
+        terse=0
+        if [ "${1:-}" = "-t" ]; then
+            terse=1
+            shift
+        fi
+        line=$(awk -v n="${1:-}" '$1 == n' "$f")
+        [ -n "$line" ] || missing || return 1
+        set -- $line
+        printf 'Name: %s\nType: %s\nRevision: 7\nHeader: family %s hashsize 1024 maxelem 65536%s\nNumber of entries: %s\n' \
+            "$1" "$2" "$3" "${5:+ timeout $5}" "$(awk -v n="$1" '$1 == n' "$e" | wc -l | tr -d ' ')"
+        if [ "$terse" = 0 ]; then
+            echo "Members:"
+            awk -v n="$1" '$1 == n { $1 = ""; sub(/^ /, ""); print }' "$e"
+        fi
+        ;;
+    create) do_create "$@" ;;
+    destroy)
+        has_set "$1" || missing || return 1
+        drop_lines "$1" "" "$f"
+        drop_lines "$1" "" "$e"
+        ;;
+    flush)
+        has_set "$1" || missing || return 1
+        drop_lines "$1" "" "$e"
+        ;;
+    add) do_add "$@" ;;
+    del)
+        has_entry "$1" "$2" || return 1
+        drop_lines "$1" "$2" "$e"
+        ;;
+    test) has_entry "$1" "$2" ;;
+    swap) do_swap "$@" ;;
+    save) do_save "$1" ;;
+    restore)
+        n=0
+        while IFS= read -r line; do
+            n=$((n + 1))
+            [ -n "$line" ] || continue
+            if ! run $line; then
+                echo "ipset v7.15: Error in line $n" >&2
+                return 1
+            fi
+        done
+        ;;
+    esac
+}
+
+run "$@"

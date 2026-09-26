@@ -125,6 +125,51 @@ const scenarios: Record<string, Scenario> = {
     env: { FW_IPV6: '1', xray_block_quic: 'true', xray_dns_only: 'true' },
     steps: ['configure_firewall', 'cleanup_firewall']
   },
+  'tproxy with ipset bypass mode': {
+    config: config([dokodemo('tproxy')]),
+    env: { ipsec: 'bypass' }
+  },
+  'redirect with ipset redirect mode dual-stack': {
+    config: config([dokodemo('redirect')]),
+    env: { ipsec: 'redirect', FW_IPV6: '1' }
+  },
+  'restart in redirect mode carries learned addresses over': {
+    config: config([dokodemo('tproxy')]),
+    env: { ipsec: 'redirect', FW_NOW: '1000000' },
+    steps: ['cleanup_firewall', 'configure_firewall'],
+    prestate:
+      'ipset create XRAYUI_PROXY4 hash:net family inet timeout 86400; ipset add XRAYUI_PROXY4 198.51.100.10 timeout 5000; ipset add XRAYUI_PROXY4 198.51.100.11; ipset create XRAYUI_PROXY4_NET hash:net family inet; ipset add XRAYUI_PROXY4_NET 203.0.113.0/24; ipset create XRAYUI_PROXY4_OLD hash:net family inet timeout 86400; ipset add XRAYUI_PROXY4_OLD 192.0.2.1 timeout 0'
+  },
+  'boot in redirect mode restores learned addresses minus the time spent down': {
+    config: config([dokodemo('tproxy')]),
+    env: { ipsec: 'redirect', FW_NOW: '1000000' },
+    prestate: "printf '# 999000\\nXRAYUI_PROXY4 198.51.100.20 3000\\nXRAYUI_PROXY4 198.51.100.21 500\\nXRAYUI_PROXY6 2001:db8::1 3000\\n' >\"$IPSET_LEARNED_FILE\""
+  },
+  'reconfigure in redirect mode leaves live learned addresses alone': {
+    config: config([dokodemo('tproxy')]),
+    env: { ipsec: 'redirect', FW_NOW: '1000000' },
+    prestate:
+      "ipset create XRAYUI_PROXY4 hash:net family inet timeout 86400; ipset add XRAYUI_PROXY4 198.51.100.20 timeout 86000; printf '# 999000\\nXRAYUI_PROXY4 198.51.100.20 3000\\nXRAYUI_PROXY4 198.51.100.22 3000\\n' >\"$IPSET_LEARNED_FILE\""
+  },
+  'cleanup in bypass mode drops saved learned addresses': {
+    config: config([dokodemo('tproxy')]),
+    env: { ipsec: 'bypass' },
+    steps: ['cleanup_firewall'],
+    prestate: "ipset create XRAYUI_BYPASS4 hash:net family inet timeout 86400; ipset add XRAYUI_BYPASS4 198.51.100.30; printf '# 1\\nXRAYUI_PROXY4 198.51.100.20 3000\\n' >\"$IPSET_LEARNED_FILE\""
+  },
+  'firewall hook while dnsmasq already has the xrayui block': {
+    config: config([dokodemo('tproxy')]),
+    env: { ipsec: 'redirect', FW_FROM_HOOK: 'true', FW_DNSMASQ_BLOCK: '1' }
+  },
+  'firewall hook while dnsmasq lacks the xrayui block': {
+    config: config([dokodemo('tproxy')]),
+    env: { ipsec: 'redirect', FW_FROM_HOOK: 'true', FW_DNSMASQ_BLOCK: '0' }
+  },
+  'cleanup while dnsmasq lacks the xrayui block': {
+    config: config([dokodemo('tproxy')]),
+    env: { FW_DNSMASQ_BLOCK: '0' },
+    steps: ['cleanup_firewall']
+  },
   'cleanup when only ipv4 still has the hooks': {
     config: config([dokodemo('tproxy')]),
     env: { FW_IPV6: '1' },
@@ -213,6 +258,63 @@ describeOnLinux('firewall.sh behaviour', () => {
     const ipset = 'tproxy with ipset redirect mode and QUIC blocking';
     expect(await verdict(ipset, { proto: 'udp', dport: 443, sets: ['XRAYUI_PROXY4'] })).toBe('drop');
     expect(await verdict(ipset, { proto: 'udp', dport: 443 })).toBe('direct');
+  });
+
+  it('lets static networks and learned addresses into Xray in ipset redirect mode', async () => {
+    const name = 'tproxy with ipset redirect mode and QUIC blocking';
+    expect(await verdict(name, { sets: ['XRAYUI_PROXY4'] })).toBe('proxy');
+    expect(await verdict(name, { sets: ['XRAYUI_PROXY4_NET'] })).toBe('proxy');
+    expect(await verdict(name, { sets: ['XRAYUI_PROXY4', 'XRAYUI_PROXY4_NET'] })).toBe('proxy');
+    expect(await verdict(name, {})).toBe('direct');
+    expect(await verdict(name, { sets: ['XRAYUI_PROXY4', 'XRAYUI_BYPASS4_NET'] })).toBe('direct');
+    const nat = 'redirect with ipset redirect mode dual-stack';
+    expect(await verdict(nat, { sets: ['XRAYUI_PROXY4_NET'] }, 'nat')).toBe('proxy');
+    expect(await verdict(nat, {}, 'nat')).toBe('direct');
+    const v6 = parseChain((await result(nat)).dump, 'ip6tables', 'nat').map((rule) => rule.join(' '));
+    expect(v6).toContain('-m set ! --match-set XRAYUI_PROXY6 dst -m set ! --match-set XRAYUI_PROXY6_NET dst -j RETURN');
+  });
+
+  it('keeps both bypass sets out of Xray in ipset bypass mode', async () => {
+    const name = 'tproxy with ipset bypass mode';
+    expect(await verdict(name, { sets: ['XRAYUI_BYPASS4'] })).toBe('direct');
+    expect(await verdict(name, { sets: ['XRAYUI_BYPASS4_NET'] })).toBe('direct');
+    expect(await verdict(name, {})).toBe('proxy');
+    expect(await verdict(name, { sets: ['XRAYUI_PROXY4'] })).toBe('proxy');
+  });
+
+  it('carries learned addresses across a restart but not static networks', async () => {
+    const { dump } = await result('restart in redirect mode carries learned addresses over');
+    const learned = dump.split('== learned file\n')[1].split('\n== ')[0].split('\n');
+    expect(learned).toEqual(['# 1000000', 'XRAYUI_PROXY4 198.51.100.10 5000', 'XRAYUI_PROXY4 198.51.100.11 86400']);
+    const entries = dump.split('== ipset entries\n')[1].split('\n== ')[0].split('\n');
+    expect(entries).toEqual(['XRAYUI_PROXY4 198.51.100.10 timeout 5000', 'XRAYUI_PROXY4 198.51.100.11 timeout 86400']);
+  });
+
+  it('shortens restored timeouts by the downtime and drops expired ones', async () => {
+    const { dump } = await result('boot in redirect mode restores learned addresses minus the time spent down');
+    const entries = dump.split('== ipset entries\n')[1].split('\n== ')[0].split('\n');
+    expect(entries).toEqual(['XRAYUI_PROXY4 198.51.100.20 timeout 2000']);
+  });
+
+  it('does not rewind addresses dnsmasq refreshed while the sets were live', async () => {
+    const { dump } = await result('reconfigure in redirect mode leaves live learned addresses alone');
+    const entries = dump.split('== ipset entries\n')[1].split('\n== ')[0].split('\n');
+    expect(entries).toEqual(['XRAYUI_PROXY4 198.51.100.20 timeout 86000']);
+  });
+
+  it('never keeps learned addresses outside redirect mode', async () => {
+    const { dump } = await result('cleanup in bypass mode drops saved learned addresses');
+    expect(dump).not.toContain('== learned file');
+    expect(dump).not.toContain('== ipset entries');
+  });
+
+  it('restarts dnsmasq from the firewall hooks only when its xrayui block is missing', async () => {
+    const events = (dump: string) => (dump.split('== events\n')[1] ?? '').split('\n== ')[0];
+    expect(events((await result('firewall hook while dnsmasq already has the xrayui block')).dump)).not.toContain('dnsmasq_restart');
+    expect(events((await result('firewall hook while dnsmasq lacks the xrayui block')).dump)).toContain('dnsmasq_restart');
+    expect(events((await result('tproxy with default policy')).dump)).toContain('dnsmasq_restart');
+    expect(events((await result('cleanup while dnsmasq lacks the xrayui block')).dump)).not.toContain('dnsmasq_restart');
+    expect(events((await result('cleanup after a dual-stack configure')).dump)).toContain('dnsmasq_restart');
   });
 
   it('leaves UDP alone when the inbound only accepts TCP', async () => {

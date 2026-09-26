@@ -111,7 +111,7 @@ subscriptions)
     ;;
 cron)
     case "$2" in
-    logrotate | geodata | subscription_refresh | subscription_fallback)
+    logrotate | geodata | subscription_refresh | subscription_fallback | ipset_save)
         cron_job_lock "$2" || exit 0
         update_loading_progress() { :; }
         ;;
@@ -134,6 +134,10 @@ cron)
         ;;
     subscription_fallback)
         failover_check
+        ;;
+    ipset_save)
+        load_xrayui_config
+        [ "$ipsec" = "redirect" ] && ipset_learned_save
         ;;
     *) ;;
     esac
@@ -324,6 +328,7 @@ service_event)
     firewall)
         case "$3" in
         configure)
+            FIREWALL_FROM_HOOK="true"
             configure_firewall
             ;;
         cleanup)

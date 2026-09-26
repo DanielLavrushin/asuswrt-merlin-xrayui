@@ -17,6 +17,8 @@ for fam in 4 6; do
     done
 done
 [ -s "$FW_STATE/ipset.sets" ] && printf '== ipset\n%s\n' "$(cat "$FW_STATE/ipset.sets")"
+[ -s "$FW_STATE/ipset.entries" ] && printf '== ipset entries\n%s\n' "$(sort "$FW_STATE/ipset.entries")"
+[ -f "$FW_STATE/learned.ipset" ] && printf '== learned file\n%s\n' "$(cat "$FW_STATE/learned.ipset")"
 [ -s "$FW_STATE/events.log" ] && printf '== events\n%s\n' "$(cat "$FW_STATE/events.log")"
 [ -s "$FW_STATE/messages.log" ] && printf '== messages\n%s\n' "$(cat "$FW_STATE/messages.log")"
 exit 0

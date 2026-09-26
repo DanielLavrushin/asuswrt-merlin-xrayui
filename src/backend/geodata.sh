@@ -12,18 +12,24 @@ update_community_geodata() {
 
     log_info "Downloading geosite.dat from $geositeurl..."
     update_loading_progress "Downloading geosite.dat..."
-    curl -L "$geositeurl" -o "$ADDON_TMP_DIR/geosite.dat"
-    if [ $? -ne 0 ]; then
+    if ! curl -fL "$geositeurl" -o "$ADDON_TMP_DIR/geosite.dat" || [ ! -s "$ADDON_TMP_DIR/geosite.dat" ]; then
+        rm -f "$ADDON_TMP_DIR/geosite.dat"
         log_error "Failed to download geosite.dat."
         return 1
     fi
 
     log_info "Downloading geoip.dat from $geoipurl..."
     update_loading_progress "Downloading geoip.dat..."
-    curl -L "$geoipurl" -o "$ADDON_TMP_DIR/geoip.dat"
-    if [ $? -ne 0 ]; then
+    if ! curl -fL "$geoipurl" -o "$ADDON_TMP_DIR/geoip.dat" || [ ! -s "$ADDON_TMP_DIR/geoip.dat" ]; then
+        rm -f "$ADDON_TMP_DIR/geosite.dat" "$ADDON_TMP_DIR/geoip.dat"
         log_error "Failed to download geoip.dat."
         return 1
+    fi
+
+    if cmp -s "$ADDON_TMP_DIR/geosite.dat" "$xray_dir/geosite.dat" && cmp -s "$ADDON_TMP_DIR/geoip.dat" "$xray_dir/geoip.dat"; then
+        rm -f "$ADDON_TMP_DIR/geosite.dat" "$ADDON_TMP_DIR/geoip.dat"
+        log_ok "Community geodata files are already up to date."
+        return 0
     fi
 
     mv -f "$ADDON_TMP_DIR/geosite.dat" "$xray_dir/geosite.dat"
@@ -166,6 +172,7 @@ geodata_recompile_all() {
     if [ -f "$XRAY_PIDFILE" ]; then
         update_loading_progress "Restarting Xray service..."
         restart
+        GEODATA_RESTARTED="true"
     fi
 
     log_ok "Recompiled all custom geodata files successfully."

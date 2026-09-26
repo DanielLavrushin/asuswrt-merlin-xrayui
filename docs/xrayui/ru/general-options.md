@@ -92,70 +92,85 @@ URL, который Observatory запрашивает через каждый o
 - **BYPASS** — домены, направленные в outbound `FREEDOM`, уходят напрямую в интернет; остальное идёт через прокси.
 - **REDIRECT** — наоборот: проксируется только то, что **не** сопоставлено с `FREEDOM`; остальной трафик уходит напрямую.
 
+Outbound `FREEDOM` с настройками fragment, noises, redirect, proxy protocol или dialer proxy здесь считается прокси: его трафик по-прежнему заходит в Xray, и эти настройки продолжают работать.
+
 ```mermaid
 flowchart TD
-    Start["⚙️ Применение конфигурации<br/>Xray"] --> Mode{"Режим<br/>DNS-обхода"}
+    Start["Запуск dnsmasq<br/>(Xray работает)"] --> Mode{"Режим<br/>DNS-обхода"}
 
-    Mode -->|"OFF"| NoIpset["ipset не создаётся<br/>весь перехваченный трафик<br/>идёт в Xray"]
-    Mode -->|"BYPASS"| ExtractFree["Извлечь домены<br/>из правил → FREEDOM"]
-    Mode -->|"REDIRECT"| ExtractProxy["Извлечь домены<br/>из правил → не FREEDOM<br/>(proxy, blackhole, ...)"]
+    Mode -->|"OFF"| NoIpset["ipset не используется<br/>весь перехваченный трафик<br/>идёт в Xray"]
+    Mode -->|"BYPASS"| ExtractFree["Записи правил<br/>→ FREEDOM"]
+    Mode -->|"REDIRECT"| ExtractProxy["Записи правил<br/>→ не FREEDOM<br/>(proxy, blackhole, ...)"]
 
-    ExtractFree --> SkipRegex1{"regexp: ?"}
-    ExtractProxy --> SkipRegex2{"regexp: ?"}
+    ExtractFree --> Kind1{"Тип записи"}
+    ExtractProxy --> Kind2{"Тип записи"}
 
-    SkipRegex1 -->|"Да"| Ignored1["⚠️ Пропущено<br/>(ipset не поддерживает regex)"]
-    SkipRegex1 -->|"Нет"| Resolve1["Резолвинг<br/>через системный DNS"]
+    Kind1 -->|"domain / geosite"| Learn1["dnsmasq добавляет IP,<br/>когда устройство<br/>резолвит домен"]
+    Kind1 -->|"geoip / IP / CIDR"| Static1["Загружается сразу"]
+    Kind1 -->|"regexp / keyword / geoip:!"| Ignored1["Пропущено"]
 
-    SkipRegex2 -->|"Да"| Ignored2["⚠️ Пропущено"]
-    SkipRegex2 -->|"Нет"| Resolve2["Резолвинг<br/>через системный DNS"]
+    Kind2 -->|"domain / geosite"| Learn2["dnsmasq добавляет IP,<br/>когда устройство<br/>резолвит домен"]
+    Kind2 -->|"geoip / IP / CIDR"| Static2["Загружается сразу"]
+    Kind2 -->|"regexp / keyword / geoip:!"| Ignored2["Пропущено"]
 
-    Resolve1 --> Ipset1["📋 ipset<br/>XRAYUI_BYPASS4"]
-    Resolve2 --> Ipset2["📋 ipset<br/>XRAYUI_PROXY4"]
+    Learn1 --> Ipset1["XRAYUI_BYPASS4"]
+    Static1 --> Net1["XRAYUI_BYPASS4_NET"]
+    Learn2 --> Ipset2["XRAYUI_PROXY4"]
+    Static2 --> Net2["XRAYUI_PROXY4_NET"]
 
-    Ipset1 --> Runtime{"🌐 Входящий пакет<br/>(после политики B/R)"}
+    Ipset1 --> Runtime{"Входящий пакет<br/>(после политики B/R)"}
+    Net1 --> Runtime
     Ipset2 --> Runtime
-    NoIpset --> Doko["🚪 dokodemo-door Xray"]
+    Net2 --> Runtime
+    NoIpset --> Doko["dokodemo-door Xray"]
 
-    Runtime -->|"dst IP ∈ XRAYUI_BYPASS4<br/>(оба режима)"| Direct["↪️ Напрямую в WAN<br/>(минуя Xray)"]
-    Runtime -->|"REDIRECT:<br/>dst IP ∉ XRAYUI_PROXY4"| Direct
+    Runtime -->|"dst IP в наборе BYPASS<br/>(оба режима)"| Direct["Напрямую в WAN<br/>(минуя Xray)"]
+    Runtime -->|"REDIRECT:<br/>dst IP нет ни в одном<br/>наборе PROXY"| Direct
     Runtime -->|"Иначе"| Doko
 
     Doko --> XRules["Правила маршрутизации Xray<br/>(proxy / freedom / blackhole)"]
-    Direct --> Internet["🌍 Интернет"]
+    Direct --> Internet["Интернет"]
     XRules --> Internet
 
     style Start fill:#4a9eff,color:#fff,stroke:none
     style Mode fill:#ff9800,color:#fff,stroke:none
-    style SkipRegex1 fill:#ffb74d,color:#000,stroke:none
-    style SkipRegex2 fill:#ffb74d,color:#000,stroke:none
+    style Kind1 fill:#ffb74d,color:#000,stroke:none
+    style Kind2 fill:#ffb74d,color:#000,stroke:none
     style Runtime fill:#ff9800,color:#fff,stroke:none
     style ExtractFree fill:#9c27b0,color:#fff,stroke:none
     style ExtractProxy fill:#9c27b0,color:#fff,stroke:none
-    style Resolve1 fill:#9c27b0,color:#fff,stroke:none
-    style Resolve2 fill:#9c27b0,color:#fff,stroke:none
+    style Learn1 fill:#9c27b0,color:#fff,stroke:none
+    style Learn2 fill:#9c27b0,color:#fff,stroke:none
+    style Static1 fill:#9c27b0,color:#fff,stroke:none
+    style Static2 fill:#9c27b0,color:#fff,stroke:none
     style Ipset1 fill:#607d8b,color:#fff,stroke:none
     style Ipset2 fill:#607d8b,color:#fff,stroke:none
+    style Net1 fill:#607d8b,color:#fff,stroke:none
+    style Net2 fill:#607d8b,color:#fff,stroke:none
     style NoIpset fill:#607d8b,color:#fff,stroke:none
     style Doko fill:#9c27b0,color:#fff,stroke:none
     style XRules fill:#4a9eff,color:#fff,stroke:none
     style Direct fill:#4caf50,color:#fff,stroke:none
     style Internet fill:#4caf50,color:#fff,stroke:none
-    style RuntimeAll fill:#4a9eff,color:#fff,stroke:none
     style Ignored1 fill:#f44336,color:#fff,stroke:none
     style Ignored2 fill:#f44336,color:#fff,stroke:none
 ```
 
-Верхняя часть схемы — **build-time**: при применении конфигурации XRAYUI извлекает домены и разово резолвит их в IP, заполняя ipset. Нижняя часть — **runtime**: iptables матчит IP назначения пакета по ipset и решает, идёт пакет в Xray или напрямую в WAN.
+Верхняя часть схемы выполняется при каждом запуске dnsmasq, пока работает Xray. Заранее ничего не резолвится: каждый домен превращается в правило dnsmasq `ipset=`, и адреса домена попадают в набор только тогда, когда какое-то устройство запрашивает этот домен через DNS роутера. Записи `geoip:`, IP и CIDR загружаются целиком в отдельный набор `_NET`. Нижняя часть — **runtime**: iptables сверяет IP назначения пакета с наборами и решает, идёт пакет в Xray или напрямую в WAN.
 
 > [!note]
-> Правило `dst ∈ XRAYUI_BYPASS4 → RETURN` активно в обоих режимах (`BYPASS` и `REDIRECT`). В режиме `REDIRECT` дополнительно включается правило `dst ∉ XRAYUI_PROXY4 → RETURN`, так что через Xray идёт только трафик, чей IP попал в набор «проксируемых» доменов.
+> Правила `dst ∈ XRAYUI_BYPASS4 / XRAYUI_BYPASS4_NET → RETURN` активны в **обоих** режимах (`BYPASS` и `REDIRECT`). В режиме `REDIRECT` дополнительно включается правило `dst ∉ XRAYUI_PROXY4 и ∉ XRAYUI_PROXY4_NET → RETURN`, так что через Xray идёт только трафик, чей IP попал в один из «проксируемых» наборов.
 
-::: note
-Домены по регулярным выражениям (записи с префиксом `regexp:`) нельзя добавить в ipset, поэтому эта функция их игнорирует. Внутри движка Xray такие правила продолжают работать.
-:::
+#### Что важно знать
+
+- **Закэшированные DNS-ответы.** Устройство, которое узнало адрес домена до добавления правила или до перезапуска Xray, продолжает пользоваться этим ответом и может идти напрямую, пока снова не запросит домен. XRAYUI сокращает это окно: в режиме `REDIRECT` выученные адреса сохраняются каждые 30 минут и при остановке Xray, восстанавливаются при запуске, а домены, прописанные в правилах напрямую (и первые домены недавно добавленных тегов geosite), запрашиваются сразу после запуска dnsmasq. Остальное решается очисткой DNS-кэша на устройстве или перезапуском браузера.
+- **Шифрованный DNS на устройстве.** DoH/DoT в браузере, «Частный DNS» на Android и iCloud Private Relay не обращаются к роутеру, поэтому их адреса назначения в набор не попадают. Опция Merlin **Prevent client auto DoH** не даёт браузерам самостоятельно переключаться на DoH.
+- **Неподдерживаемые записи.** `regexp:`, `keyword:`, `dotless:`, слова без точки и отрицания `geoip:!` нельзя выразить через ipset. Внутри Xray они работают, но эта функция их пропускает и перечисляет в логе.
+- **Правила без адреса назначения.** Правила, которые срабатывают только по устройству-источнику, inbound, порту или протоколу, не дают ни домена, ни IP для набора, поэтому в режиме `REDIRECT` они не действуют.
+- **Срок жизни.** Выученные адреса истекают через 24 часа после последнего запроса через dnsmasq. Удаление проксируемого домена из правил очищает выученные адреса.
 
 ::: tip
-В режиме `REDIRECT` явные правила, перенаправляющие домены в `FREEDOM`, становятся избыточными и могут быть удалены.
+В режиме `REDIRECT` правила, направляющие домены в `FREEDOM`, ничего не добавляют в ipset, но внутри Xray они по-прежнему важны: правило direct для `x.example.com`, стоящее выше правила proxy для `example.com`, оставляет этот поддомен напрямую.
 :::
 
 ### Предотвратить утечки DNS

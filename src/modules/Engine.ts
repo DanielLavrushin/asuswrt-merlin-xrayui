@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { gzip } from 'pako';
 import { xrayConfig, XrayObject } from './XrayConfig';
 import {
@@ -76,6 +76,7 @@ import {
 } from './TransportObjects';
 import { XrayProtocol } from './Options';
 import * as DnsLeakProtection from './DnsLeakProtection';
+import { getCoreVersion } from './CoreVersion';
 
 // Protocol → settings class mappings for deserialization
 const inboundSettingsMap: Record<string, new () => any> = {
@@ -317,6 +318,10 @@ export enum SubmitActions {
 
 export class Engine {
   public xrayConfig: XrayObject = xrayConfig;
+  private loadedPool: Record<string, { active?: string; settings: string; stream: string }> = {};
+  private appliedConfigJson?: string;
+  private appliedBaseline?: { coreVersion: string; json: string };
+  public unloadConfirmed = false;
   public mode = 'server';
   private readonly zero_uuid = '10000000-1000-4000-8000-100000000000';
   private subscriptionsNotFound = false;
@@ -365,6 +370,29 @@ export class Engine {
     }
   };
 
+  public async getWebData<T>(name: string, config: AxiosRequestConfig = {}): Promise<AxiosResponse<T>> {
+    const request = { ...config, headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache', Expires: '0', ...config.headers } };
+    try {
+      return await axios.get<T>(`/ext/xrayui/${name}.cab`, request);
+    } catch (e) {
+      if ((e as AxiosError).response?.status !== 404) throw e;
+      return axios.get<T>(`/ext/xrayui/${name}.json?_=${Date.now()}`, request);
+    }
+  }
+
+  public openText(text: string | Promise<string>, type = 'text/plain;charset=utf-8'): void {
+    const tab = window.open('', '_blank');
+    Promise.resolve(text)
+      .then((content) => {
+        const url = URL.createObjectURL(new Blob([content], { type }));
+        if (tab) tab.location.href = url;
+      })
+      .catch((e) => {
+        tab?.close();
+        console.error('[xrayui] unable to open the file:', e);
+      });
+  }
+
   public async fetchGithubJson<T = any>(url: string, proxy: string | undefined | null, config?: any): Promise<T> {
     const proxied = this.githubProxyUrl(url, proxy);
     if (proxied !== url) {
@@ -391,6 +419,11 @@ export class Engine {
 
     const payloadString = this.compressPayload(JSON.stringify(payload));
     const chunks = this.splitPayload(payloadString, this.nvramChunkSize);
+    Object.keys(window.xray.custom_settings).forEach((k) => {
+      if (k.startsWith('xray_payload') || k.startsWith('xray_stage')) {
+        delete window.xray.custom_settings[k];
+      }
+    });
     chunks.forEach((chunk: string, idx) => {
       window.xray.custom_settings[`xray_payload${idx}`] = chunk;
     });
@@ -582,6 +615,20 @@ export class Engine {
     return config;
   }
 
+  hasUnappliedChanges(config: XrayObject): boolean {
+    if (!this.appliedConfigJson) return false;
+    try {
+      const coreVersion = getCoreVersion();
+      if (this.appliedBaseline?.coreVersion !== coreVersion) {
+        const applied = this.hydrateConfig(plainToInstance(XrayObject, JSON.parse(this.appliedConfigJson)));
+        this.appliedBaseline = { coreVersion, json: stableStringify(this.prepareServerConfig(applied)) };
+      }
+      return stableStringify(this.prepareServerConfig(config)) !== this.appliedBaseline.json;
+    } catch {
+      return false;
+    }
+  }
+
   async getGeodata(): Promise<EngineGeodatConfig | undefined> {
     const result = await this.getXrayResponse();
     return result.geodata;
@@ -613,25 +660,13 @@ export class Engine {
   }
 
   async getConnectionStatus(): Promise<EngineConnectionStatus | undefined> {
-    const response = await axios.get<EngineConnectionStatus>(`/ext/xrayui/connection-status.json?_=${Date.now()}`, {
-      headers: {
-        'Cache-Control': 'no-cache',
-        Pragma: 'no-cache',
-        Expires: '0'
-      }
-    });
+    const response = await this.getWebData<EngineConnectionStatus>('connection-status');
     let responseConfig = response.data;
     return responseConfig;
   }
 
   async getXrayResponse({ light = false }: { light?: boolean } = {}): Promise<EngineResponseConfig> {
-    const response = await axios.get<EngineResponseConfig>(`/ext/xrayui/xray-ui-response.json?_=${Date.now()}`, {
-      headers: {
-        'Cache-Control': 'no-cache',
-        Pragma: 'no-cache',
-        Expires: '0'
-      }
-    });
+    const response = await this.getWebData<EngineResponseConfig>('xray-ui-response');
     let responseConfig = response.data;
     if (!light) {
       await this.loadSubscriptions(responseConfig);
@@ -645,13 +680,7 @@ export class Engine {
       return new EngineSubscriptions();
     }
     try {
-      const response = await axios.get<Record<string, string[]>>(`/ext/xrayui/subscriptions.json?_=${Date.now()}`, {
-        headers: {
-          'Cache-Control': 'no-cache',
-          Pragma: 'no-cache',
-          Expires: '0'
-        }
-      });
+      const response = await this.getWebData<Record<string, string[]>>('subscriptions');
       this.subscriptionsNotFound = false;
       if (resp.xray) {
         resp.xray.subscriptions ??= new EngineSubscriptions();
@@ -672,13 +701,7 @@ export class Engine {
 
   async loadGeoTags(): Promise<EngineGeoTags | undefined> {
     try {
-      const response = await axios.get<EngineGeoTags>(`/ext/xrayui/geotags.json?_=${Date.now()}`, {
-        headers: {
-          'Cache-Control': 'no-cache',
-          Pragma: 'no-cache',
-          Expires: '0'
-        }
-      });
+      const response = await this.getWebData<EngineGeoTags>('geotags');
       window.xray.geotags = response.data;
       return plainToInstance(EngineGeoTags, response.data);
     } catch (e) {
@@ -689,13 +712,7 @@ export class Engine {
 
   async loadsRtlsResults(): Promise<string | undefined> {
     try {
-      const response = await axios.get<string>(`/ext/xrayui/rtls-results.json?_=${Date.now()}`, {
-        headers: {
-          'Cache-Control': 'no-cache',
-          Pragma: 'no-cache',
-          Expires: '0'
-        }
-      });
+      const response = await this.getWebData<string>('rtls-results');
       return response.data;
     } catch (e) {
       console.error('Error loading rtls results:', e);
@@ -725,6 +742,7 @@ export class Engine {
             resolve();
             if (windowReload) {
               setTimeout(() => {
+                this.unloadConfirmed = true;
                 window.location.reload();
               }, 1000);
             }
@@ -741,17 +759,19 @@ export class Engine {
   async loadXrayConfig(config?: XrayObject): Promise<XrayObject | null> {
     try {
       if (!config) {
-        const response = await axios.get<XrayObject>(`/ext/xrayui/xray-config.json?_=${Date.now()}`, {
-          headers: {
-            'Cache-Control': 'no-cache',
-            Pragma: 'no-cache',
-            Expires: '0'
-          }
-        });
+        const response = await this.getWebData<XrayObject>('xray-config');
+        this.appliedConfigJson = JSON.stringify(response.data);
+        this.appliedBaseline = undefined;
         config = plainToInstance(XrayObject, response.data);
       }
       this.xrayConfig = this.hydrateConfig(config);
       Object.assign(xrayConfig, this.xrayConfig);
+      this.loadedPool = {};
+      this.xrayConfig.outbounds.forEach((o) => {
+        if (o.tag && o.subPool?.enabled) {
+          this.loadedPool[o.tag] = { active: o.subPool.active, settings: JSON.stringify(o.settings ?? null), stream: poolStreamKey(o.streamSettings) };
+        }
+      });
       return this.xrayConfig;
     } catch (e) {
       var axiosError = e as AxiosError;
@@ -766,6 +786,35 @@ export class Engine {
       }
     }
     return null;
+  }
+
+  async keepRotatedOutbounds(config: XrayObject): Promise<void> {
+    const pooled = config.outbounds.filter((o) => o.tag && o.subPool?.enabled && o.tag in this.loadedPool);
+    if (pooled.length === 0) return;
+
+    let disk: XrayObject;
+    try {
+      const response = await this.getWebData<XrayObject>('xray-config');
+      disk = response.data;
+    } catch {
+      return;
+    }
+
+    pooled.forEach((proxy) => {
+      const loaded = this.loadedPool[proxy.tag!];
+      const current = disk.outbounds?.find((o) => o.tag === proxy.tag);
+      if (!current?.subPool?.enabled || !current.subPool.active) return;
+      if (current.subPool.active === loaded.active || proxy.subPool?.active !== loaded.active) return;
+      if (current.protocol !== proxy.protocol) return;
+      if (JSON.stringify(proxy.settings ?? null) !== loaded.settings || poolStreamKey(proxy.streamSettings) !== loaded.stream) return;
+
+      const sockopt = proxy.streamSettings?.sockopt;
+      const rotated = deserializeProxy(current, outboundSettingsMap, XrayOutboundObject);
+      proxy.settings = rotated.settings;
+      proxy.streamSettings = transformStreamSettings(rotated.streamSettings);
+      proxy.streamSettings.sockopt = sockopt;
+      proxy.subPool = rotated.subPool;
+    });
   }
 
   hydrateConfig(config: XrayObject): XrayObject {
@@ -843,6 +892,13 @@ export class Engine {
   }
 }
 
+function stableStringify(value: unknown): string {
+  return JSON.stringify(value, (_key, val) => {
+    if (!val || typeof val !== 'object' || Array.isArray(val)) return val;
+    return Object.fromEntries(Object.keys(val).sort().map((key) => [key, val[key]]));
+  });
+}
+
 function transformMaskArray(masks: any[] | undefined): XrayFinalMaskObject[] | undefined {
   if (!masks || masks.length === 0) return undefined;
   return masks.map((mask: any) => {
@@ -871,6 +927,10 @@ const streamSettingsFieldMap: [keyof XrayStreamSettingsObject, new () => any][] 
   ['xhttpSettings', XrayStreamHttpSettingsObject],
   ['hysteriaSettings', XrayStreamHysteriaSettingsObject]
 ];
+
+function poolStreamKey(streamSettings: XrayStreamSettingsObject | undefined): string {
+  return JSON.stringify({ ...(streamSettings ?? {}), sockopt: undefined });
+}
 
 function transformStreamSettings(streamSettings: XrayStreamSettingsObject | undefined): XrayStreamSettingsObject {
   if (!streamSettings) return new XrayStreamSettingsObject();

@@ -43,6 +43,7 @@
       <label class="go-option">
         <input type="checkbox" v-model="subPoolEnabled" />
       </label>
+      <span v-if="subPoolEnabled && !globalFallbackOn" class="pool-warning">{{ $t('com.OutboundCommon.warn_auto_fallback_global_off') }}</span>
     </td>
   </tr>
   <tr class="unlocked" v-else-if="showSubPoolWarning">
@@ -120,18 +121,20 @@
       });
 
       const showSubPoolToggle = computed(() => {
-        return hasSubPool.value && !!ui.value.xray?.check_connection;
+        return !isLocked.value && hasSubPool.value && !!ui.value.xray?.check_connection;
       });
 
       const showSubPoolWarning = computed(() => {
-        return hasSubPool.value && !ui.value.xray?.check_connection;
+        return !isLocked.value && hasSubPool.value && !ui.value.xray?.check_connection;
       });
+
+      const globalFallbackOn = computed(() => !!ui.value.xray?.subscription_auto_fallback);
 
       const subPoolEnabled = computed({
         get: () => proxy.value.subPool?.enabled ?? false,
         set: (val: boolean) => {
           if (val) {
-            proxy.value.subPool = { enabled: true, active: proxy.value.subPool?.active };
+            proxy.value.subPool = { enabled: true, active: proxy.value.subPool?.active, origin: proxy.value.subPool?.origin };
           } else {
             proxy.value.subPool = undefined;
           }
@@ -147,6 +150,7 @@
             emit('apply-parsed', parsedProxy);
             if (proxy.value.subPool) {
               proxy.value.subPool.active = subscription.value.url;
+              proxy.value.subPool.origin = undefined;
             } else {
               proxy.value.subPool = { enabled: false, active: subscription.value.url };
             }
@@ -156,7 +160,32 @@
 
       watch(isLocked, toggle, { immediate: true });
 
-      return { protocols, subscription, proxy, isLocked, rowRef, clear_url, apply_subscription, showSubPoolToggle, showSubPoolWarning, subPoolEnabled };
+      watch(isLocked, (locked) => {
+        if (locked && proxy.value.subPool) proxy.value.subPool = undefined;
+      });
+
+      watch(
+        protocols,
+        (list) => {
+          const active = proxy.value.subPool?.active;
+          subscription.value = active ? list.find((p) => p.url === active) : undefined;
+        },
+        { immediate: true }
+      );
+
+      return {
+        protocols,
+        subscription,
+        proxy,
+        isLocked,
+        rowRef,
+        clear_url,
+        apply_subscription,
+        showSubPoolToggle,
+        showSubPoolWarning,
+        subPoolEnabled,
+        globalFallbackOn
+      };
     }
   });
 </script>
@@ -166,5 +195,8 @@
       max-width: 200px;
     }
   }
-
+  .pool-warning {
+    color: #ffcc00;
+    margin-left: 6px;
+  }
 </style>

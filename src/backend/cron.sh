@@ -5,10 +5,12 @@ CRU_GEOUPD_ID="xrayui_geodataupdate"
 CRU_LR_ID="xrayui_logrotate"
 CRU_SUB_REFRESH_ID="xrayui_subscription_refresh"
 CRU_SUB_FALLBACK_ID="xrayui_subscription_fallback"
+CRU_IPSET_SAVE_ID="xrayui_ipset_save"
 LR_STATUS="/tmp/logrotate.status"
 LR_BIN="/opt/sbin/logrotate"
 LR_CONF="/opt/etc/logrotate.conf"
 LR_STANZA="/opt/etc/logrotate.d/xrayui"
+CRON_LOCK_FD=8
 
 #
 # Add or refresh the CRU job (every 5 min by default)
@@ -22,7 +24,7 @@ cron_logrotate_add() {
     }
 
     cron_job_delete "$CRU_LR_ID"
-    cru a "$CRU_LR_ID" "*/15 * * * * flock -n /tmp/${CRU_LR_ID}.lock $ADDON_SCRIPT cron logrotate" || {
+    cru a "$CRU_LR_ID" "*/15 * * * * $ADDON_SCRIPT cron logrotate" || {
         log_error "Failed to add CRU job for $ADDON_TITLE"
         return
     }
@@ -82,7 +84,7 @@ cron_geodata_add() {
     cron_job_delete "$CRU_GEOUPD_ID"
 
     if [ "$geo_auto_update" = "true" ]; then
-        cru a "$CRU_GEOUPD_ID" "0 3 */1 * * flock -n /tmp/${CRU_GEOUPD_ID}.lock $ADDON_SCRIPT cron geodata" || {
+        cru a "$CRU_GEOUPD_ID" "0 3 */1 * * $ADDON_SCRIPT cron geodata" || {
             log_error "Failed to add CRU job for $ADDON_TITLE"
             return
         }
@@ -91,6 +93,19 @@ cron_geodata_add() {
         log_warn "CRON job $CRU_GEOUPD_ID for $ADDON_TITLE not added (geo_auto_update is false)"
     fi
 
+}
+
+cron_ipset_save_add() {
+    load_xrayui_config
+    cron_job_delete "$CRU_IPSET_SAVE_ID"
+
+    if [ "${ipsec:-off}" = "redirect" ]; then
+        cru a "$CRU_IPSET_SAVE_ID" "*/30 * * * * $ADDON_SCRIPT cron ipset_save" || {
+            log_error "Failed to add CRU job $CRU_IPSET_SAVE_ID"
+            return
+        }
+        log_ok "CRON job $CRU_IPSET_SAVE_ID for $ADDON_TITLE added successfully"
+    fi
 }
 
 cron_job_delete() {
@@ -126,7 +141,7 @@ cron_subscription_refresh_add() {
             ;;
     esac
 
-    cru a "$CRU_SUB_REFRESH_ID" "$cron_expr flock -n /tmp/${CRU_SUB_REFRESH_ID}.lock $ADDON_SCRIPT cron subscription_refresh" || {
+    cru a "$CRU_SUB_REFRESH_ID" "$cron_expr $ADDON_SCRIPT cron subscription_refresh" || {
         log_error "Failed to add CRU job $CRU_SUB_REFRESH_ID"
         return
     }
@@ -139,10 +154,16 @@ cron_subscription_fallback_add() {
     load_xrayui_config
     local subscription_auto_fallback="${subscription_auto_fallback:-false}"
     local subscription_fallback_interval="${subscription_fallback_interval:-5}"
+    case "$subscription_fallback_interval" in
+    '' | *[!0-9]*) subscription_fallback_interval=5 ;;
+    esac
+    if [ "$subscription_fallback_interval" -lt 1 ] || [ "$subscription_fallback_interval" -gt 59 ]; then
+        subscription_fallback_interval=5
+    fi
     cron_job_delete "$CRU_SUB_FALLBACK_ID"
 
     if [ "$subscription_auto_fallback" = "true" ]; then
-        cru a "$CRU_SUB_FALLBACK_ID" "*/$subscription_fallback_interval * * * * flock -n /tmp/${CRU_SUB_FALLBACK_ID}.lock $ADDON_SCRIPT cron subscription_fallback" || {
+        cru a "$CRU_SUB_FALLBACK_ID" "*/$subscription_fallback_interval * * * * $ADDON_SCRIPT cron subscription_fallback" || {
             log_error "Failed to add CRU job $CRU_SUB_FALLBACK_ID"
             return
         }
@@ -152,6 +173,21 @@ cron_subscription_fallback_add() {
     fi
 }
 
+cron_job_lock() {
+    local lockfile="/tmp/xrayui_cron_$1.lock"
+    which flock >/dev/null 2>&1 || return 0
+    touch "$lockfile" 2>/dev/null || return 0
+    eval exec "$CRON_LOCK_FD>$lockfile"
+    if ! flock -n "$CRON_LOCK_FD"; then
+        log_info "Cron job $1 is still running - skipping this run"
+        return 1
+    fi
+    trap 'flock -u '"$CRON_LOCK_FD"' 2>/dev/null' EXIT
+    trap 'exit 129' HUP
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+}
+
 cron_jobs_add() {
 
     log_info "Adding cron jobs for $ADDON_TITLE"
@@ -159,4 +195,5 @@ cron_jobs_add() {
     cron_geodata_add
     cron_subscription_refresh_add
     cron_subscription_fallback_add
+    cron_ipset_save_add
 }

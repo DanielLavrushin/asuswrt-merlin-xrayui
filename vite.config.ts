@@ -119,6 +119,14 @@ export default defineConfig(({ mode }) => {
         writeBundle() {
           console.log('Vite finished building. Copying extra files...');
 
+          const bundle = fs.readFileSync(join(__dirname, 'dist', 'app.js'), 'utf8');
+          const marker = /<[%#]/.exec(bundle);
+          if (marker) {
+            this.error(
+              `dist/app.js contains "${marker[0]}" at offset ${marker.index}: the router's web server runs its page template engine over .js files and would cut off or hang on it.`
+            );
+          }
+
           try {
             const scriptPath = join(__dirname, 'src', 'backend', 'xrayui.sh');
             const mergedContent = inlineShellImports(scriptPath);

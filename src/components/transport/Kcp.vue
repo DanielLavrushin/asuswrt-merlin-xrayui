@@ -40,7 +40,7 @@
         <span class="hint-color">default: 20</span>
       </td>
     </tr>
-    <tr>
+    <tr v-if="legacyTuningSupported">
       <th>
         {{ $t('com.Kcp.label_congestion') }}
         <hint v-html="$t('com.Kcp.hint_congestion')"></hint>
@@ -50,7 +50,7 @@
         <span class="hint-color">default: false</span>
       </td>
     </tr>
-    <tr>
+    <tr v-if="legacyTuningSupported">
       <th>
         {{ $t('com.Kcp.label_read_buffer') }}
         <hint v-html="$t('com.Kcp.hint_read_buffer')"></hint>
@@ -60,7 +60,7 @@
         <span class="hint-color">default: 2</span>
       </td>
     </tr>
-    <tr>
+    <tr v-if="legacyTuningSupported">
       <th>
         {{ $t('com.Kcp.label_write_buffer') }}
         <hint v-html="$t('com.Kcp.hint_write_buffer')"></hint>
@@ -68,6 +68,26 @@
       <td>
         <input type="number" maxlength="3" class="input_6_table" onkeypress="return validator.isNumber(this,event);" v-model="transport.kcpSettings.writeBufferSize" />
         <span class="hint-color">default: 2</span>
+      </td>
+    </tr>
+    <tr v-if="cwndSupported">
+      <th>
+        {{ $t('com.Kcp.label_cwnd_multiplier') }}
+        <hint v-html="$t('com.Kcp.hint_cwnd_multiplier')"></hint>
+      </th>
+      <td>
+        <input type="number" min="1" maxlength="4" class="input_6_table" onkeypress="return validator.isNumber(this,event);" v-model="transport.kcpSettings.cwndMultiplier" />
+        <span class="hint-color">default: 1</span>
+      </td>
+    </tr>
+    <tr v-if="cwndSupported">
+      <th>
+        {{ $t('com.Kcp.label_max_sending_window') }}
+        <hint v-html="$t('com.Kcp.hint_max_sending_window')"></hint>
+      </th>
+      <td>
+        <input type="number" maxlength="10" class="input_12_table" onkeypress="return validator.isNumber(this,event);" v-model="transport.kcpSettings.maxSendingWindow" />
+        <span class="hint-color">default: 2097152</span>
       </td>
     </tr>
     <tr>
@@ -99,10 +119,11 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref } from 'vue';
+  import { computed, defineComponent, ref } from 'vue';
   import { XrayStreamSettingsObject } from '@/modules/CommonObjects';
   import Hint from '@main/Hint.vue';
   import { XrayStreamKcpSettingsObject } from '@/modules/TransportObjects';
+  import { coreSupports } from '@/modules/CoreVersion';
 
   export default defineComponent({
     name: 'Kcp',
@@ -124,8 +145,13 @@
           .join('');
       };
 
+      const legacyTuningSupported = computed(() => coreSupports('kcpLegacyTuning'));
+      const cwndSupported = computed(() => coreSupports('kcpCwnd'));
+
       return {
         transport,
+        legacyTuningSupported,
+        cwndSupported,
         regenerate_seed,
         headerTypes: XrayStreamKcpSettingsObject.headerTypes
       };

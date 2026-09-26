@@ -76,19 +76,22 @@ initial_response() {
     XRAY_VERSION=$(xray version 2>/dev/null | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
     [ -z "$XRAY_VERSION" ] && log_warn "Failed to get Xray version."
 
-    # Collect the names of all JSON files from /opt/etc/xray
     local profiles
-    profiles=$(find /opt/etc/xray -maxdepth 1 -type f -name "*.json" -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]' 2>/dev/null)
+    profiles=$(
+        for f in /opt/etc/xray/*.json; do
+            [ -f "$f" ] && printf '%s\n' "${f##*/}"
+        done | jq -R -s -c 'split("\n")[:-1]' 2>/dev/null
+    )
     if [ -z "$profiles" ]; then
         profiles="[]"
     fi
 
-    # Collect the backups
     local backups
     backups=$(
-        find "$ADDON_SHARE_DIR/backup" -maxdepth 1 -type f -name "*.tar.gz" \
-            -printf "%T@ %f\n" 2>/dev/null | sort -nr | awk '{print $2}' |
-            jq -R -s -c 'split("\n")[:-1]' 2>/dev/null
+        ls -1td "$ADDON_SHARE_DIR/backup"/*.tar.gz 2>/dev/null |
+            while IFS= read -r f; do
+                [ -f "$f" ] && printf '%s\n' "${f##*/}"
+            done | jq -R -s -c 'split("\n")[:-1]' 2>/dev/null
     )
     [ -z "$backups" ] && backups="[]"
 
@@ -245,28 +248,55 @@ apply_config() {
 
     update_loading_progress "Checking incoming configuration..." 5
 
-    if [ -z "$incoming_config" ]; then
+    if [ -z "${incoming_config:+1}" ]; then
         log_error "No new server configuration provided (reconstruct_payload returned empty)."
         update_loading_progress "Error: incoming configuration is empty or upload failed." 100
         exit 1
     fi
 
-    log_info "Setting up DNS rules for incoming configuration..."
-    incoming_config=$(rules_to_dns_domains "$incoming_config")
-
-    echo "$incoming_config" >"$temp_config"
+    cat >"$temp_config" <<EOF
+$incoming_config
+EOF
     if [ $? -ne 0 ]; then
         log_error "Failed to write incoming configuration to $temp_config."
         update_loading_progress "Error: failed to write incoming configuration." 100
         exit 1
     fi
 
-    jq empty "$temp_config" >/dev/null 2>&1
-    if [ $? -ne 0 ]; then
+    if ! jq -e 'type == "object"' "$temp_config" >/dev/null 2>&1; then
         local debug_copy="/tmp/xray_server_config_invalid.json"
         cp "$temp_config" "$debug_copy" 2>/dev/null
         log_error "Invalid JSON format in incoming server configuration ($(wc -c <"$temp_config") bytes). Bad copy preserved at $debug_copy"
         update_loading_progress "Error: configuration upload was corrupted (invalid JSON). Try again." 100
+        rm -f "$temp_config"
+        exit 1
+    fi
+
+    log_info "Setting up DNS rules for incoming configuration..."
+    rules_to_dns_domains "$temp_config"
+
+    if [ -f "$XRAY_CONFIG_FILE" ]; then
+        jq_update_file "$temp_config" -c --slurpfile old "$XRAY_CONFIG_FILE" '
+            if (.outbounds | type) == "array" then
+                .outbounds |= map(
+                    if ((.surl // "") != "") and (.settings == null) then
+                        . as $o
+                        | ((($old[0].outbounds // []) | map(select(.tag == $o.tag and .surl == $o.surl and .protocol == $o.protocol and .settings != null)) | first) // null) as $p
+                        | if $p == null then $o
+                          else $o + {
+                              settings: $p.settings,
+                              streamSettings: ((($p.streamSettings // {}) | del(.sockopt))
+                                + (if ($o.streamSettings.sockopt // null) != null then {sockopt: $o.streamSettings.sockopt} else {} end))
+                            }
+                          end
+                    else . end)
+            else . end
+        '
+    fi
+
+    if ! failover_config_lock; then
+        log_error "The configuration is locked by another operation."
+        update_loading_progress "Error: another restart or switch is in progress. Try again." 100
         rm -f "$temp_config"
         exit 1
     fi
@@ -276,6 +306,7 @@ apply_config() {
     cp "$XRAY_CONFIG_FILE" "$backup_config"
     if [ $? -ne 0 ]; then
         log_error "Failed to backup existing configuration to $backup_config."
+        update_loading_progress "Error: failed to back up the current configuration. Nothing was changed." 100
         rm -f "$temp_config"
         exit 1
     fi
@@ -288,10 +319,12 @@ apply_config() {
         if [ $? -ne 0 ]; then
             log_error "Critical: Failed to restore configuration from backup."
         fi
+        update_loading_progress "Error: failed to save the new configuration. The previous one was kept." 100
         rm -f "$temp_config"
         exit 1
     fi
     log_ok "New server configuration applied successfully."
+    failover_config_unlock
 
     rm -f "$temp_config"
 
@@ -305,6 +338,7 @@ apply_config() {
         log_error "Failed to restart Xray service after applying new configuration."
         cp "$backup_config" "$XRAY_CONFIG_FILE"
         restart
+        update_loading_progress "Error: Xray did not start with the new configuration. The previous one was restored." 100
         exit 1
     fi
 
@@ -314,16 +348,7 @@ apply_config() {
 }
 
 rules_to_dns_domains() {
-    local configcontent="$1"
-
-    local just_parsed
-    just_parsed="$(echo "$configcontent" | jq . 2>/dev/null)"
-    if [ -z "$just_parsed" ]; then
-        echo "$configcontent"
-        return 0
-    fi
-
-    local updated="$(echo "$just_parsed" | jq '
+    jq_update_file "$1" '
   if .routing == null then .routing = {} else . end
   | if .routing.rules == null then .routing.rules = [] else . end
   | if .dns == null then .dns = {} else . end
@@ -366,14 +391,7 @@ rules_to_dns_domains() {
       )
     | if (.dns.servers | length) == 0 then del(.dns.servers) else . end
     | if (.dns | keys | length) == 0 then del(.dns) else . end
-')"
-
-    if [ -z "$updated" ]; then
-        echo "$configcontent"
-        return 0
-    fi
-
-    echo "$updated"
+' || log_warn "Could not add routing rule domains to DNS servers; continuing without them."
 }
 
 toggle_startup() {

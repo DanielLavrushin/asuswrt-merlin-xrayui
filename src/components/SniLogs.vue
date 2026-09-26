@@ -269,7 +269,7 @@
               <input class="button_gen button_gen_small" type="button" :value="$t('com.SniLogs.clear_logs')" @click.prevent="clearLogs()" />
             </div>
             <div class="footer-right">
-              <a class="button_gen button_gen_small" :href="SNI_LOG_ENDPOINT" target="_blank">{{ $t('com.SniLogs.raw') }}</a>
+              <input class="button_gen button_gen_small" type="button" :value="$t('com.SniLogs.raw')" @click.prevent="engine.openText(logsContent)" />
               <input class="button_gen button_gen_small" type="button" :value="$t('com.SniLogs.export_csv')" @click.prevent="exportCsv()" />
               <input class="button_gen button_gen_small" type="button" :value="$t('labels.close')" @click.prevent="sniModal.close" />
             </div>
@@ -282,7 +282,6 @@
 
 <script lang="ts" setup>
   import { ref, computed, reactive, onUnmounted, nextTick } from 'vue';
-  import axios from 'axios';
   import Modal from '@main/Modal.vue';
   import engine, { SubmitActions } from '@modules/Engine';
   import xrayConfig from '@/modules/XrayConfig';
@@ -323,7 +322,6 @@
   }
 
   // ─── Constants & State ────────────────────────────────────────
-  const SNI_LOG_ENDPOINT = '/ext/xrayui/b4sni.json';
   const sniModal = ref();
   const modal_width = ref('70%');
   const logsContent = ref('');
@@ -703,9 +701,7 @@
   // ─── Service Controls ─────────────────────────────────────────
   const fetchLogs = async () => {
     try {
-      const response = await axios.get(SNI_LOG_ENDPOINT, {
-        headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' }
-      });
+      const response = await engine.getWebData<string>('b4sni', { responseType: 'text' });
       logsContent.value = response.data;
     } catch (error) {
       console.error('Error fetching SNI logs:', error);

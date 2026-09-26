@@ -472,7 +472,6 @@
         });
 
         modalList.value?.show(() => {
-          reindexRules();
           onCloseAction(rules.value, disabledRules.value);
         });
       };

@@ -53,6 +53,7 @@ install() {
     install_opkg_package flock false
     install_opkg_package logrotate false
     install_opkg_package ipset false
+    install_opkg_package findutils false
 
     if which base64 >/dev/null 2>&1; then
         log_debug "base64 is already installed."
@@ -93,6 +94,7 @@ EOF
 
     # Add or update nat-start
     setup_script_file "/jffs/scripts/nat-start" "/jffs/scripts/xrayui service_event firewall configure #xrayui"
+    setup_script_file "/jffs/scripts/firewall-start" "/jffs/scripts/xrayui service_event firewall configure #xrayui"
 
     # Add or update post-mount
     setup_script_file "/jffs/scripts/post-mount" "/jffs/scripts/xrayui service_event startup & #xrayui"
@@ -190,19 +192,13 @@ EOF
 
     cleanup_stale_asdfiles
 
-    # ---------------------------------------------------------
-    # performing version updates
-
-    local json_content=$(cat "$XRAY_CONFIG_FILE")
-
-    #  -> 0.55.1
-    log_info "Updating $XRAY_CONFIG_FILE config to version 0.55.1..."
-    if json_content=$(jq '
-      .inbounds |= map(select(.tag != "sys:socks-in"))
-    | .routing.rules //= []
-    | .routing.rules |= map(select(.name != "sys:connection-check"))
-  ' "$XRAY_CONFIG_FILE"); then
-        echo "$json_content" >"$XRAY_CONFIG_FILE"
+    if [ -f "$XRAY_CONFIG_FILE" ]; then
+        log_info "Updating $XRAY_CONFIG_FILE config to version 0.55.1..."
+        jq_update_file "$XRAY_CONFIG_FILE" '
+          if .inbounds then .inbounds |= map(select(.tag != "sys:socks-in")) else . end
+        | .routing.rules //= []
+        | .routing.rules |= map(select(.name != "sys:connection-check"))
+      ' || log_warn "Could not update $XRAY_CONFIG_FILE; it was left unchanged."
     fi
 
     log_ok "Installed $(show_version)"
@@ -410,6 +406,7 @@ clear_script_entries() {
     log_info "Removing existing $ADDON_TITLE entries from scripts."
     sed '/#xrayui/d' /jffs/scripts/services-start >/tmp/xrayui_script.$$ 2>/dev/null && mv /tmp/xrayui_script.$$ /jffs/scripts/services-start && chmod +x /jffs/scripts/services-start || log_debug "Failed to remove entry from /jffs/scripts/services-start."
     sed '/#xrayui/d' /jffs/scripts/nat-start >/tmp/xrayui_script.$$ 2>/dev/null && mv /tmp/xrayui_script.$$ /jffs/scripts/nat-start && chmod +x /jffs/scripts/nat-start || log_debug "Failed to remove entry from /jffs/scripts/nat-start."
+    sed '/#xrayui/d' /jffs/scripts/firewall-start >/tmp/xrayui_script.$$ 2>/dev/null && mv /tmp/xrayui_script.$$ /jffs/scripts/firewall-start && chmod +x /jffs/scripts/firewall-start || log_debug "Failed to remove entry from /jffs/scripts/firewall-start."
     sed '/#xrayui/d' /jffs/scripts/post-mount >/tmp/xrayui_script.$$ 2>/dev/null && mv /tmp/xrayui_script.$$ /jffs/scripts/post-mount && chmod +x /jffs/scripts/post-mount || log_debug "Failed to remove entry from /jffs/scripts/post-mount."
     sed '/#xrayui/d' /jffs/scripts/service-event >/tmp/xrayui_script.$$ 2>/dev/null && mv /tmp/xrayui_script.$$ /jffs/scripts/service-event && chmod +x /jffs/scripts/service-event || log_debug "Failed to remove entry from /jffs/scripts/service-event."
     sed '/#xrayui/d' /jffs/scripts/dnsmasq.postconf >/tmp/xrayui_script.$$ 2>/dev/null && mv /tmp/xrayui_script.$$ /jffs/scripts/dnsmasq.postconf && chmod +x /jffs/scripts/dnsmasq.postconf || log_debug "Failed to remove entry from /jffs/scripts/dnsmasq.postconf."

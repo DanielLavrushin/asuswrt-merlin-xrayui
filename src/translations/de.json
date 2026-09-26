@@ -36,7 +36,9 @@
       "xray_connecting": "Verbindung wird überprüft …",
       "xray_connected": "XRAY ist verbunden",
       "xray_stopped": "XRAY ist gestoppt",
-      "xray_running": "XRAY-Dienst läuft"
+      "xray_running": "XRAY-Dienst läuft",
+      "unapplied_changes": "Änderungen sind noch nicht angewendet. Sie werden erst mit „Anwenden“ auf den Router geschrieben.",
+      "confirm_unapplied_changes": "Einige Änderungen sind noch nicht angewendet und gehen verloren. Ohne sie fortfahren?"
     },
     "ServerStatus": {
       "configuration": "Konfiguration",
@@ -59,7 +61,7 @@
       "label_logs_enable_dns": "DNS-Protokolle aktivieren",
       "label_logs_level": "Protokollstufe",
       "label_probe_url": "Observatory-Prüf-URL",
-      "hint_probe_url": "Die URL, die das Xray Observatory zur Prüfung der Erreichbarkeit der ausgehenden Verbindungen verwendet. Der Endpunkt sollte HTTP 204 (No Content) zurückgeben.",
+      "hint_probe_url": "Die URL, die das Xray Observatory zur Prüfung der Erreichbarkeit der ausgehenden Verbindungen verwendet. Jede über den Outbound empfangene HTTP-Antwort gilt als erfolgreiche Prüfung, daher wird eine https://-URL empfohlen.",
       "label_probe_interval": "Observatory-Prüfintervall (Sekunden)",
       "hint_probe_interval": "Wie oft das Xray Observatory jede ausgehende Verbindung prüft. Jede Prüfung öffnet eine Verbindung über alle Outbounds; kurze Intervalle in Kombination mit vielen Outbounds (z. B. aus Abonnements) erhöhen die CPU- und Speicherauslastung des Routers. Standard: 30 Sekunden.",
       "label_gh_proxy": "GitHub-Proxy verwenden",
@@ -86,7 +88,7 @@
       "hint_sleep_time": "XRAYUI wartet die angegebene Zeit (in Sekunden) nach dem Start von XRAY, bevor weitere Aktionen ausgeführt werden (z. B. Anwenden von Firewall-Regeln).",
       "label_enable_debug": "Debug-Protokolle aktivieren",
       "label_ipset": "DNS-Bypass (ipset) aktivieren",
-      "hint_ipset": "*OFF* – deaktiviert die DNS → ipset-Funktion; das Routing verhält sich so, als ob die Option nicht existierte.<hr/>*BYPASS* – Domains, die dem `FREEDOM`-Outbound zugewiesen sind, gehen direkt ins Internet und umgehen XRAY; alle anderen Domains werden weiterhin über Proxy geleitet.<hr/>*REDIRECT* – umgekehrt: Nur Domains, die nicht dem `FREEDOM` zugeordnet sind, werden über Proxy geleitet; sämtlicher anderer Verkehr verlässt den Router direkt.<blockquote>Wichtig: Domains auf Basis von `regexp` können nicht in ein ipset aufgenommen werden und werden daher hier ignoriert.</blockquote>",
+      "hint_ipset": "*OFF* – deaktiviert die DNS → ipset-Funktion; das Routing verhält sich so, als ob die Option nicht existierte.<hr/>*BYPASS* – Domains, die dem `FREEDOM`-Outbound zugewiesen sind, gehen direkt ins Internet und umgehen XRAY; alle anderen Domains werden weiterhin über Proxy geleitet.<hr/>*REDIRECT* – umgekehrt: Nur Domains, die nicht dem `FREEDOM` zugeordnet sind, werden über Proxy geleitet; sämtlicher anderer Verkehr verlässt den Router direkt.<blockquote>Wichtig: Die Adressen einer Domain gelangen ins ipset, sobald Geräte sie über den DNS des Routers auflösen. Ein Gerät mit zwischengespeicherter DNS-Antwort oder eigenem verschlüsseltem DNS (DoH/DoT, Private DNS) kann eine Regel daher umgehen, bis es die Domain erneut abfragt. Einträge mit `regexp`, `keyword` und negierte `geoip:!`-Einträge können nicht in ein ipset aufgenommen werden und werden daher hier ignoriert.</blockquote>",
       "startup_delay": "Startup-Verzögerung",
       "hint_startup_delay": "Nachdem der Router neu gestartet wurde, startet XRAY nach der angegebenen Zeit (in Sekunden). Dies kann helfen, Probleme mit dem Hängenbleiben von XRAY beim Start zu vermeiden.",
       "tab_general": "Allgemein",
@@ -277,7 +279,12 @@
       "title": "Ausgänge",
       "label_create_new": "Neu erstellen",
       "alert_tag_exists": "Tag existiert bereits, ein anderes ist erforderlich.",
-      "alert_delete_confirm": "Diesen Ausgang löschen?"
+      "alert_delete_confirm": "Diesen Ausgang löschen?",
+      "hint_pool_inactive": "Auto-Fallback ist in den allgemeinen Einstellungen deaktiviert, daher wird dieser Outbound nicht automatisch umgeschaltet.",
+      "status_unreachable": "Nicht erreichbar"
+    },
+    "OutboundCommon": {
+      "warn_auto_fallback_global_off": "Inaktiv: Auto-Fallback ist in den allgemeinen Einstellungen deaktiviert."
     },
     "StreamSettingsModal": {
       "title": "Transport-Einstellungen",

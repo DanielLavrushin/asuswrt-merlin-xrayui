@@ -1,0 +1,2 @@
+#!/bin/sh
+FAKE_IPT_FAMILY=ip6tables exec "$(dirname "$0")/iptables" "$@"

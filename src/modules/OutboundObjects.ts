@@ -20,6 +20,7 @@ import { XrayVlessClientObject, XrayVmessClientObject } from './ClientsObjects';
 export interface SubPoolMetadata {
   enabled: boolean;
   active?: string;
+  origin?: string;
 }
 
 export class XrayOutboundObject<TProxy extends IProtocolType> {

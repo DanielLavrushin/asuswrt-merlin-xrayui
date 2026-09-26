@@ -1,0 +1,152 @@
+#!/bin/sh
+st=${FW_STATE:?FW_STATE is not set}
+printf 'ip %s\n' "$*" >>"$st/calls.log"
+fam=4
+oneline=0
+while :; do
+    case "${1:-}" in
+    -4) fam=4 ;;
+    -6) fam=6 ;;
+    -o) oneline=1 ;;
+    *) break ;;
+    esac
+    shift
+done
+wan_if=${FW_WAN_IF:-eth0}
+
+main_routes() {
+    if [ "$fam" = 4 ]; then
+        printf 'default via 192.0.2.1 dev %s proto kernel\n' "$wan_if"
+        printf '192.0.2.0/24 dev %s proto kernel scope link src 192.0.2.3\n' "$wan_if"
+        printf '10.8.0.0/24 dev tun21 proto kernel scope link src 10.8.0.1\n'
+        printf '127.0.0.0/8 dev lo scope link\n'
+        printf '192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1\n'
+        printf '192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1\n'
+    elif [ "${FW_IPV6:-0}" = 1 ]; then
+        printf '2001:db8:1::/64 dev br0 proto kernel metric 256 pref medium\n'
+        printf '2001:db8:ffff::/64 dev %s proto kernel metric 256 pref medium\n' "$wan_if"
+        printf 'fe80::/64 dev br0 proto kernel metric 256 pref medium\n'
+        printf 'fe80::/64 dev %s proto kernel metric 256 pref medium\n' "$wan_if"
+        printf 'default via fe80::1 dev %s proto ra metric 1024 pref medium\n' "$wan_if"
+    fi
+}
+
+route_dest() {
+    case "$1" in
+    local | unicast | blackhole | unreachable | prohibit | broadcast | anycast | multicast | throw) shift ;;
+    esac
+    case "${1:-}" in
+    0.0.0.0/0 | ::/0) echo default ;;
+    *) echo "${1:-}" ;;
+    esac
+}
+
+obj=${1:-}
+[ $# -gt 0 ] && shift
+act=${1:-show}
+[ $# -gt 0 ] && shift
+
+case "$obj" in
+link)
+    printf '1: lo: <LOOPBACK,UP> mtu 65536\n'
+    printf '2: %s: <BROADCAST,MULTICAST,UP> mtu 1500\n' "$wan_if"
+    printf '3: eth6: <BROADCAST,MULTICAST,UP> mtu 1500\n'
+    printf '4: eth7: <BROADCAST,MULTICAST,UP> mtu 1500\n'
+    printf '5: br0: <BROADCAST,MULTICAST,UP> mtu 1500\n'
+    printf '6: br1: <BROADCAST,MULTICAST,UP> mtu 1500\n'
+    printf '7: tun21: <POINTOPOINT,UP> mtu 1500\n'
+    ;;
+addr)
+    [ "$fam" = 6 ] && [ "${FW_IPV6:-0}" = 1 ] || exit 0
+    case "$*" in
+    *"dev br0"*) printf '5: br0    inet6 2001:db8:1::1/64 scope global \\       valid_lft forever preferred_lft forever\n' ;;
+    *"dev $wan_if"*) printf '2: %s    inet6 2001:db8:ffff::2/64 scope global dynamic \\       valid_lft 86000sec preferred_lft 14000sec\n' "$wan_if" ;;
+    esac
+    ;;
+rule)
+    f="$st/ip.rule.$fam"
+    touch "$f"
+    spec="$*"
+    case "$act" in
+    list | show)
+        printf '0:\tfrom all lookup local\n'
+        awk '{ print "32765:\tfrom all " $0 }' "$f"
+        printf '32766:\tfrom all lookup main\n32767:\tfrom all lookup default\n'
+        ;;
+    add)
+        if grep -Fqx -- "$spec" "$f"; then
+            echo "RTNETLINK answers: File exists" >&2
+            exit 2
+        fi
+        printf '%s\n' "$spec" >>"$f"
+        ;;
+    replace)
+        grep -Fqx -- "$spec" "$f" || printf '%s\n' "$spec" >>"$f"
+        ;;
+    del | delete)
+        if ! grep -Fqx -- "$spec" "$f"; then
+            echo "RTNETLINK answers: No such file or directory" >&2
+            exit 2
+        fi
+        awk -v s="$spec" '$0 == s && !done { done = 1; next } { print }' "$f" >"$f.tmp" && mv "$f.tmp" "$f"
+        ;;
+    esac
+    ;;
+route)
+    table=main
+    spec=""
+    want=0
+    for a do
+        if [ "$want" = 1 ]; then
+            table=$a
+            want=0
+            continue
+        fi
+        [ "$a" = table ] && want=1 && continue
+        spec="${spec:+$spec }$a"
+    done
+    f="$st/ip.route.$fam.$table"
+    case "$act" in
+    show | list)
+        case "$table" in
+        main)
+            case "$spec" in
+            "scope link") main_routes | grep ' scope link' ;;
+            "proto kernel dev "*)
+                dev=${spec#proto kernel dev }
+                main_routes | grep " dev $dev proto kernel" | sed "s# dev $dev##"
+                ;;
+            *) main_routes ;;
+            esac
+            ;;
+        *) [ -f "$f" ] && cat "$f" ;;
+        esac
+        ;;
+    add | replace)
+        case " $spec " in
+        *" exist "*)
+            echo 'Error: either "to" is duplicate, or "exist" is a garbage.' >&2
+            exit 255
+            ;;
+        esac
+        dest=$(route_dest $spec)
+        dev=$(printf '%s\n' "$spec" | awk '{ for (i = 1; i < NF; i++) if ($i == "dev") print $(i + 1) }')
+        [ -n "$dev" ] && dest="$dest dev $dev"
+        line=$(printf '%s\n' "$spec" | sed 's#0\.0\.0\.0/0#default#; s#::/0#default#')
+        touch "$f"
+        if awk -v d="$dest" '{ split($0, t, " "); k = (t[1] ~ /^(local|unicast|blackhole|unreachable|prohibit|broadcast|anycast|multicast|throw)$/) ? t[2] : t[1]; for (i = 1; i < length(t); i++) if (t[i] == "dev") k = k " dev " t[i + 1] } k == d { found = 1 } END { exit found ? 0 : 1 }' "$f"; then
+            if [ "$act" = add ]; then
+                echo "RTNETLINK answers: File exists" >&2
+                exit 2
+            fi
+            awk -v d="$dest" '{ split($0, t, " "); k = (t[1] ~ /^(local|unicast|blackhole|unreachable|prohibit|broadcast|anycast|multicast|throw)$/) ? t[2] : t[1]; for (i = 1; i < length(t); i++) if (t[i] == "dev") k = k " dev " t[i + 1] } k != d' "$f" >"$f.tmp" && mv "$f.tmp" "$f"
+        fi
+        printf '%s\n' "$line" >>"$f"
+        ;;
+    flush)
+        rm -f "$f"
+        ;;
+    esac
+    ;;
+esac
+exit 0

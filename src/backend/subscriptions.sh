@@ -16,71 +16,124 @@ subscription_curl() {
         "$@"
 }
 
+subscription_url_host() {
+    local h="${1#*://}"
+    h="${h%%/*}"
+    h="${h%%\?*}"
+    printf '%s' "${h##*@}"
+}
+
+subscription_b64d() {
+    local s pad
+    s=$(printf '%s' "$1" | tr -d ' \r\n\t' | tr '_-' '/+')
+    case "$s" in
+    *[!A-Za-z0-9+/=]*) return 1 ;;
+    esac
+    pad=$(((4 - ${#s} % 4) % 4))
+    case "$pad" in
+    1) s="$s=" ;;
+    2) s="$s==" ;;
+    esac
+    printf '%s' "$s" | b64_decode
+}
+
+subscription_decode_body() {
+    local src="$1"
+    local dst="$2"
+    local b64="$dst.b64"
+    local len pad
+
+    tr -d '\r' <"$src" >"$dst"
+    grep -q '://' "$dst" && return 0
+
+    tr -d ' \n\t' <"$dst" | tr '_-' '/+' >"$b64"
+    len=$(wc -c <"$b64")
+    pad=$(((4 - len % 4) % 4))
+    case "$pad" in
+    1) printf '=' >>"$b64" ;;
+    2) printf '==' >>"$b64" ;;
+    esac
+    if ! grep -q '[^A-Za-z0-9+/=]' "$b64" && b64_decode <"$b64" >"$dst.dec" && [ -s "$dst.dec" ]; then
+        tr -d '\r' <"$dst.dec" >"$dst"
+    fi
+    rm -f "$b64" "$dst.dec"
+}
+
+subscription_body_has_links() {
+    [ -s "$1" ] && grep -qiE '(vless|vmess|trojan|ss|hy2|hysteria2?|wireguard|wg|wgcf)(://|%3A%2F%2F)' "$1"
+}
+
 process_subscriptions() {
     local config_file="$1"
-    local cfg=$(cat "$1")
-    local idx url proto tag active fetched rep
-    local temp_config="/tmp/xray_server_config_new.json"
+    local idx url proto tag hp rep
+    local body_file="/tmp/xrayui_surl.$$"
+    local dec_file="/tmp/xrayui_surl_dec.$$"
+    local cfg_file="$config_file.subs.$$"
+    local new_file="$config_file.subs.new.$$"
+
+    cp -p "$config_file" "$cfg_file" || {
+        rm -f "$cfg_file"
+        return 1
+    }
     while IFS= read -r entry; do
         [ -z "$entry" ] && continue
         idx=$(printf '%s' "$entry" | jq -r '.idx')
         url=$(printf '%s' "$entry" | jq -r '.url')
         proto=$(printf '%s' "$entry" | jq -r '.proto')
         tag=$(printf '%s' "$entry" | jq -r '.tag')
-        active=$(printf '%s' "$entry" | jq -r '.active')
+        hp=$(printf '%s' "$entry" | jq -r '.hp')
         rep=""
 
-        if [ -n "$active" ] && [ "$active" != "null" ]; then
-            rep=$(subscription_parse_link_to_outbound "$active")
+        if ! subscription_curl "$url" </dev/null >"$body_file" 2>/dev/null; then
+            log_warn "Subscription URL of outbound '$tag' ($(subscription_url_host "$url")) could not be fetched; keeping its previous settings"
+            rm -f "$body_file"
+            continue
         fi
+        subscription_decode_body "$body_file" "$dec_file"
+        rm -f "$body_file"
 
-        if [ -z "$rep" ] || [ "$rep" = "null" ]; then
-            fetched=$(subscription_curl "$url") || continue
-            if is_json "$fetched"; then
-                rep=$(printf '%s' "$fetched" | jq -c --arg t "$tag" --arg p "$proto" '
-                    (.outbounds // [])
-                    | (if ($t != "") then (map(select(.tag==$t)) | first) else null end)
-                      // (map(select(.protocol==$p)) | first)')
-            else
-                local maybe
-                maybe=$(b64d "$fetched")
-                if is_json "$maybe"; then
-                    rep=$(printf '%s' "$maybe" | jq -c --arg t "$tag" --arg p "$proto" '
-                        (.outbounds // [])
-                        | (if ($t != "") then (map(select(.tag==$t)) | first) else null end)
-                          // (map(select(.protocol==$p)) | first)')
-                else
-                    local lst
-                    lst=$(subscription_process_url_list "$proto" "$fetched")
-                    rep=$(subscription_select_outbound_by_tag_or_proto "$tag" "$proto" "$lst")
-                fi
-            fi
+        if jq -e . "$dec_file" >/dev/null 2>&1; then
+            rep=$(jq -c --arg t "$tag" --arg p "$proto" '
+                (.outbounds // [])
+                | (if ($t != "") then (map(select(.tag==$t)) | first) else null end)
+                  // (map(select(.protocol==$p)) | first)' "$dec_file")
+        else
+            rep=$(subscription_pick_from_list "$tag" "$proto" "$dec_file" "$hp")
         fi
-        [ -z "$rep" ] || [ "$rep" = "null" ] && continue
-        cfg=$(printf '%s' "$cfg" | jq -c \
+        rm -f "$dec_file"
+        if [ -z "$rep" ] || [ "$rep" = "null" ]; then
+            log_warn "Subscription URL of outbound '$tag' ($(subscription_url_host "$url")) returned no usable $proto link; keeping its previous settings"
+            continue
+        fi
+        jq -c \
             --arg pos "$idx" \
             --arg url "$url" \
             --arg tag "$tag" \
             --argjson rep "$rep" '
-                . as $root
-                | ($pos|tonumber) as $i
-                | (try $root.outbounds[$i].streamSettings.sockopt catch null) as $sock
-                | (try $root.outbounds[$i].subPool catch null) as $pool
+                ($pos|tonumber) as $i
+                | (.outbounds[$i] | del(.settings, .streamSettings, .protocol, .subPool)) as $keep
+                | (try .outbounds[$i].streamSettings.sockopt catch null) as $sock
                 | .outbounds[$i] = (
-                    ($rep + {surl:$url, tag:$tag})
-                    | if $pool != null then .subPool = $pool else . end
+                    ($keep + $rep + {surl:$url, tag:$tag})
                     | if $sock != null
                         then .streamSettings = ((.streamSettings // {}) + {sockopt:$sock})
                         else .
                         end
-                    )')
+                    )' "$cfg_file" >"$new_file" && [ -s "$new_file" ] && cat "$new_file" >"$cfg_file"
+        rm -f "$new_file"
     done <<EOF
-$(printf '%s' "$cfg" | jq -c '.outbounds
+$(jq -c '.outbounds
     | to_entries[]
     | select(.value.surl and .value.surl!="")
-    | {idx:.key,url:.value.surl,proto:.value.protocol,tag:(.value.tag//""),active:(.value.subPool.active//"")}')
+    | {idx:.key,url:.value.surl,proto:.value.protocol,tag:(.value.tag//""),
+       hp:((.value.settings.vnext[0] // .value.settings.servers[0] // .value.settings // {})
+           | if (.address // "") == "" then "" else "\(.address | tostring | ltrimstr("[") | rtrimstr("]")):\(.port // "")" | ascii_downcase end)}' "$cfg_file")
 EOF
-    printf '%s' "$cfg" >"$temp_config" && cp "$temp_config" "$config_file" && rm -f "$temp_config"
+    if ! jq -e '.outbounds | type == "array"' "$cfg_file" >/dev/null 2>&1; then
+        rm -f "$cfg_file"
+        return 1
+    fi
+    mv -f "$cfg_file" "$config_file"
 }
 
 subscription_parse_link_to_outbound() {
@@ -97,25 +150,163 @@ subscription_parse_link_to_outbound() {
     esac
 }
 
-subscription_select_outbound_by_tag_or_proto() {
-    local tag="$1"
-    local proto="$2"
-    shift 2
-    printf '%s\n' "$*" | jq -c --arg t "$tag" --arg p "$proto" '
-        (if ($t != "") then (map(select(.tag==$t)) | first) else null end)
-        // (map(select(.protocol==$p)) | first)
-        // empty'
+subscription_local_addresses() {
+    {
+        ip -o addr show 2>/dev/null | awk '{ sub(/\/.*/, "", $4); print $4 }'
+        nvram get ddns_hostname_x 2>/dev/null
+    } | tr 'A-Z' 'a-z' | awk 'NF' | sort -u
 }
 
-subscription_process_url_list() {
-    local proto="$1"
-    local fetched="$2"
-    local decoded
-    decoded=$(echo "$fetched" | base64 -d 2>/dev/null) || decoded="$fetched"
-    echo "$decoded" | tr -d '\r' | while IFS= read -r line; do
-        [ -z "$line" ] && continue
-        subscription_parse_link_to_outbound "$line" || true
-    done | jq -s '.'
+subscription_outbound_is_unusable() {
+    local ob="$1"
+    local locals="$2"
+    local addr
+    printf '%s' "$ob" | jq -e '
+        (.settings.vnext[0] // .settings.servers[0] // .settings // {}) as $s
+        | (($s.address // "") | tostring | ascii_downcase) as $a
+        | ((($s.port // 0) | tonumber?) // 0) as $p
+        | (($s.users[0].id // "") | tostring) as $id
+        | $a == "" or $a == "0.0.0.0" or $a == "::" or $a == "::1" or $a == "localhost"
+          or ($a | startswith("127.")) or $p < 2
+          or $id == "00000000-0000-0000-0000-000000000000"' >/dev/null 2>&1 && return 0
+    [ -n "$locals" ] || return 1
+    addr=$(printf '%s' "$ob" | jq -r '(.settings.vnext[0] // .settings.servers[0] // .settings // {}).address // "" | tostring | ascii_downcase' 2>/dev/null)
+    addr="${addr#\[}"
+    addr="${addr%\]}"
+    printf '%s\n' "$locals" | grep -qxF -- "$addr"
+}
+
+subscription_pick_from_list() {
+    local lines_file="/tmp/xrayui_pick.$$"
+    local rc
+    awk -v p="$2" '
+        {
+            sub(/^[ \t]+/, "")
+            sub(/[ \t]+$/, "")
+            i = index($0, "://")
+            if (i < 2) next
+            s = tolower(substr($0, 1, i - 1))
+            if (s == "ss") s = "shadowsocks"
+            else if (s == "hy2" || s == "hysteria2") s = "hysteria"
+            if (s == p) print
+        }' "$3" >"$lines_file"
+    subscription_pick_link "$1" "$lines_file" "$4"
+    rc=$?
+    rm -f "$lines_file"
+    return "$rc"
+}
+
+subscription_pick_link() {
+    local tag="$1"
+    local lines_file="$2"
+    local cur_hp="$3"
+    local line rep locals
+    [ -s "$lines_file" ] || return 1
+    locals=$(subscription_local_addresses)
+
+    if [ -n "$cur_hp" ]; then
+        line=$(awk -v hp="$cur_hp" '{
+            s = $0
+            sub(/#.*/, "", s)
+            sub(/^[^:]*:\/\//, "", s)
+            sub(/[?].*/, "", s)
+            sub(/\/.*/, "", s)
+            m = split(s, parts, "@")
+            h = tolower(parts[m])
+            gsub(/\[|\]/, "", h)
+            if (h == hp) { print; exit }
+        }' "$lines_file")
+        if [ -n "$line" ] && rep=$(subscription_parse_link_to_outbound "$line") && [ -n "$rep" ] &&
+            ! subscription_outbound_is_unusable "$rep" "$locals"; then
+            printf '%s' "$rep"
+            return 0
+        fi
+    fi
+
+    if [ -n "$tag" ]; then
+        while IFS= read -r line; do
+            if rep=$(subscription_parse_link_to_outbound "$line") && [ -n "$rep" ] &&
+                ! subscription_outbound_is_unusable "$rep" "$locals"; then
+                printf '%s' "$rep"
+                return 0
+            fi
+        done <<EOF
+$(PICK_TAG="$tag" awk '
+            function hexval(c) { return index("0123456789abcdef", tolower(c)) - 1 }
+            function pdecode(s,    out, i, c, h, l) {
+                out = ""
+                for (i = 1; i <= length(s); i++) {
+                    c = substr(s, i, 1)
+                    if (c == "%" && i + 2 <= length(s)) {
+                        h = hexval(substr(s, i + 1, 1))
+                        l = hexval(substr(s, i + 2, 1))
+                        if (h >= 0 && l >= 0) {
+                            out = out sprintf("%c", h * 16 + l)
+                            i += 2
+                            continue
+                        }
+                    }
+                    out = out c
+                }
+                return out
+            }
+            BEGIN { t = ENVIRON["PICK_TAG"] }
+            {
+                i = index($0, "#")
+                if (i && pdecode(substr($0, i + 1)) == t) print
+            }' "$lines_file")
+EOF
+    fi
+
+    while IFS= read -r line; do
+        if rep=$(subscription_parse_link_to_outbound "$line") && [ -n "$rep" ] &&
+            ! subscription_outbound_is_unusable "$rep" "$locals"; then
+            printf '%s' "$rep"
+            return 0
+        fi
+    done <"$lines_file"
+    return 1
+}
+
+subscription_link_fragment() {
+    case "$1" in
+    *#*) printf '%s' "${1#*#}" ;;
+    esac
+}
+
+subscription_split_hostport() {
+    local hp="$1"
+    local host port
+    case "$hp" in
+    \[*\]:*)
+        host="${hp%%\]:*}"
+        host="${host#\[}"
+        port="${hp##*\]:}"
+        ;;
+    *:*)
+        host="${hp%:*}"
+        port="${hp##*:}"
+        ;;
+    *) return 1 ;;
+    esac
+    port="${port%%[,-]*}"
+    case "$port" in '' | *[!0-9]*) return 1 ;; esac
+    [ -n "$host" ] || return 1
+    printf '%s %s' "$host" "$port"
+}
+
+subscription_kcp_era() {
+    local v
+    v=$(xrayui_core_version)
+    if [ -z "$v" ] || version_ge "$v" "26.6.22"; then
+        printf 'mkcp-legacy-reversed'
+    elif version_ge "$v" "26.6.1"; then
+        printf 'mkcp-legacy'
+    elif version_ge "$v" "26.1.31"; then
+        printf 'finalmask'
+    else
+        printf 'legacy'
+    fi
 }
 
 subscription_parse_network() {
@@ -125,8 +316,13 @@ subscription_parse_network() {
     local mode="$4"
     local path="$5"
     local hdr="$6"
+    local svc="$7"
+    local auth="$8"
+    local era=""
     [ -z "$hdr" ] && hdr="none"
-    jq -nc --arg n "$net" --arg seed "$seed" --arg qh "$qhost" --arg mo "$mode" --arg pa "$path" --arg ht "$hdr" '
+    [ "$net" = "kcp" ] && era=$(subscription_kcp_era)
+    jq -nc --arg n "$net" --arg seed "$seed" --arg qh "$qhost" --arg mo "$mode" --arg pa "$path" --arg ht "$hdr" \
+        --arg svc "$svc" --arg au "$auth" --arg era "$era" '
         if $n=="xhttp" then
             {xhttpSettings:{
                 host:$qh,
@@ -139,41 +335,51 @@ subscription_parse_network() {
                 xPaddingBytes:"100-1000"
             }}
         elif $n=="kcp" then
-            {kcpSettings:{
-                mtu:1350,
-                tti:50,
-                uplinkCapacity:5,
-                downlinkCapacity:20,
-                congestion:false,
-                readBufferSize:2,
-                writeBufferSize:2,
-                header:{type:$ht},
-                seed:$seed
-            }}
+            ({mtu:1350,tti:50,uplinkCapacity:5,downlinkCapacity:20,congestion:false,readBufferSize:2,writeBufferSize:2}
+              + (if $era=="legacy" then {header:{type:$ht}} + (if ($seed|length)>0 then {seed:$seed} else {} end) else {} end)) as $k
+            | ({"srtp":"srtp","utp":"utp","wechat-video":"wechat","wechat":"wechat","dtls":"dtls","wireguard":"wireguard"} | .[$ht]) as $h
+            | (if $era=="legacy" then []
+               else
+                 (if $h != null then [if $era=="finalmask" then {type:("header-" + $h)} else {type:"mkcp-legacy",settings:{header:$h}} end] else [] end)
+                 + (if ($seed|length)>0 then [if $era=="finalmask" then {type:"mkcp-aes128gcm",settings:{password:$seed}} else {type:"mkcp-legacy",settings:{value:$seed}} end] else [] end)
+                 | if $era=="mkcp-legacy-reversed" then reverse else . end
+               end) as $udp
+            | {kcpSettings:$k} + (if ($udp|length)>0 then {finalmask:{udp:$udp}} else {} end)
         elif $n=="ws" then
             {wsSettings:{
                 heartbeatPeriod:0,
                 host:$qh,
                 path:$pa
             }}
-        elif $n=="grpc" then
-            {grpcSettings:{
-                authority:$qh,
-                serviceName:$pa
+        elif $n=="httpupgrade" then
+            {httpupgradeSettings:{
+                host:$qh,
+                path:$pa
             }}
+        elif $n=="grpc" then
+            {grpcSettings:(
+                {serviceName:(if ($svc|length)>0 then $svc else $pa end)}
+                + (if ($au|length)>0 then {authority:$au} elif ($qh|length)>0 then {authority:$qh} else {} end)
+                + (if $mo=="multi" then {multiMode:true} else {} end)
+            )}
         elif $n=="tcp" then
             {tcpSettings:{header:{type:$ht}}}
+        elif $n=="raw" then
+            {rawSettings:{header:{type:$ht}}}
         else {} end'
 }
+
 subscription_parse_vmess() {
     local link="$1"
     local payload="${link#vmess://}"
+    payload="${payload%%#*}"
     local j
-    j=$(echo "$payload" | base64 -d 2>/dev/null) || return 1
+    j=$(subscription_b64d "$payload")
+    [ -n "$j" ] || return 1
 
-    local add port id ps aid scy tls net path hdr qhost
+    local add port id ps aid scy tls net path hdr qhost sni fp alpn
     local _vmess_vars
-    if ! _vmess_vars=$(echo "$j" | jq -r '
+    if ! _vmess_vars=$(printf '%s' "$j" | jq -r '
         "add=" + ((.add // "") | tostring | @sh) + "\n" +
         "port=" + ((.port // 0) | tostring | @sh) + "\n" +
         "id=" + ((.id // "") | tostring | @sh) + "\n" +
@@ -184,20 +390,29 @@ subscription_parse_vmess() {
         "net=" + ((.net // "tcp") | tostring | @sh) + "\n" +
         "path=" + ((.path // "") | tostring | @sh) + "\n" +
         "hdr=" + ((.type // "") | tostring | @sh) + "\n" +
-        "qhost=" + ((.host // "") | tostring | @sh)
+        "qhost=" + ((.host // "") | tostring | @sh) + "\n" +
+        "sni=" + ((.sni // "") | tostring | @sh) + "\n" +
+        "fp=" + ((.fp // "") | tostring | @sh) + "\n" +
+        "alpn=" + ((.alpn // "") | tostring | @sh)
     '); then
         return 1
     fi
     eval "$_vmess_vars"
+    [ -n "$add" ] || return 1
+    case "$port" in '' | 0 | *[!0-9]*) return 1 ;; esac
+    case "$aid" in '' | *[!0-9]*) aid=0 ;; esac
 
     local seed=""
     [ "$net" = "kcp" ] && seed="$path"
+    local mode=""
+    [ "$net" = "grpc" ] && mode="$hdr"
 
     local network
-    network=$(subscription_parse_network "$net" "$seed" "$qhost" "" "$path" "$hdr")
+    network=$(subscription_parse_network "$net" "$seed" "$qhost" "$mode" "$path" "$hdr") || return 1
 
     jq -nc --arg tag "$ps" --arg address "$add" --arg port "$port" \
         --arg id "$id" --arg aid "$aid" --arg scy "$scy" --arg tls "$tls" \
+        --arg sni "$sni" --arg fp "$fp" --arg alpn "$alpn" \
         --arg net "$net" --argjson network "$network" '
     {
         protocol:"vmess",
@@ -215,6 +430,13 @@ subscription_parse_vmess() {
         },
         streamSettings:(
             {network:$net,security:(if $tls=="tls" then "tls" else "none" end)}
+            + (if $tls=="tls" then {
+                    tlsSettings:(
+                        (if ($sni|length)>0 then {serverName:$sni} else {} end)
+                        + (if ($fp|length)>0 then {fingerprint:$fp} else {} end)
+                        + (if ($alpn|length)>0 then {alpn:($alpn|split(","))} else {} end)
+                    )
+               } else {} end)
             + $network
         )
     }'
@@ -223,17 +445,20 @@ subscription_parse_vmess() {
 subscription_parse_vless() {
     local link="$1"
     local rest="${link#vless://}"
-    local userhostport="${rest%%\?*}"
-    local qs="${rest#*\?}"
-    qs="${qs%%#*}"
-    local uuid="${userhostport%%@*}"
-    local hostport
-    hostport=$(subscription_parse_hostport "$userhostport")
-    local host="${hostport%%:*}"
-    local port="${hostport##*:}"
-    local tag_raw
-    tag_raw=$(printf '%s' "$link" | awk -F'#' '{print $2}')
-    local tag="$(urldecode "${tag_raw:-vless}")"
+    local body="${rest%%#*}"
+    local userhostport="${body%%\?*}"
+    local qs=""
+    case "$body" in *\?*) qs="${body#*\?}" ;; esac
+    case "$userhostport" in *@*) ;; *) return 1 ;; esac
+    local uuid
+    uuid=$(urldecode "${userhostport%@*}")
+    local hp host port
+    hp=$(subscription_split_hostport "$(subscription_parse_hostport "$userhostport")") || return 1
+    host="${hp% *}"
+    port="${hp##* }"
+    local tag
+    tag=$(urldecode "$(subscription_link_fragment "$link")")
+    [ -z "$tag" ] && tag="vless"
     local net
     net=$(urldecode "$(subscription_parse_kv "$qs" "type")")
     [ -z "$net" ] && net="tcp"
@@ -266,14 +491,22 @@ subscription_parse_vless() {
     [ -z "$mode" ] && mode="auto"
     local path
     path=$(urldecode "$(subscription_parse_kv "$qs" "path")")
-    [ -z "$path" ] && path=""
     local hdr
     hdr=$(urldecode "$(subscription_parse_kv "$qs" "headerType")")
+    local svc
+    svc=$(urldecode "$(subscription_parse_kv "$qs" "serviceName")")
+    local auth
+    auth=$(urldecode "$(subscription_parse_kv "$qs" "authority")")
+    local ai
+    ai=$(urldecode "$(subscription_parse_kv "$qs" "allowInsecure")")
+    local ai_supported
+    if core_supports_allow_insecure; then ai_supported="1"; else ai_supported="0"; fi
     local network
-    network=$(subscription_parse_network "$net" "$seed" "$qhost" "$mode" "$path" "$hdr")
+    network=$(subscription_parse_network "$net" "$seed" "$qhost" "$mode" "$path" "$hdr" "$svc" "$auth") || return 1
     jq -nc --arg tag "$tag" --arg host "$host" --arg port "$port" --arg id "$uuid" \
         --arg flow "$flow" --arg enc "$enc" --arg net "$net" --arg sec "$sec" \
         --arg fp "$fp" --arg pbk "$pbk" --arg sni "$sni" --arg alpn "$alpn" --arg seed "$seed" --arg sid "$sid" --arg spx "$spx" \
+        --arg ai "$ai" --arg aisup "$ai_supported" \
         --argjson network "$network" '
     {
         protocol:"vless",
@@ -300,6 +533,7 @@ subscription_parse_vless() {
                         (if ($sni|length)>0 then {serverName:$sni} else {} end)
                         + (if ($fp|length)>0 then {fingerprint:$fp} else {} end)
                         + (if ($alpn|length)>0 then {alpn:($alpn|split(","))} else {} end)
+                        + (if ($aisup=="1" and ($ai=="1" or $ai=="true")) then {allowInsecure:true} else {} end)
                     )
                } else {} end)
             + $network
@@ -310,19 +544,22 @@ subscription_parse_vless() {
 subscription_parse_trojan() {
     local link="$1"
     local rest="${link#trojan://}"
-    local userhostport="${rest%%\?*}"
-    local qs="${rest#*\?}"
-    qs="${qs%%#*}"
+    local body="${rest%%#*}"
+    local userhostport="${body%%\?*}"
+    local qs=""
+    case "$body" in *\?*) qs="${body#*\?}" ;; esac
+    case "$userhostport" in *@*) ;; *) return 1 ;; esac
 
-    local password="${userhostport%%@*}"
-    local hostport
-    hostport=$(subscription_parse_hostport "$userhostport")
-    local host="${hostport%%:*}"
-    local port="${hostport##*:}"
+    local password
+    password=$(urldecode "${userhostport%@*}")
+    local hp host port
+    hp=$(subscription_split_hostport "$(subscription_parse_hostport "$userhostport")") || return 1
+    host="${hp% *}"
+    port="${hp##* }"
 
-    local tag_raw
-    tag_raw=$(printf '%s' "$link" | awk -F'#' '{print $2}')
-    local tag="$(urldecode "${tag_raw:-trojan}")"
+    local tag
+    tag=$(urldecode "$(subscription_link_fragment "$link")")
+    [ -z "$tag" ] && tag="trojan"
 
     local net
     net=$(urldecode "$(subscription_parse_kv "$qs" "type")")
@@ -341,6 +578,12 @@ subscription_parse_trojan() {
     sid=$(urldecode "$(subscription_parse_kv "$qs" "sid")")
     local spx
     spx=$(urldecode "$(subscription_parse_kv "$qs" "spx")")
+    local alpn
+    alpn=$(urldecode "$(subscription_parse_kv "$qs" "alpn")")
+    local ai
+    ai=$(urldecode "$(subscription_parse_kv "$qs" "allowInsecure")")
+    local ai_supported
+    if core_supports_allow_insecure; then ai_supported="1"; else ai_supported="0"; fi
 
     local qhost
     qhost=$(urldecode "$(subscription_parse_kv "$qs" "host")")
@@ -350,13 +593,20 @@ subscription_parse_trojan() {
     path=$(urldecode "$(subscription_parse_kv "$qs" "path")")
     local hdr
     hdr=$(urldecode "$(subscription_parse_kv "$qs" "headerType")")
+    local seed
+    seed=$(urldecode "$(subscription_parse_kv "$qs" "seed")")
+    local svc
+    svc=$(urldecode "$(subscription_parse_kv "$qs" "serviceName")")
+    local auth
+    auth=$(urldecode "$(subscription_parse_kv "$qs" "authority")")
 
     local network
-    network=$(subscription_parse_network "$net" "$sid" "$qhost" "$mode" "$path" "$hdr")
+    network=$(subscription_parse_network "$net" "$seed" "$qhost" "$mode" "$path" "$hdr" "$svc" "$auth") || return 1
 
     jq -nc --arg tag "$tag" --arg host "$host" --arg port "$port" --arg pwd "$password" \
         --arg net "$net" --arg sec "$sec" \
         --arg fp "$fp" --arg pbk "$pbk" --arg sni "$sni" --arg sid "$sid" --arg spx "$spx" \
+        --arg alpn "$alpn" --arg ai "$ai" --arg aisup "$ai_supported" \
         --argjson network "$network" '
     {
         protocol:"trojan",
@@ -378,6 +628,13 @@ subscription_parse_trojan() {
                         shortId:$sid,
                         spiderX:$spx
                     }
+               } elif $sec=="tls" then {
+                    tlsSettings:(
+                        (if ($sni|length)>0 then {serverName:$sni} else {} end)
+                        + (if ($fp|length)>0 then {fingerprint:$fp} else {} end)
+                        + (if ($alpn|length)>0 then {alpn:($alpn|split(","))} else {} end)
+                        + (if ($aisup=="1" and ($ai=="1" or $ai=="true")) then {allowInsecure:true} else {} end)
+                    )
                } else {} end)
             + $network
         )
@@ -396,35 +653,39 @@ subscription_parse_shadowsocks() {
         ;;
     esac
 
-    local tag_raw
-    tag_raw=$(printf '%s' "$link" | awk -F'#' '{print $2}')
-    local tag="$(urldecode "${tag_raw:-ss}")"
+    local tag
+    tag=$(urldecode "$(subscription_link_fragment "$link")")
+    [ -z "$tag" ] && tag="ss"
 
-    local methodpass hostport is_2022_format=""
-    if echo "$before_hash" | grep -q '@'; then
+    local methodpass hostport
+    case "$before_hash" in
+    *@*)
         local left="${before_hash%@*}"
-        local right="${before_hash#*@}"
+        local right="${before_hash##*@}"
         local decoded_left
-        decoded_left=$(echo "$left" | base64 -d 2>/dev/null) || decoded_left=""
-        if [ -n "$decoded_left" ] && echo "$decoded_left" | grep -q ':'; then
-            methodpass="$decoded_left"
-        else
-            methodpass=$(urldecode "$left")
-            is_2022_format="1"
-        fi
+        decoded_left=$(subscription_b64d "$left")
+        case "$decoded_left" in
+        *:*) methodpass="$decoded_left" ;;
+        *) methodpass=$(urldecode "$left") ;;
+        esac
         hostport="$right"
-    else
+        ;;
+    *)
         local creds_hostport
-        creds_hostport=$(echo "$before_hash" | base64 -d 2>/dev/null)
+        creds_hostport=$(subscription_b64d "$before_hash")
         methodpass="${creds_hostport%@*}"
-        hostport="${creds_hostport#*@}"
-    fi
+        hostport="${creds_hostport##*@}"
+        ;;
+    esac
 
-    hostport="${hostport%%\?*}"
+    hostport="${hostport%%/*}"
     local method="${methodpass%%:*}"
     local password="${methodpass#*:}"
-    local host="${hostport%%:*}"
-    local port="${hostport##*:}"
+    [ -n "$method" ] || return 1
+    local hp host port
+    hp=$(subscription_split_hostport "$hostport") || return 1
+    host="${hp% *}"
+    port="${hp##* }"
 
     local net
     net=$(urldecode "$(subscription_parse_kv "$qs" "type")")
@@ -437,6 +698,10 @@ subscription_parse_shadowsocks() {
     mode=$(urldecode "$(subscription_parse_kv "$qs" "mode")")
     local path
     path=$(urldecode "$(subscription_parse_kv "$qs" "path")")
+    local svc
+    svc=$(urldecode "$(subscription_parse_kv "$qs" "serviceName")")
+    local auth
+    auth=$(urldecode "$(subscription_parse_kv "$qs" "authority")")
 
     local sec
     sec=$(urldecode "$(subscription_parse_kv "$qs" "security")")
@@ -454,7 +719,7 @@ subscription_parse_shadowsocks() {
     if core_supports_allow_insecure; then ai_supported="1"; else ai_supported="0"; fi
 
     local network
-    network=$(subscription_parse_network "$net" "" "$qhost" "$mode" "$path" "$hdr")
+    network=$(subscription_parse_network "$net" "" "$qhost" "$mode" "$path" "$hdr" "$svc" "$auth") || return 1
 
     jq -nc --arg tag "$tag" --arg host "$host" --arg port "$port" \
         --arg method "$method" --arg password "$password" \
@@ -491,7 +756,6 @@ subscription_parse_hysteria() {
     local link="$1"
     local rest proto
 
-    # Determine protocol and extract rest of URL
     case "$link" in
     hy2://*)
         proto="hy2"
@@ -510,30 +774,28 @@ subscription_parse_hysteria() {
         ;;
     esac
 
-    local userhostport="${rest%%\?*}"
-    local qs="${rest#*\?}"
-    qs="${qs%%#*}"
+    local body="${rest%%#*}"
+    local userhostport="${body%%\?*}"
+    local qs=""
+    case "$body" in *\?*) qs="${body#*\?}" ;; esac
 
-    # Extract auth (password) from user@host:port or from query params
     local auth=""
-    if echo "$userhostport" | grep -q '@'; then
-        auth="${userhostport%%@*}"
-        # If auth contains username:password format, extract password
-        if echo "$auth" | grep -q ':'; then
-            auth="${auth#*:}"
-        fi
-    fi
+    case "$userhostport" in
+    *@*)
+        auth=$(urldecode "${userhostport%@*}")
+        case "$auth" in *:*) auth="${auth#*:}" ;; esac
+        ;;
+    esac
 
-    local hostport
-    hostport=$(subscription_parse_hostport "$userhostport")
-    local host="${hostport%%:*}"
-    local port="${hostport##*:}"
+    local hp host port
+    hp=$(subscription_split_hostport "$(subscription_parse_hostport "$userhostport")") || return 1
+    host="${hp% *}"
+    port="${hp##* }"
 
-    local tag_raw
-    tag_raw=$(printf '%s' "$link" | awk -F'#' '{print $2}')
-    local tag="$(urldecode "${tag_raw:-hysteria}")"
+    local tag
+    tag=$(urldecode "$(subscription_link_fragment "$link")")
+    [ -z "$tag" ] && tag="hysteria"
 
-    # Extract parameters
     local auth_param
     auth_param=$(urldecode "$(subscription_parse_kv "$qs" "auth")")
     local password_param
@@ -566,17 +828,16 @@ subscription_parse_hysteria() {
     obfsPassword=$(urldecode "$(subscription_parse_kv "$qs" "obfs-password")")
     [ -z "$obfsPassword" ] && obfsPassword=$(urldecode "$(subscription_parse_kv "$qs" "obfsPassword")")
 
-    # Determine final auth value
     [ -n "$auth_param" ] && auth="$auth_param"
     [ -n "$password_param" ] && auth="$password_param"
 
-    # Determine version (hy2:// and hysteria2:// = version 2 by default)
-    [ "$proto" = "hy2" ] || [ "$proto" = "hysteria2" ] && [ -z "$version" ] && version="2"
+    if [ -z "$version" ] && { [ "$proto" = "hy2" ] || [ "$proto" = "hysteria2" ]; }; then
+        version="2"
+    fi
+    case "$version" in *[!0-9]*) version="" ;; esac
 
-    # Determine SNI
     local final_sni="${sni:-$peer}"
 
-    # Build hysteria settings (xray 26.3.27+ moved congestion/up/down to finalmask.quicParams)
     local hysteria_settings
     hysteria_settings=$(jq -nc \
         --arg auth "$auth" \
@@ -586,7 +847,6 @@ subscription_parse_hysteria() {
         | if ($version|length)>0 then .version=($version|tonumber) else . end
     ')
 
-    # Build finalmask.quicParams from congestion/up/down (suffix bare numbers with "mbps" for brutal)
     local up_val="${up:-$upmbps}"
     local down_val="${down:-$downmbps}"
     local quic_params
@@ -594,14 +854,13 @@ subscription_parse_hysteria() {
         --arg congestion "$congestion" \
         --arg up "$up_val" \
         --arg down "$down_val" '
-        def brutal_unit(v): if (v|test("[^0-9]")) then v else "\(v) mbps" end;
+        def brutal_unit(v): if (v | explode | all(. >= 48 and . <= 57)) then "\(v) mbps" else v end;
         {}
         | if ($congestion|length)>0 then .congestion=$congestion else . end
         | if ($up|length)>0 then .brutalUp=brutal_unit($up) else . end
         | if ($down|length)>0 then .brutalDown=brutal_unit($down) else . end
     ')
 
-    # Build TLS settings if needed
     local tls_settings="null"
     local ai_supported pin_sep core_ver
     if core_supports_allow_insecure; then ai_supported="1"; else ai_supported="0"; fi
@@ -615,15 +874,16 @@ subscription_parse_hysteria() {
             --arg alpn "$alpn" \
             --arg pin "$pinSHA256" \
             --arg pinsep "$pin_sep" '
+            def ws: . == " " or . == "\t" or . == "\n" or . == "\r";
+            def trimws: if length == 0 then . elif (.[0:1] | ws) then .[1:] | trimws elif (.[-1:] | ws) then .[:-1] | trimws else . end;
             {}
             | if ($sni|length)>0 then .serverName=$sni else . end
             | if ($aisup=="1" and ($insecure=="1" or $insecure=="true")) then .allowInsecure=true else . end
             | if ($alpn|length)>0 then .alpn=($alpn|split(",")) else . end
-            | if ($pin|length)>0 then .pinnedPeerCertSha256=([$pin|splits("[,~]")|gsub("^\\s+|\\s+$";"")]|map(select(length>0))|join($pinsep)) else . end
+            | if ($pin|length)>0 then .pinnedPeerCertSha256=([$pin|split(",")[]|split("~")[]|trimws]|map(select(length>0))|join($pinsep)) else . end
         ')
     fi
 
-    # Build salamander obfuscation if present
     local udpmasks="null"
     if [ "$obfs" = "salamander" ] && [ -n "$obfsPassword" ]; then
         udpmasks=$(jq -nc --arg pwd "$obfsPassword" '[{type:"salamander",settings:{password:$pwd}}]')
@@ -638,143 +898,147 @@ subscription_parse_hysteria() {
     {
         protocol:"hysteria",
         tag:$tag,
-        settings:{
-            address:$host,
-            port:($port|tonumber)
-        }
-        + (if ($version|length)>0 then {version:($version|tonumber)} else {} end),
+        settings:(
+            {
+                address:$host,
+                port:($port|tonumber)
+            }
+            + (if ($version|length)>0 then {version:($version|tonumber)} else {} end)
+        ),
         streamSettings:(
             {network:"hysteria",hysteriaSettings:$hysteria}
             + (if $tls!=null then {security:"tls",tlsSettings:$tls} else {} end)
             + (if (($quic|length)>0) or ($udpmasks!=null) then
-                {finalmask:
+                {finalmask:(
                     (if ($quic|length)>0 then {quicParams:$quic} else {} end)
                     + (if $udpmasks!=null then {udp:$udpmasks} else {} end)
-                }
+                )}
               else {} end)
         )
     }'
 }
 
-subscription_parse_kv() { printf '%s' "$1" | tr '&' '\n' | awk -F= -v k="$2" '$1==k{sub(/^[^=]*=/, ""); print}'; }
+subscription_parse_kv() { printf '%s' "$1" | tr '&' '\n' | awk -F= -v k="$2" '$1==k{sub(/^[^=]*=/, ""); print; exit}'; }
 
 subscription_parse_hostport() { printf '%s' "$1" | awk -F@ '{print $NF}' | awk -F/ '{print $1}'; }
 
 cron_subscription_refresh_run() {
-    # Override update_loading_progress to no-op during cron execution
-    # to avoid triggering the UI loading dialog in the background
     update_loading_progress() { :; }
-    subscription_fetch_protocols
+    load_xrayui_config
+    subscription_fetch_protocols cron || return 0
+    failover_resync_pool_outbounds
 }
 
 subscription_fetch_protocols() {
-    load_xrayui_config
-    load_ui_response
+    local mode="$1"
+    local payload="" links url key rc line line_count
+    local cache_dir="$ADDON_SHARE_DIR/subcache"
+    local tmp_urls="/tmp/xrayui_proto_urls.$$"
+    local tmp_keys="/tmp/xrayui_proto_keys.$$"
+    local tmp_lines="/tmp/xrayui_proto_links.$$"
+    local tmp_pairs="/tmp/xrayui_proto_pairs.$$"
+    local tmpc="/tmp/xrayui_proto_c.$$"
+    local tmpd="/tmp/xrayui_proto_d.$$"
+    local tmp_json="$XRAYUI_SUBSCRIPTIONS_FILE.tmp.$$"
 
-    payload=$(reconstruct_payload)
+    load_xrayui_config
+    if [ "$mode" != "cron" ]; then
+        load_ui_response
+        payload=$(reconstruct_payload)
+    fi
+
     links=${payload:-$subscriptionLinks}
     links=${links#\"}
     links=${links%\"}
     [ -z "$links" ] && return 0
 
-    tmp_json="/tmp/xrayui_proto_json.$$"
-    tmp_lines="/tmp/xrayui_proto_links.$$"
-    tmp_pairs="/tmp/xrayui_proto_pairs.$$"
-    tmp_urls="/tmp/xrayui_proto_urls.$$"
+    mkdir -p "$cache_dir"
     : >"$tmp_lines"
-    : >"$tmp_pairs"
-    : >"$tmp_urls"
+    : >"$tmp_keys"
     printf '%s\n' "$links" | tr '|' '\n' >"$tmp_urls"
 
-    log_debug "Fetching subscription links: $tmp_urls ..."
-
-    while IFS= read -r url; do
+    while IFS= read -r url || [ -n "$url" ]; do
         url=$(printf '%s' "$url" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
         [ -z "$url" ] && continue
+        key=$(printf '%s' "$url" | md5sum | cut -d' ' -f1)
+        printf '%s\n' "$key" >>"$tmp_keys"
 
-        tmpc="/tmp/xrayui_proto_c.$$"
-        tmpd="/tmp/xrayui_proto_d.$$"
-        : >"$tmpc"
+        update_loading_progress "Fetching content from $(subscription_url_host "$url") ..."
+        log_debug "Fetching subscription from $(subscription_url_host "$url") ..."
         : >"$tmpd"
+        if subscription_curl "$url" </dev/null >"$tmpc" 2>/dev/null; then
+            subscription_decode_body "$tmpc" "$tmpd"
+        fi
+        rm -f "$tmpc"
 
-        update_loading_progress "Fetching content from $url ..."
-        log_debug "Fetching content from $url ..."
-        subscription_curl "$url" </dev/null >"$tmpc" 2>/dev/null || true
-
-        sz=$(wc -c <"$tmpc")
-        if [ "$sz" -eq 0 ]; then
-            log_debug "No content fetched from $url"
-            rm -f "$tmpc" "$tmpd"
+        if subscription_body_has_links "$tmpd"; then
+            cp "$tmpd" "$cache_dir/$key"
+        elif [ -s "$cache_dir/$key" ]; then
+            log_warn "Subscription $(subscription_url_host "$url") returned no usable links; using its last good copy"
+            cp "$cache_dir/$key" "$tmpd"
+        else
+            log_warn "Subscription $(subscription_url_host "$url") returned no usable links"
             continue
         fi
 
-        tr -d '\r' <"$tmpc" >"$tmpc.tmp" && mv "$tmpc.tmp" "$tmpc"
-
-        prev=$(safe_preview <"$tmpc")
-
-        if grep '://' "$tmpc" >/dev/null 2>&1; then
-            cp "$tmpc" "$tmpd"
-        else
-            if base64 -d <"$tmpc" >"$tmpd" 2>/dev/null; then :; else cp "$tmpc" "$tmpd"; fi
-        fi
-
-        prev2=$(safe_preview <"$tmpd")
-
         cat "$tmpd" >>"$tmp_lines"
         printf '\n' >>"$tmp_lines"
-
-        rm -f "$tmpc" "$tmpd"
     done <"$tmp_urls"
-    rm -f "$tmp_urls"
+    rm -f "$tmp_urls" "$tmpd"
 
     line_count=$(wc -l <"$tmp_lines")
     update_loading_progress "Processing $line_count links ..."
-    log_info "Processing $line_count links ..."
-    while IFS= read -r line; do
-        line=$(printf '%s' "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-        [ -z "$line" ] && continue
+    log_info "Processing $line_count subscription links ..."
 
-        case $line in *%[0-9A-Fa-f][0-9A-Fa-f]*) line=$(urldecode_pct "$line") ;; esac
-        case "$line" in *://*) : ;; *) continue ;; esac
-
-        #  case "$line" in *#*) line=${line%%#*} ;; esac
-        line=$(printf '%s' "$line" | tr '\t' ' ')
-
-        scheme=${line%%://*}
-        scheme=$(printf '%s' "$scheme" | tr '[:upper:]' '[:lower:]')
-        case "$scheme" in
-        vless) key=vless ;;
-        vmess) key=vmess ;;
-        trojan) key=trojan ;;
-        ss) key=shadowsocks ;; # keep ss:// link, key is "shadowsocks"
-        hy2 | hysteria | hysteria2) key=hysteria ;;
-        wireguard | wg | wgcf) key=wireguard ;;
-        *) continue ;;
+    while IFS= read -r line || [ -n "$line" ]; do
+        case "$line" in
+        *://*) ;;
+        *%3[Aa]%2[Ff]%2[Ff]*) line=$(urldecode "$line") ;;
         esac
-        printf '%s\t%s\n' "$key" "$line" >>"$tmp_pairs"
-        log_debug "Parsed protocol: $key from line: $line"
-    done <"$tmp_lines"
+        printf '%s\n' "$line"
+    done <"$tmp_lines" | awk '
+        {
+            gsub(/\t/, " ")
+            gsub(/^ +| +$/, "")
+            if ($0 == "") next
+            i = index($0, "://")
+            if (i < 2) next
+            s = tolower(substr($0, 1, i - 1))
+            k = ""
+            if (s == "vless") k = "vless"
+            else if (s == "vmess") k = "vmess"
+            else if (s == "trojan") k = "trojan"
+            else if (s == "ss") k = "shadowsocks"
+            else if (s == "hy2" || s == "hysteria" || s == "hysteria2") k = "hysteria"
+            else if (s == "wireguard" || s == "wg" || s == "wgcf") k = "wireguard"
+            if (k == "" || seen[$0]++) next
+            print k "\t" $0
+        }' >"$tmp_pairs"
 
-    log_debug "Parsing protocols from $tmp_pairs ..."
-
+    rc=1
     if [ -s "$tmp_pairs" ]; then
-        awk -F '\t' 'NF==2{print $0}' "$tmp_pairs" |
-            jq -R -s -c '
-          split("\n")
-          | map(select(length>0) | split("\t") | {name: .[0], link: .[1]})
-          | sort_by(.name)
-          | group_by(.name)
-          | map({key: (.[0].name), value: (map(.link) | unique)})
-          | from_entries
-        ' >"$tmp_json" || printf '{}' >"$tmp_json"
-
-        log_debug "Saved protocols to $tmp_json"
-    else
-        printf '{}' >"$tmp_json"
-        log_error "No valid protocols found in $tmp_pairs"
+        jq -R -s -c '
+            split("\n")
+            | map(select(length>0) | split("\t") | {name: .[0], link: (.[1:] | join("\t"))})
+            | group_by(.name)
+            | map({key: .[0].name, value: map(.link)})
+            | from_entries
+        ' "$tmp_pairs" >"$tmp_json" 2>/dev/null
+        if jq -e 'type == "object" and length > 0' "$tmp_json" >/dev/null 2>&1; then
+            mv -f "$tmp_json" "$XRAYUI_SUBSCRIPTIONS_FILE"
+            rc=0
+        fi
     fi
-    mv "$tmp_json" "$XRAYUI_SUBSCRIPTIONS_FILE"
 
-    rm -f "$tmp_json" "$tmp_lines" "$tmp_pairs"
-    return 0
+    if [ "$rc" -ne 0 ]; then
+        log_error "Subscription refresh found no usable links; the previous list was kept"
+    elif [ -z "$payload" ]; then
+        for f in "$cache_dir"/*; do
+            [ -f "$f" ] || continue
+            grep -qx "${f##*/}" "$tmp_keys" || rm -f "$f"
+        done
+    fi
+
+    rm -f "$tmp_json" "$tmp_lines" "$tmp_pairs" "$tmp_keys"
+    return "$rc"
 }

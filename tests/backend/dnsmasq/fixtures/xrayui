@@ -1,0 +1,4 @@
+[custom]
+custom-one.example
+full:custom-two.example
+regexp:.*\.custom\.example$

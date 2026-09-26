@@ -47,6 +47,7 @@
                               <stream-settings-modal ref="transportModal" />
                               <div class="apply_gen">
                                 <input class="button_gen" @click.prevent="apply_settings()" type="button" :value="$t('labels.apply')" />
+                                <div v-if="unapplied" class="unapplied-changes">{{ $t('com.ClientStatus.unapplied_changes') }}</div>
                               </div>
                               <clients-online v-if="isAdvanced && enableClientsCheck"></clients-online>
                               <logs-manager
@@ -73,8 +74,9 @@
 </template>
 
 <script lang="ts">
-  import { computed, defineComponent, inject, Ref, ref, watch } from 'vue';
+  import { computed, defineComponent, inject, onBeforeUnmount, onMounted, Ref, ref, watch } from 'vue';
   import engine, { EngineResponseConfig, SubmitActions } from '@/modules/Engine';
+  import { getCoreVersion } from '@/modules/CoreVersion';
 
   import Modal from '@main/Modal.vue';
 
@@ -143,6 +145,30 @@
         { immediate: true }
       );
 
+      const unapplied = ref(false);
+      let unappliedTimer: ReturnType<typeof setTimeout> | undefined;
+      watch(
+        [config, () => getCoreVersion()],
+        () => {
+          clearTimeout(unappliedTimer);
+          unappliedTimer = setTimeout(() => {
+            unapplied.value = engine.hasUnappliedChanges(config.value);
+          }, 500);
+        },
+        { deep: true }
+      );
+
+      const warnBeforeUnload = (event: BeforeUnloadEvent) => {
+        if (engine.unloadConfirmed || !engine.hasUnappliedChanges(config.value)) return;
+        event.preventDefault();
+        event.returnValue = '';
+      };
+      onMounted(() => window.addEventListener('beforeunload', warnBeforeUnload));
+      onBeforeUnmount(() => {
+        window.removeEventListener('beforeunload', warnBeforeUnload);
+        clearTimeout(unappliedTimer);
+      });
+
       const show_transport = (proxy: XrayInboundObject<IProtocolType> | XrayOutboundObject<IProtocolType>, type: string) => {
         transportModal.value.show(proxy, type);
       };
@@ -158,6 +184,7 @@
         }
 
         await engine.executeWithLoadingProgress(async () => {
+          await engine.keepRotatedOutbounds(config.value);
           const cfg = engine.prepareServerConfig(config.value);
           await engine.submit(SubmitActions.configurationApply, cfg);
           await engine.loadXrayConfig();
@@ -176,6 +203,7 @@
         engine,
         transportModal,
         sniffingModal,
+        unapplied,
         version: window.xray.custom_settings.xray_version,
         page: window.location.pathname.substring(1),
         mode,
@@ -192,6 +220,10 @@
 <style lang="scss">
   .apply_gen {
     margin-bottom: 10px;
+    .unapplied-changes {
+      margin-top: 6px;
+      color: $c_yellow;
+    }
   }
   .FormTable {
     tr.proxy-row th {

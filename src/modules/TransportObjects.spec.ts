@@ -27,6 +27,7 @@ import {
   XrayUdpHopObject,
   canonicalizeXhttpHeaders
 } from './TransportObjects';
+import { setCoreVersion } from './CoreVersion';
 
 describe('TransportObjects', () => {
   let obj: XrayStreamKcpSettingsObject;
@@ -434,6 +435,70 @@ describe('TransportObjects', () => {
         const kcp = new XrayStreamKcpSettingsObject();
         kcp.mtu = 1400;
         expect(kcp.normalize()).toBe(kcp);
+      });
+
+      describe('numeric fields', () => {
+        afterEach(() => setCoreVersion('0.0.0'));
+
+        it('drops emptied fields instead of writing an empty string', () => {
+          const kcp = new XrayStreamKcpSettingsObject();
+          (kcp as any).mtu = '';
+          (kcp as any).tti = null;
+          (kcp as any).uplinkCapacity = 'abc';
+          kcp.header = undefined;
+          expect(kcp.normalize()).toBeUndefined();
+        });
+
+        it('stores numeric strings as numbers', () => {
+          const kcp = new XrayStreamKcpSettingsObject();
+          (kcp as any).uplinkCapacity = '12';
+          (kcp as any).downlinkCapacity = '20';
+          kcp.normalize();
+          expect(kcp.uplinkCapacity).toBe(12);
+          expect(kcp.downlinkCapacity).toBeUndefined();
+        });
+
+        it('keeps congestion and buffer sizes and drops cwnd fields below 26.4.13', () => {
+          setCoreVersion('26.3.27');
+          const kcp = new XrayStreamKcpSettingsObject();
+          kcp.congestion = true;
+          kcp.readBufferSize = 1;
+          kcp.writeBufferSize = 4;
+          kcp.cwndMultiplier = 2;
+          kcp.maxSendingWindow = 4194304;
+          kcp.normalize();
+          expect(JSON.parse(JSON.stringify(kcp))).toEqual({ congestion: true, readBufferSize: 1, writeBufferSize: 4 });
+        });
+
+        it('drops congestion and buffer sizes and keeps cwnd fields from 26.4.13', () => {
+          setCoreVersion('26.4.13');
+          const kcp = new XrayStreamKcpSettingsObject();
+          kcp.congestion = true;
+          kcp.readBufferSize = 1;
+          kcp.writeBufferSize = 4;
+          kcp.cwndMultiplier = 2;
+          kcp.maxSendingWindow = 4194304;
+          kcp.normalize();
+          expect(JSON.parse(JSON.stringify(kcp))).toEqual({ cwndMultiplier: 2, maxSendingWindow: 4194304 });
+        });
+
+        it('drops cwnd values the core would reject', () => {
+          setCoreVersion('26.7.28');
+          const kcp = new XrayStreamKcpSettingsObject();
+          kcp.header = undefined;
+          kcp.mtu = 1400;
+          kcp.cwndMultiplier = 0;
+          kcp.maxSendingWindow = 1000;
+          kcp.normalize();
+          expect(JSON.parse(JSON.stringify(kcp))).toEqual({ mtu: 1400 });
+        });
+
+        it('strips default cwnd values', () => {
+          setCoreVersion('26.7.28');
+          const kcp = new XrayStreamKcpSettingsObject();
+          kcp.header = undefined;
+          expect(kcp.normalize()).toBeUndefined();
+        });
       });
     });
   });

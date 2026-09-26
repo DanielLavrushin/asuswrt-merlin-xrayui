@@ -1,0 +1,6 @@
+#!/bin/sh
+if [ "${1:-}" = "+%s" ] && [ -n "${FW_NOW:-}" ]; then
+    echo "$FW_NOW"
+    exit 0
+fi
+PATH=${FW_REAL_PATH:?FW_REAL_PATH is not set} exec date "$@"

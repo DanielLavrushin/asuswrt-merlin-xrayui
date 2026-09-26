@@ -111,6 +111,12 @@ subscriptions)
     ;;
 cron)
     case "$2" in
+    logrotate | geodata | subscription_refresh | subscription_fallback | ipset_save)
+        cron_job_lock "$2" || exit 0
+        update_loading_progress() { :; }
+        ;;
+    esac
+    case "$2" in
     addjobs)
         cron_jobs_add
         ;;
@@ -121,13 +127,19 @@ cron)
         cron_logrotate_run
         ;;
     geodata)
-        update_community_geodata
+        update_community_geodata if_changed
         ;;
     subscription_refresh)
         cron_subscription_refresh_run
         ;;
     subscription_fallback)
         failover_check
+        ;;
+    ipset_save)
+        load_xrayui_config
+        if [ "$ipsec" = "redirect" ] && [ -n "$(get_xray_daemon_pid)" ] && firewall_is_configured; then
+            with_firewall_lock ipset_learned_save
+        fi
         ;;
     *) ;;
     esac
@@ -186,16 +198,25 @@ service_event)
             update_loading_progress "Custom tagfiles retrieved successfully." 100
             ;;
         customrecompileall)
-            geodata_recompile_all
-            update_loading_progress "Geodata recompiled successfully." 100
+            if geodata_recompile_all; then
+                update_loading_progress "Geodata recompiled successfully." 100
+            else
+                update_loading_progress "Error: geodata could not be recompiled." 100
+            fi
             ;;
         customrecompile)
-            geodata_recompile
-            update_loading_progress "Geodata recompiled successfully." 100
+            if geodata_recompile; then
+                update_loading_progress "Geodata recompiled successfully." 100
+            else
+                update_loading_progress "Error: the custom list could not be saved or compiled." 100
+            fi
             ;;
         customdeletetag)
-            geodata_delete_tag
-            update_loading_progress "Geodata tag deleted successfully." 100
+            if geodata_delete_tag; then
+                update_loading_progress "Geodata tag deleted successfully." 100
+            else
+                update_loading_progress "Error: the geodata tag could not be deleted or geodata could not be recompiled." 100
+            fi
             ;;
         esac
         ;;
@@ -240,8 +261,11 @@ service_event)
             case "$4" in
             fetchprotocols)
                 update_loading_progress "Updating subscription protocols..." 0
-                subscription_fetch_protocols
-                update_loading_progress "Subscription protocols updated successfully." 100
+                if subscription_fetch_protocols; then
+                    update_loading_progress "Subscription protocols updated successfully." 100
+                else
+                    update_loading_progress "No usable links were fetched. The previous list was kept." 100
+                fi
                 ;;
             esac
             ;;
@@ -251,8 +275,11 @@ service_event)
                 logs_fetch
                 ;;
             changeloglevel)
-                change_log_level
-                update_loading_progress "Log level changed successfully." 100
+                if change_log_level; then
+                    update_loading_progress "Log level changed successfully." 100
+                else
+                    update_loading_progress "Error: failed to change the log level. Nothing was changed." 100
+                fi
                 ;;
             *)
                 enable_config_logs
@@ -271,9 +298,10 @@ service_event)
             initial_response
             ;;
         applygeneraloptions)
-            apply_general_options
-            initial_response
-            update_loading_progress "General settings applied." 100
+            if apply_general_options; then
+                initial_response
+                update_loading_progress "General settings applied." 100
+            fi
             ;;
         xrayversionswitch)
             switch_xray_version
@@ -315,6 +343,7 @@ service_event)
     firewall)
         case "$3" in
         configure)
+            FIREWALL_FROM_HOOK="true"
             configure_firewall
             ;;
         cleanup)

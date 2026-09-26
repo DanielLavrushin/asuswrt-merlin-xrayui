@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { plainToInstance } from 'class-transformer';
 import { XrayStreamSettingsObject, XrayHeaderObject } from './CommonObjects';
 import {
   XrayStreamKcpSettingsObject,
@@ -6,6 +7,9 @@ import {
   XrayMkcpLegacyObject,
   XrayFinalMaskObject,
   XrayFinalMaskSettingsObject,
+  XraySalamanderObject,
+  XraySudokuObject,
+  XrayXicmpObject,
   maskToCoreForm,
   maskFromCoreForm,
   extractKcpMaskingForUi
@@ -104,6 +108,92 @@ describe('mKCP masking migration', () => {
       stream.normalize();
 
       expect(plain(stream.finalmask?.udp)).toEqual([{ type: 'header-srtp' }, { type: 'mkcp-aes128gcm', settings: { password: 'p4ss' } }]);
+    });
+  });
+
+  describe('mask order', () => {
+    it('keeps the header first before 26.6.22', () => {
+      setCoreVersion('26.6.1');
+      const stream = buildKcpStream('wechat-video', 'p4ss');
+      stream.normalize();
+
+      expect(plain(stream.finalmask?.udp)).toEqual([
+        { type: 'mkcp-legacy', settings: { header: 'wechat' } },
+        { type: 'mkcp-legacy', settings: { value: 'p4ss' } }
+      ]);
+    });
+
+    it('puts the header last from 26.6.22, where the last mask is outermost', () => {
+      setCoreVersion('26.6.22');
+      const stream = buildKcpStream('wechat-video', 'p4ss');
+      stream.normalize();
+
+      expect(plain(stream.finalmask?.udp)).toEqual([
+        { type: 'mkcp-legacy', settings: { value: 'p4ss' } },
+        { type: 'mkcp-legacy', settings: { header: 'wechat' } }
+      ]);
+    });
+
+    it('keeps other masks inside the mKCP masks from 26.6.22', () => {
+      setCoreVersion('26.7.28');
+      const stream = buildKcpStream('srtp', 'p4ss');
+      const noise = new XrayFinalMaskObject();
+      noise.type = 'salamander';
+      noise.settings = plainToInstance(XraySalamanderObject, { password: 'x' });
+      stream.finalmask = new XrayFinalMaskSettingsObject();
+      stream.finalmask.udp = [noise];
+      stream.normalize();
+
+      expect(plain(stream.finalmask?.udp).map((m: any) => m.settings?.header ?? m.settings?.value ?? m.type)).toEqual(['salamander', 'p4ss', 'srtp']);
+    });
+
+    const kcpWith = (type: string, settings: any) => {
+      const stream = buildKcpStream('srtp', 'p4ss');
+      const extra = new XrayFinalMaskObject();
+      extra.type = type;
+      extra.settings = settings;
+      stream.finalmask = new XrayFinalMaskSettingsObject();
+      stream.finalmask.udp = [extra];
+      stream.normalize();
+      return plain(stream.finalmask?.udp).map((m: any) => m.settings?.header ?? m.settings?.value ?? m.type);
+    };
+    const sudoku = () => plainToInstance(XraySudokuObject, { password: 'x' });
+    const xicmp = () => plainToInstance(XrayXicmpObject, { listenIp: '10.0.0.1' });
+
+    it.each([
+      ['26.6.1', ['srtp', 'p4ss', 'sudoku']],
+      ['26.7.28', ['p4ss', 'srtp', 'sudoku']],
+      ['26.9.9', ['sudoku', 'p4ss', 'srtp']]
+    ])('places sudoku where %s checks for the innermost mask', (version, expected) => {
+      setCoreVersion(version);
+      expect(kcpWith('sudoku', sudoku())).toEqual(expected);
+    });
+
+    it.each([
+      ['26.6.1', ['xicmp', 'srtp', 'p4ss']],
+      ['26.7.28', ['xicmp', 'p4ss', 'srtp']],
+      ['26.9.9', ['p4ss', 'srtp', 'xicmp']]
+    ])('places xicmp where %s checks for the outermost mask', (version, expected) => {
+      setCoreVersion(version);
+      expect(kcpWith('xicmp', xicmp())).toEqual(expected);
+    });
+
+    it('keeps the order stable through load and save on 26.7.28', () => {
+      setCoreVersion('26.7.28');
+      const stream = new XrayStreamSettingsObject();
+      stream.network = 'kcp';
+      stream.finalmask = new XrayFinalMaskSettingsObject();
+      stream.finalmask.udp = [
+        maskFromCoreForm(plainToInstance(XrayFinalMaskObject, { type: 'mkcp-legacy', settings: plainToInstance(XrayMkcpLegacyObject, { value: 'p4ss' }) })),
+        maskFromCoreForm(plainToInstance(XrayFinalMaskObject, { type: 'mkcp-legacy', settings: plainToInstance(XrayMkcpLegacyObject, { header: 'wechat' }) }))
+      ];
+      extractKcpMaskingForUi(stream);
+      stream.normalize();
+
+      expect(plain(stream.finalmask?.udp)).toEqual([
+        { type: 'mkcp-legacy', settings: { value: 'p4ss' } },
+        { type: 'mkcp-legacy', settings: { header: 'wechat' } }
+      ]);
     });
   });
 

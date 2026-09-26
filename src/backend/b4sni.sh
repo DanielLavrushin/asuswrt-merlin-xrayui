@@ -25,13 +25,14 @@ b4sni_start() {
         fi
     fi
 
-    # Start the main b4sni process
-    $IONICE $NICE "$b4sni" >>"$log_file" 2>&1 &
+    $IONICE $NICE "$b4sni" </dev/null >>"$log_file" 2>&1 3>&- 4>&- 5>&- 6>&- 7>&- 8>&- 9>&- 387>&- 386>&- &
     local main_pid=$!
     echo "$main_pid" >"$pid_file"
 
-    # Start the log manager in background
-    b4sni_log_manager "$log_file" &
+    (
+        exec </dev/null 3>&- 4>&- 5>&- 6>&- 7>&- 8>&- 9>&- 387>&- 386>&-
+        b4sni_log_manager "$log_file"
+    ) &
     local manager_pid=$!
     echo "$manager_pid" >"${pid_file}.manager"
 

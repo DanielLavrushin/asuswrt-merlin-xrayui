@@ -41,7 +41,9 @@
       "xray_connecting": "Checking connection...",
       "xray_connected": "XRAY is connected",
       "xray_stopped": "XRAY is stopped",
-      "xray_running": "XRAY service is running"
+      "xray_running": "XRAY service is running",
+      "unapplied_changes": "Changes are not applied yet. They are written to the router only when apply is pressed.",
+      "confirm_unapplied_changes": "Some changes have not been applied yet and will be lost. Continue without them?"
     },
     "ServerStatus": {
       "configuration": "Configuration",
@@ -64,7 +66,7 @@
       "label_logs_enable_dns": "Enable DNS logs",
       "label_logs_level": "Log level",
       "label_probe_url": "Observatory probe URL",
-      "hint_probe_url": "The URL used by the Xray Observatory to probe outbound health. The endpoint should return HTTP 204 (No Content).",
+      "hint_probe_url": "The URL used by the Xray Observatory to probe outbound health. Any HTTP response received through the outbound counts as a successful check, so an https:// URL is recommended.",
       "label_probe_interval": "Observatory probe interval (seconds)",
       "hint_probe_interval": "How often the Xray Observatory checks each outbound connection. Every check opens a connection through every outbound, so short intervals combined with many outbounds (e.g. from subscriptions) increase CPU and memory usage on the router. Default is 30 seconds.",
       "label_gh_proxy": "Use GitHub Proxy",
@@ -89,7 +91,7 @@
       "tun_routing_interface": "Interface only (no routing rules)",
       "label_enable_debug": "Enable debug logs",
       "label_ipset": "Enable DNS bypass (ipset)",
-      "hint_ipset": "*OFF* - turns off the DNS → ipset feature; routing behaves exactly as if the option didn’t exist.<hr />*BYPASS* - domains mapped to the `FREEDOM` outbound go straight to the internet, skipping Xray; every other domain is still proxied.<hr/>*REDIRECT* – the inverse: only domains not mapped to `FREEDOM` are proxied; all other traffic leaves the router directly.<blockquote>Important: `regexp`-based domains can’t be pushed into an ipset, so they’re ignored here.</blockquote>",
+      "hint_ipset": "*OFF* - turns off the DNS → ipset feature; routing behaves exactly as if the option didn’t exist.<hr />*BYPASS* - domains mapped to the `FREEDOM` outbound go straight to the internet, skipping Xray; every other domain is still proxied.<hr/>*REDIRECT* – the inverse: only domains not mapped to `FREEDOM` are proxied; all other traffic leaves the router directly.<blockquote>Important: domain addresses land in the ipset when devices resolve them through the router’s DNS, so a device with a cached DNS answer or its own encrypted DNS (DoH/DoT, Private DNS) can bypass a rule until it looks the domain up again. `regexp`, `keyword` and negated `geoip:!` entries can’t be pushed into an ipset, so they’re ignored here.</blockquote>",
       "startup_delay": "XRAYUI Startup delay",
       "hint_startup_delay": "After the router restarts, XRAYUI will start after the specified time (in seconds). This can help avoid issues with XRAY hanging on startup.",
       "sleep_time": "After XRAY start delay",
@@ -310,7 +312,9 @@
       "alert_tag_exists": "Tag  already exists, please choose another one.",
       "alert_delete_confirm": "Delete this outbound?",
       "alert_delete_tag_in_rules_use": "This tag ({1}) is used in the routing rules ({0}). Please remove it from the rules before deleting the outbound.",
-      "alert_delete_tag_in_balancer_use": "This tag ({1}) is used as a fallback in the balancers ({0}). Please remove it from the balancers before deleting the outbound."
+      "alert_delete_tag_in_balancer_use": "This tag ({1}) is used as a fallback in the balancers ({0}). Please remove it from the balancers before deleting the outbound.",
+      "hint_pool_inactive": "Auto-fallback is turned off in General Options, so this outbound is not switched automatically.",
+      "status_unreachable": "Unreachable"
     },
     "StreamSettingsModal": {
       "title": "Transport settings",
@@ -451,7 +455,11 @@
       "hint_read_buffer": "The read buffer size for a single connection, measured in MB. The default value is `2`",
       "hint_write_buffer": "The write buffer size for a single connection, measured in MB. The default value is `2`",
       "hint_header": "Configuration for packet header obfuscation.",
-      "hint_seed": "An optional obfuscation seed is used to obfuscate traffic data using the `AES-128-GCM` algorithm.<hr>The client and server need to use the same seed. This obfuscation mechanism cannot ensure the security of the content, but it may be able to resist some blocking."
+      "hint_seed": "An optional obfuscation seed is used to obfuscate traffic data using the `AES-128-GCM` algorithm.<hr>The client and server need to use the same seed. This obfuscation mechanism cannot ensure the security of the content, but it may be able to resist some blocking.",
+      "label_cwnd_multiplier": "Congestion window multiplier",
+      "hint_cwnd_multiplier": "Multiplies the number of in-flight packets that mKCP derives from the uplink capacity, `MTU` and `TTI`. The minimum value is `1`. The default value is `1`",
+      "label_max_sending_window": "Max sending window",
+      "hint_max_sending_window": "The maximum sending window, in bytes. Xray converts it into a number of in-flight packets as `maxSendingWindow / MTU`, so it must not be smaller than the `MTU`. The default value is `2097152`"
     },
     "Grpc": {
       "label_service_name": "Service name",
@@ -596,8 +604,9 @@
       "label_subscription_type": "Available Subscription Configuration",
       "hint_subscription_type": "The type of the subscription configuration. <ul> <li>`xray`: Xray subscription configuration</li> <li>`clash`: Clash subscription configuration</li> </ul><hr/>This setting is only effective when the `subscriptionUrl` is not set.",
       "label_auto_fallback": "Auto-fallback pool",
-      "hint_auto_fallback": "Enable to include this outbound in the auto-fallback pool. When the active endpoint becomes unreachable, it will be automatically rotated to the next alive endpoint from the subscription pool.<hr/>Requires the global auto-fallback option to be enabled in General Settings.",
-      "warn_auto_fallback_requires_observatory": "Requires Xray Connection Check to be enabled in General Settings."
+      "hint_auto_fallback": "Enable to include this outbound in the auto-fallback pool. When the active endpoint stops responding, another endpoint from the subscription pool is picked, checked and switched to. Endpoints already used by other outbounds are skipped.<hr/>Requires the global auto-fallback option to be enabled in General Settings.",
+      "warn_auto_fallback_requires_observatory": "Requires Xray Connection Check to be enabled in General Settings.",
+      "warn_auto_fallback_global_off": "Inactive: auto-fallback is turned off in General Options."
     },
     "FreedomOutbound": {
       "modal_title": "Freedom",

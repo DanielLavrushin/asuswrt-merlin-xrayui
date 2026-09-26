@@ -50,11 +50,11 @@ Starting Xray and applying XRAYUI rules are both resource-intensive. On some dev
 
 ### Check connection to xray server
 
-Enables live outbound health checks. When on, XRAYUI starts Xray with the built-in **Observatory**, which periodically opens a connection through **every** outbound to the probe URL and records whether it succeeded. The result is shown as a green/red indicator next to each outbound in the **Outbounds** section, and the same data drives the automatic subscription failover. The system pieces XRAYUI adds for this are tagged `sys` and stay hidden in the UI.
+Enables live outbound health checks. When on, XRAYUI starts Xray with the built-in **Observatory**, which periodically opens a connection through **every** outbound to the probe URL and records whether it succeeded. The result is shown as a green/red indicator next to each outbound in the **Outbounds** section (yellow means no result yet; hover over the dot to see the delay or the error Xray reported), and the same data drives the automatic subscription failover. The system pieces XRAYUI adds for this are tagged `sys` and stay hidden in the UI.
 
 #### Observatory probe URL
 
-The URL the Observatory requests through each outbound. The endpoint should return **HTTP 204 (No Content)**. Default: `https://www.google.com/generate_204`.
+The URL the Observatory requests through each outbound. Any HTTP response that comes back through the outbound counts as a successful check — the status code is not looked at. Use an `https://` URL, so that a block page from a provider or ISP cannot pass for a working connection. Default: `https://www.google.com/generate_204`.
 
 #### Observatory probe interval
 
@@ -92,70 +92,85 @@ Controls how domain decisions are mirrored into kernel ipsets for fast-path rout
 - **BYPASS** — domains mapped to the `FREEDOM` outbound go directly to the internet; everything else remains proxied.
 - **REDIRECT** — the inverse: only domains **not** mapped to `FREEDOM` are proxied; all other traffic goes direct.
 
+A `FREEDOM` outbound with fragment, noises, redirect, proxy protocol, a dialer proxy, a bound interface or a custom source address counts as a proxy here, so its traffic still enters Xray and those settings keep working.
+
 ```mermaid
 flowchart TD
-    Start["⚙️ Applying Xray<br/>configuration"] --> Mode{"DNS bypass<br/>mode"}
+    Start["dnsmasq starts<br/>(Xray running)"] --> Mode{"DNS bypass<br/>mode"}
 
-    Mode -->|"OFF"| NoIpset["ipset not created<br/>all intercepted traffic<br/>goes into Xray"]
-    Mode -->|"BYPASS"| ExtractFree["Extract domains<br/>from rules → FREEDOM"]
-    Mode -->|"REDIRECT"| ExtractProxy["Extract domains<br/>from rules → non-FREEDOM<br/>(proxy, blackhole, ...)"]
+    Mode -->|"OFF"| NoIpset["ipset not used<br/>all intercepted traffic<br/>goes into Xray"]
+    Mode -->|"BYPASS"| ExtractFree["Entries of rules<br/>→ FREEDOM"]
+    Mode -->|"REDIRECT"| ExtractProxy["Entries of rules<br/>→ non-FREEDOM<br/>(proxy, blackhole, ...)"]
 
-    ExtractFree --> SkipRegex1{"regexp: ?"}
-    ExtractProxy --> SkipRegex2{"regexp: ?"}
+    ExtractFree --> Kind1{"Entry type"}
+    ExtractProxy --> Kind2{"Entry type"}
 
-    SkipRegex1 -->|"Yes"| Ignored1["⚠️ Skipped<br/>(ipset has no regex)"]
-    SkipRegex1 -->|"No"| Resolve1["Resolve via<br/>system DNS"]
+    Kind1 -->|"domain / geosite"| Learn1["dnsmasq adds the IPs<br/>a device resolves"]
+    Kind1 -->|"geoip / IP / CIDR"| Static1["Loaded at once"]
+    Kind1 -->|"regexp / keyword / geoip:!"| Ignored1["Skipped"]
 
-    SkipRegex2 -->|"Yes"| Ignored2["⚠️ Skipped"]
-    SkipRegex2 -->|"No"| Resolve2["Resolve via<br/>system DNS"]
+    Kind2 -->|"domain / geosite"| Learn2["dnsmasq adds the IPs<br/>a device resolves"]
+    Kind2 -->|"geoip / IP / CIDR"| Static2["Loaded at once"]
+    Kind2 -->|"regexp / keyword / geoip:!"| Ignored2["Skipped"]
 
-    Resolve1 --> Ipset1["📋 ipset<br/>XRAYUI_BYPASS4"]
-    Resolve2 --> Ipset2["📋 ipset<br/>XRAYUI_PROXY4"]
+    Learn1 --> Ipset1["XRAYUI_BYPASS4"]
+    Static1 --> Net1["XRAYUI_BYPASS4_NET"]
+    Learn2 --> Ipset2["XRAYUI_PROXY4"]
+    Static2 --> Net2["XRAYUI_PROXY4_NET"]
 
-    Ipset1 --> Runtime{"🌐 Incoming packet<br/>(after B/R policy)"}
+    Ipset1 --> Runtime{"Incoming packet<br/>(after B/R policy)"}
+    Net1 --> Runtime
     Ipset2 --> Runtime
-    NoIpset --> Doko["🚪 Xray dokodemo-door"]
+    Net2 --> Runtime
+    NoIpset --> Doko["Xray dokodemo-door"]
 
-    Runtime -->|"dst IP ∈ XRAYUI_BYPASS4<br/>(both modes)"| Direct["↪️ Direct to WAN<br/>(skips Xray)"]
-    Runtime -->|"REDIRECT:<br/>dst IP ∉ XRAYUI_PROXY4"| Direct
+    Runtime -->|"dst IP in a BYPASS set<br/>(both modes)"| Direct["Direct to WAN<br/>(skips Xray)"]
+    Runtime -->|"REDIRECT:<br/>dst IP in no PROXY set"| Direct
     Runtime -->|"Otherwise"| Doko
 
     Doko --> XRules["Xray routing rules<br/>(proxy / freedom / blackhole)"]
-    Direct --> Internet["🌍 Internet"]
+    Direct --> Internet["Internet"]
     XRules --> Internet
 
     style Start fill:#4a9eff,color:#fff,stroke:none
     style Mode fill:#ff9800,color:#fff,stroke:none
-    style SkipRegex1 fill:#ffb74d,color:#000,stroke:none
-    style SkipRegex2 fill:#ffb74d,color:#000,stroke:none
+    style Kind1 fill:#ffb74d,color:#000,stroke:none
+    style Kind2 fill:#ffb74d,color:#000,stroke:none
     style Runtime fill:#ff9800,color:#fff,stroke:none
     style ExtractFree fill:#9c27b0,color:#fff,stroke:none
     style ExtractProxy fill:#9c27b0,color:#fff,stroke:none
-    style Resolve1 fill:#9c27b0,color:#fff,stroke:none
-    style Resolve2 fill:#9c27b0,color:#fff,stroke:none
+    style Learn1 fill:#9c27b0,color:#fff,stroke:none
+    style Learn2 fill:#9c27b0,color:#fff,stroke:none
+    style Static1 fill:#9c27b0,color:#fff,stroke:none
+    style Static2 fill:#9c27b0,color:#fff,stroke:none
     style Ipset1 fill:#607d8b,color:#fff,stroke:none
     style Ipset2 fill:#607d8b,color:#fff,stroke:none
+    style Net1 fill:#607d8b,color:#fff,stroke:none
+    style Net2 fill:#607d8b,color:#fff,stroke:none
     style NoIpset fill:#607d8b,color:#fff,stroke:none
     style Doko fill:#9c27b0,color:#fff,stroke:none
     style XRules fill:#4a9eff,color:#fff,stroke:none
     style Direct fill:#4caf50,color:#fff,stroke:none
     style Internet fill:#4caf50,color:#fff,stroke:none
-    style RuntimeAll fill:#4a9eff,color:#fff,stroke:none
     style Ignored1 fill:#f44336,color:#fff,stroke:none
     style Ignored2 fill:#f44336,color:#fff,stroke:none
 ```
 
-The top half of the chart is **build-time**: when the Xray config is applied, XRAYUI extracts domains and resolves them once to populate the ipset. The bottom half is **runtime**: iptables matches the packet's destination IP against the ipset and decides whether it enters Xray or goes directly to WAN.
+The top half of the chart runs every time dnsmasq starts while Xray is running. Nothing is resolved in advance: each domain becomes a dnsmasq `ipset=` rule, and a domain's addresses land in the set only when a device looks that domain up through the router's DNS. `geoip:`, IP and CIDR entries are loaded into a separate `_NET` set in one go. The bottom half is **runtime**: iptables matches the packet's destination IP against the sets and decides whether it enters Xray or goes directly to WAN.
 
 > [!note]
-> The `dst ∈ XRAYUI_BYPASS4 → RETURN` rule is active in **both** modes (`BYPASS` and `REDIRECT`). `REDIRECT` additionally installs `dst ∉ XRAYUI_PROXY4 → RETURN`, so only packets whose destination IP landed in the "proxied" set actually reach Xray.
+> The `dst ∈ XRAYUI_BYPASS4 / XRAYUI_BYPASS4_NET → RETURN` rules are active in **both** modes (`BYPASS` and `REDIRECT`). `REDIRECT` additionally installs `dst ∉ XRAYUI_PROXY4 and ∉ XRAYUI_PROXY4_NET → RETURN`, so only packets whose destination IP landed in a "proxied" set actually reach Xray.
 
-::: note
-Regex-based domains (entries starting with the `regexp:` prefix) cannot be inserted into ipsets and are ignored by this feature. They still apply inside Xray’s own matching engine.
-:::
+#### Things to know
+
+- **Cached DNS answers.** A device that resolved a domain before a rule was added, or before Xray restarted, keeps using that answer and can go direct until it looks the domain up again. XRAYUI narrows this gap: in `REDIRECT` mode the learned addresses are saved every 30 minutes and when Xray stops, restored when it starts, and the domains written directly in the rules (plus the first domains of newly added geosite tags) are looked up right after dnsmasq starts. DNS answers handed to devices are also capped at one hour in `BYPASS` and `REDIRECT` modes, so a device asks again within an hour at most. Flushing the device's DNS cache or restarting the browser covers the rest.
+- **Encrypted DNS on the device.** DoH/DoT in the browser, Android Private DNS and iCloud Private Relay never ask the router, so their destinations never reach the set. Merlin's **Prevent client auto DoH** option stops browsers that switch to DoH on their own.
+- **Unsupported entries.** `regexp:`, `keyword:`, `dotless:`, plain words without a dot, negated `geoip:!` entries and domains with non-Latin letters cannot be expressed as an ipset (international domains work when written in punycode, `xn--...`). They still work inside Xray, but this feature skips them and lists them in the log.
+- **Rules without a destination.** Rules that match only by source device, inbound, port or protocol have no domain or IP to put into a set, so in `REDIRECT` mode they have no effect.
+- **Expiry.** Learned addresses expire 24 hours after the last lookup through dnsmasq. Removing a proxied domain from the rules clears the learned addresses.
 
 ::: tip
-In `REDIRECT` mode, explicit rules that send domains to `FREEDOM` become redundant and can be removed.
+In `REDIRECT` mode, rules that send domains to `FREEDOM` add nothing to the ipset, but they still matter inside Xray: a direct rule for `x.example.com` placed above a proxy rule for `example.com` keeps that subdomain direct.
 :::
 
 ### Prevent DNS leaks

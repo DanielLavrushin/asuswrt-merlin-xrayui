@@ -1,0 +1,16 @@
+#!/bin/sh
+[ "${1:-}" = get ] || exit 0
+key=$(printf '%s' "${2:-}" | tr -cd 'A-Za-z0-9_')
+eval "override=\${NVRAM_$key-__unset__}"
+if [ "$override" != "__unset__" ]; then
+    printf '%s\n' "$override"
+    exit 0
+fi
+case "$key" in
+lan_ifname) echo br0 ;;
+wl0_ifname) echo eth6 ;;
+wl1_ifname) echo eth7 ;;
+wan0_ifname) echo "${FW_WAN_IF:-eth0}" ;;
+wan0_ipaddr) echo 192.0.2.3 ;;
+*) echo "" ;;
+esac

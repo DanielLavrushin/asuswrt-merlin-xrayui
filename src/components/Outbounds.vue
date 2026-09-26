@@ -34,9 +34,9 @@
           <tr v-show="!proxy.isSystem()" class="proxy-row">
             <th class="drag-handle" aria-label="Drag to reorder">
               <span class="grip drag-handle" aria-hidden="true"></span>
-              {{ proxy.surl ? '🔗' : '' }}{{ proxy.subPool?.enabled ? '🔄' : '' }}
+              {{ proxy.surl ? '🔗' : '' }}<span v-if="proxy.subPool?.enabled && !proxy.surl" :class="{ 'pool-inactive': !fallbackActive }" :title="fallbackActive ? '' : $t('com.Outbounds.hint_pool_inactive')">🔄</span>
               {{ proxy.tag == '' ? 'no tag' : proxy.tag! }}
-              <span v-if="isRunning && check_connection && connectionStatus[proxy.tag]" class="connection-status">
+              <span v-if="isRunning && check_connection && connectionStatus[proxy.tag]" class="connection-status" :title="statusTitle(proxy.tag)">
                 {{ connectionStatus[proxy.tag]?.alive ? '🟢' : connectionStatus[proxy.tag]?.alive === false ? '🔴' : '🟡' }}
               </span>
             </th>
@@ -105,6 +105,8 @@
   import { useI18n } from 'vue-i18n';
   import RtlsScanner from './RtlsScanner.vue';
 
+  type OutboundStatus = { alive?: boolean; delay?: number; reason?: string };
+
   export default defineComponent({
     name: 'Outbounds',
     emits: ['show-transport', 'show-sniffing'],
@@ -121,7 +123,7 @@
       const availableProxies = ref<XrayProtocolOption[]>(xrayProtocols.filter((p) => p.modes & XrayProtocolMode.Outbound));
       const selectedProxyType = ref<string>();
       const selectedProxy = ref<any>();
-      const connectionStatus = ref<Record<string, { alive?: boolean }>>({});
+      const connectionStatus = ref<Record<string, OutboundStatus>>({});
       const uiResponse = inject<Ref<EngineResponseConfig>>('uiResponse')!;
       const check_connection = ref(false);
       const proxyModal = ref();
@@ -137,7 +139,7 @@
               .reduce((acc, proxy) => {
                 acc[proxy.tag!] = { alive: undefined };
                 return acc;
-              }, {} as Record<string, { alive?: boolean }>);
+              }, {} as Record<string, OutboundStatus>);
           }
         },
         { immediate: true }
@@ -158,11 +160,20 @@
         await engine.submit(SubmitActions.checkConnectionStatus, null, 2000);
         const result = await engine.getConnectionStatus();
         if (!result) return;
-        const map: Record<string, { alive: boolean }> = {};
+        const map: Record<string, OutboundStatus> = {};
         Object.values(result).forEach((entry: any) => {
-          map[entry.outbound_tag] = { alive: entry.alive };
+          map[entry.outbound_tag] = { alive: entry.alive === true, delay: entry.delay, reason: entry.last_error_reason };
         });
         connectionStatus.value = map;
+      };
+
+      const fallbackActive = computed(() => !!uiResponse.value.xray?.subscription_auto_fallback && !!uiResponse.value.xray?.check_connection);
+
+      const statusTitle = (tag: string) => {
+        const status = connectionStatus.value[tag];
+        if (!status || status.alive === undefined) return '';
+        if (status.alive) return status.delay !== undefined ? `${status.delay} ms` : '';
+        return status.reason || t('com.Outbounds.status_unreachable');
       };
 
       const showImportModal = () => {
@@ -287,6 +298,8 @@
         parserModal,
         connectionStatus,
         check_connection,
+        fallbackActive,
+        statusTitle,
         showImportModal,
         show_transport,
         edit_proxy,
@@ -302,5 +315,9 @@
   .connection-status {
     float: right;
     margin: 0 4px 0 10px;
+  }
+  .pool-inactive {
+    opacity: 0.35;
+    cursor: help;
   }
 </style>

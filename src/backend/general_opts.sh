@@ -11,10 +11,13 @@ apply_general_options() {
     local old_geosite_url="${geosite_url:-$DEFAULT_GEOSITE_URL}"
     local old_geoip_url="${geoip_url:-$DEFAULT_GEOIP_URL}"
 
-    local temp_config="/tmp/xray_server_config_new.json"
-    local json_content=$(cat "$XRAY_CONFIG_FILE")
-
     local genopts=$(reconstruct_payload)
+
+    if ! printf '%s' "$genopts" | jq -e 'type == "object"' >/dev/null 2>&1; then
+        log_error "General options payload is empty or invalid; nothing was changed."
+        update_loading_progress "Error: settings upload was empty or corrupted. Try again." 100
+        return 1
+    fi
 
     log_debug "General options received: $genopts"
     # Extract all general options in a single jq call
@@ -59,6 +62,7 @@ apply_general_options() {
         "subscription_filters=" + (((.subscriptions.filters // []) | join("|")) | @sh)
     '); then
         log_error "Failed to parse general options payload."
+        update_loading_progress "Error: failed to read the settings. Nothing was changed." 100
         return 1
     fi
     eval "$_genopts_vars"
@@ -75,7 +79,7 @@ apply_general_options() {
     local error_val="none"
     [ "$logs_error" = "true" ] && error_val="$logs_error_path"
 
-    json_content=$(echo "$json_content" | jq \
+    if ! jq_update_file "$XRAY_CONFIG_FILE" \
         --arg loglevel "$log_level" \
         --arg access "$access_val" \
         --arg error "$error_val" \
@@ -85,16 +89,11 @@ apply_general_options() {
         | .log.access = $access
         | .log.error = $error
         | if $dns_log then .log.dnsLog = true else del(.log.dnsLog) end
-        ')
-
-    if [ -z "$json_content" ]; then
+        '; then
         log_error "Failed to build xray config JSON. Aborting."
+        update_loading_progress "Error: failed to update the Xray configuration. Nothing was changed." 100
         return 1
     fi
-
-    echo "$json_content" >"$temp_config"
-    cp "$temp_config" "$XRAY_CONFIG_FILE"
-    rm -f "$temp_config"
 
     update_xrayui_config "logs_dnsmasq" "$logs_dnsmasq"
     update_xrayui_config "github_proxy" "$github_proxy"
@@ -138,24 +137,25 @@ apply_general_options() {
     cron_geodata_add
     cron_subscription_refresh_add
     cron_subscription_fallback_add
+    cron_ipset_save_add
 
     # integration scribe
     logs_scribe_integration
 
-    # Check if geodata URLs have changed and update if necessary
-    local geodata_updated=false
+    GEODATA_RESTARTED="false"
     if [ "$old_geosite_url" != "$geosite_url" ] || [ "$old_geoip_url" != "$geoip_url" ]; then
         log_info "Geodata URLs have changed. Updating geodata files..."
         log_debug "Old geosite URL: $old_geosite_url, New: $geosite_url"
         log_debug "Old geoip URL: $old_geoip_url, New: $geoip_url"
         update_community_geodata
-        geodata_updated=true
     fi
 
-    if [ -f "$XRAY_PIDFILE" ] && [ "$geodata_updated" = false ]; then
+    if [ -f "$XRAY_PIDFILE" ] && [ "$GEODATA_RESTARTED" != "true" ]; then
         update_loading_progress "Restarting Xray service..."
         restart
     fi
+
+    return 0
 }
 
 apply_general_options_hooks() {

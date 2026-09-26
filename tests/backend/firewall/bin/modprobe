@@ -1,0 +1,3 @@
+#!/bin/sh
+printf "modprobe %s\n" "$*" >>"${FW_STATE:?}/calls.log"
+exit 0

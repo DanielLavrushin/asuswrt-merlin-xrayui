@@ -7,14 +7,12 @@
       <label class="config-size-label"> {{ configSize }}/8000 ({{ ((configSize / 8000) * 100).toFixed(0) }}%) </label>
     </div>
     <template v-slot:footer>
-      <label>
+      <label class="hide-sensitive">
         <input type="checkbox" v-model="hideSenseData" @change="hide_sense_data" />
         {{ $t('com.ConfigModal.hide_sensetive_data') }}
       </label>
       <input class="button_gen button_gen_small" type="button" :value="$t('com.ConfigModal.save_to_file')" @click.prevent="save_to_file" />
-      <a class="button_gen button_gen_small" :href="configUri" target="_blank">
-        {{ $t('com.ConfigModal.open_raw') }}
-      </a>
+      <input class="button_gen button_gen_small" type="button" :value="$t('com.ConfigModal.open_raw')" @click.prevent="open_raw" />
     </template>
   </modal>
 </template>
@@ -26,6 +24,7 @@
   import 'vue-json-pretty/lib/styles.css';
   import engine from '@modules/Engine';
   import xrayConfig from '@modules/XrayConfig';
+  import { hideSensitiveData } from '@modules/SensitiveData';
 
   export default defineComponent({
     name: 'ConfigModal',
@@ -38,73 +37,13 @@
       let originalConfig: any = {};
       const configJson = ref<any>(null);
       const configSize = ref<number>(0);
-      const configUri = '/ext/xrayui/xray-config.json';
       const hideSenseData = ref<boolean>(true);
-      const sensitiveKeys = [
-        'surl',
-        'secretKey',
-        'address',
-        'password',
-        'serverName',
-        'publicKey',
-        'shortIds',
-        'privateKey',
-        'shortId',
-        'email',
-        'id',
-        'user',
-        'pass',
-        'certificate',
-        'key',
-        'mac',
-        'spiderX',
-        'path',
-        'dns',
-        'servers',
-        'host'
-      ];
 
-      const maskObject = (obj: any): any => {
-        if (Array.isArray(obj)) {
-          return obj.map((item) => maskObject(item));
-        } else if (obj !== null && typeof obj === 'object') {
-          const newObj: any = {};
-          for (const key in obj) {
-            if (Object.prototype.hasOwnProperty.call(obj, key)) {
-              if (sensitiveKeys.includes(key)) {
-                // If the value is an array, process each element.
-                if (Array.isArray(obj[key])) {
-                  newObj[key] = obj[key].map((item) => (typeof item === 'string' || typeof item === 'number' ? hide_chars(item) : maskObject(item)));
-                } else if (typeof obj[key] === 'string' || typeof obj[key] === 'number') {
-                  newObj[key] = hide_chars(obj[key]);
-                } else {
-                  newObj[key] = maskObject(obj[key]);
-                }
-              } else {
-                newObj[key] = maskObject(obj[key]);
-              }
-            }
-          }
-          return newObj;
-        } else {
-          return obj;
-        }
-      };
-
-      // Replaces every character in a string with '*' or returns a masked number.
-      const hide_chars = (str: string | number | undefined) => {
-        if (str === undefined) return undefined;
-        if (typeof str === 'string') return str.replace(/./g, '*');
-        return Number(str.toString().replace(/.\d/g, '0'));
-      };
-
-      // Loads the configuration from the URI and updates reactive state.
       const load = async () => {
         try {
-          const cfg = engine.prepareServerConfig(xrayConfig);
-          originalConfig = cfg;
-          configJson.value = cfg;
-          configSize.value = JSON.stringify(cfg).length;
+          const json = JSON.stringify(engine.prepareServerConfig(xrayConfig));
+          originalConfig = JSON.parse(json);
+          configSize.value = json.length;
           hide_sense_data();
         } catch (error) {
           console.error('Error loading config:', error);
@@ -112,8 +51,16 @@
       };
 
       const show = async () => {
+        hideSenseData.value = true;
         await load();
         modal.value.show();
+      };
+
+      const open_raw = () => {
+        engine.openText(
+          engine.getWebData<string>('xray-config', { responseType: 'text' }).then((response) => response.data),
+          'application/json;charset=utf-8'
+        );
       };
 
       const save_to_file = () => {
@@ -131,12 +78,7 @@
       };
 
       const hide_sense_data = () => {
-        if (hideSenseData.value) {
-          const clone = JSON.parse(JSON.stringify(originalConfig));
-          configJson.value = maskObject(clone);
-        } else {
-          configJson.value = originalConfig;
-        }
+        configJson.value = hideSenseData.value ? hideSensitiveData(originalConfig) : originalConfig;
       };
 
       return {
@@ -144,7 +86,7 @@
         configJson,
         configSize,
         hideSenseData,
-        configUri,
+        open_raw,
         show,
         save_to_file,
         hide_sense_data
@@ -175,5 +117,15 @@
   .config-size-label {
     float: right;
     font-size: 10px;
+  }
+
+  .hide-sensitive {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .hide-sensitive input {
+    margin: 0;
   }
 </style>

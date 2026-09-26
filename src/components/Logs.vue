@@ -89,7 +89,7 @@
           </div>
         </div>
         <template v-slot:footer>
-          <a class="button_gen button_gen_small" :href="file" target="_blank">raw</a>
+          <input class="button_gen button_gen_small" type="button" value="raw" @click.prevent="engine.openText(logsContent)" />
           <input class="button_gen button_gen_small" type="button" :value="$t('labels.close')" @click.prevent="logsModal.close" />
         </template>
       </modal>
@@ -98,7 +98,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, computed, reactive } from 'vue';
+  import { ref, computed, reactive, watch } from 'vue';
   import axios from 'axios';
   import engine, { SubmitActions } from '@/modules/Engine';
   import { XrayLogObject } from '@/modules/CommonObjects';
@@ -110,10 +110,11 @@
   const logsModal = ref();
   let refreshInterval: number;
 
-  const FILE_ACCESS = '/ext/xrayui/xray_access_partial.asp';
-  const FILE_ERROR = '/ext/xrayui/xray_error_partial.asp';
+  const FILE_ACCESS = '/ext/xrayui/xray_access_partial.cab';
+  const FILE_ERROR = '/ext/xrayui/xray_error_partial.cab';
   const file = ref(FILE_ACCESS);
   const logsContent = ref('');
+  watch(file, () => (logsContent.value = ''));
   const modal_width = ref('85%');
 
   const ACCESS_RE =
@@ -255,8 +256,12 @@
     if (!follow.value) return;
     await engine.submit(SubmitActions.fetchXrayLogs);
     await new Promise((resolve) => setTimeout(resolve, 2000));
-    const response = await axios.get(file.value);
-    if (response.data) logsContent.value = response.data;
+    try {
+      const response = await axios.get<string>(file.value, { responseType: 'text', headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' } });
+      logsContent.value = response.data ?? '';
+    } catch (error) {
+      console.error('Error fetching logs:', error);
+    }
   };
 
   const display = async () => {

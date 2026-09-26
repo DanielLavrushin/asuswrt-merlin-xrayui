@@ -54,15 +54,18 @@ api_add_outbound() {
   log_debug "API: added outbound"
 }
 
-# Hot-swap an outbound: remove old, add replacement.
-# $1 = tag to replace
-# $2 = full outbound JSON (subPool/surl will be stripped for the API call)
 api_swap_outbound() {
   local tag="$1"
   local outbound_json="$2"
+  local previous_json="$3"
 
   api_remove_outbound "$tag" || return 1
-  api_add_outbound "$outbound_json" || return 1
+  if ! api_add_outbound "$outbound_json"; then
+    if [ -n "$previous_json" ] && api_add_outbound "$previous_json"; then
+      log_warn "API: restored the previous outbound '$tag'"
+    fi
+    return 1
+  fi
   log_info "API: hot-swapped outbound '$tag'"
 }
 
@@ -147,33 +150,41 @@ api_get_connected_clients() {
 
 }
 
+api_fetch_observatory() {
+  local cfg host port url raw
+
+  cfg=$(api_get_current_config)
+  [ -f "$cfg" ] || return 1
+
+  host=$(jq -r '.inbounds[]? | select(.tag == "sys:metrics_in") | .listen' "$cfg" 2>/dev/null)
+  port=$(jq -r '.inbounds[]? | select(.tag == "sys:metrics_in") | .port' "$cfg" 2>/dev/null)
+  if [ -z "$host" ] || [ -z "$port" ]; then
+    log_debug "Metrics inbound is not configured in $cfg" >&2
+    return 1
+  fi
+
+  url="http://${host}:${port}/debug/vars"
+  if ! raw=$(curl -fsS --max-time 5 "$url" 2>/dev/null); then
+    log_debug "Failed to fetch observatory from $url" >&2
+    return 1
+  fi
+
+  printf '%s' "$raw" | jq -ce '.observatory // {} | objects' 2>/dev/null
+}
+
 api_get_connection_status() {
-  local cfg api_addr host port url observatory
+  local obs tmp
 
   load_xrayui_config
 
-  cfg=$(api_get_current_config)
-
-  host=$(jq -r '
-    .inbounds[]
-    | select(.tag == "sys:metrics_in")
-    | .listen
-  ' "$cfg")
-  port=$(jq -r '
-    .inbounds[]
-    | select(.tag == "sys:metrics_in")
-    | .port
-  ' "$cfg")
-
-  api_addr="${host}:${port}"
-  url="http://${api_addr}/debug/vars"
-
-  if ! curl -fsS --max-time 5 "$url" |
-    jq '.observatory' \
-      >"$XRAYUI_CONNECTION_STATUS_FILE"; then
-    log_error "Failed to fetch or parse observatory from $url"
+  if ! obs=$(api_fetch_observatory); then
+    log_error "Failed to fetch or parse observatory data"
     return 1
   fi
+
+  tmp="$XRAYUI_CONNECTION_STATUS_FILE.tmp.$$"
+  printf '%s\n' "$obs" | jq '.' >"$tmp" 2>/dev/null && mv -f "$tmp" "$XRAYUI_CONNECTION_STATUS_FILE"
+  rm -f "$tmp"
 }
 
 api_apply_configuration() {
@@ -184,16 +195,12 @@ api_apply_configuration() {
     return
   fi
 
-  local json_content=$(cat "$XRAY_CONFIG_FILE")
+  local filter
   api_write_config
 
   if [ "$check_connection" = "true" ]; then
-    json_content=$(
-      echo "$json_content" |
-        jq '
-            # ensure rules exists
+    filter='
             .routing.rules //= [] |
-            # check if already present
             (.routing.rules | map(.name=="sys:metrics") | any) as $has |
             if $has then
               .
@@ -209,16 +216,13 @@ api_apply_configuration() {
               ] + .routing.rules
             end
           '
-    )
   else
-    json_content=$(
-      echo "$json_content" |
-        jq '
+    filter='
             .routing.rules //= [] |
             .routing.rules |= map(select(.name != "sys:metrics"))
           '
-    )
   fi
 
-  echo "$json_content" >"$XRAY_CONFIG_FILE"
+  jq_update_file "$XRAY_CONFIG_FILE" "$filter" ||
+    log_error "Failed to update the API routing rule; $XRAY_CONFIG_FILE was left unchanged."
 }

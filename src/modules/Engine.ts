@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { gzip } from 'pako';
 import { xrayConfig, XrayObject } from './XrayConfig';
 import {
@@ -370,6 +370,29 @@ export class Engine {
     }
   };
 
+  public async getWebData<T>(name: string, config: AxiosRequestConfig = {}): Promise<AxiosResponse<T>> {
+    const request = { ...config, headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache', Expires: '0', ...config.headers } };
+    try {
+      return await axios.get<T>(`/ext/xrayui/${name}.cab`, request);
+    } catch (e) {
+      if ((e as AxiosError).response?.status !== 404) throw e;
+      return axios.get<T>(`/ext/xrayui/${name}.json?_=${Date.now()}`, request);
+    }
+  }
+
+  public openText(text: string | Promise<string>, type = 'text/plain;charset=utf-8'): void {
+    const tab = window.open('', '_blank');
+    Promise.resolve(text)
+      .then((content) => {
+        const url = URL.createObjectURL(new Blob([content], { type }));
+        if (tab) tab.location.href = url;
+      })
+      .catch((e) => {
+        tab?.close();
+        console.error('[xrayui] unable to open the file:', e);
+      });
+  }
+
   public async fetchGithubJson<T = any>(url: string, proxy: string | undefined | null, config?: any): Promise<T> {
     const proxied = this.githubProxyUrl(url, proxy);
     if (proxied !== url) {
@@ -637,25 +660,13 @@ export class Engine {
   }
 
   async getConnectionStatus(): Promise<EngineConnectionStatus | undefined> {
-    const response = await axios.get<EngineConnectionStatus>(`/ext/xrayui/connection-status.json?_=${Date.now()}`, {
-      headers: {
-        'Cache-Control': 'no-cache',
-        Pragma: 'no-cache',
-        Expires: '0'
-      }
-    });
+    const response = await this.getWebData<EngineConnectionStatus>('connection-status');
     let responseConfig = response.data;
     return responseConfig;
   }
 
   async getXrayResponse({ light = false }: { light?: boolean } = {}): Promise<EngineResponseConfig> {
-    const response = await axios.get<EngineResponseConfig>(`/ext/xrayui/xray-ui-response.json?_=${Date.now()}`, {
-      headers: {
-        'Cache-Control': 'no-cache',
-        Pragma: 'no-cache',
-        Expires: '0'
-      }
-    });
+    const response = await this.getWebData<EngineResponseConfig>('xray-ui-response');
     let responseConfig = response.data;
     if (!light) {
       await this.loadSubscriptions(responseConfig);
@@ -669,13 +680,7 @@ export class Engine {
       return new EngineSubscriptions();
     }
     try {
-      const response = await axios.get<Record<string, string[]>>(`/ext/xrayui/subscriptions.json?_=${Date.now()}`, {
-        headers: {
-          'Cache-Control': 'no-cache',
-          Pragma: 'no-cache',
-          Expires: '0'
-        }
-      });
+      const response = await this.getWebData<Record<string, string[]>>('subscriptions');
       this.subscriptionsNotFound = false;
       if (resp.xray) {
         resp.xray.subscriptions ??= new EngineSubscriptions();
@@ -696,13 +701,7 @@ export class Engine {
 
   async loadGeoTags(): Promise<EngineGeoTags | undefined> {
     try {
-      const response = await axios.get<EngineGeoTags>(`/ext/xrayui/geotags.json?_=${Date.now()}`, {
-        headers: {
-          'Cache-Control': 'no-cache',
-          Pragma: 'no-cache',
-          Expires: '0'
-        }
-      });
+      const response = await this.getWebData<EngineGeoTags>('geotags');
       window.xray.geotags = response.data;
       return plainToInstance(EngineGeoTags, response.data);
     } catch (e) {
@@ -713,13 +712,7 @@ export class Engine {
 
   async loadsRtlsResults(): Promise<string | undefined> {
     try {
-      const response = await axios.get<string>(`/ext/xrayui/rtls-results.json?_=${Date.now()}`, {
-        headers: {
-          'Cache-Control': 'no-cache',
-          Pragma: 'no-cache',
-          Expires: '0'
-        }
-      });
+      const response = await this.getWebData<string>('rtls-results');
       return response.data;
     } catch (e) {
       console.error('Error loading rtls results:', e);
@@ -766,13 +759,7 @@ export class Engine {
   async loadXrayConfig(config?: XrayObject): Promise<XrayObject | null> {
     try {
       if (!config) {
-        const response = await axios.get<XrayObject>(`/ext/xrayui/xray-config.json?_=${Date.now()}`, {
-          headers: {
-            'Cache-Control': 'no-cache',
-            Pragma: 'no-cache',
-            Expires: '0'
-          }
-        });
+        const response = await this.getWebData<XrayObject>('xray-config');
         this.appliedConfigJson = JSON.stringify(response.data);
         this.appliedBaseline = undefined;
         config = plainToInstance(XrayObject, response.data);
@@ -805,9 +792,7 @@ export class Engine {
 
     let disk: XrayObject;
     try {
-      const response = await axios.get<XrayObject>(`/ext/xrayui/xray-config.json?_=${Date.now()}`, {
-        headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache', Expires: '0' }
-      });
+      const response = await this.getWebData<XrayObject>('xray-config');
       disk = response.data;
     } catch {
       return;

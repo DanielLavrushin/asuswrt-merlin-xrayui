@@ -373,7 +373,6 @@
   import { EngineResponseConfig, EngineSubscriptions } from '@/modules/Engine';
   import engine, { SubmitActions } from '@/modules/Engine';
   import { XrayProtocol } from '@/modules/Options';
-  import axios from 'axios';
 
   const props = defineProps<{ config: XrayObject }>();
   const ui = inject<Ref<EngineResponseConfig>>('uiResponse')!;
@@ -534,9 +533,7 @@
       await engine.submit(SubmitActions.subscribeFetchProtocols, options.subscriptions?.links?.join('|'));
     }, false);
     try {
-      const subsResp = await axios.get<Record<string, string[]>>(`/ext/xrayui/subscriptions.json?_=${Date.now()}`, {
-        headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache', Expires: '0' }
-      });
+      const subsResp = await engine.getWebData<Record<string, string[]>>('subscriptions');
       if (ui.value.xray) {
         if (!ui.value.xray.subscriptions) {
           ui.value.xray.subscriptions = new EngineSubscriptions();

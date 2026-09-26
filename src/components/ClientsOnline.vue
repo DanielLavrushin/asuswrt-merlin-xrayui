@@ -28,7 +28,6 @@
 
 <script lang="ts">
   import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue';
-  import axios from 'axios';
   import engine, { SubmitActions } from '@/modules/Engine';
   import xrayConfig from '@/modules/XrayConfig';
   import { XrayProtocol } from '@/modules/Options';
@@ -53,7 +52,7 @@
       // Fetch client data from the server.
       const fetchClients = async () => {
         try {
-          const response = await axios.get('/ext/xrayui/clients-online.json');
+          const response = await engine.getWebData<Client[]>('clients-online');
           clients.value = response.data;
         } catch (error) {
           console.warn('Error fetching clients:', error);

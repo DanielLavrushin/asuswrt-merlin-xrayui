@@ -85,6 +85,35 @@ const findBinary = (name: string) =>
     .map((d) => path.join(d, name))
     .find((p) => fs.existsSync(p) && fs.statSync(p).isFile());
 const EXTERNAL = { RS_EXT_PRINTF: findBinary('printf') ?? '', RS_EXT_ECHO: findBinary('echo') ?? '' };
+const poolLink = (i: number, label = `Pool ${i}`) =>
+  `vless://11111111-2222-3333-4444-${String(i).padStart(12, '0')}@198.18.${Math.floor(i / 250)}.${(i % 250) + 1}:443?encryption=none&security=reality&pbk=${'k'.repeat(200)}&type=tcp#${encodeURIComponent(label)}`;
+const POOL_LABELS: Record<number, string> = { 7: 'Германия Берлин', 123: 'Netherlands AMS', 200: 'ŁÓDŹ Centrum', 250: 'ΕΛΛΆΔΑ Αθήνα', 449: 'ÄRGER Wien' };
+const POOL = Array.from({ length: 450 }, (_, i) => poolLink(i, POOL_LABELS[i])).join('\n') + '\n';
+const POOL_ENV = {
+  ...EXTERNAL,
+  RS_POOL_FILTER: ' германия | NETHERLANDS |ärger|łódź|ελλάδα|  ',
+  RS_POOL_LABEL: encodeURIComponent('Pool 420'),
+  RS_POOL_ADDRESS: 'vless://gone@198.18.1.171:443#nothing'
+};
+const BIG_GEODATA = Array.from({ length: 9000 }, (_, i) => `domain:list-${i}.example.net`).join('\n');
+const BIG_CONFIG_RAW = JSON.stringify({
+  log: { loglevel: 'warning' },
+  inbounds: [],
+  outbounds: [{ tag: 'direct', protocol: 'freedom' }],
+  routing: { rules: Array.from({ length: 3000 }, (_, i) => ({ type: 'field', domain: [`domain:big-${hex(i).slice(0, 24)}.example.com`], outboundTag: 'direct' })) }
+});
+const chunkSettings = (payload: string) =>
+  frontend
+    .splitPayload(payload, 2048)
+    .map((chunk, i) => `xray_payload${i} ${chunk}`)
+    .join('\n') + '\n';
+const DNS_DOMAINS = Array.from({ length: 4000 }, (_, i) => `domain:host-${i}.example.org`);
+const DNS_CONFIG = JSON.stringify({
+  inbounds: [],
+  outbounds: [{ tag: 'direct', protocol: 'freedom' }],
+  routing: { rules: [{ idx: 1, type: 'field', domain: DNS_DOMAINS, outboundTag: 'direct' }] },
+  dns: { servers: [{ address: '1.1.1.1', rules: [1] }] }
+});
 const APPLIED = JSON.stringify({ log: { loglevel: 'debug' }, inbounds: [], outbounds: [{ tag: 'direct', protocol: 'freedom' }] });
 const loadingResponse = (message: string) => JSON.stringify({ xray: { profile: 'config.json' }, loading: { message, progress: 100 } });
 
@@ -177,10 +206,64 @@ const scenarios: Record<string, Scenario> = {
     env: EXTERNAL,
     files: { 'opt/etc/xray/config.json': SUB_CONFIG, 'sub/big': Buffer.from(BIG_LINKS).toString('base64'), 'sub/json': SUB_JSON }
   },
+  'subscription picked by its name': {
+    steps: ['subs'],
+    env: EXTERNAL,
+    files: {
+      'opt/etc/xray/config.json': JSON.stringify({
+        inbounds: [],
+        outbounds: [{ tag: 'Узел 7', protocol: 'vless', surl: 'https://sub.example/named', settings: { vnext: [{ address: '203.0.113.250', port: 443, users: [{ id: 'old' }] }] } }]
+      }),
+      'sub/named': Array.from({ length: 20 }, (_, i) => poolLink(i, `Узел ${i}`)).join('\n') + '\n'
+    }
+  },
   'large plain subscription': {
     steps: ['subs'],
     env: EXTERNAL,
     files: { 'opt/etc/xray/config.json': SUB_CONFIG, 'sub/big': BIG_LINKS, 'sub/json': Buffer.from(SUB_JSON).toString('base64') }
+  },
+  'large failover pool': { steps: ['pool_ops'], env: POOL_ENV, files: { pool: POOL } },
+  'config update that emits two documents': { steps: ['update_file'], env: { RS_FILTER: '., .' }, files: { 'opt/etc/xray/config.json': CONFIG } },
+  'config update through a symlink': {
+    steps: ['update_file'],
+    env: { RS_FILTER: '.log.loglevel = "info"' },
+    files: { 'store/real.json': CONFIG },
+    dirs: ['opt/etc/xray'],
+    links: { 'opt/etc/xray/config.json': 'store/real.json' }
+  },
+  'apply a config over 128 KiB': {
+    steps: ['apply'],
+    env: EXTERNAL,
+    files: { 'opt/etc/xray/config.json': CONFIG, 'jffs/addons/custom_settings.txt': chunkSettings(frontend.compressPayload(BIG_CONFIG_RAW)) }
+  },
+  'save a custom geodata list over 128 KiB': {
+    steps: ['geodata_save'],
+    env: EXTERNAL,
+    dirs: ['share/data'],
+    files: { 'jffs/addons/custom_settings.txt': chunkSettings(frontend.compressPayload(JSON.stringify({ tag: 'biglist', content: BIG_GEODATA }))) }
+  },
+  'save a custom geodata list loaded back from the router': {
+    steps: ['geodata_save'],
+    dirs: ['share/data'],
+    files: { 'jffs/addons/custom_settings.txt': chunkSettings(frontend.compressPayload(JSON.stringify({ tag: 'short', content: 'domain:a.example\ndomain:b.example\n\n' }))) }
+  },
+  'save a custom geodata list with a path in its tag': {
+    steps: ['geodata_save'],
+    dirs: ['share/data'],
+    files: { 'jffs/addons/custom_settings.txt': chunkSettings(frontend.compressPayload(JSON.stringify({ tag: '../escape', content: 'domain:x.example' }))) }
+  },
+  'config update': { steps: ['update_file'], env: { RS_FILTER: '.log.loglevel = "info"' }, files: { 'opt/etc/xray/config.json': CONFIG } },
+  'config update with a broken filter': { steps: ['update_file'], env: { RS_FILTER: '.log.loglevel = ' }, files: { 'opt/etc/xray/config.json': CONFIG } },
+  'config update that is not an object': { steps: ['update_file'], env: { RS_FILTER: '.inbounds' }, files: { 'opt/etc/xray/config.json': CONFIG } },
+  'general options save with a large config': {
+    steps: ['save_general'],
+    env: EXTERNAL,
+    files: { 'opt/etc/xray/config.json': SUB_CONFIG, 'jffs/addons/custom_settings.txt': SETTINGS }
+  },
+  'apply with large DNS rule domains': {
+    steps: ['apply'],
+    env: EXTERNAL,
+    files: { 'opt/etc/xray/config.json': CONFIG, 'jffs/addons/custom_settings.txt': `xray_payload0 ${DNS_CONFIG}\n` }
   },
   apply: {
     steps: ['apply'],
@@ -260,7 +343,17 @@ async function run(shell: string[], scenario: Scenario): Promise<Result> {
     if (out.code === 70) throw new Error(out.stderr);
     const read = (rel: string) => (fs.existsSync(at(rel)) && fs.statSync(at(rel)).isFile() ? fs.readFileSync(at(rel), 'utf8') : undefined);
     const snapshot: Record<string, string | undefined> = {};
-    for (const rel of ['www/xray-ui-response.json', 'events.log', 'decoded', 'opt/etc/xray/config.json', 'jffs/addons/custom_settings.txt']) snapshot[rel] = read(rel);
+    for (const rel of [
+      'www/xray-ui-response.json',
+      'events.log',
+      'decoded',
+      'opt/etc/xray/config.json',
+      'jffs/addons/custom_settings.txt',
+      'share/data/biglist',
+      'share/data/short',
+      'share/escape'
+    ])
+      snapshot[rel] = read(rel);
     return {
       response: JSON.parse(snapshot['www/xray-ui-response.json'] ?? '{}'),
       events: (snapshot['events.log'] ?? '').split('\n').filter((l) => l !== ''),
@@ -287,6 +380,32 @@ afterAll(() => {
   fs.rmSync(BINS_ROOT, { recursive: true, force: true });
 });
 
+const LARGE_VALUES: Record<string, string[]> = {
+  'failover.sh': ['pool', 'list', 'labeled', 'matched', 'candidates', 'failed', 'FAILOVER_STATE'],
+  'subscriptions.sh': ['fetched', 'decoded', 'lines', 'cfg'],
+  '_helper.sh': ['decoded', 'raw', 'assembled'],
+  'response.sh': ['incoming_config'],
+  'geodata.sh': ['datfile', 'filecontent'],
+  'general_opts.sh': ['json_content'],
+  'install.sh': ['json_content'],
+  'api.sh': ['json_content']
+};
+
+it('never passes large values to printf, echo or [ in the backend', () => {
+  const offenders: string[] = [];
+  for (const [file, names] of Object.entries(LARGE_VALUES)) {
+    const vars = names.join('|');
+    const ref = `\\$(?:(?:${vars})|\\{(?:${vars})(?!:\\+)(?:\\}|[#%:][^"]*))"`;
+    const pattern = new RegExp(`(\\[ !?\\s*-[nz] "${ref}|\\btest -[nz] "${ref}|\\[ "${ref} !?=|(printf|echo)\\b[^|;]*"${ref})`);
+    fs.readFileSync(path.join(process.cwd(), 'src', 'backend', file), 'utf8')
+      .split('\n')
+      .forEach((line, i) => {
+        if (pattern.test(line)) offenders.push(`${file}:${i + 1}: ${line.trim()}`);
+      });
+  }
+  expect(offenders).toEqual([]);
+});
+
 it('builds the gz fixtures exactly as the frontend submits them', () => {
   expect(GZ.startsWith('gz:')).toBe(true);
   expect(CHUNKS.length).toBeGreaterThan(1);
@@ -297,6 +416,11 @@ it('builds the gz fixtures exactly as the frontend submits them', () => {
   }
   expect(LINKS_JUNK.length).toBeGreaterThan(2048);
   for (const big of [BIG_LINKS, SUB_CONFIG, SUB_JSON]) expect(big.length).toBeGreaterThan(131072);
+  expect(DNS_CONFIG.length).toBeLessThan(131072);
+  expect(POOL.length).toBeGreaterThan(131072);
+  expect(BIG_CONFIG_RAW.length).toBeGreaterThan(131072);
+  expect(BIG_GEODATA.length).toBeGreaterThan(131072);
+  expect(DNS_CONFIG.length * 2).toBeGreaterThan(131072);
   expect(EXTERNAL.RS_EXT_PRINTF).not.toBe('');
   expect(EXTERNAL.RS_EXT_ECHO).not.toBe('');
 });
@@ -462,6 +586,110 @@ describe.each(SHELLS)('response backend under %s', (_label, shell) => {
     });
   });
 
+  describe('subscription picked by its name', () => {
+    it('picks the link whose percent-encoded name matches the outbound tag', async () => {
+      const r = await get('subscription picked by its name');
+      expect(r.events).toContain('process_subscriptions rc=0');
+      const ob = JSON.parse(r.read('opt/etc/xray/config.json') ?? '{}').outbounds[0];
+      expect(ob.tag).toBe('Узел 7');
+      expect(ob.settings.vnext[0].address).toBe('198.18.0.8');
+    });
+  });
+
+  describe('auto-fallback pool over 128 KiB', () => {
+    it('filters, orders and searches the whole pool without jq regex support', async () => {
+      const r = await get('large failover pool');
+      expect(r.stderr).not.toContain('Argument list too long');
+      expect(r.stderr).not.toContain('ONIGURUMA');
+      expect(r.events).toContain('all: 450');
+      expect(r.events).toContain(`filtered: ${[7, 123, 200, 250, 449].map((i) => poolLink(i, POOL_LABELS[i])).join(' ')} `);
+      expect(r.events).toContain('unmatched: 450');
+      expect(r.events).toContain('WARN: Failover: no pool entry matches the rotation filters - using the whole pool');
+      expect(r.events).toContain(`next: ${poolLink(401)}`);
+      expect(r.events).toContain(`origin: ${poolLink(300)}`);
+      expect(r.events).toContain('has known rc=0');
+      expect(r.events).toContain('has unknown rc=1');
+      expect(r.events).toContain('list has rc=0');
+      expect(r.events).toContain(`by label: ${poolLink(420)}`);
+      expect(r.events).toContain(`by address: ${poolLink(420)}`);
+    });
+  });
+
+  describe('jq_update_file', () => {
+    it('updates the file when the filter produces an object', async () => {
+      const r = await get('config update');
+      expect(r.events).toContain('jq_update_file rc=0');
+      expect(JSON.parse(r.read('opt/etc/xray/config.json') ?? '{}').log.loglevel).toBe('info');
+    });
+
+    it.each(['config update with a broken filter', 'config update that is not an object', 'config update that emits two documents'])(
+      'leaves the file untouched and removes its temp files: %s',
+      async (name) => {
+        const r = await get(name);
+        expect(r.events).toContain('jq_update_file rc=1');
+        expect(r.read('opt/etc/xray/config.json')).toBe(CONFIG);
+        expect(r.events).toContain('files: config.json ');
+      }
+    );
+
+    it('writes through a symlinked config and keeps the link', async () => {
+      const r = await get('config update through a symlink');
+      expect(r.events).toContain('jq_update_file rc=0');
+      expect(JSON.parse(r.read('opt/etc/xray/config.json') ?? '{}').log.loglevel).toBe('info');
+      expect(r.events).toContain('files: config.json ');
+    });
+  });
+
+  describe('saving a configuration over 128 KiB', () => {
+    itIf(HAS_BASE64)('saves General Options without emptying a large config', async () => {
+      const r = await get('general options save with a large config');
+      expect(r.stderr).not.toContain('Argument list too long');
+      const config = JSON.parse(r.read('opt/etc/xray/config.json') ?? '{}');
+      expect(config.log.loglevel).toBe('info');
+      expect(config.routing.rules).toHaveLength(BIG_RULES.length);
+      expect(finalProgress(r)).toEqual(['PROGRESS: General settings applied.|100']);
+    });
+
+    it('applies a config whose DNS rule domains grow it past 128 KiB', async () => {
+      const r = await get('apply with large DNS rule domains');
+      expect(r.stderr).not.toContain('Argument list too long');
+      expect(r.events).toContain('apply_config rc=0');
+      const config = JSON.parse(r.read('opt/etc/xray/config.json') ?? '{}');
+      expect(config.routing.rules[0].domain).toHaveLength(DNS_DOMAINS.length);
+      expect(config.dns.servers[0].domains).toHaveLength(DNS_DOMAINS.length);
+    });
+  });
+
+  describe('uploads over 128 KiB', () => {
+    itIf(HAS_BASE64)('applies a configuration whose decoded size is over 128 KiB', async () => {
+      const r = await get('apply a config over 128 KiB');
+      expect(r.stderr).not.toContain('Argument list too long');
+      expect(r.events).toContain('apply_config rc=0');
+      expect(JSON.parse(r.read('opt/etc/xray/config.json') ?? '{}').routing.rules).toHaveLength(3000);
+    });
+
+    itIf(HAS_BASE64)('saves a custom geodata list over 128 KiB', async () => {
+      const r = await get('save a custom geodata list over 128 KiB');
+      expect(r.stderr).not.toContain('Argument list too long');
+      expect(r.events).toContain('geodata_recompile rc=0');
+      expect(r.events).toContain('recompile_all');
+      expect(r.read('share/data/biglist')).toBe(`${BIG_GEODATA}\n`);
+    });
+
+    itIf(HAS_BASE64)('does not add blank lines when a list is saved again', async () => {
+      const r = await get('save a custom geodata list loaded back from the router');
+      expect(r.events).toContain('geodata_recompile rc=0');
+      expect(r.read('share/data/short')).toBe('domain:a.example\ndomain:b.example\n');
+    });
+
+    itIf(HAS_BASE64)('refuses a custom geodata tag that contains a path', async () => {
+      const r = await get('save a custom geodata list with a path in its tag');
+      expect(r.events).toContain('geodata_recompile rc=1');
+      expect(r.events).not.toContain('recompile_all');
+      expect(r.read('share/escape')).toBeUndefined();
+    });
+  });
+
   describe('apply_config', () => {
     it('writes the new configuration without reporting the end of the action itself', async () => {
       const r = await get('apply');
@@ -482,13 +710,13 @@ describe.each(SHELLS)('response backend under %s', (_label, shell) => {
     itIf(HAS_BASE64)('decodes a frontend gz payload with base64', async () => {
       const r = await get('gz payload with base64');
       expect(r.events).toContain('decode_payload rc=0');
-      expect(r.read('decoded')).toBe(RAW);
+      expect(r.read('decoded')).toBe(`${RAW}\n`);
     });
 
     itIf(HAS_OPENSSL)('decodes a frontend gz payload with openssl when base64 is missing', async () => {
       const r = await get('gz payload without base64');
       expect(r.events).toContain('decode_payload rc=0');
-      expect(r.read('decoded')).toBe(RAW);
+      expect(r.read('decoded')).toBe(`${RAW}\n`);
     });
 
     it('fails without output when neither base64 nor openssl is available', async () => {
@@ -500,7 +728,7 @@ describe.each(SHELLS)('response backend under %s', (_label, shell) => {
     it('passes a plain payload through unchanged', async () => {
       const r = await get('plain payload');
       expect(r.events).toContain('decode_payload rc=0');
-      expect(r.read('decoded')).toBe(PLAIN);
+      expect(r.read('decoded')).toBe(`${PLAIN}\n`);
     });
   });
 

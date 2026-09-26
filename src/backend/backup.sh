@@ -82,7 +82,7 @@ backup_remount_to_web() {
     local share_backup="$ADDON_SHARE_DIR/backup"
     local web_backup="$ADDON_WEB_DIR/backup"
 
-    rm -r "$web_backup"
+    rm -rf "$web_backup"
 
     if [ ! -d "$web_backup" ]; then
         mkdir -p "$web_backup"
@@ -95,7 +95,7 @@ backup_remount_to_web() {
     for file in "$share_backup"/*; do
         log_info "Processing file: $file"
         if [ -f "$file" ]; then
-            local symlink="$web_backup/$(basename "$file")"
+            local symlink="$web_backup/$(basename "$file").cab"
             ln -s -f "$file" "$symlink" || log_debug "Failed to create symlink: $symlink -> $file"
             if [ $? -ne 0 ]; then
                 log_error "Error: Failed to create symlink '$symlink' -> '$file'."

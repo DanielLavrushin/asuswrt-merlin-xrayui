@@ -95,6 +95,7 @@
               <input type="checkbox" :value="device.mac" v-model="currentRule.mac" />
               {{ device.isOnline ? '🟢 ' : '⚪ ' }}
               {{ device.isOrphan ? '❌ ' : '' }}
+              {{ device.isWireless ? '🛜 ' : '' }}
               {{ device.name || device.mac }}
             </label>
           </td>
@@ -162,6 +163,7 @@
   import { defineComponent, ref, watch } from 'vue';
   import Modal from '@main/Modal.vue';
   import { XrayRoutingPolicy } from '@/modules/CommonObjects';
+  import { XrayRouterDeviceOnline } from '@/modules/Interfaces';
   import Hint from '@main/Hint.vue';
   import draggable from 'vuedraggable';
 
@@ -169,6 +171,7 @@
     public mac!: string;
     public name?: string;
     public isOnline!: boolean;
+    public isWireless?: boolean;
     public isVisible!: boolean;
     public isOrphan!: boolean;
   }
@@ -208,12 +211,12 @@
         .filter((mac) => validMac.test(mac))
         .map((mac) => {
           const raw = rawDevices[mac] || {};
-          const prefix = raw.is_wireless ? '🛜 ' : '';
-          const label = raw.nickName || raw.name || raw.vendor || mac;
+          const live: XrayRouterDeviceOnline | undefined = devicesOnline[mac];
           return {
             mac,
-            name: `${prefix}${label}`,
-            isOnline: Boolean(devicesOnline[mac]) || raw.online === '1',
+            name: raw.nickName || raw.name || raw.vendor || mac,
+            isOnline: live ? live.isOnline !== '0' : raw.online === '1',
+            isWireless: Number(live?.isWL ?? raw.wireless) > 0,
             isVisible: true,
             isOrphan: false
           };

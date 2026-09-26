@@ -56,7 +56,7 @@
       Modal
     },
     setup() {
-      const md = markdownit({ html: true, breaks: true });
+      const md = markdownit({ html: false, breaks: true });
       const COOKIE_NAME = 'xrayui_dontupdate';
       const ui = inject<Ref<EngineResponseConfig>>('uiResponse');
       const withPatch = (version?: string) => (version && version.split('.').length === 2 ? `${version}.0` : (version ?? ''));

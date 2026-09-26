@@ -16,7 +16,7 @@ jest.mock('@/modules/Engine', () => {
 import { flushPromises, mount } from '@vue/test-utils';
 import { defineComponent, h, nextTick, ref } from 'vue';
 import Version from '@main/Version.vue';
-import { EngineResponseConfig } from '@/modules/Engine';
+import engine, { EngineResponseConfig } from '@/modules/Engine';
 import { XrayUiGlobal } from '@/global';
 
 describe('Version.vue', () => {
@@ -54,6 +54,16 @@ describe('Version.vue', () => {
     const { wrapper, respond } = mountWith({ xray_version: '0.70' });
     await respond('9.9.9');
     expect(label(wrapper)).toBe('! XRAYUI v0.70.0');
+  });
+
+  it('shows markup in the release notes as text', async () => {
+    (engine.fetchGithubJson as jest.Mock).mockResolvedValueOnce({ tag_name: 'v0.70.1', body: '**Fixed** <img src=x onerror="window.pwned=1">' });
+    const { wrapper, respond } = mountWith({ xray_version: '0.70.0' });
+    await respond('0.70.0');
+    const notes = wrapper.find('.changelog');
+    expect(notes.find('img').exists()).toBe(false);
+    expect(notes.find('strong').text()).toBe('Fixed');
+    expect(notes.text()).toContain('<img src=x onerror="window.pwned=1">');
   });
 
   it('prefers the stored version', async () => {

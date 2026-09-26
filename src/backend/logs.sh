@@ -103,8 +103,8 @@ logs_fetch() {
   log_error=$(jq -r --arg error "$ADDON_LOGS_DIR/xray_error.log" \
     '.log.error // $error' "$XRAY_CONFIG_FILE")
 
-  local pub_error="$ADDON_WEB_DIR/xray_error_partial.asp"
-  local pub_access="$ADDON_WEB_DIR/xray_access_partial.asp"
+  local pub_error="$ADDON_WEB_DIR/xray_error_partial.cab"
+  local pub_access="$ADDON_WEB_DIR/xray_access_partial.cab"
 
   local tmp_error="${pub_error}.$$"
   local tmp_access="${pub_access}.$$"
@@ -129,22 +129,19 @@ change_log_level() {
 
   log_info "Changing log level to $log_level..."
 
-  local updated_json=$(jq --arg log_level "$log_level" '
+  if ! jq_update_file "$XRAY_CONFIG_FILE" --arg log_level "$log_level" '
         if .log.loglevel then del(.log.loglevel) else . end |
         .log.loglevel = $log_level
-    ' "$XRAY_CONFIG_FILE")
-
-  if [ $? -ne 0 ]; then
+    '; then
     log_error "Error: Failed to update JSON content with log level."
     return 1
   fi
-
-  echo "$updated_json" >"$XRAY_CONFIG_FILE"
 
   if [ -f "$XRAY_PIDFILE" ]; then
     restart
   fi
 
+  return 0
 }
 
 enable_config_logs() {

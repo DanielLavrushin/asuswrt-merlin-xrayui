@@ -248,24 +248,22 @@ apply_config() {
 
     update_loading_progress "Checking incoming configuration..." 5
 
-    if [ -z "$incoming_config" ]; then
+    if [ -z "${incoming_config:+1}" ]; then
         log_error "No new server configuration provided (reconstruct_payload returned empty)."
         update_loading_progress "Error: incoming configuration is empty or upload failed." 100
         exit 1
     fi
 
-    log_info "Setting up DNS rules for incoming configuration..."
-    incoming_config=$(rules_to_dns_domains "$incoming_config")
-
-    echo "$incoming_config" >"$temp_config"
+    cat >"$temp_config" <<EOF
+$incoming_config
+EOF
     if [ $? -ne 0 ]; then
         log_error "Failed to write incoming configuration to $temp_config."
         update_loading_progress "Error: failed to write incoming configuration." 100
         exit 1
     fi
 
-    jq empty "$temp_config" >/dev/null 2>&1
-    if [ $? -ne 0 ]; then
+    if ! jq -e 'type == "object"' "$temp_config" >/dev/null 2>&1; then
         local debug_copy="/tmp/xray_server_config_invalid.json"
         cp "$temp_config" "$debug_copy" 2>/dev/null
         log_error "Invalid JSON format in incoming server configuration ($(wc -c <"$temp_config") bytes). Bad copy preserved at $debug_copy"
@@ -274,9 +272,11 @@ apply_config() {
         exit 1
     fi
 
+    log_info "Setting up DNS rules for incoming configuration..."
+    rules_to_dns_domains "$temp_config"
+
     if [ -f "$XRAY_CONFIG_FILE" ]; then
-        local carried
-        carried=$(jq -c --slurpfile old "$XRAY_CONFIG_FILE" '
+        jq_update_file "$temp_config" -c --slurpfile old "$XRAY_CONFIG_FILE" '
             if (.outbounds | type) == "array" then
                 .outbounds |= map(
                     if ((.surl // "") != "") and (.settings == null) then
@@ -291,7 +291,7 @@ apply_config() {
                           end
                     else . end)
             else . end
-        ' "$temp_config" 2>/dev/null) && [ -n "$carried" ] && printf '%s\n' "$carried" >"$temp_config"
+        '
     fi
 
     if ! failover_config_lock; then
@@ -348,16 +348,7 @@ apply_config() {
 }
 
 rules_to_dns_domains() {
-    local configcontent="$1"
-
-    local just_parsed
-    just_parsed="$(echo "$configcontent" | jq . 2>/dev/null)"
-    if [ -z "$just_parsed" ]; then
-        echo "$configcontent"
-        return 0
-    fi
-
-    local updated="$(echo "$just_parsed" | jq '
+    jq_update_file "$1" '
   if .routing == null then .routing = {} else . end
   | if .routing.rules == null then .routing.rules = [] else . end
   | if .dns == null then .dns = {} else . end
@@ -400,14 +391,7 @@ rules_to_dns_domains() {
       )
     | if (.dns.servers | length) == 0 then del(.dns.servers) else . end
     | if (.dns | keys | length) == 0 then del(.dns) else . end
-')"
-
-    if [ -z "$updated" ]; then
-        echo "$configcontent"
-        return 0
-    fi
-
-    echo "$updated"
+' || log_warn "Could not add routing rule domains to DNS servers; continuing without them."
 }
 
 toggle_startup() {

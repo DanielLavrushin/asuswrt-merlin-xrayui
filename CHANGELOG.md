@@ -5,6 +5,13 @@
 - FIXED: The XRAYUI page could open as a blank white screen because of a device on the network, such as some IP cameras, or a device name with quotes or a backslash. Settings saved by other add-ons with such characters, or a missing add-on settings file, had the same effect. The page now opens, and the names and settings are kept exactly as they are.
 - FIXED: After servers were loaded from a long list of subscription links, a TLS ping or generating ECH or WireGuard keys could get broken data and fail until the page was reloaded.
 - FIXED: In rare cases, an XRAYUI page opened just as another action was finishing could erase the settings of all add-ons on its next save, which also stopped Xray from starting with the router.
+- FIXED: Backups could be downloaded from the router's web address without logging in. A login is now required.
+- FIXED: Downloading a backup failed after the router restarted, until a backup was created or deleted.
+- FIXED: A server name, a certificate name or a website name seen in the logs that contained certain character sequences could freeze the router's whole web interface for several minutes while the XRAYUI page, the log viewer or the SNI log was open.
+- FIXED: The **raw** button of the log viewer showed log lines as a web page, so a crafted website name in the log could run page code. Raw views now show plain text.
+- FIXED: Release notes in the update window could run page code sent by a GitHub proxy mirror. They are now shown as plain formatted text.
+- FIXED: A crafted domain in a routing rule, for example one added from the SNI log, could run page code in the DNS server rules list.
+- FIXED: The device list in **Redirect/Bypass policies** showed devices that had left the network as online, so **Show all** changed nothing, and Wi-Fi devices were never marked.
 - IMPROVED: Changes made in settings windows are not saved until **Apply** is pressed. A note under **Apply** now shows when some changes have not been applied yet, and **Start**, **Restart**, **Stop** and leaving the page ask first instead of silently dropping them.
 - FIXED: mKCP settings showed **Congestion control**, **Read buffer size** and **Write buffer size**, which Xray-core 26.4.13 and newer ignore. On those versions **Congestion window multiplier** and **Max sending window** are shown instead.
 - FIXED: Clearing an mKCP number field, such as **MTU**, stopped Xray from starting. An empty field now means the default value.
@@ -51,6 +58,13 @@
 - FIXED: On some routers, leftovers of interrupted large saves were never cleaned up and kept taking up memory.
 - IMPROVED: An error at the end of **Apply** or a save in **General Options** now stays on screen for a few seconds instead of disappearing before it can be read.
 - FIXED: When **Apply** could not replace the configuration file, the loading screen never went away.
+- FIXED: Outbounds with a **Subscription URL** were not updated from large subscriptions (roughly 400 servers or more), or at all when the configuration was large.
+- FIXED: Auto-fallback never switched servers, and a subscription update did not refresh the auto-fallback pool, when one server type in the subscriptions had roughly 400 servers or more.
+- FIXED: With a large configuration, updating XRAYUI, saving **General Options** or pressing **Apply** could leave the Xray configuration file empty, so Xray no longer started.
+- FIXED: A configuration or a custom geodata list larger than about 128 KB could not be saved. For custom geodata lists the page still reported success.
+- FIXED: **Check connection to xray server** could not be turned on for a large configuration.
+- FIXED: Hysteria servers from subscriptions that set a speed or a pinned certificate could not be used on most routers.
+- FIXED: A custom geodata list name could point outside its folder, so saving or deleting a list could write or remove other files on the router.
 
 ## [0.69.1] - 2026-09-01
 

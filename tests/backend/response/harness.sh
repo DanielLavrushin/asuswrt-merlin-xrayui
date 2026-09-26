@@ -37,12 +37,14 @@ rewrite "${RS_GENOPTS_SCRIPT:-$REPO_DIR/src/backend/general_opts.sh}" general_op
 rewrite "${RS_XRAYUI_SCRIPT:-$REPO_DIR/src/backend/xrayui.sh}" xrayui
 rewrite "${RS_GEODATA_SCRIPT:-$REPO_DIR/src/backend/geodata.sh}" geodata
 rewrite "${RS_SUBSCRIPTIONS_SCRIPT:-$REPO_DIR/src/backend/subscriptions.sh}" subscriptions
+rewrite "${RS_FAILOVER_SCRIPT:-$REPO_DIR/src/backend/failover.sh}" failover
 
 . "$RS_STATE/helper.$$.sh"
 . "$RS_STATE/response.$$.sh"
 . "$RS_STATE/general_opts.$$.sh"
 . "$RS_STATE/geodata.$$.sh"
 . "$RS_STATE/subscriptions.$$.sh"
+. "$RS_STATE/failover.$$.sh"
 
 ev() { printf '%s\n' "$*" >>"$RS_STATE/events.log"; }
 log_error() { ev "ERROR: $*"; }
@@ -111,6 +113,35 @@ sub_link() {
 sub_body() {
     subscription_decode_body "$RS_STATE/payload" "$RS_STATE/decoded"
     ev "subscription_decode_body rc=$?"
+}
+
+pool_ops() {
+    pool=$(cat "$RS_STATE/pool")
+    ev "all: $(failover_filter_candidates "$pool" | grep -c .)"
+    ev "filtered: $(subscription_filters="$RS_POOL_FILTER" failover_filter_candidates "$pool" 2>/dev/null | tr '\n' ' ')"
+    ev "unmatched: $(subscription_filters='nothing-like-this' failover_filter_candidates "$pool" 2>/dev/null | grep -c .)"
+    ev "next: $(failover_order_candidates "$pool" "$(sed -n 401p "$RS_STATE/pool")" "" "" | head -n 1)"
+    ev "origin: $(failover_order_candidates "$pool" "$(sed -n 11p "$RS_STATE/pool")" "$(sed -n 301p "$RS_STATE/pool")" "" | head -n 1)"
+    failover_pool_has_id "$pool" "$(sed -n 401p "$RS_STATE/pool")"
+    ev "has known rc=$?"
+    failover_pool_has_id "$pool" "vless://gone@203.0.113.9:443"
+    ev "has unknown rc=$?"
+    failover_list_has "$pool" "$(sed -n 5p "$RS_STATE/pool")"
+    ev "list has rc=$?"
+    ev "by label: $(failover_find_replacement "$pool" "vless://gone@203.0.113.9:443#$RS_POOL_LABEL")"
+    ev "by address: $(failover_find_replacement "$pool" "$RS_POOL_ADDRESS")"
+}
+
+update_file() {
+    jq_update_file "$XRAY_CONFIG_FILE" "$RS_FILTER"
+    ev "jq_update_file rc=$?"
+    ev "files: $(ls -A "${XRAY_CONFIG_FILE%/*}" | tr '\n' ' ')"
+}
+
+geodata_save() {
+    geodata_recompile_all() { ev "recompile_all"; }
+    geodata_recompile
+    ev "geodata_recompile rc=$?"
 }
 
 subs() {

@@ -11,9 +11,6 @@ apply_general_options() {
     local old_geosite_url="${geosite_url:-$DEFAULT_GEOSITE_URL}"
     local old_geoip_url="${geoip_url:-$DEFAULT_GEOIP_URL}"
 
-    local temp_config="/tmp/xray_server_config_new.json"
-    local json_content=$(cat "$XRAY_CONFIG_FILE")
-
     local genopts=$(reconstruct_payload)
 
     if ! printf '%s' "$genopts" | jq -e 'type == "object"' >/dev/null 2>&1; then
@@ -82,7 +79,7 @@ apply_general_options() {
     local error_val="none"
     [ "$logs_error" = "true" ] && error_val="$logs_error_path"
 
-    json_content=$(echo "$json_content" | jq \
+    if ! jq_update_file "$XRAY_CONFIG_FILE" \
         --arg loglevel "$log_level" \
         --arg access "$access_val" \
         --arg error "$error_val" \
@@ -92,17 +89,11 @@ apply_general_options() {
         | .log.access = $access
         | .log.error = $error
         | if $dns_log then .log.dnsLog = true else del(.log.dnsLog) end
-        ')
-
-    if [ -z "$json_content" ]; then
+        '; then
         log_error "Failed to build xray config JSON. Aborting."
         update_loading_progress "Error: failed to update the Xray configuration. Nothing was changed." 100
         return 1
     fi
-
-    echo "$json_content" >"$temp_config"
-    cp "$temp_config" "$XRAY_CONFIG_FILE"
-    rm -f "$temp_config"
 
     update_xrayui_config "logs_dnsmasq" "$logs_dnsmasq"
     update_xrayui_config "github_proxy" "$github_proxy"

@@ -100,7 +100,7 @@
                       </td>
                       <td>
                         {{ r.name }}
-                        <hint v-html="r.domain?.join('<br/>')" />
+                        <hint v-html="domainHint(r.domain)" />
                       </td>
                     </tr>
                   </tbody>
@@ -270,6 +270,9 @@
         modalRules.value.show();
       };
 
+      const escapeHtml = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      const domainHint = (list?: string[]) => (list ?? []).map(escapeHtml).join('<br/>');
+
       const hasFakeDns = computed(() => {
         return xrayConfig.fakedns && xrayConfig.fakedns.length > 0 && !props.servers.some((s) => typeof s === 'string' && s === 'fakedns');
       });
@@ -299,6 +302,7 @@
         addOrUpdateComplex,
         show_advanced,
         set_fakedns,
+        domainHint,
         XrayDnsServerObject
       };
     }

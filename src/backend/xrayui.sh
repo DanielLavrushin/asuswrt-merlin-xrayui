@@ -198,16 +198,25 @@ service_event)
             update_loading_progress "Custom tagfiles retrieved successfully." 100
             ;;
         customrecompileall)
-            geodata_recompile_all
-            update_loading_progress "Geodata recompiled successfully." 100
+            if geodata_recompile_all; then
+                update_loading_progress "Geodata recompiled successfully." 100
+            else
+                update_loading_progress "Error: geodata could not be recompiled." 100
+            fi
             ;;
         customrecompile)
-            geodata_recompile
-            update_loading_progress "Geodata recompiled successfully." 100
+            if geodata_recompile; then
+                update_loading_progress "Geodata recompiled successfully." 100
+            else
+                update_loading_progress "Error: the custom list could not be saved or compiled." 100
+            fi
             ;;
         customdeletetag)
-            geodata_delete_tag
-            update_loading_progress "Geodata tag deleted successfully." 100
+            if geodata_delete_tag; then
+                update_loading_progress "Geodata tag deleted successfully." 100
+            else
+                update_loading_progress "Error: the geodata tag could not be deleted or geodata could not be recompiled." 100
+            fi
             ;;
         esac
         ;;
@@ -266,8 +275,11 @@ service_event)
                 logs_fetch
                 ;;
             changeloglevel)
-                change_log_level
-                update_loading_progress "Log level changed successfully." 100
+                if change_log_level; then
+                    update_loading_progress "Log level changed successfully." 100
+                else
+                    update_loading_progress "Error: failed to change the log level. Nothing was changed." 100
+                fi
                 ;;
             *)
                 enable_config_logs

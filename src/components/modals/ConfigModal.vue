@@ -12,9 +12,7 @@
         {{ $t('com.ConfigModal.hide_sensetive_data') }}
       </label>
       <input class="button_gen button_gen_small" type="button" :value="$t('com.ConfigModal.save_to_file')" @click.prevent="save_to_file" />
-      <a class="button_gen button_gen_small" :href="configUri" target="_blank">
-        {{ $t('com.ConfigModal.open_raw') }}
-      </a>
+      <input class="button_gen button_gen_small" type="button" :value="$t('com.ConfigModal.open_raw')" @click.prevent="open_raw" />
     </template>
   </modal>
 </template>
@@ -39,7 +37,6 @@
       let originalConfig: any = {};
       const configJson = ref<any>(null);
       const configSize = ref<number>(0);
-      const configUri = '/ext/xrayui/xray-config.json';
       const hideSenseData = ref<boolean>(true);
 
       const load = async () => {
@@ -57,6 +54,13 @@
         hideSenseData.value = true;
         await load();
         modal.value.show();
+      };
+
+      const open_raw = () => {
+        engine.openText(
+          engine.getWebData<string>('xray-config', { responseType: 'text' }).then((response) => response.data),
+          'application/json;charset=utf-8'
+        );
       };
 
       const save_to_file = () => {
@@ -82,7 +86,7 @@
         configJson,
         configSize,
         hideSenseData,
-        configUri,
+        open_raw,
         show,
         save_to_file,
         hide_sense_data

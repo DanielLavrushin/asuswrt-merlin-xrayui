@@ -77,7 +77,7 @@ failover_evaluate() {
         return 0
     fi
 
-    vals=$(printf '%s' "$FAILOVER_STATE" | jq -r --arg t "$tag" '
+    vals=$(failover_state_jq -r --arg t "$tag" '
         (.[$t] // {}) | "\(.last_obs // 0) \(.last_switch // 0) \(.verified != false) \(.consecutive_failures // 0)"')
     set -- $vals
     last_obs="${1:-0}"
@@ -146,7 +146,7 @@ failover_wait_verdict() {
 
     interval=$(sanitize_probe_interval "$probe_interval")
     [ "$interval" -le 60 ] || return 2
-    switch_at=$(printf '%s' "$FAILOVER_STATE" | jq -r --arg t "$tag" '.[$t].last_switch // 0')
+    switch_at=$(failover_state_jq -r --arg t "$tag" '.[$t].last_switch // 0')
     deadline=$(($(date +%s) + interval + 15))
 
     while [ "$(date +%s)" -lt "$deadline" ]; do
@@ -190,14 +190,14 @@ failover_switch_next() {
         | if ($s.address // "") == "" then "" else "\($s.address):\($s.port // "")" | ascii_downcase end')
 
     pool=$(jq -r --arg p "$proto" '.[$p] // [] | .[]' "$XRAYUI_SUBSCRIPTIONS_FILE" 2>/dev/null)
-    if [ -z "$pool" ]; then
+    if [ -z "${pool:+1}" ]; then
         log_warn "Failover: the subscription pool has no $proto links for '$tag'"
         failover_request_pool_refresh "$now"
         return 1
     fi
     pool=$(failover_filter_candidates "$pool")
 
-    others_ids=$(jq -r --arg t "$tag" '.outbounds[]? | select(.tag != $t) | (.subPool.active // empty) | sub("#.*$"; "")' "$XRAY_CONFIG_FILE" 2>/dev/null)
+    others_ids=$(jq -r --arg t "$tag" '.outbounds[]? | select(.tag != $t) | (.subPool.active // empty) | (split("#") | .[0] // "")' "$XRAY_CONFIG_FILE" 2>/dev/null)
     others_hps=$(jq -r --arg t "$tag" '
         .outbounds[]? | select(.tag != $t)
         | (.settings.vnext[0] // .settings.servers[0] // .settings // {}) as $s
@@ -206,7 +206,7 @@ failover_switch_next() {
 
     failover_state_update --arg t "$tag" --argjson now "$now" --argjson ttl "$FAILOVER_FAILED_TTL" '
         if .[$t].failed then .[$t].failed |= with_entries(select(.value > ($now - $ttl))) else . end'
-    failed=$(printf '%s' "$FAILOVER_STATE" | jq -r --arg t "$tag" '(.[$t].failed // {}) | keys[]')
+    failed=$(failover_state_jq -r --arg t "$tag" '(.[$t].failed // {}) | keys[]')
 
     candidates=$(failover_order_candidates "$pool" "$active" "$origin" "$cur_hp")
     locals=$(subscription_local_addresses)
@@ -264,7 +264,7 @@ EOF
     done
 
     if [ -z "$chosen" ]; then
-        if [ -n "$failed" ]; then
+        if [ -n "${failed:+1}" ]; then
             log_warn "Failover: every endpoint in the pool failed recently for '$tag' - clearing the failed list"
             failover_state_update --arg t "$tag" --argjson now "$now" '
                 .[$t] = ((.[$t] // {}) | .failed = ((.failed // {}) | with_entries(select(.value >= $now))))'
@@ -301,12 +301,14 @@ failover_order_candidates() {
     local origin_id="${origin%%#*}"
 
     if [ -n "$origin_id" ] && [ "$origin_id" != "${active%%#*}" ]; then
-        printf '%s\n' "$pool" | while IFS= read -r l; do
+        while IFS= read -r l; do
             [ "${l%%#*}" = "$origin_id" ] && printf '%s\n' "$l" && break
-        done
+        done <<EOF
+$pool
+EOF
     fi
 
-    printf '%s\n' "$pool" | awk -v aid="${active%%#*}" -v ahp="$cur_hp" '
+    awk -v aid="${active%%#*}" -v ahp="$cur_hp" '
         function hostport(s,    m, parts) {
             sub(/#.*/, "", s)
             sub(/^[^:]*:\/\//, "", s)
@@ -327,7 +329,9 @@ failover_order_candidates() {
             if (!start && ahp != "") for (i = 1; i <= n; i++) if (hps[i] == ahp) { start = i; break }
             for (j = 1; j <= n; j++) { i = ((start + j - 1) % n) + 1; if (hps[i] != ahp) print links[i] }
             for (j = 1; j <= n; j++) { i = ((start + j - 1) % n) + 1; if (hps[i] == ahp) print links[i] }
-        }'
+        }' <<EOF
+$pool
+EOF
 }
 
 failover_link_hostport() {
@@ -343,7 +347,9 @@ failover_link_hostport() {
 }
 
 failover_list_has() {
-    [ -n "$1" ] && printf '%s\n' "$1" | grep -qxF -- "$2"
+    [ -n "${1:+1}" ] && grep -qxF -- "$2" <<EOF
+$1
+EOF
 }
 
 failover_link_label() {
@@ -375,7 +381,9 @@ failover_filter_candidates() {
     local labeled matched
 
     if [ -z "$filters" ]; then
-        printf '%s\n' "$list"
+        cat <<EOF
+$list
+EOF
         return 0
     fi
 
@@ -387,21 +395,40 @@ failover_filter_candidates() {
 $list
 EOF
     )
-    matched=$(printf '%s\n' "$labeled" | jq -Rrs --arg f "$filters" '
-        def esc: gsub("(?<c>[.*+?^${}()|\\[\\]\\\\])"; "\\\(.c)");
-        ($f | split("|") | map(gsub("^\\s+|\\s+$"; "")) | map(select(length > 0)) | map(esc)) as $p
+    matched=$(jq -Rrs --arg f "$filters" '
+        def lc: explode | map(
+            if (. >= 65 and . <= 90) or (. >= 192 and . <= 222 and . != 215) or (. >= 913 and . <= 939 and . != 930) or (. >= 1040 and . <= 1071) then . + 32
+            elif . >= 1024 and . <= 1039 then . + 80
+            elif ((. >= 256 and . <= 311) or (. >= 330 and . <= 375)) and . % 2 == 0 and . != 304 then . + 1
+            elif ((. >= 313 and . <= 328) or (. >= 377 and . <= 382)) and . % 2 == 1 then . + 1
+            elif . == 376 then 255
+            elif . == 902 then 940
+            elif . >= 904 and . <= 906 then . + 37
+            elif . == 908 then 972
+            elif . == 910 or . == 911 then . + 63
+            else . end) | implode;
+        def ws: . == " " or . == "\t" or . == "\n" or . == "\r";
+        def trimws: if length == 0 then . elif (.[0:1] | ws) then .[1:] | trimws elif (.[-1:] | ws) then .[:-1] | trimws else . end;
+        ($f | split("|") | map(trimws | lc) | map(select(length > 0))) as $p
         | split("\n")[]
         | select(length > 0)
         | split("\t") as $x
-        | ($x[0]) as $lbl
-        | select(any($p[]; . as $q | $lbl | test($q; "i")))
-        | $x[1:] | join("\t")' 2>/dev/null)
+        | ($x[0] | lc) as $lbl
+        | select(any($p[]; . as $q | $lbl | contains($q)))
+        | $x[1:] | join("\t")' 2>/dev/null <<EOF
+$labeled
+EOF
+    )
 
-    if [ -n "$matched" ]; then
-        printf '%s\n' "$matched"
+    if [ -n "${matched:+1}" ]; then
+        cat <<EOF
+$matched
+EOF
     else
         log_warn "Failover: no pool entry matches the rotation filters - using the whole pool" >&2
-        printf '%s\n' "$list"
+        cat <<EOF
+$list
+EOF
     fi
 }
 
@@ -431,7 +458,7 @@ failover_merge_outbound() {
 }
 
 failover_validate_outbound() {
-    local tmp="/tmp/xrayui_fo_test.$$"
+    local tmp="/tmp/xrayui_fo_test.$$.json"
     local rc
     printf '%s' "$1" | jq -c '{outbounds: [del(.subPool, .surl)]}' >"$tmp" 2>/dev/null || {
         rm -f "$tmp"
@@ -542,7 +569,7 @@ failover_request_pool_refresh() {
     local now="$1"
     local last
     [ -n "${subscriptionLinks:-}" ] || return 0
-    last=$(printf '%s' "$FAILOVER_STATE" | jq -r '._pool_refresh // 0')
+    last=$(failover_state_jq -r '._pool_refresh // 0')
     [ $((now - last)) -ge 3600 ] || return 0
     failover_state_update --argjson now "$now" '._pool_refresh = $now'
     log_info "Failover: refreshing the subscription pool"
@@ -550,7 +577,7 @@ failover_request_pool_refresh() {
 }
 
 failover_breaker_ok() {
-    printf '%s' "$FAILOVER_STATE" | jq -e --arg t "$1" --argjson now "$(date +%s)" --argjson max "$FAILOVER_MAX_SWITCHES_PER_HOUR" '
+    failover_state_jq -e --arg t "$1" --argjson now "$(date +%s)" --argjson max "$FAILOVER_MAX_SWITCHES_PER_HOUR" '
         ((.[$t].switch_times // []) | map(select(. > ($now - 3600))) | length) < $max' >/dev/null 2>&1
 }
 
@@ -559,21 +586,29 @@ failover_mark_failed() {
         .[$t] = ((.[$t] // {}) | .failed = ((.failed // {}) + {($id): $now}))'
 }
 
+failover_state_jq() {
+    jq "$@" <<EOF
+$FAILOVER_STATE
+EOF
+}
+
 failover_state_load() {
     FAILOVER_STATE=$(cat "$XRAYUI_FAILOVER_STATE_FILE" 2>/dev/null)
-    printf '%s' "$FAILOVER_STATE" | jq -e 'type == "object"' >/dev/null 2>&1 || FAILOVER_STATE="{}"
+    failover_state_jq -e 'type == "object"' >/dev/null 2>&1 || FAILOVER_STATE="{}"
 }
 
 failover_state_save() {
     local tmp="$XRAYUI_FAILOVER_STATE_FILE.tmp.$$"
-    [ -n "$FAILOVER_STATE" ] || return 1
-    printf '%s\n' "$FAILOVER_STATE" >"$tmp" && mv -f "$tmp" "$XRAYUI_FAILOVER_STATE_FILE"
+    [ -n "${FAILOVER_STATE:+1}" ] || return 1
+    cat >"$tmp" <<EOF && mv -f "$tmp" "$XRAYUI_FAILOVER_STATE_FILE"
+$FAILOVER_STATE
+EOF
     rm -f "$tmp"
 }
 
 failover_state_update() {
     local new
-    new=$(printf '%s' "$FAILOVER_STATE" | jq -c "$@" 2>/dev/null) && [ -n "$new" ] && FAILOVER_STATE="$new"
+    new=$(failover_state_jq -c "$@" 2>/dev/null) && [ -n "${new:+1}" ] && FAILOVER_STATE="$new"
 }
 
 failover_resync_pool_outbounds() {
@@ -592,7 +627,7 @@ failover_resync_pool_outbounds() {
         active=$(printf '%s' "$entry" | jq -r '.a')
         origin=$(printf '%s' "$entry" | jq -r '.o')
         pool=$(jq -r --arg p "$proto" '.[$p] // [] | .[]' "$XRAYUI_SUBSCRIPTIONS_FILE" 2>/dev/null)
-        [ -n "$pool" ] || continue
+        [ -n "${pool:+1}" ] || continue
 
         new_origin=""
         if [ -n "$origin" ] && ! failover_pool_has_id "$pool" "$origin"; then
@@ -646,7 +681,9 @@ EOF
 }
 
 failover_pool_has_id() {
-    printf '%s\n' "$1" | awk -v id="${2%%#*}" '{ s = $0; sub(/#.*/, "", s); if (s == id) { f = 1; exit } } END { exit !f }'
+    awk -v id="${2%%#*}" '{ s = $0; sub(/#.*/, "", s); if (s == id) { f = 1; exit } } END { exit !f }' <<EOF
+$1
+EOF
 }
 
 failover_find_replacement() {
@@ -657,17 +694,19 @@ failover_find_replacement() {
     case "$link" in
     *#*)
         label="${link#*#}"
-        printf '%s\n' "$pool" | while IFS= read -r l; do
+        while IFS= read -r l; do
             case "$l" in
             *#*) [ "${l#*#}" = "$label" ] && printf '%s' "$l" && break ;;
             esac
-        done | head -n 1 | grep . && return 0
+        done <<EOF | head -n 1 | grep . && return 0
+$pool
+EOF
         ;;
     esac
 
     hp=$(failover_link_hostport "$link")
     [ -n "$hp" ] || return 1
-    printf '%s\n' "$pool" | awk -v hp="$hp" '{
+    awk -v hp="$hp" '{
         s = $0
         sub(/#.*/, "", s)
         sub(/^[^:]*:\/\//, "", s)
@@ -675,5 +714,7 @@ failover_find_replacement() {
         sub(/\/.*/, "", s)
         m = split(s, parts, "@")
         if (tolower(parts[m]) == hp) { print; exit }
-    }'
+    }' <<EOF
+$pool
+EOF
 }

@@ -225,7 +225,7 @@
         await Promise.all(
           targets.map(async (filename) => {
             try {
-              const res = await fetch(`/ext/xrayui/backup/${filename}`, { method: 'HEAD' });
+              const res = await fetch(`/ext/xrayui/backup/${filename}.cab`, { method: 'HEAD' });
               const len = res.headers.get('Content-Length');
               sizes.value[filename] = len ? Number(len) : null;
             } catch {
@@ -259,10 +259,16 @@
         }
       };
 
-      const download = (filename: string) => {
+      const download = async (filename: string) => {
         if (!filename) return;
+        const url = `/ext/xrayui/backup/${filename}.cab`;
+        const res = await fetch(url, { method: 'HEAD', cache: 'no-store' }).catch(() => undefined);
+        if (res?.ok && res.headers.get('Content-Type')?.startsWith('text/html')) {
+          window.location.reload();
+          return;
+        }
         const link = document.createElement('a');
-        link.href = `/ext/xrayui/backup/${filename}`;
+        link.href = url;
         link.download = filename;
         document.body.appendChild(link);
         link.click();

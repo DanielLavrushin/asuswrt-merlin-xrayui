@@ -192,19 +192,13 @@ EOF
 
     cleanup_stale_asdfiles
 
-    # ---------------------------------------------------------
-    # performing version updates
-
-    local json_content=$(cat "$XRAY_CONFIG_FILE")
-
-    #  -> 0.55.1
-    log_info "Updating $XRAY_CONFIG_FILE config to version 0.55.1..."
-    if json_content=$(jq '
-      .inbounds |= map(select(.tag != "sys:socks-in"))
-    | .routing.rules //= []
-    | .routing.rules |= map(select(.name != "sys:connection-check"))
-  ' "$XRAY_CONFIG_FILE"); then
-        echo "$json_content" >"$XRAY_CONFIG_FILE"
+    if [ -f "$XRAY_CONFIG_FILE" ]; then
+        log_info "Updating $XRAY_CONFIG_FILE config to version 0.55.1..."
+        jq_update_file "$XRAY_CONFIG_FILE" '
+          if .inbounds then .inbounds |= map(select(.tag != "sys:socks-in")) else . end
+        | .routing.rules //= []
+        | .routing.rules |= map(select(.name != "sys:connection-check"))
+      ' || log_warn "Could not update $XRAY_CONFIG_FILE; it was left unchanged."
     fi
 
     log_ok "Installed $(show_version)"

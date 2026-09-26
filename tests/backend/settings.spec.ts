@@ -12,8 +12,7 @@ const which = (bin: string): string | undefined => {
 const BUSYBOX = process.platform === 'linux' ? which('busybox') : undefined;
 const SHELLS: [string, string[]][] = [...(BUSYBOX ? [['busybox sh', [BUSYBOX, 'sh']] as [string, string[]]] : []), ['sh', ['sh']]];
 
-const STORED =
-  'MerlinAU_version_local 1.4.2\nxray_payload0 gz:AAAA/BB+\nxray_startup y\nxray_payload1 CCC=\nxray_stage_data abc\nxray_staged_session s1\nxray_version 0.70.0\n';
+const STORED = 'MerlinAU_version_local 1.4.2\nxray_payload0 gz:AAAA/BB+\nxray_startup y\nxray_payload1 CCC=\nxray_stage_data abc\nxray_staged_session s1\nxray_version 0.70.0\n';
 const KEPT = 'MerlinAU_version_local 1.4.2\nxray_startup y\nxray_version 0.70.0\n';
 
 const run = (shell: string[], steps: string[], env: Record<string, string> = {}) => {

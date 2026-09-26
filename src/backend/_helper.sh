@@ -312,15 +312,23 @@ decode_payload() {
     case "$raw" in
         gz:*)
             local decoded
-            decoded=$(printf '%s' "${raw#gz:}" | b64_decode | gunzip 2>/dev/null)
-            if [ -z "$decoded" ]; then
+            decoded=$(
+                b64_decode <<EOF | gunzip 2>/dev/null
+${raw#gz:}
+EOF
+            )
+            if [ -z "${decoded:+1}" ]; then
                 log_error "decode_payload: failed to decompress gz: payload (base64/gunzip pipeline failed or produced empty output)" >&2
                 return 1
             fi
-            printf '%s' "$decoded"
+            cat <<EOF
+$decoded
+EOF
             ;;
         *)
-            printf '%s' "$raw"
+            cat <<EOF
+$raw
+EOF
             ;;
     esac
 }
@@ -635,6 +643,25 @@ urldecode() {
     local data
     data=$(printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/%\([0-9A-Fa-f][0-9A-Fa-f]\)/\\x\1/g')
     printf '%b' "$data"
+}
+
+jq_update_file() {
+    local file="$1"
+    local target
+    shift
+    if [ -L "$file" ] && target=$(readlink -f "$file") && [ -n "$target" ]; then
+        file="$target"
+    fi
+    local tmp="$file.tmp.$$"
+    if jq "$@" "$file" >"$tmp" 2>"$tmp.err" &&
+        jq -n -e '[inputs] | length == 1 and (.[0] | type == "object")' "$tmp" >/dev/null 2>&1 &&
+        mv -f "$tmp" "$file"; then
+        rm -f "$tmp.err"
+        return 0
+    fi
+    log_debug "jq_update_file: $file was left unchanged: $(head -c 300 "$tmp.err" 2>/dev/null)"
+    rm -f "$tmp" "$tmp.err"
+    return 1
 }
 
 xrayui_core_version() {

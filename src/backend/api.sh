@@ -195,16 +195,12 @@ api_apply_configuration() {
     return
   fi
 
-  local json_content=$(cat "$XRAY_CONFIG_FILE")
+  local filter
   api_write_config
 
   if [ "$check_connection" = "true" ]; then
-    json_content=$(
-      echo "$json_content" |
-        jq '
-            # ensure rules exists
+    filter='
             .routing.rules //= [] |
-            # check if already present
             (.routing.rules | map(.name=="sys:metrics") | any) as $has |
             if $has then
               .
@@ -220,20 +216,13 @@ api_apply_configuration() {
               ] + .routing.rules
             end
           '
-    )
   else
-    json_content=$(
-      echo "$json_content" |
-        jq '
+    filter='
             .routing.rules //= [] |
             .routing.rules |= map(select(.name != "sys:metrics"))
           '
-    )
   fi
 
-  if [ -n "$json_content" ] && printf '%s' "$json_content" | jq -e 'type == "object"' >/dev/null 2>&1; then
-    printf '%s\n' "$json_content" >"$XRAY_CONFIG_FILE"
-  else
+  jq_update_file "$XRAY_CONFIG_FILE" "$filter" ||
     log_error "Failed to update the API routing rule; $XRAY_CONFIG_FILE was left unchanged."
-  fi
 }

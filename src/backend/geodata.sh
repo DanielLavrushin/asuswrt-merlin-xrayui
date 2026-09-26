@@ -191,31 +191,38 @@ geodata_recompile() {
         return 1
     fi
 
-    # Reconstruct the payload
-    local datfile=$(reconstruct_payload)
-    if [ $? -ne 0 ] || [ -z "$datfile" ]; then
+    local datfile payload_file="/tmp/xrayui_geodata_payload.$$"
+    datfile=$(reconstruct_payload)
+    if [ -z "${datfile:+1}" ]; then
         log_error "Error: Failed to reconstruct payload."
         return 1
     fi
+    cat >"$payload_file" <<EOF
+$datfile
+EOF
 
-    # Extract 'tag' and 'content' from the payload using jq
-    local filename=$(echo "$datfile" | jq -r '.tag')
-    if [ $? -ne 0 ] || [ -z "$filename" ] || [ "$filename" == "null" ]; then
+    local filename
+    filename=$(jq -r '.tag // empty' "$payload_file" 2>/dev/null)
+    case "$filename" in
+    '' | */* | .*)
         log_error "Error: Invalid or missing 'tag' in payload."
+        rm -f "$payload_file"
         return 1
-    fi
-
-    local filecontent=$(echo "$datfile" | jq -r '.content')
-    if [ $? -ne 0 ] || [ -z "$filecontent" ] || [ "$filecontent" == "null" ]; then
-        log_error "Error: Invalid or missing 'content' in payload."
-        return 1
-    fi
+        ;;
+    esac
 
     local filepath="$datadir/$filename"
 
-    echo "$filecontent" >"$filepath"
-    if [ $? -ne 0 ]; then
+    if ! jq -r '.content // empty | until(endswith("\n") | not; .[:-1])' "$payload_file" >"$filepath.tmp" 2>/dev/null || ! grep -q . "$filepath.tmp"; then
+        log_error "Error: Invalid or missing 'content' in payload."
+        rm -f "$payload_file" "$filepath.tmp"
+        return 1
+    fi
+    rm -f "$payload_file"
+
+    if ! mv -f "$filepath.tmp" "$filepath"; then
         log_error "Error: Failed to write content to '$filepath'."
+        rm -f "$filepath.tmp"
         return 1
     fi
 
@@ -239,31 +246,33 @@ geodata_delete_tag() {
     local datadir="$ADDON_SHARE_DIR/data"
     local geodata_dir="$ADDON_SHARE_DIR/geodata"
 
-    # Check if the data directory exists
     if [ ! -d "$datadir" ]; then
         log_error "Error: Data directory '$datadir' does not exist."
         return 1
     fi
 
-    # Reconstruct the payload
-    local datfile=$(reconstruct_payload)
-    if [ $? -ne 0 ] || [ -z "$datfile" ]; then
+    local datfile
+    datfile=$(reconstruct_payload)
+    if [ -z "${datfile:+1}" ]; then
         log_error "Error: Failed to reconstruct payload."
         return 1
     fi
 
-    # Extract 'tag' from the payload using jq
-    local filename=$(echo "$datfile" | jq -r '.tag')
-    if [ $? -ne 0 ] || [ -z "$filename" ] || [ "$filename" == "null" ]; then
+    local filename
+    filename=$(jq -r '.tag // empty' 2>/dev/null <<EOF
+$datfile
+EOF
+    )
+    case "$filename" in
+    '' | */* | .*)
         log_error "Error: Invalid or missing 'tag' in payload."
         return 1
-    fi
+        ;;
+    esac
 
-    # Define the file and symlink paths
     local filepath="$datadir/$filename"
     local symlinkpath="$geodata_dir/$filename.asp"
 
-    # Remove the file from the data directory
     if [ -f "$filepath" ]; then
         rm "$filepath"
         if [ $? -ne 0 ]; then
@@ -275,7 +284,6 @@ geodata_delete_tag() {
         log_warn "Warning: File '$filepath' does not exist. Skipping deletion."
     fi
 
-    # Remove the symlink from the geodata directory
     if [ -L "$symlinkpath" ]; then
         rm "$symlinkpath"
         if [ $? -ne 0 ]; then
@@ -294,7 +302,6 @@ geodata_delete_tag() {
         return 1
     fi
 
-    # Log the successful deletion process
     log_ok "Geodata tag deletion process completed successfully."
 
     return 0

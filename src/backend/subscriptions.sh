@@ -71,7 +71,10 @@ process_subscriptions() {
     local cfg_file="$config_file.subs.$$"
     local new_file="$config_file.subs.new.$$"
 
-    cp "$config_file" "$cfg_file" || return 1
+    cp "$config_file" "$cfg_file" || {
+        rm -f "$cfg_file"
+        return 1
+    }
     while IFS= read -r entry; do
         [ -z "$entry" ] && continue
         idx=$(printf '%s' "$entry" | jq -r '.idx')
@@ -165,7 +168,7 @@ subscription_outbound_is_unusable() {
         | (($s.users[0].id // "") | tostring) as $id
         | $a == "" or $a == "0.0.0.0" or $a == "::" or $a == "::1" or $a == "localhost"
           or ($a | startswith("127.")) or $p < 2
-          or ($id | test("^0{8}-0{4}-0{4}-0{4}-0{12}$"))' >/dev/null 2>&1 && return 0
+          or $id == "00000000-0000-0000-0000-000000000000"' >/dev/null 2>&1 && return 0
     [ -n "$locals" ] || return 1
     addr=$(printf '%s' "$ob" | jq -r '(.settings.vnext[0] // .settings.servers[0] // .settings // {}).address // "" | tostring | ascii_downcase' 2>/dev/null)
     addr="${addr#\[}"
@@ -220,14 +223,37 @@ subscription_pick_link() {
 
     if [ -n "$tag" ]; then
         while IFS= read -r line; do
-            case "$line" in *#*) ;; *) continue ;; esac
-            [ "$(urldecode "${line#*#}")" = "$tag" ] || continue
             if rep=$(subscription_parse_link_to_outbound "$line") && [ -n "$rep" ] &&
                 ! subscription_outbound_is_unusable "$rep" "$locals"; then
                 printf '%s' "$rep"
                 return 0
             fi
-        done <"$lines_file"
+        done <<EOF
+$(PICK_TAG="$tag" awk '
+            function hexval(c) { return index("0123456789abcdef", tolower(c)) - 1 }
+            function pdecode(s,    out, i, c, h, l) {
+                out = ""
+                for (i = 1; i <= length(s); i++) {
+                    c = substr(s, i, 1)
+                    if (c == "%" && i + 2 <= length(s)) {
+                        h = hexval(substr(s, i + 1, 1))
+                        l = hexval(substr(s, i + 2, 1))
+                        if (h >= 0 && l >= 0) {
+                            out = out sprintf("%c", h * 16 + l)
+                            i += 2
+                            continue
+                        }
+                    }
+                    out = out c
+                }
+                return out
+            }
+            BEGIN { t = ENVIRON["PICK_TAG"] }
+            {
+                i = index($0, "#")
+                if (i && pdecode(substr($0, i + 1)) == t) print
+            }' "$lines_file")
+EOF
     fi
 
     while IFS= read -r line; do
@@ -826,7 +852,7 @@ subscription_parse_hysteria() {
         --arg congestion "$congestion" \
         --arg up "$up_val" \
         --arg down "$down_val" '
-        def brutal_unit(v): if (v|test("[^0-9]")) then v else "\(v) mbps" end;
+        def brutal_unit(v): if (v | explode | all(. >= 48 and . <= 57)) then "\(v) mbps" else v end;
         {}
         | if ($congestion|length)>0 then .congestion=$congestion else . end
         | if ($up|length)>0 then .brutalUp=brutal_unit($up) else . end
@@ -846,11 +872,13 @@ subscription_parse_hysteria() {
             --arg alpn "$alpn" \
             --arg pin "$pinSHA256" \
             --arg pinsep "$pin_sep" '
+            def ws: . == " " or . == "\t" or . == "\n" or . == "\r";
+            def trimws: if length == 0 then . elif (.[0:1] | ws) then .[1:] | trimws elif (.[-1:] | ws) then .[:-1] | trimws else . end;
             {}
             | if ($sni|length)>0 then .serverName=$sni else . end
             | if ($aisup=="1" and ($insecure=="1" or $insecure=="true")) then .allowInsecure=true else . end
             | if ($alpn|length)>0 then .alpn=($alpn|split(",")) else . end
-            | if ($pin|length)>0 then .pinnedPeerCertSha256=([$pin|splits("[,~]")|gsub("^\\s+|\\s+$";"")]|map(select(length>0))|join($pinsep)) else . end
+            | if ($pin|length)>0 then .pinnedPeerCertSha256=([$pin|split(",")[]|split("~")[]|trimws]|map(select(length>0))|join($pinsep)) else . end
         ')
     fi
 

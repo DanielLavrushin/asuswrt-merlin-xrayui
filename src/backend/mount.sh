@@ -62,11 +62,21 @@ mount_ui() {
     ln -s -f "$XRAYUI_FAILOVER_STATE_FILE" "$ADDON_WEB_DIR/failover-state.json" || log_error "Failed to create symlink for failover-state.json."
     ln -s -f "$ADDON_SHARE_DIR/logs/rtls-results.log" "$ADDON_WEB_DIR/rtls-results.json" || log_error "Failed to create symlink for rtls-scan-results.log."
     ln -s -f "$ADDON_SHARE_DIR/logs/b4sni.log" "$ADDON_WEB_DIR/b4sni.json" || log_error "Failed to create symlink for b4sni.json."
+    mount_web_aliases
+    rm -f "$ADDON_WEB_DIR/xray_error_partial.asp" "$ADDON_WEB_DIR/xray_access_partial.asp"
 
     geodata_remount_to_web
+    (backup_remount_to_web)
 
     clear_lock
     log_ok "XRAYUI mounted successfully as $ADDON_USER_PAGE"
+}
+
+mount_web_aliases() {
+    local name
+    for name in xray-config xray-ui-response clients-online connection-status subscriptions geotags rtls-results b4sni; do
+        [ -L "$ADDON_WEB_DIR/$name.cab" ] || ln -s -f "$name.json" "$ADDON_WEB_DIR/$name.cab" || log_error "Failed to create symlink for $name.cab."
+    done
 }
 
 unmount_ui() {

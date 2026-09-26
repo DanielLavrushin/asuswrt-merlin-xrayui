@@ -109,6 +109,44 @@ describe('Backup.vue', () => {
     expect(engine.submit).toHaveBeenCalledTimes(1);
   });
 
+  describe('download', () => {
+    let clicked: { href: string | null; download: string }[];
+    const answer = (type: string, ok = true) => {
+      global.fetch = jest.fn().mockResolvedValue({ ok, headers: { get: (name: string) => (name === 'Content-Type' ? type : null) } }) as unknown as typeof fetch;
+    };
+
+    beforeEach(() => {
+      clicked = [];
+      jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+        clicked.push({ href: this.getAttribute('href'), download: this.download });
+      });
+    });
+    afterEach(() => jest.restoreAllMocks());
+
+    it('downloads through the login-protected name and keeps the file name', async () => {
+      answer('text/txt');
+      await wrapper.vm.download('xrayui-20260926-101500.tar.gz');
+
+      expect(global.fetch).toHaveBeenCalledWith('/ext/xrayui/backup/xrayui-20260926-101500.tar.gz.cab', { method: 'HEAD', cache: 'no-store' });
+      expect(clicked).toEqual([{ href: '/ext/xrayui/backup/xrayui-20260926-101500.tar.gz.cab', download: 'xrayui-20260926-101500.tar.gz' }]);
+    });
+
+    it('does not save the login page as a backup when the session has expired', async () => {
+      jest.spyOn(console, 'error').mockImplementation(() => undefined);
+      answer('text/html');
+      await wrapper.vm.download('xrayui-20260926-101500.tar.gz');
+
+      expect(clicked).toEqual([]);
+    });
+
+    it('still starts the download when the check cannot be made', async () => {
+      global.fetch = jest.fn().mockRejectedValue(new Error('offline')) as unknown as typeof fetch;
+      await wrapper.vm.download('xrayui-20260926-101500.tar.gz');
+
+      expect(clicked).toHaveLength(1);
+    });
+  });
+
   it('should render backups list', async () => {
     await wrapper.vm.show_backup_modal();
     await nextTick();

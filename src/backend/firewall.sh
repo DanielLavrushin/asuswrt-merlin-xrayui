@@ -1106,7 +1106,7 @@ ensure_bypass_ipset() {
 port_chunks() {
     [ -n "$1" ] || return 0
     printf '%s\n' "$1" | sed 's/-/:/g' | tr -cd '0-9,:' | tr ',' '\n' | awk '
-        NF {
+        NF && !seen[$0]++ {
             w = index($0, ":") ? 2 : 1
             if (n + w > 15) {
                 print s
@@ -1159,7 +1159,7 @@ emit_policy_rules() {
 apply_policy_rules() {
     local tbl=$1 proto=$2 policies=$3 nets=$4
     shift 4
-    local line pass ports everyone_done="" device_redirect=""
+    local line pass ports everyone_mode="" everyone_ports="" device_redirect=""
     local policy_name policy_mode policy_tcp policy_udp policy_macs
     for pass in devices everyone; do
         while IFS= read -r line; do
@@ -1169,25 +1169,32 @@ apply_policy_rules() {
             redirect | bypass) ;;
             *) continue ;;
             esac
-            if [ "$pass" = "devices" ]; then
-                [ -n "$policy_macs" ] || continue
-                [ "$policy_mode" = "redirect" ] && device_redirect=1
-            else
-                if [ -n "$policy_macs" ] || [ -n "$everyone_done" ]; then
-                    continue
-                fi
-                everyone_done=1
-            fi
             if [ "$proto" = "tcp" ]; then
                 ports=$policy_tcp
             else
                 ports=$policy_udp
             fi
+            if [ "$pass" = "devices" ]; then
+                [ -n "$policy_macs" ] || continue
+                [ "$policy_mode" = "redirect" ] && device_redirect=1
+                log_info "Applying policy: $policy_name, MODE: $policy_mode, protocol: $proto"
+                emit_policy_rules "$tbl" "$proto" "$policy_mode" "$ports" "$policy_macs" "$nets" "$@"
+                continue
+            fi
+            [ -z "$policy_macs" ] || continue
+            if [ -z "$everyone_mode" ]; then
+                everyone_mode=$policy_mode
+            elif [ "$policy_mode" != "$everyone_mode" ]; then
+                log_warn "Skipping policy $policy_name: all-devices policies must share one mode ($everyone_mode), protocol: $proto"
+                continue
+            fi
+            [ -n "$ports" ] && everyone_ports="${everyone_ports:+$everyone_ports,}$ports"
             log_info "Applying policy: $policy_name, MODE: $policy_mode, protocol: $proto"
-            emit_policy_rules "$tbl" "$proto" "$policy_mode" "$ports" "${policy_macs:-ANY}" "$nets" "$@"
         done <"$policies"
     done
-    if [ -z "$everyone_done" ] && [ -z "$device_redirect" ]; then
+    if [ -n "$everyone_mode" ]; then
+        emit_policy_rules "$tbl" "$proto" "$everyone_mode" "$everyone_ports" ANY "$nets" "$@"
+    elif [ -z "$device_redirect" ]; then
         emit_policy_rules "$tbl" "$proto" redirect "" ANY "$nets" "$@"
     fi
 }

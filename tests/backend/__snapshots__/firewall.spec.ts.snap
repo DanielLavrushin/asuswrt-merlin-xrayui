@@ -625,6 +625,73 @@ dnsmasq_restart
 "
 `;
 
+exports[`firewall.sh generated rules policy: bypass everyone next to a redirect everyone policy 1`] = `
+"== iptables -t filter
+-N XRAYUI
+-A INPUT -j XRAYUI
+-A FORWARD -j XRAYUI
+-A XRAYUI -m mark --mark 0x10000/0x10000 -j ACCEPT
+-A XRAYUI -j RETURN
+== iptables -t nat
+-N XRAYUI
+== iptables -t mangle
+-N XRAYUI
+-N DIVERT
+-A PREROUTING -p tcp -m socket --transparent -j DIVERT
+-A PREROUTING -j XRAYUI
+-A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+-A OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+-A XRAYUI -m addrtype --dst-type LOCAL -p udp --dport 12345 -j RETURN
+-A XRAYUI -m addrtype --dst-type LOCAL -p tcp --dport 12345 -j RETURN
+-A XRAYUI -m addrtype --src-type LOCAL -j RETURN
+-A XRAYUI -m addrtype --dst-type LOCAL -j RETURN
+-A XRAYUI -p udp -m socket --transparent -j MARK --set-mark 0x10000/0x10000
+-A XRAYUI -p tcp -m socket --transparent -j MARK --set-mark 0x10000/0x10000
+-A XRAYUI -d 10.8.0.0/24 -j RETURN
+-A XRAYUI -d 192.168.1.0/24 -j RETURN
+-A XRAYUI -d 192.168.101.0/24 -j RETURN
+-A XRAYUI -p udp -m multiport --dports 67,68,123,500,4500,4501,51820 -j RETURN
+-A XRAYUI -d 224.0.0.0/4 -j RETURN
+-A XRAYUI -d 239.0.0.0/8 -j RETURN
+-A XRAYUI -m addrtype --dst-type BROADCAST -j RETURN
+-A XRAYUI -m conntrack --ctstate DNAT -j RETURN
+-A XRAYUI -d 203.0.113.10 -j RETURN
+-A XRAYUI -d 192.0.2.3 -j RETURN
+-A XRAYUI -s 10.8.0.0/24 -p tcp -m multiport --dports 443 -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 10.8.0.0/24 -p tcp -j RETURN
+-A XRAYUI -s 192.168.1.0/24 -p tcp -m multiport --dports 443 -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.1.0/24 -p tcp -j RETURN
+-A XRAYUI -s 192.168.101.0/24 -p tcp -m multiport --dports 443 -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.101.0/24 -p tcp -j RETURN
+-A XRAYUI -s 10.8.0.0/24 -p udp -j RETURN
+-A XRAYUI -s 192.168.1.0/24 -p udp -j RETURN
+-A XRAYUI -s 192.168.101.0/24 -p udp -j RETURN
+-A DIVERT -j MARK --set-mark 0x10000/0x10000
+-A DIVERT -j CONNMARK --save-mark --mask 0x10000
+-A DIVERT -j ACCEPT
+== ip -4 rule
+fwmark 0x10000/0x10000 lookup 77
+== ip -4 route table 77
+local default dev lo proto static
+192.0.2.0/24 dev eth0 proto kernel scope link src 192.0.2.3
+10.8.0.0/24 dev tun21 proto kernel scope link src 10.8.0.1
+127.0.0.0/8 dev lo scope link
+192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1
+192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1
+== ipset
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
+== events
+dnsmasq_restart
+== messages
+WARN: Skipping policy redirect policy: all-devices policies must share one mode (bypass), protocol: tcp
+WARN: Skipping policy redirect policy: all-devices policies must share one mode (bypass), protocol: udp
+== stderr
+"
+`;
+
 exports[`firewall.sh generated rules policy: bypass one device entirely 1`] = `
 "== iptables -t filter
 -N XRAYUI
@@ -995,6 +1062,73 @@ exports[`firewall.sh generated rules policy: redirect only one device 1`] = `
 -A XRAYUI -s 10.8.0.0/24 -m mac --mac-source AA:BB:CC:DD:EE:01 -p udp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
 -A XRAYUI -s 192.168.1.0/24 -m mac --mac-source AA:BB:CC:DD:EE:01 -p udp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
 -A XRAYUI -s 192.168.101.0/24 -m mac --mac-source AA:BB:CC:DD:EE:01 -p udp -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A DIVERT -j MARK --set-mark 0x10000/0x10000
+-A DIVERT -j CONNMARK --save-mark --mask 0x10000
+-A DIVERT -j ACCEPT
+== ip -4 rule
+fwmark 0x10000/0x10000 lookup 77
+== ip -4 route table 77
+local default dev lo proto static
+192.0.2.0/24 dev eth0 proto kernel scope link src 192.0.2.3
+10.8.0.0/24 dev tun21 proto kernel scope link src 10.8.0.1
+127.0.0.0/8 dev lo scope link
+192.168.1.0/24 dev br0 proto kernel scope link src 192.168.1.1
+192.168.101.0/24 dev br1 proto kernel scope link src 192.168.101.1
+== ipset
+XRAYUI_BYPASS4 hash:net inet timeout 86400
+XRAYUI_BYPASS4_NET hash:net inet
+XRAYUI_PROXY4 hash:net inet timeout 86400
+XRAYUI_PROXY4_NET hash:net inet
+== events
+dnsmasq_restart
+== stderr
+"
+`;
+
+exports[`firewall.sh generated rules policy: two bypass everyone policies, udp voice first then web ports 1`] = `
+"== iptables -t filter
+-N XRAYUI
+-A INPUT -j XRAYUI
+-A FORWARD -j XRAYUI
+-A XRAYUI -m mark --mark 0x10000/0x10000 -j ACCEPT
+-A XRAYUI -j RETURN
+== iptables -t nat
+-N XRAYUI
+== iptables -t mangle
+-N XRAYUI
+-N DIVERT
+-A PREROUTING -p tcp -m socket --transparent -j DIVERT
+-A PREROUTING -j XRAYUI
+-A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+-A OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+-A XRAYUI -m addrtype --dst-type LOCAL -p udp --dport 12345 -j RETURN
+-A XRAYUI -m addrtype --dst-type LOCAL -p tcp --dport 12345 -j RETURN
+-A XRAYUI -m addrtype --src-type LOCAL -j RETURN
+-A XRAYUI -m addrtype --dst-type LOCAL -j RETURN
+-A XRAYUI -p udp -m socket --transparent -j MARK --set-mark 0x10000/0x10000
+-A XRAYUI -p tcp -m socket --transparent -j MARK --set-mark 0x10000/0x10000
+-A XRAYUI -d 10.8.0.0/24 -j RETURN
+-A XRAYUI -d 192.168.1.0/24 -j RETURN
+-A XRAYUI -d 192.168.101.0/24 -j RETURN
+-A XRAYUI -p udp -m multiport --dports 67,68,123,500,4500,4501,51820 -j RETURN
+-A XRAYUI -d 224.0.0.0/4 -j RETURN
+-A XRAYUI -d 239.0.0.0/8 -j RETURN
+-A XRAYUI -m addrtype --dst-type BROADCAST -j RETURN
+-A XRAYUI -m conntrack --ctstate DNAT -j RETURN
+-A XRAYUI -d 203.0.113.10 -j RETURN
+-A XRAYUI -d 192.0.2.3 -j RETURN
+-A XRAYUI -s 10.8.0.0/24 -p tcp -m multiport --dports 22,80,443,8443 -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 10.8.0.0/24 -p tcp -j RETURN
+-A XRAYUI -s 192.168.1.0/24 -p tcp -m multiport --dports 22,80,443,8443 -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.1.0/24 -p tcp -j RETURN
+-A XRAYUI -s 192.168.101.0/24 -p tcp -m multiport --dports 22,80,443,8443 -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.101.0/24 -p tcp -j RETURN
+-A XRAYUI -s 10.8.0.0/24 -p udp -m multiport --dports 443,19294:19344,50000:50100,22,17003 -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 10.8.0.0/24 -p udp -j RETURN
+-A XRAYUI -s 192.168.1.0/24 -p udp -m multiport --dports 443,19294:19344,50000:50100,22,17003 -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.1.0/24 -p udp -j RETURN
+-A XRAYUI -s 192.168.101.0/24 -p udp -m multiport --dports 443,19294:19344,50000:50100,22,17003 -j TPROXY --on-port 12345 --tproxy-mark 0x10000/0x10000
+-A XRAYUI -s 192.168.101.0/24 -p udp -j RETURN
 -A DIVERT -j MARK --set-mark 0x10000/0x10000
 -A DIVERT -j CONNMARK --save-mark --mask 0x10000
 -A DIVERT -j ACCEPT

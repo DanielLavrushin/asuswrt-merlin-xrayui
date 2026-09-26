@@ -274,6 +274,7 @@
       "label_source_ips": "源 IP 列表",
       "label_source_ports": "源端口",
       "alert_delete_rule_confirm": "删除此规则？",
+      "alert_ext_xrayui_in_ips": "自定义地理数据列表 (ext:xrayui:) 仅包含域名，不能用于 IP 列表：{entries}",
       "hint_friendly_name": "规则的友好名称。",
       "hint_outbound_tag": "出站代理的标签。当出站连接与标签匹配时，此规则将生效。",
       "hint_inbound_tags": "一个数组，每个项代表一个入站代理标签。当入站连接与数组中的任何标签匹配时，此规则将生效。",

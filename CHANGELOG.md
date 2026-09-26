@@ -1,5 +1,10 @@
 # XRAYUI Changelog
 
+## [0.70.1] - 2026-09-27
+
+- FIXED: With several **Redirect/Bypass policies** for all devices, only the first one worked, so traffic from the others skipped Xray and routing rules seemed to stop working after updating to 0.70.0. All such policies now apply together. A policy for all devices with a different mode than the first one is skipped and noted in the log.
+- FIXED: A custom geodata list (`ext:xrayui:`) could be saved in a rule's target or source IP list, where it never matches anything and fills the Xray error log with `ignore invalid IP byte slice` lines. Such rules are now refused on save, since custom lists hold domains only.
+
 ## [0.70.0] - 2026-09-26
 
 - FIXED: Backups could be downloaded from the router's web address without logging in. A login is now required, and downloading a backup no longer fails after a router restart.

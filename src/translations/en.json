@@ -278,6 +278,7 @@
       "label_source_ips": "Source IP List",
       "label_source_ports": "The source port",
       "alert_delete_rule_confirm": "Delete this rule?",
+      "alert_ext_xrayui_in_ips": "Custom geodata lists (ext:xrayui:) contain only domains and cannot be used as IP lists: {entries}",
       "hint_friendly_name": "A friendly name for the rule.",
       "hint_outbound_tag": "The tag of the outbound proxy. This rule will take effect when the outbound connection matches the tag.",
       "hint_inbound_tags": "An array where each item represents an inbound proxy tag. This rule will take effect when the inbound connection matches any of the tags in the array.",

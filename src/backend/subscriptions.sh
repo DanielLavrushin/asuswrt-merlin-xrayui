@@ -127,7 +127,7 @@ $(jq -c '.outbounds
     | select(.value.surl and .value.surl!="")
     | {idx:.key,url:.value.surl,proto:.value.protocol,tag:(.value.tag//""),
        hp:((.value.settings.vnext[0] // .value.settings.servers[0] // .value.settings // {})
-           | if (.address // "") == "" then "" else "\(.address | tostring | gsub("[\\[\\]]"; "")):\(.port // "")" | ascii_downcase end)}' "$cfg_file")
+           | if (.address // "") == "" then "" else "\(.address | tostring | ltrimstr("[") | rtrimstr("]")):\(.port // "")" | ascii_downcase end)}' "$cfg_file")
 EOF
     if ! jq -e '.outbounds | type == "array"' "$cfg_file" >/dev/null 2>&1; then
         rm -f "$cfg_file"

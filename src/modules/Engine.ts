@@ -318,7 +318,7 @@ export enum SubmitActions {
 
 export class Engine {
   public xrayConfig: XrayObject = xrayConfig;
-  private loadedPoolActive: Record<string, string | undefined> = {};
+  private loadedPool: Record<string, { active?: string; settings: string; stream: string }> = {};
   private appliedConfigJson?: string;
   private appliedBaseline?: { coreVersion: string; json: string };
   public unloadConfirmed = false;
@@ -766,9 +766,11 @@ export class Engine {
       }
       this.xrayConfig = this.hydrateConfig(config);
       Object.assign(xrayConfig, this.xrayConfig);
-      this.loadedPoolActive = {};
+      this.loadedPool = {};
       this.xrayConfig.outbounds.forEach((o) => {
-        if (o.tag && o.subPool?.enabled) this.loadedPoolActive[o.tag] = o.subPool.active;
+        if (o.tag && o.subPool?.enabled) {
+          this.loadedPool[o.tag] = { active: o.subPool.active, settings: JSON.stringify(o.settings ?? null), stream: poolStreamKey(o.streamSettings) };
+        }
       });
       return this.xrayConfig;
     } catch (e) {
@@ -787,7 +789,7 @@ export class Engine {
   }
 
   async keepRotatedOutbounds(config: XrayObject): Promise<void> {
-    const pooled = config.outbounds.filter((o) => o.tag && o.subPool?.enabled && o.tag in this.loadedPoolActive);
+    const pooled = config.outbounds.filter((o) => o.tag && o.subPool?.enabled && o.tag in this.loadedPool);
     if (pooled.length === 0) return;
 
     let disk: XrayObject;
@@ -799,15 +801,18 @@ export class Engine {
     }
 
     pooled.forEach((proxy) => {
-      const loaded = this.loadedPoolActive[proxy.tag!];
+      const loaded = this.loadedPool[proxy.tag!];
       const current = disk.outbounds?.find((o) => o.tag === proxy.tag);
       if (!current?.subPool?.enabled || !current.subPool.active) return;
-      if (current.subPool.active === loaded || proxy.subPool?.active !== loaded) return;
+      if (current.subPool.active === loaded.active || proxy.subPool?.active !== loaded.active) return;
       if (current.protocol !== proxy.protocol) return;
+      if (JSON.stringify(proxy.settings ?? null) !== loaded.settings || poolStreamKey(proxy.streamSettings) !== loaded.stream) return;
 
+      const sockopt = proxy.streamSettings?.sockopt;
       const rotated = deserializeProxy(current, outboundSettingsMap, XrayOutboundObject);
       proxy.settings = rotated.settings;
       proxy.streamSettings = transformStreamSettings(rotated.streamSettings);
+      proxy.streamSettings.sockopt = sockopt;
       proxy.subPool = rotated.subPool;
     });
   }
@@ -922,6 +927,10 @@ const streamSettingsFieldMap: [keyof XrayStreamSettingsObject, new () => any][] 
   ['xhttpSettings', XrayStreamHttpSettingsObject],
   ['hysteriaSettings', XrayStreamHysteriaSettingsObject]
 ];
+
+function poolStreamKey(streamSettings: XrayStreamSettingsObject | undefined): string {
+  return JSON.stringify({ ...(streamSettings ?? {}), sockopt: undefined });
+}
 
 function transformStreamSettings(streamSettings: XrayStreamSettingsObject | undefined): XrayStreamSettingsObject {
   if (!streamSettings) return new XrayStreamSettingsObject();

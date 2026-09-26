@@ -1,6 +1,6 @@
 # XRAYUI Changelog
 
-## [0.70.0] - 2026-09-xx
+## [0.70.0] - 2026-09-26
 
 - FIXED: The XRAYUI page could open as a blank white screen because of a device on the network, such as some IP cameras, or a device name with quotes or a backslash. Settings saved by other add-ons with such characters, or a missing add-on settings file, had the same effect. The page now opens, and the names and settings are kept exactly as they are.
 - FIXED: After servers were loaded from a long list of subscription links, a TLS ping or generating ECH or WireGuard keys could get broken data and fail until the page was reloaded.

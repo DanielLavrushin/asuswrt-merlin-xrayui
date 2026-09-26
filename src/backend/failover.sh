@@ -187,7 +187,7 @@ failover_switch_next() {
     origin=$(printf '%s' "$current" | jq -r '.subPool.origin // ""')
     cur_hp=$(printf '%s' "$current" | jq -r '
         (.settings.vnext[0] // .settings.servers[0] // .settings // {}) as $s
-        | if ($s.address // "") == "" then "" else "\($s.address | tostring | gsub("[\\[\\]]"; "")):\($s.port // "")" | ascii_downcase end')
+        | if ($s.address // "") == "" then "" else "\($s.address | tostring | ltrimstr("[") | rtrimstr("]")):\($s.port // "")" | ascii_downcase end')
 
     pool=$(jq -r --arg p "$proto" '.[$p] // [] | .[]' "$XRAYUI_SUBSCRIPTIONS_FILE" 2>/dev/null)
     if [ -z "${pool:+1}" ]; then
@@ -202,7 +202,7 @@ failover_switch_next() {
         .outbounds[]? | select(.tag != $t)
         | (.settings.vnext[0] // .settings.servers[0] // .settings // {}) as $s
         | select(($s.address // "") != "")
-        | "\($s.address | tostring | gsub("[\\[\\]]"; "")):\($s.port // "")" | ascii_downcase' "$XRAY_CONFIG_FILE" 2>/dev/null)
+        | "\($s.address | tostring | ltrimstr("[") | rtrimstr("]")):\($s.port // "")" | ascii_downcase' "$XRAY_CONFIG_FILE" 2>/dev/null)
 
     failover_state_update --arg t "$tag" --argjson now "$now" --argjson ttl "$FAILOVER_FAILED_TTL" '
         if .[$t].failed then .[$t].failed |= with_entries(select(.value > ($now - $ttl))) else . end'

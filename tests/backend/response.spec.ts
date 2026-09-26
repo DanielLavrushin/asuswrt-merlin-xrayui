@@ -54,6 +54,37 @@ const LINKS_JUNK = LINKS_B64 + '\n<!-- cached by edge -->\n';
 const VMESS = JSON.stringify({ v: '2', ps: 'Сервер ??>', add: '203.0.113.3', port: '443', id: '11111111-2222-3333-4444-555555555555', net: 'ws', path: '/ws?ed=2048' });
 const VMESS_B64 = Buffer.from(VMESS).toString('base64url');
 const VMESS_JUNK = `${VMESS_B64.slice(0, 40)}%3A${VMESS_B64.slice(40)}`;
+const vlessLink = (i: number) =>
+  `vless://11111111-2222-3333-4444-${String(i).padStart(12, '0')}@198.51.100.${(i % 250) + 1}:443?encryption=none&security=tls&sni=s${i}.example&type=tcp#Server%20${i}`;
+const BIG_LINKS = Array.from({ length: 1500 }, (_, i) => vlessLink(i)).join('\n') + '\n';
+const BIG_RULES = Array.from({ length: 2000 }, (_, i) => ({ type: 'field', domain: [`domain:site-${i}.example.com`], outboundTag: 'direct' }));
+const SUB_CONFIG = JSON.stringify({
+  log: { loglevel: 'warning' },
+  inbounds: [],
+  outbounds: [
+    {
+      tag: 'proxy',
+      protocol: 'vless',
+      surl: 'https://sub.example/big',
+      settings: { vnext: [{ address: '203.0.113.200', port: 443, users: [{ id: 'old' }] }] },
+      streamSettings: { sockopt: { mark: 255 } }
+    },
+    { tag: 'json', protocol: 'vless', surl: 'https://sub.example/json', settings: { vnext: [{ address: '203.0.113.201', port: 443, users: [{ id: 'old' }] }] } },
+    { tag: 'gone', protocol: 'trojan', surl: 'https://sub.example/gone', settings: { servers: [{ address: '203.0.113.202', port: 443, password: 'x' }] } },
+    { tag: 'direct', protocol: 'freedom' }
+  ],
+  routing: { rules: BIG_RULES }
+});
+const SUB_JSON = JSON.stringify({
+  outbounds: [{ tag: 'json', protocol: 'vless', settings: { vnext: [{ address: 'json.example.com', port: 8443, users: [{ id: 'new', encryption: 'none' }] }] } }],
+  routing: { rules: BIG_RULES }
+});
+const findBinary = (name: string) =>
+  (process.env.PATH ?? '')
+    .split(path.delimiter)
+    .map((d) => path.join(d, name))
+    .find((p) => fs.existsSync(p) && fs.statSync(p).isFile());
+const EXTERNAL = { RS_EXT_PRINTF: findBinary('printf') ?? '', RS_EXT_ECHO: findBinary('echo') ?? '' };
 const APPLIED = JSON.stringify({ log: { loglevel: 'debug' }, inbounds: [], outbounds: [{ tag: 'direct', protocol: 'freedom' }] });
 const loadingResponse = (message: string) => JSON.stringify({ xray: { profile: 'config.json' }, loading: { message, progress: 100 } });
 
@@ -140,6 +171,16 @@ const scenarios: Record<string, Scenario> = {
     steps: ['clear_loading'],
     env: { RS_NEXT_LOADING: JSON.stringify({ xray: { profile: 'config.json' }, loading: { message: 'Restarting Xray service...', progress: 35 } }) },
     files: { 'www/xray-ui-response.json': loadingResponse('Error: another restart or switch is in progress. Try again.') }
+  },
+  'large subscriptions': {
+    steps: ['subs'],
+    env: EXTERNAL,
+    files: { 'opt/etc/xray/config.json': SUB_CONFIG, 'sub/big': Buffer.from(BIG_LINKS).toString('base64'), 'sub/json': SUB_JSON }
+  },
+  'large plain subscription': {
+    steps: ['subs'],
+    env: EXTERNAL,
+    files: { 'opt/etc/xray/config.json': SUB_CONFIG, 'sub/big': BIG_LINKS, 'sub/json': Buffer.from(SUB_JSON).toString('base64') }
   },
   apply: {
     steps: ['apply'],
@@ -255,6 +296,9 @@ it('builds the gz fixtures exactly as the frontend submits them', () => {
     expect(encoded).toMatch(/[-_]/);
   }
   expect(LINKS_JUNK.length).toBeGreaterThan(2048);
+  for (const big of [BIG_LINKS, SUB_CONFIG, SUB_JSON]) expect(big.length).toBeGreaterThan(131072);
+  expect(EXTERNAL.RS_EXT_PRINTF).not.toBe('');
+  expect(EXTERNAL.RS_EXT_ECHO).not.toBe('');
 });
 
 describe.each(SHELLS)('response backend under %s', (_label, shell) => {
@@ -397,6 +441,24 @@ describe.each(SHELLS)('response backend under %s', (_label, shell) => {
       const r = await get('error progress replaced during the wait');
       expect(sleeps(r)).toEqual(['sleep 1', 'sleep 5']);
       expect(r.response.loading).toEqual({ message: 'Restarting Xray service...', progress: 35 });
+    });
+  });
+
+  describe('process_subscriptions with bodies and a config over 128 KiB', () => {
+    const outbound = (r: Result, tag: string) => (JSON.parse(r.read('opt/etc/xray/config.json') ?? '{}').outbounds as Record<string, any>[]).find((o) => o.tag === tag);
+
+    it.each(['large subscriptions', 'large plain subscription'])('refreshes every reachable outbound: %s', async (name) => {
+      const r = await get(name);
+      expect(r.events).toContain('process_subscriptions rc=0');
+      expect(r.stderr).not.toContain('Argument list too long');
+      const proxy = outbound(r, 'proxy');
+      expect(proxy?.settings.vnext[0].address).toBe('198.51.100.1');
+      expect(proxy?.streamSettings.sockopt).toEqual({ mark: 255 });
+      expect(proxy?.surl).toBe('https://sub.example/big');
+      expect(outbound(r, 'json')?.settings.vnext[0].address).toBe('json.example.com');
+      expect(outbound(r, 'gone')?.settings.servers[0].address).toBe('203.0.113.202');
+      expect(r.events.some((e) => e.startsWith("WARN: Subscription URL of outbound 'gone'"))).toBe(true);
+      expect(JSON.parse(r.read('opt/etc/xray/config.json') ?? '{}').routing.rules).toHaveLength(BIG_RULES.length);
     });
   });
 

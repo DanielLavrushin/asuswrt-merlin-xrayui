@@ -67,6 +67,12 @@ restart() { ev "restart"; }
 failover_config_lock() { return 0; }
 failover_config_unlock() { :; }
 backup_xray_config() { :; }
+subscription_curl() { cat "$RS_STATE/sub/${1##*/}" 2>/dev/null; }
+subscription_local_addresses() { :; }
+if [ -n "${RS_EXT_PRINTF:-}" ]; then
+    printf() { "$RS_EXT_PRINTF" "$@"; }
+    echo() { "$RS_EXT_ECHO" "$@"; }
+fi
 
 ADDON_TAG=xrayui
 ADDON_TAG_UPPER=XRAYUI
@@ -105,6 +111,11 @@ sub_link() {
 sub_body() {
     subscription_decode_body "$RS_STATE/payload" "$RS_STATE/decoded"
     ev "subscription_decode_body rc=$?"
+}
+
+subs() {
+    process_subscriptions "$XRAY_CONFIG_FILE"
+    ev "process_subscriptions rc=$?"
 }
 
 apply() {

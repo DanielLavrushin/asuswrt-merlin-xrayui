@@ -637,10 +637,6 @@ urldecode() {
     printf '%b' "$data"
 }
 
-is_json() {
-    echo "$1" | jq -e . >/dev/null 2>&1
-}
-
 xrayui_core_version() {
     if [ -z "$XRAYUI_CORE_VER_CACHE" ]; then
         XRAYUI_CORE_VER_CACHE=$(xray version 2>/dev/null | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)

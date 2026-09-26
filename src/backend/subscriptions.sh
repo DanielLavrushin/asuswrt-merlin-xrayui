@@ -65,11 +65,13 @@ subscription_body_has_links() {
 
 process_subscriptions() {
     local config_file="$1"
-    local cfg new idx url proto tag hp fetched rep maybe
+    local idx url proto tag hp rep
     local body_file="/tmp/xrayui_surl.$$"
-    local temp_config="$config_file.subs.$$"
+    local dec_file="/tmp/xrayui_surl_dec.$$"
+    local cfg_file="$config_file.subs.$$"
+    local new_file="$config_file.subs.new.$$"
 
-    cfg=$(cat "$config_file") || return 1
+    cp "$config_file" "$cfg_file" || return 1
     while IFS= read -r entry; do
         [ -z "$entry" ] && continue
         idx=$(printf '%s' "$entry" | jq -r '.idx')
@@ -84,30 +86,23 @@ process_subscriptions() {
             rm -f "$body_file"
             continue
         fi
-        fetched=$(tr -d '\r' <"$body_file")
+        subscription_decode_body "$body_file" "$dec_file"
         rm -f "$body_file"
 
-        if is_json "$fetched"; then
-            rep=$(printf '%s' "$fetched" | jq -c --arg t "$tag" --arg p "$proto" '
+        if jq -e . "$dec_file" >/dev/null 2>&1; then
+            rep=$(jq -c --arg t "$tag" --arg p "$proto" '
                 (.outbounds // [])
                 | (if ($t != "") then (map(select(.tag==$t)) | first) else null end)
-                  // (map(select(.protocol==$p)) | first)')
+                  // (map(select(.protocol==$p)) | first)' "$dec_file")
         else
-            maybe=$(subscription_b64d "$fetched")
-            if is_json "$maybe"; then
-                rep=$(printf '%s' "$maybe" | jq -c --arg t "$tag" --arg p "$proto" '
-                    (.outbounds // [])
-                    | (if ($t != "") then (map(select(.tag==$t)) | first) else null end)
-                      // (map(select(.protocol==$p)) | first)')
-            else
-                rep=$(subscription_pick_from_list "$tag" "$proto" "$fetched" "$hp")
-            fi
+            rep=$(subscription_pick_from_list "$tag" "$proto" "$dec_file" "$hp")
         fi
+        rm -f "$dec_file"
         if [ -z "$rep" ] || [ "$rep" = "null" ]; then
             log_warn "Subscription URL of outbound '$tag' ($(subscription_url_host "$url")) returned no usable $proto link; keeping its previous settings"
             continue
         fi
-        new=$(printf '%s' "$cfg" | jq -c \
+        jq -c \
             --arg pos "$idx" \
             --arg url "$url" \
             --arg tag "$tag" \
@@ -121,18 +116,21 @@ process_subscriptions() {
                         then .streamSettings = ((.streamSettings // {}) + {sockopt:$sock})
                         else .
                         end
-                    )') && [ -n "$new" ] && cfg="$new"
+                    )' "$cfg_file" >"$new_file" && [ -s "$new_file" ] && mv -f "$new_file" "$cfg_file"
+        rm -f "$new_file"
     done <<EOF
-$(printf '%s' "$cfg" | jq -c '.outbounds
+$(jq -c '.outbounds
     | to_entries[]
     | select(.value.surl and .value.surl!="")
     | {idx:.key,url:.value.surl,proto:.value.protocol,tag:(.value.tag//""),
        hp:((.value.settings.vnext[0] // .value.settings.servers[0] // .value.settings // {})
-           | if (.address // "") == "" then "" else "\(.address):\(.port // "")" | ascii_downcase end)}')
+           | if (.address // "") == "" then "" else "\(.address):\(.port // "")" | ascii_downcase end)}' "$cfg_file")
 EOF
-    printf '%s' "$cfg" | jq -e '.outbounds | type == "array"' >/dev/null 2>&1 || return 1
-    printf '%s' "$cfg" >"$temp_config" && mv -f "$temp_config" "$config_file"
-    rm -f "$temp_config"
+    if ! jq -e '.outbounds | type == "array"' "$cfg_file" >/dev/null 2>&1; then
+        rm -f "$cfg_file"
+        return 1
+    fi
+    mv -f "$cfg_file" "$config_file"
 }
 
 subscription_parse_link_to_outbound() {
@@ -176,18 +174,9 @@ subscription_outbound_is_unusable() {
 }
 
 subscription_pick_from_list() {
-    local tag="$1"
-    local proto="$2"
-    local fetched="$3"
-    local cur_hp="$4"
-    local decoded lines line rep locals
-    case "$fetched" in
-    *://*) decoded="$fetched" ;;
-    *) decoded=$(subscription_b64d "$fetched") ;;
-    esac
-    [ -n "$decoded" ] || decoded="$fetched"
-
-    lines=$(printf '%s\n' "$decoded" | tr -d '\r' | awk -v p="$proto" '
+    local lines_file="/tmp/xrayui_pick.$$"
+    local rc
+    awk -v p="$2" '
         {
             sub(/^[ \t]+/, "")
             sub(/[ \t]+$/, "")
@@ -197,12 +186,23 @@ subscription_pick_from_list() {
             if (s == "ss") s = "shadowsocks"
             else if (s == "hy2" || s == "hysteria2") s = "hysteria"
             if (s == p) print
-        }')
-    [ -n "$lines" ] || return 1
+        }' "$3" >"$lines_file"
+    subscription_pick_link "$1" "$lines_file" "$4"
+    rc=$?
+    rm -f "$lines_file"
+    return "$rc"
+}
+
+subscription_pick_link() {
+    local tag="$1"
+    local lines_file="$2"
+    local cur_hp="$3"
+    local line rep locals
+    [ -s "$lines_file" ] || return 1
     locals=$(subscription_local_addresses)
 
     if [ -n "$cur_hp" ]; then
-        line=$(printf '%s\n' "$lines" | awk -v hp="$cur_hp" '{
+        line=$(awk -v hp="$cur_hp" '{
             s = $0
             sub(/#.*/, "", s)
             sub(/^[^:]*:\/\//, "", s)
@@ -210,7 +210,7 @@ subscription_pick_from_list() {
             sub(/\/.*/, "", s)
             m = split(s, parts, "@")
             if (tolower(parts[m]) == hp) { print; exit }
-        }')
+        }' "$lines_file")
         if [ -n "$line" ] && rep=$(subscription_parse_link_to_outbound "$line") && [ -n "$rep" ] &&
             ! subscription_outbound_is_unusable "$rep" "$locals"; then
             printf '%s' "$rep"
@@ -227,9 +227,7 @@ subscription_pick_from_list() {
                 printf '%s' "$rep"
                 return 0
             fi
-        done <<EOF
-$lines
-EOF
+        done <"$lines_file"
     fi
 
     while IFS= read -r line; do
@@ -238,9 +236,7 @@ EOF
             printf '%s' "$rep"
             return 0
         fi
-    done <<EOF
-$lines
-EOF
+    done <"$lines_file"
     return 1
 }
 

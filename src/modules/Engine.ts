@@ -76,6 +76,7 @@ import {
 } from './TransportObjects';
 import { XrayProtocol } from './Options';
 import * as DnsLeakProtection from './DnsLeakProtection';
+import { getCoreVersion } from './CoreVersion';
 
 // Protocol → settings class mappings for deserialization
 const inboundSettingsMap: Record<string, new () => any> = {
@@ -318,6 +319,9 @@ export enum SubmitActions {
 export class Engine {
   public xrayConfig: XrayObject = xrayConfig;
   private loadedPoolActive: Record<string, string | undefined> = {};
+  private appliedConfigJson?: string;
+  private appliedBaseline?: { coreVersion: string; json: string };
+  public unloadConfirmed = false;
   public mode = 'server';
   private readonly zero_uuid = '10000000-1000-4000-8000-100000000000';
   private subscriptionsNotFound = false;
@@ -392,6 +396,11 @@ export class Engine {
 
     const payloadString = this.compressPayload(JSON.stringify(payload));
     const chunks = this.splitPayload(payloadString, this.nvramChunkSize);
+    Object.keys(window.xray.custom_settings).forEach((k) => {
+      if (k.startsWith('xray_payload')) {
+        delete window.xray.custom_settings[k];
+      }
+    });
     chunks.forEach((chunk: string, idx) => {
       window.xray.custom_settings[`xray_payload${idx}`] = chunk;
     });
@@ -583,6 +592,20 @@ export class Engine {
     return config;
   }
 
+  hasUnappliedChanges(config: XrayObject): boolean {
+    if (!this.appliedConfigJson) return false;
+    try {
+      const coreVersion = getCoreVersion();
+      if (this.appliedBaseline?.coreVersion !== coreVersion) {
+        const applied = this.hydrateConfig(plainToInstance(XrayObject, JSON.parse(this.appliedConfigJson)));
+        this.appliedBaseline = { coreVersion, json: stableStringify(this.prepareServerConfig(applied)) };
+      }
+      return stableStringify(this.prepareServerConfig(config)) !== this.appliedBaseline.json;
+    } catch {
+      return false;
+    }
+  }
+
   async getGeodata(): Promise<EngineGeodatConfig | undefined> {
     const result = await this.getXrayResponse();
     return result.geodata;
@@ -726,6 +749,7 @@ export class Engine {
             resolve();
             if (windowReload) {
               setTimeout(() => {
+                this.unloadConfirmed = true;
                 window.location.reload();
               }, 1000);
             }
@@ -749,6 +773,8 @@ export class Engine {
             Expires: '0'
           }
         });
+        this.appliedConfigJson = JSON.stringify(response.data);
+        this.appliedBaseline = undefined;
         config = plainToInstance(XrayObject, response.data);
       }
       this.xrayConfig = this.hydrateConfig(config);
@@ -874,6 +900,13 @@ export class Engine {
     const plain = JSON.parse(JSON.stringify(config));
     return this.hydrateConfig(plainToInstance(XrayObject, plain));
   }
+}
+
+function stableStringify(value: unknown): string {
+  return JSON.stringify(value, (_key, val) => {
+    if (!val || typeof val !== 'object' || Array.isArray(val)) return val;
+    return Object.fromEntries(Object.keys(val).sort().map((key) => [key, val[key]]));
+  });
 }
 
 function transformMaskArray(masks: any[] | undefined): XrayFinalMaskObject[] | undefined {

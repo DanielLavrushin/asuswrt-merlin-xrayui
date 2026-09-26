@@ -173,12 +173,18 @@ ipset_learned_save() {
     [ -n "$sets" ] || return 0
 
     mkdir -p "$(dirname "$file")" 2>/dev/null
-    {
-        printf '# %s\n' "$(date +%s)"
-        for s in $sets; do
-            ipset save "$s" 2>/dev/null | awk '$1 == "add" && $4 == "timeout" && $5 > 0 { print $2, $3, $5 }'
-        done
-    } >"$file.new" && mv -f "$file.new" "$file"
+    local tmp="$file.$$"
+    printf '# %s\n' "$(date +%s)" >"$tmp" || return 1
+    for s in $sets; do
+        if ! ipset save "$s" >"$tmp.raw" 2>/dev/null; then
+            rm -f "$tmp" "$tmp.raw"
+            log_warn "Could not read ipset $s; keeping the previously saved learned addresses"
+            return 1
+        fi
+        awk '$1 == "add" && $4 == "timeout" && $5 > 0 { print $2, $3, $5 }' "$tmp.raw" >>"$tmp"
+    done
+    rm -f "$tmp.raw"
+    mv -f "$tmp" "$file"
     log_debug "Saved $(($(wc -l <"$file") - 1)) learned ipset addresses to $file"
 }
 
@@ -186,11 +192,14 @@ ipset_learned_restore() {
     local file="$IPSET_LEARNED_FILE" sets out
     [ -s "$file" ] || return 0
     sets=" $(ipset list -n 2>/dev/null | tr '\n' ' ') "
-    out=$(awk -v now="$(date +%s)" -v sets="$sets" '
+    if out=$(awk -v now="$(date +%s)" -v sets="$sets" '
         NR == 1 { el = now - $2; if (el < 0) el = 0; next }
         index(sets, " " $1 " ") && $3 - el > 0 { printf "add %s %s timeout %d\n", $1, $2, $3 - el }
-    ' "$file" | ipset -exist restore 2>&1) || log_warn "Failed to restore learned ipset addresses: $out"
-    log_debug "Restored learned ipset addresses from $file"
+    ' "$file" | ipset -exist restore 2>&1); then
+        log_debug "Restored learned ipset addresses from $file"
+    else
+        log_warn "Failed to restore learned ipset addresses: $out"
+    fi
 }
 
 has_loopback_dokodemo() {

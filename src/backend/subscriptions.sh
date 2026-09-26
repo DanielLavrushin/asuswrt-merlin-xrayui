@@ -271,7 +271,9 @@ subscription_split_hostport() {
 subscription_kcp_era() {
     local v
     v=$(xrayui_core_version)
-    if [ -z "$v" ] || version_ge "$v" "26.6.1"; then
+    if [ -z "$v" ] || version_ge "$v" "26.6.22"; then
+        printf 'mkcp-legacy-reversed'
+    elif version_ge "$v" "26.6.1"; then
         printf 'mkcp-legacy'
     elif version_ge "$v" "26.1.31"; then
         printf 'finalmask'
@@ -313,6 +315,7 @@ subscription_parse_network() {
                else
                  (if $h != null then [if $era=="finalmask" then {type:("header-" + $h)} else {type:"mkcp-legacy",settings:{header:$h}} end] else [] end)
                  + (if ($seed|length)>0 then [if $era=="finalmask" then {type:"mkcp-aes128gcm",settings:{password:$seed}} else {type:"mkcp-legacy",settings:{value:$seed}} end] else [] end)
+                 | if $era=="mkcp-legacy-reversed" then reverse else . end
                end) as $udp
             | {kcpSettings:$k} + (if ($udp|length)>0 then {finalmask:{udp:$udp}} else {} end)
         elif $n=="ws" then

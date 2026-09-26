@@ -2,7 +2,15 @@
 
 ## [0.70.0] - 2026-09-xx
 
+- FIXED: The XRAYUI page could open as a blank white screen because of a device on the network, such as some IP cameras, or a device name with quotes or a backslash. Settings saved by other add-ons with such characters, or a missing add-on settings file, had the same effect. The page now opens, and the names and settings are kept exactly as they are.
+- FIXED: After servers were loaded from a long list of subscription links, a TLS ping or generating ECH or WireGuard keys could get broken data and fail until the page was reloaded.
+- IMPROVED: Changes made in settings windows are not saved until **Apply** is pressed. A note under **Apply** now shows when some changes have not been applied yet, and **Start**, **Restart**, **Stop** and leaving the page ask first instead of silently dropping them.
+- FIXED: mKCP settings showed **Congestion control**, **Read buffer size** and **Write buffer size**, which Xray-core 26.4.13 and newer ignore. On those versions **Congestion window multiplier** and **Max sending window** are shown instead.
+- FIXED: Clearing an mKCP number field, such as **MTU**, stopped Xray from starting. An empty field now means the default value.
+- FIXED: mKCP with both a packet header and a seed did not connect on Xray-core 26.6.22 and newer, because the two were applied in the wrong order. Subscription links were affected too. A configuration saved earlier needs **Apply** once, and when both ends of an mKCP link use XRAYUI, both need updating.
+- FIXED: In simple mode, **Apply** removed device policies and other routing settings when neither domain list had any entries.
 - FIXED: **Hide sensitive data** in the configuration viewer missed several private details, most notably the full server link (with its ID, address and key) of outbounds in the **Auto-fallback pool**. These are now hidden, as is a proxy server's address or domain when it is repeated elsewhere, such as in routing rules.
+- FIXED: With **Hide sensitive data** turned off, the configuration viewer showed pieces of program code and `undefined` values mixed into the configuration.
 - FIXED: Auto-fallback only noticed a dead server while the XRAYUI page was open in a browser, so with the page closed it never switched. Each check now reads fresh results from Xray.
 - FIXED: After auto-fallback had to restart Xray once, it silently stopped working until the next manual restart. Automatic geodata updates had the same problem after their first run.
 - FIXED: Auto-fallback switched blindly to the next server in the list, including dead servers, fake "expired" or "traffic left" entries, and links the installed Xray cannot use. New servers are now checked before and after the switch, and servers that failed recently are skipped.
@@ -22,7 +30,9 @@
 - FIXED: With IPv6 enabled, a server inbound's port was opened not only on the router but on every device in the LAN.
 - FIXED: With **DNS bypass (ipset)** set to redirect, sites from proxy rules often went direct for a long time after a restart, a reboot or a router reconnect, until the device looked the site up again. Addresses the router has already learned are now kept across restarts and reboots, and the sites listed in rules are looked up right after a restart. ([#282](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/282))
 - FIXED: With **DNS bypass (ipset)**, large country lists such as `geoip:us` were silently not loaded, so that traffic went direct in redirect mode.
-- FIXED: With **DNS bypass (ipset)**, some sites from geosite lists and entries from custom `ext:` data files were ignored, and a direct outbound with fragment or noises lost those settings in redirect mode. Entries that cannot be used, such as `regexp:` or `keyword:`, are now listed in the log.
+- FIXED: With **DNS bypass (ipset)**, some sites from geosite lists and entries from custom `ext:` data files were ignored, and a direct outbound with fragment, noises or a bound network interface lost those settings. Entries that cannot be used, such as `regexp:` or `keyword:`, are now listed in the log.
+- FIXED: With **DNS bypass (ipset)**, a domain with non-Latin letters in a rule or in a geosite list (some Russian lists contain thousands) stopped the router's DNS from starting.
+- IMPROVED: With **DNS bypass (ipset)**, DNS is back within a second or two after a restart instead of about ten seconds when the rules have not changed.
 - IMPROVED: The router rebuilding its firewall no longer restarts DNS every time.
 - FIXED: The nightly geodata update restarted Xray even when nothing had changed, and a failed download could replace the geodata files with an error page.
 - FIXED: When the geodata links in **General Options** were changed and the download failed, the other changed options were not applied.
@@ -34,6 +44,8 @@
 - FIXED: An inbound listening on `127.0.0.1` got no traffic when another transparent inbound was listed after it.
 - FIXED: A transparent inbound listening on `::` got no IPv4 traffic.
 - FIXED: Stopping Xray left a routing rule behind on the router.
+- FIXED: On some routers, the **Profile manager** list, the backup list and the list of custom geodata files stayed empty, so no profile could be picked. ([#405](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/405))
+- FIXED: On some routers, **Apply** failed with an upload error, and Save in **General Options** reset every option to an empty value while still reporting success. A failed save now leaves the settings unchanged. ([#405](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/405))
 
 ## [0.69.1] - 2026-09-01
 

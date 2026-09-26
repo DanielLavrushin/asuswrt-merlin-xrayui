@@ -36,7 +36,9 @@
       "xray_connecting": "Verbindung wird überprüft …",
       "xray_connected": "XRAY ist verbunden",
       "xray_stopped": "XRAY ist gestoppt",
-      "xray_running": "XRAY-Dienst läuft"
+      "xray_running": "XRAY-Dienst läuft",
+      "unapplied_changes": "Änderungen sind noch nicht angewendet. Sie werden erst mit „Anwenden“ auf den Router geschrieben.",
+      "confirm_unapplied_changes": "Einige Änderungen sind noch nicht angewendet und gehen verloren. Ohne sie fortfahren?"
     },
     "ServerStatus": {
       "configuration": "Konfiguration",

@@ -50,6 +50,7 @@ export class XrayInboundObject<TProxy extends IProtocolType> {
 
     if (this.sniffing) {
       this.sniffing.normalize();
+      if (isObjectEmpty(this.sniffing)) this.sniffing = undefined;
     }
 
     if (this.allocate) {

@@ -260,7 +260,13 @@
       };
 
       const download = (filename: string) => {
-        if (filename) globalThis.location.href = `/ext/xrayui/backup/${filename}`;
+        if (!filename) return;
+        const link = document.createElement('a');
+        link.href = `/ext/xrayui/backup/${filename}`;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       };
 
       const create_backup = async () => {

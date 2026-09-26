@@ -121,7 +121,6 @@
           const routing = config.value.routing;
           if (routing?.rules) {
             routing.rules = routing.rules.filter((r) => r.name !== name);
-            if (routing.rules.length === 0) delete config.value.routing;
           }
           return;
         }

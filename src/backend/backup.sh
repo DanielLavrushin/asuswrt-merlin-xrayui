@@ -156,6 +156,8 @@ backup_restore_configuration() {
 
     log_ok "Restore completed successfully from $backup_file."
 
+    cron_jobs_add
+
     update_loading_progress "Applying restored profile $XRAY_CONFIG_FILE..."
     restart
 }

@@ -1,0 +1,23 @@
+#!/bin/sh
+value=0
+inexec=0
+for a do
+    if [ "$inexec" = 1 ]; then
+        [ "$a" = ";" ] && inexec=0
+        continue
+    fi
+    if [ "$value" = 1 ]; then
+        value=0
+        continue
+    fi
+    case "$a" in
+    -name | -iname | -mtime) value=1 ;;
+    -exec) inexec=1 ;;
+    -print | -print0 | -a | -o | -L | -H | -follow | '!') ;;
+    -*)
+        printf 'find: unrecognized: %s\nBusyBox v1.25.1 multi-call binary.\n\nUsage: find [-HL] [PATH]... [OPTIONS] [ACTIONS]\n' "$a" >&2
+        exit 1
+        ;;
+    esac
+done
+PATH=${RS_REAL_PATH:?RS_REAL_PATH is not set} exec find "$@"

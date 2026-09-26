@@ -92,7 +92,7 @@ Controls how domain decisions are mirrored into kernel ipsets for fast-path rout
 - **BYPASS** — domains mapped to the `FREEDOM` outbound go directly to the internet; everything else remains proxied.
 - **REDIRECT** — the inverse: only domains **not** mapped to `FREEDOM` are proxied; all other traffic goes direct.
 
-A `FREEDOM` outbound with fragment, noises, redirect, proxy protocol or a dialer proxy counts as a proxy here, so its traffic still enters Xray and those settings keep working.
+A `FREEDOM` outbound with fragment, noises, redirect, proxy protocol, a dialer proxy, a bound interface or a custom source address counts as a proxy here, so its traffic still enters Xray and those settings keep working.
 
 ```mermaid
 flowchart TD
@@ -163,9 +163,9 @@ The top half of the chart runs every time dnsmasq starts while Xray is running. 
 
 #### Things to know
 
-- **Cached DNS answers.** A device that resolved a domain before a rule was added, or before Xray restarted, keeps using that answer and can go direct until it looks the domain up again. XRAYUI narrows this gap: in `REDIRECT` mode the learned addresses are saved every 30 minutes and when Xray stops, restored when it starts, and the domains written directly in the rules (plus the first domains of newly added geosite tags) are looked up right after dnsmasq starts. Flushing the device's DNS cache or restarting the browser covers the rest.
+- **Cached DNS answers.** A device that resolved a domain before a rule was added, or before Xray restarted, keeps using that answer and can go direct until it looks the domain up again. XRAYUI narrows this gap: in `REDIRECT` mode the learned addresses are saved every 30 minutes and when Xray stops, restored when it starts, and the domains written directly in the rules (plus the first domains of newly added geosite tags) are looked up right after dnsmasq starts. DNS answers handed to devices are also capped at one hour in `BYPASS` and `REDIRECT` modes, so a device asks again within an hour at most. Flushing the device's DNS cache or restarting the browser covers the rest.
 - **Encrypted DNS on the device.** DoH/DoT in the browser, Android Private DNS and iCloud Private Relay never ask the router, so their destinations never reach the set. Merlin's **Prevent client auto DoH** option stops browsers that switch to DoH on their own.
-- **Unsupported entries.** `regexp:`, `keyword:`, `dotless:`, plain words without a dot and negated `geoip:!` entries cannot be expressed as an ipset. They still work inside Xray, but this feature skips them and lists them in the log.
+- **Unsupported entries.** `regexp:`, `keyword:`, `dotless:`, plain words without a dot, negated `geoip:!` entries and domains with non-Latin letters cannot be expressed as an ipset (international domains work when written in punycode, `xn--...`). They still work inside Xray, but this feature skips them and lists them in the log.
 - **Rules without a destination.** Rules that match only by source device, inbound, port or protocol have no domain or IP to put into a set, so in `REDIRECT` mode they have no effect.
 - **Expiry.** Learned addresses expire 24 hours after the last lookup through dnsmasq. Removing a proxied domain from the rules clears the learned addresses.
 

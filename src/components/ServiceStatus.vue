@@ -110,6 +110,7 @@
       };
 
       const handleStatus = async (action: string) => {
+        if (engine.hasUnappliedChanges(config.value) && !window.confirm(t('com.ClientStatus.confirm_unapplied_changes'))) return;
         await engine.executeWithLoadingProgress(async () => {
           await engine.submit(action);
         });

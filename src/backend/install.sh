@@ -53,6 +53,7 @@ install() {
     install_opkg_package flock false
     install_opkg_package logrotate false
     install_opkg_package ipset false
+    install_opkg_package findutils false
 
     if which base64 >/dev/null 2>&1; then
         log_debug "base64 is already installed."

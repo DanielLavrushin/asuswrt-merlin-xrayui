@@ -22,21 +22,13 @@
     <script language="JavaScript" type="text/javascript" src="/help.js"></script>
     <script language="JavaScript" type="text/javascript" src="/validator.js"></script>
     <script>
-      const custom_settings_raw = '<% get_custom_settings(); %>';
-      const stripAnsi = /\u001b\[[0-9;]*m/g;
-      const stripControls = /[\u0000-\u001F]+/g;
-      const custom_settings = JSON.parse(custom_settings_raw.replace(stripAnsi, '').replace(stripControls, ''));
-
       var xray = {
         router: {
           name: '<% nvram_get("productid"); %>',
-          cpu: JSON.parse('<%cpu_core_num();%>'),
           firmware: '<% nvram_get("firmver"); %>',
           language: '<% nvram_get("preferred_lang"); %>',
           ip: '<% nvram_get("lan_ipaddr"); %>',
           territory: '<% nvram_get("territory_code"); %>',
-          devices_online: JSON.parse(`<% get_clientlist(); %>`),
-          devices: JSON.parse(`<% get_clientlist_from_json_database(); %>`),
           wan_ip: '<% nvram_get("wan_ipaddr"); %>',
           wan_connected: '<% nvram_get("link_internet"); %>' == '2',
           features: '<% nvram_get("rc_support"); %>',
@@ -47,20 +39,45 @@
           b4sni_isRunning: parseInt('<% sysinfo("pid.b4sni"); %>') > 0
         }
       };
-
-      try {
-        xray.custom_settings = custom_settings;
-      } catch (e) {
-        if (custom_settings.indexOf('xray_payload') !== -1) {
-          console.error("Invalid custom settings: xray_payload detected. Please  run '/jffs/scripts/xrayui fixme'. This is unexpected, please report.");
-        }
-      }
     </script>
   </head>
 
   <body>
     <div id="xrayui-app"></div>
     <div id="xrayui-modals"></div>
+    <xmp id="xrayui-data-custom-settings" hidden><% get_custom_settings(); %></xmp>
+    <xmp id="xrayui-data-cpu" hidden><% cpu_core_num(); %></xmp>
+    <xmp id="xrayui-data-devices-online" hidden><% get_clientlist(); %></xmp>
+    <xmp id="xrayui-data-devices" hidden><% get_clientlist_from_json_database(); %></xmp>
+    <script>
+      (function () {
+        function readObject(id) {
+          try {
+            var value = JSON.parse(document.getElementById(id).textContent);
+            if (value && typeof value === 'object' && !Array.isArray(value)) {
+              return value;
+            }
+          } catch (e) {
+            console.warn('XRAYUI: ' + id + ' is not valid JSON, using an empty object instead.', e);
+          }
+          return {};
+        }
+
+        var stripAnsi = /\u001b\[[0-9;]*m/g;
+        var stripControls = /[\u0000-\u001F]+/g;
+        var custom_settings = readObject('xrayui-data-custom-settings');
+        Object.keys(custom_settings).forEach(function (key) {
+          if (typeof custom_settings[key] === 'string') {
+            custom_settings[key] = custom_settings[key].replace(stripAnsi, '').replace(stripControls, '');
+          }
+        });
+
+        xray.custom_settings = custom_settings;
+        xray.router.cpu = parseInt(document.getElementById('xrayui-data-cpu').textContent, 10) || undefined;
+        xray.router.devices_online = readObject('xrayui-data-devices-online');
+        xray.router.devices = readObject('xrayui-data-devices');
+      })();
+    </script>
     <script>
       window.addEventListener('load', function () {
         if (xray.router.features) {

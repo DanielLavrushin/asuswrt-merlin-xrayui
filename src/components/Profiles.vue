@@ -64,8 +64,10 @@
         (newVal) => {
           if (newVal) {
             if (newVal?.xray) {
+              const list = Array.isArray(newVal.xray.profiles) ? [...newVal.xray.profiles] : [];
+              if (newVal.xray.profile && !list.includes(newVal.xray.profile)) list.push(newVal.xray.profile);
               profile.value = newVal.xray.profile;
-              profiles.value = newVal.xray.profiles.sort();
+              profiles.value = list.sort();
             }
           }
         },

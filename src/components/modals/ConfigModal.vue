@@ -44,10 +44,9 @@
 
       const load = async () => {
         try {
-          const cfg = engine.prepareServerConfig(xrayConfig);
-          originalConfig = cfg;
-          configJson.value = cfg;
-          configSize.value = JSON.stringify(cfg).length;
+          const json = JSON.stringify(engine.prepareServerConfig(xrayConfig));
+          originalConfig = JSON.parse(json);
+          configSize.value = json.length;
           hide_sense_data();
         } catch (error) {
           console.error('Error loading config:', error);

@@ -65,6 +65,7 @@ apply_general_options() {
         "subscription_filters=" + (((.subscriptions.filters // []) | join("|")) | @sh)
     '); then
         log_error "Failed to parse general options payload."
+        update_loading_progress "Error: failed to read the settings. Nothing was changed." 100
         return 1
     fi
     eval "$_genopts_vars"
@@ -95,6 +96,7 @@ apply_general_options() {
 
     if [ -z "$json_content" ]; then
         log_error "Failed to build xray config JSON. Aborting."
+        update_loading_progress "Error: failed to update the Xray configuration. Nothing was changed." 100
         return 1
     fi
 
@@ -161,6 +163,8 @@ apply_general_options() {
         update_loading_progress "Restarting Xray service..."
         restart
     fi
+
+    return 0
 }
 
 apply_general_options_hooks() {

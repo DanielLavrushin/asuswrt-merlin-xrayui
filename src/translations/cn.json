@@ -37,7 +37,9 @@
       "xray_connecting": "正在检查连接...",
       "xray_connected": "XRAY 已连接",
       "xray_stopped": "XRAY 已停止",
-      "xray_running": "XRAY 服务正在运行"
+      "xray_running": "XRAY 服务正在运行",
+      "unapplied_changes": "更改尚未应用。只有点击“应用”后才会写入路由器。",
+      "confirm_unapplied_changes": "部分更改尚未应用，将会丢失。是否继续？"
     },
     "ServerStatus": {
       "configuration": "配置",
@@ -449,7 +451,11 @@
       "hint_read_buffer": "单连接读取缓存大小（MB），默认 `2`。",
       "hint_write_buffer": "单连接写入缓存大小（MB），默认 `2`。",
       "hint_header": "数据包头部混淆配置。",
-      "hint_seed": "通过 `AES-128-GCM` 算法混淆流量数据。（可选）<hr>客户端与服务器需使用相同种子，仅能抵抗部分封锁，不保证内容安全。"
+      "hint_seed": "通过 `AES-128-GCM` 算法混淆流量数据。（可选）<hr>客户端与服务器需使用相同种子，仅能抵抗部分封锁，不保证内容安全。",
+      "label_cwnd_multiplier": "拥塞窗口倍数",
+      "hint_cwnd_multiplier": "对 mKCP 根据上行带宽、`MTU` 与 `TTI` 计算出的在途包数量进行倍乘。最小值 `1`，默认 `1`。",
+      "label_max_sending_window": "最大发送窗口",
+      "hint_max_sending_window": "最大发送窗口（字节）。Xray 按 `maxSendingWindow / MTU` 换算为在途包数量，因此不能小于 `MTU`。默认 `2097152`。"
     },
     "Grpc": {
       "label_service_name": "服务名称",

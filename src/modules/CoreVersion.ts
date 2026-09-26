@@ -31,7 +31,9 @@ const CORE_FEATURES = {
   tunInbound: { since: '26.1.13' },
   tunGateway: { since: '26.4.13' },
   tunAutoRoute: { since: '26.6.27' },
-  tunDesc: { since: '26.7.28' }
+  tunDesc: { since: '26.7.28' },
+  kcpLegacyTuning: { until: '26.4.13' },
+  kcpCwnd: { since: '26.4.13' }
 } as const satisfies Record<string, CoreFeatureRule>;
 
 export type CoreFeature = keyof typeof CORE_FEATURES;
@@ -54,6 +56,14 @@ export function mkcpMaskingMode(): MkcpMaskingMode {
 
 export function coreUsesMkcpLegacyMaskType(): boolean {
   return coreAtLeast('26.6.1');
+}
+
+export function coreAppliesLastMaskOutermost(): boolean {
+  return coreAtLeast('26.6.22');
+}
+
+export function coreExpectsOutermostMaskLast(): boolean {
+  return coreAtLeast('26.9.9');
 }
 
 export function tunUsesUppercaseMtu(): boolean {

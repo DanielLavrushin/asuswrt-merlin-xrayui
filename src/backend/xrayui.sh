@@ -127,7 +127,7 @@ cron)
         cron_logrotate_run
         ;;
     geodata)
-        update_community_geodata
+        update_community_geodata if_changed
         ;;
     subscription_refresh)
         cron_subscription_refresh_run
@@ -137,7 +137,9 @@ cron)
         ;;
     ipset_save)
         load_xrayui_config
-        [ "$ipsec" = "redirect" ] && ipset_learned_save
+        if [ "$ipsec" = "redirect" ] && [ -n "$(get_xray_daemon_pid)" ] && firewall_is_configured; then
+            with_firewall_lock ipset_learned_save
+        fi
         ;;
     *) ;;
     esac
@@ -284,9 +286,10 @@ service_event)
             initial_response
             ;;
         applygeneraloptions)
-            apply_general_options
-            initial_response
-            update_loading_progress "General settings applied." 100
+            if apply_general_options; then
+                initial_response
+                update_loading_progress "General settings applied." 100
+            fi
             ;;
         xrayversionswitch)
             switch_xray_version

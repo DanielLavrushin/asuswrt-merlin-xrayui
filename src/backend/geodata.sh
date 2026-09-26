@@ -26,7 +26,9 @@ update_community_geodata() {
         return 1
     fi
 
-    if cmp -s "$ADDON_TMP_DIR/geosite.dat" "$xray_dir/geosite.dat" && cmp -s "$ADDON_TMP_DIR/geoip.dat" "$xray_dir/geoip.dat"; then
+    if [ "$1" = "if_changed" ] &&
+        cmp -s "$ADDON_TMP_DIR/geosite.dat" "$xray_dir/geosite.dat" &&
+        cmp -s "$ADDON_TMP_DIR/geoip.dat" "$xray_dir/geoip.dat"; then
         rm -f "$ADDON_TMP_DIR/geosite.dat" "$ADDON_TMP_DIR/geoip.dat"
         log_ok "Community geodata files are already up to date."
         return 0
@@ -85,7 +87,11 @@ get_custom_geodata_tagfiles() {
 
     local data_dir="$ADDON_SHARE_DIR/data"
 
-    local tagfiles_json=$(find "$data_dir" -type f -exec basename {} \; | \sed 's/\.[^.]*$//' | sort | jq -R -s -c 'split("\n")[:-1]')
+    local tagfiles_json=$(
+        for f in "$data_dir"/*; do
+            [ -f "$f" ] && printf '%s\n' "${f##*/}"
+        done | sed 's/\.[^.]*$//' | sort | jq -R -s -c 'split("\n")[:-1]'
+    )
 
     UI_RESPONSE=$(echo "$UI_RESPONSE" | jq --argjson tags "$tagfiles_json" '.geodata["tags"] = $tags')
 

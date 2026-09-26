@@ -41,7 +41,9 @@
       "xray_connecting": "Checking connection...",
       "xray_connected": "XRAY is connected",
       "xray_stopped": "XRAY is stopped",
-      "xray_running": "XRAY service is running"
+      "xray_running": "XRAY service is running",
+      "unapplied_changes": "Changes are not applied yet. They are written to the router only when apply is pressed.",
+      "confirm_unapplied_changes": "Some changes have not been applied yet and will be lost. Continue without them?"
     },
     "ServerStatus": {
       "configuration": "Configuration",
@@ -453,7 +455,11 @@
       "hint_read_buffer": "The read buffer size for a single connection, measured in MB. The default value is `2`",
       "hint_write_buffer": "The write buffer size for a single connection, measured in MB. The default value is `2`",
       "hint_header": "Configuration for packet header obfuscation.",
-      "hint_seed": "An optional obfuscation seed is used to obfuscate traffic data using the `AES-128-GCM` algorithm.<hr>The client and server need to use the same seed. This obfuscation mechanism cannot ensure the security of the content, but it may be able to resist some blocking."
+      "hint_seed": "An optional obfuscation seed is used to obfuscate traffic data using the `AES-128-GCM` algorithm.<hr>The client and server need to use the same seed. This obfuscation mechanism cannot ensure the security of the content, but it may be able to resist some blocking.",
+      "label_cwnd_multiplier": "Congestion window multiplier",
+      "hint_cwnd_multiplier": "Multiplies the number of in-flight packets that mKCP derives from the uplink capacity, `MTU` and `TTI`. The minimum value is `1`. The default value is `1`",
+      "label_max_sending_window": "Max sending window",
+      "hint_max_sending_window": "The maximum sending window, in bytes. Xray converts it into a number of in-flight packets as `maxSendingWindow / MTU`, so it must not be smaller than the `MTU`. The default value is `2097152`"
     },
     "Grpc": {
       "label_service_name": "Service name",

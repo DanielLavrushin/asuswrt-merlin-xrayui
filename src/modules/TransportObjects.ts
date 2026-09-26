@@ -9,7 +9,13 @@ import {
   isObjectEmpty
 } from './CommonObjects';
 import { ITransportNetwork } from './Interfaces';
-import { coreUsesMkcpLegacyMaskType, mkcpMaskingMode } from './CoreVersion';
+import { coreAppliesLastMaskOutermost, coreExpectsOutermostMaskLast, coreSupports, coreUsesMkcpLegacyMaskType, mkcpMaskingMode } from './CoreVersion';
+
+const nonDefaultNumber = (value: unknown, defaultValue: number, min = -Infinity): number | undefined => {
+  if (value === '' || value === null || value === undefined) return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= min && parsed !== defaultValue ? parsed : undefined;
+};
 
 export class XrayStreamTcpSettingsObject implements ITransportNetwork {
   public acceptProxyProtocol? = false;
@@ -31,6 +37,8 @@ export class XrayStreamKcpSettingsObject implements ITransportNetwork {
   public congestion? = false;
   public readBufferSize? = 2;
   public writeBufferSize? = 2;
+  public cwndMultiplier? = 1;
+  public maxSendingWindow? = 2097152;
   public seed?: string;
   public header?: XrayHeaderObject = new XrayHeaderObject();
 
@@ -45,13 +53,17 @@ export class XrayStreamKcpSettingsObject implements ITransportNetwork {
   }
 
   normalize = (): this | undefined => {
-    this.mtu = this.mtu === 1350 ? undefined : this.mtu;
-    this.tti = this.tti === 50 ? undefined : this.tti;
-    this.uplinkCapacity = this.uplinkCapacity === 5 ? undefined : this.uplinkCapacity;
-    this.downlinkCapacity = this.downlinkCapacity === 20 ? undefined : this.downlinkCapacity;
-    this.congestion = !this.congestion ? undefined : this.congestion;
-    this.readBufferSize = this.readBufferSize === 2 ? undefined : this.readBufferSize;
-    this.writeBufferSize = this.writeBufferSize === 2 ? undefined : this.writeBufferSize;
+    const legacyTuning = coreSupports('kcpLegacyTuning');
+    const cwnd = coreSupports('kcpCwnd');
+    this.mtu = nonDefaultNumber(this.mtu, 1350);
+    this.tti = nonDefaultNumber(this.tti, 50);
+    this.uplinkCapacity = nonDefaultNumber(this.uplinkCapacity, 5);
+    this.downlinkCapacity = nonDefaultNumber(this.downlinkCapacity, 20);
+    this.congestion = legacyTuning && this.congestion ? this.congestion : undefined;
+    this.readBufferSize = legacyTuning ? nonDefaultNumber(this.readBufferSize, 2) : undefined;
+    this.writeBufferSize = legacyTuning ? nonDefaultNumber(this.writeBufferSize, 2) : undefined;
+    this.cwndMultiplier = cwnd ? nonDefaultNumber(this.cwndMultiplier, 1, 1) : undefined;
+    this.maxSendingWindow = cwnd ? nonDefaultNumber(this.maxSendingWindow, 2097152, this.mtu ?? 1350) : undefined;
     this.seed = !this.seed || this.seed == '' ? undefined : this.seed;
     this.header = this.header?.type === 'none' ? undefined : this.header;
 
@@ -685,6 +697,9 @@ const CANONICAL_TO_KCP_UI_HEADER: Record<string, string> = Object.fromEntries(
   Object.entries(KCP_UI_HEADER_TO_CANONICAL).map(([ui, canonical]) => [canonical, ui])
 );
 
+const OUTERMOST_MASK_TYPES = new Set(['xicmp', 'realm', 'udphop']);
+const INNERMOST_MASK_TYPES = new Set(['sudoku']);
+
 function isKcpUiOwnedMask(mask: XrayFinalMaskObject): boolean {
   return mask.type in CANONICAL_TO_KCP_UI_HEADER || mask.type === 'mkcp-aes128gcm';
 }
@@ -721,7 +736,11 @@ export function migrateKcpMaskingForSerialization(stream: KcpMaskStreamLike): vo
   }
 
   const preserved = (stream.finalmask?.udp ?? []).filter((mask) => !isKcpUiOwnedMask(mask));
-  const udp = [...built, ...preserved];
+  const outermost = preserved.filter((mask) => OUTERMOST_MASK_TYPES.has(mask.type));
+  const innermost = preserved.filter((mask) => INNERMOST_MASK_TYPES.has(mask.type));
+  const others = preserved.filter((mask) => !OUTERMOST_MASK_TYPES.has(mask.type) && !INNERMOST_MASK_TYPES.has(mask.type));
+  const middle = coreAppliesLastMaskOutermost() ? [...others, ...built.reverse()] : [...built, ...others];
+  const udp = coreExpectsOutermostMaskLast() ? [...innermost, ...middle, ...outermost] : [...outermost, ...middle, ...innermost];
 
   if (udp.length > 0) {
     if (!stream.finalmask) stream.finalmask = new XrayFinalMaskSettingsObject();

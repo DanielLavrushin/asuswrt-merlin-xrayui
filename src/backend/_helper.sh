@@ -287,15 +287,20 @@ reconstruct_payload() {
 
 }
 
-# Decompress payloads that carry a "gz:" magic prefix (base64-encoded gzip from the frontend).
-# Anything without the prefix is returned unchanged so legacy callers keep working.
-# Called via $(...) — only data goes to stdout, errors to stderr.
+b64_decode() {
+    if which base64 >/dev/null 2>&1; then
+        base64 -d 2>/dev/null
+    else
+        tr -d '\r\n' | openssl base64 -d -A 2>/dev/null
+    fi
+}
+
 decode_payload() {
     local raw="$1"
     case "$raw" in
         gz:*)
             local decoded
-            decoded=$(printf '%s' "${raw#gz:}" | base64 -d 2>/dev/null | gunzip 2>/dev/null)
+            decoded=$(printf '%s' "${raw#gz:}" | b64_decode | gunzip 2>/dev/null)
             if [ -z "$decoded" ]; then
                 log_error "decode_payload: failed to decompress gz: payload (base64/gunzip pipeline failed or produced empty output)" >&2
                 return 1

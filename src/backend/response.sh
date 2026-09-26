@@ -76,19 +76,22 @@ initial_response() {
     XRAY_VERSION=$(xray version 2>/dev/null | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
     [ -z "$XRAY_VERSION" ] && log_warn "Failed to get Xray version."
 
-    # Collect the names of all JSON files from /opt/etc/xray
     local profiles
-    profiles=$(find /opt/etc/xray -maxdepth 1 -type f -name "*.json" -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]' 2>/dev/null)
+    profiles=$(
+        for f in /opt/etc/xray/*.json; do
+            [ -f "$f" ] && printf '%s\n' "${f##*/}"
+        done | jq -R -s -c 'split("\n")[:-1]' 2>/dev/null
+    )
     if [ -z "$profiles" ]; then
         profiles="[]"
     fi
 
-    # Collect the backups
     local backups
     backups=$(
-        find "$ADDON_SHARE_DIR/backup" -maxdepth 1 -type f -name "*.tar.gz" \
-            -printf "%T@ %f\n" 2>/dev/null | sort -nr | awk '{print $2}' |
-            jq -R -s -c 'split("\n")[:-1]' 2>/dev/null
+        ls -1td "$ADDON_SHARE_DIR/backup"/*.tar.gz 2>/dev/null |
+            while IFS= read -r f; do
+                [ -f "$f" ] && printf '%s\n' "${f##*/}"
+            done | jq -R -s -c 'split("\n")[:-1]' 2>/dev/null
     )
     [ -z "$backups" ] && backups="[]"
 

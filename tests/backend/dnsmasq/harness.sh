@@ -80,6 +80,10 @@ configure() {
     printf 'configure rc=%s\n' "$?" >>"$DM_STATE/events.log"
 }
 
+if [ "${DM_NO_SLEEP:-0}" = 1 ]; then
+    sleep() { :; }
+fi
+
 if [ -n "${DM_PRESTATE:-}" ]; then
     eval "$DM_PRESTATE"
 fi

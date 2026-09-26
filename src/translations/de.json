@@ -59,7 +59,7 @@
       "label_logs_enable_dns": "DNS-Protokolle aktivieren",
       "label_logs_level": "Protokollstufe",
       "label_probe_url": "Observatory-Prüf-URL",
-      "hint_probe_url": "Die URL, die das Xray Observatory zur Prüfung der Erreichbarkeit der ausgehenden Verbindungen verwendet. Der Endpunkt sollte HTTP 204 (No Content) zurückgeben.",
+      "hint_probe_url": "Die URL, die das Xray Observatory zur Prüfung der Erreichbarkeit der ausgehenden Verbindungen verwendet. Jede über den Outbound empfangene HTTP-Antwort gilt als erfolgreiche Prüfung, daher wird eine https://-URL empfohlen.",
       "label_probe_interval": "Observatory-Prüfintervall (Sekunden)",
       "hint_probe_interval": "Wie oft das Xray Observatory jede ausgehende Verbindung prüft. Jede Prüfung öffnet eine Verbindung über alle Outbounds; kurze Intervalle in Kombination mit vielen Outbounds (z. B. aus Abonnements) erhöhen die CPU- und Speicherauslastung des Routers. Standard: 30 Sekunden.",
       "label_gh_proxy": "GitHub-Proxy verwenden",
@@ -277,7 +277,9 @@
       "title": "Ausgänge",
       "label_create_new": "Neu erstellen",
       "alert_tag_exists": "Tag existiert bereits, ein anderes ist erforderlich.",
-      "alert_delete_confirm": "Diesen Ausgang löschen?"
+      "alert_delete_confirm": "Diesen Ausgang löschen?",
+      "hint_pool_inactive": "Auto-Fallback ist in den allgemeinen Einstellungen deaktiviert, daher wird dieser Outbound nicht automatisch umgeschaltet.",
+      "status_unreachable": "Nicht erreichbar"
     },
     "StreamSettingsModal": {
       "title": "Transport-Einstellungen",

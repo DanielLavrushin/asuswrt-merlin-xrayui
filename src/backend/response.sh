@@ -271,6 +271,33 @@ apply_config() {
         exit 1
     fi
 
+    if [ -f "$XRAY_CONFIG_FILE" ]; then
+        local carried
+        carried=$(jq -c --slurpfile old "$XRAY_CONFIG_FILE" '
+            if (.outbounds | type) == "array" then
+                .outbounds |= map(
+                    if ((.surl // "") != "") and (.settings == null) then
+                        . as $o
+                        | ((($old[0].outbounds // []) | map(select(.tag == $o.tag and .surl == $o.surl and .protocol == $o.protocol and .settings != null)) | first) // null) as $p
+                        | if $p == null then $o
+                          else $o + {
+                              settings: $p.settings,
+                              streamSettings: ((($p.streamSettings // {}) | del(.sockopt))
+                                + (if ($o.streamSettings.sockopt // null) != null then {sockopt: $o.streamSettings.sockopt} else {} end))
+                            }
+                          end
+                    else . end)
+            else . end
+        ' "$temp_config" 2>/dev/null) && [ -n "$carried" ] && printf '%s\n' "$carried" >"$temp_config"
+    fi
+
+    if ! failover_config_lock; then
+        log_error "The configuration is locked by another operation."
+        update_loading_progress "Error: another restart or switch is in progress. Try again." 100
+        rm -f "$temp_config"
+        exit 1
+    fi
+
     log_info "Applying new server configuration to $XRAY_CONFIG_FILE..."
     backup_xray_config
     cp "$XRAY_CONFIG_FILE" "$backup_config"
@@ -292,6 +319,7 @@ apply_config() {
         exit 1
     fi
     log_ok "New server configuration applied successfully."
+    failover_config_unlock
 
     rm -f "$temp_config"
 

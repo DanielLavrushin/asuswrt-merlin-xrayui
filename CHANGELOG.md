@@ -2,6 +2,21 @@
 
 ## [0.70.0] - 2026-09-xx
 
+- FIXED: **Hide sensitive data** in the configuration viewer missed several private details, most notably the full server link (with its ID, address and key) of outbounds in the **Auto-fallback pool**. These are now hidden, as is a proxy server's address or domain when it is repeated elsewhere, such as in routing rules.
+- FIXED: Auto-fallback only noticed a dead server while the XRAYUI page was open in a browser, so with the page closed it never switched. Each check now reads fresh results from Xray.
+- FIXED: After auto-fallback had to restart Xray once, it silently stopped working until the next manual restart. Automatic geodata updates had the same problem after their first run.
+- FIXED: Auto-fallback switched blindly to the next server in the list, including dead servers, fake "expired" or "traffic left" entries, and links the installed Xray cannot use. New servers are now checked before and after the switch, and servers that failed recently are skipped.
+- FIXED: With several outbounds in the auto-fallback pool, one of them could be switched to the server another one was already using, and every switch wiped settings such as Mux and Send through. ([#343](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/343))
+- FIXED: Auto-fallback and Subscription URL outbounds could pick a subscription entry that points back at the router itself, which can make Xray use up all memory and freeze the router.
+- FIXED: A failed subscription update (provider down or showing an error page) emptied the server list, leaving auto-fallback with nothing to switch to. The last good list is now kept.
+- IMPROVED: When the provider changes a server's keys or address, the scheduled subscription update now applies the change to outbounds in the auto-fallback pool.
+- FIXED: An outbound with a **Subscription URL** could stop Xray from starting when the subscription was unreachable during a restart, and a list subscription could put a fake "expired" entry in its place. The last working server is now kept.
+- FIXED: Rotation filters did not work on the router: a single keyword was ignored, and matching was case-sensitive and missed non-Latin names.
+- FIXED: Several kinds of subscription links were imported incorrectly: Hysteria links, mKCP links on current Xray versions, Trojan links with TLS, gRPC and HTTPUpgrade transports, IPv6 addresses, and names or passwords with encoded characters.
+- FIXED: Pressing Apply on a page that had been open since before an automatic switch put the dead server back.
+- FIXED: Offline outbounds were shown with a yellow dot instead of red. Hovering over the dot now shows the delay or the error.
+- IMPROVED: The outbound editor shows which subscription server is in use, and warns when the auto-fallback pool is on but auto-fallback is turned off in General Options.
+- FIXED: A scheduled subscription update running at the same moment as Apply or Save could swallow the change, and in rare cases reset all General Options.
 - FIXED: With a server inbound on port 443, HTTPS from LAN devices went around the proxy. Now only connections to the router itself skip the proxy.
 - FIXED: Proxy rules could vanish after the router reconnected to the internet or rebuilt its firewall, leaving LAN traffic unproxied until the next Xray restart. This showed up most often with IPv6 enabled.
 - FIXED: With IPv6 enabled, a server inbound's port was opened not only on the router but on every device in the LAN.

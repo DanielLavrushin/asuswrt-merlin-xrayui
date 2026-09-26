@@ -60,7 +60,7 @@
       "label_logs_enable_dns": "DNS 日志",
       "label_logs_level": "日志级别",
       "label_probe_url": "Observatory 探测 URL",
-      "hint_probe_url": "Xray Observatory 用于探测出站连接健康状态的 URL。该端点应返回 HTTP 204（No Content）。",
+      "hint_probe_url": "Xray Observatory 用于探测出站连接健康状态的 URL。通过出站收到任何 HTTP 响应即视为检查成功，因此建议使用 https:// 地址。",
       "label_probe_interval": "Observatory 探测间隔（秒）",
       "hint_probe_interval": "Xray Observatory 检查每个出站连接的频率。每次检查都会通过所有出站建立连接，因此在出站较多（例如来自订阅）时，过短的间隔会增加路由器的 CPU 和内存占用。默认为 30 秒。",
       "label_gh_proxy": "GitHub 代理",
@@ -306,7 +306,9 @@
       "alert_tag_exists": "标签已存在，请选择另一个。",
       "alert_delete_confirm": "删除此出站？",
       "alert_delete_tag_in_rules_use": "此标签 ({1}) 在路由规则 ({0}) 中使用。请在删除出站之前从规则中移除它。",
-      "alert_delete_tag_in_balancer_use": "此标签 ({1}) 在均衡器 ({0}) 中被用作后备 (fallback)。请在删除出站之前从均衡器中移除它。"
+      "alert_delete_tag_in_balancer_use": "此标签 ({1}) 在均衡器 ({0}) 中被用作后备 (fallback)。请在删除出站之前从均衡器中移除它。",
+      "hint_pool_inactive": "通用设置中的自动故障转移已关闭，此出站不会自动切换。",
+      "status_unreachable": "不可达"
     },
     "StreamSettingsModal": {
       "title": "传输设置",
@@ -592,8 +594,9 @@
       "label_subscription_type": "可用订阅配置",
       "hint_subscription_type": "订阅配置的类型。<ul> <li>`xray`：Xray 订阅配置</li> <li>`clash`：Clash 订阅配置</li> </ul><hr/>仅当未设置 `subscriptionUrl` 时，此设置才会生效。",
       "label_auto_fallback": "自动故障转移池",
-      "hint_auto_fallback": "启用后将此出站加入自动故障转移池。当活跃端点不可达时，将自动切换到订阅池中的下一个可用端点。<hr/>需要在通用设置中启用全局自动故障转移选项。",
-      "warn_auto_fallback_requires_observatory": "需要在通用设置中启用 Xray 连接检查。"
+      "hint_auto_fallback": "启用后将此出站加入自动故障转移池。当活跃端点无响应时，将从订阅池中选取另一个端点，经检查后切换。已被其他出站使用的端点会被跳过。<hr/>需要在通用设置中启用全局自动故障转移选项。",
+      "warn_auto_fallback_requires_observatory": "需要在通用设置中启用 Xray 连接检查。",
+      "warn_auto_fallback_global_off": "未生效：通用设置中的自动故障转移已关闭。"
     },
     "FreedomOutbound": {
       "modal_title": "直连（Freedom）",

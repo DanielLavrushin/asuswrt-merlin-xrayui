@@ -317,6 +317,7 @@ export enum SubmitActions {
 
 export class Engine {
   public xrayConfig: XrayObject = xrayConfig;
+  private loadedPoolActive: Record<string, string | undefined> = {};
   public mode = 'server';
   private readonly zero_uuid = '10000000-1000-4000-8000-100000000000';
   private subscriptionsNotFound = false;
@@ -752,6 +753,10 @@ export class Engine {
       }
       this.xrayConfig = this.hydrateConfig(config);
       Object.assign(xrayConfig, this.xrayConfig);
+      this.loadedPoolActive = {};
+      this.xrayConfig.outbounds.forEach((o) => {
+        if (o.tag && o.subPool?.enabled) this.loadedPoolActive[o.tag] = o.subPool.active;
+      });
       return this.xrayConfig;
     } catch (e) {
       var axiosError = e as AxiosError;
@@ -766,6 +771,34 @@ export class Engine {
       }
     }
     return null;
+  }
+
+  async keepRotatedOutbounds(config: XrayObject): Promise<void> {
+    const pooled = config.outbounds.filter((o) => o.tag && o.subPool?.enabled && o.tag in this.loadedPoolActive);
+    if (pooled.length === 0) return;
+
+    let disk: XrayObject;
+    try {
+      const response = await axios.get<XrayObject>(`/ext/xrayui/xray-config.json?_=${Date.now()}`, {
+        headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache', Expires: '0' }
+      });
+      disk = response.data;
+    } catch {
+      return;
+    }
+
+    pooled.forEach((proxy) => {
+      const loaded = this.loadedPoolActive[proxy.tag!];
+      const current = disk.outbounds?.find((o) => o.tag === proxy.tag);
+      if (!current?.subPool?.enabled || !current.subPool.active) return;
+      if (current.subPool.active === loaded || proxy.subPool?.active !== loaded) return;
+      if (current.protocol !== proxy.protocol) return;
+
+      const rotated = deserializeProxy(current, outboundSettingsMap, XrayOutboundObject);
+      proxy.settings = rotated.settings;
+      proxy.streamSettings = transformStreamSettings(rotated.streamSettings);
+      proxy.subPool = rotated.subPool;
+    });
   }
 
   hydrateConfig(config: XrayObject): XrayObject {

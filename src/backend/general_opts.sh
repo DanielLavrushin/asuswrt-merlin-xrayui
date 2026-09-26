@@ -16,6 +16,12 @@ apply_general_options() {
 
     local genopts=$(reconstruct_payload)
 
+    if ! printf '%s' "$genopts" | jq -e 'type == "object"' >/dev/null 2>&1; then
+        log_error "General options payload is empty or invalid; nothing was changed."
+        update_loading_progress "Error: settings upload was empty or corrupted. Try again." 100
+        return 1
+    fi
+
     log_debug "General options received: $genopts"
     # Extract all general options in a single jq call
     local github_proxy log_level logs_access logs_error logs_dns logs_dnsmasq logs_dor

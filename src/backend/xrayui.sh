@@ -111,6 +111,12 @@ subscriptions)
     ;;
 cron)
     case "$2" in
+    logrotate | geodata | subscription_refresh | subscription_fallback)
+        cron_job_lock "$2" || exit 0
+        update_loading_progress() { :; }
+        ;;
+    esac
+    case "$2" in
     addjobs)
         cron_jobs_add
         ;;
@@ -240,8 +246,11 @@ service_event)
             case "$4" in
             fetchprotocols)
                 update_loading_progress "Updating subscription protocols..." 0
-                subscription_fetch_protocols
-                update_loading_progress "Subscription protocols updated successfully." 100
+                if subscription_fetch_protocols; then
+                    update_loading_progress "Subscription protocols updated successfully." 100
+                else
+                    update_loading_progress "No usable links were fetched. The previous list was kept." 100
+                fi
                 ;;
             esac
             ;;

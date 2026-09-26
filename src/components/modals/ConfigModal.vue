@@ -26,6 +26,7 @@
   import 'vue-json-pretty/lib/styles.css';
   import engine from '@modules/Engine';
   import xrayConfig from '@modules/XrayConfig';
+  import { hideSensitiveData } from '@modules/SensitiveData';
 
   export default defineComponent({
     name: 'ConfigModal',
@@ -40,65 +41,7 @@
       const configSize = ref<number>(0);
       const configUri = '/ext/xrayui/xray-config.json';
       const hideSenseData = ref<boolean>(true);
-      const sensitiveKeys = [
-        'surl',
-        'secretKey',
-        'address',
-        'password',
-        'serverName',
-        'publicKey',
-        'shortIds',
-        'privateKey',
-        'shortId',
-        'email',
-        'id',
-        'user',
-        'pass',
-        'certificate',
-        'key',
-        'mac',
-        'spiderX',
-        'path',
-        'dns',
-        'servers',
-        'host'
-      ];
 
-      const maskObject = (obj: any): any => {
-        if (Array.isArray(obj)) {
-          return obj.map((item) => maskObject(item));
-        } else if (obj !== null && typeof obj === 'object') {
-          const newObj: any = {};
-          for (const key in obj) {
-            if (Object.prototype.hasOwnProperty.call(obj, key)) {
-              if (sensitiveKeys.includes(key)) {
-                // If the value is an array, process each element.
-                if (Array.isArray(obj[key])) {
-                  newObj[key] = obj[key].map((item) => (typeof item === 'string' || typeof item === 'number' ? hide_chars(item) : maskObject(item)));
-                } else if (typeof obj[key] === 'string' || typeof obj[key] === 'number') {
-                  newObj[key] = hide_chars(obj[key]);
-                } else {
-                  newObj[key] = maskObject(obj[key]);
-                }
-              } else {
-                newObj[key] = maskObject(obj[key]);
-              }
-            }
-          }
-          return newObj;
-        } else {
-          return obj;
-        }
-      };
-
-      // Replaces every character in a string with '*' or returns a masked number.
-      const hide_chars = (str: string | number | undefined) => {
-        if (str === undefined) return undefined;
-        if (typeof str === 'string') return str.replace(/./g, '*');
-        return Number(str.toString().replace(/.\d/g, '0'));
-      };
-
-      // Loads the configuration from the URI and updates reactive state.
       const load = async () => {
         try {
           const cfg = engine.prepareServerConfig(xrayConfig);
@@ -112,6 +55,7 @@
       };
 
       const show = async () => {
+        hideSenseData.value = true;
         await load();
         modal.value.show();
       };
@@ -131,12 +75,7 @@
       };
 
       const hide_sense_data = () => {
-        if (hideSenseData.value) {
-          const clone = JSON.parse(JSON.stringify(originalConfig));
-          configJson.value = maskObject(clone);
-        } else {
-          configJson.value = originalConfig;
-        }
+        configJson.value = hideSenseData.value ? hideSensitiveData(originalConfig) : originalConfig;
       };
 
       return {

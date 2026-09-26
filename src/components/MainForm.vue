@@ -158,6 +158,7 @@
         }
 
         await engine.executeWithLoadingProgress(async () => {
+          await engine.keepRotatedOutbounds(config.value);
           const cfg = engine.prepareServerConfig(config.value);
           await engine.submit(SubmitActions.configurationApply, cfg);
           await engine.loadXrayConfig();

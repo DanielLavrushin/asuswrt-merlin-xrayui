@@ -50,11 +50,11 @@ Starting Xray and applying XRAYUI rules are both resource-intensive. On some dev
 
 ### Check connection to xray server
 
-Enables live outbound health checks. When on, XRAYUI starts Xray with the built-in **Observatory**, which periodically opens a connection through **every** outbound to the probe URL and records whether it succeeded. The result is shown as a green/red indicator next to each outbound in the **Outbounds** section, and the same data drives the automatic subscription failover. The system pieces XRAYUI adds for this are tagged `sys` and stay hidden in the UI.
+Enables live outbound health checks. When on, XRAYUI starts Xray with the built-in **Observatory**, which periodically opens a connection through **every** outbound to the probe URL and records whether it succeeded. The result is shown as a green/red indicator next to each outbound in the **Outbounds** section (yellow means no result yet; hover over the dot to see the delay or the error Xray reported), and the same data drives the automatic subscription failover. The system pieces XRAYUI adds for this are tagged `sys` and stay hidden in the UI.
 
 #### Observatory probe URL
 
-The URL the Observatory requests through each outbound. The endpoint should return **HTTP 204 (No Content)**. Default: `https://www.google.com/generate_204`.
+The URL the Observatory requests through each outbound. Any HTTP response that comes back through the outbound counts as a successful check — the status code is not looked at. Use an `https://` URL, so that a block page from a provider or ISP cannot pass for a working connection. Default: `https://www.google.com/generate_204`.
 
 #### Observatory probe interval
 

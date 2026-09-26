@@ -62,6 +62,15 @@ When you apply main form changes, your changes will be applied and the page will
 > [!info]  
 > Even though the name means subscription, it is not enough just to update the remote side. To ensure the changes are taken into action, you need to press the `apply` button in the XRAYUI every time you change something in your subscription. In this case, the modified changes will be reloaded and applied by XRAYUI.
 
+What happens on every Xray start or restart:
+
+- XRAYUI fetches the Subscription URL and rebuilds the outbound from it. The tag and your own settings, such as Mux, Send through and socket options, are kept.
+- If the subscription cannot be reached (provider down, no DNS yet, error page), the outbound keeps its **last working settings** and Xray starts normally.
+- If the URL returns a list of servers instead of a single one, XRAYUI keeps the server the outbound already uses as long as it is still in the list. Otherwise it takes the first usable entry. Informational entries that many panels add, such as "Expires …" or "Traffic left …", are skipped, and so are entries that point back at the router itself.
+
+> [!info]
+> The **Auto-fallback pool** option is not offered for outbounds with a Subscription URL — such an outbound always follows its own URL. Use a subscription **source** and the drop-down described below if you want automatic switching.
+
 ## XRAYUI: Source Link
 
 Source link is a link that contains more than one protocol inside. It will not work as a protocol link described above, but you will need to set it up differently.
@@ -74,17 +83,19 @@ You can save it, then the window will be reloaded. Or you can give a temporary l
 
 The system will fetch the links from the Subscription source. Visually nothing happened. You can close the window.
 
+If a source cannot be reached or returns something that is not a list of links (for example, a maintenance or block page), XRAYUI uses the last good copy of that source. If nothing usable comes back at all, the previous server list is kept and the fetch reports that no usable links were found — a failed fetch never empties the list.
+
 However, if you create a new outbound proxy, you will get a list of available subscriptions you can pick from the list `Available Subscription Configuration`  
 ![available subscriptions](../.vuepress/public/images/subscriptions/20250731213630.png)
 
 > [!warning]  
 > The drop-down is only available when the specific type of subscription was fetched from the URL.
 
-Now you can select the subscription object from the drop-down and apply the configuration settings automatically.
+Now you can select the subscription object from the drop-down and apply the configuration settings automatically. When you open the outbound again later, the drop-down shows the server the outbound currently uses.
 
 > [!warning]
 > The difference between subscription source and subscription protocol is granularity. If the link contains one item - you can insert it into the Subscription URL field and this will perform an automatic reload during service restart.
-> Conversely, when it contains more than one source, it will display a drop-down list per outbound connection. This will require you to reapply the settings when changes are performed on the remote side.
+> Conversely, when it contains more than one source, it will display a drop-down list per outbound connection. This will require you to reapply the settings when changes are performed on the remote side — unless the outbound is in the [auto-fallback pool](#auto-fallback) and [automatic refresh](#automatic-subscription-refresh) is on, in which case such changes are picked up automatically.
 
 ## Automatic Subscription Refresh
 
@@ -99,11 +110,15 @@ In `General Options` → `Subscriptions` tab, find the **Auto-refresh interval**
 
 ![autosubs](../.vuepress/public/images/subscriptions/20260222194646.png)
 
-The refresh runs silently in the background via a cron job. It uses the same subscription links you already configured in the text area above.
+The refresh runs silently in the background via a cron job. It uses the same subscription links you already configured in the text area above (a temporary link that was only used with the `fetch` button is not refreshed).
+
+A failed refresh does no harm: a source that cannot be reached is replaced by its last good copy, and if nothing usable comes back, the previous server list stays as it is.
+
+When [auto-fallback](#auto-fallback) is enabled, the refresh also keeps the outbounds in the auto-fallback pool up to date. Providers regularly change a server's keys, UUID or port. If the link an outbound uses is no longer in the refreshed list, XRAYUI looks for the same server in the new list, first by its name and then by its address and port, and applies the new details. When only the name changed (for example, a "traffic left" counter), nothing is restarted.
 
 ## Auto-Fallback
 
-Auto-fallback is designed for situations where your ISP or network blocks a proxy endpoint. When enabled, XRAYUI will periodically check whether your active proxy is reachable. If it detects that the endpoint is down, it will automatically switch to the next working server from your subscription pool. Your routing rules, DNS settings, and everything else stay intact — only the connection details change.
+Auto-fallback is designed for situations where your ISP or network blocks a proxy endpoint. When enabled, XRAYUI regularly checks whether your active proxy is reachable. If the endpoint is down, it switches the outbound to another working server from your subscription pool. Your routing rules, DNS settings and the outbound's own options stay intact — only the connection details change.
 
 ![autofall](../.vuepress/public/images/subscriptions/20260220235709.png)
 
@@ -127,32 +142,57 @@ There are two parts to the setup:
 > [!info]
 > Only outbounds that have the **Auto-fallback pool** checkbox enabled will participate in automatic switching. Other outbounds are left untouched.
 
+> [!warning]
+> Both parts are needed. If the pool is enabled on an outbound but the global **Auto-fallback** toggle is off, nothing is switched: the outbound editor shows a warning next to the checkbox, and the 🔄 icon in the outbound list is dimmed.
+
+The **Auto-fallback pool** checkbox is not available for outbounds that use a **Subscription URL** — those follow their own URL (see [XRAYUI: Protocol Link](#xrayui-protocol-link)).
+
 ### Probe URL
 
 By default, the Connection Check verifies endpoint health by sending a request to `https://www.google.com/generate_204`. If this URL is not suitable for your environment (for example, if it is blocked in your region), you can change it in `General Options` → `General` tab under **Observatory probe URL** (shown when **Check connection to xray server** is enabled). The **Observatory probe interval** setting next to it controls how often the checks run — consider raising it if your subscriptions bring in many outbounds.
 
 ![prob](../.vuepress/public/images/subscriptions/20260222194527.png)
 
-The probe URL must return an HTTP `204 No Content` response to be considered successful. Any endpoint that returns 204 will work.
+Any HTTP response that comes back through the outbound counts as a successful probe — Xray does not look at the status code. Use an `https://` address, so that a block page from your ISP or provider cannot pass for a working connection.
+
+The Observatory result is also shown in the **Outbounds** list: 🟢 working (hover to see the delay), 🔴 unreachable (hover to see the error Xray reported), 🟡 no result yet.
 
 ### Rotation Filters
 
 If your subscription pool contains servers in many regions but you only want to rotate through a subset, you can set **Rotation filters** in `General Options` → `Subscriptions` tab.
 
-Enter comma-separated keywords (e.g., `Canada, Denmark`). When auto-fallback rotates to a new server, only subscription links whose name or URL contains at least one of these keywords will be considered. Links that do not match any keyword are skipped.
+Enter comma-separated keywords (e.g., `Canada, Denmark`). When auto-fallback looks for a new server, only subscription links whose name contains at least one of these keywords are considered (for links without a name, the server address is used instead). Matching ignores upper/lower case and works for names in any language, for example `канада`.
 
-If no filters are set, or if none of the keywords match any links in the pool, the full subscription pool is used as before.
+If no filters are set, or if none of the keywords match any links in the pool, the full subscription pool is used and a warning is written to the router log.
 
 ### How It Works
 
-The system checks your pool-enabled outbounds on the schedule you configured. For each one:
+On every health check, for each outbound in the pool:
 
-1. It checks whether the endpoint is alive using the **Connection Check** feature. Xray continuously probes your configured endpoints and provides reliable, up-to-date health status.
-2. If a check fails, it does not switch immediately. It waits for **3 consecutive failures** to avoid reacting to temporary network glitches.
-3. After 3 failures, it switches to the next server in your subscription pool (filtered by your rotation filters, if any). The Connection Check will verify the new server's health on the next check cycle.
-4. The switch is performed instantly via the **Xray API** with near-zero downtime. If the API is unavailable, the system falls back to a full Xray restart automatically.
+1. XRAYUI asks Xray for its **latest** probe result for that outbound. Only a probe that is newer than the one seen last time counts, so the same result is never counted twice.
+2. A failed probe does not trigger a switch right away. XRAYUI waits for **3 consecutive failed probes** to avoid reacting to short network glitches. When the router itself reports no internet connection (WAN down), nothing is counted.
+3. After 3 failures, XRAYUI picks the next server. It tries the server you originally selected first (if the outbound was switched away from it earlier), then goes through the pool in the provider's order, starting after the current server. Your rotation filters apply. These entries are skipped:
+   - servers already used by another outbound, so two outbounds never end up on the same server while there are alternatives;
+   - servers that failed during the last 6 hours;
+   - informational entries such as "Expires …" or "Traffic left …" (addresses like `0.0.0.0`), and entries that point back at the router itself;
+   - links that the installed Xray version cannot use (for example, outdated transports);
+   - servers that refuse connections from the router (checked for TCP-based servers only; a server that cannot be resolved is not skipped for that reason).
+4. The switch happens through the **Xray API**, with close to zero downtime. If that is not possible, Xray is restarted. If Xray does not come up with the new server, the previous one is restored.
+5. XRAYUI then waits for Xray to test the new server. If it is down as well, the next server is tried right away — up to 3 servers per check. With an Observatory probe interval above 60 seconds, this is left to the next check instead: a freshly selected server that fails its first probe is replaced without waiting for 3 failures.
+
+Only the connection details (address, keys, transport and security) are replaced. The outbound's tag, **Send through**, **Mux**, socket options, TCP fragment/noise masks and XHTTP `extra` settings are kept, so routing rules and balancers that use the tag keep working.
 
 > [!info]
 > Subscription pool settings are preserved across Xray restarts. You do not need to reconfigure the pool after restarting the service.
 
-A built-in safety limit prevents excessive switching — no more than 5 switches per hour per outbound. If all endpoints in the pool are unreachable, the system clears its failed list and retries on the next cycle.
+> [!info]
+> If a page with XRAYUI was already open before an automatic switch, pressing **Apply** on it keeps the new server instead of bringing back the dead one — unless you picked a different server on that page yourself.
+
+### Safety Limits
+
+- No more than **10 switches per hour** per outbound.
+- If every server in the pool failed recently, the list of failed servers is cleared and the pool is tried again on a later check.
+- If the pool has no usable server left, XRAYUI refreshes the subscription sources (at most once per hour).
+- Each check looks at no more than 20 servers per outbound; the rest are checked next time.
+
+Every step is written to the router's system log with the prefix `Failover:` (for example `logread | grep Failover`).

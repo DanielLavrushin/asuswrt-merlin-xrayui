@@ -369,11 +369,12 @@ reconstruct_staged_payload() {
 }
 
 cleanup_payload() {
-    # clean up all payload chunks from the custom settings
+    grep -q '^xray_payload' /jffs/addons/custom_settings.txt 2>/dev/null || return 0
     sed '/^xray_payload/d' /jffs/addons/custom_settings.txt >/tmp/custom_settings.$$ && mv /tmp/custom_settings.$$ /jffs/addons/custom_settings.txt
 }
 
 cleanup_staged_marker() {
+    grep -qE '^xray_stag(ed_session|e_)' /jffs/addons/custom_settings.txt 2>/dev/null || return 0
     sed '/^xray_staged_session/d;/^xray_stage_/d' /jffs/addons/custom_settings.txt >/tmp/custom_settings.$$ && mv /tmp/custom_settings.$$ /jffs/addons/custom_settings.txt
 }
 
@@ -600,8 +601,9 @@ fixme() {
 }
 
 urldecode() {
-    local data=$1
-    printf '%b' "$(printf '%s' "$data" | sed 's/%\([0-9A-Fa-f][0-9A-Fa-f]\)/\\x\1/g')"
+    local data
+    data=$(printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/%\([0-9A-Fa-f][0-9A-Fa-f]\)/\\x\1/g')
+    printf '%b' "$data"
 }
 
 is_json() {

@@ -2,69 +2,62 @@
 
 ## [0.70.0] - 2026-09-26
 
-- FIXED: The XRAYUI page could open as a blank white screen because of a device on the network, such as some IP cameras, or a device name with quotes or a backslash. Settings saved by other add-ons with such characters, or a missing add-on settings file, had the same effect. The page now opens, and the names and settings are kept exactly as they are.
-- FIXED: After servers were loaded from a long list of subscription links, a TLS ping or generating ECH or WireGuard keys could get broken data and fail until the page was reloaded.
-- FIXED: In rare cases, an XRAYUI page opened just as another action was finishing could erase the settings of all add-ons on its next save, which also stopped Xray from starting with the router.
-- FIXED: Backups could be downloaded from the router's web address without logging in. A login is now required.
-- FIXED: Downloading a backup failed after the router restarted, until a backup was created or deleted.
-- FIXED: A server name, a certificate name or a website name seen in the logs that contained certain character sequences could freeze the router's whole web interface for several minutes while the XRAYUI page, the log viewer or the SNI log was open.
-- FIXED: The **raw** button of the log viewer showed log lines as a web page, so a crafted website name in the log could run page code. Raw views now show plain text.
-- FIXED: Release notes in the update window could run page code sent by a GitHub proxy mirror. They are now shown as plain formatted text.
-- FIXED: A crafted domain in a routing rule, for example one added from the SNI log, could run page code in the DNS server rules list.
-- FIXED: The device list in **Redirect/Bypass policies** showed devices that had left the network as online, so **Show all** changed nothing, and Wi-Fi devices were never marked.
-- IMPROVED: Changes made in settings windows are not saved until **Apply** is pressed. A note under **Apply** now shows when some changes have not been applied yet, and **Start**, **Restart**, **Stop** and leaving the page ask first instead of silently dropping them.
-- FIXED: mKCP settings showed **Congestion control**, **Read buffer size** and **Write buffer size**, which Xray-core 26.4.13 and newer ignore. On those versions **Congestion window multiplier** and **Max sending window** are shown instead.
-- FIXED: Clearing an mKCP number field, such as **MTU**, stopped Xray from starting. An empty field now means the default value.
-- FIXED: mKCP with both a packet header and a seed did not connect on Xray-core 26.6.22 and newer, because the two were applied in the wrong order. Subscription links were affected too. A configuration saved earlier needs **Apply** once, and when both ends of an mKCP link use XRAYUI, both need updating.
-- FIXED: In simple mode, **Apply** removed device policies and other routing settings when neither domain list had any entries.
-- FIXED: **Hide sensitive data** in the configuration viewer missed several private details, most notably the full server link (with its ID, address and key) of outbounds in the **Auto-fallback pool**. These are now hidden, as is a proxy server's address or domain when it is repeated elsewhere, such as in routing rules.
-- FIXED: With **Hide sensitive data** turned off, the configuration viewer showed pieces of program code and `undefined` values mixed into the configuration.
-- FIXED: Auto-fallback only noticed a dead server while the XRAYUI page was open in a browser, so with the page closed it never switched. Each check now reads fresh results from Xray.
-- FIXED: After auto-fallback had to restart Xray once, it silently stopped working until the next manual restart. Automatic geodata updates had the same problem after their first run.
-- FIXED: Auto-fallback switched blindly to the next server in the list, including dead servers, fake "expired" or "traffic left" entries, and links the installed Xray cannot use. New servers are now checked before and after the switch, and servers that failed recently are skipped.
-- FIXED: With several outbounds in the auto-fallback pool, one of them could be switched to the server another one was already using, and every switch wiped settings such as Mux and Send through. ([#343](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/343))
-- FIXED: Auto-fallback and Subscription URL outbounds could pick a subscription entry that points back at the router itself, which can make Xray use up all memory and freeze the router.
-- FIXED: A failed subscription update (provider down or showing an error page) emptied the server list, leaving auto-fallback with nothing to switch to. The last good list is now kept.
-- IMPROVED: When the provider changes a server's keys or address, the scheduled subscription update now applies the change to outbounds in the auto-fallback pool.
-- FIXED: An outbound with a **Subscription URL** could stop Xray from starting when the subscription was unreachable during a restart, and a list subscription could put a fake "expired" entry in its place. The last working server is now kept.
-- FIXED: Rotation filters did not work on the router: a single keyword was ignored, and matching was case-sensitive and missed non-Latin names.
-- FIXED: Several kinds of subscription links were imported incorrectly: Hysteria links, mKCP links on current Xray versions, Trojan links with TLS, gRPC and HTTPUpgrade transports, IPv6 addresses, and names or passwords with encoded characters.
-- FIXED: Pressing Apply on a page that had been open since before an automatic switch put the dead server back.
-- FIXED: Offline outbounds were shown with a yellow dot instead of red. Hovering over the dot now shows the delay or the error.
-- IMPROVED: The outbound editor shows which subscription server is in use, and warns when the auto-fallback pool is on but auto-fallback is turned off in General Options.
-- FIXED: A scheduled subscription update running at the same moment as Apply or Save could swallow the change, and in rare cases reset all General Options.
-- FIXED: With a server inbound on port 443, HTTPS from LAN devices went around the proxy. Now only connections to the router itself skip the proxy.
-- FIXED: Proxy rules could vanish after the router reconnected to the internet or rebuilt its firewall, leaving LAN traffic unproxied until the next Xray restart. This showed up most often with IPv6 enabled.
-- FIXED: With IPv6 enabled, a server inbound's port was opened not only on the router but on every device in the LAN.
-- FIXED: With **DNS bypass (ipset)** set to redirect, sites from proxy rules often went direct for a long time after a restart, a reboot or a router reconnect, until the device looked the site up again. Addresses the router has already learned are now kept across restarts and reboots, and the sites listed in rules are looked up right after a restart. ([#282](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/282))
-- FIXED: With **DNS bypass (ipset)**, large country lists such as `geoip:us` were silently not loaded, so that traffic went direct in redirect mode.
-- FIXED: With **DNS bypass (ipset)**, some sites from geosite lists and entries from custom `ext:` data files were ignored, and a direct outbound with fragment, noises or a bound network interface lost those settings. Entries that cannot be used, such as `regexp:` or `keyword:`, are now listed in the log.
-- FIXED: With **DNS bypass (ipset)**, a domain with non-Latin letters in a rule or in a geosite list (some Russian lists contain thousands) stopped the router's DNS from starting.
-- IMPROVED: With **DNS bypass (ipset)**, DNS is back within a second or two after a restart instead of about ten seconds when the rules have not changed.
-- IMPROVED: The router rebuilding its firewall no longer restarts DNS every time.
-- FIXED: The nightly geodata update restarted Xray even when nothing had changed, and a failed download could replace the geodata files with an error page.
-- FIXED: When the geodata links in **General Options** were changed and the download failed, the other changed options were not applied.
-- FIXED: A transparent inbound set to TCP only broke all UDP traffic of LAN devices, such as games and calls. UDP now goes direct in that case.
-- FIXED: Bypass and redirect policies did not always do what their descriptions say. A device redirected with excluded ports lost its other TCP traffic, a policy for one device switched off an "all devices" policy, and a bypassed device still had its UDP proxied.
-- FIXED: Policies listing more than 15 ports were ignored.
-- FIXED: **Block QUIC** also blocked UDP port 443 arriving from the internet, which broke QUIC-based server inbounds and port forwards on that port. It now affects only traffic that goes through Xray.
-- FIXED: Two firewall updates running at the same time, such as a restart during a reconnect, could leave duplicate or missing rules.
-- FIXED: An inbound listening on `127.0.0.1` got no traffic when another transparent inbound was listed after it.
-- FIXED: A transparent inbound listening on `::` got no IPv4 traffic.
-- FIXED: Stopping Xray left a routing rule behind on the router.
-- FIXED: On some routers, the **Profile manager** list, the backup list and the list of custom geodata files stayed empty, so no profile could be picked. ([#405](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/405))
-- FIXED: On some routers, **Apply** failed with an upload error, and Save in **General Options** reset every option to an empty value while still reporting success. A failed save now leaves the settings unchanged. ([#405](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/405))
-- FIXED: On some routers, most subscriptions returned no servers, and VMess and some Shadowsocks servers from subscriptions were skipped or imported broken. A damaged subscription no longer replaces the last good list. ([#405](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/405))
-- FIXED: On some routers, leftovers of interrupted large saves were never cleaned up and kept taking up memory.
-- IMPROVED: An error at the end of **Apply** or a save in **General Options** now stays on screen for a few seconds instead of disappearing before it can be read.
-- FIXED: When **Apply** could not replace the configuration file, the loading screen never went away.
-- FIXED: Outbounds with a **Subscription URL** were not updated from large subscriptions (roughly 400 servers or more), or at all when the configuration was large.
-- FIXED: Auto-fallback never switched servers, and a subscription update did not refresh the auto-fallback pool, when one server type in the subscriptions had roughly 400 servers or more.
-- FIXED: With a large configuration, updating XRAYUI, saving **General Options** or pressing **Apply** could leave the Xray configuration file empty, so Xray no longer started.
-- FIXED: A configuration or a custom geodata list larger than about 128 KB could not be saved. For custom geodata lists the page still reported success.
-- FIXED: **Check connection to xray server** could not be turned on for a large configuration.
-- FIXED: Hysteria servers from subscriptions that set a speed or a pinned certificate could not be used on most routers.
+### Security
+
+- FIXED: Backups could be downloaded from the router's web address without logging in. A login is now required, and downloading a backup no longer fails after a router restart.
+- FIXED: Crafted text could run page code in the log viewer's **raw** view, in release notes from a GitHub proxy mirror, and in the DNS server rules list. Raw views and release notes now show plain text.
 - FIXED: A custom geodata list name could point outside its folder, so saving or deleting a list could write or remove other files on the router.
+- FIXED: With IPv6 enabled, a server inbound's port was opened on every device in the LAN, not only on the router.
+- FIXED: **Hide sensitive data** in the configuration viewer missed several private details, such as the full server links of outbounds in the **Auto-fallback pool** and proxy addresses repeated in routing rules. With it turned off, the viewer showed stray program code.
+
+### Auto-fallback and subscriptions
+
+- FIXED: Auto-fallback only worked while the XRAYUI page was open, and stopped for good after its first Xray restart. It now runs on its own, and pressing **Apply** on a page opened before a switch no longer puts the dead server back.
+- FIXED: Auto-fallback switched blindly to the next server, including dead ones, fake "expired" or "traffic left" entries and links the installed Xray cannot use. Servers are now checked before and after a switch, and recently failed ones are skipped.
+- FIXED: With several outbounds in the **Auto-fallback pool**, two could end up on the same server, and every switch wiped settings such as Mux and Send through. ([#343](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/343))
+- FIXED: Auto-fallback and **Subscription URL** outbounds could pick a subscription entry pointing back at the router itself, which could use up all memory and freeze the router.
+- FIXED: A failed subscription update emptied the server list, and a **Subscription URL** outbound could stop Xray from starting when its subscription was unreachable, or get a fake "expired" entry. The last good list and working server are now kept.
+- FIXED: **Subscription URL** outbounds were not updated from large subscriptions (about 400 servers or more) or with a large configuration, and auto-fallback did not work when one server type had that many.
+- FIXED: On some routers, most subscriptions returned no servers, and VMess and some Shadowsocks servers were skipped or imported broken. ([#405](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/405))
+- FIXED: Several kinds of subscription links were imported incorrectly or could not be used, including Hysteria, mKCP, Trojan with TLS, gRPC, HTTPUpgrade, IPv6 addresses, and names or passwords with special characters.
+- FIXED: Rotation filters did not work on the router: a single keyword was ignored, and matching missed different letter case and non-Latin names.
+- IMPROVED: Scheduled subscription updates now apply a provider's changed server keys or addresses to outbounds in the **Auto-fallback pool**.
+- IMPROVED: Offline outbounds now show a red dot instead of a yellow one, and hovering over it shows the delay or the error. The outbound editor shows which subscription server is in use and warns when auto-fallback is turned off in **General Options**.
+
+### Proxy rules and device policies
+
+- FIXED: Proxy rules could vanish after the router reconnected or rebuilt its firewall (most often with IPv6 enabled), so LAN traffic skipped the proxy until the next Xray restart.
+- FIXED: A transparent inbound set to TCP only broke all UDP traffic of LAN devices, such as games and calls. UDP now goes direct in that case.
+- FIXED: With a server inbound on port 443, HTTPS from LAN devices bypassed the proxy.
+- FIXED: Bypass and redirect policies did not always work as described: a device redirected with excluded ports lost its other TCP traffic, a single-device policy switched off an "all devices" policy, a bypassed device still had its UDP proxied, and policies with more than 15 ports were ignored.
+- FIXED: The device list in **Redirect/Bypass policies** showed devices that had left the network as online, so **Show all** changed nothing, and Wi-Fi devices were never marked.
+- FIXED: **Block QUIC** also blocked incoming UDP port 443, breaking QUIC-based server inbounds and port forwards on that port. It now affects only traffic going through Xray.
+- FIXED: An inbound listening on `127.0.0.1` got no traffic when another transparent inbound was listed after it, and one listening on `::` got no IPv4 traffic.
+
+### DNS bypass and geodata
+
+- FIXED: With **DNS bypass (ipset)** set to redirect, sites from proxy rules often went direct for a long time after a restart, reboot or reconnect. Known addresses are now kept, and sites listed in rules are looked up right after a restart. ([#282](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/282))
+- FIXED: With **DNS bypass (ipset)**, a domain with non-Latin letters in a rule or a geosite list stopped the router's DNS from starting.
+- FIXED: With **DNS bypass (ipset)**, large country lists such as `geoip:us`, some geosite sites and custom `ext:` entries were silently skipped, and a direct outbound lost its fragment, noises or bound interface settings. Unsupported entries such as `regexp:` are now listed in the log.
+- IMPROVED: DNS restarts less often and comes back within a second or two instead of about ten when the rules have not changed.
+- FIXED: Automatic geodata updates stopped after their first run, and the nightly update restarted Xray even when nothing had changed. A failed download could replace the geodata files with an error page, or keep other changed **General Options** from being applied.
+
+### Page and saving settings
+
+- FIXED: The XRAYUI page could open as a blank white screen because of certain network devices (such as some IP cameras), quotes or backslashes in device names or other add-ons' settings, or a missing add-on settings file.
+- FIXED: Certain server, certificate or website names seen in the logs could freeze the router's whole web interface for several minutes while the XRAYUI page, the log viewer or the SNI log was open.
+- FIXED: With a large configuration, updating XRAYUI, saving **General Options** or pressing **Apply** could empty the Xray configuration file, so Xray no longer started. Very large configurations and custom geodata lists also could not be saved, and **Check connection to xray server** could not be turned on.
+- FIXED: On some routers, **Apply** failed with an upload error, saving **General Options** reset every option while still reporting success, and the **Profile manager**, backup and custom geodata lists stayed empty. ([#405](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/405))
+- FIXED: In rare cases, saving from a page opened as another action finished erased the settings of all add-ons and stopped Xray from starting with the router. A scheduled subscription update running during **Apply** or Save could also swallow the change.
+- IMPROVED: A note under **Apply** shows changes that have not been applied yet, and **Start**, **Restart**, **Stop** and leaving the page ask first instead of silently dropping them.
+- FIXED: In simple mode, **Apply** removed device policies and other routing settings when both domain lists were empty.
+- FIXED: The loading screen could stay forever when **Apply** failed, and errors at the end of **Apply** or a **General Options** save disappeared before they could be read.
+- FIXED: After servers were loaded from a long subscription list, TLS ping and generating ECH or WireGuard keys could fail until the page was reloaded.
+
+### mKCP
+
+- FIXED: mKCP with both a packet header and a seed did not connect on Xray-core 26.6.22 and newer, including servers from subscriptions. A configuration saved earlier needs **Apply** once, and when both ends use XRAYUI, both need updating.
+- FIXED: Clearing an mKCP number field such as **MTU** stopped Xray from starting. On Xray-core 26.4.13 and newer, mKCP settings now show the options that version actually uses.
 
 ## [0.69.1] - 2026-09-01
 

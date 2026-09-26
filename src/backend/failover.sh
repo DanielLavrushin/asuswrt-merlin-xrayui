@@ -179,7 +179,7 @@ failover_switch_next() {
     chosen=""
 
     now=$(date +%s)
-    current=$(jq -c --arg t "$tag" 'first(.outbounds[]? | select(.tag == $t)) // empty' "$XRAY_CONFIG_FILE" 2>/dev/null)
+    current=$(failover_read_outbound "$tag")
     [ -n "$current" ] || return 1
 
     proto=$(printf '%s' "$current" | jq -r '.protocol // ""')
@@ -276,10 +276,15 @@ EOF
     fi
 
     log_info "Failover: switching '$tag' to $(failover_link_label "$chosen")"
-    if ! failover_apply_outbound "$tag" "$merged"; then
+    failover_apply_outbound "$tag" "$merged" "$current"
+    case "$?" in
+    0) ;;
+    2) return 1 ;;
+    *)
         failover_mark_failed "$tag" "$id" "$now"
         return 1
-    fi
+        ;;
+    esac
 
     now=$(date +%s)
     failover_state_update --arg t "$tag" --argjson now "$now" --arg old "${active%%#*}" '
@@ -527,18 +532,32 @@ failover_write_outbound() {
     return "$rc"
 }
 
+failover_read_outbound() {
+    jq -c --arg t "$1" 'first(.outbounds[]? | select(.tag == $t)) // empty' "$XRAY_CONFIG_FILE" 2>/dev/null
+}
+
+failover_same_json() {
+    [ "$(jq -n --argjson a "$1" --argjson b "$2" '$a == $b' 2>/dev/null)" = "true" ]
+}
+
 failover_apply_outbound() {
     local tag="$1"
     local ob="$2"
+    local expected="$3"
     local previous
 
     if ! failover_config_lock; then
         log_warn "Failover: the configuration is busy - trying again on the next check"
-        return 1
+        return 2
     fi
 
-    previous=$(jq -c --arg t "$tag" 'first(.outbounds[]? | select(.tag == $t)) // empty' "$XRAY_CONFIG_FILE" 2>/dev/null)
-    if [ -z "$previous" ] || ! failover_write_outbound "$tag" "$ob"; then
+    previous=$(failover_read_outbound "$tag")
+    if [ -z "$previous" ] || { [ -n "$expected" ] && ! failover_same_json "$previous" "$expected"; }; then
+        failover_config_unlock
+        log_info "Failover: outbound '$tag' was changed or removed meanwhile - checking again on the next run"
+        return 2
+    fi
+    if ! failover_write_outbound "$tag" "$ob"; then
         failover_config_unlock
         log_error "Failover: could not update outbound '$tag' in $XRAY_CONFIG_FILE"
         return 1
@@ -558,7 +577,7 @@ failover_apply_outbound() {
 
     log_error "Failover: Xray did not start with the new endpoint of '$tag' - restoring the previous one"
     if failover_config_lock; then
-        failover_write_outbound "$tag" "$previous"
+        failover_same_json "$(failover_read_outbound "$tag")" "$ob" && failover_write_outbound "$tag" "$previous"
         failover_config_unlock
     fi
     restart
@@ -640,7 +659,7 @@ failover_resync_pool_outbounds() {
         fi
         [ -n "$replacement" ] || [ -n "$new_origin" ] || continue
 
-        current=$(jq -c --arg t "$tag" 'first(.outbounds[]? | select(.tag == $t)) // empty' "$XRAY_CONFIG_FILE" 2>/dev/null)
+        current=$(failover_read_outbound "$tag")
         [ -n "$current" ] || continue
 
         if [ -z "$replacement" ]; then
@@ -667,14 +686,14 @@ failover_resync_pool_outbounds() {
         if [ "$same" = "true" ]; then
             merged=$(printf '%s' "$current" | jq -c --argjson b "$merged" '.subPool = $b.subPool')
             if [ -n "$merged" ] && failover_config_lock; then
-                failover_write_outbound "$tag" "$merged"
+                failover_same_json "$(failover_read_outbound "$tag")" "$current" && failover_write_outbound "$tag" "$merged"
                 failover_config_unlock
             fi
             continue
         fi
 
         log_info "Failover: the subscription changed the endpoint of '$tag' - updating it"
-        failover_apply_outbound "$tag" "$merged" </dev/null
+        failover_apply_outbound "$tag" "$merged" "$current" </dev/null
     done <<EOF
 $entries
 EOF

@@ -391,6 +391,13 @@
               .map((s) => s.trim())
               .filter((s) => s)
           : [];
+
+        const customListsInIps = [...newRule.ip, ...newRule.source].filter((v) => /^ext:xrayui:/i.test(v));
+        if (customListsInIps.length) {
+          alert(t('com.RulesModal.alert_ext_xrayui_in_ips', { entries: customListsInIps.join(', ') }));
+          return;
+        }
+
         newRule.sourcePort = currentRule.value.sourcePort;
         newRule.port = currentRule.value.port;
 

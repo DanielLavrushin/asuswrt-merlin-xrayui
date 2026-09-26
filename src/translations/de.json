@@ -248,6 +248,7 @@
       "label_source_ips": "Quell-IP-Liste",
       "label_source_ports": "Quellport",
       "alert_delete_rule_confirm": "Diese Regel löschen?",
+      "alert_ext_xrayui_in_ips": "Eigene Geodaten-Listen (ext:xrayui:) enthalten nur Domains und funktionieren nicht in IP-Listen: {entries}",
       "hint_friendly_name": "Ein freundlicher Name für die Regel.",
       "hint_outbound_tag": "Der Tag des ausgehenden Proxys. Diese Regel tritt in Kraft, wenn die ausgehende Verbindung diesen Tag hat.",
       "hint_inbound_tags": "Ein Array, in dem jeder Eintrag einen Tag des eingehenden Proxys darstellt. Diese Regel tritt in Kraft, wenn die eingehende Verbindung mit einem der Tags übereinstimmt.",

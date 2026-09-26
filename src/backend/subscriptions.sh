@@ -71,7 +71,7 @@ process_subscriptions() {
     local cfg_file="$config_file.subs.$$"
     local new_file="$config_file.subs.new.$$"
 
-    cp "$config_file" "$cfg_file" || {
+    cp -p "$config_file" "$cfg_file" || {
         rm -f "$cfg_file"
         return 1
     }
@@ -119,7 +119,7 @@ process_subscriptions() {
                         then .streamSettings = ((.streamSettings // {}) + {sockopt:$sock})
                         else .
                         end
-                    )' "$cfg_file" >"$new_file" && [ -s "$new_file" ] && mv -f "$new_file" "$cfg_file"
+                    )' "$cfg_file" >"$new_file" && [ -s "$new_file" ] && cat "$new_file" >"$cfg_file"
         rm -f "$new_file"
     done <<EOF
 $(jq -c '.outbounds
@@ -127,7 +127,7 @@ $(jq -c '.outbounds
     | select(.value.surl and .value.surl!="")
     | {idx:.key,url:.value.surl,proto:.value.protocol,tag:(.value.tag//""),
        hp:((.value.settings.vnext[0] // .value.settings.servers[0] // .value.settings // {})
-           | if (.address // "") == "" then "" else "\(.address):\(.port // "")" | ascii_downcase end)}' "$cfg_file")
+           | if (.address // "") == "" then "" else "\(.address | tostring | gsub("[\\[\\]]"; "")):\(.port // "")" | ascii_downcase end)}' "$cfg_file")
 EOF
     if ! jq -e '.outbounds | type == "array"' "$cfg_file" >/dev/null 2>&1; then
         rm -f "$cfg_file"
@@ -212,7 +212,9 @@ subscription_pick_link() {
             sub(/[?].*/, "", s)
             sub(/\/.*/, "", s)
             m = split(s, parts, "@")
-            if (tolower(parts[m]) == hp) { print; exit }
+            h = tolower(parts[m])
+            gsub(/\[|\]/, "", h)
+            if (h == hp) { print; exit }
         }' "$lines_file")
         if [ -n "$line" ] && rep=$(subscription_parse_link_to_outbound "$line") && [ -n "$rep" ] &&
             ! subscription_outbound_is_unusable "$rep" "$locals"; then

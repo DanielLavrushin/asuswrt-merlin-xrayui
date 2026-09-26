@@ -187,7 +187,7 @@ failover_switch_next() {
     origin=$(printf '%s' "$current" | jq -r '.subPool.origin // ""')
     cur_hp=$(printf '%s' "$current" | jq -r '
         (.settings.vnext[0] // .settings.servers[0] // .settings // {}) as $s
-        | if ($s.address // "") == "" then "" else "\($s.address):\($s.port // "")" | ascii_downcase end')
+        | if ($s.address // "") == "" then "" else "\($s.address | tostring | gsub("[\\[\\]]"; "")):\($s.port // "")" | ascii_downcase end')
 
     pool=$(jq -r --arg p "$proto" '.[$p] // [] | .[]' "$XRAYUI_SUBSCRIPTIONS_FILE" 2>/dev/null)
     if [ -z "${pool:+1}" ]; then
@@ -202,7 +202,7 @@ failover_switch_next() {
         .outbounds[]? | select(.tag != $t)
         | (.settings.vnext[0] // .settings.servers[0] // .settings // {}) as $s
         | select(($s.address // "") != "")
-        | "\($s.address):\($s.port // "")" | ascii_downcase' "$XRAY_CONFIG_FILE" 2>/dev/null)
+        | "\($s.address | tostring | gsub("[\\[\\]]"; "")):\($s.port // "")" | ascii_downcase' "$XRAY_CONFIG_FILE" 2>/dev/null)
 
     failover_state_update --arg t "$tag" --argjson now "$now" --argjson ttl "$FAILOVER_FAILED_TTL" '
         if .[$t].failed then .[$t].failed |= with_entries(select(.value > ($now - $ttl))) else . end'
@@ -314,13 +314,15 @@ EOF
     fi
 
     awk -v aid="${active%%#*}" -v ahp="$cur_hp" '
-        function hostport(s,    m, parts) {
+        function hostport(s,    m, parts, h) {
             sub(/#.*/, "", s)
             sub(/^[^:]*:\/\//, "", s)
             sub(/[?].*/, "", s)
             sub(/\/.*/, "", s)
             m = split(s, parts, "@")
-            return tolower(parts[m])
+            h = tolower(parts[m])
+            gsub(/\[|\]/, "", h)
+            return h
         }
         NF {
             n++
@@ -347,7 +349,9 @@ failover_link_hostport() {
         sub(/[?].*/, "", s)
         sub(/\/.*/, "", s)
         m = split(s, parts, "@")
-        print tolower(parts[m])
+        h = tolower(parts[m])
+        gsub(/\[|\]/, "", h)
+        print h
     }'
 }
 
@@ -504,6 +508,7 @@ failover_tcp_precheck() {
 
 failover_config_lock() {
     local waited=0
+    which flock >/dev/null 2>&1 || return 0
     touch "$XRAY_RESTART_LOCKFILE" 2>/dev/null || return 0
     eval exec "$XRAY_RESTART_LOCK_FD>$XRAY_RESTART_LOCKFILE"
     while ! flock -n "$XRAY_RESTART_LOCK_FD"; do
@@ -524,6 +529,7 @@ failover_write_outbound() {
     local tag="$1"
     local ob="$2"
     local tmp="$XRAY_CONFIG_FILE.failover.$$"
+    cp -p "$XRAY_CONFIG_FILE" "$tmp" 2>/dev/null
     jq --arg t "$tag" --argjson ob "$ob" '.outbounds |= map(if .tag == $t then $ob else . end)' "$XRAY_CONFIG_FILE" >"$tmp" 2>/dev/null &&
         jq -e '.outbounds | type == "array"' "$tmp" >/dev/null 2>&1 &&
         mv -f "$tmp" "$XRAY_CONFIG_FILE"
@@ -732,7 +738,9 @@ EOF
         sub(/[?].*/, "", s)
         sub(/\/.*/, "", s)
         m = split(s, parts, "@")
-        if (tolower(parts[m]) == hp) { print; exit }
+        h = tolower(parts[m])
+        gsub(/\[|\]/, "", h)
+        if (h == hp) { print; exit }
     }' <<EOF
 $pool
 EOF

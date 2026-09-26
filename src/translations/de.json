@@ -283,6 +283,9 @@
       "hint_pool_inactive": "Auto-Fallback ist in den allgemeinen Einstellungen deaktiviert, daher wird dieser Outbound nicht automatisch umgeschaltet.",
       "status_unreachable": "Nicht erreichbar"
     },
+    "OutboundCommon": {
+      "warn_auto_fallback_global_off": "Inaktiv: Auto-Fallback ist in den allgemeinen Einstellungen deaktiviert."
+    },
     "StreamSettingsModal": {
       "title": "Transport-Einstellungen",
       "modal_security_title": "Sicherheitseinstellungen",

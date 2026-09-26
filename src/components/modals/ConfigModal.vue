@@ -7,7 +7,7 @@
       <label class="config-size-label"> {{ configSize }}/8000 ({{ ((configSize / 8000) * 100).toFixed(0) }}%) </label>
     </div>
     <template v-slot:footer>
-      <label>
+      <label class="hide-sensitive">
         <input type="checkbox" v-model="hideSenseData" @change="hide_sense_data" />
         {{ $t('com.ConfigModal.hide_sensetive_data') }}
       </label>
@@ -113,5 +113,15 @@
   .config-size-label {
     float: right;
     font-size: 10px;
+  }
+
+  .hide-sensitive {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .hide-sensitive input {
+    margin: 0;
   }
 </style>

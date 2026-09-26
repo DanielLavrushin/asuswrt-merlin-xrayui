@@ -42,10 +42,19 @@ const STALE = {
 };
 const T = 1790000000;
 const NOW = Math.floor(Date.now() / 1000);
-const LINKS = 'vless://11111111-2222-3333-4444-555555555555@203.0.113.1:443?security=reality#Server%20A\ntrojan://secret@203.0.113.2:443#Сервер Б\n';
+const LINKS =
+  [
+    ...Array.from({ length: 20 }, (_, i) => `vless://11111111-2222-3333-4444-555555555555@203.0.113.${i + 1}:443?security=reality&sni=s${i}.example#Server%20${i}`),
+    'trojan://secret@203.0.113.30:443#Сервер Б',
+    'hy2://pass@203.0.113.31:443?sni=a.example#?>?'
+  ].join('\n') + '\n';
 const LINKS_B64 = Buffer.from(LINKS).toString('base64').replace(/.{76}/g, '$&\n');
-const VMESS = JSON.stringify({ v: '2', ps: 'Сервер', add: '203.0.113.3', port: '443', id: '11111111-2222-3333-4444-555555555555', net: 'ws' });
+const LINKS_B64URL = Buffer.from(LINKS).toString('base64url');
+const LINKS_JUNK = LINKS_B64 + '\n<!-- cached by edge -->\n';
+const VMESS = JSON.stringify({ v: '2', ps: 'Сервер ??>', add: '203.0.113.3', port: '443', id: '11111111-2222-3333-4444-555555555555', net: 'ws', path: '/ws?ed=2048' });
 const VMESS_B64 = Buffer.from(VMESS).toString('base64url');
+const VMESS_JUNK = `${VMESS_B64.slice(0, 40)}%3A${VMESS_B64.slice(40)}`;
+const APPLIED = JSON.stringify({ log: { loglevel: 'debug' }, inbounds: [], outbounds: [{ tag: 'direct', protocol: 'freedom' }] });
 const loadingResponse = (message: string) => JSON.stringify({ xray: { profile: 'config.json' }, loading: { message, progress: 100 } });
 
 type Bin = 'host' | 'nobase64' | 'bare';
@@ -108,9 +117,15 @@ const scenarios: Record<string, Scenario> = {
   'subscription body without base64': { steps: ['sub_body'], bin: 'nobase64', files: { payload: LINKS_B64 } },
   'subscription body without base64 or openssl': { steps: ['sub_body'], bin: 'bare', files: { payload: LINKS_B64 } },
   'plain subscription body': { steps: ['sub_body'], bin: 'bare', files: { payload: LINKS } },
+  'url-safe subscription body with base64': { steps: ['sub_body'], files: { payload: LINKS_B64URL } },
+  'url-safe subscription body without base64': { steps: ['sub_body'], bin: 'nobase64', files: { payload: LINKS_B64URL } },
+  'subscription body with junk with base64': { steps: ['sub_body'], files: { payload: LINKS_JUNK } },
+  'subscription body with junk without base64': { steps: ['sub_body'], bin: 'nobase64', files: { payload: LINKS_JUNK } },
   'vmess link with base64': { steps: ['sub_link'], files: { payload: VMESS_B64 } },
   'vmess link without base64': { steps: ['sub_link'], bin: 'nobase64', files: { payload: VMESS_B64 } },
   'vmess link without base64 or openssl': { steps: ['sub_link'], bin: 'bare', files: { payload: VMESS_B64 } },
+  'vmess link with junk with base64': { steps: ['sub_link'], files: { payload: VMESS_JUNK } },
+  'vmess link with junk without base64': { steps: ['sub_link'], bin: 'nobase64', files: { payload: VMESS_JUNK } },
   'stale staging sessions': {
     steps: ['sweep'],
     files: { 'tmp/xrayui-staging/old/chunk-0': 'x', 'tmp/xrayui-staging/fresh/chunk-0': 'x', 'tmp/xrayui-staging/stray': '' },
@@ -121,6 +136,20 @@ const scenarios: Record<string, Scenario> = {
     files: { 'www/xray-ui-response.json': loadingResponse('Error: settings upload was empty or corrupted. Try again.') }
   },
   'success progress cleanup': { steps: ['clear_loading'], files: { 'www/xray-ui-response.json': loadingResponse('General settings applied.') } },
+  'error progress replaced during the wait': {
+    steps: ['clear_loading'],
+    env: { RS_NEXT_LOADING: JSON.stringify({ xray: { profile: 'config.json' }, loading: { message: 'Restarting Xray service...', progress: 35 } }) },
+    files: { 'www/xray-ui-response.json': loadingResponse('Error: another restart or switch is in progress. Try again.') }
+  },
+  apply: {
+    steps: ['apply'],
+    files: { 'opt/etc/xray/config.json': CONFIG, 'jffs/addons/custom_settings.txt': `xray_payload0 ${APPLIED}\n` }
+  },
+  'apply without a current config': {
+    steps: ['apply'],
+    dirs: ['opt/etc/xray'],
+    files: { 'jffs/addons/custom_settings.txt': `xray_payload0 ${APPLIED}\n` }
+  },
   'empty directories': { steps: ['respond'], dirs: ['opt/etc/xray', 'share/backup'] },
   'missing directories': { steps: ['respond'] },
   'gz payload with base64': { steps: ['decode'], files: { payload: GZ } },
@@ -221,6 +250,11 @@ it('builds the gz fixtures exactly as the frontend submits them', () => {
   expect(GZ.startsWith('gz:')).toBe(true);
   expect(CHUNKS.length).toBeGreaterThan(1);
   expect(PLAIN.startsWith('gz:')).toBe(false);
+  for (const encoded of [VMESS_B64, LINKS_B64URL]) {
+    expect(encoded.length % 4).not.toBe(0);
+    expect(encoded).toMatch(/[-_]/);
+  }
+  expect(LINKS_JUNK.length).toBeGreaterThan(2048);
 });
 
 describe.each(SHELLS)('response backend under %s', (_label, shell) => {
@@ -297,6 +331,21 @@ describe.each(SHELLS)('response backend under %s', (_label, shell) => {
       expect(r.read('decoded')).toBe(LINKS);
     });
 
+    itIf(HAS_BASE64)('decodes an unpadded URL-safe subscription body with base64', async () => {
+      const r = await get('url-safe subscription body with base64');
+      expect(r.read('decoded')).toBe(LINKS);
+    });
+
+    itIf(HAS_OPENSSL)('decodes an unpadded URL-safe subscription body with openssl when base64 is missing', async () => {
+      const r = await get('url-safe subscription body without base64');
+      expect(r.read('decoded')).toBe(LINKS);
+    });
+
+    it.each(['subscription body with junk with base64', 'subscription body with junk without base64'])('keeps a body with non-base64 junk undecoded: %s', async (name) => {
+      const r = await get(name);
+      expect(r.read('decoded')).toBe(LINKS_JUNK);
+    });
+
     itIf(HAS_BASE64)('decodes an unpadded URL-safe vmess link with base64', async () => {
       const r = await get('vmess link with base64');
       expect(r.read('decoded')).toBe(VMESS);
@@ -309,6 +358,12 @@ describe.each(SHELLS)('response backend under %s', (_label, shell) => {
 
     it('returns nothing for a vmess link when neither base64 nor openssl is available', async () => {
       const r = await get('vmess link without base64 or openssl');
+      expect(r.read('decoded')).toBe('');
+    });
+
+    it.each(['vmess link with junk with base64', 'vmess link with junk without base64'])('rejects a vmess link with non-base64 characters: %s', async (name) => {
+      const r = await get(name);
+      expect(r.events).toContain('subscription_b64d rc=1');
       expect(r.read('decoded')).toBe('');
     });
   });
@@ -336,6 +391,28 @@ describe.each(SHELLS)('response backend under %s', (_label, shell) => {
       const r = await get('success progress cleanup');
       expect(sleeps(r)).toEqual(['sleep 1']);
       expect(r.response.loading).toBeUndefined();
+    });
+
+    it('leaves the progress of an action that started during the wait', async () => {
+      const r = await get('error progress replaced during the wait');
+      expect(sleeps(r)).toEqual(['sleep 1', 'sleep 5']);
+      expect(r.response.loading).toEqual({ message: 'Restarting Xray service...', progress: 35 });
+    });
+  });
+
+  describe('apply_config', () => {
+    it('writes the new configuration without reporting the end of the action itself', async () => {
+      const r = await get('apply');
+      expect(r.events).toContain('apply_config rc=0');
+      expect(JSON.parse(r.read('opt/etc/xray/config.json') ?? '{}')).toMatchObject(JSON.parse(APPLIED));
+      expect(finalProgress(r)).toEqual([]);
+    });
+
+    it('ends with an error when the current configuration cannot be backed up', async () => {
+      const r = await get('apply without a current config');
+      expect(r.events).toContain('apply_config rc=1');
+      expect(finalProgress(r)).toEqual([expect.stringMatching(/^PROGRESS: Error: failed to back up/)]);
+      expect(r.read('opt/etc/xray/config.json')).toBeUndefined();
     });
   });
 

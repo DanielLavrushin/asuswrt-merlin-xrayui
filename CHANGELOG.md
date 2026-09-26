@@ -4,6 +4,7 @@
 
 - FIXED: The XRAYUI page could open as a blank white screen because of a device on the network, such as some IP cameras, or a device name with quotes or a backslash. Settings saved by other add-ons with such characters, or a missing add-on settings file, had the same effect. The page now opens, and the names and settings are kept exactly as they are.
 - FIXED: After servers were loaded from a long list of subscription links, a TLS ping or generating ECH or WireGuard keys could get broken data and fail until the page was reloaded.
+- FIXED: In rare cases, an XRAYUI page opened just as another action was finishing could erase the settings of all add-ons on its next save, which also stopped Xray from starting with the router.
 - IMPROVED: Changes made in settings windows are not saved until **Apply** is pressed. A note under **Apply** now shows when some changes have not been applied yet, and **Start**, **Restart**, **Stop** and leaving the page ask first instead of silently dropping them.
 - FIXED: mKCP settings showed **Congestion control**, **Read buffer size** and **Write buffer size**, which Xray-core 26.4.13 and newer ignore. On those versions **Congestion window multiplier** and **Max sending window** are shown instead.
 - FIXED: Clearing an mKCP number field, such as **MTU**, stopped Xray from starting. An empty field now means the default value.
@@ -46,9 +47,10 @@
 - FIXED: Stopping Xray left a routing rule behind on the router.
 - FIXED: On some routers, the **Profile manager** list, the backup list and the list of custom geodata files stayed empty, so no profile could be picked. ([#405](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/405))
 - FIXED: On some routers, **Apply** failed with an upload error, and Save in **General Options** reset every option to an empty value while still reporting success. A failed save now leaves the settings unchanged. ([#405](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/405))
-- FIXED: On some routers, most subscriptions returned no servers, and VMess and some Shadowsocks servers from subscriptions were skipped. ([#405](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/405))
+- FIXED: On some routers, most subscriptions returned no servers, and VMess and some Shadowsocks servers from subscriptions were skipped or imported broken. A damaged subscription no longer replaces the last good list. ([#405](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/405))
 - FIXED: On some routers, leftovers of interrupted large saves were never cleaned up and kept taking up memory.
-- IMPROVED: An error at the end of a save or another action now stays on screen for a few seconds instead of disappearing before it can be read.
+- IMPROVED: An error at the end of **Apply** or a save in **General Options** now stays on screen for a few seconds instead of disappearing before it can be read.
+- FIXED: When **Apply** could not replace the configuration file, the loading screen never went away.
 
 ## [0.69.1] - 2026-09-01
 

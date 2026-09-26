@@ -397,7 +397,7 @@ export class Engine {
     const payloadString = this.compressPayload(JSON.stringify(payload));
     const chunks = this.splitPayload(payloadString, this.nvramChunkSize);
     Object.keys(window.xray.custom_settings).forEach((k) => {
-      if (k.startsWith('xray_payload')) {
+      if (k.startsWith('xray_payload') || k.startsWith('xray_stage')) {
         delete window.xray.custom_settings[k];
       }
     });

@@ -248,7 +248,19 @@ get_webui_page() {
 
 am_settings_del() {
     local key="$1"
-    sed "/$key/d" /jffs/addons/custom_settings.txt >/tmp/custom_settings.$$ && mv /tmp/custom_settings.$$ /jffs/addons/custom_settings.txt
+    custom_settings_drop "/$key/d"
+}
+
+custom_settings_drop() {
+    local settings=/jffs/addons/custom_settings.txt
+    local staged="/tmp/custom_settings.$$"
+    local tmp="$settings.$$"
+    if sed "$1" "$settings" >"$staged" && cat "$staged" >"$tmp" && mv -f "$tmp" "$settings"; then
+        rm -f "$staged"
+        return 0
+    fi
+    rm -f "$staged" "$tmp"
+    return 1
 }
 
 remove_json_comments() {
@@ -375,12 +387,12 @@ reconstruct_staged_payload() {
 
 cleanup_payload() {
     grep -q '^xray_payload' /jffs/addons/custom_settings.txt 2>/dev/null || return 0
-    sed '/^xray_payload/d' /jffs/addons/custom_settings.txt >/tmp/custom_settings.$$ && mv /tmp/custom_settings.$$ /jffs/addons/custom_settings.txt
+    custom_settings_drop '/^xray_payload/d'
 }
 
 cleanup_staged_marker() {
     grep -qE '^xray_stag(ed_session|e_)' /jffs/addons/custom_settings.txt 2>/dev/null || return 0
-    sed '/^xray_staged_session/d;/^xray_stage_/d' /jffs/addons/custom_settings.txt >/tmp/custom_settings.$$ && mv /tmp/custom_settings.$$ /jffs/addons/custom_settings.txt
+    custom_settings_drop '/^xray_staged_session/d;/^xray_stage_/d'
 }
 
 cleanup_staging() {
@@ -571,14 +583,17 @@ remove_loading_progress() {
     fi
 
     sleep 1
-    case "$(jq -r '.loading.message // empty' "$UI_RESPONSE_FILE" 2>/dev/null)" in
+    local message
+    message=$(jq -r '.loading.message // empty' "$UI_RESPONSE_FILE" 2>/dev/null)
+    case "$message" in
     Error*) sleep 5 ;;
+    *) message="" ;;
     esac
     load_ui_response
 
     local json_content=$(cat "$UI_RESPONSE_FILE")
 
-    json_content=$(echo "$json_content" | jq 'del(.loading)' 2>/dev/null)
+    json_content=$(echo "$json_content" | jq --arg m "$message" 'if $m == "" or .loading.message == $m then del(.loading) else . end' 2>/dev/null)
 
     if [ -z "$json_content" ]; then
         log_warn "Failed to remove loading progress from response file."
@@ -602,10 +617,8 @@ fixme() {
     fi
 
     log_info "Removing XRAY broken payload settings..."
-    if grep -q '^xray_payload' /jffs/addons/custom_settings.txt 2>/dev/null; then
-        grep -v '^xray_payload' /jffs/addons/custom_settings.txt >/tmp/custom_settings.tmp &&
-            mv /tmp/custom_settings.tmp /jffs/addons/custom_settings.txt ||
-            log_warn "Failed to remove broken payload settings"
+    if grep -qE '^xray_(payload|staged_session|stage_)' /jffs/addons/custom_settings.txt 2>/dev/null; then
+        custom_settings_drop '/^xray_payload/d;/^xray_staged_session/d;/^xray_stage_/d' || log_warn "Failed to remove broken payload settings"
     else
         log_info "No broken payload settings found."
     fi

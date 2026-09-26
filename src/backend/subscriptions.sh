@@ -26,6 +26,9 @@ subscription_url_host() {
 subscription_b64d() {
     local s pad
     s=$(printf '%s' "$1" | tr -d ' \r\n\t' | tr '_-' '/+')
+    case "$s" in
+    *[!A-Za-z0-9+/=]*) return 1 ;;
+    esac
     pad=$(((4 - ${#s} % 4) % 4))
     case "$pad" in
     1) s="$s=" ;;
@@ -50,7 +53,7 @@ subscription_decode_body() {
     1) printf '=' >>"$b64" ;;
     2) printf '==' >>"$b64" ;;
     esac
-    if b64_decode <"$b64" >"$dst.dec" && [ -s "$dst.dec" ]; then
+    if ! grep -q '[^A-Za-z0-9+/=]' "$b64" && b64_decode <"$b64" >"$dst.dec" && [ -s "$dst.dec" ]; then
         tr -d '\r' <"$dst.dec" >"$dst"
     fi
     rm -f "$b64" "$dst.dec"

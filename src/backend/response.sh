@@ -306,6 +306,7 @@ apply_config() {
     cp "$XRAY_CONFIG_FILE" "$backup_config"
     if [ $? -ne 0 ]; then
         log_error "Failed to backup existing configuration to $backup_config."
+        update_loading_progress "Error: failed to back up the current configuration. Nothing was changed." 100
         rm -f "$temp_config"
         exit 1
     fi
@@ -318,6 +319,7 @@ apply_config() {
         if [ $? -ne 0 ]; then
             log_error "Critical: Failed to restore configuration from backup."
         fi
+        update_loading_progress "Error: failed to save the new configuration. The previous one was kept." 100
         rm -f "$temp_config"
         exit 1
     fi
@@ -336,6 +338,7 @@ apply_config() {
         log_error "Failed to restart Xray service after applying new configuration."
         cp "$backup_config" "$XRAY_CONFIG_FILE"
         restart
+        update_loading_progress "Error: Xray did not start with the new configuration. The previous one was restored." 100
         exit 1
     fi
 

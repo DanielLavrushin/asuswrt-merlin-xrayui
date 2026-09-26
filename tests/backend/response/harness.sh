@@ -64,6 +64,9 @@ cron_ipset_save_add() { :; }
 logs_scribe_integration() { :; }
 update_community_geodata() { :; }
 restart() { ev "restart"; }
+failover_config_lock() { return 0; }
+failover_config_unlock() { :; }
+backup_xray_config() { :; }
 
 ADDON_TAG=xrayui
 ADDON_TAG_UPPER=XRAYUI
@@ -104,6 +107,11 @@ sub_body() {
     ev "subscription_decode_body rc=$?"
 }
 
+apply() {
+    (apply_config)
+    ev "apply_config rc=$?"
+}
+
 sweep() {
     sweep_stale_staging
     ev "sweep rc=$?"
@@ -111,7 +119,13 @@ sweep() {
 }
 
 clear_loading() {
-    sleep() { ev "sleep $1"; }
+    sleep() {
+        ev "sleep $1"
+        if [ "$1" = 5 ] && [ -n "${RS_NEXT_LOADING:-}" ]; then
+            printf '%s' "$RS_NEXT_LOADING" >"$UI_RESPONSE_FILE"
+        fi
+        return 0
+    }
     remove_loading_progress
     ev "remove_loading_progress rc=$?"
     unset -f sleep

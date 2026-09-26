@@ -43,7 +43,7 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, inject, Ref, watch } from 'vue';
+  import { defineComponent, ref, inject, Ref, watch, computed } from 'vue';
   import Modal from '@main/Modal.vue';
   import vClean from 'version-clean';
   import vCompare from 'version-compare';
@@ -57,19 +57,16 @@
     },
     setup() {
       const md = markdownit({ html: true, breaks: true });
-      let tempcurvers = window.xray.custom_settings.xray_version;
-      if (tempcurvers.split('.').length === 2) {
-        tempcurvers += '.0';
-      }
       const COOKIE_NAME = 'xrayui_dontupdate';
+      const ui = inject<Ref<EngineResponseConfig>>('uiResponse');
+      const withPatch = (version?: string) => (version && version.split('.').length === 2 ? `${version}.0` : (version ?? ''));
 
-      const current_version = ref<string>(tempcurvers);
+      const current_version = computed(() => withPatch(window.xray.custom_settings.xray_version || ui?.value?.xray?.ui_version));
       const latest_version = ref<string>();
       const updateModal = ref();
       const hasUpdate = ref(false);
       const changelog = ref<string>('');
       const refusedToUpdateVersion = ref(engine.getCookie(COOKIE_NAME));
-      const ui = inject<Ref<EngineResponseConfig>>('uiResponse');
 
       const checkLatest = async (proxy?: string) => {
         const gh_releases_url = 'https://api.github.com/repos/daniellavrushin/asuswrt-merlin-xrayui/releases/latest';
@@ -77,7 +74,7 @@
           const latestRelease = await engine.fetchGithubJson<any>(gh_releases_url, proxy);
           if (!latestRelease) return;
           latest_version.value = vClean(latestRelease.tag_name)!;
-          hasUpdate.value = vCompare(latest_version.value, current_version.value) === 1;
+          hasUpdate.value = !!current_version.value && vCompare(latest_version.value, current_version.value) === 1;
           if (hasUpdate.value === true) {
             window.xray.server.xray_version_latest = latest_version.value;
             if (refusedToUpdateVersion.value != latest_version.value) {

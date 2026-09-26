@@ -120,18 +120,13 @@ geodata_remount_to_web() {
         fi
     fi
 
-    find "$geodata_dir" -type l -name "*.asp" -exec rm {} \;
-
-    # Create new .asp symlinks for each file in data_dir
     for tagfile in "$datadir"/*; do
         if [ -f "$tagfile" ]; then
             tagbasename=$(basename "$tagfile")
-            tagname="${tagbasename%.*}" # Remove extension if any
+            tagname="${tagbasename%.*}"
 
-            # Define symlink name with .asp extension
             symlink="$geodata_dir/$tagname.asp"
 
-            # Create the symlink (using absolute paths)
             ln -s -f "$tagfile" "$symlink" || log_debug "Failed to create symlink: $symlink -> $tagfile"
             if [ $? -ne 0 ]; then
                 log_error "Error: Failed to create symlink '$symlink' -> '$tagfile'."

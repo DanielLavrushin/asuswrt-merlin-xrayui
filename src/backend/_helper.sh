@@ -388,10 +388,19 @@ cleanup_staging() {
     if [ -n "$session" ]; then
         rm -rf "$XRAYUI_STAGING_DIR/$session"
     fi
-    # sweep stale sessions older than 5 minutes
-    if [ -d "$XRAYUI_STAGING_DIR" ]; then
-        find "$XRAYUI_STAGING_DIR" -maxdepth 1 -mindepth 1 -type d -mmin +5 -exec rm -rf {} \; 2>/dev/null
-    fi
+    sweep_stale_staging
+}
+
+sweep_stale_staging() {
+    [ -d "$XRAYUI_STAGING_DIR" ] || return 0
+    local now d mtime
+    now=$(date +%s)
+    for d in "$XRAYUI_STAGING_DIR"/*; do
+        [ -d "$d" ] || continue
+        mtime=$(date -r "$d" +%s 2>/dev/null) || continue
+        [ $((now - mtime)) -gt 300 ] && rm -rf "$d"
+    done
+    return 0
 }
 
 stage_chunk() {
@@ -438,8 +447,7 @@ stage_chunk() {
 
     cleanup_staged_marker
 
-    # opportunistic sweep of stale sessions
-    find "$XRAYUI_STAGING_DIR" -maxdepth 1 -mindepth 1 -type d -mmin +5 -exec rm -rf {} \; 2>/dev/null
+    sweep_stale_staging
 
     return 0
 }
@@ -563,6 +571,9 @@ remove_loading_progress() {
     fi
 
     sleep 1
+    case "$(jq -r '.loading.message // empty' "$UI_RESPONSE_FILE" 2>/dev/null)" in
+    Error*) sleep 5 ;;
+    esac
     load_ui_response
 
     local json_content=$(cat "$UI_RESPONSE_FILE")
@@ -580,11 +591,13 @@ remove_loading_progress() {
 fixme() {
     log_info "Attempting to fix XRAY UI issues..."
 
-    # Check disk space first
     local jffs_usage=$(df /jffs 2>/dev/null | awk 'NR==2 {print $5}' | tr -d '%')
     if [ -n "$jffs_usage" ] && [ "$jffs_usage" -gt 90 ]; then
         log_warn "/jffs is ${jffs_usage}% full! Listing large files:"
-        find /jffs -type f -size +100k -exec ls -lh {} \; 2>/dev/null | head -20
+        du -ak /jffs 2>/dev/null | sort -nr | while read -r size path; do
+            [ "$size" -gt 100 ] || break
+            [ -f "$path" ] && printf '%6s KB  %s\n' "$size" "$path"
+        done | head -20
         log_warn "Consider removing old backups or logs before proceeding."
     fi
 
@@ -633,10 +646,6 @@ core_supports_allow_insecure() {
     [ -z "$v" ] && return 0
     version_ge "$v" "26.3.27" && return 1
     return 0
-}
-
-b64d() {
-    echo "$1" | base64 -d 2>/dev/null
 }
 
 get_or_create_hwid() {

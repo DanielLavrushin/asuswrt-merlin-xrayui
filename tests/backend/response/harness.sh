@@ -36,11 +36,13 @@ rewrite "${RS_RESPONSE_SCRIPT:-$REPO_DIR/src/backend/response.sh}" response
 rewrite "${RS_GENOPTS_SCRIPT:-$REPO_DIR/src/backend/general_opts.sh}" general_opts
 rewrite "${RS_XRAYUI_SCRIPT:-$REPO_DIR/src/backend/xrayui.sh}" xrayui
 rewrite "${RS_GEODATA_SCRIPT:-$REPO_DIR/src/backend/geodata.sh}" geodata
+rewrite "${RS_SUBSCRIPTIONS_SCRIPT:-$REPO_DIR/src/backend/subscriptions.sh}" subscriptions
 
 . "$RS_STATE/helper.$$.sh"
 . "$RS_STATE/response.$$.sh"
 . "$RS_STATE/general_opts.$$.sh"
 . "$RS_STATE/geodata.$$.sh"
+. "$RS_STATE/subscriptions.$$.sh"
 
 ev() { printf '%s\n' "$*" >>"$RS_STATE/events.log"; }
 log_error() { ev "ERROR: $*"; }
@@ -90,6 +92,29 @@ decode() {
 tagfiles() {
     get_custom_geodata_tagfiles
     ev "tagfiles rc=$?"
+}
+
+sub_link() {
+    subscription_b64d "$(cat "$RS_STATE/payload")" >"$RS_STATE/decoded"
+    ev "subscription_b64d rc=$?"
+}
+
+sub_body() {
+    subscription_decode_body "$RS_STATE/payload" "$RS_STATE/decoded"
+    ev "subscription_decode_body rc=$?"
+}
+
+sweep() {
+    sweep_stale_staging
+    ev "sweep rc=$?"
+    ev "staging: $(ls "$XRAYUI_STAGING_DIR" | tr '\n' ' ')"
+}
+
+clear_loading() {
+    sleep() { ev "sleep $1"; }
+    remove_loading_progress
+    ev "remove_loading_progress rc=$?"
+    unset -f sleep
 }
 
 save_general() {

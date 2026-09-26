@@ -31,7 +31,7 @@ subscription_b64d() {
     1) s="$s=" ;;
     2) s="$s==" ;;
     esac
-    printf '%s' "$s" | base64 -d 2>/dev/null
+    printf '%s' "$s" | b64_decode
 }
 
 subscription_decode_body() {
@@ -50,7 +50,7 @@ subscription_decode_body() {
     1) printf '=' >>"$b64" ;;
     2) printf '==' >>"$b64" ;;
     esac
-    if base64 -d <"$b64" >"$dst.dec" 2>/dev/null && [ -s "$dst.dec" ]; then
+    if b64_decode <"$b64" >"$dst.dec" && [ -s "$dst.dec" ]; then
         tr -d '\r' <"$dst.dec" >"$dst"
     fi
     rm -f "$b64" "$dst.dec"

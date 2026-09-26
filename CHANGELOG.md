@@ -46,6 +46,9 @@
 - FIXED: Stopping Xray left a routing rule behind on the router.
 - FIXED: On some routers, the **Profile manager** list, the backup list and the list of custom geodata files stayed empty, so no profile could be picked. ([#405](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/405))
 - FIXED: On some routers, **Apply** failed with an upload error, and Save in **General Options** reset every option to an empty value while still reporting success. A failed save now leaves the settings unchanged. ([#405](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/405))
+- FIXED: On some routers, most subscriptions returned no servers, and VMess and some Shadowsocks servers from subscriptions were skipped. ([#405](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/405))
+- FIXED: On some routers, leftovers of interrupted large saves were never cleaned up and kept taking up memory.
+- IMPROVED: An error at the end of a save or another action now stays on screen for a few seconds instead of disappearing before it can be read.
 
 ## [0.69.1] - 2026-09-01
 

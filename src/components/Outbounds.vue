@@ -209,8 +209,9 @@
         const lines: string[] = [];
         switch (view.kind) {
           case 'next': {
-            let line = t('com.Outbounds.balancer_next', [balancer, view.delay]);
+            let line = view.delay === undefined ? t('com.Outbounds.balancer_next_nodelay', [balancer]) : t('com.Outbounds.balancer_next', [balancer, view.delay]);
             if (view.runnerUp) line += ' ' + t('com.Outbounds.balancer_runner_up', [view.runnerUp.tag, view.runnerUp.delay]);
+            if (dead) line += ' ' + t('com.Outbounds.balancer_target_dead');
             lines.push(line);
             break;
           }
@@ -221,9 +222,11 @@
             lines.push(dead ? t('com.Outbounds.balancer_dead_share', [balancer]) : t('com.Outbounds.balancer_rotating', [balancer, view.tags.length]));
             break;
           case 'fallback':
-          case 'default':
-            lines.push(t(`com.Outbounds.balancer_${view.kind}`, [balancer]) + (dead ? ' ' + t('com.Outbounds.balancer_target_dead') : ''));
+          case 'default': {
+            const key = `com.Outbounds.balancer_${view.kind}${view.reason === 'no-match' ? '_nomatch' : ''}`;
+            lines.push(t(key, [balancer]) + (dead ? ' ' + t('com.Outbounds.balancer_target_dead') : ''));
             break;
+          }
         }
         lines.push(t('com.Outbounds.balancer_rules', [item.rules.join(', ')]));
         lines.push(t('com.Outbounds.balancer_open_connections'));
@@ -399,10 +402,10 @@
       }
     }
     &.bal-tied th {
-      box-shadow: inset 3px 0 0 rgba(176, 108, 255, 0.6);
+      box-shadow: inset 3px 0 0 rgba($c_purple, 0.6);
     }
     &.bal-rotating th {
-      box-shadow: inset 3px 0 0 rgba(176, 108, 255, 0.35);
+      box-shadow: inset 3px 0 0 rgba($c_purple, 0.35);
     }
   }
   .balancer-badge {
@@ -410,19 +413,19 @@
     margin-left: 6px;
     padding: 0 5px;
     border-radius: 3px;
-    border: 1px solid rgba(176, 108, 255, 0.55);
+    border: 1px solid rgba($c_purple, 0.55);
     font-size: 11px;
     font-weight: normal;
     line-height: 15px;
     white-space: nowrap;
     color: #fff;
-    background-color: rgba(176, 108, 255, 0.3);
+    background-color: rgba($c_purple, 0.3);
     cursor: help;
     &.next,
     &.fallback,
     &.default {
       border-color: $c_purple;
-      background-color: $c_purple;
+      background-color: $c_purple_dark;
     }
     &.dead {
       border-color: $c_yellow;

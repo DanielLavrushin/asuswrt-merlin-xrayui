@@ -13,7 +13,9 @@
           </th>
           <td style="color: #ffcc00">{{ b.tag || 'unnamed' }}</td>
           <td>{{ b.strategy?.type || 'random' }}</td>
-          <td :class="['balancer-now', nowClass(b)]" :title="$t('com.BalancerModal.hint_now')">{{ nowText(b) }}</td>
+          <td>
+            <span :class="['balancer-now', nowClass(b)]" :title="nowText(b) + '\n' + $t('com.BalancerModal.hint_now')">{{ nowText(b) }}</span>
+          </td>
           <td>
             <span class="row-buttons">
               <input class="button_gen button_gen_small" type="button" :value="$t('labels.edit')" @click.prevent="editBalancer(b)" />
@@ -226,7 +228,12 @@
 </script>
 <style scoped lang="scss">
   .balancer-now {
+    display: inline-block;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
+    vertical-align: middle;
     cursor: help;
     &.next,
     &.fallback,
@@ -235,7 +242,7 @@
     }
     &.tied,
     &.rotating {
-      color: rgba(176, 108, 255, 0.8);
+      color: rgba($c_purple, 0.8);
     }
     &.muted {
       opacity: 0.6;

@@ -241,7 +241,8 @@
       "now_rotating_dead": "轮换：{0} / {1}，{2} 个不可达",
       "now_fallback": "备用：{0}",
       "now_default": "第一个出站：{0}",
-      "now_none": "无出站"
+      "now_none": "无出站",
+      "now_next": "{0} · {1} ms"
     },
     "PolicyModal": {
       "modal_title2": "策略列表",
@@ -327,17 +328,20 @@
       "badge_rotating": "轮换",
       "badge_fallback": "备用",
       "badge_default": "默认路由",
-      "balancer_next": "负载均衡器 {0} 将新连接发送到此处：{1} ms，是其出站中延迟最低的。",
+      "balancer_next": "负载均衡器 {0} 将新连接发送到此处（{1} ms）。",
       "balancer_runner_up": "次优：{0}，{1} ms。",
       "balancer_tied": "负载均衡器 {0}：与 {2} 并列，延迟均为 {1} ms。在下一次检查之前，新连接会发往其中之一。",
       "balancer_rotating": "负载均衡器 {0} 将新连接分配到 {1} 个出站，包括此出站。",
       "balancer_dead_share": "负载均衡器 {0} 未设置备用出站，因此这个不可达的出站仍会分到一部分新连接。",
-      "balancer_fallback": "负载均衡器 {0} 的出站均不可达，因此新连接发往其备用出站。",
-      "balancer_default": "负载均衡器 {0} 的出站均不可达且未设置备用出站，因此新连接发往列表中的第一个出站。",
-      "balancer_target_dead": "此出站在上一次检查中也失败了。",
+      "balancer_fallback": "负载均衡器 {0} 当前没有可用的出站，因此新连接发往其备用出站。",
+      "balancer_default": "负载均衡器 {0} 当前没有可用的出站且未设置备用出站，因此新连接发往列表中的第一个出站。",
+      "balancer_target_dead": "此出站不可达或不存在。",
       "balancer_rules": "规则：{0}。",
       "balancer_open_connections": "已建立的连接会保留在最初使用的出站上。",
-      "balancer_checked": "{0} 秒前检查。"
+      "balancer_checked": "{0} 秒前检查。",
+      "balancer_next_nodelay": "负载均衡器 {0} 将新连接发送到此处。",
+      "balancer_fallback_nomatch": "负载均衡器 {0} 没有匹配到任何出站，因此新连接发往其备用出站。",
+      "balancer_default_nomatch": "负载均衡器 {0} 没有匹配到任何出站且未设置备用出站，因此新连接发往列表中的第一个出站。"
     },
     "StreamSettingsModal": {
       "title": "传输设置",

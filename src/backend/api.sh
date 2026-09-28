@@ -190,27 +190,61 @@ api_get_connection_status() {
 
   tmp="$XRAYUI_CONNECTION_STATUS_FILE.tmp.$$"
   if [ "$pid" -gt 0 ] && raw=$(api_fetch_metrics) &&
-    printf '%s' "$raw" | jq -c --argjson ts "$now" --argjson pid "$pid" \
+    printf '%s' "$raw" | jq -ce --argjson ts "$now" --argjson pid "$pid" \
       '{v: 2, ok: true, ts: $ts, pid: $pid, observatory: (.observatory | objects // {})}' >"$tmp" 2>/dev/null; then
     :
   else
     [ "$pid" -gt 0 ] && log_error "Failed to fetch or parse observatory data"
     printf '{"v":2,"ok":false,"ts":%s,"pid":%s,"observatory":{}}\n' "$now" "$pid" >"$tmp"
   fi
-  mv -f "$tmp" "$XRAYUI_CONNECTION_STATUS_FILE"
+  mv -f "$tmp" "$XRAYUI_CONNECTION_STATUS_FILE" || rm -f "$tmp"
 }
+
+API_BALANCER_NEEDS_OBSERVATORY='
+  def needs_observatory:
+    ((.strategy.type // "random") | ascii_downcase) as $type
+    | $type == "leastping" or $type == "leastload" or ((.fallbackTag // "") != "");
+'
 
 api_balancers_need_observatory() {
   [ -f "$XRAY_CONFIG_FILE" ] || return 1
-  jq -e '
-    [ .routing.balancers[]?
-      | select(
-          ((.strategy.type // "random") | ascii_downcase) as $type
-          | $type == "leastping" or $type == "leastload" or ((.fallbackTag // "") != "")
-        )
-    ]
-    | length > 0
+  jq -e "$API_BALANCER_NEEDS_OBSERVATORY"'
+    .observatory == null
+    and .burstObservatory == null
+    and ([ .routing.balancers[]? | select(needs_observatory) ] | length > 0)
   ' "$XRAY_CONFIG_FILE" >/dev/null 2>&1
+}
+
+api_write_observatory_config() {
+  local xray_api_config selectors observatory_probe_url observatory_probe_interval
+
+  log_info "Writing observatory configuration for balancers..."
+  mkdir -p /opt/etc/xray/xrayui
+
+  xray_api_config=$(api_get_current_config)
+  selectors=$(
+    jq -c "$API_BALANCER_NEEDS_OBSERVATORY"'
+      [ .routing.balancers[]?
+        | select(needs_observatory)
+        | .selector
+        | if type == "string" then split(",")[] elif type == "array" then .[] else empty end
+        | strings ]
+      | unique
+    ' "$XRAY_CONFIG_FILE"
+  ) || return 1
+  observatory_probe_url=$(printf '%s' "${probe_url:-https://www.google.com/generate_204}" | jq -Rs '.')
+  observatory_probe_interval=$(sanitize_probe_interval "$probe_interval")
+
+  cat >"$xray_api_config" <<EOF
+{
+  "observatory": {
+    "subjectSelector": $selectors,
+    "probeUrl": $observatory_probe_url,
+    "probeInterval": "${observatory_probe_interval}s",
+    "enableConcurrency": true
+  }
+}
+EOF
 }
 
 api_config_required() {
@@ -226,7 +260,8 @@ api_apply_configuration() {
   fi
 
   if [ "$check_connection" != "true" ] && [ "$clients_check" != "true" ]; then
-    log_info "Balancers need the observatory; loading the API configuration."
+    api_write_observatory_config
+    return
   fi
 
   local filter

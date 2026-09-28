@@ -26,11 +26,15 @@ curl() {
     cat "$RS_STATE/vars.json"
 }
 date() { echo 1790000000; }
+sanitize_probe_interval() { echo "${1:-30}"; }
+jq_update_file() { ev "jq_update_file"; }
 
 XRAY_CONFIG_FILE="$RS_STATE/opt/etc/xray/config.json"
 XRAYUI_CONNECTION_STATUS_FILE="$RS_STATE/share/xray_connection_status.json"
 check_connection=${RS_CHECK_CONNECTION:-true}
 clients_check=${RS_CLIENTS_CHECK:-false}
+probe_url=${RS_PROBE_URL:-}
+probe_interval=${RS_PROBE_INTERVAL:-}
 
 status() {
     api_get_connection_status
@@ -45,6 +49,11 @@ observatory() {
 required() {
     api_config_required
     ev "required rc=$?"
+}
+
+apply() {
+    api_apply_configuration
+    ev "apply rc=$?"
 }
 
 for step do

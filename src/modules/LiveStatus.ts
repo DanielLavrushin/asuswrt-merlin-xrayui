@@ -46,13 +46,18 @@ export const liveStatus = reactive<LiveStatusState>({
   running: undefined
 });
 
-const tracker = { lastTs: 0, staleReads: 0, advanced: false, runningPid: 0 };
+const tracker = { lastTs: 0, staleReads: 0, advanced: false, runningPid: 0, generation: 0 };
+
+const updateFreshness = () => {
+  liveStatus.fresh = liveStatus.ok && liveStatus.ts > 0 && tracker.advanced && tracker.staleReads < 2;
+};
 
 export const applyStatus = (status: StatusEnvelope, nowMs: number = Date.now()): void => {
-  if (status.ts > tracker.lastTs) {
+  if (status.ts > 0 && status.ts !== tracker.lastTs) {
     if (tracker.lastTs > 0 || Math.abs(nowMs / 1000 - status.ts) <= FRESH_CLOCK_WINDOW) tracker.advanced = true;
     tracker.lastTs = status.ts;
     tracker.staleReads = 0;
+    liveStatus.receivedAt = nowMs;
   } else {
     tracker.staleReads++;
   }
@@ -60,33 +65,56 @@ export const applyStatus = (status: StatusEnvelope, nowMs: number = Date.now()):
   liveStatus.ok = status.ok;
   liveStatus.ts = status.ts;
   liveStatus.pid = status.pid;
-  liveStatus.receivedAt = nowMs;
   liveStatus.observatory = status.observatory;
-  liveStatus.fresh = status.ok && status.ts > 0 && tracker.advanced && tracker.staleReads < 2;
+  updateFreshness();
 };
 
-const loadRunning = async (pid: number): Promise<void> => {
+const markFailedRead = () => {
+  tracker.staleReads++;
+  updateFreshness();
+};
+
+const loadRunning = async (pid: number, generation: number): Promise<void> => {
+  let config: unknown;
   try {
-    const response = await engine.getWebData<unknown>('xray-config');
-    liveStatus.running = extractRunningRouting(response.data);
-    tracker.runningPid = pid;
+    config = (await engine.getWebData<unknown>('xray-config')).data;
   } catch {
+    config = undefined;
+  }
+  if (generation !== tracker.generation) return;
+  if (config && typeof config === 'object' && !Array.isArray(config)) {
+    liveStatus.running = extractRunningRouting(config);
+    tracker.runningPid = pid;
+  } else {
     liveStatus.running = undefined;
     tracker.runningPid = 0;
   }
 };
 
 export const refreshLiveStatus = async (): Promise<boolean> => {
-  await engine.submit(SubmitActions.checkConnectionStatus, null, 2000);
-  const status = normalizeStatus(await engine.getConnectionStatus());
-  if (!status) return false;
+  const generation = tracker.generation;
+  let status: StatusEnvelope | undefined;
+  try {
+    await engine.submit(SubmitActions.checkConnectionStatus, null, 2000);
+    status = normalizeStatus(await engine.getConnectionStatus());
+  } catch (error) {
+    if (generation === tracker.generation) markFailedRead();
+    throw error;
+  }
+  if (generation !== tracker.generation) return false;
+  if (!status) {
+    markFailedRead();
+    return false;
+  }
+  const reload = status.ok && status.pid > 0 && status.pid !== tracker.runningPid;
+  if (reload) liveStatus.running = undefined;
   applyStatus(status);
-  if (status.ok && status.pid > 0 && status.pid !== tracker.runningPid) await loadRunning(status.pid);
-  return true;
+  if (reload) await loadRunning(status.pid, generation);
+  return generation === tracker.generation;
 };
 
 export const clearLiveStatus = (): void => {
-  Object.assign(tracker, { lastTs: 0, staleReads: 0, advanced: false, runningPid: 0 });
+  Object.assign(tracker, { lastTs: 0, staleReads: 0, advanced: false, runningPid: 0, generation: tracker.generation + 1 });
   Object.assign(liveStatus, { ok: false, fresh: false, ts: 0, pid: 0, receivedAt: 0, observatory: {}, running: undefined });
 };
 

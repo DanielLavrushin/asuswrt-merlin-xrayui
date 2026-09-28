@@ -31,6 +31,7 @@ interface Result {
   events: string[];
   status?: Record<string, unknown>;
   observatory?: string;
+  apiConfig?: Record<string, unknown>;
 }
 
 const run = (shell: string[], scenario: Scenario): Result => {
@@ -46,10 +47,12 @@ const run = (shell: string[], scenario: Scenario): Result => {
     expect(out.error).toBeUndefined();
     const read = (rel: string) => (fs.existsSync(path.join(state, rel)) ? fs.readFileSync(path.join(state, rel), 'utf8') : undefined);
     const status = read('share/xray_connection_status.json');
+    const apiConfig = read('opt/etc/xray/xrayui/config-api.json');
     return {
       events: (read('events.log') ?? '').split('\n').filter(Boolean),
       status: status ? JSON.parse(status) : undefined,
-      observatory: read('observatory.out')
+      observatory: read('observatory.out'),
+      apiConfig: apiConfig ? JSON.parse(apiConfig) : undefined
     };
   } finally {
     fs.rmSync(state, { recursive: true, force: true });
@@ -74,6 +77,11 @@ describeIf.each(SHELLS)('api.sh under %s', (_name, shell) => {
     const r = run(shell, { steps: ['status'], env: { RS_PID: '4242' } });
     expect(r.status).toEqual({ v: 2, ok: false, ts: 1790000000, pid: 4242, observatory: {} });
     expect(r.events).toContain('ERROR: Failed to fetch or parse observatory data');
+  });
+
+  it('marks the status as unavailable when the metrics answer is empty', () => {
+    const r = run(shell, { steps: ['status'], env: { RS_PID: '4242' }, files: { 'vars.json': '' } });
+    expect(r.status).toEqual({ v: 2, ok: false, ts: 1790000000, pid: 4242, observatory: {} });
   });
 
   it('replaces the last status without calling curl or logging when Xray is stopped', () => {
@@ -104,6 +112,44 @@ describeIf.each(SHELLS)('api.sh under %s', (_name, shell) => {
       files: { 'opt/etc/xray/config.json': balancerConfig(balancer) }
     });
     expect(r.events).toEqual([`required rc=${rc}`]);
+  });
+
+  it.each([
+    ['observatory', { observatory: { subjectSelector: ['p-'] } }],
+    ['burstObservatory', { burstObservatory: { subjectSelector: ['p-'] } }]
+  ])('leaves a configuration with its own %s alone when both checks are off', (_label, extra) => {
+    const config = { ...JSON.parse(balancerConfig({ strategy: { type: 'leastPing' } })), ...extra };
+    const r = run(shell, { steps: ['required'], env: { RS_CHECK_CONNECTION: 'false', RS_CLIENTS_CHECK: 'false' }, files: { 'opt/etc/xray/config.json': JSON.stringify(config) } });
+    expect(r.events).toEqual(['required rc=1']);
+  });
+
+  it('writes only an observatory for the balancers that need it when both checks are off', () => {
+    const config = {
+      outbounds: [{ tag: 'p-a' }],
+      routing: {
+        balancers: [
+          { tag: 'fast', selector: ['p-', 'q-'], strategy: { type: 'leastPing' } },
+          { tag: 'safe', selector: 'r-,p-', fallbackTag: 'direct' },
+          { tag: 'loose', selector: ['z-'] }
+        ]
+      }
+    };
+    const r = run(shell, {
+      steps: ['apply'],
+      env: { RS_CHECK_CONNECTION: 'false', RS_CLIENTS_CHECK: 'false', RS_PROBE_URL: 'https://probe.example/204', RS_PROBE_INTERVAL: '45' },
+      files: { 'opt/etc/xray/config.json': JSON.stringify(config) }
+    });
+    expect(r.apiConfig).toEqual({
+      observatory: { subjectSelector: ['p-', 'q-', 'r-'], probeUrl: 'https://probe.example/204', probeInterval: '45s', enableConcurrency: true }
+    });
+    expect(r.events).not.toContain('jq_update_file');
+    expect(r.events).toContain('apply rc=0');
+  });
+
+  it('writes the full API configuration and the metrics rule when the connection check is on', () => {
+    const r = run(shell, { steps: ['apply'], env: { RS_CHECK_CONNECTION: 'true' }, files: { 'opt/etc/xray/config.json': balancerConfig({ strategy: { type: 'leastPing' } }) } });
+    expect(r.apiConfig).toMatchObject({ api: { tag: 'sys:api' }, observatory: { subjectSelector: ['p-a'] }, metrics: { tag: 'sys:metrics_out' } });
+    expect(r.events).toContain('jq_update_file');
   });
 
   it('needs the API configuration when either check is on, and not without a configuration', () => {

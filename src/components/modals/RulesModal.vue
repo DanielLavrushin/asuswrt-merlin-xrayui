@@ -32,7 +32,7 @@
             </td>
             <td>
               {{ r.balancerTag ? '⚖ ' + r.balancerTag : r.outboundTag }}
-              <span v-if="balancerNowText(r)" class="balancer-now" :title="$t('com.BalancerModal.hint_now')">&rarr; {{ balancerNowText(r) }}</span>
+              <span v-if="balancerNowText(r)" class="balancer-now" :title="balancerNowText(r) + '\n' + $t('com.BalancerModal.hint_now')">&rarr; {{ balancerNowText(r) }}</span>
             </td>
             <td>
               <text v-show="r.isSystem()">system rule</text>
@@ -662,9 +662,14 @@
 
 <style scoped lang="scss">
   .balancer-now {
+    display: inline-block;
+    max-width: 160px;
     margin-left: 4px;
-    color: $c_purple;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
+    vertical-align: bottom;
+    color: $c_purple;
     cursor: help;
   }
   .FormTable {

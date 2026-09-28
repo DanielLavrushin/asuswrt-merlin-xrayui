@@ -40,9 +40,54 @@ describe('resolveBalancer', () => {
     expect(none).toMatchObject({ kind: 'default', tags: ['direct'] });
   });
 
-  it('shows a tuned leastLoad as a rotating set of observed alive outbounds', () => {
-    const view = resolveBalancer(balancer({ type: 'leastload', settings: { expected: 2 } }), OBS, ROUTING);
-    expect(view).toMatchObject({ kind: 'rotating', tags: ['p-b', 'p-c', 'p-a'], dead: [] });
+  it.each([
+    ['expected 2', { expected: 2 }, { kind: 'rotating', tags: ['p-b', 'p-c'] }],
+    ['expected above the live count', { expected: 9 }, { kind: 'rotating', tags: ['p-b', 'p-c', 'p-a'] }],
+    ['a cost on the fastest outbound', { costs: [{ match: 'p-b', value: 100 }] }, { kind: 'next', tags: ['p-c'] }],
+    ['a regexp cost without a value', { costs: [{ regexp: true, match: 'p-[b]' }] }, { kind: 'next', tags: ['p-b'] }],
+    ['a baseline nothing meets', { baselines: ['30ms'] }, { kind: 'default', tags: ['direct'], reason: 'none-usable' }],
+    ['a baseline two outbounds meet', { baselines: ['100ms'] }, { kind: 'rotating', tags: ['p-b', 'p-c'] }],
+    ['a baseline with expected as the floor', { baselines: ['30ms'], expected: 1 }, { kind: 'next', tags: ['p-b'] }]
+  ])('selects leastLoad outbounds like Xray with %s', (_label, settings, expected) => {
+    expect(resolveBalancer(balancer({ type: 'leastload', settings }), OBS, ROUTING)).toMatchObject(expected);
+  });
+
+  it('weights leastLoad delays by the number a cost matches in the tag', () => {
+    const routing = { handlerTags: ['n-1', 'n-9'], defaultTag: 'n-1' };
+    const obs: Observatory = { 'n-1': alive('n-1', 50), 'n-9': alive('n-9', 20) };
+    const view = resolveBalancer(balancer({ type: 'leastload', selector: ['n-'], settings: { costs: [{ regexp: true, match: '\\d+' }] } }), obs, routing);
+    expect(view).toMatchObject({ kind: 'next', tags: ['n-1'], runnerUp: { tag: 'n-9', delay: 20 } });
+  });
+
+  it('treats an alive outbound without a delay as 0 ms, as Xray omits a zero delay', () => {
+    const obs: Observatory = { ...OBS, 'p-a': { alive: true, outbound_tag: 'p-a' } };
+    expect(resolveBalancer(balancer(), obs, ROUTING)).toMatchObject({ kind: 'next', tags: ['p-a'], delay: 0 });
+    expect(resolveBalancer(balancer({ type: 'leastload' }), obs, ROUTING)).toMatchObject({ kind: 'next', tags: ['p-a'], delay: 0 });
+  });
+
+  it('truncates maxRTT to whole milliseconds like Xray', () => {
+    const view = resolveBalancer(balancer({ type: 'leastload', settings: { maxRTT: '40.5ms' } }), OBS, ROUTING);
+    expect(view).toMatchObject({ kind: 'default', reason: 'none-usable' });
+  });
+
+  it('shows a single remaining outbound of a rotating balancer as the only target', () => {
+    const obs: Observatory = { ...OBS, 'p-a': dead('p-a'), 'p-c': dead('p-c') };
+    expect(resolveBalancer(balancer({ type: 'random', fallbackTag: 'direct' }), obs, ROUTING)).toMatchObject({ kind: 'next', tags: ['p-b'], delay: 40, dead: [] });
+    const routing = { handlerTags: ['p-only'], defaultTag: 'p-only' };
+    expect(resolveBalancer(balancer({ type: 'roundrobin' }), {}, routing)).toMatchObject({ kind: 'next', tags: ['p-only'], delay: undefined });
+    expect(resolveBalancer(balancer({ type: 'roundrobin' }), { 'p-only': dead('p-only') }, routing)).toMatchObject({ kind: 'next', dead: ['p-only'] });
+  });
+
+  it('flags a fallback outbound that does not exist', () => {
+    expect(resolveBalancer(balancer({ selector: ['zz-'], fallbackTag: 'gone' }), OBS, ROUTING)).toMatchObject({ kind: 'fallback', tags: ['gone'], dead: ['gone'], reason: 'no-match' });
+  });
+
+  it('reports an untagged first outbound as the default route', () => {
+    const running = extractRunningRouting({ outbounds: [{ protocol: 'freedom' }, { tag: 'p-a' }] });
+    expect(running.defaultTag).toBe('');
+    const view = resolveBalancer(balancer(), {}, running);
+    expect(view).toMatchObject({ kind: 'default', tags: [''], dead: [] });
+    expect(computeOutboundMarks({ ...running, balancers: [balancer()], rulesByBalancer: { bal: ['r'] } }, {})).toEqual({});
   });
 
   it('keeps a tuned leastLoad with expected 1 as a single pick', () => {
@@ -79,7 +124,7 @@ describe('resolveBalancer', () => {
   });
 
   it('falls back when no handler matches the selector', () => {
-    expect(resolveBalancer(balancer({ selector: ['zz-'] }), OBS, ROUTING)).toMatchObject({ kind: 'default', tags: ['direct'], total: 0 });
+    expect(resolveBalancer(balancer({ selector: ['zz-'] }), OBS, ROUTING)).toMatchObject({ kind: 'default', tags: ['direct'], total: 0, reason: 'no-match' });
   });
 });
 
@@ -92,7 +137,7 @@ describe('extractRunningRouting', () => {
       balancers: [{ tag: 'bal', selector: 'p-a,p-b', strategy: { type: 'leastPing' }, fallbackTag: 'direct' }, { selector: ['x'] }],
       rules: [
         { name: 'video', balancerTag: 'bal' },
-        { balancerTag: 'bal' },
+        { balancerTag: 'bal', idx: 4 },
         { name: 'both', balancerTag: 'bal', outboundTag: 'direct' },
         { name: 'plain', outboundTag: 'direct' }
       ]
@@ -102,7 +147,7 @@ describe('extractRunningRouting', () => {
   it('collects balancers, the rules that really use them, handler tags and the default outbound', () => {
     const running = extractRunningRouting(config);
     expect(running.balancers).toEqual([{ tag: 'bal', selector: ['p-a', 'p-b'], type: 'leastping', settings: {}, fallbackTag: 'direct' }]);
-    expect(running.rulesByBalancer).toEqual({ bal: ['video', '#2'] });
+    expect(running.rulesByBalancer).toEqual({ bal: ['video', '#5'] });
     expect(running.handlerTags).toEqual(['p-a', 'direct', 'portal-1', 'rev-client', 'sys:metrics_out']);
     expect(running.defaultTag).toBe('p-a');
   });
@@ -152,6 +197,9 @@ describe('helpers', () => {
     expect(parseDuration('1s')).toBe(1000);
     expect(parseDuration('1m30s')).toBe(90000);
     expect(parseDuration('250ms')).toBe(250);
+    expect(parseDuration('.5s')).toBe(500);
+    expect(parseDuration('1.s')).toBe(1000);
+    expect(parseDuration('300μs')).toBeCloseTo(0.3);
     expect(parseDuration('fast')).toBeUndefined();
     expect(parseDuration(5)).toBeUndefined();
   });
@@ -164,7 +212,9 @@ describe('helpers', () => {
 
   it('describes a view in one short line', () => {
     const t = (key: string, args: unknown[]) => `${key}:${args.join('|')}`;
-    expect(describeViewShort({ kind: 'next', tags: ['p-b'], dead: [], total: 3, delay: 40 }, t)).toBe('p-b · 40 ms');
+    expect(describeViewShort({ kind: 'next', tags: ['p-b'], dead: [], total: 3, delay: 40 }, t)).toBe('com.BalancerModal.now_next:p-b|40');
+    expect(describeViewShort({ kind: 'next', tags: ['p-b'], dead: [], total: 3 }, t)).toBe('p-b');
+    expect(describeViewShort({ kind: 'default', tags: [''], dead: [], total: 0 }, t)).toBe('com.BalancerModal.now_default:no tag');
     expect(describeViewShort({ kind: 'rotating', tags: ['a', 'b'], dead: ['b'], total: 3 }, t)).toBe('com.BalancerModal.now_rotating_dead:2|3|1');
     expect(describeViewShort({ kind: 'default', tags: ['direct'], dead: [], total: 0 }, t)).toBe('com.BalancerModal.now_default:direct');
   });

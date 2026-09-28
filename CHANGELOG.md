@@ -3,7 +3,7 @@
 ## [0.70.2] - 2026-09-28
 
 - ADDED: The **Outbounds** list marks in purple the outbound a balancer sends new connections to, and the balancer list and routing rules show it too. For **random** and **roundRobin** balancers, which spread connections, every outbound taking part is marked. Requires **Check connection to xray server**.
-- FIXED: Xray did not start with a **leastPing** or **leastLoad** balancer, or with any balancer that has a fallback outbound, while **Check connection to xray server** and **Check clients online status** were both off.
+- FIXED: Xray did not start with a **leastPing** or **leastLoad** balancer, or with any balancer that has a fallback outbound, while **Check connection to xray server** and **Check clients online status** were both off. The configuration check also reported an error for such balancers even while Xray ran fine.
 - FIXED: The outbound status dots kept showing the last result after Xray stopped outside the page, for example after a crash.
 - FIXED: A failed Xray core update could leave Xray stopped while still reporting success. The new version is now checked before anything is replaced, and an error is shown when the update fails or Xray does not start with it.
 - FIXED: The Xray core version showed as 0.0.0 when the core was missing or could not run. It now shows **not installed** or **not working**, with the reason on hover and in the system log. ([#411](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/411))

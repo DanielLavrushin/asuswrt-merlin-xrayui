@@ -517,9 +517,14 @@ test_xray_config() {
         return
     fi
 
-    local output
+    local output extra_cfg=""
 
-    if ! output=$(xray -c $XRAY_CONFIG_FILE -test 2>&1); then
+    if api_config_required; then
+        [ -f "$(api_get_current_config)" ] || api_apply_configuration
+        [ -f "$(api_get_current_config)" ] && extra_cfg="-c $(api_get_current_config)"
+    fi
+
+    if ! output=$(xray -c $XRAY_CONFIG_FILE $extra_cfg -test 2>&1); then
         message=$(echo "$output" | sed -n '/> infra\/conf:/ {s/.*> infra\/conf: //p}')
         if [ -z "$message" ]; then
             message="$output"

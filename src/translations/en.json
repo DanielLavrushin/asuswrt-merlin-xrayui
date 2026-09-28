@@ -245,7 +245,8 @@
       "now_rotating_dead": "rotating: {0} of {1}, {2} unreachable",
       "now_fallback": "fallback: {0}",
       "now_default": "first outbound: {0}",
-      "now_none": "no outbound"
+      "now_none": "no outbound",
+      "now_next": "{0} · {1} ms"
     },
     "PolicyModal": {
       "modal_title2": "Policy List",
@@ -331,17 +332,20 @@
       "badge_rotating": "rotating",
       "badge_fallback": "fallback",
       "badge_default": "default route",
-      "balancer_next": "Balancer {0} sends new connections here: {1} ms, the lowest delay among its outbounds.",
+      "balancer_next": "Balancer {0} sends new connections here ({1} ms).",
       "balancer_runner_up": "Next best: {0}, {1} ms.",
       "balancer_tied": "Balancer {0}: tied at {1} ms with {2}. New connections go to one of them until the next check.",
       "balancer_rotating": "Balancer {0} spreads new connections across {1} outbounds, including this one.",
       "balancer_dead_share": "Balancer {0} has no fallback outbound, so this unreachable outbound still gets a share of new connections.",
-      "balancer_fallback": "No outbound of balancer {0} is reachable, so new connections go to its fallback outbound.",
-      "balancer_default": "No outbound of balancer {0} is reachable and no fallback outbound is set, so new connections go to the first outbound in the list.",
-      "balancer_target_dead": "This outbound failed its last check too.",
+      "balancer_fallback": "No outbound of balancer {0} can be used right now, so new connections go to its fallback outbound.",
+      "balancer_default": "No outbound of balancer {0} can be used right now and no fallback outbound is set, so new connections go to the first outbound in the list.",
+      "balancer_target_dead": "This outbound is unreachable or missing.",
       "balancer_rules": "Rules: {0}.",
       "balancer_open_connections": "Connections that are already open stay on the outbound they started with.",
-      "balancer_checked": "Checked {0} s ago."
+      "balancer_checked": "Checked {0} s ago.",
+      "balancer_next_nodelay": "Balancer {0} sends new connections here.",
+      "balancer_fallback_nomatch": "Balancer {0} matches no outbound, so new connections go to its fallback outbound.",
+      "balancer_default_nomatch": "Balancer {0} matches no outbound and no fallback outbound is set, so new connections go to the first outbound in the list."
     },
     "StreamSettingsModal": {
       "title": "Transport settings",

@@ -1,4 +1,5 @@
-import { applyStatus, balancerNow, clearLiveStatus, liveStatus, normalizeStatus, observationAge } from './LiveStatus';
+import engine from './Engine';
+import { applyStatus, balancerNow, clearLiveStatus, liveStatus, normalizeStatus, observationAge, refreshLiveStatus } from './LiveStatus';
 import { extractRunningRouting } from './BalancerStatus';
 import { XrayBalancerObject, XrayBalancerStrategyObject } from './CommonObjects';
 
@@ -64,6 +65,19 @@ describe('applyStatus', () => {
     expect(observationAge('p-a', (NOW + 5) * 1000)).toBe(17);
     expect(observationAge('missing', NOW * 1000)).toBeUndefined();
   });
+
+  it('keeps counting the age from the last new status on a repeated read', () => {
+    applyStatus(envelope(NOW), NOW * 1000);
+    applyStatus(envelope(NOW), (NOW + 9) * 1000);
+    expect(observationAge('p-a', (NOW + 9) * 1000)).toBe(21);
+  });
+
+  it('accepts a status whose clock went backwards', () => {
+    applyStatus(envelope(NOW), NOW * 1000);
+    applyStatus(envelope(NOW - 60), (NOW + 9) * 1000);
+    applyStatus(envelope(NOW - 51), (NOW + 18) * 1000);
+    expect(liveStatus.fresh).toBe(true);
+  });
 });
 
 describe('balancerNow', () => {
@@ -95,5 +109,65 @@ describe('balancerNow', () => {
     expect(balancerNow(edited('new'))).toEqual({ state: 'not-applied' });
     liveStatus.fresh = false;
     expect(balancerNow(edited('fast', 'leastPing'))).toEqual({ state: 'no-data' });
+  });
+});
+
+describe('refreshLiveStatus', () => {
+  const config = { outbounds: [{ tag: 'direct' }, { tag: 'p-a' }], routing: { balancers: [{ tag: 'fast', selector: ['p-'] }], rules: [{ balancerTag: 'fast' }] } };
+  let status: unknown;
+  let disk: unknown;
+
+  beforeEach(() => {
+    clearLiveStatus();
+    status = { v: 2, ok: true, ts: Math.floor(Date.now() / 1000), pid: 100, observatory: obs };
+    disk = config;
+    jest.spyOn(engine, 'submit').mockResolvedValue(undefined as never);
+    jest.spyOn(engine, 'getConnectionStatus').mockImplementation(async () => status as never);
+    jest.spyOn(engine, 'getWebData').mockImplementation(async () => ({ data: disk }) as never);
+  });
+
+  afterEach(() => jest.restoreAllMocks());
+
+  it('loads the running configuration once per Xray process', async () => {
+    await expect(refreshLiveStatus()).resolves.toBe(true);
+    expect(liveStatus.fresh).toBe(true);
+    expect(liveStatus.running?.balancers.map((b) => b.tag)).toEqual(['fast']);
+    await refreshLiveStatus();
+    expect(engine.getWebData).toHaveBeenCalledTimes(1);
+    status = { ...(status as object), pid: 101, ts: (status as { ts: number }).ts + 9 };
+    disk = { ...config, routing: { balancers: [{ tag: 'slow', selector: ['p-'] }], rules: [] } };
+    await refreshLiveStatus();
+    expect(engine.getWebData).toHaveBeenCalledTimes(2);
+    expect(liveStatus.running?.balancers.map((b) => b.tag)).toEqual(['slow']);
+  });
+
+  it('does not keep a configuration that failed to load as text', async () => {
+    disk = '{"outbounds": [';
+    await refreshLiveStatus();
+    expect(liveStatus.running).toBeUndefined();
+    disk = config;
+    await refreshLiveStatus();
+    expect(liveStatus.running?.balancers).toHaveLength(1);
+  });
+
+  it('goes stale when the status cannot be read', async () => {
+    await refreshLiveStatus();
+    expect(liveStatus.fresh).toBe(true);
+    status = '<html>login</html>';
+    await expect(refreshLiveStatus()).resolves.toBe(false);
+    (engine.getConnectionStatus as jest.Mock).mockRejectedValue(new Error('network'));
+    await expect(refreshLiveStatus()).rejects.toThrow('network');
+    expect(liveStatus.fresh).toBe(false);
+  });
+
+  it('drops a refresh that finishes after the page left advanced mode', async () => {
+    let release: () => void = () => undefined;
+    (engine.submit as jest.Mock).mockImplementation(() => new Promise<void>((resolve) => (release = resolve)));
+    const pending = refreshLiveStatus();
+    clearLiveStatus();
+    release();
+    await expect(pending).resolves.toBe(false);
+    expect(liveStatus.fresh).toBe(false);
+    expect(liveStatus.running).toBeUndefined();
   });
 });

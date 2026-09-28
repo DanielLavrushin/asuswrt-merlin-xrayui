@@ -749,6 +749,10 @@
       "label": "Час роботи процесу X-RAY Core",
       "formatted_time": "Час роботи: {0}д {1}г {2}х {3}с"
     },
+    "XrayVersion": {
+      "not_installed": "не встановлено",
+      "not_working": "не працює"
+    },
     "XrayCoreVersionModal": {
       "modal_title": "Оновлення X-RAY Core",
       "modal_desc": "Реліз зі списку або пункт «Своя версія…» для встановлення будь-якого тегу релізу Xray-core.",

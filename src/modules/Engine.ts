@@ -232,6 +232,7 @@ export class EngineResponseConfig {
     uptime: number;
     ui_version: string;
     core_version: string;
+    core_error?: string;
     profile: string;
     profiles: string[];
     backups: string[];

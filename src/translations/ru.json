@@ -753,6 +753,10 @@
       "label": "Время работы X-RAY Core",
       "formatted_time": "{0}д {1}ч {2}м {3}с"
     },
+    "XrayVersion": {
+      "not_installed": "не установлено",
+      "not_working": "не работает"
+    },
     "XrayCoreVersionModal": {
       "modal_title": "Обновление X-RAY Core",
       "modal_desc": "Релиз из списка или пункт «Своя версия…» для установки любого тега релиза Xray-core.",

@@ -753,6 +753,10 @@
       "label": "X-RAY Core uptime",
       "formatted_time": "{0}d {1}h {2}m {3}s"
     },
+    "XrayVersion": {
+      "not_installed": "not installed",
+      "not_working": "not working"
+    },
     "XrayCoreVersionModal": {
       "modal_title": "X-RAY Core Update",
       "modal_desc": "A release from the dropdown, or “Custom version…” to install any tagged Xray-core release.",

@@ -749,6 +749,10 @@
       "label": "X-RAY 运行时间",
       "formatted_time": "{0}天 {1}时 {2}分 {3}秒"
     },
+    "XrayVersion": {
+      "not_installed": "未安装",
+      "not_working": "无法运行"
+    },
     "XrayCoreVersionModal": {
       "modal_title": "X-RAY 核心更新",
       "modal_desc": "从下拉列表中选择一个版本，或选择「自定义版本…」以安装任意 Xray-core 发布标签。",

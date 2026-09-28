@@ -48,13 +48,13 @@ describe('Kcp.vue', () => {
 
   it('switches the rows when the core version arrives after mounting', async () => {
     const { wrapper } = mountKcp();
-    expect(wrapper.text()).toContain('com.Kcp.label_congestion');
+    expect(wrapper.text()).toContain('com.Kcp.label_cwnd_multiplier');
 
-    setCoreVersion('26.7.28');
+    setCoreVersion('26.3.27');
     await nextTick();
 
-    expect(wrapper.text()).not.toContain('com.Kcp.label_congestion');
-    expect(wrapper.text()).toContain('com.Kcp.label_cwnd_multiplier');
+    expect(wrapper.text()).not.toContain('com.Kcp.label_cwnd_multiplier');
+    expect(wrapper.text()).toContain('com.Kcp.label_congestion');
   });
 
   it('writes typed cwnd values into the settings as numbers', async () => {

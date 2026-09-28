@@ -137,6 +137,8 @@ interface Result {
 }
 
 const scenarios: Record<string, Scenario> = {
+  'broken core': { steps: ['respond'], env: { RS_XRAY_BROKEN: 'exec format error <%' }, files: { 'opt/etc/xray/config.json': '{}' } },
+  'missing core': { steps: ['respond'], env: { RS_XRAY_MISSING: '1' }, files: { 'opt/etc/xray/config.json': '{}' } },
   'profiles and backups': {
     steps: ['respond'],
     env: { profile: 'b.json' },
@@ -462,9 +464,27 @@ describe.each(SHELLS)('response backend under %s', (_label, shell) => {
         expect(r.events).toContain('initial_response rc=0');
         expect(r.response.loading).toBeUndefined();
         expect(r.response.xray?.core_version).toBe('26.3.27');
+        expect(r.response.xray?.core_error).toBe('');
         expect(r.response.xray?.ui_version).toBe('0.70.0');
         expect(r.stderr).not.toContain('find: unrecognized');
       }
+    });
+  });
+
+  describe('initial_response core probe', () => {
+    it('reports why a present core does not run, without markup characters', async () => {
+      const r = await get('broken core');
+      expect(r.events).toContain('initial_response rc=0');
+      expect(r.response.xray?.core_version).toBe('');
+      expect(r.response.xray?.core_error).toBe('exec format error %');
+      expect(r.events).toContain('WARN: Failed to get Xray version: exec format error %');
+    });
+
+    it('reports a missing core as not installed', async () => {
+      const r = await get('missing core');
+      expect(r.events).toContain('initial_response rc=0');
+      expect(r.response.xray?.core_version).toBe('');
+      expect(r.response.xray?.core_error).toBe('not installed');
     });
   });
 

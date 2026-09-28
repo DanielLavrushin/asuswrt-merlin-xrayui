@@ -66,7 +66,7 @@ install() {
         log_info "Xray is already installed. Skipping xray-core installation."
     else
         log_warn "Xray is not installed. Installing xray-core..."
-        switch_xray_version "latest"
+        switch_xray_version "latest" || log_error "Failed to install xray-core."
     fi
 
     # xrayui config
@@ -199,6 +199,15 @@ EOF
         | .routing.rules //= []
         | .routing.rules |= map(select(.name != "sys:connection-check"))
       ' || log_warn "Could not update $XRAY_CONFIG_FILE; it was left unchanged."
+    fi
+
+    xrayui_core_forget
+    xrayui_core_probe
+    if [ -z "$(xrayui_core_version)" ]; then
+        log_error "Xray core is unavailable: $XRAYUI_CORE_ERR"
+        log_error_box "Installation finished, but the Xray core is missing. Install it with: xrayui update xray latest"
+        update_loading_progress "Installation finished, but the Xray core is missing."
+        return 1
     fi
 
     log_ok "Installed $(show_version)"

@@ -99,7 +99,10 @@ describe('CommonObjects', () => {
   });
 
   describe('XrayStreamTlsSettingsObject', () => {
+    afterEach(() => setCoreVersion('0.0.0'));
+
     it('retains custom props', () => {
+      setCoreVersion('26.3.26');
       const tls = new XrayStreamTlsSettingsObject();
       tls.serverName = 'example.com';
       tls.allowInsecure = true;

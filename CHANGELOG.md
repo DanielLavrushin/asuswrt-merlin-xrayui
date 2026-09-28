@@ -1,5 +1,12 @@
 # XRAYUI Changelog
 
+## [0.70.2] - 2026-09-28
+
+- FIXED: A failed Xray core update could leave Xray stopped while still reporting success. The update is now checked before anything is replaced; on failure the running version is kept and an error is shown.
+- FIXED: The Xray core version showed as 0.0.0 when the core was missing or could not run. It now shows **not installed** or **not working**, with the reason on hover and in the system log. ([#411](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/411))
+- FIXED: Installation reported success even when the Xray core could not be downloaded. It now says the core is missing and how to install it.
+- FIXED: When the core version could not be detected, pressing **Apply** could save settings that newer Xray versions refuse to start with.
+
 ## [0.70.1] - 2026-09-27
 
 - FIXED: With several **Redirect/Bypass policies** for all devices, only the first one worked, so traffic from the others skipped Xray and routing rules seemed to stop working after updating to 0.70.0. All such policies now apply together. A policy for all devices with a different mode than the first one is skipped and noted in the log.

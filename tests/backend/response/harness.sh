@@ -55,7 +55,14 @@ log_debug() { :; }
 update_loading_progress() { ev "PROGRESS: $1|$2"; }
 load_xrayui_config() { :; }
 get_proc_uptime() { echo 0; }
-xray() { echo "Xray 26.3.27 (Xray, Penetrates Everything.) 0000000 (go1.26.0 linux/arm64)"; }
+xray() {
+    if [ -n "${RS_XRAY_BROKEN:-}" ]; then
+        printf '\n%s\n' "$RS_XRAY_BROKEN" >&2
+        return 126
+    fi
+    echo "Xray 26.3.27 (Xray, Penetrates Everything.) 0000000 (go1.26.0 linux/arm64)"
+}
+[ -n "${RS_XRAY_MISSING:-}" ] && unset -f xray
 am_settings_get() { grep "^$1 " "$RS_STATE/jffs/addons/custom_settings.txt" 2>/dev/null | cut -f2- -d' '; }
 update_xrayui_config() { ev "SET: $1=$2"; }
 logrotate_setup() { :; }

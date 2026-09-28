@@ -2,8 +2,9 @@
 # shellcheck disable=SC2034  # codacy:Unused variables
 
 show_version() {
-    XRAY_VERSION=$(xray version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
-    log_ok "XRAYUI: $XRAYUI_VERSION, XRAY-CORE: $XRAY_VERSION"
+    xrayui_core_probe
+    XRAY_VERSION=$(xrayui_core_version)
+    log_ok "XRAYUI: $XRAYUI_VERSION, XRAY-CORE: ${XRAY_VERSION:-$XRAYUI_CORE_ERR}"
 }
 
 switch_xray_version() {
@@ -71,6 +72,7 @@ switch_xray_version() {
     local release_data=$(curl -sSL "$version_url")
     if [ -z "$release_data" ]; then
         log_error "Error: could not fetch release data from $version_url"
+        return 1
     fi
 
     local arch=$(uname -m)
@@ -102,7 +104,7 @@ switch_xray_version() {
         asset_name="Xray-linux-mips64le.zip"
         ;;
     *)
-        echo "Unsupported architecture: $arch"
+        log_error "Unsupported architecture: $arch"
         return 1
         ;;
     esac
@@ -123,33 +125,48 @@ switch_xray_version() {
     rm -rf "$tmp_zip"
 
     log_ok "Downloading Xray release version $asset_url into $tmp_zip"
-    curl -L "$asset_url" -o "$tmp_zip"
-    if [ $? -ne 0 ] || [ ! -f "$tmp_zip" ]; then
+    if ! curl -fL "$asset_url" -o "$tmp_zip" || [ ! -s "$tmp_zip" ]; then
         log_error "Failed to download $asset_name."
+        rm -f "$tmp_zip"
         return 1
     fi
 
-    update_loading_progress "Stopping Xray service..."
-    POST_RESTART_DNSMASQ="true"
-    stop
-
     update_loading_progress "Unpacking $asset_name ..."
     log_ok "Unpacking $asset_name..."
+    rm -rf "$xray_tmp_dir"
     mkdir -p "$xray_tmp_dir"
 
     if ! unzip -o "$tmp_zip" -d "$xray_tmp_dir"; then
         log_error "Error: failed to unzip $tmp_zip"
+        rm -rf "$xray_tmp_dir" "$tmp_zip"
+        return 1
+    fi
+    rm -f "$tmp_zip"
+
+    local new_version
+    chmod +x "$xray_tmp_dir/xray" 2>/dev/null
+    new_version=$("$xray_tmp_dir/xray" version 2>/dev/null | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
+    if [ -z "$new_version" ]; then
+        log_error "Error: the downloaded Xray binary does not run on this router. The installed version was kept."
+        rm -rf "$xray_tmp_dir"
         return 1
     fi
 
-    cp "$xray_tmp_dir/xray" "/opt/sbin/xray"
+    if ! cp "$xray_tmp_dir/xray" /opt/sbin/xray.new || ! chmod +x /opt/sbin/xray.new || ! mv -f /opt/sbin/xray.new /opt/sbin/xray; then
+        log_error "Error: could not write the new Xray binary to /opt/sbin. The installed version was kept."
+        rm -f /opt/sbin/xray.new
+        rm -rf "$xray_tmp_dir"
+        return 1
+    fi
+    xrayui_core_forget
+
     [ ! -f "/opt/sbin/geosite.dat" ] && cp "$xray_tmp_dir/geosite.dat" "/opt/sbin/geosite.dat"
     [ ! -f "/opt/sbin/geoip.dat" ] && cp "$xray_tmp_dir/geoip.dat" "/opt/sbin/geoip.dat"
-
-    chmod +x "/opt/sbin/xray"
     rm -rf "$xray_tmp_dir"
-    rm -f "$tmp_zip"
 
+    update_loading_progress "Restarting Xray service..."
+    POST_RESTART_DNSMASQ="true"
+    stop
     start
 
     dnsmasq_restart

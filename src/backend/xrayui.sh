@@ -47,7 +47,7 @@ uninstall)
 update)
     case "$2" in
     xray)
-        switch_xray_version $3
+        switch_xray_version $3 || exit 1
         ;;
     *)
         update "$2"
@@ -304,13 +304,17 @@ service_event)
             fi
             ;;
         xrayversionswitch)
-            switch_xray_version
-            initial_response
-            if [ -f "$XRAY_PIDFILE" ]; then
-                update_loading_progress "Restarting Xray service..."
-                restart
+            if switch_xray_version; then
+                initial_response
+                if [ -f "$XRAY_PIDFILE" ]; then
+                    update_loading_progress "Restarting Xray service..."
+                    restart
+                fi
+                update_loading_progress "Switched Xray version successfully!" 100
+            else
+                initial_response
+                update_loading_progress "Error: failed to switch the Xray version. The details are in the system log." 100
             fi
-            update_loading_progress "Switched Xray version successfully!" 100
             ;;
         changeprofile)
             change_config_profile

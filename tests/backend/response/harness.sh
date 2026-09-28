@@ -38,8 +38,10 @@ rewrite "${RS_XRAYUI_SCRIPT:-$REPO_DIR/src/backend/xrayui.sh}" xrayui
 rewrite "${RS_GEODATA_SCRIPT:-$REPO_DIR/src/backend/geodata.sh}" geodata
 rewrite "${RS_SUBSCRIPTIONS_SCRIPT:-$REPO_DIR/src/backend/subscriptions.sh}" subscriptions
 rewrite "${RS_FAILOVER_SCRIPT:-$REPO_DIR/src/backend/failover.sh}" failover
+rewrite "${RS_VERSION_SCRIPT:-$REPO_DIR/src/backend/version.sh}" version
 
 . "$RS_STATE/helper.$$.sh"
+. "$RS_STATE/version.$$.sh"
 . "$RS_STATE/response.$$.sh"
 . "$RS_STATE/general_opts.$$.sh"
 . "$RS_STATE/geodata.$$.sh"
@@ -55,7 +57,25 @@ log_debug() { :; }
 update_loading_progress() { ev "PROGRESS: $1|$2"; }
 load_xrayui_config() { :; }
 get_proc_uptime() { echo 0; }
-xray() { echo "Xray 26.3.27 (Xray, Penetrates Everything.) 0000000 (go1.26.0 linux/arm64)"; }
+xray() {
+    if [ -n "${RS_XRAY_MISSING:-}" ] || [ -n "${RS_XRAY_UNLOADABLE:-}" ]; then
+        echo "sh: xray: not found" >&2
+        return 127
+    fi
+    if [ -n "${RS_XRAY_BROKEN:-}" ]; then
+        printf '\n%s\n' "$RS_XRAY_BROKEN" >&2
+        return 2
+    fi
+    echo "Xray ${RS_XRAY_VERSION:-26.3.27} (Xray, Penetrates Everything.) 0000000 (go1.26.0 linux/arm64)"
+}
+which() {
+    if [ "$1" = "xray" ]; then
+        [ -n "${RS_XRAY_UNLOADABLE:-}" ] || return 1
+        echo "/opt/sbin/xray"
+        return 0
+    fi
+    command which "$@"
+}
 am_settings_get() { grep "^$1 " "$RS_STATE/jffs/addons/custom_settings.txt" 2>/dev/null | cut -f2- -d' '; }
 update_xrayui_config() { ev "SET: $1=$2"; }
 logrotate_setup() { :; }
@@ -182,6 +202,67 @@ save_general() {
     fi
     (
         set -- service_event configuration applygeneraloptions
+        . "$RS_STATE/xrayui.$$.sh"
+    )
+    ev "dispatch rc=$?"
+}
+
+allow_insecure() {
+    if core_supports_allow_insecure; then
+        ev "allowInsecure=yes"
+    else
+        ev "allowInsecure=no"
+    fi
+}
+
+core_switch() {
+    ADDON_TMP_DIR="$ADDON_SHARE_DIR/tmp"
+    mkdir -p "$RS_STATE/opt/sbin"
+    echo "old-core" >"$RS_STATE/opt/sbin/xray"
+    [ "${RS_SW_RUNNING:-yes}" = "yes" ] && : >"$RS_STATE/running"
+    uname() { echo aarch64; }
+    github_proxy_url() { echo "$1"; }
+    curl() {
+        case "$*" in
+        *" -o "*)
+            [ "${RS_SW_DOWNLOAD:-ok}" = "ok" ] || return 22
+            echo "zip" >"$4"
+            ;;
+        *assets) echo '[{"name":"Xray-linux-arm64-v8a.zip","browser_download_url":"https://dl.example/xray.zip"}]' ;;
+        *) echo '{"assets_url":"https://api.example/assets"}' ;;
+        esac
+    }
+    unzip() {
+        mkdir -p "$4"
+        if [ "${RS_SW_BINARY:-ok}" = "ok" ]; then
+            printf '#!/bin/sh\necho "Xray 26.7.28 (Xray, Penetrates Everything.)"\n' >"$4/xray"
+        else
+            printf '#!/bin/sh\nexit 2\n' >"$4/xray"
+        fi
+        : >"$4/geosite.dat"
+        : >"$4/geoip.dat"
+    }
+    get_xray_daemon_pid() { [ -f "$RS_STATE/running" ] && echo 4242; }
+    stop() {
+        ev "stop"
+        rm -f "$RS_STATE/running"
+    }
+    start() {
+        ev "start"
+        [ "${RS_SW_STARTS:-yes}" = "yes" ] && : >"$RS_STATE/running"
+    }
+    dnsmasq_restart() { ev "dnsmasq_restart"; }
+    switch_xray_version "v26.7.28"
+    ev "switch rc=$?"
+    ev "sbin: $(ls "$RS_STATE/opt/sbin" | tr '\n' ' ')"
+    ev "core: $(head -n 2 "$RS_STATE/opt/sbin/xray" | tail -n 1)"
+    ev "tmp: $(ls "$ADDON_TMP_DIR" | tr '\n' ' ')"
+}
+
+switch_dispatch() {
+    switch_xray_version() { return "$RS_SW_RC"; }
+    (
+        set -- service_event configuration xrayversionswitch
         . "$RS_STATE/xrayui.$$.sh"
     )
     ev "dispatch rc=$?"

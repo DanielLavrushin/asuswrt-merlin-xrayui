@@ -66,13 +66,13 @@ describe('mKCP masking migration', () => {
       expect(plain(stream.kcpSettings?.header)).toEqual({ type: 'srtp' });
     });
 
-    it('treats an unknown core version as modern', () => {
+    it('treats an unknown core version as the newest core', () => {
       setCoreVersion('0.0.0');
       const stream = buildKcpStream('utp');
       stream.normalize();
 
       expect(stream.kcpSettings?.header).toBeUndefined();
-      expect(plain(stream.finalmask?.udp)).toEqual([{ type: 'header-utp' }]);
+      expect(plain(stream.finalmask?.udp)).toEqual([{ type: 'mkcp-legacy', settings: { header: 'utp' } }]);
     });
 
     it('does not emit masking when header is none', () => {

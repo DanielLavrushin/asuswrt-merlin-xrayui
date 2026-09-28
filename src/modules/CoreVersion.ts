@@ -2,7 +2,8 @@ import { ref } from 'vue';
 import vCompare from 'version-compare';
 import vClean from 'version-clean';
 
-const coreVersion = ref('0.0.0');
+const UNKNOWN_CORE = '0.0.0';
+const coreVersion = ref(UNKNOWN_CORE);
 
 export function setCoreVersion(version?: string): void {
   if (!version) return;
@@ -13,12 +14,16 @@ export function getCoreVersion(): string {
   return coreVersion.value;
 }
 
+function coreKnown(): boolean {
+  return coreVersion.value !== UNKNOWN_CORE;
+}
+
 export function coreAtLeast(target: string): boolean {
-  return vCompare(coreVersion.value, target) >= 0;
+  return !coreKnown() || vCompare(coreVersion.value, target) >= 0;
 }
 
 export function coreBelow(target: string): boolean {
-  return vCompare(coreVersion.value, target) < 0;
+  return coreKnown() && vCompare(coreVersion.value, target) < 0;
 }
 
 type CoreFeatureRule = { since?: string; until?: string };
@@ -48,8 +53,7 @@ export function coreSupports(feature: CoreFeature): boolean {
 export type MkcpMaskingMode = 'legacy' | 'finalmask' | 'finalmask-mkcp-legacy';
 
 export function mkcpMaskingMode(): MkcpMaskingMode {
-  const v = coreVersion.value;
-  if (v !== '0.0.0' && coreBelow('26.1.31')) return 'legacy';
+  if (coreBelow('26.1.31')) return 'legacy';
   if (coreAtLeast('26.6.1')) return 'finalmask-mkcp-legacy';
   return 'finalmask';
 }

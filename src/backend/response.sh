@@ -73,8 +73,9 @@ initial_response() {
     local after_firewall_cleanup=$(sed '1{/^#!/d}' "$ADDON_USER_SCRIPTS_DIR/firewall_after_cleanup" 2>/dev/null || echo "")
 
     local XRAY_VERSION
-    XRAY_VERSION=$(xray version 2>/dev/null | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
-    [ -z "$XRAY_VERSION" ] && log_warn "Failed to get Xray version."
+    xrayui_core_probe
+    XRAY_VERSION=$(xrayui_core_version)
+    [ -z "$XRAY_VERSION" ] && log_warn "Failed to get Xray version: $XRAYUI_CORE_ERR"
 
     local profiles
     profiles=$(
@@ -134,6 +135,7 @@ initial_response() {
         --arg after_firewall_start "$after_firewall_start" \
         --arg after_firewall_cleanup "$after_firewall_cleanup" \
         --arg xray_ver "$XRAY_VERSION" \
+        --arg xray_err "$XRAYUI_CORE_ERR" \
         --arg xrayui_ver "$XRAYUI_VERSION" \
         --argjson profiles "$profiles" \
         --argjson backups "$backups" \
@@ -175,6 +177,7 @@ initial_response() {
         }
         | .xray.ui_version = $xrayui_ver
         | .xray.core_version = $xray_ver
+        | .xray.core_error = $xray_err
         | .xray.profiles = $profiles
         | .xray.backups = $backups
         | .xray.debug = $debug
@@ -211,15 +214,16 @@ initial_response() {
             --arg sfi "$subscription_fallback_interval" \
             --arg xrayui_ver "$XRAYUI_VERSION" \
             --arg xray_ver "$XRAY_VERSION" \
+            --arg xray_err "$XRAYUI_CORE_ERR" \
             --argjson profiles "${profiles:-[]}" \
             --argjson backups "${backups:-[]}" \
             --argjson debug "$debug" \
             '{
                 geodata: { geoip_url: $geoipurl, geosite_url: $geositeurl, community: { "geoip.dat": $geoip, "geosite.dat": $geosite }, auto_update: $geo_auto_update },
-                xray: { uptime: $uptime, profile: $profile, skip_test: $skip_test, clients_check: $clients_check, check_connection: $check_connection, probe_url: $probe_url, probe_interval: $probe_interval, github_proxy: $github_proxy, dnsmasq: $dnsmasq, logs_dor: $logs_dor, logs_max_size: $logs_max_size, ipsec: $ipsec, startup_delay: $startup_delay, sleep_time: $sleep_time, dns_only: $dns_only, block_quic: $block_quic, tun_routing: $tun_routing, subscription_auto_refresh: $sar, subscription_auto_fallback: ($saf == "true"), subscription_fallback_interval: ($sfi | tonumber), subscriptions: { links: [], filters: [] }, hooks: {}, ui_version: $xrayui_ver, core_version: $xray_ver, profiles: $profiles, backups: $backups, debug: $debug }
+                xray: { uptime: $uptime, profile: $profile, skip_test: $skip_test, clients_check: $clients_check, check_connection: $check_connection, probe_url: $probe_url, probe_interval: $probe_interval, github_proxy: $github_proxy, dnsmasq: $dnsmasq, logs_dor: $logs_dor, logs_max_size: $logs_max_size, ipsec: $ipsec, startup_delay: $startup_delay, sleep_time: $sleep_time, dns_only: $dns_only, block_quic: $block_quic, tun_routing: $tun_routing, subscription_auto_refresh: $sar, subscription_auto_fallback: ($saf == "true"), subscription_fallback_interval: ($sfi | tonumber), subscriptions: { links: [], filters: [] }, hooks: {}, ui_version: $xrayui_ver, core_version: $xray_ver, core_error: $xray_err, profiles: $profiles, backups: $backups, debug: $debug }
             }' >"$_tmp_response" 2>"$_jq_err"; then
             log_error "Error: jq -n also failed. jq error: $(cat "$_jq_err" 2>/dev/null). Writing bare minimum response."
-            echo '{"xray":{"ui_version":"'"$XRAYUI_VERSION"'","core_version":"","profiles":[],"backups":[]}}' >"$_tmp_response"
+            echo '{"xray":{"ui_version":"'"$XRAYUI_VERSION"'","core_version":"'"$XRAY_VERSION"'","profiles":[],"backups":[]}}' >"$_tmp_response"
         fi
         rm -f "$_jq_err"
     else

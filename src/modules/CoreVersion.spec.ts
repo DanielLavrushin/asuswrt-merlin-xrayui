@@ -42,8 +42,12 @@ describe('CoreVersion', () => {
       expect(coreSupports('verifyPeerCertByName')).toBe(true);
     });
 
-    it('treats the unknown default version as supporting allowInsecure', () => {
-      expect(coreSupports('allowInsecure')).toBe(true);
+    it('treats the unknown default version as the newest core', () => {
+      expect(coreAtLeast('99.0.0')).toBe(true);
+      expect(coreBelow('0.0.1')).toBe(false);
+      expect(coreSupports('allowInsecure')).toBe(false);
+      expect(coreSupports('pinnedPeerCertSha256')).toBe(true);
+      expect(coreSupports('tunDesc')).toBe(true);
     });
   });
 });

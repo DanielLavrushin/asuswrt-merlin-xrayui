@@ -30,7 +30,10 @@
             <td style="color: #ffcc00">
               {{ !r.name ? getRuleName(r) : r.name }}
             </td>
-            <td>{{ r.balancerTag ? '⚖ ' + r.balancerTag : r.outboundTag }}</td>
+            <td>
+              {{ r.balancerTag ? '⚖ ' + r.balancerTag : r.outboundTag }}
+              <span v-if="balancerNowText(r)" class="balancer-now" :title="balancerNowText(r) + '\n' + $t('com.BalancerModal.hint_now')">&rarr; {{ balancerNowText(r) }}</span>
+            </td>
             <td>
               <text v-show="r.isSystem()">system rule</text>
               <span class="row-buttons">
@@ -264,6 +267,8 @@
   import draggable from 'vuedraggable';
   import { useI18n } from 'vue-i18n';
   import { EngineGeoTags } from '@modules/Engine';
+  import { balancerNow } from '@/modules/LiveStatus';
+  import { describeViewShort } from '@/modules/BalancerStatus';
 
   export default defineComponent({
     name: 'RulesModal',
@@ -305,6 +310,13 @@
       const balancerTags = ref<string[]>([]);
       const targetType = ref<'outbound' | 'balancer'>('outbound');
       const filterText = ref<string>('');
+
+      const balancerNowText = (r: XrayRoutingRuleObject) => {
+        if (!r.balancerTag || r.outboundTag || r.enabled === false) return '';
+        const edited = (xrayConfig.routing?.balancers || []).find((b) => b.tag === r.balancerTag);
+        const now = balancerNow(edited);
+        return now.state === 'view' ? describeViewShort(now.view, (key, args) => t(key, args)) : '';
+      };
 
       const currentPrefix = ref<'geosite:' | 'ext:xrayui:' | 'geoip:'>('geosite:');
       const activeField = ref<'domains' | 'ips' | null>(null);
@@ -631,6 +643,7 @@
         saveRule,
         show,
         getRuleName,
+        balancerNowText,
         onTargetTypeChange,
         on_off_rule,
         reindexRules,
@@ -648,6 +661,17 @@
 </script>
 
 <style scoped lang="scss">
+  .balancer-now {
+    display: inline-block;
+    max-width: 160px;
+    margin-left: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+    color: $c_purple;
+    cursor: help;
+  }
   .FormTable {
     tr th {
       width: auto;

@@ -100,7 +100,7 @@ start() {
     fi
 
     update_loading_progress "Starting $ADDON_TITLE..."
-    if [ "$clients_check" = "true" ] || [ "$check_connection" = "true" ]; then
+    if api_config_required; then
 
         api_apply_configuration
 
@@ -110,7 +110,7 @@ start() {
         local XRAY_EXTRA_CFG=""
         if [ -f "$xray_api_config" ]; then
             XRAY_EXTRA_CFG="-c $xray_api_config"
-            log_info "API extension $xray_api_config found – enabling per-user stats."
+            log_info "Loading API extension $xray_api_config."
         else
             log_info "No API extension for $(basename "$XRAY_CONFIG_FILE"); running plain config."
         fi

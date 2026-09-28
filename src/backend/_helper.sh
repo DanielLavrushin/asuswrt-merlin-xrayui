@@ -517,9 +517,14 @@ test_xray_config() {
         return
     fi
 
-    local output
+    local output extra_cfg=""
 
-    if ! output=$(xray -c $XRAY_CONFIG_FILE -test 2>&1); then
+    if api_config_required; then
+        [ -f "$(api_get_current_config)" ] || api_apply_configuration
+        [ -f "$(api_get_current_config)" ] && extra_cfg="-c $(api_get_current_config)"
+    fi
+
+    if ! output=$(xray -c $XRAY_CONFIG_FILE $extra_cfg -test 2>&1); then
         message=$(echo "$output" | sed -n '/> infra\/conf:/ {s/.*> infra\/conf: //p}')
         if [ -z "$message" ]; then
             message="$output"
@@ -664,11 +669,38 @@ jq_update_file() {
     return 1
 }
 
-xrayui_core_version() {
-    if [ -z "$XRAYUI_CORE_VER_CACHE" ]; then
-        XRAYUI_CORE_VER_CACHE=$(xray version 2>/dev/null | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
-        [ -z "$XRAYUI_CORE_VER_CACHE" ] && XRAYUI_CORE_VER_CACHE="-"
+xrayui_core_probe() {
+    [ -n "$XRAYUI_CORE_VER_CACHE" ] && return 0
+    local out rc bin
+    XRAYUI_CORE_ERR=""
+    out=$(xray version 2>&1)
+    rc=$?
+    XRAYUI_CORE_VER_CACHE=$(printf '%s\n' "$out" | grep -E '^Xray [0-9]+\.[0-9]+\.[0-9]+' | head -n 1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
+    [ -n "$XRAYUI_CORE_VER_CACHE" ] && return 0
+    XRAYUI_CORE_VER_CACHE="-"
+    if [ "$rc" -eq 127 ]; then
+        bin=$(which xray 2>/dev/null)
+        if [ -z "$bin" ]; then
+            XRAYUI_CORE_ERR="not installed"
+        else
+            XRAYUI_CORE_ERR="$bin cannot be executed (missing loader or interpreter)"
+        fi
+        return 0
     fi
+    XRAYUI_CORE_ERR=$(printf '%s\n' "$out" | sed '/^[[:space:]]*$/d' | head -n 1 | cut -c1-200 | tr -d '<')
+    case "$XRAYUI_CORE_ERR" in
+    *": line "[01]": syntax error"*) XRAYUI_CORE_ERR="exec format error: the binary is not built for this router's CPU" ;;
+    esac
+    XRAYUI_CORE_ERR="${XRAYUI_CORE_ERR:-no version output, exit code $rc}"
+}
+
+xrayui_core_forget() {
+    XRAYUI_CORE_VER_CACHE=""
+    XRAYUI_CORE_ERR=""
+}
+
+xrayui_core_version() {
+    xrayui_core_probe
     [ "$XRAYUI_CORE_VER_CACHE" = "-" ] || printf '%s' "$XRAYUI_CORE_VER_CACHE"
 }
 
@@ -679,7 +711,7 @@ version_ge() {
 core_supports_allow_insecure() {
     local v
     v=$(xrayui_core_version)
-    [ -z "$v" ] && return 0
+    [ -z "$v" ] && return 1
     version_ge "$v" "26.3.27" && return 1
     return 0
 }

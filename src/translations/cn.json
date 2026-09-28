@@ -230,7 +230,19 @@
       "label_fallback_tag": "备用出站",
       "hint_fallback_tag": "如果此负载均衡器选择的所有出站连接都不可用，流量将被发送到此备用出站。<br/><strong>注意：</strong>需要配置 observatory 或 burstObservatory。",
       "label_matching": "匹配的出站连接",
-      "none": "（无）"
+      "none": "（无）",
+      "hint_now": "此负载均衡器的新连接当前发往何处，基于最近一次连接检查。已建立的连接保持不变。",
+      "now_needs_check": "需要开启“检查与 X-ray 服务器的连接”",
+      "now_no_data": "无实时状态",
+      "now_not_applied": "尚未应用",
+      "now_unused": "未被任何规则使用",
+      "now_tied": "并列：{0} · {1} ms",
+      "now_rotating": "轮换：{0} / {1}",
+      "now_rotating_dead": "轮换：{0} / {1}，{2} 个不可达",
+      "now_fallback": "备用：{0}",
+      "now_default": "第一个出站：{0}",
+      "now_none": "无出站",
+      "now_next": "{0} · {1} ms"
     },
     "PolicyModal": {
       "modal_title2": "策略列表",
@@ -311,7 +323,25 @@
       "alert_delete_tag_in_rules_use": "此标签 ({1}) 在路由规则 ({0}) 中使用。请在删除出站之前从规则中移除它。",
       "alert_delete_tag_in_balancer_use": "此标签 ({1}) 在均衡器 ({0}) 中被用作后备 (fallback)。请在删除出站之前从均衡器中移除它。",
       "hint_pool_inactive": "通用设置中的自动故障转移已关闭，此出站不会自动切换。",
-      "status_unreachable": "不可达"
+      "status_unreachable": "不可达",
+      "badge_tied": "并列",
+      "badge_rotating": "轮换",
+      "badge_fallback": "备用",
+      "badge_default": "默认路由",
+      "balancer_next": "负载均衡器 {0} 将新连接发送到此处（{1} ms）。",
+      "balancer_runner_up": "次优：{0}，{1} ms。",
+      "balancer_tied": "负载均衡器 {0}：与 {2} 并列，延迟均为 {1} ms。在下一次检查之前，新连接会发往其中之一。",
+      "balancer_rotating": "负载均衡器 {0} 将新连接分配到 {1} 个出站，包括此出站。",
+      "balancer_dead_share": "负载均衡器 {0} 未设置备用出站，因此这个不可达的出站仍会分到一部分新连接。",
+      "balancer_fallback": "负载均衡器 {0} 当前没有可用的出站，因此新连接发往其备用出站。",
+      "balancer_default": "负载均衡器 {0} 当前没有可用的出站且未设置备用出站，因此新连接发往列表中的第一个出站。",
+      "balancer_target_dead": "此出站不可达或不存在。",
+      "balancer_rules": "规则：{0}。",
+      "balancer_open_connections": "已建立的连接会保留在最初使用的出站上。",
+      "balancer_checked": "{0} 秒前检查。",
+      "balancer_next_nodelay": "负载均衡器 {0} 将新连接发送到此处。",
+      "balancer_fallback_nomatch": "负载均衡器 {0} 没有匹配到任何出站，因此新连接发往其备用出站。",
+      "balancer_default_nomatch": "负载均衡器 {0} 没有匹配到任何出站且未设置备用出站，因此新连接发往列表中的第一个出站。"
     },
     "StreamSettingsModal": {
       "title": "传输设置",
@@ -748,6 +778,10 @@
     "ProcessUptime": {
       "label": "X-RAY 运行时间",
       "formatted_time": "{0}天 {1}时 {2}分 {3}秒"
+    },
+    "XrayVersion": {
+      "not_installed": "未安装",
+      "not_working": "无法运行"
     },
     "XrayCoreVersionModal": {
       "modal_title": "X-RAY 核心更新",

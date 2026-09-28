@@ -35,6 +35,7 @@ describe('TransportObjects', () => {
     jest.clearAllMocks();
     obj = new XrayStreamKcpSettingsObject();
   });
+  afterEach(() => setCoreVersion('0.0.0'));
 
   it('should parse XrayStreamKcpSettingsObject from parsed URL object', () => {
     const url = 'vless://00000000-0000-0000-0000-000000000000@test_domain.name:12422?type=kcp&headerType=none&headerType=wechat-video&seed=fake_seed&security=none#proxy';
@@ -45,6 +46,7 @@ describe('TransportObjects', () => {
   });
 
   it('should normalize XrayStreamKcpSettingsObject', () => {
+    setCoreVersion('26.3.27');
     obj.normalize();
 
     expect(obj.mtu).toBeUndefined();

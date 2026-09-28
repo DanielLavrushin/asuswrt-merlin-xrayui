@@ -97,7 +97,8 @@
     color: #ffffff;
   }
 
-  input::placeholder {
+  input::placeholder,
+  textarea::placeholder {
     color: $c_yellow;
     font-weight: bold;
     opacity: 0.5;

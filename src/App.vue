@@ -40,7 +40,7 @@
             await engine.delay(1000);
             try {
               const response = await engine.getXrayResponse();
-              if (response?.xray?.core_version || response?.xray?.core_error) {
+              if (response?.xray?.core_version) {
                 setCoreVersion(response.xray.core_version);
                 uiResponse.value = response;
                 break;

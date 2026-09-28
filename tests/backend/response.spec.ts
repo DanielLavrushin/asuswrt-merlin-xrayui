@@ -139,6 +139,27 @@ interface Result {
 const scenarios: Record<string, Scenario> = {
   'broken core': { steps: ['respond'], env: { RS_XRAY_BROKEN: 'exec format error <%' }, files: { 'opt/etc/xray/config.json': '{}' } },
   'missing core': { steps: ['respond'], env: { RS_XRAY_MISSING: '1' }, files: { 'opt/etc/xray/config.json': '{}' } },
+  'core for another cpu': {
+    steps: ['respond'],
+    env: { RS_XRAY_BROKEN: '/opt/sbin/xray: line 1: syntax error: unexpected word (expecting ")")' },
+    files: { 'opt/etc/xray/config.json': '{}' }
+  },
+  'core crashing with a dotted trace': {
+    steps: ['respond'],
+    env: { RS_XRAY_BROKEN: 'fatal error: out of memory in google.golang.org/protobuf@v1.36.6/internal/impl.go:12' },
+    files: { 'opt/etc/xray/config.json': '{}' }
+  },
+  'allowInsecure on a missing core': { steps: ['allow_insecure'], env: { RS_XRAY_MISSING: '1' } },
+  'allowInsecure on an old core': { steps: ['allow_insecure'], env: { RS_XRAY_VERSION: '26.3.26' } },
+  'allowInsecure on a current core': { steps: ['allow_insecure'], env: { RS_XRAY_VERSION: '26.3.27' } },
+  'core switch while running': { steps: ['core_switch'] },
+  'core switch while stopped': { steps: ['core_switch'], env: { RS_SW_RUNNING: 'no' } },
+  'core switch with a failed download': { steps: ['core_switch'], env: { RS_SW_DOWNLOAD: 'fail' } },
+  'core switch with a binary that does not run': { steps: ['core_switch'], env: { RS_SW_BINARY: 'broken' } },
+  'core switch where the new core does not start': { steps: ['core_switch'], env: { RS_SW_STARTS: 'no' } },
+  'switch handler success': { steps: ['switch_dispatch'], env: { RS_SW_RC: '0' }, files: { 'opt/etc/xray/config.json': '{}' } },
+  'switch handler failure': { steps: ['switch_dispatch'], env: { RS_SW_RC: '1' }, files: { 'opt/etc/xray/config.json': '{}' } },
+  'switch handler start failure': { steps: ['switch_dispatch'], env: { RS_SW_RC: '2' }, files: { 'opt/etc/xray/config.json': '{}' } },
   'profiles and backups': {
     steps: ['respond'],
     env: { profile: 'b.json' },
@@ -485,6 +506,78 @@ describe.each(SHELLS)('response backend under %s', (_label, shell) => {
       expect(r.events).toContain('initial_response rc=0');
       expect(r.response.xray?.core_version).toBe('');
       expect(r.response.xray?.core_error).toBe('not installed');
+    });
+
+    it('explains a core built for another CPU instead of showing the shell syntax error', async () => {
+      const r = await get('core for another cpu');
+      expect(r.response.xray?.core_version).toBe('');
+      expect(r.response.xray?.core_error).toBe("exec format error: the binary is not built for this router's CPU");
+    });
+
+    it('does not take a version number from a crash trace', async () => {
+      const r = await get('core crashing with a dotted trace');
+      expect(r.response.xray?.core_version).toBe('');
+      expect(r.response.xray?.core_error).toContain('fatal error: out of memory');
+    });
+  });
+
+  describe('core_supports_allow_insecure', () => {
+    it.each([
+      ['allowInsecure on a missing core', 'no'],
+      ['allowInsecure on an old core', 'yes'],
+      ['allowInsecure on a current core', 'no']
+    ])('%s: %s', async (name, expected) => {
+      const r = await get(name);
+      expect(r.events).toContain(`allowInsecure=${expected}`);
+    });
+  });
+
+  describe('switch_xray_version', () => {
+    const NEW_CORE = 'core: echo "Xray 26.7.28 (Xray, Penetrates Everything.)"';
+
+    it('replaces the binary before stopping Xray, then restarts it', async () => {
+      const r = await get('core switch while running');
+      expect(r.events).toContain('switch rc=0');
+      expect(r.events).toContain(NEW_CORE);
+      expect(r.events).toContain('sbin: geoip.dat geosite.dat xray ');
+      expect(r.events).toContain('tmp: ');
+      const order = r.events.filter((e) => ['stop', 'start', 'dnsmasq_restart'].includes(e));
+      expect(order).toEqual(['stop', 'start', 'dnsmasq_restart']);
+    });
+
+    it('leaves a stopped Xray stopped', async () => {
+      const r = await get('core switch while stopped');
+      expect(r.events).toContain('switch rc=0');
+      expect(r.events).toContain(NEW_CORE);
+      expect(r.events).not.toContain('stop');
+      expect(r.events).not.toContain('start');
+    });
+
+    it.each(['core switch with a failed download', 'core switch with a binary that does not run'])('keeps the running core untouched on %s', async (name) => {
+      const r = await get(name);
+      expect(r.events).toContain('switch rc=1');
+      expect(r.events).toContain('core: old-core');
+      expect(r.events).toContain('sbin: xray ');
+      expect(r.events).toContain('tmp: ');
+      expect(r.events).not.toContain('stop');
+      expect(r.events.some((e) => e.startsWith('ERROR: '))).toBe(true);
+    });
+
+    it('reports a new core that does not start with the current configuration', async () => {
+      const r = await get('core switch where the new core does not start');
+      expect(r.events).toContain('switch rc=2');
+      expect(r.events).toContain(NEW_CORE);
+      expect(r.events).toContain('ERROR: Error: Xray 26.7.28 was installed, but it did not start with the current configuration.');
+    });
+
+    it.each([
+      ['switch handler success', 'Switched Xray version successfully!'],
+      ['switch handler failure', 'Error: failed to switch the Xray version. The details are in the system log.'],
+      ['switch handler start failure', 'Error: the new Xray version was installed, but Xray did not start with the current configuration. The details are in the system log.']
+    ])('%s ends with the matching message', async (name, message) => {
+      const r = await get(name);
+      expect(finalProgress(r)).toEqual([`PROGRESS: ${message}|100`]);
+      expect(r.events).not.toContain('restart');
     });
   });
 

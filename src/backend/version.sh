@@ -147,13 +147,13 @@ switch_xray_version() {
     chmod +x "$xray_tmp_dir/xray" 2>/dev/null
     new_version=$("$xray_tmp_dir/xray" version 2>/dev/null | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
     if [ -z "$new_version" ]; then
-        log_error "Error: the downloaded Xray binary does not run on this router. The installed version was kept."
+        log_error "Error: the downloaded Xray binary does not run on this router."
         rm -rf "$xray_tmp_dir"
         return 1
     fi
 
-    if ! cp "$xray_tmp_dir/xray" /opt/sbin/xray.new || ! chmod +x /opt/sbin/xray.new || ! mv -f /opt/sbin/xray.new /opt/sbin/xray; then
-        log_error "Error: could not write the new Xray binary to /opt/sbin. The installed version was kept."
+    if ! mv -f "$xray_tmp_dir/xray" /opt/sbin/xray.new || ! chmod +x /opt/sbin/xray.new || ! mv -f /opt/sbin/xray.new /opt/sbin/xray; then
+        log_error "Error: could not write the new Xray binary to /opt/sbin."
         rm -f /opt/sbin/xray.new
         rm -rf "$xray_tmp_dir"
         return 1
@@ -164,13 +164,19 @@ switch_xray_version() {
     [ ! -f "/opt/sbin/geoip.dat" ] && cp "$xray_tmp_dir/geoip.dat" "/opt/sbin/geoip.dat"
     rm -rf "$xray_tmp_dir"
 
-    update_loading_progress "Restarting Xray service..."
-    POST_RESTART_DNSMASQ="true"
-    stop
-    start
+    if [ -n "$(get_xray_daemon_pid)" ]; then
+        update_loading_progress "Restarting Xray service..."
+        POST_RESTART_DNSMASQ="true"
+        stop
+        start
+        dnsmasq_restart
+        POST_RESTART_DNSMASQ="false"
 
-    dnsmasq_restart
-    POST_RESTART_DNSMASQ="false"
+        if [ -z "$(get_xray_daemon_pid)" ]; then
+            log_error "Error: Xray $new_version was installed, but it did not start with the current configuration."
+            return 2
+        fi
+    fi
 
     log_ok "Xray version updated!"
     log_ok $(show_version)

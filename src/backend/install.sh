@@ -66,7 +66,7 @@ install() {
         log_info "Xray is already installed. Skipping xray-core installation."
     else
         log_warn "Xray is not installed. Installing xray-core..."
-        switch_xray_version "latest" || log_error "Failed to install xray-core."
+        switch_xray_version "latest"
     fi
 
     # xrayui config
@@ -204,9 +204,8 @@ EOF
     xrayui_core_forget
     xrayui_core_probe
     if [ -z "$(xrayui_core_version)" ]; then
-        log_error "Xray core is unavailable: $XRAYUI_CORE_ERR"
-        log_error_box "Installation finished, but the Xray core is missing. Install it with: xrayui update xray latest"
-        update_loading_progress "Installation finished, but the Xray core is missing."
+        log_error_box "Installation finished, but the Xray core is not available ($XRAYUI_CORE_ERR). Install it with: xrayui update xray latest"
+        update_loading_progress "Installation finished, but the Xray core is not available."
         return 1
     fi
 

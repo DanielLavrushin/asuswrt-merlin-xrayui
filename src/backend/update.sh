@@ -59,7 +59,7 @@ update() {
     if sh "$ADDON_SCRIPT" install; then
         log_ok "Installation completed successfully."
     else
-        log_error "Installation failed. Exiting."
+        log_error "Installation finished with errors. The details are above."
         return 1
     fi
 

@@ -150,8 +150,8 @@ api_get_connected_clients() {
 
 }
 
-api_fetch_observatory() {
-  local cfg host port url raw
+api_fetch_metrics() {
+  local cfg host port url
 
   cfg=$(api_get_current_config)
   [ -f "$cfg" ] || return 1
@@ -164,35 +164,69 @@ api_fetch_observatory() {
   fi
 
   url="http://${host}:${port}/debug/vars"
-  if ! raw=$(curl -fsS --max-time 5 "$url" 2>/dev/null); then
-    log_debug "Failed to fetch observatory from $url" >&2
+  if ! curl -fsS --max-time 5 "$url" 2>/dev/null; then
+    log_debug "Failed to fetch metrics from $url" >&2
     return 1
   fi
+}
 
+api_fetch_observatory() {
+  local raw
+
+  raw=$(api_fetch_metrics) || return 1
   printf '%s' "$raw" | jq -ce '.observatory // {} | objects' 2>/dev/null
 }
 
 api_get_connection_status() {
-  local obs tmp
+  local raw pid now tmp
 
   load_xrayui_config
 
-  if ! obs=$(api_fetch_observatory); then
-    log_error "Failed to fetch or parse observatory data"
-    return 1
-  fi
+  now=$(date +%s)
+  pid=$(get_xray_daemon_pid) || pid=0
+  case "$pid" in
+    '' | *[!0-9]*) pid=0 ;;
+  esac
 
   tmp="$XRAYUI_CONNECTION_STATUS_FILE.tmp.$$"
-  printf '%s\n' "$obs" | jq '.' >"$tmp" 2>/dev/null && mv -f "$tmp" "$XRAYUI_CONNECTION_STATUS_FILE"
-  rm -f "$tmp"
+  if [ "$pid" -gt 0 ] && raw=$(api_fetch_metrics) &&
+    printf '%s' "$raw" | jq -c --argjson ts "$now" --argjson pid "$pid" \
+      '{v: 2, ok: true, ts: $ts, pid: $pid, observatory: (.observatory | objects // {})}' >"$tmp" 2>/dev/null; then
+    :
+  else
+    [ "$pid" -gt 0 ] && log_error "Failed to fetch or parse observatory data"
+    printf '{"v":2,"ok":false,"ts":%s,"pid":%s,"observatory":{}}\n' "$now" "$pid" >"$tmp"
+  fi
+  mv -f "$tmp" "$XRAYUI_CONNECTION_STATUS_FILE"
+}
+
+api_balancers_need_observatory() {
+  [ -f "$XRAY_CONFIG_FILE" ] || return 1
+  jq -e '
+    [ .routing.balancers[]?
+      | select(
+          ((.strategy.type // "random") | ascii_downcase) as $type
+          | $type == "leastping" or $type == "leastload" or ((.fallbackTag // "") != "")
+        )
+    ]
+    | length > 0
+  ' "$XRAY_CONFIG_FILE" >/dev/null 2>&1
+}
+
+api_config_required() {
+  [ "$check_connection" = "true" ] || [ "$clients_check" = "true" ] || api_balancers_need_observatory
 }
 
 api_apply_configuration() {
   load_xrayui_config
 
-  if [ "$check_connection" = "false" ] && [ "$clients_check" = "false" ]; then
+  if ! api_config_required; then
     log_info "Skipping API configuration as per user settings."
     return
+  fi
+
+  if [ "$check_connection" != "true" ] && [ "$clients_check" != "true" ]; then
+    log_info "Balancers need the observatory; loading the API configuration."
   fi
 
   local filter

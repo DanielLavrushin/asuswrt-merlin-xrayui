@@ -3,7 +3,7 @@
     <table class="FormTable modal-form-table">
       <thead>
         <tr>
-          <td colspan="4">{{ $t('com.BalancerModal.modal_title2') }}</td>
+          <td colspan="5">{{ $t('com.BalancerModal.modal_title2') }}</td>
         </tr>
       </thead>
       <tbody v-if="balancers.length">
@@ -13,6 +13,7 @@
           </th>
           <td style="color: #ffcc00">{{ b.tag || 'unnamed' }}</td>
           <td>{{ b.strategy?.type || 'random' }}</td>
+          <td :class="['balancer-now', nowClass(b)]" :title="$t('com.BalancerModal.hint_now')">{{ nowText(b) }}</td>
           <td>
             <span class="row-buttons">
               <input class="button_gen button_gen_small" type="button" :value="$t('labels.edit')" @click.prevent="editBalancer(b)" />
@@ -23,7 +24,7 @@
       </tbody>
       <tbody v-else>
         <tr>
-          <td colspan="4" style="color: #ffcc00">{{ $t('com.BalancerModal.no_balancers_defined') }}</td>
+          <td colspan="5" style="color: #ffcc00">{{ $t('com.BalancerModal.no_balancers_defined') }}</td>
         </tr>
       </tbody>
     </table>
@@ -93,11 +94,15 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, computed } from 'vue';
+  import { defineComponent, ref, computed, inject, Ref } from 'vue';
+  import { useI18n } from 'vue-i18n';
   import Modal from '@main/Modal.vue';
   import { XrayBalancerObject, XrayBalancerStrategyObject } from '@/modules/CommonObjects';
   import xrayConfig from '@/modules/XrayConfig';
   import Hint from '@main/Hint.vue';
+  import { EngineResponseConfig } from '@/modules/Engine';
+  import { balancerNow } from '@/modules/LiveStatus';
+  import { describeViewShort } from '@/modules/BalancerStatus';
 
   export default defineComponent({
     name: 'BalancerModal',
@@ -109,6 +114,8 @@
       }
     },
     setup(props, { emit }) {
+      const { t } = useI18n();
+      const uiResponse = inject<Ref<EngineResponseConfig> | undefined>('uiResponse', undefined);
       const balancers = ref<XrayBalancerObject[]>(props.balancers);
       const currentBalancer = ref<XrayBalancerObject>(new XrayBalancerObject());
       const modalList = ref<InstanceType<typeof Modal> | null>(null);
@@ -130,6 +137,27 @@
         if (!prefixes.length) return [];
         return outboundTags.value.filter((tag) => prefixes.some((prefix) => tag.startsWith(prefix)));
       });
+
+      const nowText = (b: XrayBalancerObject) => {
+        if (!uiResponse?.value?.xray?.check_connection) return t('com.BalancerModal.now_needs_check');
+        const now = balancerNow(b);
+        switch (now.state) {
+          case 'no-data':
+            return t('com.BalancerModal.now_no_data');
+          case 'not-applied':
+            return t('com.BalancerModal.now_not_applied');
+          case 'unused':
+            return t('com.BalancerModal.now_unused');
+          default:
+            return describeViewShort(now.view, (key, args) => t(key, args));
+        }
+      };
+
+      const nowClass = (b: XrayBalancerObject) => {
+        if (!uiResponse?.value?.xray?.check_connection) return 'muted';
+        const now = balancerNow(b);
+        return now.state === 'view' ? now.view.kind : 'muted';
+      };
 
       const show = () => {
         balancers.value = [...props.balancers];
@@ -185,6 +213,8 @@
         outboundTags,
         matchingOutbounds,
         strategyOptions: XrayBalancerStrategyObject.typeOptions,
+        nowText,
+        nowClass,
         show,
         addBalancer,
         editBalancer,
@@ -194,3 +224,21 @@
     }
   });
 </script>
+<style scoped lang="scss">
+  .balancer-now {
+    white-space: nowrap;
+    cursor: help;
+    &.next,
+    &.fallback,
+    &.default {
+      color: $c_purple;
+    }
+    &.tied,
+    &.rotating {
+      color: rgba(176, 108, 255, 0.8);
+    }
+    &.muted {
+      opacity: 0.6;
+    }
+  }
+</style>

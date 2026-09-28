@@ -31,11 +31,18 @@
         :preventOnFilter="false"
       >
         <template #item="{ element: proxy, index }">
-          <tr v-show="!proxy.isSystem()" class="proxy-row">
+          <tr v-show="!proxy.isSystem()" :class="['proxy-row', rowClass(proxy.tag)]">
             <th class="drag-handle" aria-label="Drag to reorder">
               <span class="grip drag-handle" aria-hidden="true"></span>
               {{ proxy.surl ? '🔗' : '' }}<span v-if="proxy.subPool?.enabled && !proxy.surl" :class="{ 'pool-inactive': !fallbackActive }" :title="fallbackActive ? '' : $t('com.Outbounds.hint_pool_inactive')">🔄</span>
-              {{ proxy.tag == '' ? 'no tag' : proxy.tag! }}
+              <span class="proxy-tag">{{ proxy.tag == '' ? 'no tag' : proxy.tag! }}</span>
+              <span
+                v-for="item in balancerMarks[proxy.tag]?.items ?? []"
+                :key="item.balancer"
+                :class="['balancer-badge', badgeClass(proxy.tag, item)]"
+                :title="markTitle(proxy.tag, item)"
+                >&#9878; {{ item.balancer }}<template v-if="badgeLabel(item)"> · {{ badgeLabel(item) }}</template></span
+              >
               <span v-if="isRunning && check_connection && connectionStatus[proxy.tag]" class="connection-status" :title="statusTitle(proxy.tag)">
                 {{ connectionStatus[proxy.tag]?.alive ? '🟢' : connectionStatus[proxy.tag]?.alive === false ? '🔴' : '🟡' }}
               </span>
@@ -79,7 +86,7 @@
 
 <script lang="ts">
   import { defineComponent, ref, computed, nextTick, watch, onMounted, onUnmounted, inject, Ref } from 'vue';
-  import engine, { EngineResponseConfig, SubmitActions } from '@/modules/Engine';
+  import engine, { EngineResponseConfig } from '@/modules/Engine';
   import Modal from '@main/Modal.vue';
   import { xrayProtocols } from '@/modules/XrayConfig';
 
@@ -88,6 +95,8 @@
   import { XrayOutboundObject } from '@/modules/OutboundObjects';
   import { XrayProtocolMode } from '@/modules/Options';
   import { createPoller } from '@/modules/Polling';
+  import { liveStatus, refreshLiveStatus, clearLiveStatus, observationAge } from '@/modules/LiveStatus';
+  import { computeOutboundMarks, OutboundMark, OutboundMarkItem } from '@/modules/BalancerStatus';
 
   import FreedomOutbound from '@obd/FreedomOutbound.vue';
   import BlackholeOutbound from '@obd/BlackholeOutbound.vue';
@@ -155,16 +164,72 @@
       const fetchStatus = async () => {
         if (!check_connection.value) {
           connectionStatus.value = {};
+          clearLiveStatus();
           return;
         }
-        await engine.submit(SubmitActions.checkConnectionStatus, null, 2000);
-        const result = await engine.getConnectionStatus();
-        if (!result) return;
+        if (!(await refreshLiveStatus())) return;
         const map: Record<string, OutboundStatus> = {};
-        Object.values(result).forEach((entry: any) => {
+        Object.values(liveStatus.observatory).forEach((entry) => {
+          if (!entry?.outbound_tag) return;
           map[entry.outbound_tag] = { alive: entry.alive === true, delay: entry.delay, reason: entry.last_error_reason };
         });
         connectionStatus.value = map;
+      };
+
+      const balancerMarks = computed<Record<string, OutboundMark>>(() => {
+        if (!check_connection.value || !liveStatus.fresh || !liveStatus.running) return {};
+        return computeOutboundMarks(liveStatus.running, liveStatus.observatory);
+      });
+
+      const rowClass = (tag?: string) => {
+        const mark = tag ? balancerMarks.value[tag] : undefined;
+        return mark ? `bal-${mark.level}` : '';
+      };
+
+      const badgeClass = (tag: string, item: OutboundMarkItem) => (item.view.dead.includes(tag) ? 'dead' : item.view.kind);
+
+      const badgeLabel = (item: OutboundMarkItem) => {
+        switch (item.view.kind) {
+          case 'tied':
+            return t('com.Outbounds.badge_tied');
+          case 'rotating':
+            return t('com.Outbounds.badge_rotating');
+          case 'fallback':
+            return t('com.Outbounds.badge_fallback');
+          case 'default':
+            return t('com.Outbounds.badge_default');
+          default:
+            return '';
+        }
+      };
+
+      const markTitle = (tag: string, item: OutboundMarkItem) => {
+        const { view, balancer } = item;
+        const dead = view.dead.includes(tag);
+        const lines: string[] = [];
+        switch (view.kind) {
+          case 'next': {
+            let line = t('com.Outbounds.balancer_next', [balancer, view.delay]);
+            if (view.runnerUp) line += ' ' + t('com.Outbounds.balancer_runner_up', [view.runnerUp.tag, view.runnerUp.delay]);
+            lines.push(line);
+            break;
+          }
+          case 'tied':
+            lines.push(t('com.Outbounds.balancer_tied', [balancer, view.delay, view.tags.filter((x) => x !== tag).join(', ')]));
+            break;
+          case 'rotating':
+            lines.push(dead ? t('com.Outbounds.balancer_dead_share', [balancer]) : t('com.Outbounds.balancer_rotating', [balancer, view.tags.length]));
+            break;
+          case 'fallback':
+          case 'default':
+            lines.push(t(`com.Outbounds.balancer_${view.kind}`, [balancer]) + (dead ? ' ' + t('com.Outbounds.balancer_target_dead') : ''));
+            break;
+        }
+        lines.push(t('com.Outbounds.balancer_rules', [item.rules.join(', ')]));
+        lines.push(t('com.Outbounds.balancer_open_connections'));
+        const age = view.kind === 'next' || view.kind === 'tied' ? observationAge(tag) : undefined;
+        if (age !== undefined) lines.push(t('com.Outbounds.balancer_checked', [age]));
+        return lines.join('\n');
       };
 
       const fallbackActive = computed(() => !!uiResponse.value.xray?.subscription_auto_fallback && !!uiResponse.value.xray?.check_connection);
@@ -285,6 +350,7 @@
       });
       onUnmounted(() => {
         statusPoller.stop();
+        clearLiveStatus();
       });
 
       return {
@@ -300,6 +366,11 @@
         check_connection,
         fallbackActive,
         statusTitle,
+        balancerMarks,
+        rowClass,
+        badgeClass,
+        badgeLabel,
+        markTitle,
         showImportModal,
         show_transport,
         edit_proxy,
@@ -311,7 +382,7 @@
   });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
   .connection-status {
     float: right;
     margin: 0 4px 0 10px;
@@ -319,5 +390,44 @@
   .pool-inactive {
     opacity: 0.35;
     cursor: help;
+  }
+  .proxy-row {
+    &.bal-next th {
+      box-shadow: inset 3px 0 0 $c_purple;
+      .proxy-tag {
+        color: $c_purple;
+      }
+    }
+    &.bal-tied th {
+      box-shadow: inset 3px 0 0 rgba(176, 108, 255, 0.6);
+    }
+    &.bal-rotating th {
+      box-shadow: inset 3px 0 0 rgba(176, 108, 255, 0.35);
+    }
+  }
+  .balancer-badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 0 5px;
+    border-radius: 3px;
+    border: 1px solid rgba(176, 108, 255, 0.55);
+    font-size: 11px;
+    font-weight: normal;
+    line-height: 15px;
+    white-space: nowrap;
+    color: #fff;
+    background-color: rgba(176, 108, 255, 0.3);
+    cursor: help;
+    &.next,
+    &.fallback,
+    &.default {
+      border-color: $c_purple;
+      background-color: $c_purple;
+    }
+    &.dead {
+      border-color: $c_yellow;
+      background-color: transparent;
+      color: $c_yellow;
+    }
   }
 </style>

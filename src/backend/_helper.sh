@@ -670,7 +670,7 @@ xrayui_core_probe() {
     XRAYUI_CORE_ERR=""
     out=$(xray version 2>&1)
     rc=$?
-    XRAYUI_CORE_VER_CACHE=$(printf '%s\n' "$out" | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1)
+    XRAYUI_CORE_VER_CACHE=$(printf '%s\n' "$out" | grep -E '^Xray [0-9]+\.[0-9]+\.[0-9]+' | head -n 1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
     [ -n "$XRAYUI_CORE_VER_CACHE" ] && return 0
     XRAYUI_CORE_VER_CACHE="-"
     if [ "$rc" -eq 127 ]; then
@@ -678,6 +678,9 @@ xrayui_core_probe() {
         return 0
     fi
     XRAYUI_CORE_ERR=$(printf '%s\n' "$out" | sed '/^[[:space:]]*$/d' | head -n 1 | cut -c1-200 | tr -d '<')
+    case "$XRAYUI_CORE_ERR" in
+    *": line "[01]": syntax error"*) XRAYUI_CORE_ERR="exec format error: the binary is not built for this router's CPU" ;;
+    esac
     XRAYUI_CORE_ERR="${XRAYUI_CORE_ERR:-no version output, exit code $rc}"
 }
 

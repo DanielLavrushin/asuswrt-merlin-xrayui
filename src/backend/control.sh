@@ -100,7 +100,7 @@ start() {
     fi
 
     update_loading_progress "Starting $ADDON_TITLE..."
-    if [ "$clients_check" = "true" ] || [ "$check_connection" = "true" ]; then
+    if api_config_required; then
 
         api_apply_configuration
 

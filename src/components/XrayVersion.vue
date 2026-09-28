@@ -1,7 +1,7 @@
 <template>
   <span class="core-version" v-show="xray_version || core_error">
     X-RAY Core
-    <a href="#" :title="xray_version ? undefined : core_error" @click="show">{{ label }}</a>
+    <a href="#" :title="xray_version || core_error === 'not installed' ? undefined : core_error" @click="show">{{ label }}</a>
   </span>
   <xray-core-version-modal ref="modal" v-model:current-version="xray_version"></xray-core-version-modal>
 </template>

@@ -234,7 +234,18 @@
       "label_fallback_tag": "Fallback outbound",
       "hint_fallback_tag": "If all outbounds selected by this balancer are unavailable, traffic will be sent to this fallback outbound.<br/><strong>Note:</strong> Requires observatory or burstObservatory configuration.",
       "label_matching": "Matching outbounds",
-      "none": "(none)"
+      "none": "(none)",
+      "hint_now": "Where new connections of this balancer go right now, from the latest connection check. Connections that are already open stay where they are.",
+      "now_needs_check": "requires Check connection to xray server",
+      "now_no_data": "no live status",
+      "now_not_applied": "not applied yet",
+      "now_unused": "not used by any rule",
+      "now_tied": "tied: {0} · {1} ms",
+      "now_rotating": "rotating: {0} of {1}",
+      "now_rotating_dead": "rotating: {0} of {1}, {2} unreachable",
+      "now_fallback": "fallback: {0}",
+      "now_default": "first outbound: {0}",
+      "now_none": "no outbound"
     },
     "PolicyModal": {
       "modal_title2": "Policy List",
@@ -315,7 +326,22 @@
       "alert_delete_tag_in_rules_use": "This tag ({1}) is used in the routing rules ({0}). Please remove it from the rules before deleting the outbound.",
       "alert_delete_tag_in_balancer_use": "This tag ({1}) is used as a fallback in the balancers ({0}). Please remove it from the balancers before deleting the outbound.",
       "hint_pool_inactive": "Auto-fallback is turned off in General Options, so this outbound is not switched automatically.",
-      "status_unreachable": "Unreachable"
+      "status_unreachable": "Unreachable",
+      "badge_tied": "tied",
+      "badge_rotating": "rotating",
+      "badge_fallback": "fallback",
+      "badge_default": "default route",
+      "balancer_next": "Balancer {0} sends new connections here: {1} ms, the lowest delay among its outbounds.",
+      "balancer_runner_up": "Next best: {0}, {1} ms.",
+      "balancer_tied": "Balancer {0}: tied at {1} ms with {2}. New connections go to one of them until the next check.",
+      "balancer_rotating": "Balancer {0} spreads new connections across {1} outbounds, including this one.",
+      "balancer_dead_share": "Balancer {0} has no fallback outbound, so this unreachable outbound still gets a share of new connections.",
+      "balancer_fallback": "No outbound of balancer {0} is reachable, so new connections go to its fallback outbound.",
+      "balancer_default": "No outbound of balancer {0} is reachable and no fallback outbound is set, so new connections go to the first outbound in the list.",
+      "balancer_target_dead": "This outbound failed its last check too.",
+      "balancer_rules": "Rules: {0}.",
+      "balancer_open_connections": "Connections that are already open stay on the outbound they started with.",
+      "balancer_checked": "Checked {0} s ago."
     },
     "StreamSettingsModal": {
       "title": "Transport settings",

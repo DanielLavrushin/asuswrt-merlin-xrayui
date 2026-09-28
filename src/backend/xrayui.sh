@@ -39,7 +39,7 @@ version)
     show_version
     ;;
 install)
-    install
+    install || exit 1
     ;;
 uninstall)
     uninstall
@@ -182,9 +182,13 @@ service_event)
         test_xray_config true
         ;;
     update)
-        update
-        initial_response
-        update_loading_progress "Update process completed!" 100
+        if update; then
+            initial_response
+            update_loading_progress "Update process completed!" 100
+        else
+            initial_response
+            update_loading_progress "Error: the update finished with errors. The details are in the system log." 100
+        fi
         exit 0
         ;;
     geodata)
@@ -304,17 +308,21 @@ service_event)
             fi
             ;;
         xrayversionswitch)
-            if switch_xray_version; then
+            switch_xray_version
+            case $? in
+            0)
                 initial_response
-                if [ -f "$XRAY_PIDFILE" ]; then
-                    update_loading_progress "Restarting Xray service..."
-                    restart
-                fi
                 update_loading_progress "Switched Xray version successfully!" 100
-            else
+                ;;
+            2)
+                initial_response
+                update_loading_progress "Error: the new Xray version was installed, but Xray did not start with the current configuration. The details are in the system log." 100
+                ;;
+            *)
                 initial_response
                 update_loading_progress "Error: failed to switch the Xray version. The details are in the system log." 100
-            fi
+                ;;
+            esac
             ;;
         changeprofile)
             change_config_profile

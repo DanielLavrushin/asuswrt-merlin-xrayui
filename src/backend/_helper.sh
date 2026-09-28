@@ -671,7 +671,7 @@ jq_update_file() {
 
 xrayui_core_probe() {
     [ -n "$XRAYUI_CORE_VER_CACHE" ] && return 0
-    local out rc
+    local out rc bin
     XRAYUI_CORE_ERR=""
     out=$(xray version 2>&1)
     rc=$?
@@ -679,7 +679,12 @@ xrayui_core_probe() {
     [ -n "$XRAYUI_CORE_VER_CACHE" ] && return 0
     XRAYUI_CORE_VER_CACHE="-"
     if [ "$rc" -eq 127 ]; then
-        XRAYUI_CORE_ERR="not installed"
+        bin=$(which xray 2>/dev/null)
+        if [ -z "$bin" ]; then
+            XRAYUI_CORE_ERR="not installed"
+        else
+            XRAYUI_CORE_ERR="$bin cannot be executed (missing loader or interpreter)"
+        fi
         return 0
     fi
     XRAYUI_CORE_ERR=$(printf '%s\n' "$out" | sed '/^[[:space:]]*$/d' | head -n 1 | cut -c1-200 | tr -d '<')

@@ -139,6 +139,7 @@ interface Result {
 const scenarios: Record<string, Scenario> = {
   'broken core': { steps: ['respond'], env: { RS_XRAY_BROKEN: 'exec format error <%' }, files: { 'opt/etc/xray/config.json': '{}' } },
   'missing core': { steps: ['respond'], env: { RS_XRAY_MISSING: '1' }, files: { 'opt/etc/xray/config.json': '{}' } },
+  'core that cannot be loaded': { steps: ['respond'], env: { RS_XRAY_UNLOADABLE: '1' }, files: { 'opt/etc/xray/config.json': '{}' } },
   'core for another cpu': {
     steps: ['respond'],
     env: { RS_XRAY_BROKEN: '/opt/sbin/xray: line 1: syntax error: unexpected word (expecting ")")' },
@@ -506,6 +507,12 @@ describe.each(SHELLS)('response backend under %s', (_label, shell) => {
       expect(r.events).toContain('initial_response rc=0');
       expect(r.response.xray?.core_version).toBe('');
       expect(r.response.xray?.core_error).toBe('not installed');
+    });
+
+    it('does not call a present core that cannot be loaded missing', async () => {
+      const r = await get('core that cannot be loaded');
+      expect(r.response.xray?.core_version).toBe('');
+      expect(r.response.xray?.core_error).toBe('/opt/sbin/xray cannot be executed (missing loader or interpreter)');
     });
 
     it('explains a core built for another CPU instead of showing the shell syntax error', async () => {

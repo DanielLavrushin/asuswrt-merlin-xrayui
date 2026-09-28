@@ -58,7 +58,7 @@ update_loading_progress() { ev "PROGRESS: $1|$2"; }
 load_xrayui_config() { :; }
 get_proc_uptime() { echo 0; }
 xray() {
-    if [ -n "${RS_XRAY_MISSING:-}" ]; then
+    if [ -n "${RS_XRAY_MISSING:-}" ] || [ -n "${RS_XRAY_UNLOADABLE:-}" ]; then
         echo "sh: xray: not found" >&2
         return 127
     fi
@@ -67,6 +67,14 @@ xray() {
         return 2
     fi
     echo "Xray ${RS_XRAY_VERSION:-26.3.27} (Xray, Penetrates Everything.) 0000000 (go1.26.0 linux/arm64)"
+}
+which() {
+    if [ "$1" = "xray" ]; then
+        [ -n "${RS_XRAY_UNLOADABLE:-}" ] || return 1
+        echo "/opt/sbin/xray"
+        return 0
+    fi
+    command which "$@"
 }
 am_settings_get() { grep "^$1 " "$RS_STATE/jffs/addons/custom_settings.txt" 2>/dev/null | cut -f2- -d' '; }
 update_xrayui_config() { ev "SET: $1=$2"; }

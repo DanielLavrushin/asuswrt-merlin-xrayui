@@ -124,15 +124,29 @@ get_proc() {
     echo $(/bin/pidof "$proc_name" 2>/dev/null | awk '{print $NF}')
 }
 
-is_xray_daemon_pid() {
-    local cmdline
-    [ -n "$1" ] || return 1
-    [ -r "/proc/$1/cmdline" ] || return 1
-    cmdline=$(tr '\0' ' ' <"/proc/$1/cmdline" 2>/dev/null)
-    case "$cmdline" in
-    *xray*" -c "*) return 0 ;;
+is_xray_daemon_cmdline() {
+    local args
+    case "${1%% *}" in
+    xray | */xray) ;;
+    *) return 1 ;;
+    esac
+    case "$1" in
+    *" "*) args="${1#* }" ;;
+    *) args="" ;;
+    esac
+    case " $args " in
+    *" -test "* | *" --test "* | *" -test="* | *" --test="* | *" -dump "* | *" --dump "* | *" -dump="* | *" --dump="* | *" -version "* | *" --version "* | *" -h "* | *" -help "* | *" --help "*) return 1 ;;
+    esac
+    case "${args%% *}" in
+    "" | run | -*) return 0 ;;
     esac
     return 1
+}
+
+is_xray_daemon_pid() {
+    [ -n "$1" ] || return 1
+    [ -r "/proc/$1/cmdline" ] || return 1
+    is_xray_daemon_cmdline "$(tr '\0' ' ' <"/proc/$1/cmdline" 2>/dev/null)"
 }
 
 get_xray_daemon_pids() {

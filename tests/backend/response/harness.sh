@@ -268,6 +268,89 @@ switch_dispatch() {
     ev "dispatch rc=$?"
 }
 
+daemon_ids() {
+    while IFS= read -r line; do
+        if is_xray_daemon_cmdline "$line"; then
+            ev "daemon: $line"
+        else
+            ev "helper: $line"
+        fi
+    done <"$RS_STATE/cmdlines"
+}
+
+stop_xray() {
+    rewrite "${RS_CONTROL_SCRIPT:-$REPO_DIR/src/backend/control.sh}" control
+    (
+        . "$RS_STATE/control.$$.sh"
+        get_xray_daemon_pids() { cat "$RS_STATE/procs" 2>/dev/null; }
+        get_xray_daemon_pid() { get_xray_daemon_pids | head -n 1 | grep .; }
+        kill_xray_daemon() {
+            ev "kill $1 pidfile=$([ -f "$XRAY_PIDFILE" ] && echo present || echo gone)"
+            case "$1:${RS_STOP_ON:-TERM}" in
+            -TERM:TERM | -9:TERM | -9:KILL) : >"$RS_STATE/procs" ;;
+            esac
+        }
+        sleep() { :; }
+        cleanup_firewall() { ev "cleanup_firewall"; }
+        cleanup_stale_asdfiles() { :; }
+        stop
+        ev "stop rc=$?"
+        ev "pidfile $([ -f "$XRAY_PIDFILE" ] && echo present || echo gone)"
+    )
+}
+
+stop_dispatch() {
+    stop() {
+        ev "stop"
+        return "${RS_STOP_RC:-0}"
+    }
+    (
+        set -- service_event serverstatus stop
+        . "$RS_STATE/xrayui.$$.sh"
+    )
+    ev "dispatch rc=$?"
+}
+
+apply_outbound() {
+    get_xray_daemon_pid() { [ -f "$XRAY_PIDFILE" ] && [ ! -f "$RS_STATE/crashed" ] && echo 4242; }
+    api_swap_outbound() {
+        ev "swap $1"
+        case "${RS_SWAP:-ok}" in
+        ok) return 0 ;;
+        stopped) rm -f "$XRAY_PIDFILE" ;;
+        esac
+        return 1
+    }
+    case "${RS_RESTART:-}" in
+    stopped) restart() {
+        ev "restart"
+        rm -f "$XRAY_PIDFILE"
+    } ;;
+    crashed) restart() {
+        ev "restart"
+        : >"$RS_STATE/crashed"
+    } ;;
+    esac
+    failover_apply_outbound p '{"tag":"p","protocol":"vless","subPool":{"enabled":true,"active":"new"}}' "$(failover_read_outbound p)"
+    ev "apply rc=$?"
+    ev "active $(jq -r '.outbounds[0].subPool.active' "$XRAY_CONFIG_FILE")"
+}
+
+switch_next() {
+    get_xray_daemon_pid() { [ -f "$XRAY_PIDFILE" ] && echo 4242; }
+    api_swap_outbound() {
+        ev "swap $1"
+        return 0
+    }
+    failover_validate_outbound() { return 0; }
+    failover_tcp_precheck() { return 0; }
+    FAILOVER_STATE='{"p":{"consecutive_failures":3,"verified":true}}'
+    failover_switch_next p
+    ev "switch rc=$?"
+    ev "state $(failover_state_jq -c '.p | {failed: ((.failed // {}) | keys), verified, consecutive_failures, switches: ((.switch_times // []) | length)}')"
+    ev "active $(jq -r '.outbounds[0].subPool.active' "$XRAY_CONFIG_FILE")"
+}
+
 for step do
     $step
 done

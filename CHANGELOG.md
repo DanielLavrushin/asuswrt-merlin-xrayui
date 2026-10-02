@@ -1,5 +1,11 @@
 # XRAYUI Changelog
 
+## [0.70.3] - 2026-10-02
+
+- FIXED: **Stop** could leave a second copy of Xray running, such as one started at boot by an old Entware Xray package, so the page still showed Xray as running. Such copies are now stopped too, and **Stop** shows an error when Xray keeps running.
+- FIXED: A stopped Xray could start again by itself when a subscription update or auto-fallback changed a server in the **Auto-fallback pool**. The new server is now used on the next start instead.
+- FIXED: With **Check clients online status** turned on, the page could show a stopped Xray as running.
+
 ## [0.70.2] - 2026-09-28
 
 - ADDED: The **Outbounds** list marks in purple the outbound a balancer sends new connections to, and the balancer list and routing rules show it too. For **random** and **roundRobin** balancers, which spread connections, every outbound taking part is marked. Requires **Check connection to xray server**.

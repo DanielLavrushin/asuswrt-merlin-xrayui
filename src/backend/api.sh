@@ -130,13 +130,17 @@ api_get_connected_clients() {
 
   : >"$out_json"
 
-  # pull user counters and *reset* them
+  if [ -z "$api_addr" ] || [ -z "$(get_xray_daemon_pid)" ]; then
+    echo "[]" >"$out_json"
+    return
+  fi
+
   if ! xray api statsquery \
     -s "$api_addr" \
     -pattern 'user>>>' \
     -reset >"$stats_json" 2>/dev/null; then
     log_error "StatsService unreachable on $api_addr"
-    echo "[]"
+    echo "[]" >"$out_json"
     return
   fi
 

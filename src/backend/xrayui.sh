@@ -377,8 +377,11 @@ service_event)
             ;;
         stop)
             update_loading_progress "Stopping Xray service..." 0
-            stop
-            update_loading_progress "Xray service stopped successfully." 100
+            if stop; then
+                update_loading_progress "Xray service stopped successfully." 100
+            else
+                update_loading_progress "Error: Xray is still running. The details are in the system log." 100
+            fi
             ;;
         *)
             exit 1

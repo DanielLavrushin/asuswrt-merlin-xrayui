@@ -523,12 +523,12 @@ describe('TransportObjects', () => {
       expect(download.normalize()).toBe(download);
     });
 
-    it('clears port when falsy', () => {
+    it('defaults port to 443 when falsy', () => {
       const download = new XrayDownloadSettingsObject();
       download.address = 'example.com';
       download.port = 0;
       download.normalize();
-      expect(download.port).toBeUndefined();
+      expect(download.port).toBe(443);
     });
 
     it('retains port when set', () => {

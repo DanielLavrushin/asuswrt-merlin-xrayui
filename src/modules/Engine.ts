@@ -72,7 +72,8 @@ import {
   maskFromCoreForm,
   extractKcpMaskingForUi,
   migrateSplitHttpToXhttp,
-  canonicalizeXhttpHeaders
+  canonicalizeXhttpHeaders,
+  canonicalizeXhttpPadding
 } from './TransportObjects';
 import { XrayProtocol } from './Options';
 import * as DnsLeakProtection from './DnsLeakProtection';
@@ -957,6 +958,7 @@ function transformStreamSettings(streamSettings: XrayStreamSettingsObject | unde
 
   migrateSplitHttpToXhttp(settings);
   canonicalizeXhttpHeaders(settings);
+  canonicalizeXhttpPadding(settings);
   extractKcpMaskingForUi(settings);
 
   return settings;

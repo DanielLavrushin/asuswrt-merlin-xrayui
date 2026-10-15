@@ -93,6 +93,9 @@ export class XrayStreamWsSettingsObject implements ITransportNetwork {
   };
 }
 
+// These UI fields live on xhttpSettings, but core reads them from extra whenever it exists.
+const xhttpPaddingFields = ['xPaddingObfsMode', 'xPaddingKey', 'xPaddingHeader', 'xPaddingPlacement', 'xPaddingMethod'] as const;
+
 export class XrayStreamHttpSettingsObject implements ITransportNetwork {
   static modes = ['auto', 'stream-up', 'stream-one'];
   public host?: string;
@@ -176,18 +179,18 @@ export class XrayStreamHttpSettingsObject implements ITransportNetwork {
     this.headers = isObjectEmpty(this.headers) ? undefined : this.headers;
     this.extra = plainToInstance(XrayXhttpExtraObject, this.extra ?? {});
 
-    // `extra.headers` is DERIVED from the top-level value, never a source of truth. Clear it
-    // BEFORE the emptiness check below, so that a copy left by a previous save can neither
-    // resurrect headers the user has just removed, nor keep `extra` alive on its own.
+    // Header and padding mirrors are derived from the editor fields. Clear stale copies before
+    // checking emptiness so a previous save cannot resurrect removed values or keep extra alive.
     this.extra.headers = undefined;
+    for (const field of xhttpPaddingFields) delete this.extra[field];
     this.extra = this.extra.normalize();
 
     // If `extra` survived, it REPLACES this whole object inside xray-core, which carries over only
-    // host/path/mode (infra/conf/transport_method.go:308-317). Rebuild the mirror so headers are
-    // not lost. When `extra` normalizes away there is nothing to replace us, and the top-level
-    // `headers` applies as written.
-    if (this.extra && this.headers) {
-      this.extra.headers = this.headers as Record<string, string>;
+    // host/path/mode (v26.6.22, infra/conf/transport_internet.go:262-272). Mirror padding as well
+    // as headers; otherwise enabling a split download silently disables upload obfuscation.
+    if (this.extra) {
+      if (this.headers) this.extra.headers = this.headers as Record<string, string>;
+      Object.assign(this.extra, Object.fromEntries(xhttpPaddingFields.map((field) => [field, this[field]])));
     }
 
     return isObjectEmpty(this) ? undefined : this;
@@ -196,7 +199,7 @@ export class XrayStreamHttpSettingsObject implements ITransportNetwork {
 
 export class XrayDownloadSettingsObject {
   public address?: string;
-  public port?: number;
+  public port? = 443;
   public network = 'xhttp'; // must be "xhttp"
   public security?: string; // 'tls' | 'reality'
   public tlsSettings?: XrayStreamTlsSettingsObject;
@@ -209,7 +212,8 @@ export class XrayDownloadSettingsObject {
       return undefined;
     }
 
-    this.port = !this.port ? undefined : this.port;
+    // A placeholder does not set a value, and core does not infer the HTTPS port here.
+    this.port = this.port || 443;
 
     if (this.security === 'tls') {
       this.tlsSettings = plainToInstance(XrayStreamTlsSettingsObject, this.tlsSettings ?? {});
@@ -234,6 +238,16 @@ export class XrayDownloadSettingsObject {
   };
 }
 
+/** Seed a new split download without overwriting independently configured/imported values. */
+export function createXhttpDownloadSettings(upload: XrayStreamHttpSettingsObject): XrayDownloadSettingsObject {
+  const download = new XrayDownloadSettingsObject();
+  download.xhttpSettings = new XrayStreamHttpSettingsObject();
+  download.xhttpSettings.path = upload.path;
+  Object.assign(download.xhttpSettings, Object.fromEntries(xhttpPaddingFields.map((field) => [field, upload[field]])));
+  download.xhttpSettings.extra!.xPaddingBytes = upload.extra?.xPaddingBytes ?? upload.xPaddingBytes;
+  return download;
+}
+
 export class XrayXhttpExtraObject {
   // Mirrored from the parent XrayStreamHttpSettingsObject during normalize(). Xray-core parses
   // `extra` as a full SplitHTTPConfig that REPLACES the outer object, carrying over only host,
@@ -241,6 +255,11 @@ export class XrayXhttpExtraObject {
   // without this mirror any custom header is silently dropped as soon as `extra` is emitted.
   // Not defaulted, so it never causes an otherwise-empty `extra` to materialize.
   headers?: Record<string, string>;
+  xPaddingObfsMode?: boolean;
+  xPaddingKey?: string;
+  xPaddingHeader?: string;
+  xPaddingPlacement?: string;
+  xPaddingMethod?: string;
   xPaddingBytes? = '100-1000';
   noGRPCHeader? = false;
   noSSEHeader? = false;
@@ -326,6 +345,20 @@ export function canonicalizeXhttpHeaders(stream: { xhttpSettings?: XrayStreamHtt
 
   if (isObjectEmpty(xhttp.headers)) xhttp.headers = extra.headers;
   extra.headers = undefined;
+}
+
+/** Restore extra-only subscription padding into the fields exposed by the editor. */
+export function canonicalizeXhttpPadding(stream: { xhttpSettings?: XrayStreamHttpSettingsObject }): void {
+  const xhttp = stream.xhttpSettings;
+  if (!xhttp?.extra) return;
+  // extra wins in core, including an explicit false. Do not let constructor defaults hide it.
+  for (const field of xhttpPaddingFields) {
+    if (xhttp.extra[field] !== undefined) {
+      Object.assign(xhttp, { [field]: xhttp.extra[field] });
+      delete xhttp.extra[field];
+    }
+  }
+  if (xhttp.extra.downloadSettings) canonicalizeXhttpPadding(xhttp.extra.downloadSettings);
 }
 
 /**

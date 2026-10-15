@@ -52,57 +52,7 @@
         </span>
         <modal ref="antiDetectionModal" :title="$t('com.Xhttp.modal_anti_detection')" width="800">
           <table width="100%" class="FormTable modal-form-table">
-            <tbody>
-              <tr>
-                <th>
-                  {{ $t('com.Xhttp.label_xPaddingObfsMode') }}
-                  <hint v-html="$t('com.Xhttp.hint_xPaddingObfsMode')"></hint>
-                </th>
-                <td><input type="checkbox" v-model="transport.xhttpSettings.xPaddingObfsMode" /></td>
-              </tr>
-              <tr v-if="transport.xhttpSettings.xPaddingObfsMode">
-                <th>
-                  {{ $t('com.Xhttp.label_xPaddingPlacement') }}
-                  <hint v-html="$t('com.Xhttp.hint_xPaddingPlacement')"></hint>
-                </th>
-                <td>
-                  <select class="input_option" v-model="transport.xhttpSettings.xPaddingPlacement">
-                    <option v-for="opt in paddingPlacements" :key="opt" :value="opt">{{ opt }}</option>
-                  </select>
-                  <span class="hint-color">default: queryInHeader</span>
-                </td>
-              </tr>
-              <tr v-if="transport.xhttpSettings.xPaddingObfsMode">
-                <th>
-                  {{ $t('com.Xhttp.label_xPaddingMethod') }}
-                  <hint v-html="$t('com.Xhttp.hint_xPaddingMethod')"></hint>
-                </th>
-                <td>
-                  <select class="input_option" v-model="transport.xhttpSettings.xPaddingMethod">
-                    <option v-for="opt in paddingMethods" :key="opt" :value="opt">{{ opt }}</option>
-                  </select>
-                  <span class="hint-color">default: repeat-x</span>
-                </td>
-              </tr>
-              <tr v-if="transport.xhttpSettings.xPaddingObfsMode">
-                <th>
-                  {{ $t('com.Xhttp.label_xPaddingKey') }}
-                  <hint v-html="$t('com.Xhttp.hint_xPaddingKey')"></hint>
-                </th>
-                <td>
-                  <input type="text" placeholder="x_padding" class="input_20_table" v-model="transport.xhttpSettings.xPaddingKey" />
-                </td>
-              </tr>
-              <tr v-if="transport.xhttpSettings.xPaddingObfsMode">
-                <th>
-                  {{ $t('com.Xhttp.label_xPaddingHeader') }}
-                  <hint v-html="$t('com.Xhttp.hint_xPaddingHeader')"></hint>
-                </th>
-                <td>
-                  <input type="text" placeholder="X-Padding" class="input_20_table" v-model="transport.xhttpSettings.xPaddingHeader" />
-                </td>
-              </tr>
-            </tbody>
+            <xhttp-padding :settings="transport.xhttpSettings" />
             <tbody>
               <tr>
                 <th>
@@ -317,7 +267,8 @@
   import Modal from '@main/Modal.vue';
   import Hint from '@main/Hint.vue';
   import DownloadSettings from './DownloadSettings.vue';
-  import { XrayStreamHttpSettingsObject, XrayXhttpExtraObject, XrayDownloadSettingsObject } from '@/modules/TransportObjects';
+  import XhttpPadding from './XhttpPadding.vue';
+  import { XrayStreamHttpSettingsObject, XrayXhttpExtraObject, createXhttpDownloadSettings } from '@/modules/TransportObjects';
 
   export default defineComponent({
     name: 'Http',
@@ -325,7 +276,8 @@
       HeadersMapping,
       Modal,
       Hint,
-      DownloadSettings
+      DownloadSettings,
+      XhttpPadding
     },
     props: {
       transport: XrayStreamSettingsObject,
@@ -347,7 +299,7 @@
       const manage_download_settings = () => {
         // Initialize downloadSettings if it doesn't exist
         if (!extra.value.downloadSettings) {
-          extra.value.downloadSettings = new XrayDownloadSettingsObject();
+          extra.value.downloadSettings = createXhttpDownloadSettings(transport.value.xhttpSettings!);
         }
         downloadSettingsModal.value.show();
       };
@@ -356,8 +308,6 @@
         transport,
         modes: XrayStreamHttpSettingsObject.modes,
         methods: XrayOptions.httpMethods,
-        paddingPlacements: XrayOptions.xhttpPaddingPlacements,
-        paddingMethods: XrayOptions.xhttpPaddingMethods,
         sessionPlacements: XrayOptions.xhttpSessionPlacements,
         uplinkDataPlacements: XrayOptions.xhttpUplinkDataPlacements,
         uplinkMethods: ['POST', 'PUT', 'PATCH', 'GET', 'HEAD'],

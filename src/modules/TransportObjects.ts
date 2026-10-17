@@ -97,7 +97,7 @@ export class XrayStreamWsSettingsObject implements ITransportNetwork {
 const xhttpPaddingFields = ['xPaddingObfsMode', 'xPaddingKey', 'xPaddingHeader', 'xPaddingPlacement', 'xPaddingMethod'] as const;
 
 export class XrayStreamHttpSettingsObject implements ITransportNetwork {
-  static modes = ['auto', 'stream-up', 'stream-one'];
+  static modes = ['auto', 'packet-up', 'stream-up', 'stream-one'];
   public host?: string;
   public path? = '/';
   public mode? = 'auto';

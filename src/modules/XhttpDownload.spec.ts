@@ -24,7 +24,7 @@ const hydrate = (xhttpSettings: Record<string, unknown>) => engine.hydrateConfig
 
 describe('split XHTTP padding', () => {
   it('sends the configured padding on both legs, including non-default byte ranges', () => {
-    const http = plainToInstance(XrayStreamHttpSettingsObject, {
+    const http = XrayStreamHttpSettingsObject.fromPlain({
       path: '/split/', mode: 'stream-up', ...padding, extra: { xPaddingBytes: '200-400' }
     });
     const download = createXhttpDownloadSettings(http);
@@ -42,31 +42,31 @@ describe('split XHTTP padding', () => {
 
   it('keeps obfuscation enabled with every padding sub-field at its default', () => {
     const http = new XrayStreamHttpSettingsObject();
-    http.xPaddingObfsMode = true;
+    http.extra!.xPaddingObfsMode = true;
     http.extra!.downloadSettings = createXhttpDownloadSettings(http);
     http.extra!.downloadSettings.address = 'down.example.com';
 
     const saved = serialize(http);
     expect(effective(saved).xPaddingObfsMode).toBe(true);
     expect(effective(saved.extra.downloadSettings.xhttpSettings).xPaddingObfsMode).toBe(true);
-    expect(saved.extra.downloadSettings.xhttpSettings.extra).toBeUndefined();
+    expect(saved.extra.downloadSettings.xhttpSettings.extra).toEqual({ xPaddingObfsMode: true });
   });
 
   it('uses an independent copy that remains editable after upload settings change', () => {
-    const http = plainToInstance(XrayStreamHttpSettingsObject, { path: '/up/', ...padding });
+    const http = XrayStreamHttpSettingsObject.fromPlain({ path: '/up/', ...padding });
     const download = createXhttpDownloadSettings(http);
     http.path = '/changed/';
-    http.xPaddingKey = 'new-upload-key';
+    http.extra!.xPaddingKey = 'new-upload-key';
     download.address = 'down.example.com';
     download.port = 8443;
     download.xhttpSettings!.path = '/cdn-rewrite/';
-    download.xhttpSettings!.xPaddingKey = 'download-key';
+    download.xhttpSettings!.extra!.xPaddingKey = 'download-key';
     http.extra!.downloadSettings = download;
 
     const saved = serialize(http).extra.downloadSettings;
     expect(saved.port).toBe(8443);
-    expect(saved.xhttpSettings).toMatchObject({ path: '/cdn-rewrite/', xPaddingKey: 'download-key' });
-    expect(http.xPaddingKey).toBe('new-upload-key');
+    expect(saved.xhttpSettings).toMatchObject({ path: '/cdn-rewrite/', extra: { xPaddingKey: 'download-key' } });
+    expect(http.extra!.xPaddingKey).toBe('new-upload-key');
   });
 
   it('hydrates extra-only subscription padding for upload and download and preserves it on save', () => {
@@ -77,8 +77,8 @@ describe('split XHTTP padding', () => {
       } }
     });
     const http = config.outbounds![0].streamSettings!.xhttpSettings!;
-    expect(http).toMatchObject(padding);
-    expect(http.extra!.downloadSettings!.xhttpSettings).toMatchObject({ ...padding, xPaddingKey: 'download' });
+    expect(http.extra).toMatchObject(padding);
+    expect(http.extra!.downloadSettings!.xhttpSettings!.extra).toMatchObject({ ...padding, xPaddingKey: 'download' });
 
     const saved = serialize(http);
     expect(effective(saved)).toMatchObject(padding);
@@ -89,9 +89,9 @@ describe('split XHTTP padding', () => {
   });
 
   it('does not resurrect obfuscation when it is disabled after a save', () => {
-    const http = plainToInstance(XrayStreamHttpSettingsObject, { ...padding, extra: { scMaxBufferedPosts: 99 } });
+    const http = XrayStreamHttpSettingsObject.fromPlain({ ...padding, extra: { scMaxBufferedPosts: 99 } });
     serialize(http);
-    http.xPaddingObfsMode = false;
+    http.extra!.xPaddingObfsMode = false;
     const saved = serialize(http);
     expect(effective(saved).xPaddingObfsMode).toBeUndefined();
     expect(effective(saved).xPaddingKey).toBeUndefined();
@@ -101,7 +101,7 @@ describe('split XHTTP padding', () => {
   it('honors an explicit false inside imported extra over an outer true', () => {
     const http = hydrate({ xPaddingObfsMode: true, extra: { xPaddingObfsMode: false, scMaxBufferedPosts: 99 } })
       .outbounds![0].streamSettings!.xhttpSettings!;
-    expect(http.xPaddingObfsMode).toBe(false);
+    expect(http.extra!.xPaddingObfsMode).toBe(false);
     expect(effective(serialize(http)).xPaddingObfsMode).toBeUndefined();
   });
 

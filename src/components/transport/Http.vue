@@ -29,7 +29,7 @@
         <input type="text" placeholder="100-1000" class="input_20_table" v-model="extra.xPaddingBytes" />
       </td>
     </tr>
-    <headers-mapping v-if="transport.xhttpSettings" :headersMap="transport.xhttpSettings.headers" @on:header:update="onheaderapupdate" />
+    <headers-mapping v-if="transport.xhttpSettings" :headersMap="extra.headers" @on:header:update="onheaderapupdate" />
     <tr class="unlocked">
       <th>Disable gRPC disguise</th>
       <td><input type="checkbox" v-model="extra.noGRPCHeader" /></td>
@@ -52,7 +52,7 @@
         </span>
         <modal ref="antiDetectionModal" :title="$t('com.Xhttp.modal_anti_detection')" width="800">
           <table width="100%" class="FormTable modal-form-table">
-            <xhttp-padding :settings="transport.xhttpSettings" />
+            <xhttp-padding :settings="extra" />
             <tbody>
               <tr>
                 <th>
@@ -60,7 +60,7 @@
                   <hint v-html="$t('com.Xhttp.hint_uplinkHTTPMethod')"></hint>
                 </th>
                 <td>
-                  <select class="input_option" v-model="transport.xhttpSettings.uplinkHTTPMethod">
+                  <select class="input_option" v-model="extra.uplinkHTTPMethod">
                     <option v-for="opt in uplinkMethods" :key="opt" :value="opt">{{ opt }}</option>
                   </select>
                   <span class="hint-color">default: POST</span>
@@ -74,19 +74,19 @@
                   <hint v-html="$t('com.Xhttp.hint_sessionPlacement')"></hint>
                 </th>
                 <td>
-                  <select class="input_option" v-model="transport.xhttpSettings.sessionPlacement">
+                  <select class="input_option" v-model="extra.sessionIDPlacement">
                     <option v-for="opt in sessionPlacements" :key="opt" :value="opt">{{ opt }}</option>
                   </select>
                   <span class="hint-color">default: path</span>
                 </td>
               </tr>
-              <tr v-if="transport.xhttpSettings.sessionPlacement && transport.xhttpSettings.sessionPlacement !== 'path'">
+              <tr v-if="extra.sessionIDPlacement && extra.sessionIDPlacement !== 'path'">
                 <th>
                   {{ $t('com.Xhttp.label_sessionKey') }}
                   <hint v-html="$t('com.Xhttp.hint_sessionKey')"></hint>
                 </th>
                 <td>
-                  <input type="text" class="input_20_table" v-model="transport.xhttpSettings.sessionKey" placeholder="auto" />
+                  <input type="text" class="input_20_table" v-model="extra.sessionIDKey" placeholder="auto" />
                 </td>
               </tr>
               <tr>
@@ -95,19 +95,19 @@
                   <hint v-html="$t('com.Xhttp.hint_seqPlacement')"></hint>
                 </th>
                 <td>
-                  <select class="input_option" v-model="transport.xhttpSettings.seqPlacement">
+                  <select class="input_option" v-model="extra.seqPlacement">
                     <option v-for="opt in sessionPlacements" :key="opt" :value="opt">{{ opt }}</option>
                   </select>
                   <span class="hint-color">default: path</span>
                 </td>
               </tr>
-              <tr v-if="transport.xhttpSettings.seqPlacement && transport.xhttpSettings.seqPlacement !== 'path'">
+              <tr v-if="extra.seqPlacement && extra.seqPlacement !== 'path'">
                 <th>
                   {{ $t('com.Xhttp.label_seqKey') }}
                   <hint v-html="$t('com.Xhttp.hint_seqKey')"></hint>
                 </th>
                 <td>
-                  <input type="text" class="input_20_table" v-model="transport.xhttpSettings.seqKey" placeholder="auto" />
+                  <input type="text" class="input_20_table" v-model="extra.seqKey" placeholder="auto" />
                 </td>
               </tr>
             </tbody>
@@ -130,13 +130,13 @@
               <tr>
                 <th>Max POST size (bytes)</th>
                 <td>
-                  <input type="number" min="1" class="input_20_table" v-model.number="extra.scMaxEachPostBytes" />
+                  <input type="text" class="input_20_table" v-model="extra.scMaxEachPostBytes" />
                 </td>
               </tr>
               <tr>
                 <th>Min interval between POSTs (ms)</th>
                 <td>
-                  <input type="number" min="0" class="input_20_table" v-model.number="extra.scMinPostsIntervalMs" />
+                  <input type="text" class="input_20_table" v-model="extra.scMinPostsIntervalMs" />
                 </td>
               </tr>
               <tr>
@@ -159,28 +159,28 @@
                   <hint v-html="$t('com.Xhttp.hint_uplinkDataPlacement')"></hint>
                 </th>
                 <td>
-                  <select class="input_option" v-model="transport.xhttpSettings.uplinkDataPlacement">
+                  <select class="input_option" v-model="extra.uplinkDataPlacement">
                     <option v-for="opt in uplinkDataPlacements" :key="opt" :value="opt">{{ opt }}</option>
                   </select>
-                  <span class="hint-color">default: body</span>
+                  <span class="hint-color">default: auto</span>
                 </td>
               </tr>
-              <tr v-if="transport.xhttpSettings.uplinkDataPlacement && transport.xhttpSettings.uplinkDataPlacement !== 'body'">
+              <tr v-if="extra.uplinkDataPlacement && extra.uplinkDataPlacement !== 'body'">
                 <th>
                   {{ $t('com.Xhttp.label_uplinkDataKey') }}
                   <hint v-html="$t('com.Xhttp.hint_uplinkDataKey')"></hint>
                 </th>
                 <td>
-                  <input type="text" class="input_20_table" v-model="transport.xhttpSettings.uplinkDataKey" placeholder="auto" />
+                  <input type="text" class="input_20_table" v-model="extra.uplinkDataKey" placeholder="auto" />
                 </td>
               </tr>
-              <tr v-if="transport.xhttpSettings.uplinkDataPlacement && transport.xhttpSettings.uplinkDataPlacement !== 'body'">
+              <tr v-if="extra.uplinkDataPlacement && extra.uplinkDataPlacement !== 'body'">
                 <th>
                   {{ $t('com.Xhttp.label_uplinkChunkSize') }}
                   <hint v-html="$t('com.Xhttp.hint_uplinkChunkSize')"></hint>
                 </th>
                 <td>
-                  <input type="number" min="64" class="input_20_table" v-model.number="transport.xhttpSettings.uplinkChunkSize" placeholder="auto" />
+                  <input type="text" class="input_20_table" v-model="extra.uplinkChunkSize" placeholder="auto" />
                 </td>
               </tr>
             </tbody>
@@ -293,7 +293,7 @@
       const xmux = computed(() => extra.value.xmux ?? (extra.value.xmux = new XrayXmuxObject()));
 
       const onheaderapupdate = (headers: any) => {
-        if (transport.value.xhttpSettings) transport.value.xhttpSettings.headers = headers;
+        extra.value.headers = headers;
       };
 
       const manage_download_settings = () => {

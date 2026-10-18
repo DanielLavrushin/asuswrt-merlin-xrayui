@@ -23,7 +23,7 @@ export const XrayOptions = {
   xhttpPaddingPlacements: ['queryInHeader', 'cookie', 'header', 'query'],
   xhttpPaddingMethods: ['repeat-x', 'tokenish'],
   xhttpSessionPlacements: ['path', 'cookie', 'header', 'query'],
-  xhttpUplinkDataPlacements: ['body', 'cookie', 'header'],
+  xhttpUplinkDataPlacements: ['auto', 'body', 'cookie', 'header'],
   clientFlowOptions: ['none', 'xtls-rprx-vision'],
   encryptionOptions: [
     // Recommended encryption methods

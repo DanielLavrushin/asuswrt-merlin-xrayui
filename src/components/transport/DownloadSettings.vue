@@ -85,7 +85,7 @@
                     </td>
                   </tr>
                 </tbody>
-                <xhttp-padding v-if="downloadSettings.xhttpSettings" :settings="downloadSettings.xhttpSettings" />
+                <xhttp-padding v-if="downloadSettings.xhttpSettings" :settings="extra" />
               </table>
             </modal>
           </td>
@@ -146,7 +146,6 @@
       const xhttp = props.downloadSettings.xhttpSettings;
       if (!xhttp.extra) {
         xhttp.extra = new XrayXhttpExtraObject();
-        xhttp.extra.xPaddingBytes = xhttp.xPaddingBytes;
       }
       const extra = computed(() => props.downloadSettings.xhttpSettings!.extra!);
 

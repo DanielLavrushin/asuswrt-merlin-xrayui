@@ -38,7 +38,9 @@ const CORE_FEATURES = {
   tunAutoRoute: { since: '26.6.27' },
   tunDesc: { since: '26.7.28' },
   kcpLegacyTuning: { until: '26.4.13' },
-  kcpCwnd: { since: '26.4.13' }
+  kcpCwnd: { since: '26.4.13' },
+  // XTLS/Xray-core e10347bf (#6258), first included in v26.6.22.
+  xhttpSessionID: { since: '26.6.22' }
 } as const satisfies Record<string, CoreFeatureRule>;
 
 export type CoreFeature = keyof typeof CORE_FEATURES;

@@ -183,12 +183,17 @@
           window.showLoading(6000);
         }
 
-        await engine.executeWithLoadingProgress(async () => {
-          await engine.keepRotatedOutbounds(config.value);
-          const cfg = engine.prepareServerConfig(config.value);
-          await engine.submit(SubmitActions.configurationApply, cfg);
-          await engine.loadXrayConfig();
-        });
+        try {
+          await engine.executeWithLoadingProgress(async () => {
+            await engine.keepRotatedOutbounds(config.value);
+            const cfg = engine.prepareServerConfig(config.value);
+            await engine.submit(SubmitActions.configurationApply, cfg);
+            await engine.loadXrayConfig();
+          });
+        } catch (error) {
+          window.hideLoading();
+          window.alert(error instanceof Error ? error.message : String(error));
+        }
       };
 
       const set_mode = (newMode: string) => {

@@ -71,9 +71,7 @@ import {
   XrayFinalMaskSettingsObject,
   maskFromCoreForm,
   extractKcpMaskingForUi,
-  migrateSplitHttpToXhttp,
-  canonicalizeXhttpHeaders,
-  canonicalizeXhttpPadding
+  migrateSplitHttpToXhttp
 } from './TransportObjects';
 import { XrayProtocol } from './Options';
 import * as DnsLeakProtection from './DnsLeakProtection';
@@ -926,7 +924,6 @@ const streamSettingsFieldMap: [keyof XrayStreamSettingsObject, new () => any][] 
   ['wsSettings', XrayStreamWsSettingsObject],
   ['httpupgradeSettings', XrayStreamHttpUpgradeSettingsObject],
   ['grpcSettings', XrayStreamGrpcSettingsObject],
-  ['xhttpSettings', XrayStreamHttpSettingsObject],
   ['hysteriaSettings', XrayStreamHysteriaSettingsObject]
 ];
 
@@ -957,8 +954,7 @@ function transformStreamSettings(streamSettings: XrayStreamSettingsObject | unde
   }
 
   migrateSplitHttpToXhttp(settings);
-  canonicalizeXhttpHeaders(settings);
-  canonicalizeXhttpPadding(settings);
+  if (settings.xhttpSettings) settings.xhttpSettings = XrayStreamHttpSettingsObject.fromPlain(settings.xhttpSettings);
   extractKcpMaskingForUi(settings);
 
   return settings;

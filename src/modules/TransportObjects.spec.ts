@@ -24,8 +24,7 @@ import {
   XrayQuicParamsObject,
   XrayQuicParamsUdpHopObject,
   XrayStreamHysteriaSettingsObject,
-  XrayUdpHopObject,
-  canonicalizeXhttpHeaders
+  XrayUdpHopObject
 } from './TransportObjects';
 import { setCoreVersion } from './CoreVersion';
 
@@ -166,214 +165,118 @@ describe('TransportObjects', () => {
         expect(http.mode).toBe('stream-one');
       });
 
-      // xray-core parses `extra` as a full SplitHTTPConfig that REPLACES the outer object, carrying
-      // over only host/path/mode (infra/conf/transport_method.go:308-317). `headers` is NOT carried
-      // over, so it must be mirrored into `extra` whenever `extra` is emitted.
-      it('mirrors headers into extra when extra is emitted, so core cannot drop them', () => {
-        http.headers = { 'X-Real-IP': '1.2.3.4' };
-        http.extra!.scMaxBufferedPosts = 99; // any non-default value keeps `extra` alive
+      it('stores custom headers only in extra even without performance settings', () => {
+        http.extra!.headers = { 'X-Real-IP': '1.2.3.4' };
         http.normalize();
-
-        expect(http.extra).toBeDefined();
         expect(http.extra!.headers).toEqual({ 'X-Real-IP': '1.2.3.4' });
-        // the top-level copy stays: it is what applies if `extra` is ever dropped
-        expect(http.headers).toEqual({ 'X-Real-IP': '1.2.3.4' });
+        expect(JSON.parse(JSON.stringify(http))).not.toHaveProperty('headers');
       });
 
-      it('does not materialize extra just to hold headers', () => {
-        http.headers = { 'X-Real-IP': '1.2.3.4' };
-        http.normalize();
-
-        // no non-default extra field was set, so extra normalizes away and the top-level
-        // headers are what core reads -- nothing to mirror into
-        expect(http.extra).toBeUndefined();
-        expect(http.headers).toEqual({ 'X-Real-IP': '1.2.3.4' });
-      });
-
-      it('leaves extra.headers unset when there are no headers', () => {
-        http.extra!.scMaxBufferedPosts = 99;
-        http.normalize();
-
-        expect(http.extra).toBeDefined();
-        expect(http.extra!.headers).toBeUndefined();
-      });
-
-      // The mirror is derived, so it must be rebuilt on EVERY save. Otherwise a copy written by
-      // an earlier save outlives the headers the user just deleted, and core keeps applying them.
-      it('clears the mirrored copy when the user removes every header', () => {
-        const saved = plainToInstance(XrayStreamHttpSettingsObject, {
-          path: '/x',
-          headers: { 'X-Real-IP': '1.2.3.4' },
-          extra: { scMaxBufferedPosts: 99, headers: { 'X-Real-IP': '1.2.3.4' } }
+      it('does not resurrect headers removed after importing duplicated settings', () => {
+        const saved = XrayStreamHttpSettingsObject.fromPlain({
+          path: '/x', headers: { Old: 'a' }, extra: { headers: { Old: 'a' }, scMaxBufferedPosts: 99 }
         });
-
-        saved.headers = {}; // Http.vue binds the top-level value
+        saved.extra!.headers = {};
         saved.normalize();
-
-        expect(saved.headers).toBeUndefined();
         expect(saved.extra!.headers).toBeUndefined();
-        expect(JSON.stringify(saved)).not.toContain('X-Real-IP');
-      });
-
-      it('does not let a stale mirrored copy keep extra alive on its own', () => {
-        const saved = plainToInstance(XrayStreamHttpSettingsObject, {
-          path: '/x',
-          headers: { 'X-Real-IP': '1.2.3.4' },
-          extra: { headers: { 'X-Real-IP': '1.2.3.4' } } // no real extra fields
-        });
-
-        saved.headers = {};
-        saved.normalize();
-
-        // with nothing but the derived copy left, extra should normalize away entirely
-        expect(saved.extra).toBeUndefined();
-      });
-
-      it('replaces the mirrored copy rather than merging into it', () => {
-        const saved = plainToInstance(XrayStreamHttpSettingsObject, {
-          headers: { Old: 'a' },
-          extra: { scMaxBufferedPosts: 99, headers: { Old: 'a' } }
-        });
-
-        saved.headers = { New: 'b' };
-        saved.normalize();
-
-        expect(saved.extra!.headers).toEqual({ New: 'b' });
+        expect(JSON.stringify(saved)).not.toContain('Old');
       });
 
       it('clears all padding fields when xPaddingObfsMode is false (default)', () => {
-        http.normalize();
-        expect(http.xPaddingObfsMode).toBeUndefined();
-        expect(http.xPaddingKey).toBeUndefined();
-        expect(http.xPaddingHeader).toBeUndefined();
-        expect(http.xPaddingPlacement).toBeUndefined();
-        expect(http.xPaddingMethod).toBeUndefined();
+        http.extra!.normalize();
+        expect(http.extra!.xPaddingObfsMode).toBeUndefined();
+        expect(http.extra!.xPaddingKey).toBeUndefined();
+        expect(http.extra!.xPaddingHeader).toBeUndefined();
+        expect(http.extra!.xPaddingPlacement).toBeUndefined();
+        expect(http.extra!.xPaddingMethod).toBeUndefined();
       });
 
       it('retains non-default padding fields when xPaddingObfsMode is true', () => {
-        http.xPaddingObfsMode = true;
-        http.xPaddingKey = 'my_key';
-        http.xPaddingHeader = 'My-Header';
-        http.xPaddingPlacement = 'cookie';
-        http.xPaddingMethod = 'tokenish';
-        http.normalize();
-        expect(http.xPaddingObfsMode).toBe(true);
-        expect(http.xPaddingKey).toBe('my_key');
-        expect(http.xPaddingHeader).toBe('My-Header');
-        expect(http.xPaddingPlacement).toBe('cookie');
-        expect(http.xPaddingMethod).toBe('tokenish');
+        http.extra!.xPaddingObfsMode = true;
+        http.extra!.xPaddingKey = 'my_key';
+        http.extra!.xPaddingHeader = 'My-Header';
+        http.extra!.xPaddingPlacement = 'cookie';
+        http.extra!.xPaddingMethod = 'tokenish';
+        http.extra!.normalize();
+        expect(http.extra!.xPaddingObfsMode).toBe(true);
+        expect(http.extra!.xPaddingKey).toBe('my_key');
+        expect(http.extra!.xPaddingHeader).toBe('My-Header');
+        expect(http.extra!.xPaddingPlacement).toBe('cookie');
+        expect(http.extra!.xPaddingMethod).toBe('tokenish');
       });
 
       it('clears default padding sub-fields even when obfs is enabled', () => {
-        http.xPaddingObfsMode = true;
-        http.normalize();
-        expect(http.xPaddingObfsMode).toBe(true);
-        expect(http.xPaddingKey).toBeUndefined();
-        expect(http.xPaddingHeader).toBeUndefined();
-        expect(http.xPaddingPlacement).toBeUndefined();
-        expect(http.xPaddingMethod).toBeUndefined();
+        http.extra!.xPaddingObfsMode = true;
+        http.extra!.normalize();
+        expect(http.extra!.xPaddingObfsMode).toBe(true);
+        expect(http.extra!.xPaddingKey).toBeUndefined();
+        expect(http.extra!.xPaddingHeader).toBeUndefined();
+        expect(http.extra!.xPaddingPlacement).toBeUndefined();
+        expect(http.extra!.xPaddingMethod).toBeUndefined();
       });
 
       it('clears uplinkHTTPMethod when POST (default)', () => {
-        http.normalize();
-        expect(http.uplinkHTTPMethod).toBeUndefined();
+        http.extra!.normalize();
+        expect(http.extra!.uplinkHTTPMethod).toBeUndefined();
       });
 
       it('retains non-default uplinkHTTPMethod', () => {
-        http.uplinkHTTPMethod = 'PUT';
-        http.normalize();
-        expect(http.uplinkHTTPMethod).toBe('PUT');
+        http.extra!.uplinkHTTPMethod = 'PUT';
+        http.extra!.normalize();
+        expect(http.extra!.uplinkHTTPMethod).toBe('PUT');
       });
 
       it('clears sessionKey when sessionPlacement is path (default)', () => {
-        http.sessionKey = 'my_session';
-        http.normalize();
-        expect(http.sessionPlacement).toBeUndefined();
-        expect(http.sessionKey).toBeUndefined();
+        http.extra!.sessionIDKey = 'my_session';
+        http.extra!.normalize();
+        expect(http.extra!.sessionIDPlacement).toBeUndefined();
+        expect(http.extra!.sessionIDKey).toBeUndefined();
       });
 
       it('retains sessionKey when sessionPlacement is not path', () => {
-        http.sessionPlacement = 'cookie';
-        http.sessionKey = 'sid';
-        http.normalize();
-        expect(http.sessionPlacement).toBe('cookie');
-        expect(http.sessionKey).toBe('sid');
+        http.extra!.sessionIDPlacement = 'cookie';
+        http.extra!.sessionIDKey = 'sid';
+        http.extra!.normalize();
+        expect(http.extra!.sessionIDPlacement).toBe('cookie');
+        expect(http.extra!.sessionIDKey).toBe('sid');
       });
 
       it('clears seqKey when seqPlacement is path (default)', () => {
-        http.seqKey = 'my_seq';
-        http.normalize();
-        expect(http.seqPlacement).toBeUndefined();
-        expect(http.seqKey).toBeUndefined();
+        http.extra!.seqKey = 'my_seq';
+        http.extra!.normalize();
+        expect(http.extra!.seqPlacement).toBeUndefined();
+        expect(http.extra!.seqKey).toBeUndefined();
       });
 
       it('retains seqKey when seqPlacement is not path', () => {
-        http.seqPlacement = 'header';
-        http.seqKey = 'x-seq';
-        http.normalize();
-        expect(http.seqPlacement).toBe('header');
-        expect(http.seqKey).toBe('x-seq');
+        http.extra!.seqPlacement = 'header';
+        http.extra!.seqKey = 'x-seq';
+        http.extra!.normalize();
+        expect(http.extra!.seqPlacement).toBe('header');
+        expect(http.extra!.seqKey).toBe('x-seq');
       });
 
-      it('clears uplinkDataPlacement when body (default)', () => {
-        http.normalize();
-        expect(http.uplinkDataPlacement).toBeUndefined();
+      it('clears uplinkDataPlacement when auto (default)', () => {
+        http.extra!.normalize();
+        expect(http.extra!.uplinkDataPlacement).toBeUndefined();
       });
 
       it('retains non-default uplinkDataPlacement', () => {
-        http.uplinkDataPlacement = 'cookie';
-        http.normalize();
-        expect(http.uplinkDataPlacement).toBe('cookie');
+        http.extra!.uplinkDataPlacement = 'cookie';
+        http.extra!.normalize();
+        expect(http.extra!.uplinkDataPlacement).toBe('cookie');
       });
 
-      it('clears uplinkChunkSize when below minimum (64)', () => {
-        http.uplinkChunkSize = 32;
-        http.normalize();
-        expect(http.uplinkChunkSize).toBeUndefined();
+      it('preserves an explicit chunk size for core to clamp', () => {
+        http.extra!.uplinkChunkSize = 32;
+        http.extra!.normalize();
+        expect(http.extra!.uplinkChunkSize).toBe(32);
       });
 
       it('retains valid uplinkChunkSize', () => {
-        http.uplinkChunkSize = 3072;
-        http.normalize();
-        expect(http.uplinkChunkSize).toBe(3072);
-      });
-    });
-
-    describe('canonicalizeXhttpHeaders', () => {
-      // A config from an earlier build can carry headers only in `extra`. The editor binds the
-      // top-level value, so without lifting them up they are invisible and the next save drops them.
-      it('lifts headers out of extra when the top level has none', () => {
-        const stream = {
-          xhttpSettings: plainToInstance(XrayStreamHttpSettingsObject, {
-            path: '/x',
-            extra: { scMaxBufferedPosts: 99, headers: { 'X-Real-IP': '1.2.3.4' } }
-          })
-        };
-
-        canonicalizeXhttpHeaders(stream);
-
-        expect(stream.xhttpSettings.headers).toEqual({ 'X-Real-IP': '1.2.3.4' });
-        expect(stream.xhttpSettings.extra!.headers).toBeUndefined();
-      });
-
-      it('keeps the top-level value authoritative when both are present', () => {
-        const stream = {
-          xhttpSettings: plainToInstance(XrayStreamHttpSettingsObject, {
-            headers: { Top: 'wins' },
-            extra: { headers: { Nested: 'loses' } }
-          })
-        };
-
-        canonicalizeXhttpHeaders(stream);
-
-        expect(stream.xhttpSettings.headers).toEqual({ Top: 'wins' });
-        expect(stream.xhttpSettings.extra!.headers).toBeUndefined();
-      });
-
-      it('is a no-op when there is nothing to canonicalize', () => {
-        const stream = { xhttpSettings: new XrayStreamHttpSettingsObject() };
-        expect(() => canonicalizeXhttpHeaders(stream)).not.toThrow();
-        expect(() => canonicalizeXhttpHeaders({})).not.toThrow();
+        http.extra!.uplinkChunkSize = 3072;
+        http.extra!.normalize();
+        expect(http.extra!.uplinkChunkSize).toBe(3072);
       });
     });
 

@@ -55,14 +55,14 @@
 <script lang="ts">
   import { defineComponent, ref, type PropType } from 'vue';
   import Hint from '@main/Hint.vue';
-  import { XrayStreamHttpSettingsObject } from '@/modules/TransportObjects';
+  import { XrayXhttpExtraObject } from '@/modules/TransportObjects';
   import { XrayOptions } from '@/modules/Options';
 
   export default defineComponent({
     name: 'XhttpPadding',
     components: { Hint },
     props: {
-      settings: { type: Object as PropType<XrayStreamHttpSettingsObject>, required: true }
+      settings: { type: Object as PropType<XrayXhttpExtraObject>, required: true }
     },
     setup(props) {
       return {

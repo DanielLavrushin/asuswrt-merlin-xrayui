@@ -111,7 +111,7 @@ subscriptions)
     ;;
 cron)
     case "$2" in
-    logrotate | geodata | subscription_refresh | subscription_fallback | ipset_save)
+    logrotate | geodata | subscription_refresh | subscription_fallback | ipset_save | autorestart)
         cron_job_lock "$2" || exit 0
         update_loading_progress() { :; }
         ;;
@@ -140,6 +140,9 @@ cron)
         if [ "$ipsec" = "redirect" ] && [ -n "$(get_xray_daemon_pid)" ] && firewall_is_configured; then
             with_firewall_lock ipset_learned_save
         fi
+        ;;
+    autorestart)
+        autorestart_check
         ;;
     *) ;;
     esac

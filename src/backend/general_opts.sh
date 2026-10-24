@@ -28,6 +28,7 @@ apply_general_options() {
     local subscription_auto_refresh subscription_auto_fallback
     local subscription_fallback_interval probe_url probe_interval subscription_filters
     local tun_routing
+    local xray_autorestart xray_autorestart_interval xray_autorestart_retries xray_autorestart_delay
     local _genopts_vars
     if ! _genopts_vars=$(echo "$genopts" | jq -r '
         "github_proxy=" + ((.github_proxy // "") | tostring | @sh) + "\n" +
@@ -59,6 +60,10 @@ apply_general_options() {
         "probe_url=" + ((.probe_url // "https://www.google.com/generate_204") | tostring | @sh) + "\n" +
         "probe_interval=" + ((.probe_interval // 30) | tostring | @sh) + "\n" +
         "tun_routing=" + ((.tun_routing // "full") | tostring | @sh) + "\n" +
+        "xray_autorestart=" + ((.autorestart // "false") | tostring | @sh) + "\n" +
+        "xray_autorestart_interval=" + ((.autorestart_interval // 5) | tostring | @sh) + "\n" +
+        "xray_autorestart_retries=" + ((.autorestart_retries // 3) | tostring | @sh) + "\n" +
+        "xray_autorestart_delay=" + ((.autorestart_delay // 10) | tostring | @sh) + "\n" +
         "subscription_filters=" + (((.subscriptions.filters // []) | join("|")) | @sh)
     '); then
         log_error "Failed to parse general options payload."
@@ -120,6 +125,11 @@ apply_general_options() {
     update_xrayui_config "probe_interval" "$(sanitize_probe_interval "$probe_interval")"
     [ "$tun_routing" = "interface" ] || tun_routing="full"
     update_xrayui_config "tun_routing" "$tun_routing"
+    [ "$xray_autorestart" = "true" ] || xray_autorestart="false"
+    update_xrayui_config "xray_autorestart" "$xray_autorestart"
+    update_xrayui_config "xray_autorestart_interval" "$(sanitize_autorestart_interval "$xray_autorestart_interval")"
+    update_xrayui_config "xray_autorestart_retries" "$(sanitize_autorestart_number "$xray_autorestart_retries" 3 100)"
+    update_xrayui_config "xray_autorestart_delay" "$(sanitize_autorestart_number "$xray_autorestart_delay" 10 1440)"
 
     update_xrayui_config "subscription_filters" "$subscription_filters"
 
@@ -138,6 +148,7 @@ apply_general_options() {
     cron_subscription_refresh_add
     cron_subscription_fallback_add
     cron_ipset_save_add
+    cron_autorestart_add
 
     # integration scribe
     logs_scribe_integration

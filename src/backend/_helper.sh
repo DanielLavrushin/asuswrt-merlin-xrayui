@@ -220,6 +220,27 @@ sanitize_probe_interval() {
     echo "$v"
 }
 
+# Minutes between watchdog checks. Only divisors of 60, so `*/N` in cron runs at even steps.
+sanitize_autorestart_interval() {
+    case "$1" in
+    1 | 2 | 3 | 5 | 10 | 15 | 20 | 30) echo "$1" ;;
+    *) echo 5 ;;
+    esac
+}
+
+# Usage: sanitize_autorestart_number <value> <default> <max>
+sanitize_autorestart_number() {
+    local v="${1:-$2}"
+    case "$v" in
+    '' | *[!0-9]*) v=$2 ;;
+    esac
+    while [ "${#v}" -gt 1 ] && [ "${v#0}" != "$v" ]; do v="${v#0}"; done
+    if [ "${#v}" -gt 5 ] || [ "$v" -gt "$3" ]; then
+        v=$3
+    fi
+    echo "$v"
+}
+
 get_webui_page() {
     ADDON_USER_PAGE="none"
     local max_user_page=0

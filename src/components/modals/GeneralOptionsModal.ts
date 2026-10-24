@@ -23,6 +23,10 @@ export default function useGeneralOptions(cfg: XrayObject, ui: Ref<EngineRespons
     probe_url: ui.value?.xray?.probe_url ?? 'https://www.google.com/generate_204',
     probe_interval: ui.value?.xray?.probe_interval ?? 30,
     tun_routing: ui.value?.xray?.tun_routing ?? 'full',
+    autorestart: ui.value?.xray?.autorestart ?? false,
+    autorestart_interval: ui.value?.xray?.autorestart_interval ?? 5,
+    autorestart_retries: ui.value?.xray?.autorestart_retries ?? 3,
+    autorestart_delay: ui.value?.xray?.autorestart_delay ?? 10,
     logs_scribe: ui.value?.integration?.scribe?.enabled ?? false,
     normalise: function () {
       this.subscriptions.protocols = undefined;
@@ -45,6 +49,7 @@ export default function useGeneralOptions(cfg: XrayObject, ui: Ref<EngineRespons
     options,
     log_levels: ['none', 'debug', 'info', 'warning', 'error'],
     ipset_options: ['off', 'bypass', 'redirect'],
+    autorestart_intervals: [1, 2, 5, 10, 15, 30],
     hydrate,
     persist
   };

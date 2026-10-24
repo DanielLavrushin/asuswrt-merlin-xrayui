@@ -1049,6 +1049,9 @@ describe.each(SHELLS)('response backend under %s', (_label, shell) => {
     itIf(HAS_OPENSSL)('saves a gz payload on a router without base64', async () => {
       const r = await get('save without base64');
       expect(r.events).toContain('SET: ipsec=redirect');
+      expect(r.events).toEqual(
+        expect.arrayContaining(['SET: xray_autorestart=false', 'SET: xray_autorestart_interval=5', 'SET: xray_autorestart_retries=3', 'SET: xray_autorestart_delay=10', 'cron_autorestart_add'])
+      );
       expect(r.events).toContain(`SET: subscriptionLinks=${GENERAL.subscriptions.links.join('|')}`);
       expect(JSON.parse(r.read('opt/etc/xray/config.json') ?? '{}').log.loglevel).toBe('info');
       expect((r.response.xray?.hooks as Record<string, string>).after_firewall_start).toBe(GENERAL.hooks.after_firewall_start);

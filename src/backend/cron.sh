@@ -6,6 +6,7 @@ CRU_LR_ID="xrayui_logrotate"
 CRU_SUB_REFRESH_ID="xrayui_subscription_refresh"
 CRU_SUB_FALLBACK_ID="xrayui_subscription_fallback"
 CRU_IPSET_SAVE_ID="xrayui_ipset_save"
+CRU_AUTORESTART_ID="xrayui_autorestart"
 LR_STATUS="/tmp/logrotate.status"
 LR_BIN="/opt/sbin/logrotate"
 LR_CONF="/opt/etc/logrotate.conf"
@@ -173,6 +174,25 @@ cron_subscription_fallback_add() {
     fi
 }
 
+cron_autorestart_add() {
+    log_info "Configuring $CRU_AUTORESTART_ID cron job for $ADDON_TITLE"
+
+    load_xrayui_config
+    local interval=$(sanitize_autorestart_interval "$xray_autorestart_interval")
+    cron_job_delete "$CRU_AUTORESTART_ID"
+
+    if [ "${xray_autorestart:-false}" = "true" ]; then
+        cru a "$CRU_AUTORESTART_ID" "*/$interval * * * * $ADDON_SCRIPT cron autorestart" || {
+            log_error "Failed to add CRU job $CRU_AUTORESTART_ID"
+            return
+        }
+        log_ok "CRON job $CRU_AUTORESTART_ID for $ADDON_TITLE added successfully"
+    else
+        rm -f "$XRAY_AUTORESTART_STATE_FILE"
+        log_warn "CRON job $CRU_AUTORESTART_ID not added (xray_autorestart is false)"
+    fi
+}
+
 cron_job_lock() {
     local lockfile="/tmp/xrayui_cron_$1.lock"
     which flock >/dev/null 2>&1 || return 0
@@ -196,4 +216,5 @@ cron_jobs_add() {
     cron_subscription_refresh_add
     cron_subscription_fallback_add
     cron_ipset_save_add
+    cron_autorestart_add
 }

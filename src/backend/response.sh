@@ -48,6 +48,11 @@ initial_response() {
     local subscription_auto_fallback="${subscription_auto_fallback:-false}"
     local subscription_fallback_interval="${subscription_fallback_interval:-5}"
     local subscription_filters="${subscription_filters:-""}"
+    local autorestart="false"
+    [ "$xray_autorestart" = "true" ] && autorestart="true"
+    local autorestart_interval=$(sanitize_autorestart_interval "$xray_autorestart_interval")
+    local autorestart_retries=$(sanitize_autorestart_number "$xray_autorestart_retries" 3 100)
+    local autorestart_delay=$(sanitize_autorestart_number "$xray_autorestart_delay" 10 1440)
     local probe_url="${probe_url:-https://www.google.com/generate_204}"
     local probe_interval=$(sanitize_probe_interval "$probe_interval")
 
@@ -130,6 +135,10 @@ initial_response() {
         --arg sar "$subscription_auto_refresh" \
         --arg saf "$subscription_auto_fallback" \
         --arg sfi "$subscription_fallback_interval" \
+        --argjson autorestart "$autorestart" \
+        --argjson autorestart_interval "$autorestart_interval" \
+        --argjson autorestart_retries "$autorestart_retries" \
+        --argjson autorestart_delay "$autorestart_delay" \
         --arg sf "$subscription_filters" \
         --arg hook_before_firewall_start "$hook_before_firewall_start" \
         --arg after_firewall_start "$after_firewall_start" \
@@ -169,6 +178,10 @@ initial_response() {
         | .xray.subscription_auto_refresh = $sar
         | .xray.subscription_auto_fallback = ($saf == "true")
         | .xray.subscription_fallback_interval = ($sfi | tonumber)
+        | .xray.autorestart = $autorestart
+        | .xray.autorestart_interval = $autorestart_interval
+        | .xray.autorestart_retries = $autorestart_retries
+        | .xray.autorestart_delay = $autorestart_delay
         | .xray.subscriptions.filters = (if $sf == "" then [] else ($sf | split("|")) end)
         | .xray.hooks = {
             before_firewall_start: $hook_before_firewall_start,
@@ -212,6 +225,10 @@ initial_response() {
             --arg sar "$subscription_auto_refresh" \
             --arg saf "$subscription_auto_fallback" \
             --arg sfi "$subscription_fallback_interval" \
+            --argjson autorestart "$autorestart" \
+            --argjson autorestart_interval "$autorestart_interval" \
+            --argjson autorestart_retries "$autorestart_retries" \
+            --argjson autorestart_delay "$autorestart_delay" \
             --arg xrayui_ver "$XRAYUI_VERSION" \
             --arg xray_ver "$XRAY_VERSION" \
             --arg xray_err "$XRAYUI_CORE_ERR" \
@@ -220,7 +237,7 @@ initial_response() {
             --argjson debug "$debug" \
             '{
                 geodata: { geoip_url: $geoipurl, geosite_url: $geositeurl, community: { "geoip.dat": $geoip, "geosite.dat": $geosite }, auto_update: $geo_auto_update },
-                xray: { uptime: $uptime, profile: $profile, skip_test: $skip_test, clients_check: $clients_check, check_connection: $check_connection, probe_url: $probe_url, probe_interval: $probe_interval, github_proxy: $github_proxy, dnsmasq: $dnsmasq, logs_dor: $logs_dor, logs_max_size: $logs_max_size, ipsec: $ipsec, startup_delay: $startup_delay, sleep_time: $sleep_time, dns_only: $dns_only, block_quic: $block_quic, tun_routing: $tun_routing, subscription_auto_refresh: $sar, subscription_auto_fallback: ($saf == "true"), subscription_fallback_interval: ($sfi | tonumber), subscriptions: { links: [], filters: [] }, hooks: {}, ui_version: $xrayui_ver, core_version: $xray_ver, core_error: $xray_err, profiles: $profiles, backups: $backups, debug: $debug }
+                xray: { uptime: $uptime, profile: $profile, skip_test: $skip_test, clients_check: $clients_check, check_connection: $check_connection, probe_url: $probe_url, probe_interval: $probe_interval, github_proxy: $github_proxy, dnsmasq: $dnsmasq, logs_dor: $logs_dor, logs_max_size: $logs_max_size, ipsec: $ipsec, startup_delay: $startup_delay, sleep_time: $sleep_time, dns_only: $dns_only, block_quic: $block_quic, tun_routing: $tun_routing, subscription_auto_refresh: $sar, subscription_auto_fallback: ($saf == "true"), subscription_fallback_interval: ($sfi | tonumber), autorestart: $autorestart, autorestart_interval: $autorestart_interval, autorestart_retries: $autorestart_retries, autorestart_delay: $autorestart_delay, subscriptions: { links: [], filters: [] }, hooks: {}, ui_version: $xrayui_ver, core_version: $xray_ver, core_error: $xray_err, profiles: $profiles, backups: $backups, debug: $debug }
             }' >"$_tmp_response" 2>"$_jq_err"; then
             log_error "Error: jq -n also failed. jq error: $(cat "$_jq_err" 2>/dev/null). Writing bare minimum response."
             echo '{"xray":{"ui_version":"'"$XRAYUI_VERSION"'","core_version":"'"$XRAY_VERSION"'","profiles":[],"backups":[]}}' >"$_tmp_response"

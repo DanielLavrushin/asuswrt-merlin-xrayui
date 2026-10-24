@@ -42,6 +42,46 @@
                 <input type="number" maxlength="4" class="input_6_table" v-model="options.sleep_time" />
               </td>
             </tr>
+            <tr>
+              <th>
+                {{ $t('com.GeneralOptionsModal.label_autorestart') }}
+                <hint v-html="$t('com.GeneralOptionsModal.hint_autorestart')"></hint>
+              </th>
+              <td>
+                <label class="go-option"><input type="checkbox" v-model="options.autorestart" /></label>
+              </td>
+            </tr>
+            <tr v-if="options.autorestart">
+              <th>
+                {{ $t('com.GeneralOptionsModal.label_autorestart_interval') }}
+                <hint v-html="$t('com.GeneralOptionsModal.hint_autorestart_interval')"></hint>
+              </th>
+              <td>
+                <select class="input_option" v-model.number="options.autorestart_interval">
+                  <option v-for="m in autorestart_intervals" :key="m" :value="m">{{ m }} min</option>
+                </select>
+              </td>
+            </tr>
+            <tr v-if="options.autorestart">
+              <th>
+                {{ $t('com.GeneralOptionsModal.label_autorestart_retries') }}
+                <hint v-html="$t('com.GeneralOptionsModal.hint_autorestart_retries')"></hint>
+              </th>
+              <td>
+                <input type="number" min="0" max="100" maxlength="3" class="input_6_table" v-model.number="options.autorestart_retries" />
+                <span class="hint-color">{{ $t('com.GeneralOptionsModal.autorestart_retries_forever') }}</span>
+              </td>
+            </tr>
+            <tr v-if="options.autorestart">
+              <th>
+                {{ $t('com.GeneralOptionsModal.label_autorestart_delay') }}
+                <hint v-html="$t('com.GeneralOptionsModal.hint_autorestart_delay')"></hint>
+              </th>
+              <td>
+                <input type="number" min="0" max="1440" maxlength="4" class="input_6_table" v-model.number="options.autorestart_delay" />
+                <span class="hint-color">min</span>
+              </td>
+            </tr>
             <tr v-show="validateCheckConOption()">
               <th>{{ $t('com.GeneralOptionsModal.check_xray_connection') }}</th>
               <td>
@@ -378,7 +418,7 @@
   const ui = inject<Ref<EngineResponseConfig>>('uiResponse')!;
 
   const { t } = useI18n();
-  const { options, log_levels, ipset_options, hydrate, persist } = useGeneralOptions(props.config, ui);
+  const { options, log_levels, ipset_options, autorestart_intervals, hydrate, persist } = useGeneralOptions(props.config, ui);
 
   const modal = ref();
 

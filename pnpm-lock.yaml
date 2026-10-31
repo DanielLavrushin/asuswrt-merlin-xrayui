@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  markdown-it>entities: 8.0.0
+
 importers:
 
   .:
@@ -2161,8 +2164,8 @@ packages:
     resolution: {integrity: sha512-TWrgLOFUQTH994YUyl1yT4uyavY5nNB5muff+RtWaqNVCAK408b5ZnnbNAUEWLTCpum9w6arT70i1XdQ4UeOPA==}
     engines: {node: '>=0.12'}
 
-  entities@8.1.0:
-    resolution: {integrity: sha512-kxL7msIffSuh9aaFAMD7rxAIuTRMAHMeBtgHW2yUdWw732ZNh4MehkF2gdjvtdmikkaIP9bFDDJOPlsvm7avrA==}
+  entities@8.0.0:
+    resolution: {integrity: sha512-zwfzJecQ/Uej6tusMqwAqU/6KL2XaB2VZ2Jg54Je6ahNBGNH6Ek6g3jjNCF0fG9EWQKGZNddNjU5F1ZQn/sBnA==}
     engines: {node: '>=20.19.0'}
 
   envify@3.4.1:
@@ -5925,7 +5928,7 @@ snapshots:
 
   entities@7.0.1: {}
 
-  entities@8.1.0: {}
+  entities@8.0.0: {}
 
   envify@3.4.1:
     dependencies:
@@ -6891,7 +6894,7 @@ snapshots:
   markdown-it@15.0.2:
     dependencies:
       argparse: 3.0.3
-      entities: 8.1.0
+      entities: 8.0.0
       linkify-it: 6.1.0
       mdurl: 2.1.0
       punycode.js: 2.3.1

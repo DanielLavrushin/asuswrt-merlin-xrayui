@@ -2,9 +2,14 @@
 
 ## [0.71.0] - 2026-10-31
 
-- FIXED: **Stop** could leave a second copy of Xray running, such as one started at boot by an old Entware Xray package, so the page still showed Xray as running. Such copies are now stopped too, and **Stop** shows an error when Xray keeps running.
-- FIXED: A stopped Xray could start again by itself when a subscription update or auto-fallback changed a server in the **Auto-fallback pool**. The new server is now used on the next start instead.
+- FIXED: **Stop** could leave a second copy of Xray running, such as one started at boot by an old Entware Xray package, so the page still showed Xray as running.
+- FIXED: A stopped Xray could start again by itself when a subscription update or auto-fallback changed a server in the **Auto-fallback pool**.
 - FIXED: With **Check clients online status** turned on, the page could show a stopped Xray as running.
+- FIXED: Xray ignored the XHTTP padding obfuscation, **Uplink HTTP method**, session, sequence and uplink data settings whenever another option such as **Uplink/Downlink Separation**, **XMUX Settings** or **Performance Tuning** was set. With Xray 26.6.22 and later, **Session ID placement** was ignored in every case. ([#421](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/421))
+- FIXED: Split XHTTP connections with **Uplink/Downlink Separation** failed against servers that require padding obfuscation, because padding could not be set for the download connection. An empty **Download Server Port** made Xray connect to port 0. ([#420](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/420))
+- FIXED: **Transfer Mode** offered no **packet-up**, so GET as **Uplink HTTP method** could stop Xray from starting. ([#421](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/421))
+- CHANGED: XHTTP settings that Xray ignored before take effect after the first **Apply** on this version. **Apply** stops with a message naming the inbound or outbound when an XHTTP setting cannot work in its **Transfer Mode**, such as GET without packet-up.
+- IMPROVED: Importing a link keeps the XHTTP settings from its `extra` parameter. Most **Performance Tuning** fields accept a range such as `1000-2000`.
 
 ## [0.70.2] - 2026-09-28
 

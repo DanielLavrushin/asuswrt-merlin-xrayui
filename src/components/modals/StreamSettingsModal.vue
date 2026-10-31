@@ -49,7 +49,7 @@
               <span class="row-buttons">
                 <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click="manage_sockopt" />
                 <modal ref="sockoptModal" :title="$t('com.SockOpt.label')">
-                  <sockopt v-model:transport="transport"></sockopt>
+                  <sockopt v-model:transport="transport" :proxy-type="proxyType"></sockopt>
                 </modal>
               </span>
             </td>

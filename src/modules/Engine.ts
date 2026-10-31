@@ -629,8 +629,8 @@ export class Engine {
         this.appliedBaseline = { coreVersion, json: stableStringify(this.prepareServerConfig(applied)) };
       }
       return stableStringify(this.prepareServerConfig(config)) !== this.appliedBaseline.json;
-    } catch {
-      return false;
+    } catch (error) {
+      return error instanceof XhttpConfigError;
     }
   }
 

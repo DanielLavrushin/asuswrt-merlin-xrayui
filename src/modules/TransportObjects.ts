@@ -93,7 +93,6 @@ export class XrayStreamWsSettingsObject implements ITransportNetwork {
   };
 }
 
-// These UI fields live on xhttpSettings, but core reads them from extra whenever it exists.
 const xhttpPaddingFields = ['xPaddingObfsMode', 'xPaddingKey', 'xPaddingHeader', 'xPaddingPlacement', 'xPaddingMethod'] as const;
 
 export class XrayStreamHttpSettingsObject implements ITransportNetwork {
@@ -178,16 +177,10 @@ export class XrayStreamHttpSettingsObject implements ITransportNetwork {
 
     this.headers = isObjectEmpty(this.headers) ? undefined : this.headers;
     this.extra = plainToInstance(XrayXhttpExtraObject, this.extra ?? {});
-
-    // Header and padding mirrors are derived from the editor fields. Clear stale copies before
-    // checking emptiness so a previous save cannot resurrect removed values or keep extra alive.
     this.extra.headers = undefined;
     for (const field of xhttpPaddingFields) delete this.extra[field];
     this.extra = this.extra.normalize();
 
-    // If `extra` survived, it REPLACES this whole object inside xray-core, which carries over only
-    // host/path/mode (v26.6.22, infra/conf/transport_internet.go:262-272). Mirror padding as well
-    // as headers; otherwise enabling a split download silently disables upload obfuscation.
     if (this.extra) {
       if (this.headers) this.extra.headers = this.headers as Record<string, string>;
       Object.assign(this.extra, Object.fromEntries(xhttpPaddingFields.map((field) => [field, this[field]])));
@@ -212,7 +205,6 @@ export class XrayDownloadSettingsObject {
       return undefined;
     }
 
-    // A placeholder does not set a value, and core does not infer the HTTPS port here.
     this.port = this.port || 443;
 
     if (this.security === 'tls') {
@@ -238,7 +230,6 @@ export class XrayDownloadSettingsObject {
   };
 }
 
-/** Seed a new split download without overwriting independently configured/imported values. */
 export function createXhttpDownloadSettings(upload: XrayStreamHttpSettingsObject): XrayDownloadSettingsObject {
   const download = new XrayDownloadSettingsObject();
   download.xhttpSettings = new XrayStreamHttpSettingsObject();
@@ -347,11 +338,9 @@ export function canonicalizeXhttpHeaders(stream: { xhttpSettings?: XrayStreamHtt
   extra.headers = undefined;
 }
 
-/** Restore extra-only subscription padding into the fields exposed by the editor. */
 export function canonicalizeXhttpPadding(stream: { xhttpSettings?: XrayStreamHttpSettingsObject }): void {
   const xhttp = stream.xhttpSettings;
   if (!xhttp?.extra) return;
-  // extra wins in core, including an explicit false. Do not let constructor defaults hide it.
   for (const field of xhttpPaddingFields) {
     if (xhttp.extra[field] !== undefined) {
       Object.assign(xhttp, { [field]: xhttp.extra[field] });

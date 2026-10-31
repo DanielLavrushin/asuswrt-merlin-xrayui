@@ -297,7 +297,6 @@
       };
 
       const manage_download_settings = () => {
-        // Initialize downloadSettings if it doesn't exist
         if (!extra.value.downloadSettings) {
           extra.value.downloadSettings = createXhttpDownloadSettings(transport.value.xhttpSettings!);
         }

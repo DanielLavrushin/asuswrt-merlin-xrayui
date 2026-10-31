@@ -14,8 +14,6 @@ const padding = {
   xPaddingMethod: 'tokenish'
 };
 
-// Xray-core v26.6.22 SplitHTTPConfig.Build replaces the outer config with extra,
-// retaining only host/path/mode. Assert against what core actually consumes.
 const effective = (settings: Record<string, any>) => settings.extra ?? settings;
 const serialize = (http: XrayStreamHttpSettingsObject) => JSON.parse(JSON.stringify(http.normalize()));
 const hydrate = (xhttpSettings: Record<string, unknown>) => engine.hydrateConfig(plainToInstance(XrayObject, {

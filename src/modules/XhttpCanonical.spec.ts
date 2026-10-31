@@ -1,6 +1,7 @@
 import { plainToInstance } from 'class-transformer';
 import { setCoreVersion } from './CoreVersion';
-import { XrayStreamHttpSettingsObject } from './TransportObjects';
+import { XhttpConfigError, XrayStreamHttpSettingsObject } from './TransportObjects';
+import { XrayParsedUrlObject } from './CommonObjects';
 import { XrayObject } from './XrayConfig';
 import engine from './Engine';
 
@@ -65,5 +66,29 @@ describe('canonical XHTTP representation', () => {
     expect(JSON.stringify(config)).toBe(original);
     expect(saved.outbounds[0].streamSettings!.xhttpSettings!.extra).toMatchObject({ sessionPlacement: 'header', sessionKey: 'sid' });
     expect(JSON.stringify(engine.prepareServerConfig(saved))).toBe(JSON.stringify(saved));
+  });
+
+  it('names the proxy whose migrated settings block Apply', () => {
+    const config = engine.hydrateConfig(plainToInstance(XrayObject, {
+      outbounds: [{ protocol: 'vless', tag: 'proxy-a', settings: { vnext: [] }, streamSettings: {
+        network: 'xhttp', xhttpSettings: { uplinkHTTPMethod: 'GET', extra: { xmux: { maxConnections: 4 } } }
+      } }]
+    }));
+    let caught: unknown;
+    try {
+      engine.prepareServerConfig(config);
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(XhttpConfigError);
+    expect(caught).toMatchObject({ key: 'error_get_packet_up', tag: 'proxy-a' });
+  });
+
+  it('normalizes a share-link transport in place and ignores a malformed extra', () => {
+    const link = (extra: string) => ({ parsedParams: { path: '/p', host: 'h.example', extra } }) as unknown as XrayParsedUrlObject;
+    const settings = new XrayStreamHttpSettingsObject(link('{"xPaddingBytes":"200-300"}'));
+    expect(settings.normalize()).toBe(settings);
+    expect(JSON.parse(JSON.stringify(settings))).toEqual({ path: '/p', host: 'h.example', extra: { xPaddingBytes: '200-300' } });
+    expect(new XrayStreamHttpSettingsObject(link('{broken')).extra!.xPaddingBytes).toBe('100-1000');
   });
 });

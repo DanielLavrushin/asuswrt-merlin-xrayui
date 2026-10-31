@@ -71,7 +71,8 @@ import {
   XrayFinalMaskSettingsObject,
   maskFromCoreForm,
   extractKcpMaskingForUi,
-  migrateSplitHttpToXhttp
+  migrateSplitHttpToXhttp,
+  XhttpConfigError
 } from './TransportObjects';
 import { XrayProtocol } from './Options';
 import * as DnsLeakProtection from './DnsLeakProtection';
@@ -573,13 +574,17 @@ export class Engine {
     config = this.cloneServerConfig(config);
     DnsLeakProtection.repair(config);
 
-    config.inbounds.forEach((proxy) => {
-      proxy.normalize();
-    });
+    const normalizeProxy = (proxy: { tag?: string; normalize: () => unknown }) => {
+      try {
+        proxy.normalize();
+      } catch (error) {
+        if (error instanceof XhttpConfigError) error.tag ??= proxy.tag;
+        throw error;
+      }
+    };
 
-    config.outbounds.forEach((proxy) => {
-      proxy.normalize();
-    });
+    config.inbounds.forEach(normalizeProxy);
+    config.outbounds.forEach(normalizeProxy);
 
     if (config.dns) {
       config.dns.normalize();

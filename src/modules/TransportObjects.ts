@@ -93,7 +93,6 @@ export class XrayStreamWsSettingsObject implements ITransportNetwork {
   };
 }
 
-// Only these fields remain outside extra. Other settings have one authoritative copy.
 const xhttpOuterFields = new Set(['host', 'path', 'mode', 'extra', 'normalize']);
 const xhttpPaddingFields = ['xPaddingBytes', 'xPaddingObfsMode', 'xPaddingKey', 'xPaddingHeader', 'xPaddingPlacement', 'xPaddingMethod'] as const;
 type XhttpRange = number | string;
@@ -102,8 +101,6 @@ function xhttpExtraFields(source: object): Record<string, unknown> {
   const fields = Object.fromEntries(Object.entries(source).filter(([key, value]) =>
     !xhttpOuterFields.has(key) && value !== undefined && typeof value !== 'function'
   ));
-  // Resolve aliases within each source BEFORE merging, so an explicit extra value wins even
-  // when it uses the old spelling. The editor always uses the sessionID names.
   for (const [legacy, current] of [['sessionPlacement', 'sessionIDPlacement'], ['sessionKey', 'sessionIDKey']]) {
     if (fields[current] === undefined && fields[legacy] !== undefined) fields[current] = fields[legacy];
     delete fields[legacy];
@@ -116,6 +113,26 @@ const normalizeXhttpRange = (value: XhttpRange | undefined, defaultValue?: Xhttp
   return value === '' || value == null || (defaultValue !== undefined && String(value) === String(defaultValue)) ? undefined : value;
 };
 
+const parseLinkExtra = (value: unknown): unknown => {
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return undefined;
+  }
+};
+
+export class XhttpConfigError extends Error {
+  readonly key: string;
+  tag?: string;
+
+  constructor(key: string) {
+    super(`XHTTP: ${key}`);
+    this.name = 'XhttpConfigError';
+    this.key = key;
+  }
+}
+
 export class XrayStreamHttpSettingsObject implements ITransportNetwork {
   static modes = ['auto', 'packet-up', 'stream-up', 'stream-one'];
   public host?: string;
@@ -126,14 +143,13 @@ export class XrayStreamHttpSettingsObject implements ITransportNetwork {
   constructor(parsedObject?: XrayParsedUrlObject) {
     if (parsedObject) {
       const params = parsedObject.parsedParams;
-      Object.assign(this, XrayStreamHttpSettingsObject.fromPlain({
-        path: params.path ?? '/', mode: params.mode ?? 'auto', host: params.host,
-        extra: params.extra ? JSON.parse(params.extra) : undefined
-      }));
+      const { host, path, mode, extra } = XrayStreamHttpSettingsObject.fromPlain({
+        path: params.path ?? '/', mode: params.mode ?? 'auto', host: params.host, extra: parseLinkExtra(params.extra)
+      });
+      Object.assign(this, { host, path, mode, extra });
     }
   }
 
-  /** Migrate raw JSON before class defaults are applied. Does not mutate the source. */
   static fromPlain(source: object = {}): XrayStreamHttpSettingsObject {
     const raw = source as Record<string, unknown>;
     const settings = new XrayStreamHttpSettingsObject();
@@ -141,8 +157,6 @@ export class XrayStreamHttpSettingsObject implements ITransportNetwork {
       if (raw[field] !== undefined) Object.assign(settings, { [field]: raw[field] });
     }
     const nested = raw.extra && typeof raw.extra === 'object' && !Array.isArray(raw.extra) ? raw.extra : {};
-    // Repair earlier UI output by retaining outer-only values. Explicit extra values take
-    // precedence, including false, zero and empty maps; defaults are introduced only afterwards.
     settings.extra = plainToInstance(XrayXhttpExtraObject, { ...xhttpExtraFields(raw), ...xhttpExtraFields(nested) });
     const download = settings.extra.downloadSettings;
     if (download) {
@@ -153,8 +167,6 @@ export class XrayStreamHttpSettingsObject implements ITransportNetwork {
   }
 
   normalize = (): this | undefined => {
-    // Also handles raw/legacy objects passed directly to serialization, and old-core wire names
-    // from a previous normalization. No obsolete outer copies survive to resurrect deleted data.
     this.extra = XrayStreamHttpSettingsObject.fromPlain(this).extra;
     for (const key of Object.keys(this)) {
       if (!xhttpOuterFields.has(key)) Reflect.deleteProperty(this, key);
@@ -165,13 +177,13 @@ export class XrayStreamHttpSettingsObject implements ITransportNetwork {
     this.extra = this.extra?.normalize();
 
     if (this.extra?.uplinkHTTPMethod === 'GET' && this.mode !== 'packet-up') {
-      throw new Error('XHTTP: uplinkHTTPMethod GET requires packet-up mode.');
+      throw new XhttpConfigError('error_get_packet_up');
     }
     if (['header', 'cookie'].includes(this.extra?.uplinkDataPlacement ?? '') && this.mode !== 'packet-up') {
-      throw new Error('XHTTP: header/cookie uplink data placement requires packet-up mode.');
+      throw new XhttpConfigError('error_data_placement_packet_up');
     }
     if (this.extra?.downloadSettings && this.mode === 'stream-one') {
-      throw new Error('XHTTP: downloadSettings cannot be used in stream-one mode.');
+      throw new XhttpConfigError('error_download_stream_one');
     }
     return isObjectEmpty(this) ? undefined : this;
   };
@@ -192,7 +204,6 @@ export class XrayDownloadSettingsObject {
       return undefined;
     }
 
-    // A placeholder does not set a value, and core does not infer the HTTPS port here.
     this.port = this.port || 443;
 
     if (this.security === 'tls') {
@@ -218,7 +229,6 @@ export class XrayDownloadSettingsObject {
   };
 }
 
-/** Seed a new split download without overwriting independently configured/imported values. */
 export function createXhttpDownloadSettings(upload: XrayStreamHttpSettingsObject): XrayDownloadSettingsObject {
   const download = new XrayDownloadSettingsObject();
   download.xhttpSettings = new XrayStreamHttpSettingsObject();
@@ -243,8 +253,6 @@ export class XrayXhttpExtraObject {
   sessionIDLength?: XhttpRange;
   seqPlacement? = 'path';
   seqKey?: string;
-  // Core defaults to auto, which lets an inbound accept payloads from multiple placements.
-  // An explicit body is not equivalent and must not be normalized away.
   uplinkDataPlacement? = 'auto';
   uplinkDataKey?: string;
   uplinkChunkSize?: XhttpRange;

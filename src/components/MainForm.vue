@@ -75,8 +75,10 @@
 
 <script lang="ts">
   import { computed, defineComponent, inject, onBeforeUnmount, onMounted, Ref, ref, watch } from 'vue';
+  import { useI18n } from 'vue-i18n';
   import engine, { EngineResponseConfig, SubmitActions } from '@/modules/Engine';
   import { getCoreVersion } from '@/modules/CoreVersion';
+  import { XhttpConfigError } from '@/modules/TransportObjects';
 
   import Modal from '@main/Modal.vue';
 
@@ -125,6 +127,7 @@
     },
 
     setup() {
+      const { t } = useI18n();
       const config = ref(engine.xrayConfig);
       const transportModal = ref();
       const sniffingModal = ref();
@@ -192,7 +195,8 @@
           });
         } catch (error) {
           window.hideLoading();
-          window.alert(error instanceof Error ? error.message : String(error));
+          if (error instanceof XhttpConfigError) window.alert(t(`com.Xhttp.${error.key}`, { tag: error.tag ?? '' }));
+          else window.alert(error instanceof Error ? error.message : String(error));
         }
       };
 

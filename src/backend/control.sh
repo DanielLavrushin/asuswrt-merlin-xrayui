@@ -139,9 +139,16 @@ start() {
 }
 
 stop() {
+    local rc=0
+    local pid
     log_info "Stopping $ADDON_TITLE"
 
     update_loading_progress "Stopping $ADDON_TITLE"
+
+    if [ -f "$XRAY_PIDFILE" ]; then
+        rm -f "$XRAY_PIDFILE"
+        log_info "PID file $XRAY_PIDFILE removed successfully."
+    fi
 
     if [ -n "$(get_xray_daemon_pid)" ]; then
         kill_xray_daemon -TERM
@@ -160,21 +167,19 @@ stop() {
             sleep 1
         fi
 
-        if [ -n "$(get_xray_daemon_pid)" ]; then
-            log_error "Xray daemon is still running after SIGKILL."
-        fi
+        for pid in $(get_xray_daemon_pids); do
+            log_error "Xray daemon is still running after SIGKILL (PID: $pid)."
+            rc=1
+        done
     else
         log_info "Xray daemon is not running."
-    fi
-
-    if [ -f "$XRAY_PIDFILE" ]; then
-        rm -f "$XRAY_PIDFILE"
-        log_info "PID file $XRAY_PIDFILE removed successfully."
     fi
 
     cleanup_firewall
 
     cleanup_stale_asdfiles
+
+    return "$rc"
 }
 
 restart() {

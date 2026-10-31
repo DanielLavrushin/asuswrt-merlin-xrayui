@@ -28,9 +28,16 @@ curl() {
 date() { echo 1790000000; }
 sanitize_probe_interval() { echo "${1:-30}"; }
 jq_update_file() { ev "jq_update_file"; }
+xray() {
+    ev "xray $*"
+    [ -f "$RS_STATE/stats.json" ] || return 1
+    cat "$RS_STATE/stats.json"
+}
 
 XRAY_CONFIG_FILE="$RS_STATE/opt/etc/xray/config.json"
 XRAYUI_CONNECTION_STATUS_FILE="$RS_STATE/share/xray_connection_status.json"
+ADDON_SHARE_DIR="$RS_STATE/share"
+XRAYUI_CLIENTS_FILE="$RS_STATE/share/clients-online.json"
 check_connection=${RS_CHECK_CONNECTION:-true}
 clients_check=${RS_CLIENTS_CHECK:-false}
 probe_url=${RS_PROBE_URL:-}
@@ -54,6 +61,11 @@ required() {
 apply() {
     api_apply_configuration
     ev "apply rc=$?"
+}
+
+clients() {
+    api_get_connected_clients
+    ev "clients rc=$?"
 }
 
 for step do

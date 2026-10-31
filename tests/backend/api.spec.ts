@@ -32,6 +32,7 @@ interface Result {
   status?: Record<string, unknown>;
   observatory?: string;
   apiConfig?: Record<string, unknown>;
+  clients?: string;
 }
 
 const run = (shell: string[], scenario: Scenario): Result => {
@@ -52,12 +53,22 @@ const run = (shell: string[], scenario: Scenario): Result => {
       events: (read('events.log') ?? '').split('\n').filter(Boolean),
       status: status ? JSON.parse(status) : undefined,
       observatory: read('observatory.out'),
-      apiConfig: apiConfig ? JSON.parse(apiConfig) : undefined
+      apiConfig: apiConfig ? JSON.parse(apiConfig) : undefined,
+      clients: read('share/clients-online.json')
     };
   } finally {
     fs.rmSync(state, { recursive: true, force: true });
   }
 };
+
+const CLIENTS_API_CONFIG = JSON.stringify({ api: { tag: 'sys:api', listen: '127.0.0.1:10085' } });
+const STATS = JSON.stringify({
+  stat: [
+    { name: 'user>>>alice@example>>>traffic>>>uplink', value: '120' },
+    { name: 'user>>>alice@example>>>traffic>>>downlink', value: '40' },
+    { name: 'user>>>bob@example>>>traffic>>>uplink', value: '0' }
+  ]
+});
 
 const balancerConfig = (balancer: Record<string, unknown>) => JSON.stringify({ outbounds: [{ tag: 'p-a' }], routing: { balancers: [{ tag: 'bal', selector: ['p-'], ...balancer }] } });
 
@@ -150,6 +161,24 @@ describeIf.each(SHELLS)('api.sh under %s', (_name, shell) => {
     const r = run(shell, { steps: ['apply'], env: { RS_CHECK_CONNECTION: 'true' }, files: { 'opt/etc/xray/config.json': balancerConfig({ strategy: { type: 'leastPing' } }) } });
     expect(r.apiConfig).toMatchObject({ api: { tag: 'sys:api' }, observatory: { subjectSelector: ['p-a'] }, metrics: { tag: 'sys:metrics_out' } });
     expect(r.events).toContain('jq_update_file');
+  });
+
+  it('lists the clients that moved traffic since the last query', () => {
+    const r = run(shell, { steps: ['clients'], env: { RS_PID: '4242' }, files: { 'opt/etc/xray/xrayui/config-api.json': CLIENTS_API_CONFIG, 'stats.json': STATS } });
+    expect(JSON.parse(r.clients ?? '')).toEqual([{ ip: '', email: ['alice@example'] }]);
+    expect(r.events).toEqual(['xray api statsquery -s 127.0.0.1:10085 -pattern user>>> -reset', 'clients rc=0']);
+  });
+
+  it('does not start an xray process while Xray is stopped', () => {
+    const r = run(shell, { steps: ['clients'], files: { 'opt/etc/xray/xrayui/config-api.json': CLIENTS_API_CONFIG, 'stats.json': STATS } });
+    expect(JSON.parse(r.clients ?? '')).toEqual([]);
+    expect(r.events).toEqual(['clients rc=0']);
+  });
+
+  it('writes an empty client list when the stats service does not answer', () => {
+    const r = run(shell, { steps: ['clients'], env: { RS_PID: '4242' }, files: { 'opt/etc/xray/xrayui/config-api.json': CLIENTS_API_CONFIG } });
+    expect(JSON.parse(r.clients ?? '')).toEqual([]);
+    expect(r.events).toContain('ERROR: StatsService unreachable on 127.0.0.1:10085');
   });
 
   it('needs the API configuration when either check is on, and not without a configuration', () => {

@@ -175,7 +175,7 @@ failover_wait_verdict() {
 failover_switch_next() {
     local tag="$1"
     local now current proto active origin cur_hp pool candidates others_ids others_hps failed chosen
-    local link id hp rep merged pass locals tried evaluated
+    local link id hp rep merged pass locals tried evaluated applied
     chosen=""
 
     now=$(date +%s)
@@ -277,8 +277,9 @@ EOF
 
     log_info "Failover: switching '$tag' to $(failover_link_label "$chosen")"
     failover_apply_outbound "$tag" "$merged" "$current"
-    case "$?" in
-    0) ;;
+    applied=$?
+    case "$applied" in
+    0 | 3) ;;
     2) return 1 ;;
     *)
         failover_mark_failed "$tag" "$id" "$now"
@@ -295,7 +296,7 @@ EOF
             | .verified = false
             | del(.switches_this_hour)
             | if $old != "" then .failed = ((.failed // {}) + {($old): $now}) else . end)'
-    return 0
+    [ "$applied" -eq 0 ]
 }
 
 failover_order_candidates() {
@@ -569,16 +570,30 @@ failover_apply_outbound() {
         return 1
     fi
 
+    if [ ! -f "$XRAY_PIDFILE" ]; then
+        failover_config_unlock
+        log_info "Failover: Xray is stopped - '$tag' uses the new endpoint on the next start"
+        return 3
+    fi
+
     if api_swap_outbound "$tag" "$ob" "$previous"; then
         failover_config_unlock
         return 0
     fi
 
     failover_config_unlock
+    if [ ! -f "$XRAY_PIDFILE" ]; then
+        log_info "Failover: Xray was stopped - '$tag' uses the new endpoint on the next start"
+        return 3
+    fi
     log_info "Failover: hot-swap failed - restarting Xray"
     restart
     if [ -n "$(get_xray_daemon_pid)" ]; then
         return 0
+    fi
+    if [ ! -f "$XRAY_PIDFILE" ]; then
+        log_info "Failover: Xray was stopped - '$tag' uses the new endpoint on the next start"
+        return 3
     fi
 
     log_error "Failover: Xray did not start with the new endpoint of '$tag' - restoring the previous one"
@@ -586,7 +601,9 @@ failover_apply_outbound() {
         failover_same_json "$(failover_read_outbound "$tag")" "$ob" && failover_write_outbound "$tag" "$previous"
         failover_config_unlock
     fi
-    restart
+    if [ -f "$XRAY_PIDFILE" ]; then
+        restart
+    fi
     return 1
 }
 

@@ -116,6 +116,49 @@ const DNS_CONFIG = JSON.stringify({
 });
 const APPLIED = JSON.stringify({ log: { loglevel: 'debug' }, inbounds: [], outbounds: [{ tag: 'direct', protocol: 'freedom' }] });
 const loadingResponse = (message: string) => JSON.stringify({ xray: { profile: 'config.json' }, loading: { message, progress: 100 } });
+const DAEMON_CMDLINES = [
+  'xray -c /opt/etc/xray/config.json -c /opt/etc/xray/xrayui/config-api.json ',
+  'xray run -confdir /opt/etc/xray ',
+  '/opt/sbin/xray run -c /opt/etc/xray/config.json ',
+  'xray -config /opt/etc/xray/config.json ',
+  'xray --config=/opt/etc/xray/config.json ',
+  'xray -confdir /opt/etc/xray ',
+  'xray ',
+  'xray'
+];
+const HELPER_CMDLINES = [
+  'xray api statsquery -s 127.0.0.1:10085 -pattern user>>> -reset ',
+  'xray api rmo -s 127.0.0.1:10085 proxy ',
+  'xray tls ping example.com ',
+  'xray x25519 ',
+  'xray version ',
+  'xray -version ',
+  'xray -h ',
+  'xray -c /opt/etc/xray/config.json -c /opt/etc/xray/xrayui/config-api.json -test ',
+  'xray run -test -config /tmp/xrayui_fo_test.json ',
+  'xray run -dump -c /opt/etc/xray/config.json ',
+  'sh -c xray -c /opt/etc/xray/config.json ',
+  '/opt/sbin/xrayui service_event serverstatus stop ',
+  ''
+];
+const POOL_OUTBOUND = JSON.stringify({ outbounds: [{ tag: 'p', protocol: 'vless', subPool: { enabled: true, active: 'old' } }] });
+const POOL_ID = (host: number) => `vless://11111111-2222-3333-4444-555555555555@203.0.113.${host}:443?security=reality&sni=s${host}.example&pbk=key&sid=01`;
+const POOL_A = `${POOL_ID(1)}#A`;
+const POOL_B = `${POOL_ID(2)}#B`;
+const POOL_SWITCH = {
+  'opt/etc/xray/config.json': JSON.stringify({
+    outbounds: [
+      {
+        tag: 'p',
+        protocol: 'vless',
+        settings: { vnext: [{ address: '203.0.113.1', port: 443, users: [{ id: '11111111-2222-3333-4444-555555555555', encryption: 'none' }] }] },
+        streamSettings: { network: 'tcp', security: 'reality', realitySettings: { serverName: 's1.example', publicKey: 'key', shortId: '01' } },
+        subPool: { enabled: true, active: POOL_A }
+      }
+    ]
+  }),
+  'share/xray_subscriptions.json': JSON.stringify({ vless: [POOL_A, POOL_B] })
+};
 
 type Bin = 'host' | 'nobase64' | 'bare';
 
@@ -161,6 +204,37 @@ const scenarios: Record<string, Scenario> = {
   'switch handler success': { steps: ['switch_dispatch'], env: { RS_SW_RC: '0' }, files: { 'opt/etc/xray/config.json': '{}' } },
   'switch handler failure': { steps: ['switch_dispatch'], env: { RS_SW_RC: '1' }, files: { 'opt/etc/xray/config.json': '{}' } },
   'switch handler start failure': { steps: ['switch_dispatch'], env: { RS_SW_RC: '2' }, files: { 'opt/etc/xray/config.json': '{}' } },
+  'xray process command lines': { steps: ['daemon_ids'], files: { cmdlines: [...DAEMON_CMDLINES, ...HELPER_CMDLINES].join('\n') + '\n' } },
+  'stop a running daemon': { steps: ['stop_xray'], files: { procs: '4242\n', 'run/xray.pid': '4242' } },
+  'stop a daemon that ignores SIGTERM': { steps: ['stop_xray'], env: { RS_STOP_ON: 'KILL' }, files: { procs: '4242\n', 'run/xray.pid': '4242' } },
+  'stop a daemon that survives SIGKILL': { steps: ['stop_xray'], env: { RS_STOP_ON: 'never' }, files: { procs: '4242\n4343\n', 'run/xray.pid': '4242' } },
+  'stop while stopped': { steps: ['stop_xray'], files: { 'run/xray.pid': '4242' } },
+  'stop handler success': { steps: ['stop_dispatch'], env: { RS_STOP_RC: '0' }, files: { 'opt/etc/xray/config.json': '{}' } },
+  'stop handler failure': { steps: ['stop_dispatch'], env: { RS_STOP_RC: '1' }, files: { 'opt/etc/xray/config.json': '{}' } },
+  'failover switch while Xray is stopped': { steps: ['apply_outbound'], files: { 'opt/etc/xray/config.json': POOL_OUTBOUND } },
+  'failover switch with a working hot-swap': { steps: ['apply_outbound'], files: { 'opt/etc/xray/config.json': POOL_OUTBOUND, 'run/xray.pid': '4242' } },
+  'failover switch when the hot-swap fails': {
+    steps: ['apply_outbound'],
+    env: { RS_SWAP: 'fail' },
+    files: { 'opt/etc/xray/config.json': POOL_OUTBOUND, 'run/xray.pid': '4242' }
+  },
+  'failover switch when Xray is stopped during the hot-swap': {
+    steps: ['apply_outbound'],
+    env: { RS_SWAP: 'stopped' },
+    files: { 'opt/etc/xray/config.json': POOL_OUTBOUND, 'run/xray.pid': '4242' }
+  },
+  'failover switch when Xray is stopped during the restart': {
+    steps: ['apply_outbound'],
+    env: { RS_SWAP: 'fail', RS_RESTART: 'stopped' },
+    files: { 'opt/etc/xray/config.json': POOL_OUTBOUND, 'run/xray.pid': '4242' }
+  },
+  'failover switch that Xray does not start with': {
+    steps: ['apply_outbound'],
+    env: { RS_SWAP: 'fail', RS_RESTART: 'crashed' },
+    files: { 'opt/etc/xray/config.json': POOL_OUTBOUND, 'run/xray.pid': '4242' }
+  },
+  'failover rotation while Xray is stopped': { steps: ['switch_next'], files: POOL_SWITCH },
+  'failover rotation while Xray is running': { steps: ['switch_next'], files: { ...POOL_SWITCH, 'run/xray.pid': '4242' } },
   'profiles and backups': {
     steps: ['respond'],
     env: { profile: 'b.json' },
@@ -585,6 +659,110 @@ describe.each(SHELLS)('response backend under %s', (_label, shell) => {
       const r = await get(name);
       expect(finalProgress(r)).toEqual([`PROGRESS: ${message}|100`]);
       expect(r.events).not.toContain('restart');
+    });
+  });
+
+  describe('stopping Xray', () => {
+    it('treats every long-running xray as the daemon and skips the command-line helpers', async () => {
+      const r = await get('xray process command lines');
+      expect(r.events).toEqual([...DAEMON_CMDLINES.map((c) => `daemon: ${c}`), ...HELPER_CMDLINES.map((c) => `helper: ${c}`)]);
+    });
+
+    it('removes the PID file before signalling the daemon', async () => {
+      const r = await get('stop a running daemon');
+      expect(r.events).toContain('kill -TERM pidfile=gone');
+      expect(r.events).not.toContain('kill -9 pidfile=gone');
+      expect(r.events.slice(-3)).toEqual(['cleanup_firewall', 'stop rc=0', 'pidfile gone']);
+    });
+
+    it('sends SIGKILL to a daemon that ignores SIGTERM', async () => {
+      const r = await get('stop a daemon that ignores SIGTERM');
+      expect(r.events.filter((e) => e.startsWith('kill '))).toEqual(['kill -TERM pidfile=gone', 'kill -9 pidfile=gone']);
+      expect(r.events).toContain('WARN: Xray did not stop in time. Sending SIGKILL.');
+      expect(r.events).toContain('stop rc=0');
+    });
+
+    it('fails with every surviving PID logged, and still removes the firewall rules and the PID file', async () => {
+      const r = await get('stop a daemon that survives SIGKILL');
+      expect(r.events).toContain('ERROR: Xray daemon is still running after SIGKILL (PID: 4242).');
+      expect(r.events).toContain('ERROR: Xray daemon is still running after SIGKILL (PID: 4343).');
+      expect(r.events.slice(-3)).toEqual(['cleanup_firewall', 'stop rc=1', 'pidfile gone']);
+    });
+
+    it('succeeds without signals when Xray is not running', async () => {
+      const r = await get('stop while stopped');
+      expect(r.events).toContain('INFO: Xray daemon is not running.');
+      expect(r.events.some((e) => e.startsWith('kill '))).toBe(false);
+      expect(r.events.slice(-3)).toEqual(['cleanup_firewall', 'stop rc=0', 'pidfile gone']);
+    });
+
+    it.each([
+      ['stop handler success', 'Xray service stopped successfully.'],
+      ['stop handler failure', 'Error: Xray is still running. The details are in the system log.']
+    ])('%s ends with the matching message', async (name, message) => {
+      const r = await get(name);
+      expect(r.events).toContain('stop');
+      expect(finalProgress(r)).toEqual([`PROGRESS: ${message}|100`]);
+    });
+
+    it('keeps a stopped Xray stopped when auto-fallback switches an endpoint', async () => {
+      const r = await get('failover switch while Xray is stopped');
+      expect(r.events).toContain("INFO: Failover: Xray is stopped - 'p' uses the new endpoint on the next start");
+      expect(r.events).toContain('apply rc=3');
+      expect(r.events).toContain('active new');
+      expect(r.events).not.toContain('swap p');
+      expect(r.events).not.toContain('restart');
+    });
+
+    it('hot-swaps the endpoint of a running Xray without a restart', async () => {
+      const r = await get('failover switch with a working hot-swap');
+      expect(r.events).toEqual(['swap p', 'apply rc=0', 'active new']);
+    });
+
+    it('restarts a running Xray when the hot-swap fails', async () => {
+      const r = await get('failover switch when the hot-swap fails');
+      expect(r.events).toEqual(['swap p', 'INFO: Failover: hot-swap failed - restarting Xray', 'restart', 'apply rc=0', 'active new']);
+    });
+
+    it('does not restart Xray when it was stopped during the hot-swap', async () => {
+      const r = await get('failover switch when Xray is stopped during the hot-swap');
+      expect(r.events).toEqual(['swap p', "INFO: Failover: Xray was stopped - 'p' uses the new endpoint on the next start", 'apply rc=3', 'active new']);
+    });
+
+    it('does not restart Xray again when it was stopped during the fallback restart', async () => {
+      const r = await get('failover switch when Xray is stopped during the restart');
+      expect(r.events).toEqual([
+        'swap p',
+        'INFO: Failover: hot-swap failed - restarting Xray',
+        'restart',
+        "INFO: Failover: Xray was stopped - 'p' uses the new endpoint on the next start",
+        'apply rc=3',
+        'active new'
+      ]);
+    });
+
+    it('restores the previous endpoint when Xray does not start with the new one', async () => {
+      const r = await get('failover switch that Xray does not start with');
+      expect(r.events).toEqual([
+        'swap p',
+        'INFO: Failover: hot-swap failed - restarting Xray',
+        'restart',
+        "ERROR: Failover: Xray did not start with the new endpoint of 'p' - restoring the previous one",
+        'restart',
+        'apply rc=1',
+        'active old'
+      ]);
+    });
+
+    it.each([
+      ['failover rotation while Xray is stopped', 'switch rc=1'],
+      ['failover rotation while Xray is running', 'switch rc=0']
+    ])('records the switch and quarantines the old endpoint on %s', async (name, rc) => {
+      const r = await get(name);
+      expect(r.events).toContain(rc);
+      expect(r.events).toContain(`active ${POOL_B}`);
+      const state = r.events.find((e) => e.startsWith('state '));
+      expect(JSON.parse(state!.slice(6))).toEqual({ failed: [POOL_ID(1)], verified: false, consecutive_failures: 0, switches: 1 });
     });
   });
 

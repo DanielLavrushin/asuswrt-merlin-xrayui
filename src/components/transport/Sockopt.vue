@@ -72,6 +72,26 @@
         </tr>
         <tr>
           <th>
+            {{ $t('com.SockOpt.label_tcp_keepalive_idle') }}
+            <hint v-html="$t('com.SockOpt.hint_tcp_keepalive_idle')"></hint>
+          </th>
+          <td>
+            <input type="number" :min="keepAliveMin" maxlength="5" class="input_6_table" v-model.number="sockopt.tcpKeepAliveIdle" />
+            <span class="hint-color">{{ keepAliveDefault }}</span>
+          </td>
+        </tr>
+        <tr>
+          <th>
+            {{ $t('com.SockOpt.label_tcp_keepalive_interval') }}
+            <hint v-html="$t('com.SockOpt.hint_tcp_keepalive_interval')"></hint>
+          </th>
+          <td>
+            <input type="number" :min="keepAliveMin" maxlength="5" class="input_6_table" v-model.number="sockopt.tcpKeepAliveInterval" />
+            <span class="hint-color">{{ keepAliveDefault }}</span>
+          </td>
+        </tr>
+        <tr>
+          <th>
             {{ $t('com.SockOpt.label_dealer_proxy') }}
             <hint v-html="$t('com.SockOpt.hint_dealer_proxy')"></hint>
           </th>
@@ -98,7 +118,8 @@
       Hint
     },
     props: {
-      transport: XrayStreamSettingsObject
+      transport: XrayStreamSettingsObject,
+      proxyType: { type: String, default: '' }
     },
     setup(props) {
       const sockopt = ref<XraySockoptObject>(props.transport?.sockopt ?? new XraySockoptObject());
@@ -117,8 +138,15 @@
         { immediate: true }
       );
 
+      // Xray leaves keepalive off on inbound sockets and uses 45 s probes on outbound ones;
+      // a negative value turns the outbound default off, but on an inbound Xray refuses to start with it.
+      const keepAliveMin = computed(() => (props.proxyType === 'outbound' ? -1 : 0));
+      const keepAliveDefault = computed(() => (props.proxyType === 'outbound' ? 'default: 45 s, -1 = off' : 'default: off'));
+
       return {
         sockopt,
+        keepAliveMin,
+        keepAliveDefault,
         domainStrategyOptions: XraySockoptObject.domainStrategyOptions,
         tproxyOptions: XraySockoptObject.tproxyOptions,
         outboundOptions

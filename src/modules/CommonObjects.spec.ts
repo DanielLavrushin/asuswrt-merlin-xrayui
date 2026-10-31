@@ -1,3 +1,4 @@
+import { plainToInstance } from 'class-transformer';
 import {
   XrayAllocateObject,
   XrayDnsObject,
@@ -482,6 +483,42 @@ describe('CommonObjects', () => {
       expect(so.domainStrategy).toBe('UseIPv6');
       expect(so.mark).toBe(100);
       expect(so.tcpMptcp).toBe(true);
+    });
+
+    const keepAlive = (idle?: unknown, interval?: unknown) => {
+      const so = new XraySockoptObject();
+      Object.assign(so, { tcpKeepAliveIdle: idle, tcpKeepAliveInterval: interval });
+      so.normalize();
+      return JSON.parse(JSON.stringify(so));
+    };
+
+    it('keeps TCP keepalive values, including -1 that turns the outbound default off', () => {
+      expect(keepAlive(300, 30)).toEqual({ tcpKeepAliveIdle: 300, tcpKeepAliveInterval: 30 });
+      expect(keepAlive(undefined, -1)).toEqual({ tcpKeepAliveInterval: -1 });
+      expect(keepAlive(-1, -1)).toEqual({ tcpKeepAliveIdle: -1, tcpKeepAliveInterval: -1 });
+    });
+
+    it('never saves a TCP keepalive pair that Xray rejects', () => {
+      // one negative and one positive value fail with "invalid TcpKeepAliveIdle or TcpKeepAliveInterval value"
+      expect(keepAlive(300, -1)).toEqual({ tcpKeepAliveInterval: -1 });
+      expect(keepAlive(-1, 30)).toEqual({ tcpKeepAliveIdle: -1 });
+      expect(keepAlive(-5, 0)).toEqual({ tcpKeepAliveIdle: -1 });
+      // Xray reads whole seconds only
+      expect(keepAlive(300.7, '30')).toEqual({ tcpKeepAliveIdle: 300, tcpKeepAliveInterval: 30 });
+    });
+
+    it('drops empty and zero TCP keepalive values', () => {
+      const so = new XraySockoptObject();
+      so.tcpKeepAliveIdle = 0;
+      (so as unknown as Record<string, unknown>).tcpKeepAliveInterval = '';
+      expect(so.normalize()).toBeUndefined();
+    });
+
+    it('keeps TCP keepalive set in config.json through loading and saving', () => {
+      const s = plainToInstance(XrayStreamSettingsObject, { network: 'tcp', sockopt: { tcpKeepAliveIdle: 300, tcpKeepAliveInterval: 30 } });
+      s.sockopt = plainToInstance(XraySockoptObject, s.sockopt);
+      const saved = JSON.parse(JSON.stringify(s.normalize()));
+      expect(saved.sockopt).toEqual({ tcpKeepAliveIdle: 300, tcpKeepAliveInterval: 30 });
     });
   });
 

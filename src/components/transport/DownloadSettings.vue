@@ -100,7 +100,7 @@
               <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click="manage_sockopt" />
             </span>
             <modal ref="sockoptModal" :title="$t('com.DownloadSettings.sockopt_title')">
-              <sockopt :transport="downloadTransport"></sockopt>
+              <sockopt :transport="downloadTransport" proxy-type="outbound"></sockopt>
             </modal>
           </td>
         </tr>

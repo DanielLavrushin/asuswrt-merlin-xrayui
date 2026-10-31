@@ -83,6 +83,7 @@ cron_geodata_add() { :; }
 cron_subscription_refresh_add() { :; }
 cron_subscription_fallback_add() { :; }
 cron_ipset_save_add() { :; }
+cron_autorestart_add() { ev "cron_autorestart_add"; }
 logs_scribe_integration() { :; }
 update_community_geodata() { :; }
 restart() { ev "restart"; }

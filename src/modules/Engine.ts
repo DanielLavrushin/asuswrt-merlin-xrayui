@@ -255,6 +255,10 @@ export class EngineResponseConfig {
     subscription_auto_refresh?: string;
     subscription_auto_fallback?: boolean;
     subscription_fallback_interval?: number;
+    autorestart?: boolean;
+    autorestart_interval?: number;
+    autorestart_retries?: number;
+    autorestart_delay?: number;
   };
   public geodata?: EngineGeodatConfig = new EngineGeodatConfig();
   public loading?: EngineLoadingProgress;

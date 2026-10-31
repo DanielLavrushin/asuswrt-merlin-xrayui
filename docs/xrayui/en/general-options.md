@@ -48,6 +48,24 @@ Additional wait (seconds) after Xray starts, before XRAYUI continues with follow
 Starting Xray and applying XRAYUI rules are both resource-intensive. On some devices, spacing them out avoids spikes that can slow or stall the system.
 :::
 
+### Auto-restart Xray if it stops
+
+When enabled, XRAYUI checks on a schedule whether Xray is still running and restarts it when the process has exited on its own, for example after a crash. A normal restart also redoes the cleanup a crash skips, such as the firewall rules. Every automatic restart is written to the system log, for example `XRAYUI: Xray was not running, restarting (attempt 1/3)`.
+
+Xray stopped on purpose — with **Stop** in the UI or with `xrayui stop` — stays stopped, even if you stop it while an automatic restart is running. The check runs only while Xray is supposed to be running.
+
+#### Check every
+
+How often (in minutes) to check whether Xray is running. Default is **5** minutes.
+
+#### Restart attempts
+
+How many times in a row XRAYUI restarts Xray before it gives up and writes that to the system log. The count starts over when a check finds Xray running again and whenever you start or restart Xray yourself. Xray that keeps exiting before the next check uses up the attempts. Set to `0` to keep trying forever. Default is **3**.
+
+#### Delay between attempts
+
+Minimum time (in minutes) between two restart attempts, so a broken configuration does not restart Xray in a tight loop. The first attempt is made at the first check after Xray stopped. Default is **10** minutes.
+
 ### Check connection to xray server
 
 Enables live outbound health checks. When on, XRAYUI starts Xray with the built-in **Observatory**, which periodically opens a connection through **every** outbound to the probe URL and records whether it succeeded. The result is shown as a green/red indicator next to each outbound in the **Outbounds** section (yellow means no result yet; hover over the dot to see the delay or the error Xray reported), and the same data drives the automatic subscription failover. The system pieces XRAYUI adds for this are tagged `sys` and stay hidden in the UI.

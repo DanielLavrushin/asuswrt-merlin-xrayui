@@ -1,6 +1,6 @@
 # XRAYUI Changelog
 
-## [0.70.3] - 2026-10-02
+## [0.71.0] - 2026-10-31
 
 - FIXED: **Stop** could leave a second copy of Xray running, such as one started at boot by an old Entware Xray package, so the page still showed Xray as running. Such copies are now stopped too, and **Stop** shows an error when Xray keeps running.
 - FIXED: A stopped Xray could start again by itself when a subscription update or auto-fallback changed a server in the **Auto-fallback pool**. The new server is now used on the next start instead.

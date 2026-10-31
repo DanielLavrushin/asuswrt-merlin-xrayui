@@ -38,6 +38,16 @@ describe('split XHTTP padding', () => {
     expect(effective(down.xhttpSettings)).toMatchObject({ ...padding, xPaddingBytes: '200-400' });
   });
 
+  it('seeds the session ID placement and key into a new download', () => {
+    const http = XrayStreamHttpSettingsObject.fromPlain({ path: '/split/', extra: { sessionIDPlacement: 'header', sessionIDKey: 'X-Sid' } });
+    const download = createXhttpDownloadSettings(http);
+    download.address = 'down.example.com';
+    http.extra!.downloadSettings = download;
+
+    expect(download.xhttpSettings!.extra).toMatchObject({ sessionIDPlacement: 'header', sessionIDKey: 'X-Sid' });
+    expect(serialize(http).extra.downloadSettings.xhttpSettings.extra).toMatchObject({ sessionIDPlacement: 'header', sessionIDKey: 'X-Sid' });
+  });
+
   it('keeps obfuscation enabled with every padding sub-field at its default', () => {
     const http = new XrayStreamHttpSettingsObject();
     http.extra!.xPaddingObfsMode = true;

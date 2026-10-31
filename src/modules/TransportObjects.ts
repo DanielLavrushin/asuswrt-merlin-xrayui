@@ -94,7 +94,16 @@ export class XrayStreamWsSettingsObject implements ITransportNetwork {
 }
 
 const xhttpOuterFields = new Set(['host', 'path', 'mode', 'extra', 'normalize']);
-const xhttpPaddingFields = ['xPaddingBytes', 'xPaddingObfsMode', 'xPaddingKey', 'xPaddingHeader', 'xPaddingPlacement', 'xPaddingMethod'] as const;
+const xhttpDownloadSeedFields = [
+  'xPaddingBytes',
+  'xPaddingObfsMode',
+  'xPaddingKey',
+  'xPaddingHeader',
+  'xPaddingPlacement',
+  'xPaddingMethod',
+  'sessionIDPlacement',
+  'sessionIDKey'
+] as const;
 type XhttpRange = number | string;
 
 function xhttpExtraFields(source: object): Record<string, unknown> {
@@ -239,7 +248,7 @@ export function createXhttpDownloadSettings(upload: XrayStreamHttpSettingsObject
   download.xhttpSettings = new XrayStreamHttpSettingsObject();
   download.xhttpSettings.path = upload.path;
   const extra = XrayStreamHttpSettingsObject.fromPlain(upload).extra!;
-  Object.assign(download.xhttpSettings.extra!, Object.fromEntries(xhttpPaddingFields.map((field) => [field, extra[field]])));
+  Object.assign(download.xhttpSettings.extra!, Object.fromEntries(xhttpDownloadSeedFields.map((field) => [field, extra[field]])));
   return download;
 }
 

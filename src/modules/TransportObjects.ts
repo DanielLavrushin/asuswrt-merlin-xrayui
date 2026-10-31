@@ -156,8 +156,13 @@ export class XrayStreamHttpSettingsObject implements ITransportNetwork {
     for (const field of ['host', 'path', 'mode'] as const) {
       if (raw[field] !== undefined) Object.assign(settings, { [field]: raw[field] });
     }
-    const nested = raw.extra && typeof raw.extra === 'object' && !Array.isArray(raw.extra) ? raw.extra : {};
-    settings.extra = plainToInstance(XrayXhttpExtraObject, { ...xhttpExtraFields(raw), ...xhttpExtraFields(nested) });
+    const nested = raw.extra && typeof raw.extra === 'object' && !Array.isArray(raw.extra) ? raw.extra : undefined;
+    const outer = xhttpExtraFields(raw);
+    if (nested && settings.mode !== 'packet-up') {
+      if (String(outer.uplinkHTTPMethod).trim().toUpperCase() === 'GET') delete outer.uplinkHTTPMethod;
+      if (outer.uplinkDataPlacement === 'cookie' || outer.uplinkDataPlacement === 'header') delete outer.uplinkDataPlacement;
+    }
+    settings.extra = plainToInstance(XrayXhttpExtraObject, { ...outer, ...xhttpExtraFields(nested ?? {}) });
     const download = settings.extra.downloadSettings;
     if (download) {
       settings.extra.downloadSettings = plainToInstance(XrayDownloadSettingsObject, download);

@@ -68,10 +68,18 @@ describe('canonical XHTTP representation', () => {
     expect(JSON.stringify(engine.prepareServerConfig(saved))).toBe(JSON.stringify(saved));
   });
 
-  it('names the proxy whose migrated settings block Apply', () => {
+  it('drops an outer value Xray ignored when it conflicts with the mode', () => {
+    const extra = { xmux: { maxConnections: 4 } };
+    expect(XrayStreamHttpSettingsObject.fromPlain({ uplinkHTTPMethod: 'GET', uplinkDataPlacement: 'cookie', extra }).extra)
+      .toMatchObject({ uplinkHTTPMethod: 'POST', uplinkDataPlacement: 'auto' });
+    expect(XrayStreamHttpSettingsObject.fromPlain({ mode: 'packet-up', uplinkHTTPMethod: 'GET', extra }).extra!.uplinkHTTPMethod).toBe('GET');
+    expect(() => save({ uplinkHTTPMethod: 'GET' })).toThrow(XhttpConfigError);
+  });
+
+  it('names the proxy whose XHTTP settings block Apply', () => {
     const config = engine.hydrateConfig(plainToInstance(XrayObject, {
       outbounds: [{ protocol: 'vless', tag: 'proxy-a', settings: { vnext: [] }, streamSettings: {
-        network: 'xhttp', xhttpSettings: { uplinkHTTPMethod: 'GET', extra: { xmux: { maxConnections: 4 } } }
+        network: 'xhttp', xhttpSettings: { uplinkHTTPMethod: 'GET' }
       } }]
     }));
     let caught: unknown;

@@ -78,6 +78,9 @@
     "vue-tsc": "^3.3.11"
   },
   "pnpm": {
+    "overrides": {
+      "markdown-it>entities": "8.0.0"
+    },
     "onlyBuiltDependencies": [
       "core-js",
       "unrs-resolver",

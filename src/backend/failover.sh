@@ -461,7 +461,12 @@ failover_merge_outbound() {
             else .
           end
         | if $samenet and ($o.streamSettings.xhttpSettings.extra // null) != null and (.streamSettings.xhttpSettings.extra // null) == null
-            then .streamSettings.xhttpSettings.extra = ($o.streamSettings.xhttpSettings.extra | del(.downloadSettings))
+            then ((.streamSettings.xhttpSettings.mode // "") == "packet-up") as $packetup
+              | .streamSettings.xhttpSettings.extra = ($o.streamSettings.xhttpSettings.extra | del(.downloadSettings)
+                  | if $packetup then .
+                    else (if ((.uplinkHTTPMethod // "") | tostring | ascii_upcase) == "GET" then del(.uplinkHTTPMethod) else . end)
+                      | (if .uplinkDataPlacement == "cookie" or .uplinkDataPlacement == "header" then del(.uplinkDataPlacement) else . end)
+                    end)
             else .
           end' 2>/dev/null
 }

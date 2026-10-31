@@ -72,7 +72,7 @@ import {
   maskFromCoreForm,
   extractKcpMaskingForUi,
   migrateSplitHttpToXhttp,
-  canonicalizeXhttpHeaders
+  XhttpConfigError
 } from './TransportObjects';
 import { XrayProtocol } from './Options';
 import * as DnsLeakProtection from './DnsLeakProtection';
@@ -574,13 +574,17 @@ export class Engine {
     config = this.cloneServerConfig(config);
     DnsLeakProtection.repair(config);
 
-    config.inbounds.forEach((proxy) => {
-      proxy.normalize();
-    });
+    const normalizeProxy = (proxy: { tag?: string; normalize: () => unknown }) => {
+      try {
+        proxy.normalize();
+      } catch (error) {
+        if (error instanceof XhttpConfigError) error.tag ??= proxy.tag;
+        throw error;
+      }
+    };
 
-    config.outbounds.forEach((proxy) => {
-      proxy.normalize();
-    });
+    config.inbounds.forEach(normalizeProxy);
+    config.outbounds.forEach(normalizeProxy);
 
     if (config.dns) {
       config.dns.normalize();
@@ -625,8 +629,8 @@ export class Engine {
         this.appliedBaseline = { coreVersion, json: stableStringify(this.prepareServerConfig(applied)) };
       }
       return stableStringify(this.prepareServerConfig(config)) !== this.appliedBaseline.json;
-    } catch {
-      return false;
+    } catch (error) {
+      return error instanceof XhttpConfigError;
     }
   }
 
@@ -925,7 +929,6 @@ const streamSettingsFieldMap: [keyof XrayStreamSettingsObject, new () => any][] 
   ['wsSettings', XrayStreamWsSettingsObject],
   ['httpupgradeSettings', XrayStreamHttpUpgradeSettingsObject],
   ['grpcSettings', XrayStreamGrpcSettingsObject],
-  ['xhttpSettings', XrayStreamHttpSettingsObject],
   ['hysteriaSettings', XrayStreamHysteriaSettingsObject]
 ];
 
@@ -956,7 +959,7 @@ function transformStreamSettings(streamSettings: XrayStreamSettingsObject | unde
   }
 
   migrateSplitHttpToXhttp(settings);
-  canonicalizeXhttpHeaders(settings);
+  if (settings.xhttpSettings) settings.xhttpSettings = XrayStreamHttpSettingsObject.fromPlain(settings.xhttpSettings);
   extractKcpMaskingForUi(settings);
 
   return settings;

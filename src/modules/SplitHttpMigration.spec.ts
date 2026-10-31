@@ -18,7 +18,7 @@ describe('migrateSplitHttpToXhttp', () => {
     expect(s.splithttpSettings).toBeUndefined();
     expect(s.xhttpSettings!.path).toBe('/legacy');
     expect(s.xhttpSettings!.host).toBe('old.example.com');
-    expect(s.xhttpSettings!.headers).toEqual({ 'X-Real-IP': '1.2.3.4' });
+    expect(s.xhttpSettings!.extra!.headers).toEqual({ 'X-Real-IP': '1.2.3.4' });
   });
 
   it('moves the tuning fields into extra, where XHTTP expects them', () => {

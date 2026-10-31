@@ -93,110 +93,119 @@ export class XrayStreamWsSettingsObject implements ITransportNetwork {
   };
 }
 
+const xhttpOuterFields = new Set(['host', 'path', 'mode', 'extra', 'normalize']);
+const xhttpDownloadSeedFields = [
+  'xPaddingBytes',
+  'xPaddingObfsMode',
+  'xPaddingKey',
+  'xPaddingHeader',
+  'xPaddingPlacement',
+  'xPaddingMethod',
+  'sessionIDPlacement',
+  'sessionIDKey'
+] as const;
+type XhttpRange = number | string;
+
+function xhttpExtraFields(source: object): Record<string, unknown> {
+  const fields = Object.fromEntries(Object.entries(source).filter(([key, value]) =>
+    !xhttpOuterFields.has(key) && value !== undefined && typeof value !== 'function'
+  ));
+  for (const [legacy, current] of [['sessionPlacement', 'sessionIDPlacement'], ['sessionKey', 'sessionIDKey']]) {
+    if (fields[current] === undefined && fields[legacy] !== undefined) fields[current] = fields[legacy];
+    delete fields[legacy];
+  }
+  return fields;
+}
+
+const normalizeXhttpRange = (value: XhttpRange | undefined, defaultValue?: XhttpRange): XhttpRange | undefined => {
+  if (typeof value === 'string') value = value.trim();
+  return value === '' || value == null || (defaultValue !== undefined && String(value) === String(defaultValue)) ? undefined : value;
+};
+
+const parseLinkExtra = (value: unknown): unknown => {
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return undefined;
+  }
+};
+
+export class XhttpConfigError extends Error {
+  readonly key: string;
+  tag?: string;
+
+  constructor(key: string) {
+    super(`XHTTP: ${key}`);
+    this.name = 'XhttpConfigError';
+    this.key = key;
+  }
+}
+
 export class XrayStreamHttpSettingsObject implements ITransportNetwork {
-  static modes = ['auto', 'stream-up', 'stream-one'];
+  static modes = ['auto', 'packet-up', 'stream-up', 'stream-one'];
   public host?: string;
   public path? = '/';
   public mode? = 'auto';
-  xPaddingBytes? = '100-1000';
-  noGRPCHeader? = false;
-  noSSEHeader? = false;
-  scMaxEachPostBytes? = 1000000;
-  scMinPostsIntervalMs? = 30;
-  scMaxBufferedPosts? = 30;
-  scStreamUpServerSecs? = '20-80';
-
-  // Anti-detection / obfuscation fields (Xray-core PR #5414)
-  xPaddingObfsMode? = false;
-  xPaddingKey? = 'x_padding';
-  xPaddingHeader? = 'X-Padding';
-  xPaddingPlacement? = 'queryInHeader';
-  xPaddingMethod? = 'repeat-x';
-  uplinkHTTPMethod? = 'POST';
-  sessionPlacement? = 'path';
-  sessionKey?: string;
-  seqPlacement? = 'path';
-  seqKey?: string;
-  uplinkDataPlacement? = 'body';
-  uplinkDataKey?: string;
-  uplinkChunkSize?: number;
-
-  public headers? = {};
-
   public extra?: XrayXhttpExtraObject = new XrayXhttpExtraObject();
 
-  constructor(parsedObject?: XrayParsedUrlObject | undefined) {
+  constructor(parsedObject?: XrayParsedUrlObject) {
     if (parsedObject) {
-      this.path = parsedObject.parsedParams.path ?? '/';
-      this.mode = parsedObject.parsedParams.mode ?? 'auto';
-      this.host = parsedObject.parsedParams.host;
+      const params = parsedObject.parsedParams;
+      const { host, path, mode, extra } = XrayStreamHttpSettingsObject.fromPlain({
+        path: params.path ?? '/', mode: params.mode ?? 'auto', host: params.host, extra: parseLinkExtra(params.extra)
+      });
+      Object.assign(this, { host, path, mode, extra });
     }
   }
 
+  static fromPlain(source: object = {}): XrayStreamHttpSettingsObject {
+    const raw = source as Record<string, unknown>;
+    const settings = new XrayStreamHttpSettingsObject();
+    for (const field of ['host', 'path', 'mode'] as const) {
+      if (raw[field] !== undefined) Object.assign(settings, { [field]: raw[field] });
+    }
+    const nested = raw.extra && typeof raw.extra === 'object' && !Array.isArray(raw.extra) ? raw.extra : undefined;
+    const outer = xhttpExtraFields(raw);
+    if (nested && settings.mode !== 'packet-up') {
+      if (String(outer.uplinkHTTPMethod).trim().toUpperCase() === 'GET') delete outer.uplinkHTTPMethod;
+      if (outer.uplinkDataPlacement === 'cookie' || outer.uplinkDataPlacement === 'header') delete outer.uplinkDataPlacement;
+    }
+    settings.extra = plainToInstance(XrayXhttpExtraObject, { ...outer, ...xhttpExtraFields(nested ?? {}) });
+    const download = settings.extra.downloadSettings;
+    if (download) {
+      settings.extra.downloadSettings = plainToInstance(XrayDownloadSettingsObject, download);
+      settings.extra.downloadSettings.xhttpSettings = XrayStreamHttpSettingsObject.fromPlain(download.xhttpSettings ?? {});
+    }
+    return settings;
+  }
+
   normalize = (): this | undefined => {
+    this.extra = XrayStreamHttpSettingsObject.fromPlain(this).extra;
+    for (const key of Object.keys(this)) {
+      if (!xhttpOuterFields.has(key)) Reflect.deleteProperty(this, key);
+    }
     this.mode = this.mode === 'auto' ? undefined : this.mode;
     this.path = this.path === '/' ? undefined : this.path;
-    this.host = !this.host || this.host === '' ? undefined : this.host;
-    this.xPaddingBytes = this.xPaddingBytes === '100-1000' ? undefined : this.xPaddingBytes;
-    this.noGRPCHeader = !this.noGRPCHeader ? undefined : this.noGRPCHeader;
-    this.noSSEHeader = !this.noSSEHeader ? undefined : this.noSSEHeader;
-    this.scMaxEachPostBytes = this.scMaxEachPostBytes == 1000000 ? undefined : this.scMaxEachPostBytes;
-    this.scMinPostsIntervalMs = this.scMinPostsIntervalMs == 30 ? undefined : this.scMinPostsIntervalMs;
-    this.scMaxBufferedPosts = this.scMaxBufferedPosts == 30 ? undefined : this.scMaxBufferedPosts;
-    this.scStreamUpServerSecs = this.scStreamUpServerSecs === '20-80' ? undefined : this.scStreamUpServerSecs;
+    this.host = this.host || undefined;
+    this.extra = this.extra?.normalize();
 
-    // Anti-detection fields normalization
-    this.xPaddingObfsMode = !this.xPaddingObfsMode ? undefined : this.xPaddingObfsMode;
-    if (!this.xPaddingObfsMode) {
-      this.xPaddingKey = undefined;
-      this.xPaddingHeader = undefined;
-      this.xPaddingPlacement = undefined;
-      this.xPaddingMethod = undefined;
-    } else {
-      this.xPaddingKey = !this.xPaddingKey || this.xPaddingKey === 'x_padding' ? undefined : this.xPaddingKey;
-      this.xPaddingHeader = !this.xPaddingHeader || this.xPaddingHeader === 'X-Padding' ? undefined : this.xPaddingHeader;
-      this.xPaddingPlacement = this.xPaddingPlacement === 'queryInHeader' ? undefined : this.xPaddingPlacement;
-      this.xPaddingMethod = this.xPaddingMethod === 'repeat-x' ? undefined : this.xPaddingMethod;
+    if (this.extra?.uplinkHTTPMethod === 'GET' && this.mode !== 'packet-up') {
+      throw new XhttpConfigError('error_get_packet_up');
     }
-
-    this.uplinkHTTPMethod = !this.uplinkHTTPMethod || this.uplinkHTTPMethod === 'POST' ? undefined : this.uplinkHTTPMethod;
-
-    this.sessionPlacement = this.sessionPlacement === 'path' ? undefined : this.sessionPlacement;
-    if (!this.sessionPlacement) this.sessionKey = undefined;
-    else this.sessionKey = !this.sessionKey || this.sessionKey === '' ? undefined : this.sessionKey;
-
-    this.seqPlacement = this.seqPlacement === 'path' ? undefined : this.seqPlacement;
-    if (!this.seqPlacement) this.seqKey = undefined;
-    else this.seqKey = !this.seqKey || this.seqKey === '' ? undefined : this.seqKey;
-
-    this.uplinkDataPlacement = this.uplinkDataPlacement === 'body' ? undefined : this.uplinkDataPlacement;
-    this.uplinkDataKey = !this.uplinkDataKey || this.uplinkDataKey === '' ? undefined : this.uplinkDataKey;
-    this.uplinkChunkSize = !this.uplinkChunkSize || this.uplinkChunkSize < 64 ? undefined : this.uplinkChunkSize;
-
-    this.headers = isObjectEmpty(this.headers) ? undefined : this.headers;
-    this.extra = plainToInstance(XrayXhttpExtraObject, this.extra ?? {});
-
-    // `extra.headers` is DERIVED from the top-level value, never a source of truth. Clear it
-    // BEFORE the emptiness check below, so that a copy left by a previous save can neither
-    // resurrect headers the user has just removed, nor keep `extra` alive on its own.
-    this.extra.headers = undefined;
-    this.extra = this.extra.normalize();
-
-    // If `extra` survived, it REPLACES this whole object inside xray-core, which carries over only
-    // host/path/mode (infra/conf/transport_method.go:308-317). Rebuild the mirror so headers are
-    // not lost. When `extra` normalizes away there is nothing to replace us, and the top-level
-    // `headers` applies as written.
-    if (this.extra && this.headers) {
-      this.extra.headers = this.headers as Record<string, string>;
+    if (['header', 'cookie'].includes(this.extra?.uplinkDataPlacement ?? '') && this.mode !== 'packet-up') {
+      throw new XhttpConfigError('error_data_placement_packet_up');
     }
-
+    if (this.extra?.downloadSettings && this.mode === 'stream-one') {
+      throw new XhttpConfigError('error_download_stream_one');
+    }
     return isObjectEmpty(this) ? undefined : this;
   };
 }
 
 export class XrayDownloadSettingsObject {
   public address?: string;
-  public port?: number;
+  public port? = 443;
   public network = 'xhttp'; // must be "xhttp"
   public security?: string; // 'tls' | 'reality'
   public tlsSettings?: XrayStreamTlsSettingsObject;
@@ -209,7 +218,7 @@ export class XrayDownloadSettingsObject {
       return undefined;
     }
 
-    this.port = !this.port ? undefined : this.port;
+    this.port = this.port || 443;
 
     if (this.security === 'tls') {
       this.tlsSettings = plainToInstance(XrayStreamTlsSettingsObject, this.tlsSettings ?? {});
@@ -224,7 +233,7 @@ export class XrayDownloadSettingsObject {
       this.realitySettings = undefined;
     }
 
-    this.xhttpSettings = plainToInstance(XrayStreamHttpSettingsObject, this.xhttpSettings ?? {});
+    this.xhttpSettings = XrayStreamHttpSettingsObject.fromPlain(this.xhttpSettings ?? {});
     this.xhttpSettings = this.xhttpSettings ? this.xhttpSettings.normalize() : undefined;
 
     this.sockopt = plainToInstance(XraySockoptObject, this.sockopt ?? {});
@@ -234,35 +243,78 @@ export class XrayDownloadSettingsObject {
   };
 }
 
+export function createXhttpDownloadSettings(upload: XrayStreamHttpSettingsObject): XrayDownloadSettingsObject {
+  const download = new XrayDownloadSettingsObject();
+  download.xhttpSettings = new XrayStreamHttpSettingsObject();
+  download.xhttpSettings.path = upload.path;
+  const extra = XrayStreamHttpSettingsObject.fromPlain(upload).extra!;
+  Object.assign(download.xhttpSettings.extra!, Object.fromEntries(xhttpDownloadSeedFields.map((field) => [field, extra[field]])));
+  return download;
+}
+
 export class XrayXhttpExtraObject {
-  // Mirrored from the parent XrayStreamHttpSettingsObject during normalize(). Xray-core parses
-  // `extra` as a full SplitHTTPConfig that REPLACES the outer object, carrying over only host,
-  // path and mode (infra/conf/transport_method.go:308-317) -- `headers` is not carried over, so
-  // without this mirror any custom header is silently dropped as soon as `extra` is emitted.
-  // Not defaulted, so it never causes an otherwise-empty `extra` to materialize.
   headers?: Record<string, string>;
-  xPaddingBytes? = '100-1000';
+  xPaddingBytes?: XhttpRange = '100-1000';
+  xPaddingObfsMode? = false;
+  xPaddingKey? = 'x_padding';
+  xPaddingHeader? = 'X-Padding';
+  xPaddingPlacement? = 'queryInHeader';
+  xPaddingMethod? = 'repeat-x';
+  uplinkHTTPMethod? = 'POST';
+  sessionIDPlacement? = 'path';
+  sessionIDKey?: string;
+  sessionIDTable?: string;
+  sessionIDLength?: XhttpRange;
+  seqPlacement? = 'path';
+  seqKey?: string;
+  uplinkDataPlacement? = 'auto';
+  uplinkDataKey?: string;
+  uplinkChunkSize?: XhttpRange;
   noGRPCHeader? = false;
   noSSEHeader? = false;
-  scMaxEachPostBytes? = 1000000;
-  scMinPostsIntervalMs? = 30;
+  scMaxEachPostBytes?: XhttpRange = 1000000;
+  scMinPostsIntervalMs?: XhttpRange = 30;
   scMaxBufferedPosts? = 30;
-  scStreamUpServerSecs? = '20-80';
+  scStreamUpServerSecs?: XhttpRange = '20-80';
+  serverMaxHeaderBytes?: number;
   xmux?: XrayXmuxObject = new XrayXmuxObject();
   downloadSettings?: XrayDownloadSettingsObject;
 
   normalize = (): this | undefined => {
-    this.xPaddingBytes = this.xPaddingBytes === '100-1000' ? undefined : this.xPaddingBytes;
-    this.noGRPCHeader = !this.noGRPCHeader ? undefined : this.noGRPCHeader;
-    this.noSSEHeader = !this.noSSEHeader ? undefined : this.noSSEHeader;
-    this.scMaxEachPostBytes = this.scMaxEachPostBytes == 1000000 ? undefined : this.scMaxEachPostBytes;
-    this.scMinPostsIntervalMs = this.scMinPostsIntervalMs == 30 ? undefined : this.scMinPostsIntervalMs;
-    this.scMaxBufferedPosts = this.scMaxBufferedPosts == 30 ? undefined : this.scMaxBufferedPosts;
-    this.scStreamUpServerSecs = this.scStreamUpServerSecs === '20-80' ? undefined : this.scStreamUpServerSecs;
-    this.xmux = plainToInstance(XrayXmuxObject, this.xmux ?? {});
-    this.xmux = this.xmux ? this.xmux.normalize() : undefined;
-    this.downloadSettings = plainToInstance(XrayDownloadSettingsObject, this.downloadSettings ?? {});
-    this.downloadSettings = this.downloadSettings ? this.downloadSettings.normalize() : undefined;
+    this.headers = isObjectEmpty(this.headers) ? undefined : this.headers;
+    this.xPaddingBytes = normalizeXhttpRange(this.xPaddingBytes, '100-1000');
+    this.xPaddingObfsMode = this.xPaddingObfsMode || undefined;
+    if (!this.xPaddingObfsMode) {
+      this.xPaddingKey = this.xPaddingHeader = this.xPaddingPlacement = this.xPaddingMethod = undefined;
+    } else {
+      this.xPaddingKey = !this.xPaddingKey || this.xPaddingKey === 'x_padding' ? undefined : this.xPaddingKey;
+      this.xPaddingHeader = !this.xPaddingHeader || this.xPaddingHeader === 'X-Padding' ? undefined : this.xPaddingHeader;
+      this.xPaddingPlacement = this.xPaddingPlacement === 'queryInHeader' ? undefined : this.xPaddingPlacement;
+      this.xPaddingMethod = this.xPaddingMethod === 'repeat-x' ? undefined : this.xPaddingMethod;
+    }
+    this.uplinkHTTPMethod = this.uplinkHTTPMethod?.trim().toUpperCase() || undefined;
+    if (this.uplinkHTTPMethod === 'POST') this.uplinkHTTPMethod = undefined;
+    this.sessionIDPlacement = this.sessionIDPlacement === 'path' ? undefined : this.sessionIDPlacement;
+    this.sessionIDKey = this.sessionIDPlacement ? this.sessionIDKey || undefined : undefined;
+    this.seqPlacement = this.seqPlacement === 'path' ? undefined : this.seqPlacement;
+    this.seqKey = this.seqPlacement ? this.seqKey || undefined : undefined;
+    this.uplinkDataPlacement = this.uplinkDataPlacement === 'auto' ? undefined : this.uplinkDataPlacement;
+    this.uplinkDataKey = this.uplinkDataKey || undefined;
+    this.uplinkChunkSize = normalizeXhttpRange(this.uplinkChunkSize);
+    this.sessionIDLength = normalizeXhttpRange(this.sessionIDLength);
+    this.noGRPCHeader = this.noGRPCHeader || undefined;
+    this.noSSEHeader = this.noSSEHeader || undefined;
+    this.scMaxEachPostBytes = normalizeXhttpRange(this.scMaxEachPostBytes, 1000000);
+    this.scMinPostsIntervalMs = normalizeXhttpRange(this.scMinPostsIntervalMs, 30);
+    this.scMaxBufferedPosts = this.scMaxBufferedPosts === 30 ? undefined : this.scMaxBufferedPosts;
+    this.scStreamUpServerSecs = normalizeXhttpRange(this.scStreamUpServerSecs, '20-80');
+    this.xmux = plainToInstance(XrayXmuxObject, this.xmux ?? {}).normalize();
+    this.downloadSettings = plainToInstance(XrayDownloadSettingsObject, this.downloadSettings ?? {}).normalize();
+    if (!coreSupports('xhttpSessionID')) {
+      Object.assign(this, { sessionPlacement: this.sessionIDPlacement, sessionKey: this.sessionIDKey });
+      delete this.sessionIDPlacement;
+      delete this.sessionIDKey;
+    }
     return isObjectEmpty(this) ? undefined : this;
   };
 }
@@ -311,24 +363,6 @@ export interface SplitHttpMigratableStream {
 }
 
 /**
- * `xhttpSettings.headers` is the single source of truth; `xhttpSettings.extra.headers` is only a
- * derived mirror, written on serialization because core's `extra` replaces the outer object.
- *
- * A config saved by an earlier build -- or written by hand -- can carry headers ONLY in `extra`.
- * The editor binds the top-level value (Http.vue), so those headers would be invisible and the
- * next save would drop them. Lift them up at hydration and clear the mirror; normalize() rebuilds
- * it from the authoritative value.
- */
-export function canonicalizeXhttpHeaders(stream: { xhttpSettings?: XrayStreamHttpSettingsObject }): void {
-  const xhttp = stream.xhttpSettings;
-  const extra = xhttp?.extra as XrayXhttpExtraObject | undefined;
-  if (!xhttp || !extra || isObjectEmpty(extra.headers)) return;
-
-  if (isObjectEmpty(xhttp.headers)) xhttp.headers = extra.headers;
-  extra.headers = undefined;
-}
-
-/**
  * Folds a legacy `splithttp` transport into `xhttp`.
  *
  * Xray-core 24.10.31 renamed SplitHTTP to XHTTP and they have been ONE transport ever since:
@@ -360,7 +394,7 @@ export function migrateSplitHttpToXhttp(stream: SplitHttpMigratableStream): void
   const xhttp = new XrayStreamHttpSettingsObject();
   if (legacy.path !== undefined) xhttp.path = legacy.path;
   if (legacy.host !== undefined) xhttp.host = legacy.host;
-  if (legacy.headers !== undefined) xhttp.headers = legacy.headers;
+  if (legacy.headers !== undefined) xhttp.extra!.headers = legacy.headers;
 
   const extra = xhttp.extra ?? (xhttp.extra = new XrayXhttpExtraObject());
   if (legacy.scMaxEachPostBytes !== undefined) extra.scMaxEachPostBytes = legacy.scMaxEachPostBytes;

@@ -78,7 +78,14 @@
                       <span class="hint-color">default: auto</span>
                     </td>
                   </tr>
+                  <tr>
+                    <th>Header-padding bytes (range)</th>
+                    <td>
+                      <input type="text" placeholder="100-1000" class="input_20_table" v-model="extra.xPaddingBytes" />
+                    </td>
+                  </tr>
                 </tbody>
+                <xhttp-padding v-if="downloadSettings.xhttpSettings" :settings="extra" />
               </table>
             </modal>
           </td>
@@ -107,9 +114,10 @@
   import Modal from '@main/Modal.vue';
   import Hint from '@main/Hint.vue';
   import Sockopt from './Sockopt.vue';
+  import XhttpPadding from './XhttpPadding.vue';
   import SecurityTls from '../security/Tls.vue';
   import SecurityReality from '../security/Reality.vue';
-  import { XrayDownloadSettingsObject, XrayStreamHttpSettingsObject } from '@/modules/TransportObjects';
+  import { XrayDownloadSettingsObject, XrayStreamHttpSettingsObject, XrayXhttpExtraObject } from '@/modules/TransportObjects';
   import { XrayStreamSettingsObject, XrayStreamTlsSettingsObject, XrayStreamRealitySettingsObject } from '@/modules/CommonObjects';
 
   export default defineComponent({
@@ -117,7 +125,8 @@
     components: {
       Modal,
       Hint,
-      Sockopt
+      Sockopt,
+      XhttpPadding
     },
     props: {
       downloadSettings: {
@@ -133,6 +142,12 @@
       if (!props.downloadSettings.xhttpSettings) {
         props.downloadSettings.xhttpSettings = new XrayStreamHttpSettingsObject();
       }
+
+      const xhttp = props.downloadSettings.xhttpSettings;
+      if (!xhttp.extra) {
+        xhttp.extra = new XrayXhttpExtraObject();
+      }
+      const extra = computed(() => props.downloadSettings.xhttpSettings!.extra!);
 
       props.downloadSettings.network = 'xhttp';
 
@@ -211,6 +226,7 @@
         xhttpModal,
         sockoptModal,
         downloadTransport,
+        extra,
         securityComponent,
         modes: XrayStreamHttpSettingsObject.modes,
         manage_security,

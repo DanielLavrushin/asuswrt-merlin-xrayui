@@ -479,7 +479,7 @@
       "label_uplinkHTTPMethod": "Uplink-HTTP-Methode",
       "hint_uplinkHTTPMethod": "Die HTTP-Methode für Uplink-Anfragen. Einige CDNs blockieren POST, erlauben aber PUT oder PATCH. Standard: <code>POST</code>.",
       "label_uplinkDataPlacement": "Uplink-Datenplatzierung",
-      "hint_uplinkDataPlacement": "Wo die Uplink-Nutzdaten platziert werden.<ul><li><code>body</code> (Standard) - im Anfragekörper</li><li><code>cookie</code> - im Cookie-Header (nur Packet-up-Modus)</li><li><code>header</code> - in einem benutzerdefinierten HTTP-Header (nur Packet-up-Modus)</li></ul>",
+      "hint_uplinkDataPlacement": "Wo die Uplink-Nutzdaten platziert werden.<ul><li><code>auto</code> (Standard) - der Client sendet im Anfragekörper, der Server akzeptiert jede Platzierung</li><li><code>body</code> - im Anfragekörper</li><li><code>cookie</code> - im Cookie-Header (nur Packet-up-Modus)</li><li><code>header</code> - in einem benutzerdefinierten HTTP-Header (nur Packet-up-Modus)</li></ul>",
       "label_uplinkDataKey": "Uplink-Datenschlüssel",
       "hint_uplinkDataKey": "Der Schlüsselname für Uplink-Daten bei Cookie- oder Header-Platzierung. Wird automatisch generiert, wenn leer.",
       "label_uplinkChunkSize": "Uplink-Chunk-Größe (Bytes)",

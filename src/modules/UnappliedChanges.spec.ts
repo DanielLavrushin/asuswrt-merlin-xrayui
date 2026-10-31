@@ -20,7 +20,7 @@ jest.mock('axios', () => ({
 import engine from '@modules/Engine';
 import { XrayObject } from './XrayConfig';
 import { setCoreVersion } from './CoreVersion';
-import { XrayStreamKcpSettingsObject } from './TransportObjects';
+import { XrayStreamHttpSettingsObject, XrayStreamKcpSettingsObject } from './TransportObjects';
 import { XraySniffingObject } from './CommonObjects';
 
 const kcpOutbound = (config: XrayObject) => config.outbounds.find((o) => o.tag === 'kcp-out')!;
@@ -52,6 +52,14 @@ describe('unapplied changes', () => {
     kcp.uplinkCapacity = 30;
     kcp.uplinkCapacity = 12;
     expect(engine.hasUnappliedChanges(config)).toBe(false);
+  });
+
+  it('reports pending edits while an XHTTP combination cannot be applied', () => {
+    const stream = kcpOutbound(config).streamSettings!;
+    stream.network = 'xhttp';
+    stream.xhttpSettings = new XrayStreamHttpSettingsObject();
+    stream.xhttpSettings.extra!.uplinkHTTPMethod = 'GET';
+    expect(engine.hasUnappliedChanges(config)).toBe(true);
   });
 
   it('ignores a settings object recreated with the same values', () => {

@@ -182,7 +182,14 @@ service_event)
         test_xray_config true
         ;;
     update)
-        if update; then
+        # empty payload means "latest"; a payload that fails to load or parse must not fall back to latest
+        if ! update_payload=$(reconstruct_payload) || ! update_version=$(printf '%s' "$update_payload" | jq -r '.version // empty' 2>/dev/null); then
+            log_error "Could not read the requested update version. Nothing was installed."
+            initial_response
+            update_loading_progress "Error: could not read the requested version. Nothing was installed." 100
+            exit 0
+        fi
+        if update "${update_version:-latest}"; then
             initial_response
             update_loading_progress "Update process completed!" 100
         else

@@ -384,7 +384,17 @@
       "version_is_up_to_date": "Установленная версия актуальна.",
       "open_chengelog": "открыть полный <a target='_blank' href='https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/blob/main/CHANGELOG.md'>список изменений</a>",
       "update_now": "обновить!",
-      "dont_want_update": "Не обновлять до {0}"
+      "dont_want_update": "Не обновлять до {0}",
+      "label_select_version": "Версия для установки",
+      "latest_suffix": "(последняя)",
+      "installed_suffix": "(установлена)",
+      "prerelease_suffix": "(пре-релиз)",
+      "downgrade_warning": "Старые версии могут не понимать настройки, сохранённые более новой версией. Сначала создайте резервную копию.",
+      "releases_load_failed": "Не удалось загрузить список релизов с GitHub (лимит запросов или ошибка сети). Попробуйте позже.",
+      "downgrade_now": "откатиться до {0}",
+      "reinstall_now": "переустановить {0}",
+      "install_version": "установить {0}",
+      "downgrade_confirm": "Откатить XRAYUI с {1} до {0}? Старые версии могут не поддерживать все настройки текущей конфигурации."
     },
     "Reality": {
       "modal_title": "Настройки REALITY",

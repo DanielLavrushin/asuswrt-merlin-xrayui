@@ -166,11 +166,14 @@ switch_xray_version() {
 
     if [ -n "$(get_xray_daemon_pid)" ]; then
         update_loading_progress "Restarting Xray service..."
+        # Same lock as restart(), so the watchdog cannot start a second core meanwhile
+        restart_lock_acquire
         POST_RESTART_DNSMASQ="true"
         stop
         start
         dnsmasq_restart
         POST_RESTART_DNSMASQ="false"
+        restart_lock_release
 
         if [ -z "$(get_xray_daemon_pid)" ]; then
             log_error "Error: Xray $new_version was installed, but it did not start with the current configuration."

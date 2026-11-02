@@ -2,7 +2,7 @@ import { shallowMount } from '@vue/test-utils';
 import { defineComponent, h, nextTick, ref } from 'vue';
 import BalancerModal from '@modal/BalancerModal.vue';
 import xrayConfig from '@/modules/XrayConfig';
-import { XrayBurstObservatoryObject } from '@/modules/CommonObjects';
+import { XrayBalancerObject, XrayBurstObservatoryObject } from '@/modules/CommonObjects';
 
 jest.mock('vue-i18n', () => ({
   useI18n: () => ({ t: (k: string) => k })
@@ -23,9 +23,9 @@ describe('BalancerModal burstObservatory selectors', () => {
     xrayConfig.burstObservatory = undefined;
   });
 
-  const openManager = async () => {
+  const openManager = async (balancers: XrayBalancerObject[] = []) => {
     const wrapper = shallowMount(BalancerModal, {
-      props: { balancers: [] },
+      props: { balancers },
       global: { stubs: { modal: ModalStub, hint: true }, mocks: { $t: (k: string) => k } }
     });
     (wrapper.vm as unknown as { show: () => void }).show();
@@ -37,6 +37,22 @@ describe('BalancerModal burstObservatory selectors', () => {
     xrayConfig.burstObservatory = Object.assign(new XrayBurstObservatoryObject(), { subjectSelector: ['', 'p-'] });
     await openManager();
     expect(xrayConfig.burstObservatory?.subjectSelector).toEqual(['', 'p-']);
+  });
+
+  // Xray splits a balancer selector written as a comma string
+  const commaBalancer = () => Object.assign(new XrayBalancerObject(), { tag: 'bal', selector: 'p-,q-' as unknown as string[] });
+
+  it('splits a comma-string balancer selector when switching to burstObservatory', async () => {
+    const wrapper = await openManager([commaBalancer()]);
+    (wrapper.vm as unknown as { observatoryMode: string }).observatoryMode = 'burst';
+    expect(xrayConfig.burstObservatory?.subjectSelector).toEqual(['p-', 'q-']);
+  });
+
+  it('opens a balancer whose selector is a comma string for editing', async () => {
+    const wrapper = await openManager();
+    const vm = wrapper.vm as unknown as { editBalancer: (b: XrayBalancerObject) => void; selectorText: string };
+    vm.editBalancer(commaBalancer());
+    expect(vm.selectorText).toBe('p-\nq-');
   });
 
   it('rewrites the selectors from what is typed', async () => {

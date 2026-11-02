@@ -186,7 +186,7 @@
   import Hint from '@main/Hint.vue';
   import { EngineResponseConfig } from '@/modules/Engine';
   import { balancerNow } from '@/modules/LiveStatus';
-  import { describeViewShort } from '@/modules/BalancerStatus';
+  import { describeViewShort, toSelector } from '@/modules/BalancerStatus';
 
   export default defineComponent({
     name: 'BalancerModal',
@@ -258,7 +258,8 @@
         get: () => (xrayConfig.burstObservatory ? 'burst' : 'observatory'),
         set: (mode: string) => {
           if (mode === 'burst') {
-            const selectors = [...new Set(balancers.value.flatMap((b) => b.selector ?? []))];
+            // a hand-written selector may be a comma string, which Xray splits; subjectSelector is not split
+            const selectors = Array.from(new Set(balancers.value.flatMap((b) => toSelector(b.selector))));
             xrayConfig.burstObservatory = XrayBurstObservatoryObject.create(selectors);
             xrayConfig.observatory = undefined;
             burstSelectorText.value = selectors.join('\n');
@@ -292,7 +293,7 @@
         if (!b.strategy) {
           b.strategy = new XrayBalancerStrategyObject();
         }
-        selectorText.value = (b.selector || []).join('\n');
+        selectorText.value = toSelector(b.selector).join('\n');
         modalAdd.value?.show();
       };
 

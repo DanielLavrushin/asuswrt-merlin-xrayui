@@ -33,6 +33,8 @@ load_xrayui_config() { :; }
 get_xray_daemon_pid() { echo 4242; }
 configure_tun_inbounds() { :; }
 cleanup_tun_inbounds() { :; }
+kmod_load() { modprobe "$@"; }
+kmod_is_loaded() { lsmod | grep -q "^$1 "; }
 
 . "$FW_STATE/firewall.$$.sh"
 

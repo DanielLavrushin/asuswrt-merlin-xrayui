@@ -508,7 +508,11 @@
       "hint_health_check": "无数据传输时触发的检测（秒）。设置小于`10`时，最小值强制为`10`。",
       "hint_health_check_timeout": "健康检查超时时间（秒），超期则判定失败，默认`20`。",
       "hint_permit_without_stream": "设为 `true` 时允许无子连接时执行健康检查，默认 `false`。",
-      "hint_initial_windows_size": "值≤0 时功能失效；>65535 时禁用动态窗口机制。默认 0（不工作）。"
+      "hint_initial_windows_size": "值≤0 时功能失效；>65535 时禁用动态窗口机制。默认 0（不工作）。",
+      "label_authority": "Authority",
+      "hint_authority": "覆盖 `:authority` 伪头部。留空则使用服务器地址。",
+      "label_multi_mode": "Multi 模式",
+      "hint_multi_mode": "使用 `multi` 模式（分享链接：`mode=multi`）。须与服务器一致。"
     },
     "HttpUpgrade": {
       "label_accept_proxy_protocol": "接受 PROXY 协议",
@@ -525,7 +529,13 @@
     },
     "Tcp": {
       "label_accept_proxy_protocol": "接受 PROXY 协议",
-      "hint_accept_proxy_protocol": "是否接受 PROXY 协议（用于传输真实源 IP 和端口）。<br /> 不熟悉时保持默认。<br />常见反向代理（如 HAProxy、NGINX）和 VLESS fallback xver 可配置发送 PROXY 协议。<br />启用后，TCP 连接建立后下游需先发送 PROXY v1/v2 格式的源 IP / 端口，否则终止连接。"
+      "hint_accept_proxy_protocol": "是否接受 PROXY 协议（用于传输真实源 IP 和端口）。<br /> 不熟悉时保持默认。<br />常见反向代理（如 HAProxy、NGINX）和 VLESS fallback xver 可配置发送 PROXY 协议。<br />启用后，TCP 连接建立后下游需先发送 PROXY v1/v2 格式的源 IP / 端口，否则终止连接。",
+      "label_header_type": "头部伪装",
+      "hint_header_type": "`http` 将连接伪装为普通 HTTP 请求（分享链接：`headerType=http`）。须与服务器一致。",
+      "label_request_path": "请求路径",
+      "hint_request_path": "以逗号分隔的路径列表，随机选择其一。默认：`/`。",
+      "label_request_host": "Host",
+      "hint_request_host": "以逗号分隔的 `Host` 头取值列表，随机选择其一。"
     },
     "SniffingModal": {
       "modal_title": "流量嗅探",

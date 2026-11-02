@@ -8,14 +8,22 @@ update() {
     local specific_version=${1:-"latest"}
     specific_version=${specific_version#v}
 
-    if [ "$specific_version" != "latest" ] && ! echo "$specific_version" | grep -Eq '^[0-9]+\.[0-9]+(\.[0-9]+)?([.-]?[A-Za-z0-9]+)*$'; then
+    # reject anything outside the tag alphabet first: grep matches per line, so a newline would slip through
+    case "$specific_version" in
+    *[!0-9A-Za-z.-]*)
+        log_error "Invalid version requested: $specific_version"
+        return 1
+        ;;
+    esac
+
+    if [ "$specific_version" != "latest" ] && ! printf '%s\n' "$specific_version" | grep -Eq '^[0-9]+\.[0-9]+(\.[0-9]+)?([.-]?[A-Za-z0-9]+)*$'; then
         log_error "Invalid version requested: $specific_version"
         return 1
     fi
 
     local url=$(github_proxy_url "https://github.com/daniellavrushin/asuswrt-merlin-xrayui/releases/latest/download/asuswrt-merlin-xrayui.tar.gz")
 
-    if [ ! $specific_version = "latest" ]; then
+    if [ "$specific_version" != "latest" ]; then
 
         local url=$(github_proxy_url "https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/releases/download/v$specific_version/asuswrt-merlin-xrayui.tar.gz")
 

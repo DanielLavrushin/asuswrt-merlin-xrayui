@@ -4,6 +4,7 @@
 
 - ADDED: TCP transport has **Header obfuscation** with **Request path** and **Host**. gRPC outbounds have **Authority** and **Multi mode**.
 - ADDED: The update dialog lists recent XRAYUI releases, so you can install an older one (downgrade) or reinstall the current one. A downgrade asks for confirmation first, because an older version may not understand settings saved by a newer one. ([#409](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/409))
+- ADDED: **Auto-restart Xray if it stops** in **General Options**. When Xray stops unexpectedly, XRAYUI restarts it within the chosen **Watchdog check interval** and reapplies the firewall rules. The wait between attempts doubles up to an hour, and it gives up after **Max restart attempts** (0 means no limit). A stop from the page or the command line is respected, and each automatic restart is written to the system log. ([#424](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/424))
 - FIXED: TCP outbounds with HTTP header obfuscation (`headerType=http`) lost the header on import and save, so the server reset every connection. ([#417](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/417))
 - FIXED: **Accept PROXY protocol** on TCP inbounds was not saved.
 - FIXED: Imported gRPC links lost their **Service name**, and HTTPUpgrade links their path and host. ([#423](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/423))

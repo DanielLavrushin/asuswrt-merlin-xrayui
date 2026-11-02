@@ -27,6 +27,7 @@ import {
 import {
   XrayDnsObject,
   XrayStreamSettingsObject,
+  migrateRawToTcp,
   XrayRoutingObject,
   XrayRoutingRuleObject,
   XraySniffingObject,
@@ -938,6 +939,8 @@ function poolStreamKey(streamSettings: XrayStreamSettingsObject | undefined): st
 
 function transformStreamSettings(streamSettings: XrayStreamSettingsObject | undefined): XrayStreamSettingsObject {
   if (!streamSettings) return new XrayStreamSettingsObject();
+  streamSettings = { ...streamSettings } as XrayStreamSettingsObject;
+  migrateRawToTcp(streamSettings);
   const settings = plainToInstance(XrayStreamSettingsObject, streamSettings);
 
   for (const [field, SettingsClass] of streamSettingsFieldMap) {

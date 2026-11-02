@@ -306,7 +306,18 @@
       "new_version": "Eine neuere Version ist verfügbar: <strong style='color:#FFCC00'>{0}</strong>",
       "version_is_up_to_date": "Die installierte Version ist aktuell.",
       "open_chengelog": "Öffne vollständiges <a target='_blank' href='https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/blob/main/CHANGELOG.md'>Changelog</a>",
-      "update_now": "Jetzt aktualisieren!"
+      "update_now": "Jetzt aktualisieren!",
+      "dont_want_update": "Nicht auf {0} aktualisieren",
+      "label_select_version": "Zu installierende Version",
+      "latest_suffix": "(neueste)",
+      "installed_suffix": "(installiert)",
+      "prerelease_suffix": "(Vorabversion)",
+      "downgrade_warning": "Ältere Versionen verstehen möglicherweise Einstellungen einer neueren Version nicht. Erstellen Sie zuerst ein Backup.",
+      "releases_load_failed": "Die Release-Liste konnte nicht von GitHub geladen werden (Ratenlimit oder Netzwerkfehler). Bitte später erneut versuchen.",
+      "downgrade_now": "auf {0} downgraden",
+      "reinstall_now": "{0} neu installieren",
+      "install_version": "{0} installieren",
+      "downgrade_confirm": "XRAYUI von {1} auf {0} downgraden? Ältere Versionen unterstützen möglicherweise nicht alle Einstellungen Ihrer aktuellen Konfiguration."
     },
     "Reality": {
       "modal_title": "REALITY-Einstellungen",

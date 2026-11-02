@@ -363,7 +363,17 @@
       "version_is_up_to_date": "已安装的版本是最新的。",
       "open_chengelog": "打开完整 <a target='_blank' href='https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/blob/main/CHANGELOG.md'>更新日志</a>",
       "update_now": "立即更新",
-      "dont_want_update": "忽略更新 {0}"
+      "dont_want_update": "忽略更新 {0}",
+      "label_select_version": "要安装的版本",
+      "latest_suffix": "(最新)",
+      "installed_suffix": "(已安装)",
+      "prerelease_suffix": "(预发布)",
+      "downgrade_warning": "旧版本可能无法识别新版本保存的设置。请先创建备份。",
+      "releases_load_failed": "无法从 GitHub 加载版本列表（请求次数受限或网络错误）。请稍后重试。",
+      "downgrade_now": "降级到 {0}",
+      "reinstall_now": "重新安装 {0}",
+      "install_version": "安装 {0}",
+      "downgrade_confirm": "将 XRAYUI 从 {1} 降级到 {0}？旧版本可能不支持当前配置中的所有设置。"
     },
     "Reality": {
       "modal_title": "REALITY 设置",

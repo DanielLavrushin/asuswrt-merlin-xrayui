@@ -226,9 +226,10 @@ watchdog_mark_desired() {
 }
 
 # Called by stop(): an intentional stop must not be undone by the watchdog.
+# The watchdog's own stop() inside restart() keeps both.
 watchdog_clear_desired() {
-    rm -f "$XRAY_DESIRED_STATE_FILE"
-    [ "${WATCHDOG_RUN:-false}" = "true" ] || rm -f "$WATCHDOG_STATE_FILE"
+    [ "${WATCHDOG_RUN:-false}" = "true" ] && return 0
+    rm -f "$XRAY_DESIRED_STATE_FILE" "$WATCHDOG_STATE_FILE"
 }
 
 cron_watchdog_add() {
@@ -323,6 +324,12 @@ cron_watchdog_run() {
     restart
     local rc=$?
     WATCHDOG_RUN=false
+
+    # Stopped on purpose while the restart waited for the lock
+    if [ ! -f "$XRAY_DESIRED_STATE_FILE" ]; then
+        rm -f "$WATCHDOG_STATE_FILE"
+        return 0
+    fi
 
     if [ "$rc" -ne 0 ] || [ -z "$(get_xray_daemon_pid)" ]; then
         log_error "Watchdog restart attempt $attempts/$limit failed. The details are above in the system log."

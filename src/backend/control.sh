@@ -5,6 +5,12 @@ start() {
 
     load_xrayui_config
 
+    # Checked under the restart lock, which UI/CLI stops also hold
+    if [ "${WATCHDOG_RUN:-false}" = "true" ] && [ ! -f "$XRAY_DESIRED_STATE_FILE" ]; then
+        log_info "Xray was stopped on purpose while the watchdog was waiting. Not restarting it."
+        return 0
+    fi
+
     watchdog_mark_desired
 
     migrate_tun_inbounds_config
@@ -186,13 +192,14 @@ stop() {
     return "$rc"
 }
 
-restart() {
-    local lock_acquired=false
+# One lock for restarts, UI/CLI starts and stops, and the watchdog
+restart_lock_acquire() {
     local waited=0
+    RESTART_LOCK_HELD=false
 
     if which flock >/dev/null 2>&1 && touch "$XRAY_RESTART_LOCKFILE" 2>/dev/null; then
         eval exec "$XRAY_RESTART_LOCK_FD>$XRAY_RESTART_LOCKFILE"
-        lock_acquired=true
+        RESTART_LOCK_HELD=true
 
         while ! flock -n "$XRAY_RESTART_LOCK_FD"; do
             if [ "$waited" -ge 120 ]; then
@@ -207,6 +214,26 @@ restart() {
             waited=$((waited + 2))
         done
     fi
+}
+
+restart_lock_release() {
+    if [ "${RESTART_LOCK_HELD:-false}" = "true" ]; then
+        flock -u "$XRAY_RESTART_LOCK_FD" 2>/dev/null
+        eval exec "$XRAY_RESTART_LOCK_FD>&-"
+    fi
+    RESTART_LOCK_HELD=false
+}
+
+with_restart_lock() {
+    restart_lock_acquire
+    "$@"
+    local rc=$?
+    restart_lock_release
+    return "$rc"
+}
+
+restart() {
+    restart_lock_acquire
 
     log_info "Restarting $ADDON_TITLE"
 
@@ -225,10 +252,7 @@ restart() {
 
     POST_RESTART_DNSMASQ="false"
 
-    if [ "$lock_acquired" = "true" ]; then
-        flock -u "$XRAY_RESTART_LOCK_FD" 2>/dev/null
-        eval exec "$XRAY_RESTART_LOCK_FD>&-"
-    fi
+    restart_lock_release
 
     return "$start_rc"
 }

@@ -56,10 +56,10 @@ update)
     exit 0
     ;;
 start)
-    start
+    with_restart_lock start
     ;;
 stop)
-    stop
+    with_restart_lock stop
     ;;
 restart)
     restart
@@ -370,7 +370,7 @@ service_event)
         case "$3" in
         start)
             update_loading_progress "Starting Xray service..." 0
-            start
+            with_restart_lock start
             update_loading_progress "Xray service started successfully." 100
             ;;
         restart)
@@ -380,7 +380,7 @@ service_event)
             ;;
         stop)
             update_loading_progress "Stopping Xray service..." 0
-            if stop; then
+            if with_restart_lock stop; then
                 update_loading_progress "Xray service stopped successfully." 100
             else
                 update_loading_progress "Error: Xray is still running. The details are in the system log." 100

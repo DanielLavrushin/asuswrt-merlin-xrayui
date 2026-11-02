@@ -86,6 +86,7 @@ cron_subscription_refresh_add() { :; }
 cron_subscription_fallback_add() { :; }
 cron_ipset_save_add() { :; }
 cron_watchdog_add() { :; }
+with_restart_lock() { "$@"; }
 logs_scribe_integration() { :; }
 update_community_geodata() { :; }
 restart() { ev "restart"; }

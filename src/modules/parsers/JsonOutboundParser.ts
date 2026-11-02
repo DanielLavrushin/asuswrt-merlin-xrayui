@@ -1,6 +1,7 @@
 import { plainToInstance } from 'class-transformer';
 import { IProtocolType } from '../Interfaces';
-import { migrateSplitHttpToXhttp, XrayStreamHttpSettingsObject } from '../TransportObjects';
+import { migrateSplitHttpToXhttp, XrayStreamGrpcSettingsObject, XrayStreamHttpSettingsObject, XrayStreamTcpSettingsObject } from '../TransportObjects';
+import { migrateRawToTcp } from '../CommonObjects';
 import { XrayProtocol } from '../Options';
 import {
   XrayDnsOutboundObject,
@@ -54,6 +55,13 @@ const parseJsonOutbound = (source: XrayOutboundObject<IProtocolType>): XrayOutbo
     outbound.tag = source.tag || `out-${source.protocol.toLowerCase()}`;
     if (outbound.streamSettings) {
       migrateSplitHttpToXhttp(outbound.streamSettings);
+      migrateRawToTcp(outbound.streamSettings);
+      if (outbound.streamSettings.tcpSettings) {
+        outbound.streamSettings.tcpSettings = plainToInstance(XrayStreamTcpSettingsObject, outbound.streamSettings.tcpSettings);
+      }
+      if (outbound.streamSettings.grpcSettings) {
+        outbound.streamSettings.grpcSettings = plainToInstance(XrayStreamGrpcSettingsObject, outbound.streamSettings.grpcSettings);
+      }
       if (outbound.streamSettings.xhttpSettings) {
         outbound.streamSettings.xhttpSettings = XrayStreamHttpSettingsObject.fromPlain(outbound.streamSettings.xhttpSettings);
       }

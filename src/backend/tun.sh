@@ -108,7 +108,7 @@ configure_tun_inbounds() {
 
     # Ensure TUN kernel module is loaded
     if [ ! -c /dev/net/tun ]; then
-        modprobe tun 2>/dev/null || {
+        kmod_load tun 2>/dev/null || {
             log_error "Failed to load TUN kernel module. TUN inbound requires kernel TUN support."
             rm -f "$tun_inbounds_file"
             return 1

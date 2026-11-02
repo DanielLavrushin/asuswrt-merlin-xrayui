@@ -17,14 +17,69 @@ const nonDefaultNumber = (value: unknown, defaultValue: number, min = -Infinity)
   return Number.isFinite(parsed) && parsed >= min && parsed !== defaultValue ? parsed : undefined;
 };
 
+const splitList = (value: unknown): string[] =>
+  (Array.isArray(value) ? value : String(value ?? '').split(','))
+    .map((v) => String(v).trim())
+    .filter((v) => v !== '');
+
+export interface XrayTcpHttpRequest {
+  version?: string;
+  method?: string;
+  path?: string[];
+  headers?: Record<string, string | string[]>;
+}
+
+export interface XrayTcpHeader {
+  type?: string;
+  request?: XrayTcpHttpRequest;
+  response?: Record<string, unknown>;
+}
+
 export class XrayStreamTcpSettingsObject implements ITransportNetwork {
+  static readonly headerTypes = ['none', 'http'];
+
   public acceptProxyProtocol? = false;
+  public header?: XrayTcpHeader;
+
+  constructor(parsedObject?: XrayParsedUrlObject | undefined) {
+    const params = parsedObject?.parsedParams;
+    if (params?.headerType !== 'http') return;
+    const host = splitList(params.host);
+    this.header = {
+      type: 'http',
+      request: {
+        path: params.path ? splitList(params.path) : ['/'],
+        headers: host.length > 0 ? { Host: host } : {}
+      }
+    };
+  }
 
   normalize = (): this | undefined => {
     this.acceptProxyProtocol = !this.acceptProxyProtocol ? undefined : this.acceptProxyProtocol;
+    this.header = normalizeTcpHeader(this.header);
 
     return isObjectEmpty(this) ? undefined : this;
   };
+}
+
+// Works on plain objects too: hydration (plainToInstance) does not type `header`.
+function normalizeTcpHeader(header: XrayTcpHeader | undefined): XrayTcpHeader | undefined {
+  if (!header || header.type !== 'http') return undefined;
+  const request = header.request;
+  if (request) {
+    const path = splitList(request.path);
+    request.path = path.length > 0 ? path : undefined;
+    request.method = request.method || undefined;
+    request.version = request.version || undefined;
+    const headers = Object.fromEntries(
+      Object.entries(request.headers ?? {})
+        .map(([key, value]) => [key.trim(), splitList(value)] as const)
+        .filter(([key, value]) => key !== '' && value.length > 0)
+    );
+    request.headers = Object.keys(headers).length > 0 ? headers : undefined;
+    header.request = isObjectEmpty(request) ? undefined : request;
+  }
+  return header;
 }
 
 export class XrayStreamKcpSettingsObject implements ITransportNetwork {
@@ -321,12 +376,23 @@ export class XrayXhttpExtraObject {
 
 export class XrayStreamGrpcSettingsObject implements ITransportNetwork {
   public serviceName = '';
+  public authority?: string;
   public multiMode = false;
   public idle_timeout = 60;
   public health_check_timeout = 20;
   public initial_windows_size = 0;
   public permit_without_stream = false;
+
+  constructor(parsedObject?: XrayParsedUrlObject | undefined) {
+    const params = parsedObject?.parsedParams;
+    if (!params) return;
+    this.serviceName = params.serviceName ?? '';
+    this.authority = params.authority || undefined;
+    this.multiMode = params.mode === 'multi';
+  }
+
   normalize = (): this => {
+    this.authority = this.authority || undefined;
     return this;
   };
 }
@@ -336,6 +402,14 @@ export class XrayStreamHttpUpgradeSettingsObject implements ITransportNetwork {
   public path = '/';
   public host?: string;
   public headers = {};
+
+  constructor(parsedObject?: XrayParsedUrlObject | undefined) {
+    const params = parsedObject?.parsedParams;
+    if (!params) return;
+    this.path = params.path || '/';
+    this.host = params.host || undefined;
+  }
+
   normalize = (): this => {
     return this;
   };

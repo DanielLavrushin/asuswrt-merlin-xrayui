@@ -373,7 +373,17 @@
       "version_is_up_to_date": "The installed version is up to date.",
       "open_chengelog": "open full <a target='_blank' href='https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/blob/main/CHANGELOG.md'>changelog</a>",
       "update_now": "update now!",
-      "dont_want_update": "Don't want to update to {0}"
+      "dont_want_update": "Don't want to update to {0}",
+      "label_select_version": "Version to install",
+      "latest_suffix": "(latest)",
+      "installed_suffix": "(installed)",
+      "prerelease_suffix": "(prerelease)",
+      "downgrade_warning": "Older releases may not understand settings saved by a newer version. Create a backup first.",
+      "releases_load_failed": "Could not load the release list from GitHub (rate limit or network error). Try again later.",
+      "downgrade_now": "downgrade to {0}",
+      "reinstall_now": "reinstall {0}",
+      "install_version": "install {0}",
+      "downgrade_confirm": "Downgrade XRAYUI from {1} to {0}? Older releases may not support all settings of your current configuration."
     },
     "Reality": {
       "modal_title": "REALITY Settings",
@@ -508,7 +518,11 @@
       "hint_health_check": "The health check is performed when no data transmission occurs for a certain period of time, measured in `seconds`. If this value is set to less than `10`, `10` will be used as the `minimum` value.",
       "hint_health_check_timeout": "The timeout for the health check, measured in seconds. If the health check is not completed within this time period, it is considered to have failed. The default value is `20`",
       "hint_permit_without_stream": "If set to `true` allows health checks to be performed when there are no sub-connections. The default value is `false`.",
-      "hint_initial_windows_size": "The initial window size of the `h2` stream. When the value is less than or equal to `0`, this feature does not ntake effect.<hr>When the value is greater than `65535`, the Dynamic Window mechanism will be disabled. The default value is `0`, which means it is not effective."
+      "hint_initial_windows_size": "The initial window size of the `h2` stream. When the value is less than or equal to `0`, this feature does not ntake effect.<hr>When the value is greater than `65535`, the Dynamic Window mechanism will be disabled. The default value is `0`, which means it is not effective.",
+      "label_authority": "Authority",
+      "hint_authority": "Overrides the `:authority` pseudo-header. Leave empty to use the server address.",
+      "label_multi_mode": "Multi mode",
+      "hint_multi_mode": "Use `multi` mode (share links: `mode=multi`). Must match the server."
     },
     "HttpUpgrade": {
       "label_accept_proxy_protocol": "Accept PROXY protocol",
@@ -525,7 +539,13 @@
     },
     "Tcp": {
       "label_accept_proxy_protocol": "Accept PROXY protocol",
-      "hint_accept_proxy_protocol": "Indicates whether to accept the `PROXY` protocol. <br /> The `PROXY` protocol is used to transmit the real source IP and port of connections. If this is unfamiliar, it is best left alone. <br /> Commonplace reverse proxy software solutions (like `HAProxy` and `NGINX`) can be configured to have source IPs and ports sent with `PROXY` protocol. Same goes to `VLESS` fallbacks xver. <br /> When true, after the underlying `TCP` connection is established, the downstream must first send the source IPs and ports in `PROXY` protocol v1 or v2, or the connection will be terminated."
+      "hint_accept_proxy_protocol": "Indicates whether to accept the `PROXY` protocol. <br /> The `PROXY` protocol is used to transmit the real source IP and port of connections. If this is unfamiliar, it is best left alone. <br /> Commonplace reverse proxy software solutions (like `HAProxy` and `NGINX`) can be configured to have source IPs and ports sent with `PROXY` protocol. Same goes to `VLESS` fallbacks xver. <br /> When true, after the underlying `TCP` connection is established, the downstream must first send the source IPs and ports in `PROXY` protocol v1 or v2, or the connection will be terminated.",
+      "label_header_type": "Header obfuscation",
+      "hint_header_type": "`http` disguises the connection as a plain HTTP request (share links: `headerType=http`). Must match the server.",
+      "label_request_path": "Request path",
+      "hint_request_path": "Comma-separated list of paths, one is picked at random. Default: `/`.",
+      "label_request_host": "Host",
+      "hint_request_host": "Comma-separated list of `Host` header values, one is picked at random."
     },
     "SniffingModal": {
       "modal_title": "Traffic sniffing",

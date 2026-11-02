@@ -1,3 +1,7 @@
+jest.mock('vue-i18n', () => ({
+  useI18n: () => ({ t: (k: string) => k })
+}));
+
 jest.mock('@/modules/Engine', () => {
   const actual = jest.requireActual('@/modules/Engine');
   return {
@@ -8,7 +12,7 @@ jest.mock('@/modules/Engine', () => {
       setCookie: jest.fn(),
       submit: jest.fn(),
       executeWithLoadingProgress: jest.fn(),
-      fetchGithubJson: jest.fn().mockResolvedValue({ tag_name: 'v0.70.1', body: '' })
+      fetchGithubJson: jest.fn().mockResolvedValue([{ tag_name: 'v0.70.1', body: '' }])
     }
   };
 });
@@ -57,7 +61,7 @@ describe('Version.vue', () => {
   });
 
   it('shows markup in the release notes as text', async () => {
-    (engine.fetchGithubJson as jest.Mock).mockResolvedValueOnce({ tag_name: 'v0.70.1', body: '**Fixed** <img src=x onerror="window.pwned=1">' });
+    (engine.fetchGithubJson as jest.Mock).mockResolvedValueOnce([{ tag_name: 'v0.70.1', body: '**Fixed** <img src=x onerror="window.pwned=1">' }]);
     const { wrapper, respond } = mountWith({ xray_version: '0.70.0' });
     await respond('0.70.0');
     const notes = wrapper.find('.changelog');

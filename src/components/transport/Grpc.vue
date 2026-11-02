@@ -12,6 +12,25 @@
     </tr>
     <tr v-if="isOutbound">
       <th>
+        {{ $t('com.Grpc.label_authority') }}
+        <hint v-html="$t('com.Grpc.hint_authority')"></hint>
+      </th>
+      <td>
+        <input type="text" class="input_20_table" v-model="transport.grpcSettings.authority" />
+      </td>
+    </tr>
+    <tr v-if="isOutbound">
+      <th>
+        {{ $t('com.Grpc.label_multi_mode') }}
+        <hint v-html="$t('com.Grpc.hint_multi_mode')"></hint>
+      </th>
+      <td>
+        <input v-model="transport.grpcSettings.multiMode" type="checkbox" class="input" />
+        <span class="hint-color">default: false</span>
+      </td>
+    </tr>
+    <tr v-if="isOutbound">
+      <th>
         {{ $t('com.Grpc.label_health_check') }}
         <hint v-html="$t('com.Grpc.hint_health_check')"></hint>
       </th>

@@ -49,7 +49,7 @@
               <span class="row-buttons">
                 <input class="button_gen button_gen_small" type="button" :value="$t('labels.manage')" @click="manage_sockopt" />
                 <modal ref="sockoptModal" :title="$t('com.SockOpt.label')">
-                  <sockopt v-model:transport="transport"></sockopt>
+                  <sockopt v-model:transport="transport" :proxy-type="proxyType"></sockopt>
                 </modal>
               </span>
             </td>
@@ -66,6 +66,7 @@
 
 <script lang="ts">
   import { defineComponent, ref, computed } from 'vue';
+  import { useI18n } from 'vue-i18n';
 
   import { ITransportNetwork, IProtocolType } from '@/modules/Interfaces';
   import { XrayInboundObject } from '@/modules/InboundObjects';
@@ -80,7 +81,7 @@
     XrayStreamHttpUpgradeSettingsObject,
     XrayStreamHysteriaSettingsObject
   } from '@/modules/TransportObjects';
-  import { XrayStreamSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject } from '@/modules/CommonObjects';
+  import { XrayStreamSettingsObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject, XraySockoptObject } from '@/modules/CommonObjects';
 
   import Hint from '@main/Hint.vue';
   import Modal from '@main/Modal.vue';
@@ -119,6 +120,7 @@
     },
     methods: {},
     setup(props, { emit }) {
+      const { t } = useI18n();
       const modal = ref();
       const securityModal = ref();
       const sockoptModal = ref();
@@ -197,6 +199,13 @@
         modal.value.show();
       };
       const save = () => {
+        // normalize() drops the settings of an inactive network, so the XHTTP download sockopt only counts with xhttp selected
+        const download = transport.value.network === 'xhttp' ? transport.value.xhttpSettings?.extra?.downloadSettings?.sockopt : undefined;
+        const sockopts = [transport.value.sockopt, download];
+        if (!sockopts.every((s) => XraySockoptObject.isKeepAliveInRange(s))) {
+          alert(t('com.SockOpt.alert_keepalive_range', [XraySockoptObject.keepAliveMax]));
+          return;
+        }
         emit('save', transport.value);
         modal.value.close();
       };

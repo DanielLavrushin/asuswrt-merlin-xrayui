@@ -249,6 +249,20 @@ cron_watchdog_add() {
     fi
 }
 
+# Runs under the restart lock. A manual start, restart or stop may have
+# finished while the watchdog waited for it, so check again before acting.
+watchdog_recover() {
+    if [ ! -f "$XRAY_DESIRED_STATE_FILE" ] || [ -n "$(get_xray_daemon_pid)" ]; then
+        log_debug "Watchdog: Xray was started or stopped meanwhile, nothing to do."
+        WATCHDOG_SKIPPED=true
+        return 0
+    fi
+
+    printf '%s %s 0\n' "$1" "$2" >"$WATCHDOG_STATE_FILE"
+    log_warn "Xray was not running, restarting (attempt $1/$3)"
+    restart_unlocked
+}
+
 cron_watchdog_run() {
     load_xrayui_config
     [ "${watchdog:-false}" = "true" ] || return 0
@@ -270,23 +284,12 @@ cron_watchdog_run() {
         return 0
     fi
 
-    # Startup or a restart is already in progress: let it finish
+    # Boot startup is still running: let it finish
     local startup_pid=$(cat /tmp/xrayui_startup.lock 2>/dev/null)
     if [ -n "$startup_pid" ] && kill -0 "$startup_pid" 2>/dev/null; then
         log_debug "Watchdog: startup in progress, skipping this check."
         return 0
     fi
-    if which flock >/dev/null 2>&1 && [ -f "$XRAY_RESTART_LOCKFILE" ]; then
-        eval exec "$XRAY_RESTART_LOCK_FD>>$XRAY_RESTART_LOCKFILE"
-        if ! flock -n "$XRAY_RESTART_LOCK_FD"; then
-            eval exec "$XRAY_RESTART_LOCK_FD>&-"
-            log_debug "Watchdog: a restart is in progress, skipping this check."
-            return 0
-        fi
-        flock -u "$XRAY_RESTART_LOCK_FD" 2>/dev/null
-        eval exec "$XRAY_RESTART_LOCK_FD>&-"
-    fi
-
     local max_attempts=$(watchdog_sanitize_attempts "$watchdog_max_attempts")
     if [ "$max_attempts" -gt 0 ] && [ "$attempts" -ge "$max_attempts" ]; then
         if [ "$gave_up" != "1" ]; then
@@ -314,18 +317,17 @@ cron_watchdog_run() {
     fi
 
     attempts=$((attempts + 1))
-    printf '%s %s 0\n' "$attempts" "$now" >"$WATCHDOG_STATE_FILE"
-
     local limit="$max_attempts"
     [ "$max_attempts" -eq 0 ] && limit="unlimited"
-    log_warn "Xray was not running, restarting (attempt $attempts/$limit)"
 
     WATCHDOG_RUN=true
-    restart
+    WATCHDOG_SKIPPED=false
+    with_restart_lock watchdog_recover "$attempts" "$now" "$limit"
     local rc=$?
     WATCHDOG_RUN=false
+    [ "$WATCHDOG_SKIPPED" = "true" ] && return 0
 
-    # Stopped on purpose while the restart waited for the lock
+    # Stopped on purpose while the restart waited for the lock (no flock)
     if [ ! -f "$XRAY_DESIRED_STATE_FILE" ]; then
         rm -f "$WATCHDOG_STATE_FILE"
         return 0

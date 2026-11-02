@@ -233,8 +233,11 @@ with_restart_lock() {
 }
 
 restart() {
-    restart_lock_acquire
+    with_restart_lock restart_unlocked
+}
 
+# The caller holds the restart lock
+restart_unlocked() {
     log_info "Restarting $ADDON_TITLE"
 
     POST_RESTART_DNSMASQ="true"
@@ -251,8 +254,6 @@ restart() {
     fi
 
     POST_RESTART_DNSMASQ="false"
-
-    restart_lock_release
 
     return "$start_rc"
 }

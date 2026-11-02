@@ -216,6 +216,20 @@ restart_lock_acquire() {
     fi
 }
 
+# Non-blocking variant for the watchdog: returns 1 while someone else holds the lock
+restart_lock_try() {
+    RESTART_LOCK_HELD=false
+    if ! which flock >/dev/null 2>&1 || ! touch "$XRAY_RESTART_LOCKFILE" 2>/dev/null; then
+        return 0
+    fi
+    eval exec "$XRAY_RESTART_LOCK_FD>$XRAY_RESTART_LOCKFILE"
+    if ! flock -n "$XRAY_RESTART_LOCK_FD"; then
+        eval exec "$XRAY_RESTART_LOCK_FD>&-"
+        return 1
+    fi
+    RESTART_LOCK_HELD=true
+}
+
 restart_lock_release() {
     if [ "${RESTART_LOCK_HELD:-false}" = "true" ]; then
         flock -u "$XRAY_RESTART_LOCK_FD" 2>/dev/null

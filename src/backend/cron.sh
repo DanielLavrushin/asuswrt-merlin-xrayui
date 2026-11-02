@@ -250,7 +250,7 @@ cron_watchdog_add() {
 }
 
 # Runs under the restart lock. A manual start, restart or stop may have
-# finished while the watchdog waited for it, so check again before acting.
+# finished since the first check, so check again before acting.
 watchdog_recover() {
     if [ ! -f "$XRAY_DESIRED_STATE_FILE" ] || [ -n "$(get_xray_daemon_pid)" ]; then
         log_debug "Watchdog: Xray was started or stopped meanwhile, nothing to do."
@@ -320,11 +320,18 @@ cron_watchdog_run() {
     local limit="$max_attempts"
     [ "$max_attempts" -eq 0 ] && limit="unlimited"
 
+    # Never wait for the lock: restart_lock_acquire gives up after 120 s and runs anyway.
+    # Skip without counting an attempt; the next run checks again.
+    if ! restart_lock_try; then
+        log_debug "Watchdog: another start, stop or restart is running, skipping this check."
+        return 0
+    fi
     WATCHDOG_RUN=true
     WATCHDOG_SKIPPED=false
-    with_restart_lock watchdog_recover "$attempts" "$now" "$limit"
+    watchdog_recover "$attempts" "$now" "$limit"
     local rc=$?
     WATCHDOG_RUN=false
+    restart_lock_release
     [ "$WATCHDOG_SKIPPED" = "true" ] && return 0
 
     # Stopped on purpose while the restart waited for the lock (no flock)

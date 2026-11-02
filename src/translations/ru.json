@@ -950,6 +950,7 @@
       "label_tcp_no_delay": "TCP No Delay",
       "label_tcp_keepalive_idle": "TCP keepalive: простой, с",
       "label_tcp_keepalive_interval": "TCP keepalive: интервал, с",
+      "alert_keepalive_range": "TCP keepalive idle и interval не могут быть больше {0} секунд: Linux не принимает большие значения, и Xray не сможет открыть соединение.",
       "hint_tproxy_enable": "Включить или отключить прозрачное проксирование.",
       "hint_tproxy_interface": "Указывает имя привязанного исходящего сетевого интерфейса. Поддерживается в Linux, macOS, iOS. Для macOS и iOS требуется `Xray-core v1.8.6` или выше.",
       "hint_tproxy_domain_strategy": "Стратегия доменного разрешения, используемая для прозрачного проксирования.",

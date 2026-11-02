@@ -51,4 +51,11 @@ describe('Sockopt.vue', () => {
     expect(interval.text()).toContain('default: 45 s, -1 = off');
     expect(interval.find('input').attributes('min')).toBe('-1');
   });
+
+  it('caps both keepalive inputs at the 32767 s Linux limit', () => {
+    const { wrapper } = mountSockopt('inbound');
+
+    expect(row(wrapper, 'com.SockOpt.label_tcp_keepalive_idle').find('input').attributes('max')).toBe('32767');
+    expect(row(wrapper, 'com.SockOpt.label_tcp_keepalive_interval').find('input').attributes('max')).toBe('32767');
+  });
 });

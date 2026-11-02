@@ -507,6 +507,19 @@ describe('CommonObjects', () => {
       expect(keepAlive(300.7, '30')).toEqual({ tcpKeepAliveIdle: 300, tcpKeepAliveInterval: 30 });
     });
 
+    it('clamps TCP keepalive values to the 32767 s Linux limit', () => {
+      // Xray parses these into int32 and setsockopt rejects anything above 32767
+      expect(keepAlive(86400, 1e10)).toEqual({ tcpKeepAliveIdle: 32767, tcpKeepAliveInterval: 32767 });
+      expect(keepAlive(32767, 30)).toEqual({ tcpKeepAliveIdle: 32767, tcpKeepAliveInterval: 30 });
+    });
+
+    it('tells whether TCP keepalive values fit the Linux limit', () => {
+      expect(XraySockoptObject.isKeepAliveInRange(undefined)).toBe(true);
+      expect(XraySockoptObject.isKeepAliveInRange({ tcpKeepAliveIdle: 32767, tcpKeepAliveInterval: -1 })).toBe(true);
+      expect(XraySockoptObject.isKeepAliveInRange({ tcpKeepAliveIdle: 32768 })).toBe(false);
+      expect(XraySockoptObject.isKeepAliveInRange({ tcpKeepAliveInterval: 1e10 })).toBe(false);
+    });
+
     it('drops empty and zero TCP keepalive values', () => {
       const so = new XraySockoptObject();
       so.tcpKeepAliveIdle = 0;

@@ -76,7 +76,7 @@
             <hint v-html="$t('com.SockOpt.hint_tcp_keepalive_idle')"></hint>
           </th>
           <td>
-            <input type="number" :min="keepAliveMin" maxlength="5" class="input_6_table" v-model.number="sockopt.tcpKeepAliveIdle" />
+            <input type="number" :min="keepAliveMin" :max="keepAliveMax" class="input_6_table" v-model.number="sockopt.tcpKeepAliveIdle" />
             <span class="hint-color">{{ keepAliveDefault }}</span>
           </td>
         </tr>
@@ -86,7 +86,7 @@
             <hint v-html="$t('com.SockOpt.hint_tcp_keepalive_interval')"></hint>
           </th>
           <td>
-            <input type="number" :min="keepAliveMin" maxlength="5" class="input_6_table" v-model.number="sockopt.tcpKeepAliveInterval" />
+            <input type="number" :min="keepAliveMin" :max="keepAliveMax" class="input_6_table" v-model.number="sockopt.tcpKeepAliveInterval" />
             <span class="hint-color">{{ keepAliveDefault }}</span>
           </td>
         </tr>
@@ -146,6 +146,7 @@
       return {
         sockopt,
         keepAliveMin,
+        keepAliveMax: XraySockoptObject.keepAliveMax,
         keepAliveDefault,
         domainStrategyOptions: XraySockoptObject.domainStrategyOptions,
         tproxyOptions: XraySockoptObject.tproxyOptions,

@@ -804,6 +804,13 @@ export class XrayPeerObject {
 export class XraySockoptObject {
   static readonly tproxyOptions = ['off', 'redirect', 'tproxy'];
   static readonly domainStrategyOptions = ['AsIs', 'UseIP', 'UseIPv4', 'UseIPv6'];
+  // Linux caps TCP_KEEPIDLE and TCP_KEEPINTVL at 32767 s; a larger value fails setsockopt and the inbound listener with it.
+  static readonly keepAliveMax = 32767;
+
+  static isKeepAliveInRange = (sockopt?: { tcpKeepAliveIdle?: number; tcpKeepAliveInterval?: number }): boolean =>
+    [sockopt?.tcpKeepAliveIdle, sockopt?.tcpKeepAliveInterval].every(
+      (v) => v === undefined || v === null || (v as unknown) === '' || !(Number(v) > XraySockoptObject.keepAliveMax)
+    );
 
   public mark?: number;
   public tcpFastOpen?: boolean;
@@ -828,7 +835,9 @@ export class XraySockoptObject {
     this.dialerProxy = this.dialerProxy == '' ? undefined : this.dialerProxy;
     // Xray wants whole seconds and rejects a pair with one negative and one positive value (idle * interval < 0),
     // on inbounds and outbounds alike. A negative value turns keepalive off, so it wins over the positive one.
-    const seconds = (v?: number) => (Number.isFinite(Number(v)) ? Math.trunc(Number(v)) : 0);
+    // Values above the kernel limit are clamped here as a last guard for imported or hand-edited configs;
+    // the stream settings modal rejects them before save.
+    const seconds = (v?: number) => (Number.isFinite(Number(v)) ? Math.min(Math.trunc(Number(v)), XraySockoptObject.keepAliveMax) : 0);
     let idle = seconds(this.tcpKeepAliveIdle);
     let interval = seconds(this.tcpKeepAliveInterval);
     if (idle < 0 || interval < 0) {

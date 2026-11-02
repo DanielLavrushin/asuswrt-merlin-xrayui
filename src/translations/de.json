@@ -419,6 +419,7 @@
       "label_tcp_no_delay": "TCP No Delay",
       "label_tcp_keepalive_idle": "TCP-Keepalive: Leerlauf, s",
       "label_tcp_keepalive_interval": "TCP-Keepalive: Intervall, s",
+      "alert_keepalive_range": "TCP-Keepalive Idle und Intervall dürfen höchstens {0} Sekunden betragen: Linux lehnt größere Werte ab, und Xray kann die Verbindung nicht öffnen.",
       "hint_tproxy_enable": "Transparentes Proxying aktivieren oder deaktivieren.",
       "hint_tproxy_interface": "Gibt den Namen der gebundenen ausgehenden Netzwerkschnittstelle an. Unterstützt unter Linux, macOS, iOS. Für macOS und iOS ist `Xray-core v1.8.6` oder höher erforderlich.",
       "hint_tproxy_domain_strategy": "Die für transparentes Proxying zu verwendende Domain-Strategie.",

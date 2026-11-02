@@ -946,6 +946,7 @@
       "label_tcp_no_delay": "TCP 无延迟",
       "label_tcp_keepalive_idle": "TCP 保活空闲时间（秒）",
       "label_tcp_keepalive_interval": "TCP 保活探测间隔（秒）",
+      "alert_keepalive_range": "TCP keepalive 空闲时间和间隔不能超过 {0} 秒：Linux 会拒绝更大的值，Xray 将无法建立连接。",
       "hint_tproxy_enable": "启用或禁用透明代理。",
       "hint_tproxy_interface": "指定绑定的出站网络接口名称。支持 Linux、macOS、iOS。macOS 和 iOS 需要 `Xray-core v1.8.6` 或更高版本。",
       "hint_tproxy_domain_strategy": "用于透明代理的域名策略。",

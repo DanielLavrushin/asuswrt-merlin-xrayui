@@ -192,8 +192,11 @@ stop() {
     return "$rc"
 }
 
+# Returned when a strict acquire times out, so callers can tell it from a failed start or stop
+RESTART_LOCK_BUSY_RC=75
+
 # One lock for restarts, UI/CLI starts and stops, and the watchdog.
-# With "true", a timeout returns 1 instead of going ahead without the lock.
+# With "true", a timeout returns RESTART_LOCK_BUSY_RC instead of going ahead without the lock.
 restart_lock_acquire() {
     local strict="${1:-false}"
     local waited=0
@@ -209,7 +212,7 @@ restart_lock_acquire() {
                     log_error "Timed out waiting for another start, stop or restart to finish. Nothing was changed. Try again."
                     eval exec "$XRAY_RESTART_LOCK_FD>&-"
                     RESTART_LOCK_HELD=false
-                    return 1
+                    return "$RESTART_LOCK_BUSY_RC"
                 fi
                 log_warn "Timed out waiting for the running restart to finish. Restarting anyway."
                 break
@@ -248,7 +251,7 @@ restart_lock_release() {
 
 # UI/CLI start and stop: never run without the lock, or a stop could be undone
 with_restart_lock() {
-    restart_lock_acquire true || return 1
+    restart_lock_acquire true || return
     "$@"
     local rc=$?
     restart_lock_release

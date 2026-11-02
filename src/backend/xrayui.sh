@@ -378,7 +378,14 @@ service_event)
         start)
             update_loading_progress "Starting Xray service..." 0
             with_restart_lock start
-            update_loading_progress "Xray service started successfully." 100
+            case $? in
+            "$RESTART_LOCK_BUSY_RC")
+                update_loading_progress "Error: another start, stop or restart is still running. Nothing was changed. Try again." 100
+                ;;
+            *)
+                update_loading_progress "Xray service started successfully." 100
+                ;;
+            esac
             ;;
         restart)
             update_loading_progress "Restarting Xray service..." 0
@@ -387,11 +394,18 @@ service_event)
             ;;
         stop)
             update_loading_progress "Stopping Xray service..." 0
-            if with_restart_lock stop; then
+            with_restart_lock stop
+            case $? in
+            0)
                 update_loading_progress "Xray service stopped successfully." 100
-            else
+                ;;
+            "$RESTART_LOCK_BUSY_RC")
+                update_loading_progress "Error: another start, stop or restart is still running. Nothing was changed. Try again." 100
+                ;;
+            *)
                 update_loading_progress "Error: Xray is still running. The details are in the system log." 100
-            fi
+                ;;
+            esac
             ;;
         *)
             exit 1

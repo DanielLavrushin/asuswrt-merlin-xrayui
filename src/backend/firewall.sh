@@ -33,7 +33,7 @@ apply_rule() {
         fi
         if [ "$IPT" = "ip6tables" ] && [ "$tbl" = "nat" ]; then
             if [ "$IP6NAT_LOADED" = "0" ]; then
-                modprobe -q ip6table_nat 2>/dev/null && IP6NAT_LOADED=1 || IP6NAT_LOADED=-1
+                kmod_load -q ip6table_nat 2>/dev/null && IP6NAT_LOADED=1 || IP6NAT_LOADED=-1
             fi
             [ "$IP6NAT_LOADED" != "1" ] && continue
             $IPT -w -t nat -L -n >/dev/null 2>&1 || continue
@@ -325,7 +325,7 @@ configure_firewall_rules() {
     ipt mangle -A DIVERT -j CONNMARK --save-mark --mask $tproxy_mask
     ipt mangle -A DIVERT -j ACCEPT
 
-    if lsmod | grep -q '^xt_socket ' || modprobe xt_socket 2>/dev/null; then
+    if kmod_is_loaded xt_socket || kmod_load xt_socket 2>/dev/null; then
         ipt_ensure mangle PREROUTING -I -p tcp -m socket --transparent -j DIVERT
     else
         log_warn "xt_socket missing; skipping transparent DIVERT hook"
@@ -570,9 +570,9 @@ configure_firewall_client() {
         local IPT_TABLE="mangle"
 
         # Ensure TPROXY module is loaded
-        if ! lsmod | grep -q "xt_TPROXY"; then
+        if ! kmod_is_loaded xt_TPROXY; then
             log_debug "xt_TPROXY kernel module not loaded. Attempting to load..."
-            modprobe xt_TPROXY || {
+            kmod_load xt_TPROXY || {
                 log_error "Failed to load xt_TPROXY kernel module. TPROXY might not work."
                 return 1
             }
@@ -580,7 +580,7 @@ configure_firewall_client() {
         fi
 
         # Verify if the module is successfully loaded
-        if ! lsmod | grep -q "xt_TPROXY"; then
+        if ! kmod_is_loaded xt_TPROXY; then
             log_error "xt_TPROXY kernel module is still not loaded after attempt. Aborting."
             return 1
         else
@@ -625,7 +625,7 @@ configure_firewall_client() {
     source_nets="$source_nets_v4 $source_nets_v6"
 
     if [ "$IPT_TYPE" = "TPROXY" ]; then
-        lsmod | grep -q '^xt_socket ' || modprobe xt_socket 2>/dev/null
+        kmod_is_loaded xt_socket || kmod_load xt_socket 2>/dev/null
 
         ipt $IPT_TABLE -I XRAYUI 1 -p udp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask
         ipt $IPT_TABLE -I XRAYUI 2 -p tcp -m socket --transparent -j MARK --set-mark $tproxy_mark/$tproxy_mask

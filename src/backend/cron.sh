@@ -6,6 +6,11 @@ CRU_LR_ID="xrayui_logrotate"
 CRU_SUB_REFRESH_ID="xrayui_subscription_refresh"
 CRU_SUB_FALLBACK_ID="xrayui_subscription_fallback"
 CRU_IPSET_SAVE_ID="xrayui_ipset_save"
+CRU_WATCHDOG_ID="xrayui_watchdog"
+XRAY_DESIRED_STATE_FILE="/tmp/xrayui_xray.desired"
+WATCHDOG_STATE_FILE="/tmp/xrayui_watchdog.state"
+WATCHDOG_STABLE_SECONDS=600
+WATCHDOG_MAX_DELAY=3600
 LR_STATUS="/tmp/logrotate.status"
 LR_BIN="/opt/sbin/logrotate"
 LR_CONF="/opt/etc/logrotate.conf"
@@ -196,4 +201,132 @@ cron_jobs_add() {
     cron_subscription_refresh_add
     cron_subscription_fallback_add
     cron_ipset_save_add
+    cron_watchdog_add
+}
+
+watchdog_sanitize_interval() {
+    case "$1" in
+    1 | 2 | 5 | 10) echo "$1" ;;
+    *) echo 2 ;;
+    esac
+}
+
+watchdog_sanitize_attempts() {
+    case "$1" in
+    '' | *[!0-9]*) echo 5 ;;
+    *) echo "$1" ;;
+    esac
+}
+
+# Called by start(): Xray is meant to be running from now on.
+# A user (re)start also resets the retry counter; a watchdog restart keeps it.
+watchdog_mark_desired() {
+    touch "$XRAY_DESIRED_STATE_FILE" 2>/dev/null
+    [ "${WATCHDOG_RUN:-false}" = "true" ] || rm -f "$WATCHDOG_STATE_FILE"
+}
+
+# Called by stop(): an intentional stop must not be undone by the watchdog.
+watchdog_clear_desired() {
+    rm -f "$XRAY_DESIRED_STATE_FILE"
+    [ "${WATCHDOG_RUN:-false}" = "true" ] || rm -f "$WATCHDOG_STATE_FILE"
+}
+
+cron_watchdog_add() {
+    load_xrayui_config
+    cron_job_delete "$CRU_WATCHDOG_ID"
+
+    if [ "${watchdog:-false}" = "true" ]; then
+        local interval=$(watchdog_sanitize_interval "$watchdog_interval")
+        cru a "$CRU_WATCHDOG_ID" "*/$interval * * * * $ADDON_SCRIPT cron watchdog" || {
+            log_error "Failed to add CRU job $CRU_WATCHDOG_ID"
+            return
+        }
+        log_ok "CRON job $CRU_WATCHDOG_ID for $ADDON_TITLE added successfully"
+    else
+        rm -f "$WATCHDOG_STATE_FILE"
+        log_info "CRON job $CRU_WATCHDOG_ID not added (watchdog is disabled)"
+    fi
+}
+
+cron_watchdog_run() {
+    load_xrayui_config
+    [ "${watchdog:-false}" = "true" ] || return 0
+    # Not started by XRAYUI, or stopped on purpose
+    [ -f "$XRAY_DESIRED_STATE_FILE" ] || return 0
+
+    local attempts=0 last_ts=0 gave_up=0
+    [ -f "$WATCHDOG_STATE_FILE" ] && read -r attempts last_ts gave_up <"$WATCHDOG_STATE_FILE"
+    attempts=$(watchdog_sanitize_attempts "$attempts")
+    case "$last_ts" in '' | *[!0-9]*) last_ts=0 ;; esac
+    [ "$gave_up" = "1" ] || gave_up=0
+
+    if [ -n "$(get_xray_daemon_pid)" ]; then
+        # Reset only after Xray has stayed up for a while, so a crash loop keeps backing off
+        if [ -f "$WATCHDOG_STATE_FILE" ] && [ "$(get_proc_uptime xray)" -ge "$WATCHDOG_STABLE_SECONDS" ]; then
+            log_info "Xray has been running for $WATCHDOG_STABLE_SECONDS seconds. Watchdog retry counter reset."
+            rm -f "$WATCHDOG_STATE_FILE"
+        fi
+        return 0
+    fi
+
+    # Startup or a restart is already in progress: let it finish
+    local startup_pid=$(cat /tmp/xrayui_startup.lock 2>/dev/null)
+    if [ -n "$startup_pid" ] && kill -0 "$startup_pid" 2>/dev/null; then
+        log_debug "Watchdog: startup in progress, skipping this check."
+        return 0
+    fi
+    if which flock >/dev/null 2>&1 && [ -f "$XRAY_RESTART_LOCKFILE" ]; then
+        eval exec "$XRAY_RESTART_LOCK_FD>>$XRAY_RESTART_LOCKFILE"
+        if ! flock -n "$XRAY_RESTART_LOCK_FD"; then
+            eval exec "$XRAY_RESTART_LOCK_FD>&-"
+            log_debug "Watchdog: a restart is in progress, skipping this check."
+            return 0
+        fi
+        flock -u "$XRAY_RESTART_LOCK_FD" 2>/dev/null
+        eval exec "$XRAY_RESTART_LOCK_FD>&-"
+    fi
+
+    local max_attempts=$(watchdog_sanitize_attempts "$watchdog_max_attempts")
+    if [ "$max_attempts" -gt 0 ] && [ "$attempts" -ge "$max_attempts" ]; then
+        if [ "$gave_up" != "1" ]; then
+            log_error "Xray is not running and the watchdog gave up after $attempts restart attempts. Start Xray manually after fixing the cause."
+            printf '%s %s 1\n' "$attempts" "$last_ts" >"$WATCHDOG_STATE_FILE"
+        fi
+        return 0
+    fi
+
+    # Backoff: wait interval * 2^(attempts-1) between retries, capped at WATCHDOG_MAX_DELAY
+    local now=$(date +%s)
+    if [ "$attempts" -gt 0 ]; then
+        local delay=$(($(watchdog_sanitize_interval "$watchdog_interval") * 60))
+        local i=1
+        while [ "$i" -lt "$attempts" ] && [ "$delay" -lt "$WATCHDOG_MAX_DELAY" ]; do
+            delay=$((delay * 2))
+            i=$((i + 1))
+        done
+        [ "$delay" -gt "$WATCHDOG_MAX_DELAY" ] && delay=$WATCHDOG_MAX_DELAY
+        # cron fires on minute boundaries; allow 30s of slack
+        if [ $((now - last_ts)) -lt $((delay - 30)) ]; then
+            log_debug "Watchdog: next restart attempt in $((delay - now + last_ts)) seconds."
+            return 0
+        fi
+    fi
+
+    attempts=$((attempts + 1))
+    printf '%s %s 0\n' "$attempts" "$now" >"$WATCHDOG_STATE_FILE"
+
+    local limit="$max_attempts"
+    [ "$max_attempts" -eq 0 ] && limit="unlimited"
+    log_warn "Xray was not running, restarting (attempt $attempts/$limit)"
+
+    WATCHDOG_RUN=true
+    restart
+    local rc=$?
+    WATCHDOG_RUN=false
+
+    if [ "$rc" -ne 0 ] || [ -z "$(get_xray_daemon_pid)" ]; then
+        log_error "Watchdog restart attempt $attempts/$limit failed. The details are above in the system log."
+    else
+        log_ok "Watchdog restarted Xray (attempt $attempts/$limit)."
+    fi
 }

@@ -27,7 +27,7 @@ apply_general_options() {
     local subscriptionLinks xray_dns_only xray_block_quic integration_scribe
     local subscription_auto_refresh subscription_auto_fallback
     local subscription_fallback_interval probe_url probe_interval subscription_filters
-    local tun_routing
+    local tun_routing watchdog watchdog_interval watchdog_max_attempts
     local _genopts_vars
     if ! _genopts_vars=$(echo "$genopts" | jq -r '
         "github_proxy=" + ((.github_proxy // "") | tostring | @sh) + "\n" +
@@ -59,6 +59,9 @@ apply_general_options() {
         "probe_url=" + ((.probe_url // "https://www.google.com/generate_204") | tostring | @sh) + "\n" +
         "probe_interval=" + ((.probe_interval // 30) | tostring | @sh) + "\n" +
         "tun_routing=" + ((.tun_routing // "full") | tostring | @sh) + "\n" +
+        "watchdog=" + ((.watchdog // "false") | tostring | @sh) + "\n" +
+        "watchdog_interval=" + ((.watchdog_interval // 2) | tostring | @sh) + "\n" +
+        "watchdog_max_attempts=" + ((.watchdog_max_attempts // 5) | tostring | @sh) + "\n" +
         "subscription_filters=" + (((.subscriptions.filters // []) | join("|")) | @sh)
     '); then
         log_error "Failed to parse general options payload."
@@ -120,6 +123,10 @@ apply_general_options() {
     update_xrayui_config "probe_interval" "$(sanitize_probe_interval "$probe_interval")"
     [ "$tun_routing" = "interface" ] || tun_routing="full"
     update_xrayui_config "tun_routing" "$tun_routing"
+    [ "$watchdog" = "true" ] || watchdog="false"
+    update_xrayui_config "watchdog" "$watchdog"
+    update_xrayui_config "watchdog_interval" "$(watchdog_sanitize_interval "$watchdog_interval")"
+    update_xrayui_config "watchdog_max_attempts" "$(watchdog_sanitize_attempts "$watchdog_max_attempts")"
 
     update_xrayui_config "subscription_filters" "$subscription_filters"
 
@@ -138,6 +145,7 @@ apply_general_options() {
     cron_subscription_refresh_add
     cron_subscription_fallback_add
     cron_ipset_save_add
+    cron_watchdog_add
 
     # integration scribe
     logs_scribe_integration

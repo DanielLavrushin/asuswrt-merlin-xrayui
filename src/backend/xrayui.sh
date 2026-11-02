@@ -111,7 +111,7 @@ subscriptions)
     ;;
 cron)
     case "$2" in
-    logrotate | geodata | subscription_refresh | subscription_fallback | ipset_save)
+    logrotate | geodata | subscription_refresh | subscription_fallback | ipset_save | watchdog)
         cron_job_lock "$2" || exit 0
         update_loading_progress() { :; }
         ;;
@@ -134,6 +134,9 @@ cron)
         ;;
     subscription_fallback)
         failover_check
+        ;;
+    watchdog)
+        cron_watchdog_run
         ;;
     ipset_save)
         load_xrayui_config

@@ -5,6 +5,8 @@ start() {
 
     load_xrayui_config
 
+    watchdog_mark_desired
+
     migrate_tun_inbounds_config
 
     cleanup_stale_asdfiles
@@ -142,6 +144,8 @@ stop() {
     local rc=0
     local pid
     log_info "Stopping $ADDON_TITLE"
+
+    watchdog_clear_desired
 
     update_loading_progress "Stopping $ADDON_TITLE"
 

@@ -111,17 +111,20 @@
         try {
           const list = await engine.fetchGithubJson<any[]>(gh_releases_url, proxy);
           if (!Array.isArray(list)) throw new Error('unexpected releases response');
-          releases.value = list
+          const all: XrayUiRelease[] = list
             .filter((r: any) => !r.draft && r.tag_name)
-            .slice(0, RELEASES_TO_SHOW)
             .map((r: any) => ({
               version: String(r.tag_name).replace(/^v/i, ''),
               date: (r.published_at || r.created_at || '').slice(0, 10),
               prerelease: !!r.prerelease,
               body: r.body || ''
             }));
+          // look for the latest stable before cutting the list, and keep it selectable if prereleases pushed it past the cut
+          const latestRelease = all.find((r) => !r.prerelease);
+          const shown = all.slice(0, RELEASES_TO_SHOW);
+          if (latestRelease && !shown.includes(latestRelease)) shown.push(latestRelease);
+          releases.value = shown;
           releasesFailed.value = false;
-          const latestRelease = releases.value.find((r) => !r.prerelease);
           if (!latestRelease) return;
           latest_version.value = vClean(latestRelease.version)!;
           selected_version.value = latestRelease.version;

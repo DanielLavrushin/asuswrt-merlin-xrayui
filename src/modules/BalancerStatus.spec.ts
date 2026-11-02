@@ -78,6 +78,12 @@ describe('resolveBalancer', () => {
     expect(resolveBalancer(balancer({ type: 'leastload' }), obs, ROUTING)).toMatchObject({ kind: 'next', tags: ['p-b'] });
   });
 
+  it('compares the fail tolerance as the float32 Xray stores', () => {
+    // float32(0.7) is 0.699999988, so 7 failures out of 10 are over it in Xray
+    const obs: Observatory = { 'p-a': burst('p-a', 90, 20), 'p-b': burst('p-b', 40, 1, 7) };
+    expect(resolveBalancer(balancer({ type: 'leastload', settings: { tolerance: 0.7 } }), obs, ROUTING)).toMatchObject({ kind: 'next', tags: ['p-a'] });
+  });
+
   it('treats an alive outbound without a delay as 0 ms, as Xray omits a zero delay', () => {
     const obs: Observatory = { ...OBS, 'p-a': { alive: true, outbound_tag: 'p-a' } };
     expect(resolveBalancer(balancer(), obs, ROUTING)).toMatchObject({ kind: 'next', tags: ['p-a'], delay: 0 });

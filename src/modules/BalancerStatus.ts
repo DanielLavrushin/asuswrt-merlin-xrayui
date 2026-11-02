@@ -251,7 +251,8 @@ export const resolveBalancer = (balancer: RunningBalancer, observatory: Observat
     };
     const failsOf = (tag: string) => (ping(tag) ? (ping(tag)?.fail ?? 0) : 1);
     const samplesOf = (tag: string) => (ping(tag) ? (ping(tag)?.all ?? 0) : 1);
-    const tolerance = Number(settings.tolerance) || 0;
+    // Xray stores the tolerance as float32 clamped to [0, 1] (infra/conf/router_strategy.go)
+    const tolerance = Math.min(1, Math.max(0, Math.fround(Number(settings.tolerance) || 0)));
     const tolerated = (tag: string) => !(tolerance > 0 && samplesOf(tag) > 0 && ping(tag) && failsOf(tag) / samplesOf(tag) > tolerance);
     const costOf = (tag: string) => rttOf(tag) * Math.sqrt(costWeight(tag, costs));
     const live = candidates

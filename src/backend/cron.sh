@@ -211,11 +211,25 @@ watchdog_sanitize_interval() {
     esac
 }
 
-watchdog_sanitize_attempts() {
+# Digits only, without leading zeros (valid JSON), at most 9 digits so [ -gt ] never overflows
+watchdog_sanitize_number() {
     case "$1" in
-    '' | *[!0-9]*) echo 5 ;;
-    *) echo "$1" ;;
+    '' | *[!0-9]*)
+        echo "$2"
+        return
+        ;;
     esac
+    local n="${1#"${1%%[!0]*}"}"
+    [ -n "$n" ] || n=0
+    [ "${#n}" -le 9 ] || n=999999999
+    echo "$n"
+}
+
+# The Max restart attempts setting, capped at the UI maximum
+watchdog_sanitize_attempts() {
+    local n=$(watchdog_sanitize_number "$1" 5)
+    [ "$n" -le 999 ] || n=999
+    echo "$n"
 }
 
 # Called by start(): Xray is meant to be running from now on.
@@ -271,7 +285,7 @@ cron_watchdog_run() {
 
     local attempts=0 last_ts=0 gave_up=0
     [ -f "$WATCHDOG_STATE_FILE" ] && read -r attempts last_ts gave_up <"$WATCHDOG_STATE_FILE"
-    attempts=$(watchdog_sanitize_attempts "$attempts")
+    attempts=$(watchdog_sanitize_number "$attempts" 0)
     case "$last_ts" in '' | *[!0-9]*) last_ts=0 ;; esac
     [ "$gave_up" = "1" ] || gave_up=0
 

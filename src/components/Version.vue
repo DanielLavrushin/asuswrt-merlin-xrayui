@@ -29,15 +29,27 @@
         </div>
       </div>
 
+      <div class="version-select" v-if="releases.length">
+        <label for="xrayui-version-select">{{ $t('com.Version.label_select_version') }}</label>
+        <select id="xrayui-version-select" class="input_option" v-model="selected_version">
+          <option v-for="r in releases" :key="r.version" :value="r.version">
+            v{{ r.version }} ({{ r.date }}){{ r.version === latest_version ? ` ${$t('com.Version.latest_suffix')}` : ''
+            }}{{ r.version === current_version ? ` ${$t('com.Version.installed_suffix')}` : '' }}{{ r.prerelease ? ` ${$t('com.Version.prerelease_suffix')}` : '' }}
+          </option>
+        </select>
+        <span class="version-select__warn" v-if="isDowngrade">{{ $t('com.Version.downgrade_warning') }}</span>
+      </div>
+      <p class="version-select__error" v-else-if="releasesFailed">{{ $t('com.Version.releases_load_failed') }}</p>
+
       <div class="changelog-card">
         <div class="changelog" v-html="changelog"></div>
       </div>
 
       <p class="changelog-link" v-html="$t('com.Version.open_chengelog')"></p>
     </div>
-    <template v-slot:footer v-if="hasUpdate">
-      <button class="button_gen button_gen_small" @click.prevent="dont_want_update">{{ $t('com.Version.dont_want_update', [latest_version]) }}</button>
-      <input class="button_gen button_gen_small button-primary" type="button" :value="$t('com.Version.update_now')" @click.prevent="update" />
+    <template v-slot:footer v-if="hasUpdate || selected_version">
+      <button class="button_gen button_gen_small" v-if="hasUpdate" @click.prevent="dont_want_update">{{ $t('com.Version.dont_want_update', [latest_version]) }}</button>
+      <input class="button_gen button_gen_small button-primary" type="button" :value="installLabel" @click.prevent="update" />
     </template>
   </modal>
 </template>
@@ -49,6 +61,16 @@
   import vCompare from 'version-compare';
   import engine, { SubmitActions, EngineResponseConfig } from '@/modules/Engine';
   import markdownit from 'markdown-it';
+  import { useI18n } from 'vue-i18n';
+
+  interface XrayUiRelease {
+    version: string;
+    date: string;
+    prerelease: boolean;
+    body: string;
+  }
+
+  const RELEASES_TO_SHOW = 15;
 
   export default defineComponent({
     name: 'Version',
@@ -56,6 +78,7 @@
       Modal
     },
     setup() {
+      const { t } = useI18n();
       const md = markdownit({ html: false, breaks: true });
       const COOKIE_NAME = 'xrayui_dontupdate';
       const ui = inject<Ref<EngineResponseConfig>>('uiResponse');
@@ -65,15 +88,43 @@
       const latest_version = ref<string>();
       const updateModal = ref();
       const hasUpdate = ref(false);
-      const changelog = ref<string>('');
+      const releases = ref<XrayUiRelease[]>([]);
+      const releasesFailed = ref(false);
+      const selected_version = ref<string>('');
       const refusedToUpdateVersion = ref(engine.getCookie(COOKIE_NAME));
 
+      const selectedRelease = computed(() => releases.value.find((r) => r.version === selected_version.value));
+      const changelog = computed(() => (selectedRelease.value?.body ? md.render(selectedRelease.value.body) : ''));
+      const compareSelected = computed(() => (selected_version.value && current_version.value ? vCompare(selected_version.value, current_version.value) : 1));
+      const isDowngrade = computed(() => compareSelected.value === -1);
+      const installLabel = computed(() => {
+        if (!selected_version.value) return t('com.Version.update_now');
+        if (compareSelected.value === 0) return t('com.Version.reinstall_now', [selected_version.value]);
+        if (compareSelected.value === -1) return t('com.Version.downgrade_now', [selected_version.value]);
+        if (selected_version.value === latest_version.value) return t('com.Version.update_now');
+        return t('com.Version.install_version', [selected_version.value]);
+      });
+
       const checkLatest = async (proxy?: string) => {
-        const gh_releases_url = 'https://api.github.com/repos/daniellavrushin/asuswrt-merlin-xrayui/releases/latest';
+        // one call returns both the latest release and the list used for the downgrade selector
+        const gh_releases_url = `https://api.github.com/repos/daniellavrushin/asuswrt-merlin-xrayui/releases?per_page=${RELEASES_TO_SHOW + 5}`;
         try {
-          const latestRelease = await engine.fetchGithubJson<any>(gh_releases_url, proxy);
+          const list = await engine.fetchGithubJson<any[]>(gh_releases_url, proxy);
+          if (!Array.isArray(list)) throw new Error('unexpected releases response');
+          releases.value = list
+            .filter((r: any) => !r.draft && r.tag_name)
+            .slice(0, RELEASES_TO_SHOW)
+            .map((r: any) => ({
+              version: String(r.tag_name).replace(/^v/i, ''),
+              date: (r.published_at || r.created_at || '').slice(0, 10),
+              prerelease: !!r.prerelease,
+              body: r.body || ''
+            }));
+          releasesFailed.value = false;
+          const latestRelease = releases.value.find((r) => !r.prerelease);
           if (!latestRelease) return;
-          latest_version.value = vClean(latestRelease.tag_name)!;
+          latest_version.value = vClean(latestRelease.version)!;
+          selected_version.value = latestRelease.version;
           hasUpdate.value = !!current_version.value && vCompare(latest_version.value, current_version.value) === 1;
           if (hasUpdate.value === true) {
             window.xray.server.xray_version_latest = latest_version.value;
@@ -81,9 +132,9 @@
               updateModal.value.show();
             }
           }
-          changelog.value = md.render(latestRelease.body);
         } catch (e) {
-          console.warn('[xrayui] failed to load latest release info:', e);
+          releasesFailed.value = true;
+          console.warn('[xrayui] failed to load release info:', e);
         }
       };
 
@@ -106,8 +157,11 @@
       };
 
       const update = async () => {
+        const version = selected_version.value;
+        if (version && isDowngrade.value && !confirm(t('com.Version.downgrade_confirm', [version, current_version.value]))) return;
         await engine.executeWithLoadingProgress(async () => {
-          await engine.submit(SubmitActions.performUpdate);
+          // no version -> backend falls back to the latest release, same as before
+          await engine.submit(SubmitActions.performUpdate, version ? { version } : undefined);
         });
       };
 
@@ -122,6 +176,11 @@
         latest_version,
         hasUpdate,
         changelog,
+        releases,
+        releasesFailed,
+        selected_version,
+        isDowngrade,
+        installLabel,
         open_update,
         update,
         dont_want_update
@@ -248,6 +307,30 @@
     font-weight: bold;
     font-size: 13px;
     line-height: 1;
+  }
+
+  .version-select {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+
+    label {
+      font-weight: bold;
+      color: #ffffff;
+    }
+
+    &__warn {
+      flex-basis: 100%;
+      color: #ff9a3c;
+      font-size: 11px;
+    }
+
+    &__error {
+      margin: 0;
+      color: #ff9a3c;
+      font-size: 11px;
+    }
   }
 
   .changelog-card {

@@ -182,7 +182,8 @@ service_event)
         test_xray_config true
         ;;
     update)
-        if update; then
+        update_version=$(reconstruct_payload | jq -r '.version // empty' 2>/dev/null)
+        if update "${update_version:-latest}"; then
             initial_response
             update_loading_progress "Update process completed!" 100
         else

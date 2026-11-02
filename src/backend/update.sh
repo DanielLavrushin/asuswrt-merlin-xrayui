@@ -6,6 +6,12 @@ update() {
     update_loading_progress "Updating $ADDON_TITLE..." 0
 
     local specific_version=${1:-"latest"}
+    specific_version=${specific_version#v}
+
+    if [ "$specific_version" != "latest" ] && ! echo "$specific_version" | grep -Eq '^[0-9]+\.[0-9]+(\.[0-9]+)?([.-]?[A-Za-z0-9]+)*$'; then
+        log_error "Invalid version requested: $specific_version"
+        return 1
+    fi
 
     local url=$(github_proxy_url "https://github.com/daniellavrushin/asuswrt-merlin-xrayui/releases/latest/download/asuswrt-merlin-xrayui.tar.gz")
 

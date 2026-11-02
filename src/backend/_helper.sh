@@ -119,6 +119,21 @@ log_box() {
     printf '%b╚%s╝%b\n' "$color" "$border" "$CRESET"
 }
 
+# PATH puts /opt/sbin first, so a bare `modprobe` resolves to Entware's kmod,
+# which can fail to load firmware modules. Prefer the firmware's own modprobe.
+kmod_load() {
+    if [ -x /sbin/modprobe ]; then
+        /sbin/modprobe "$@"
+    else
+        modprobe "$@"
+    fi
+}
+
+# Read /proc/modules directly instead of `lsmod`, which has the same PATH issue.
+kmod_is_loaded() {
+    grep -q "^$1 " /proc/modules 2>/dev/null
+}
+
 get_proc() {
     local proc_name="$1"
     echo $(/bin/pidof "$proc_name" 2>/dev/null | awk '{print $NF}')

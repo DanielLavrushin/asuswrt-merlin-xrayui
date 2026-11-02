@@ -87,6 +87,28 @@ api_write_config() {
     ' "$XRAY_CONFIG_FILE"
   )
 
+  # A later -c file replaces whole top-level keys and Xray would run observatory and
+  # burstObservatory side by side, so re-emit the user's burstObservatory probing every outbound.
+  local observatory_block
+  observatory_block=$(
+    jq -r --argjson tags "$outbound_tags" '
+      .burstObservatory // empty
+      | objects
+      | "\"burstObservatory\": " + (. + {
+          subjectSelector: (((.subjectSelector // []) | map(strings)) + $tags | unique),
+          pingConfig: (.pingConfig | objects // {})
+        } | tojson)
+    ' "$XRAY_CONFIG_FILE" 2>/dev/null
+  )
+  if [ -z "$observatory_block" ]; then
+    observatory_block="\"observatory\": {
+    \"subjectSelector\": $outbound_tags,
+    \"probeUrl\": $observatory_probe_url,
+    \"probeInterval\": \"${observatory_probe_interval}s\",
+    \"enableConcurrency\": true
+  }"
+  fi
+
   cat >"$xray_api_config" <<EOF
 {
   "api": {
@@ -111,12 +133,7 @@ api_write_config() {
       "0": { "statsUserUplink": true, "statsUserDownlink": true }
     }
   },
-  "observatory": {
-    "subjectSelector": $outbound_tags,
-    "probeUrl": $observatory_probe_url,
-    "probeInterval": "${observatory_probe_interval}s",
-    "enableConcurrency": true
-  },
+  $observatory_block,
   "metrics": { "tag": "sys:metrics_out" }
 }
 EOF

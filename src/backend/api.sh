@@ -88,16 +88,16 @@ api_write_config() {
   )
 
   # A later -c file replaces whole top-level keys and Xray would run observatory and
-  # burstObservatory side by side, so re-emit the user's burstObservatory probing every outbound.
+  # burstObservatory side by side, so re-emit the user's burstObservatory instead. Only the
+  # connection check reads its results, so only then is every outbound added to the probes.
   local observatory_block
   observatory_block=$(
-    jq -r --argjson tags "$outbound_tags" '
+    jq -r --argjson tags "$outbound_tags" --arg probe_all "$check_connection" '
       .burstObservatory // empty
       | objects
-      | "\"burstObservatory\": " + (. + {
-          subjectSelector: (((.subjectSelector // []) | map(strings)) + $tags | unique),
-          pingConfig: (.pingConfig | objects // {})
-        } | tojson)
+      | "\"burstObservatory\": " + (. + {pingConfig: (.pingConfig | objects // {})}
+          + (if $probe_all == "true" then {subjectSelector: (((.subjectSelector // []) | map(strings)) + $tags | unique)} else {} end)
+        | tojson)
     ' "$XRAY_CONFIG_FILE" 2>/dev/null
   )
   if [ -z "$observatory_block" ]; then

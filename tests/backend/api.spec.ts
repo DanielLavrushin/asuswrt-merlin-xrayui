@@ -171,6 +171,14 @@ describeIf.each(SHELLS)('api.sh under %s', (_name, shell) => {
     expect(r.apiConfig).toMatchObject({ api: { tag: 'sys:api' }, burstObservatory: { subjectSelector: ['direct', 'p-', 'p-a'], pingConfig: burstObservatory.pingConfig } });
   });
 
+  it('keeps the burstObservatory selectors as written when only the clients check is on', () => {
+    const burstObservatory = { subjectSelector: ['p-'], pingConfig: { interval: '30s' } };
+    const config = { outbounds: [{ tag: 'p-a' }, { tag: 'direct' }], burstObservatory };
+    const r = run(shell, { steps: ['apply'], env: { RS_CHECK_CONNECTION: 'false', RS_CLIENTS_CHECK: 'true' }, files: { 'opt/etc/xray/config.json': JSON.stringify(config) } });
+    expect(r.apiConfig).not.toHaveProperty('observatory');
+    expect(r.apiConfig?.burstObservatory).toEqual(burstObservatory);
+  });
+
   it('lists the clients that moved traffic since the last query', () => {
     const r = run(shell, { steps: ['clients'], env: { RS_PID: '4242' }, files: { 'opt/etc/xray/xrayui/config-api.json': CLIENTS_API_CONFIG, 'stats.json': STATS } });
     expect(JSON.parse(r.clients ?? '')).toEqual([{ ip: '', email: ['alice@example'] }]);

@@ -1,7 +1,11 @@
 # XRAYUI Changelog
 
-## [0.71.0] - 2026-10-31
+## [0.71.0] - 2026-11-xx
 
+- ADDED: The TCP transport settings have **Header obfuscation** with **Request path** and **Host**, and gRPC outbounds have **Authority** and **Multi mode**.
+- FIXED: TCP outbounds with HTTP header obfuscation (`headerType=http` links, as published by Hiddify and other panels) lost the header on every import and save, so the server reset each connection right after the TLS handshake. The header, request path and Host are now kept from links, subscriptions and JSON imports, and configurations using the `raw` network name are read as TCP. ([#417](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/417))
+- FIXED: **Accept PROXY protocol** on TCP inbounds was not saved.
+- FIXED: Importing a gRPC link, directly or by picking a server from a subscription, dropped its **Service name**, authority and multi mode. HTTPUpgrade links lost their path and host. ([#423](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/423))
 - FIXED: **Stop** could leave a second copy of Xray running, such as one started at boot by an old Entware Xray package, so the page still showed Xray as running.
 - FIXED: A stopped Xray could start again by itself when a subscription update or auto-fallback changed a server in the **Auto-fallback pool**.
 - FIXED: With **Check clients online status** turned on, the page could show a stopped Xray as running.

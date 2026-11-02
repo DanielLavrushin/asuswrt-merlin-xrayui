@@ -26,12 +26,16 @@ describe('burstObservatory', () => {
     expect(saved).not.toHaveProperty('burstObservatory');
   });
 
-  it('drops empty fields and invalid sampling', () => {
-    const burst = XrayBurstObservatoryObject.create([' p-', '', 'p-', 'q-']);
+  it('keeps the empty prefix that selects every outbound', () => {
+    expect(roundTrip({ burstObservatory: { subjectSelector: [''], pingConfig: {} } }).burstObservatory).toEqual({ subjectSelector: [''], pingConfig: {} });
+  });
+
+  it('keeps selectors as written apart from duplicates, and drops empty ping fields and invalid sampling', () => {
+    const burst = XrayBurstObservatoryObject.create(['', 'p-', 'p-', 'q-']);
     burst.pingConfig!.connectivity = '  ';
     burst.pingConfig!.sampling = '' as unknown as number;
     burst.normalize();
-    expect(burst.subjectSelector).toEqual(['p-', 'q-']);
+    expect(burst.subjectSelector).toEqual(['', 'p-', 'q-']);
     expect(burst.pingConfig).toEqual({ destination: XrayBurstObservatoryPingConfigObject.defaultDestination, interval: '1m', timeout: '5s' });
   });
 });

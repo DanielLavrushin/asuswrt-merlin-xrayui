@@ -57,7 +57,7 @@
             </th>
             <td>
               <div class="textarea-wrapper">
-                <textarea v-model="burstSelectorText" rows="4" :placeholder="$t('com.BalancerModal.placeholder_selector')"></textarea>
+                <textarea v-model="burstSelectorText" rows="4" :placeholder="$t('com.BalancerModal.placeholder_selector')" @input="onSelectorInput"></textarea>
               </div>
             </td>
           </tr>
@@ -175,7 +175,7 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, computed, inject, watch, Ref } from 'vue';
+  import { defineComponent, ref, computed, inject, Ref } from 'vue';
   import { useI18n } from 'vue-i18n';
   import Modal from '@main/Modal.vue';
   import { XrayBalancerObject, XrayBalancerStrategyObject, XrayBurstObservatoryObject, XrayBurstObservatoryPingConfigObject } from '@/modules/CommonObjects';
@@ -262,9 +262,10 @@
           }
         }
       });
-      watch(burstSelectorText, (text) => {
-        if (xrayConfig.burstObservatory) xrayConfig.burstObservatory.subjectSelector = parseLines(text);
-      });
+      // only typing rewrites the selectors, so opening the manager keeps a hand-written list as is
+      const onSelectorInput = (event: Event) => {
+        if (xrayConfig.burstObservatory) xrayConfig.burstObservatory.subjectSelector = parseLines((event.target as HTMLTextAreaElement).value);
+      };
 
       const show = () => {
         balancers.value = [...props.balancers];
@@ -325,6 +326,7 @@
         strategyOptions: XrayBalancerStrategyObject.typeOptions,
         burst,
         burstSelectorText,
+        onSelectorInput,
         observatoryMode,
         pingDefaults: {
           destination: XrayBurstObservatoryPingConfigObject.defaultDestination,

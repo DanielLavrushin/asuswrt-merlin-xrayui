@@ -649,9 +649,10 @@ export class XrayBurstObservatoryObject {
   public subjectSelector?: string[];
   public pingConfig?: XrayBurstObservatoryPingConfigObject;
 
-  // Xray refuses a burstObservatory without pingConfig, so it is always kept (an empty one means Xray defaults)
+  // Xray refuses a burstObservatory without pingConfig, so it is always kept (an empty one means Xray defaults).
+  // Selectors are tag prefixes kept as written: "" is a valid prefix that selects every outbound.
   public normalize(): this {
-    const selector = (this.subjectSelector ?? []).map((s) => (typeof s === 'string' ? s.trim() : '')).filter(Boolean);
+    const selector = (this.subjectSelector ?? []).filter((s): s is string => typeof s === 'string');
     this.subjectSelector = selector.length ? [...new Set(selector)] : undefined;
     const ping = this.pingConfig instanceof XrayBurstObservatoryPingConfigObject ? this.pingConfig : Object.assign(new XrayBurstObservatoryPingConfigObject(), this.pingConfig);
     this.pingConfig = ping.normalize();

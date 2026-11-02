@@ -192,8 +192,10 @@ stop() {
     return "$rc"
 }
 
-# One lock for restarts, UI/CLI starts and stops, and the watchdog
+# One lock for restarts, UI/CLI starts and stops, and the watchdog.
+# With "true", a timeout returns 1 instead of going ahead without the lock.
 restart_lock_acquire() {
+    local strict="${1:-false}"
     local waited=0
     RESTART_LOCK_HELD=false
 
@@ -203,6 +205,12 @@ restart_lock_acquire() {
 
         while ! flock -n "$XRAY_RESTART_LOCK_FD"; do
             if [ "$waited" -ge 120 ]; then
+                if [ "$strict" = "true" ]; then
+                    log_error "Timed out waiting for another start, stop or restart to finish. Nothing was changed. Try again."
+                    eval exec "$XRAY_RESTART_LOCK_FD>&-"
+                    RESTART_LOCK_HELD=false
+                    return 1
+                fi
                 log_warn "Timed out waiting for the running restart to finish. Restarting anyway."
                 break
             fi
@@ -238,16 +246,22 @@ restart_lock_release() {
     RESTART_LOCK_HELD=false
 }
 
+# UI/CLI start and stop: never run without the lock, or a stop could be undone
 with_restart_lock() {
-    restart_lock_acquire
+    restart_lock_acquire true || return 1
     "$@"
     local rc=$?
     restart_lock_release
     return "$rc"
 }
 
+# Keeps the old behaviour: after the timeout it restarts anyway
 restart() {
-    with_restart_lock restart_unlocked
+    restart_lock_acquire
+    restart_unlocked
+    local rc=$?
+    restart_lock_release
+    return "$rc"
 }
 
 # The caller holds the restart lock

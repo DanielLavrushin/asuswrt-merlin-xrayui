@@ -39,6 +39,13 @@ failover_check() {
         return 0
     fi
 
+    # burstObservatory reports no probe times (last_try_time stays 0), so results could never
+    # be told apart from stale ones and a replacement endpoint could never be verified
+    if jq -e '.burstObservatory | objects' "$XRAY_CONFIG_FILE" >/dev/null 2>&1; then
+        log_warn "Failover: auto-fallback needs the plain observatory, burstObservatory reports no probe times - skipping"
+        return 0
+    fi
+
     local obs
     if ! obs=$(api_fetch_observatory); then
         log_warn "Failover: Observatory data is unavailable - skipping this check"

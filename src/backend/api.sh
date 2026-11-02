@@ -87,6 +87,28 @@ api_write_config() {
     ' "$XRAY_CONFIG_FILE"
   )
 
+  # A later -c file replaces whole top-level keys and Xray would run observatory and
+  # burstObservatory side by side, so re-emit the user's burstObservatory instead. Only the
+  # connection check reads its results, so only then is every outbound added to the probes.
+  local observatory_block
+  observatory_block=$(
+    jq -r --argjson tags "$outbound_tags" --arg probe_all "$check_connection" '
+      .burstObservatory // empty
+      | objects
+      | "\"burstObservatory\": " + (. + {pingConfig: (.pingConfig | objects // {})}
+          + (if $probe_all == "true" then {subjectSelector: (((.subjectSelector // []) | map(strings)) + $tags | unique)} else {} end)
+        | tojson)
+    ' "$XRAY_CONFIG_FILE" 2>/dev/null
+  )
+  if [ -z "$observatory_block" ]; then
+    observatory_block="\"observatory\": {
+    \"subjectSelector\": $outbound_tags,
+    \"probeUrl\": $observatory_probe_url,
+    \"probeInterval\": \"${observatory_probe_interval}s\",
+    \"enableConcurrency\": true
+  }"
+  fi
+
   cat >"$xray_api_config" <<EOF
 {
   "api": {
@@ -111,12 +133,7 @@ api_write_config() {
       "0": { "statsUserUplink": true, "statsUserDownlink": true }
     }
   },
-  "observatory": {
-    "subjectSelector": $outbound_tags,
-    "probeUrl": $observatory_probe_url,
-    "probeInterval": "${observatory_probe_interval}s",
-    "enableConcurrency": true
-  },
+  $observatory_block,
   "metrics": { "tag": "sys:metrics_out" }
 }
 EOF

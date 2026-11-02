@@ -199,7 +199,9 @@
         modal.value.show();
       };
       const save = () => {
-        const sockopts = [transport.value.sockopt, transport.value.xhttpSettings?.extra?.downloadSettings?.sockopt];
+        // xhttpSettings stays on the object after switching network, but normalize() drops it unless xhttp is selected
+        const downloadSockopt = transport.value.network === 'xhttp' ? transport.value.xhttpSettings?.extra?.downloadSettings?.sockopt : undefined;
+        const sockopts = [transport.value.sockopt, downloadSockopt];
         if (!sockopts.every((s) => XraySockoptObject.isKeepAliveInRange(s))) {
           alert(t('com.SockOpt.alert_keepalive_range', [XraySockoptObject.keepAliveMax]));
           return;

@@ -262,7 +262,8 @@
       "label_burst_sampling": "Sampling",
       "hint_burst_sampling": "How many recent probe results are kept for each outbound.",
       "label_burst_timeout": "Timeout",
-      "hint_burst_timeout": "How long a single probe may take, for example <code>5s</code>."
+      "hint_burst_timeout": "How long a single probe may take, for example <code>5s</code>.",
+      "warn_burst_auto_fallback": "Auto-fallback does not work with burstObservatory: it reports no probe times, so failed endpoints are not rotated. Use observatory, or turn off Auto-fallback."
     },
     "PolicyModal": {
       "modal_title2": "Policy List",

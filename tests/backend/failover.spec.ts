@@ -47,3 +47,31 @@ describeIf.each(SHELLS)('failover_merge_outbound under %s', (_name, shell) => {
     expect(merged.streamSettings.xhttpSettings.extra).toEqual({ uplinkHTTPMethod: 'GET', uplinkDataPlacement: 'cookie', xPaddingObfsMode: true, xmux: { maxConnections: 4 } });
   });
 });
+
+const CHECK = path.join(process.cwd(), 'tests', 'backend', 'failover', 'check.sh');
+
+const check = (shell: string[], config: object): string[] => {
+  const state = fs.mkdtempSync(path.join(os.tmpdir(), 'xrayui-failover-check-'));
+  try {
+    fs.writeFileSync(path.join(state, 'config.json'), JSON.stringify(config));
+    const out = spawnSync(shell[0], [...shell.slice(1), CHECK, state], { encoding: 'utf8' });
+    expect(out.error).toBeUndefined();
+    const log = path.join(state, 'events.log');
+    return fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\n').filter(Boolean) : [];
+  } finally {
+    fs.rmSync(state, { recursive: true, force: true });
+  }
+};
+
+describeIf.each(SHELLS)('failover_check under %s', (_name, shell) => {
+  const pooled = { outbounds: [{ tag: 'pool', protocol: 'vless', subPool: { enabled: true } }] };
+
+  it('evaluates the pooled outbounds from the observatory', () => {
+    expect(check(shell, pooled)).toEqual(['api_fetch_observatory', 'evaluate pool', 'check rc=0']);
+  });
+
+  it('skips with a warning when burstObservatory, which reports no probe times, is the observer', () => {
+    const events = check(shell, { ...pooled, burstObservatory: { subjectSelector: ['pool'], pingConfig: {} } });
+    expect(events).toEqual(['WARN: Failover: auto-fallback needs the plain observatory, burstObservatory reports no probe times - skipping', 'check rc=0']);
+  });
+});

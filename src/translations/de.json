@@ -243,7 +243,8 @@
       "label_burst_sampling": "Stichproben",
       "hint_burst_sampling": "Wie viele aktuelle Prüfergebnisse pro Outbound gespeichert werden.",
       "label_burst_timeout": "Timeout",
-      "hint_burst_timeout": "Wie lange eine einzelne Prüfung dauern darf, z. B. <code>5s</code>."
+      "hint_burst_timeout": "Wie lange eine einzelne Prüfung dauern darf, z. B. <code>5s</code>.",
+      "warn_burst_auto_fallback": "Auto-Fallback funktioniert nicht mit burstObservatory: Es meldet keine Prüfzeiten, daher werden ausgefallene Endpunkte nicht gewechselt. Verwenden Sie observatory oder deaktivieren Sie Auto-Fallback."
     },
     "RulesModal": {
       "modal_title": "Routing-Regeln verwalten",

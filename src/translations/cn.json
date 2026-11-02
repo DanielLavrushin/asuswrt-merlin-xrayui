@@ -258,7 +258,8 @@
       "label_burst_sampling": "采样数",
       "hint_burst_sampling": "每个出站保留的最近探测结果数量。",
       "label_burst_timeout": "超时",
-      "hint_burst_timeout": "单次探测的最长时间，例如 <code>5s</code>。"
+      "hint_burst_timeout": "单次探测的最长时间，例如 <code>5s</code>。",
+      "warn_burst_auto_fallback": "自动故障转移不支持 burstObservatory：它不报告探测时间，因此失效的节点不会被轮换。请使用 observatory 或关闭自动故障转移。"
     },
     "PolicyModal": {
       "modal_title2": "策略列表",

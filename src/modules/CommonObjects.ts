@@ -735,6 +735,17 @@ const SEC_KEEP: Record<string, StreamKey[]> = {
   reality: ['realitySettings']
 };
 
+/**
+ * `raw` is the current Xray-core name of `tcp` (`rawSettings` wins over `tcpSettings` in core).
+ * The UI only knows `tcp`, so fold the alias forward instead of pruning `rawSettings` on save.
+ */
+export function migrateRawToTcp(stream: { network?: string; tcpSettings?: unknown; rawSettings?: unknown }): void {
+  if (stream.network?.toLowerCase() === 'raw') stream.network = 'tcp';
+  if (stream.rawSettings === undefined) return;
+  if (stream.rawSettings) stream.tcpSettings = stream.rawSettings;
+  delete stream.rawSettings;
+}
+
 export class XrayStreamSettingsObject {
   public network? = 'tcp';
   public security? = 'none';
@@ -751,10 +762,13 @@ export class XrayStreamSettingsObject {
   public sockopt?: XraySockoptObject;
 
   public normalize(): this | undefined {
-    this.network = this.network && this.network !== 'tcp' ? this.network : undefined;
+    migrateRawToTcp(this);
+    // Resolve the kept *Settings BEFORE dropping the default 'tcp', otherwise tcpSettings is always pruned.
+    const network = this.network || 'tcp';
+    this.network = network !== 'tcp' ? network : undefined;
     this.security = this.security && this.security !== 'none' ? this.security : undefined;
 
-    const allowed = new Set<StreamKey>([...(NET_KEEP[this.network ?? ''] ?? []), ...(SEC_KEEP[this.security ?? ''] ?? [])]);
+    const allowed = new Set<StreamKey>([...(NET_KEEP[network] ?? []), ...(SEC_KEEP[this.security ?? ''] ?? [])]);
 
     (Object.keys(this) as StreamKey[])
       .filter((k) => k.endsWith('Settings'))
@@ -905,7 +919,17 @@ export class XrayParsedUrlObject {
       this.tag = vmessJson.ps || vmessJson.add;
       this.network = vmessJson.net || 'tcp';
       this.security = vmessJson.tls;
-      this.parsedParams = vmessJson;
+      // Copy without stringifying: object values such as an xhttp `extra` must reach parseLinkExtra intact.
+      this.parsedParams = { ...vmessJson };
+      // vmess JSON reuses `type`/`path`/`host` per network; map them onto the vless/trojan query names.
+      const p = this.parsedParams;
+      p.headerType = p.headerType ?? p.type;
+      if (this.network === 'grpc') {
+        p.serviceName = p.serviceName ?? p.path;
+        p.mode = p.mode ?? p.type;
+        p.authority = p.authority ?? p.host;
+      }
+      if (this.network === 'raw') this.network = 'tcp';
       return;
     } else if (protocol === 'ss') {
       const hashIdx = afterScheme.indexOf('#');
@@ -977,6 +1001,7 @@ export class XrayParsedUrlObject {
     this.port = this.port ?? parseInt(port, 10);
     this.uuid = uuid;
     this.network = this.parsedParams.type ?? 'tcp';
+    if (this.network === 'raw') this.network = 'tcp';
     this.security = this.parsedParams.security ?? 'none';
   }
 }

@@ -1,7 +1,14 @@
 import { XrayParsedUrlObject, XrayStreamRealitySettingsObject, XrayStreamTlsSettingsObject } from '../CommonObjects';
 import { IProtocolType } from '../Interfaces';
 import { XrayOutboundObject } from '../OutboundObjects';
-import { XrayStreamHttpSettingsObject, XrayStreamKcpSettingsObject, XrayStreamWsSettingsObject } from '../TransportObjects';
+import {
+  XrayStreamGrpcSettingsObject,
+  XrayStreamHttpSettingsObject,
+  XrayStreamHttpUpgradeSettingsObject,
+  XrayStreamKcpSettingsObject,
+  XrayStreamTcpSettingsObject,
+  XrayStreamWsSettingsObject
+} from '../TransportObjects';
 import VlessParser from './VlessParser';
 import VmessParser from './VmessParser';
 import TrojanParser from './TrojanParser';
@@ -53,7 +60,13 @@ export default class ProxyParser {
           proxy.streamSettings.tlsSettings = new XrayStreamTlsSettingsObject(this.parsedObject);
         }
 
-        if (this.parsedObject.network === 'ws') {
+        if (this.parsedObject.network === 'tcp') {
+          proxy.streamSettings.tcpSettings = new XrayStreamTcpSettingsObject(this.parsedObject);
+        } else if (this.parsedObject.network === 'grpc') {
+          proxy.streamSettings.grpcSettings = new XrayStreamGrpcSettingsObject(this.parsedObject);
+        } else if (this.parsedObject.network === 'httpupgrade') {
+          proxy.streamSettings.httpupgradeSettings = new XrayStreamHttpUpgradeSettingsObject(this.parsedObject);
+        } else if (this.parsedObject.network === 'ws') {
           proxy.streamSettings.wsSettings = new XrayStreamWsSettingsObject(this.parsedObject);
         } else if (this.parsedObject.network === 'kcp') {
           proxy.streamSettings.kcpSettings = new XrayStreamKcpSettingsObject(this.parsedObject);

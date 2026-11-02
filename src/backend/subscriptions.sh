@@ -362,10 +362,15 @@ subscription_parse_network() {
                 + (if ($au|length)>0 then {authority:$au} elif ($qh|length)>0 then {authority:$qh} else {} end)
                 + (if $mo=="multi" then {multiMode:true} else {} end)
             )}
-        elif $n=="tcp" then
-            {tcpSettings:{header:{type:$ht}}}
-        elif $n=="raw" then
-            {rawSettings:{header:{type:$ht}}}
+        elif $n=="tcp" or $n=="raw" then
+            {header:(
+                {type:$ht}
+                + (if $ht=="http" then {request:(
+                    {path:(if ($pa|length)>0 then ($pa|split(",")) else ["/"] end)}
+                    + (if ($qh|length)>0 then {headers:{Host:($qh|split(","))}} else {} end)
+                )} else {} end)
+            )} as $t
+            | if $n=="raw" then {rawSettings:$t} else {tcpSettings:$t} end
         else {} end'
 }
 

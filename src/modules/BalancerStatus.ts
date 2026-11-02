@@ -1,3 +1,13 @@
+// burstObservatory only; durations are in nanoseconds and zero values are omitted
+export interface HealthPingResult {
+  all?: number;
+  fail?: number;
+  deviation?: number;
+  average?: number;
+  max?: number;
+  min?: number;
+}
+
 export interface ObservatoryEntry {
   alive?: boolean;
   delay?: number;
@@ -5,6 +15,7 @@ export interface ObservatoryEntry {
   last_error_reason?: string;
   last_seen_time?: number;
   last_try_time?: number;
+  health_ping?: HealthPingResult;
 }
 
 export type Observatory = Record<string, ObservatoryEntry>;
@@ -52,6 +63,7 @@ export interface OutboundMark {
 type PlainObject = Record<string, unknown>;
 
 const DEAD_DELAY = 99999999;
+const NS_PER_MS = 1e6;
 const METRICS_OUTBOUND = 'sys:metrics_out';
 
 const isObject = (value: unknown): value is PlainObject => !!value && typeof value === 'object' && !Array.isArray(value);
@@ -226,10 +238,25 @@ export const resolveBalancer = (balancer: RunningBalancer, observatory: Observat
     const settings = balancer.settings;
     const maxRtt = parseDuration(settings.maxRTT);
     const costs = asArray(settings.costs);
-    const costOf = (tag: string) => delayOf(tag) * Math.sqrt(costWeight(tag, costs));
+    // Like Xray's strategy_leastload.go: with burstObservatory's health_ping it ranks by the RTT
+    // deviation and drops nodes over the fail tolerance; without it, by the delay of one sample.
+    const ping = (tag: string) => entry(tag)?.health_ping;
+    const rttOf = (tag: string) => {
+      const hp = ping(tag);
+      return hp ? (hp.deviation ?? 0) / NS_PER_MS : delayOf(tag);
+    };
+    const averageOf = (tag: string) => {
+      const hp = ping(tag);
+      return hp ? (hp.average ?? 0) / NS_PER_MS : delayOf(tag);
+    };
+    const failsOf = (tag: string) => (ping(tag) ? (ping(tag)?.fail ?? 0) : 1);
+    const samplesOf = (tag: string) => (ping(tag) ? (ping(tag)?.all ?? 0) : 1);
+    const tolerance = Number(settings.tolerance) || 0;
+    const tolerated = (tag: string) => !(tolerance > 0 && samplesOf(tag) > 0 && ping(tag) && failsOf(tag) / samplesOf(tag) > tolerance);
+    const costOf = (tag: string) => rttOf(tag) * Math.sqrt(costWeight(tag, costs));
     const live = candidates
-      .filter((tag) => alive(tag) && (maxRtt === undefined || delayOf(tag) < Math.trunc(maxRtt)))
-      .sort((a, b) => costOf(a) - costOf(b) || delayOf(a) - delayOf(b) || byTag(a, b));
+      .filter((tag) => alive(tag) && (maxRtt === undefined || delayOf(tag) < Math.trunc(maxRtt)) && tolerated(tag))
+      .sort((a, b) => costOf(a) - costOf(b) || averageOf(a) - averageOf(b) || failsOf(a) - failsOf(b) || samplesOf(b) - samplesOf(a) || byTag(a, b));
     const selected = selectLeastLoad(live, settings, costOf);
     if (!selected.length) return fallback('none-usable');
     if (selected.length === 1) return single(selected[0], live[1]);

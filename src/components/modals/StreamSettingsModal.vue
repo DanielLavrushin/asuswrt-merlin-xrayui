@@ -199,7 +199,9 @@
         modal.value.show();
       };
       const save = () => {
-        const sockopts = [transport.value.sockopt, transport.value.xhttpSettings?.extra?.downloadSettings?.sockopt];
+        // normalize() drops the settings of an inactive network, so the XHTTP download sockopt only counts with xhttp selected
+        const download = transport.value.network === 'xhttp' ? transport.value.xhttpSettings?.extra?.downloadSettings?.sockopt : undefined;
+        const sockopts = [transport.value.sockopt, download];
         if (!sockopts.every((s) => XraySockoptObject.isKeepAliveInRange(s))) {
           alert(t('com.SockOpt.alert_keepalive_range', [XraySockoptObject.keepAliveMax]));
           return;

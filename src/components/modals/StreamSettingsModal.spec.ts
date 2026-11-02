@@ -41,18 +41,33 @@ describe('StreamSettingsModal.vue', () => {
     expect(close).not.toHaveBeenCalled();
   });
 
-  it('checks the XHTTP download sockopt too', () => {
+  const withOversizedDownload = (network: string) => {
     const wrapper = mountModal();
-    const vm = wrapper.vm as unknown as { transport: { xhttpSettings?: XrayStreamHttpSettingsObject } };
+    const vm = wrapper.vm as unknown as { transport: { network?: string; xhttpSettings?: XrayStreamHttpSettingsObject } };
     const xhttp = new XrayStreamHttpSettingsObject();
     xhttp.extra!.downloadSettings = new XrayDownloadSettingsObject();
     xhttp.extra!.downloadSettings.sockopt = Object.assign(new XraySockoptObject(), { tcpKeepAliveInterval: 40000 });
     vm.transport.xhttpSettings = xhttp;
+    vm.transport.network = network;
+    return wrapper;
+  };
+
+  it('checks the XHTTP download sockopt when XHTTP is selected', () => {
+    const wrapper = withOversizedDownload('xhttp');
 
     save(wrapper);
 
     expect(alertSpy).toHaveBeenCalled();
     expect(wrapper.emitted('save')).toBeUndefined();
+  });
+
+  it('ignores a stale XHTTP download sockopt after switching to another network', () => {
+    const wrapper = withOversizedDownload('tcp');
+
+    save(wrapper);
+
+    expect(alertSpy).not.toHaveBeenCalled();
+    expect(wrapper.emitted('save')).toHaveLength(1);
   });
 
   it('saves keepalive values within the limit', () => {

@@ -869,7 +869,8 @@ export class XrayParsedUrlObject {
       this.tag = vmessJson.ps || vmessJson.add;
       this.network = vmessJson.net || 'tcp';
       this.security = vmessJson.tls;
-      this.parsedParams = Object.fromEntries(Object.entries(vmessJson).map(([k, v]) => [k, v == null ? undefined : String(v)]));
+      // Copy without stringifying: object values such as an xhttp `extra` must reach parseLinkExtra intact.
+      this.parsedParams = { ...vmessJson };
       // vmess JSON reuses `type`/`path`/`host` per network; map them onto the vless/trojan query names.
       const p = this.parsedParams;
       p.headerType = p.headerType ?? p.type;

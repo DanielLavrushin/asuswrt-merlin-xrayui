@@ -100,4 +100,18 @@ describe('ProxyParser transport fidelity', () => {
       expect(saved.streamSettings.httpupgradeSettings).toMatchObject({ path: '/up', host: 'h.example.com' });
     });
   });
+
+  describe('xhttp', () => {
+    it('keeps an object-valued extra from vmess links', () => {
+      const extra = {
+        headers: { 'X-Custom': 'yes' },
+        downloadSettings: { address: 'dl.example.com', port: 8443, network: 'xhttp', xhttpSettings: { path: '/down' } }
+      };
+      const url = vmessLink({ ps: 'vm', add: '1.2.3.4', port: '443', id: 'uuid', net: 'xhttp', path: '/up', extra });
+      const saved = save(new ProxyParser(url).getOutbound());
+      expect(saved.streamSettings.xhttpSettings.path).toBe('/up');
+      expect(saved.streamSettings.xhttpSettings.extra.headers).toEqual({ 'X-Custom': 'yes' });
+      expect(saved.streamSettings.xhttpSettings.extra.downloadSettings).toMatchObject({ address: 'dl.example.com', port: 8443 });
+    });
+  });
 });

@@ -621,6 +621,56 @@ export class XrayBalancerObject {
   }
 }
 
+// burstObservatory.pingConfig; fields are left unset so a hand-written config round-trips as is
+export class XrayBurstObservatoryPingConfigObject {
+  static readonly defaultDestination = 'https://connectivitycheck.gstatic.com/generate_204';
+  static readonly defaultInterval = '1m';
+  static readonly defaultSampling = 10;
+  static readonly defaultTimeout = '5s';
+  public destination?: string;
+  public connectivity?: string;
+  public interval?: string;
+  public sampling?: number;
+  public timeout?: string;
+
+  public normalize(): this {
+    const text = (v?: string) => (typeof v === 'string' && v.trim() ? v.trim() : undefined);
+    this.destination = text(this.destination);
+    this.connectivity = text(this.connectivity);
+    this.interval = text(this.interval);
+    this.timeout = text(this.timeout);
+    const sampling = Number(this.sampling);
+    this.sampling = Number.isInteger(sampling) && sampling > 0 ? sampling : undefined;
+    return this;
+  }
+}
+
+export class XrayBurstObservatoryObject {
+  public subjectSelector?: string[];
+  public pingConfig?: XrayBurstObservatoryPingConfigObject;
+
+  // Xray refuses a burstObservatory without pingConfig, so it is always kept (an empty one means Xray defaults).
+  // Selectors are tag prefixes kept as written: "" is a valid prefix that selects every outbound.
+  public normalize(): this {
+    const selector = (this.subjectSelector ?? []).filter((s): s is string => typeof s === 'string');
+    this.subjectSelector = selector.length ? [...new Set(selector)] : undefined;
+    const ping = this.pingConfig instanceof XrayBurstObservatoryPingConfigObject ? this.pingConfig : Object.assign(new XrayBurstObservatoryPingConfigObject(), this.pingConfig);
+    this.pingConfig = ping.normalize();
+    return this;
+  }
+
+  static create(subjectSelector: string[] = []): XrayBurstObservatoryObject {
+    const burst = new XrayBurstObservatoryObject();
+    burst.subjectSelector = subjectSelector;
+    burst.pingConfig = new XrayBurstObservatoryPingConfigObject();
+    burst.pingConfig.destination = XrayBurstObservatoryPingConfigObject.defaultDestination;
+    burst.pingConfig.interval = XrayBurstObservatoryPingConfigObject.defaultInterval;
+    burst.pingConfig.sampling = XrayBurstObservatoryPingConfigObject.defaultSampling;
+    burst.pingConfig.timeout = XrayBurstObservatoryPingConfigObject.defaultTimeout;
+    return burst;
+  }
+}
+
 export class XrayRoutingRuleObject {
   static readonly sysMetricsRuleName = 'sys:metrics';
   static readonly networkOptions = ['', 'tcp', 'udp', 'tcp,udp'];

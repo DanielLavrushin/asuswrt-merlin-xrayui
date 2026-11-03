@@ -43,7 +43,9 @@ import {
   XrayDnsServerObject,
   XrayFakeDnsObject,
   XrayBalancerObject,
-  XrayBalancerStrategyObject
+  XrayBalancerStrategyObject,
+  XrayBurstObservatoryObject,
+  XrayBurstObservatoryPingConfigObject
 } from './CommonObjects';
 import { plainToInstance } from 'class-transformer';
 import {
@@ -606,6 +608,10 @@ export class Engine {
       config.reverse = config.reverse.normalize();
     }
 
+    if (config.burstObservatory) {
+      config.burstObservatory = config.burstObservatory.normalize();
+    }
+
     if (config.fakedns) {
       config.fakedns = config.fakedns.map((fake: XrayFakeDnsObject) => {
         if (!(fake instanceof XrayFakeDnsObject)) {
@@ -859,6 +865,13 @@ export class Engine {
       config.routing.balancers?.forEach((b) => {
         if (b.strategy) b.strategy = plainToInstance(XrayBalancerStrategyObject, b.strategy);
       });
+    }
+
+    if (config.burstObservatory && typeof config.burstObservatory === 'object') {
+      config.burstObservatory = plainToInstance(XrayBurstObservatoryObject, config.burstObservatory);
+      if (config.burstObservatory.pingConfig) config.burstObservatory.pingConfig = plainToInstance(XrayBurstObservatoryPingConfigObject, config.burstObservatory.pingConfig);
+    } else {
+      config.burstObservatory = undefined;
     }
 
     if (config.dns) {

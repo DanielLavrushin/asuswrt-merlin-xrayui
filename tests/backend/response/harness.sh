@@ -39,9 +39,11 @@ rewrite "${RS_GEODATA_SCRIPT:-$REPO_DIR/src/backend/geodata.sh}" geodata
 rewrite "${RS_SUBSCRIPTIONS_SCRIPT:-$REPO_DIR/src/backend/subscriptions.sh}" subscriptions
 rewrite "${RS_FAILOVER_SCRIPT:-$REPO_DIR/src/backend/failover.sh}" failover
 rewrite "${RS_VERSION_SCRIPT:-$REPO_DIR/src/backend/version.sh}" version
+rewrite "${RS_CRON_SCRIPT:-$REPO_DIR/src/backend/cron.sh}" cron
 
 . "$RS_STATE/helper.$$.sh"
 . "$RS_STATE/version.$$.sh"
+. "$RS_STATE/cron.$$.sh"
 . "$RS_STATE/response.$$.sh"
 . "$RS_STATE/general_opts.$$.sh"
 . "$RS_STATE/geodata.$$.sh"
@@ -83,6 +85,10 @@ cron_geodata_add() { :; }
 cron_subscription_refresh_add() { :; }
 cron_subscription_fallback_add() { :; }
 cron_ipset_save_add() { :; }
+cron_watchdog_add() { :; }
+with_restart_lock() { "$@"; }
+restart_lock_acquire() { :; }
+restart_lock_release() { :; }
 logs_scribe_integration() { :; }
 update_community_geodata() { :; }
 restart() { ev "restart"; }

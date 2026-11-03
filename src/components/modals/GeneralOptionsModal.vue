@@ -42,6 +42,38 @@
                 <input type="number" maxlength="4" class="input_6_table" v-model="options.sleep_time" />
               </td>
             </tr>
+            <tr>
+              <th>
+                {{ $t('com.GeneralOptionsModal.label_watchdog') }}
+                <hint v-html="$t('com.GeneralOptionsModal.hint_watchdog')"></hint>
+              </th>
+              <td>
+                <label class="go-option"><input type="checkbox" v-model="options.watchdog" /></label>
+              </td>
+            </tr>
+            <tr v-if="options.watchdog">
+              <th>
+                {{ $t('com.GeneralOptionsModal.label_watchdog_interval') }}
+                <hint v-html="$t('com.GeneralOptionsModal.hint_watchdog_interval')"></hint>
+              </th>
+              <td>
+                <select class="input_option" v-model.number="options.watchdog_interval">
+                  <option :value="1">1 min</option>
+                  <option :value="2">2 min</option>
+                  <option :value="5">5 min</option>
+                  <option :value="10">10 min</option>
+                </select>
+              </td>
+            </tr>
+            <tr v-if="options.watchdog">
+              <th>
+                {{ $t('com.GeneralOptionsModal.label_watchdog_max_attempts') }}
+                <hint v-html="$t('com.GeneralOptionsModal.hint_watchdog_max_attempts')"></hint>
+              </th>
+              <td>
+                <input type="number" min="0" max="999" maxlength="3" class="input_6_table" v-model.number="options.watchdog_max_attempts" />
+              </td>
+            </tr>
             <tr v-show="validateCheckConOption()">
               <th>{{ $t('com.GeneralOptionsModal.check_xray_connection') }}</th>
               <td>

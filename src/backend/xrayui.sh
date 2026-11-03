@@ -56,10 +56,10 @@ update)
     exit 0
     ;;
 start)
-    start
+    with_restart_lock start
     ;;
 stop)
-    stop
+    with_restart_lock stop
     ;;
 restart)
     restart
@@ -111,7 +111,7 @@ subscriptions)
     ;;
 cron)
     case "$2" in
-    logrotate | geodata | subscription_refresh | subscription_fallback | ipset_save)
+    logrotate | geodata | subscription_refresh | subscription_fallback | ipset_save | watchdog)
         cron_job_lock "$2" || exit 0
         update_loading_progress() { :; }
         ;;
@@ -134,6 +134,9 @@ cron)
         ;;
     subscription_fallback)
         failover_check
+        ;;
+    watchdog)
+        cron_watchdog_run
         ;;
     ipset_save)
         load_xrayui_config
@@ -374,8 +377,15 @@ service_event)
         case "$3" in
         start)
             update_loading_progress "Starting Xray service..." 0
-            start
-            update_loading_progress "Xray service started successfully." 100
+            with_restart_lock start
+            case $? in
+            "$RESTART_LOCK_BUSY_RC")
+                update_loading_progress "Error: another start, stop or restart is still running. Nothing was changed. Try again." 100
+                ;;
+            *)
+                update_loading_progress "Xray service started successfully." 100
+                ;;
+            esac
             ;;
         restart)
             update_loading_progress "Restarting Xray service..." 0
@@ -384,11 +394,18 @@ service_event)
             ;;
         stop)
             update_loading_progress "Stopping Xray service..." 0
-            if stop; then
+            with_restart_lock stop
+            case $? in
+            0)
                 update_loading_progress "Xray service stopped successfully." 100
-            else
+                ;;
+            "$RESTART_LOCK_BUSY_RC")
+                update_loading_progress "Error: another start, stop or restart is still running. Nothing was changed. Try again." 100
+                ;;
+            *)
                 update_loading_progress "Error: Xray is still running. The details are in the system log." 100
-            fi
+                ;;
+            esac
             ;;
         *)
             exit 1

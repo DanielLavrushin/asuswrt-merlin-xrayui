@@ -254,6 +254,9 @@ export class EngineResponseConfig {
     dns_only?: boolean;
     block_quic?: boolean;
     tun_routing?: string;
+    watchdog?: boolean;
+    watchdog_interval?: number;
+    watchdog_max_attempts?: number;
     logs_scribe?: boolean;
     subscription_auto_refresh?: string;
     subscription_auto_fallback?: boolean;

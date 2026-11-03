@@ -5,6 +5,14 @@ start() {
 
     load_xrayui_config
 
+    # Checked under the restart lock, which UI/CLI stops also hold
+    if [ "${WATCHDOG_RUN:-false}" = "true" ] && [ ! -f "$XRAY_DESIRED_STATE_FILE" ]; then
+        log_info "Xray was stopped on purpose while the watchdog was waiting. Not restarting it."
+        return 0
+    fi
+
+    watchdog_mark_desired
+
     migrate_tun_inbounds_config
 
     cleanup_stale_asdfiles
@@ -143,6 +151,8 @@ stop() {
     local pid
     log_info "Stopping $ADDON_TITLE"
 
+    watchdog_clear_desired
+
     update_loading_progress "Stopping $ADDON_TITLE"
 
     if [ -f "$XRAY_PIDFILE" ]; then
@@ -182,16 +192,28 @@ stop() {
     return "$rc"
 }
 
-restart() {
-    local lock_acquired=false
+# Returned when a strict acquire times out, so callers can tell it from a failed start or stop
+RESTART_LOCK_BUSY_RC=75
+
+# One lock for restarts, UI/CLI starts and stops, and the watchdog.
+# With "true", a timeout returns RESTART_LOCK_BUSY_RC instead of going ahead without the lock.
+restart_lock_acquire() {
+    local strict="${1:-false}"
     local waited=0
+    RESTART_LOCK_HELD=false
 
     if which flock >/dev/null 2>&1 && touch "$XRAY_RESTART_LOCKFILE" 2>/dev/null; then
         eval exec "$XRAY_RESTART_LOCK_FD>$XRAY_RESTART_LOCKFILE"
-        lock_acquired=true
+        RESTART_LOCK_HELD=true
 
         while ! flock -n "$XRAY_RESTART_LOCK_FD"; do
             if [ "$waited" -ge 120 ]; then
+                if [ "$strict" = "true" ]; then
+                    log_error "Timed out waiting for another start, stop or restart to finish. Nothing was changed. Try again."
+                    eval exec "$XRAY_RESTART_LOCK_FD>&-"
+                    RESTART_LOCK_HELD=false
+                    return "$RESTART_LOCK_BUSY_RC"
+                fi
                 log_warn "Timed out waiting for the running restart to finish. Restarting anyway."
                 break
             fi
@@ -203,7 +225,50 @@ restart() {
             waited=$((waited + 2))
         done
     fi
+}
 
+# Non-blocking variant for the watchdog: returns 1 while someone else holds the lock
+restart_lock_try() {
+    RESTART_LOCK_HELD=false
+    if ! which flock >/dev/null 2>&1 || ! touch "$XRAY_RESTART_LOCKFILE" 2>/dev/null; then
+        return 0
+    fi
+    eval exec "$XRAY_RESTART_LOCK_FD>$XRAY_RESTART_LOCKFILE"
+    if ! flock -n "$XRAY_RESTART_LOCK_FD"; then
+        eval exec "$XRAY_RESTART_LOCK_FD>&-"
+        return 1
+    fi
+    RESTART_LOCK_HELD=true
+}
+
+restart_lock_release() {
+    if [ "${RESTART_LOCK_HELD:-false}" = "true" ]; then
+        flock -u "$XRAY_RESTART_LOCK_FD" 2>/dev/null
+        eval exec "$XRAY_RESTART_LOCK_FD>&-"
+    fi
+    RESTART_LOCK_HELD=false
+}
+
+# UI/CLI start and stop: never run without the lock, or a stop could be undone
+with_restart_lock() {
+    restart_lock_acquire true || return
+    "$@"
+    local rc=$?
+    restart_lock_release
+    return "$rc"
+}
+
+# Keeps the old behaviour: after the timeout it restarts anyway
+restart() {
+    restart_lock_acquire
+    restart_unlocked
+    local rc=$?
+    restart_lock_release
+    return "$rc"
+}
+
+# The caller holds the restart lock
+restart_unlocked() {
     log_info "Restarting $ADDON_TITLE"
 
     POST_RESTART_DNSMASQ="true"
@@ -220,11 +285,6 @@ restart() {
     fi
 
     POST_RESTART_DNSMASQ="false"
-
-    if [ "$lock_acquired" = "true" ]; then
-        flock -u "$XRAY_RESTART_LOCK_FD" 2>/dev/null
-        eval exec "$XRAY_RESTART_LOCK_FD>&-"
-    fi
 
     return "$start_rc"
 }

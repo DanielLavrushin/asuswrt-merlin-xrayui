@@ -292,7 +292,7 @@ cron_watchdog_run() {
     if [ -n "$(get_xray_daemon_pid)" ]; then
         # Reset only after Xray has stayed up for a while, so a crash loop keeps backing off
         if [ -f "$WATCHDOG_STATE_FILE" ] && [ "$(get_proc_uptime xray)" -ge "$WATCHDOG_STABLE_SECONDS" ]; then
-            log_info "Xray has been running for $WATCHDOG_STABLE_SECONDS seconds. Watchdog retry counter reset."
+            log_notice "Xray has been running for $WATCHDOG_STABLE_SECONDS seconds. Watchdog retry counter reset."
             rm -f "$WATCHDOG_STATE_FILE"
         fi
         return 0
@@ -357,6 +357,6 @@ cron_watchdog_run() {
     if [ "$rc" -ne 0 ] || [ -z "$(get_xray_daemon_pid)" ]; then
         log_error "Watchdog restart attempt $attempts/$limit failed. The details are above in the system log."
     else
-        log_ok "Watchdog restarted Xray (attempt $attempts/$limit)."
+        log_notice "Watchdog restarted Xray (attempt $attempts/$limit)."
     fi
 }

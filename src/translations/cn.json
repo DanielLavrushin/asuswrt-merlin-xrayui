@@ -326,7 +326,23 @@
       "target_balancer": "负载均衡器",
       "label_balancer_tag": "负载均衡器",
       "hint_balancer_tag": "负载均衡器的标签。此规则将把匹配的流量转发到指定的负载均衡器。",
-      "no_balancers": "未定义负载均衡器。请先在路由部分添加负载均衡器。"
+      "no_balancers": "未定义负载均衡器。请先在路由部分添加负载均衡器。",
+      "target_missing": "{0}（未找到）",
+      "reassign": "重新分配…",
+      "reassign_title": "重新分配规则",
+      "label_reassign_from": "从",
+      "hint_reassign_from": "规则当前使用的内容。括号中的数字是使用它的规则数量，包括已禁用的规则。",
+      "label_reassign_to": "到",
+      "hint_reassign_to": "规则将改为使用的内容。<br>**从规则中移除** 会将该入站连接从规则的入站列表中移除。仅列出此入站连接的规则保持不变，因为移除后该规则将适用于所有入站连接的流量。",
+      "reassign_summary": "将更改 {0} 条规则。",
+      "reassign_apply": "重新分配",
+      "label_reassign_field": "更改",
+      "hint_reassign_field": "要更改规则的哪一部分。一条规则只指向一个出站连接或负载均衡器，但可以列出多个入站连接。未列出入站连接的规则适用于所有入站连接的流量。",
+      "reassign_field_outbound": "出站连接或负载均衡器",
+      "reassign_field_inbound": "入站连接",
+      "reassign_remove": "— 从规则中移除 —",
+      "reassign_skipped": "有 {0} 条规则仅列出此入站连接，保持不变：移除后它们将适用于所有入站连接的流量。请删除这些规则，或将其移到其他入站连接。",
+      "reassign_nothing": "没有规则列出入站连接。"
     },
     "Inbounds": {
       "title": "入站",
@@ -334,15 +350,16 @@
       "modal_title_inbound_settings": "入站设置",
       "alert_tag_exists": "标签已存在，请选择另一个。",
       "alert_delete_confirm": "删除此入站？",
-      "alert_delete_tag_in_rules_use": "此标签 ({1}) 在路由规则 ({0}) 中使用。请在删除入站之前从规则中移除它。"
+      "alert_delete_tag_in_rules_use": "此标签 ({1}) 在路由规则 ({0}) 中使用。请先将这些规则移到其他入站连接，或从规则中移除该入站（路由 → 路由规则 → 管理 → 重新分配…），然后再删除入站。"
     },
     "Outbounds": {
       "title": "出站",
       "label_create_new": "创建新的",
       "alert_tag_exists": "标签已存在，请选择另一个。",
       "alert_delete_confirm": "删除此出站？",
-      "alert_delete_tag_in_rules_use": "此标签 ({1}) 在路由规则 ({0}) 中使用。请在删除出站之前从规则中移除它。",
+      "alert_delete_tag_in_rules_use": "此标签 ({1}) 在路由规则 ({0}) 中使用。请先将这些规则移到其他出站连接（路由 → 路由规则 → 管理 → 重新分配…），然后再删除出站。",
       "alert_delete_tag_in_balancer_use": "此标签 ({1}) 在均衡器 ({0}) 中被用作后备 (fallback)。请在删除出站之前从均衡器中移除它。",
+      "alert_delete_tag_in_dialer_proxy_use": "此出站 ({1}) 被出站 ({0}) 用作 Dealer 代理。请先更改它们的 Dealer 代理（传输 → Sockopt），然后再删除出站。",
       "hint_pool_inactive": "通用设置中的自动故障转移已关闭，此出站不会自动切换。",
       "status_unreachable": "不可达",
       "badge_tied": "并列",

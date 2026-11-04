@@ -31,7 +31,15 @@
               {{ !r.name ? getRuleName(r) : r.name }}
             </td>
             <td>
-              {{ r.balancerTag ? '⚖ ' + r.balancerTag : r.outboundTag }}
+              <select
+                class="input_option rule-target"
+                :aria-label="`${r.name || getRuleName(r)}: ${$t('com.RulesModal.reassign_field_outbound')}`"
+                :value="targetKey(r)"
+                @change="retarget([r], ($event.target as HTMLSelectElement).value)"
+              >
+                <option v-if="!targetOptions.some((o) => o.key === targetKey(r))" :value="targetKey(r)">{{ $t('com.RulesModal.target_missing', [targetLabel(targetKey(r))]) }}</option>
+                <option v-for="opt in targetOptions" :key="opt.key" :value="opt.key">{{ opt.label }}</option>
+              </select>
               <span v-if="balancerNowText(r)" class="balancer-now" :title="balancerNowText(r) + '\n' + $t('com.BalancerModal.hint_now')">&rarr; {{ balancerNowText(r) }}</span>
             </td>
             <td>
@@ -54,7 +62,56 @@
       <label class="rule-filter">
         <input type="text" placeholder="rule filter" v-model="filterText" @input="filter_rules" />
       </label>
+      <input class="button_gen button_gen_small" type="button" :value="$t('com.RulesModal.reassign')" :disabled="!usedTargets.length" @click.prevent="openReassign" />
       <input class="button_gen button_gen_small" type="button" :value="$t('com.RulesModal.add_new_rule')" @click.prevent="addRule" />
+    </template>
+  </modal>
+  <modal width="500" ref="modalReassign" :title="$t('com.RulesModal.reassign_title')">
+    <table class="FormTable modal-form-table">
+      <tbody>
+        <tr>
+          <th>
+            {{ $t('com.RulesModal.label_reassign_field') }}
+            <hint v-html="$t('com.RulesModal.hint_reassign_field')"></hint>
+          </th>
+          <td>
+            <select class="input_option" v-model="reassignField" :aria-label="$t('com.RulesModal.label_reassign_field')">
+              <option value="outbound">{{ $t('com.RulesModal.reassign_field_outbound') }}</option>
+              <option value="inbound">{{ $t('com.RulesModal.reassign_field_inbound') }}</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <th>
+            {{ $t('com.RulesModal.label_reassign_from') }}
+            <hint v-html="$t('com.RulesModal.hint_reassign_from')"></hint>
+          </th>
+          <td>
+            <select class="input_option" v-model="reassignFrom" v-if="reassignFromOptions.length" :aria-label="$t('com.RulesModal.label_reassign_from')">
+              <option v-for="opt in reassignFromOptions" :key="opt.key" :value="opt.key">{{ opt.label }} ({{ opt.count }})</option>
+            </select>
+            <span class="hint-color" v-else>{{ $t('com.RulesModal.reassign_nothing') }}</span>
+          </td>
+        </tr>
+        <tr>
+          <th>
+            {{ $t('com.RulesModal.label_reassign_to') }}
+            <hint v-html="$t('com.RulesModal.hint_reassign_to')"></hint>
+          </th>
+          <td>
+            <select class="input_option" v-model="reassignTo" :aria-label="$t('com.RulesModal.label_reassign_to')">
+              <option v-for="opt in reassignToOptions" :key="opt.key" :value="opt.key" :disabled="opt.key === reassignFrom">{{ opt.label }}</option>
+            </select>
+          </td>
+        </tr>
+        <tr v-if="reassignReady && reassignPlan.skip.length">
+          <td colspan="2" class="hint-color">{{ $t('com.RulesModal.reassign_skipped', [reassignPlan.skip.length]) }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <template v-slot:footer>
+      <span class="hint-color reassign-summary" v-if="reassignReady">{{ $t('com.RulesModal.reassign_summary', [reassignPlan.change.length]) }}</span>
+      <input class="button_gen button_gen_small" type="button" :value="$t('com.RulesModal.reassign_apply')" :disabled="!reassignReady || !reassignPlan.change.length" @click.prevent="reassign" />
     </template>
   </modal>
   <modal width="755" ref="modalAdd" title="Rule">
@@ -245,7 +302,7 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, computed, nextTick, Ref } from 'vue';
+  import { defineComponent, ref, computed, nextTick, watch, Ref } from 'vue';
   import Modal from '@main/Modal.vue';
   import xrayConfig from '@/modules/XrayConfig';
   import { XrayRoutingRuleObject } from '@/modules/CommonObjects';
@@ -302,6 +359,95 @@
         const edited = (xrayConfig.routing?.balancers || []).find((b) => b.tag === r.balancerTag);
         const now = balancerNow(edited);
         return now.state === 'view' ? describeViewShort(now.view, (key, args) => t(key, args)) : '';
+      };
+
+      const modalReassign = ref<InstanceType<typeof Modal> | null>(null);
+      const reassignField = ref<'outbound' | 'inbound'>('outbound');
+      const reassignFrom = ref('');
+      const reassignTo = ref('');
+      const REMOVE_INBOUND = 'remove'; // no "x:" prefix, so it can't collide with an inbound key
+
+      // one list for both target kinds; a rule routes to exactly one of them
+      const targetOptions = computed(() => [
+        ...outbounds.value.map((tag) => ({ key: `o:${tag}`, label: tag })),
+        ...balancerTags.value.map((tag) => ({ key: `b:${tag}`, label: `⚖ ${tag}` }))
+      ]);
+      const targetKey = (r: XrayRoutingRuleObject) => (r.balancerTag ? `b:${r.balancerTag}` : `o:${r.outboundTag ?? ''}`);
+      const targetLabel = (key: string) => (key.startsWith('b:') ? `⚖ ${key.slice(2)}` : key.slice(2));
+
+      // edits the shared rule objects in place, as the rule editor's v-model does
+      const retarget = (targets: XrayRoutingRuleObject[], key: string) => {
+        targets.forEach((r) => {
+          r.outboundTag = key.startsWith('o:') ? key.slice(2) : undefined;
+          r.balancerTag = key.startsWith('b:') ? key.slice(2) : undefined;
+        });
+        reindexRules();
+      };
+
+      // disabled rules are included, so enabling one later doesn't bring back the old target
+      const userRules = computed(() => allRules.value.filter((r) => !r.isSystem()));
+
+      const usedTargets = computed(() => {
+        const counts = new Map<string, number>();
+        userRules.value.forEach((r) => counts.set(targetKey(r), (counts.get(targetKey(r)) ?? 0) + 1));
+        return Array.from(counts, ([key, count]) => ({ key, count, label: targetLabel(key) }));
+      });
+      const usedInbounds = computed(() => {
+        const counts = new Map<string, number>();
+        userRules.value.forEach((r) => Array.from(new Set(r.inboundTag ?? [])).forEach((tag) => counts.set(tag, (counts.get(tag) ?? 0) + 1)));
+        return Array.from(counts, ([tag, count]) => ({ key: `i:${tag}`, count, label: tag }));
+      });
+
+      const reassignFromOptions = computed(() => (reassignField.value === 'outbound' ? usedTargets.value : usedInbounds.value));
+      const reassignToOptions = computed(() =>
+        reassignField.value === 'outbound'
+          ? targetOptions.value
+          : [...inbounds.value.map((tag) => ({ key: `i:${tag}`, label: tag })), { key: REMOVE_INBOUND, label: t('com.RulesModal.reassign_remove') }]
+      );
+      const reassignReady = computed(() => !!reassignFrom.value && !!reassignTo.value && reassignFrom.value !== reassignTo.value);
+
+      // which rules the current From/To would change, and which are left alone
+      const reassignPlan = computed(() => {
+        if (reassignField.value === 'outbound') {
+          return { change: userRules.value.filter((r) => targetKey(r) === reassignFrom.value), skip: [] as XrayRoutingRuleObject[] };
+        }
+        const fromTag = reassignFrom.value.slice(2);
+        const withFrom = userRules.value.filter((r) => r.inboundTag?.includes(fromTag));
+        // a rule left with no inbound would match traffic from every inbound, so removing its only inbound is not allowed
+        const onlyFrom = (r: XrayRoutingRuleObject) => reassignTo.value === REMOVE_INBOUND && (r.inboundTag ?? []).every((tag) => tag === fromTag);
+        return { change: withFrom.filter((r) => !onlyFrom(r)), skip: withFrom.filter(onlyFrom) };
+      });
+
+      watch(reassignField, () => {
+        reassignFrom.value = reassignFromOptions.value[0]?.key ?? '';
+        reassignTo.value = '';
+      });
+      // From took the value To had: make the user choose To again instead of leaving both the same
+      watch(reassignFrom, (from) => {
+        if (reassignTo.value === from) reassignTo.value = '';
+      });
+
+      const openReassign = () => {
+        reassignFrom.value = reassignFromOptions.value[0]?.key ?? '';
+        reassignTo.value = '';
+        modalReassign.value?.show(() => {});
+      };
+
+      const reassign = () => {
+        if (!reassignReady.value) return;
+        const { change } = reassignPlan.value;
+        if (reassignField.value === 'outbound') {
+          retarget(change, reassignTo.value);
+        } else {
+          const fromTag = reassignFrom.value.slice(2);
+          const toTag = reassignTo.value.slice(2);
+          change.forEach((r) => {
+            const tags = r.inboundTag ?? [];
+            r.inboundTag = reassignTo.value === REMOVE_INBOUND ? tags.filter((tag) => tag !== fromTag) : Array.from(new Set(tags.map((tag) => (tag === fromTag ? toTag : tag))));
+          });
+          reindexRules();
+        }
+        modalReassign.value?.close();
       };
 
       const currentPrefix = ref<'geosite:' | 'ext:xrayui:' | 'geoip:'>('geosite:');
@@ -606,6 +752,21 @@
         currentRule,
         modalList,
         modalAdd,
+        modalReassign,
+        reassignField,
+        reassignFrom,
+        reassignTo,
+        reassignFromOptions,
+        reassignToOptions,
+        reassignReady,
+        reassignPlan,
+        targetOptions,
+        targetKey,
+        targetLabel,
+        retarget,
+        usedTargets,
+        openReassign,
+        reassign,
         ips,
         domains,
         source,
@@ -681,6 +842,12 @@
     tbody tr.rule-system td {
       color: rgb(255, 0, 255);
     }
+  }
+  .rule-target {
+    max-width: 160px;
+  }
+  .reassign-summary {
+    margin-right: 8px;
   }
   .rule-filter {
     float: left;

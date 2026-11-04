@@ -256,25 +256,46 @@
         if (proxy) {
           selectedProxy.value = proxy;
           selectedProxyType.value = proxy.protocol;
-
-          watch(
-            () => proxy.tag,
-            (newVal, oldVal) => {
-              if (oldVal && newVal && oldVal !== newVal) {
-                config.value.routing?.rules?.map((r) => {
-                  r.outboundTag = r.outboundTag === oldVal ? newVal : r.outboundTag;
-                });
-              }
-            },
-            { immediate: true }
-          );
         }
+        // the tag input edits the live object, so references are renamed once on close, not on every keystroke
+        const originalTag = proxy?.tag;
 
         await nextTick();
         proxyModal.value.show(() => {
+          if (proxy && originalTag) renameTagRefs(proxy, originalTag);
           selectedProxy.value = undefined;
           selectedProxyType.value = undefined;
         });
+      };
+
+      const renameTagRefs = (proxy: XrayOutboundObject<IProtocolType>, originalTag: string) => {
+        const newTag = proxy.tag;
+        if (!newTag || newTag === originalTag) return;
+        // the tag belongs to another outbound: renaming would merge its rules irreversibly, so keep the old tag
+        if (config.value.outbounds.some((o) => o !== proxy && o.tag === newTag)) {
+          proxy.tag = originalTag;
+          return;
+        }
+        const routing = config.value.routing;
+        [...(routing?.rules ?? []), ...(routing?.disabled_rules ?? [])].forEach((r) => {
+          if (r.outboundTag === originalTag) r.outboundTag = newTag;
+        });
+        (routing?.balancers ?? []).forEach((b) => {
+          if (b.fallbackTag === originalTag) b.fallbackTag = newTag;
+        });
+        config.value.outbounds.forEach((o) =>
+          dialerSockopts(o).forEach((so) => {
+            if (so?.dialerProxy === originalTag) so.dialerProxy = newTag;
+          })
+        );
+      };
+
+      // outbound chaining: an outbound dials through another via sockopt.dialerProxy, and XHTTP's download connection has its own sockopt.
+      // activeOnly skips xhttpSettings left over from an earlier transport: normalize() drops them on save, so they aren't a live dependency
+      const dialerSockopts = (o: XrayOutboundObject<IProtocolType>, activeOnly = false) => {
+        const stream = o.streamSettings;
+        const download = activeOnly && stream?.network !== 'xhttp' ? undefined : stream?.xhttpSettings?.extra?.downloadSettings?.sockopt;
+        return [stream?.sockopt, download];
       };
 
       const remove_proxy = async (proxy: XrayOutboundObject<IProtocolType>) => {
@@ -291,6 +312,13 @@
           const balancersWithTag = (config.value.routing?.balancers || []).filter((balancer) => balancer.fallbackTag === proxy.tag);
           if (balancersWithTag.length > 0) {
             alert(t('com.Outbounds.alert_delete_tag_in_balancer_use', [balancersWithTag.map((balancer) => balancer.tag).join(', '), proxy.tag]));
+            return;
+          }
+
+          // deleting it would leave these outbounds dialing through an outbound that no longer exists
+          const chainedOutbounds = config.value.outbounds.filter((o) => o !== proxy && dialerSockopts(o, true).some((so) => so?.dialerProxy === proxy.tag));
+          if (chainedOutbounds.length > 0) {
+            alert(t('com.Outbounds.alert_delete_tag_in_dialer_proxy_use', [chainedOutbounds.map((o) => o.tag).join(', '), proxy.tag]));
             return;
           }
         }

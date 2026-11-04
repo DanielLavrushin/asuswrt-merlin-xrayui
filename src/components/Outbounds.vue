@@ -290,8 +290,13 @@
         );
       };
 
-      // outbound chaining: an outbound dials through another via sockopt.dialerProxy, and XHTTP's download connection has its own sockopt
-      const dialerSockopts = (o: XrayOutboundObject<IProtocolType>) => [o.streamSettings?.sockopt, o.streamSettings?.xhttpSettings?.extra?.downloadSettings?.sockopt];
+      // outbound chaining: an outbound dials through another via sockopt.dialerProxy, and XHTTP's download connection has its own sockopt.
+      // activeOnly skips xhttpSettings left over from an earlier transport: normalize() drops them on save, so they aren't a live dependency
+      const dialerSockopts = (o: XrayOutboundObject<IProtocolType>, activeOnly = false) => {
+        const stream = o.streamSettings;
+        const download = activeOnly && stream?.network !== 'xhttp' ? undefined : stream?.xhttpSettings?.extra?.downloadSettings?.sockopt;
+        return [stream?.sockopt, download];
+      };
 
       const remove_proxy = async (proxy: XrayOutboundObject<IProtocolType>) => {
         if (!window.confirm(t('com.Outbounds.alert_delete_confirm'))) return;
@@ -311,7 +316,7 @@
           }
 
           // deleting it would leave these outbounds dialing through an outbound that no longer exists
-          const chainedOutbounds = config.value.outbounds.filter((o) => o !== proxy && dialerSockopts(o).some((so) => so?.dialerProxy === proxy.tag));
+          const chainedOutbounds = config.value.outbounds.filter((o) => o !== proxy && dialerSockopts(o, true).some((so) => so?.dialerProxy === proxy.tag));
           if (chainedOutbounds.length > 0) {
             alert(t('com.Outbounds.alert_delete_tag_in_dialer_proxy_use', [chainedOutbounds.map((o) => o.tag).join(', '), proxy.tag]));
             return;

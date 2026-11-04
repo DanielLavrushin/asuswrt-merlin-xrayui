@@ -104,7 +104,7 @@ There are two ways to keep a schedule working:
 MAC="AA:BB:CC:DD:EE:FF"
 LAN="192.168.50.0/24"
 TIME="-m time --timestart 22:00 --timestop 07:00 --kerneltz"
-RULE4="-i br0 -m mac --mac-source $MAC ! -d $LAN -m addrtype ! --dst-type BROADCAST $TIME -j DROP"
+RULE4="-i br0 -m mac --mac-source $MAC ! -d $LAN -m addrtype ! --dst-type BROADCAST,MULTICAST $TIME -j DROP"
 RULE6="-i br0 -m mac --mac-source $MAC ! -d fe80::/10 -m addrtype ! --dst-type LOCAL,MULTICAST $TIME -j DROP"
 
 while iptables -t mangle -D PREROUTING $RULE4 2>/dev/null; do :; done

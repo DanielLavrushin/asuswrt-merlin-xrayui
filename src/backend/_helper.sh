@@ -745,6 +745,15 @@ core_supports_allow_insecure() {
     return 0
 }
 
+# Xray 26.7.11 removed the unencrypted Shadowsocks ciphers (none/plain) and refuses to start with them.
+core_supports_ss_plain_cipher() {
+    local v
+    v=$(xrayui_core_version)
+    [ -z "$v" ] && return 1
+    version_ge "$v" "26.7.11" && return 1
+    return 0
+}
+
 get_or_create_hwid() {
     local hwid_file="$ADDON_SHARE_DIR/.hwid"
     if [ -f "$hwid_file" ]; then

@@ -34,7 +34,7 @@
       <tr v-for="(client, index) in clients" :key="index" class="data_tr">
         <td>{{ client.id }}</td>
         <td>{{ client.email }}</td>
-        <td v-if="securities.length">{{ client.security }}</td>
+        <td v-if="securities.length">{{ client.security || 'auto' }}</td>
         <td>
           <qr ref="modalQr" :client="client" :proxy="proxy"></qr>
           <button @click.prevent="editClient(client, index)" class="button_gen button_gen_small">&#8494;</button>
@@ -46,9 +46,10 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref } from 'vue';
+  import { computed, defineComponent, ref } from 'vue';
   import engine from '@/modules/Engine';
   import { XrayVmessClientObject } from '@/modules/ClientsObjects';
+  import { coreSupports } from '@/modules/CoreVersion';
   import Qr from './QrCodeClient.vue';
 
   import modal from '@main/Modal.vue';
@@ -121,8 +122,14 @@
         clients.value.splice(clients.value.indexOf(client), 1);
       };
 
+      // Xray 26.7.11 and later silently use auto for none/zero, so they are offered only to older cores.
+      const securities = computed(() => {
+        if (mode.value != 'outbound') return [];
+        return ['aes-128-gcm', 'chacha20-poly1305', 'auto', ...(coreSupports('vmessPlainSecurity') ? ['none', 'zero'] : [])];
+      });
+
       return {
-        securities: mode.value == 'outbound' ? ['aes-128-gcm', 'chacha20-poly1305', 'auto', 'none', 'zero'] : [],
+        securities,
         span,
         clients,
         newClient,

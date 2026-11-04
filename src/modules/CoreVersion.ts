@@ -46,7 +46,10 @@ const CORE_FEATURES = {
   // xicmp settings were {listenIp, id} before 26.6.1.
   xicmpIps: { since: '26.6.1' },
   // xdns `domain` is a startup error ("feature removed") from 26.4.13 on.
-  xdnsLegacy: { until: '26.4.13' }
+  xdnsLegacy: { until: '26.4.13' },
+  // XTLS/Xray-core#6303 removed the unencrypted ciphers: Shadowsocks none/plain fail to start, VMess none/zero turn into auto.
+  ssPlainCipher: { until: '26.7.11' },
+  vmessPlainSecurity: { until: '26.7.11' }
 } as const satisfies Record<string, CoreFeatureRule>;
 
 export type CoreFeature = keyof typeof CORE_FEATURES;
@@ -88,4 +91,15 @@ export function coreAppliesTunRoutes(): boolean {
 
 export function coreAppliesTunGateway(): boolean {
   return coreAtLeast('26.7.11');
+}
+
+// A VLESS or Trojan outbound without TLS/REALITY to a public address stops Xray from starting (XTLS/Xray-core#6303).
+// 26.7.11 checks only the short form (`address` right in `settings`); the vnext/servers form XRAYUI writes is checked since 26.9.9.
+export function coreChecksOutboundTransportSecurity(shortForm: boolean): boolean {
+  return coreAtLeast(shortForm ? '26.7.11' : '26.9.9');
+}
+
+// Since 26.10.31 (XTLS/Xray-core#7249) only RFC 1918, fc00::/7, loopback and link-local IPs count as private for that check.
+export function coreUsesNarrowPrivateIps(): boolean {
+  return coreAtLeast('26.10.31');
 }

@@ -1036,6 +1036,14 @@
       "closest": "Closest Domain",
       "scan_progress": "Scanning is in progress..."
     },
+    "ApplyChecks": {
+      "error_ss_plain_cipher": "Shadowsocks in {tag}: Xray 26.7.11 and later do not start with the {method} encryption method. Choose another one.",
+      "error_ss_plain_cipher_client": "Shadowsocks in {tag}: client {client} uses the {method} encryption method, which Xray does not accept for inbound clients. Remove the client and add it again with another method.",
+      "error_vless_no_tls": "VLESS in {tag}: Xray does not start when the server address {address} is public and there is no TLS, REALITY or VLESS Encryption. Turn on TLS or REALITY in its transport settings. Without them, only private addresses and local names such as .lan are allowed.",
+      "error_trojan_no_tls": "Trojan in {tag}: Xray does not start when the server address {address} is public and there is no TLS or REALITY. Turn on TLS or REALITY in its transport settings. Without them, only private addresses and local names such as .lan are allowed.",
+      "error_link_ss_plain_cipher": "Shadowsocks server {tag} uses no encryption ({method}). Xray 26.7.11 and later do not support it, so the server cannot be used.",
+      "warn_ss_plain_cipher": "Xray 26.7.11 and later do not start with this encryption method."
+    },
     "Xhttp": {
       "modal_anti_detection": "Anti-Detection Settings",
       "hint_anti_detection": "Configure padding obfuscation, HTTP method, and session/sequence placement to bypass CDN-based traffic filtering.",

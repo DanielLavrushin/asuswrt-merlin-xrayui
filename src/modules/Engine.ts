@@ -237,6 +237,7 @@ export class EngineResponseConfig {
     ui_version: string;
     core_version: string;
     core_error?: string;
+    tested_core?: string;
     profile: string;
     profiles: string[];
     backups: string[];

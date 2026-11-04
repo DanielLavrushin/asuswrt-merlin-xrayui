@@ -830,7 +830,9 @@
     },
     "XrayVersion": {
       "not_installed": "not installed",
-      "not_working": "not working"
+      "not_working": "not working",
+      "newer_than_tested": "newer than tested ({0})",
+      "newer_than_tested_hint": "This XRAYUI release was tested with Xray-core {0}. A newer core may have renamed or dropped settings that XRAYUI writes, and Xray ignores those without an error. Click the version to switch the core."
     },
     "XrayCoreVersionModal": {
       "modal_title": "X-RAY Core Update",

@@ -362,7 +362,9 @@
       "balancer_checked": "{0} 秒前检查。",
       "balancer_next_nodelay": "负载均衡器 {0} 将新连接发送到此处。",
       "balancer_fallback_nomatch": "负载均衡器 {0} 没有匹配到任何出站，因此新连接发往其备用出站。",
-      "balancer_default_nomatch": "负载均衡器 {0} 没有匹配到任何出站且未设置备用出站，因此新连接发往列表中的第一个出站。"
+      "balancer_default_nomatch": "负载均衡器 {0} 没有匹配到任何出站且未设置备用出站，因此新连接发往列表中的第一个出站。",
+      "alert_delete_tag_in_dialer_proxy_use": "此标签 ({1}) 被出站 ({0}) 用作 Dealer 代理 (dialerProxy)，删除后它们将无法连接。删除前请在 Transport → Sockopt 中为它们选择其他 Dealer 代理。",
+      "alert_delete_last_balancer_outbound": "此出站 ({1}) 是这些负载均衡器唯一匹配的出站，且它们未设置备用出站：{0}。删除后，Xray 会将它们的流量发往列表中的第一个出站，该出站可能是 direct。删除前请添加另一个匹配其选择器的出站，或设置备用出站。"
     },
     "StreamSettingsModal": {
       "title": "传输设置",
@@ -1023,7 +1025,8 @@
       "error_vless_no_tls": "{tag} 的 VLESS：服务器地址 {address} 为公网地址且未设置 TLS、REALITY 或 VLESS Encryption 时，Xray 无法启动。请在其传输设置中启用 TLS 或 REALITY。只有私有地址和本地名称（如 .lan）可以不使用它们。",
       "error_trojan_no_tls": "{tag} 的 Trojan：服务器地址 {address} 为公网地址且未设置 TLS 或 REALITY 时，Xray 无法启动。请在其传输设置中启用 TLS 或 REALITY。只有私有地址和本地名称（如 .lan）可以不使用它们。",
       "error_link_ss_plain_cipher": "Shadowsocks 服务器 {tag} 未使用加密（{method}）。Xray 26.7.11 及更高版本不支持，因此无法使用该服务器。",
-      "warn_ss_plain_cipher": "Xray 26.7.11 及更高版本无法使用此加密方法启动。"
+      "warn_ss_plain_cipher": "Xray 26.7.11 及更高版本无法使用此加密方法启动。",
+      "confirm_balancer_no_outbounds": "以下负载均衡器没有匹配到任何出站且未设置备用出站：{tags}。Xray 会将它们的流量发往列表中的第一个出站 ({first})。仍要应用吗？"
     },
     "Xhttp": {
       "modal_anti_detection": "反检测设置",

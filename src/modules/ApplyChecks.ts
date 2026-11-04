@@ -1,5 +1,6 @@
 import { coreChecksOutboundTransportSecurity, coreSupports, coreUsesNarrowPrivateIps } from './CoreVersion';
 import { isShadowsocksPlainCipher, XrayProtocol } from './Options';
+import { toSelector } from './BalancerStatus';
 
 // A setting the installed Xray refuses to start with. Apply stops and shows com.ApplyChecks.<key>, which names the inbound or outbound.
 export class ApplyCheckError extends Error {
@@ -189,4 +190,23 @@ export function checkBeforeApply(config: { inbounds?: ProxyLike[]; outbounds?: P
       .map((proxy) => shadowsocksProblem(proxy, false) ?? transportSecurityProblem(proxy))
       .find(Boolean);
   if (problem) throw problem;
+}
+
+interface BalancerConfigLike {
+  outbounds?: { tag?: string }[];
+  routing?: { balancers?: { tag?: string; selector?: unknown; fallbackTag?: string }[] };
+  reverse?: { portals?: { tag?: string }[] };
+}
+
+// Tags of balancers whose selector matches no outbound and that have no fallback outbound. Xray then sends their
+// traffic through the default route, the first outbound in the list, which may be direct (#467).
+export function balancersWithoutOutbounds(config: BalancerConfigLike): string[] {
+  // selectors are tag prefixes, as in Xray; reverse portals are outbound handlers in Xray too
+  const tags = [...(config.outbounds ?? []), ...(config.reverse?.portals ?? [])].map((o) => o.tag).filter((tag): tag is string => !!tag);
+  return (config.routing?.balancers ?? [])
+    .filter((b) => {
+      const selector = toSelector(b.selector);
+      return !!b.tag && selector.length > 0 && !b.fallbackTag && !tags.some((tag) => selector.some((prefix) => tag.startsWith(prefix)));
+    })
+    .map((b) => b.tag!);
 }

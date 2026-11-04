@@ -1,0 +1,225 @@
+name: Xray-core schema
+
+# Xray-core decodes its config with encoding/json and no DisallowUnknownFields: a key core no
+# longer reads is dropped without an error, Xray starts, `xray run -test` passes, and the XRAYUI
+# setting silently does nothing (#441, #443, #444, #445). tools/xray-schema dumps the keys, loader
+# names and switch values core reads; this workflow diffs the latest Xray-core release against
+# the dump of the core XRAYUI is tested with (#450). See tools/xray-schema/README.md.
+on:
+  schedule:
+    - cron: '41 5 * * *'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Xray-core tag to compare instead of the latest release (report in the run summary only, no issue)'
+        required: false
+        default: ''
+  push:
+    branches: ['**']
+    paths:
+      - 'tools/xray-schema/**'
+      - 'src/backend/_globals.sh'
+      - '.github/workflows/xray-schema.yml'
+  pull_request:
+    paths:
+      - 'tools/xray-schema/**'
+      - 'src/backend/_globals.sh'
+      - '.github/workflows/xray-schema.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  # The snapshot must describe XRAYUI_TESTED_CORE, the core fresh installs get (#451), and must be
+  # exactly what the tool produces for it. Catches a raised version without a new snapshot, a
+  # hand-edited snapshot, and a tool change that was not followed by regenerating it.
+  snapshot:
+    name: Snapshot matches XRAYUI_TESTED_CORE
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: xray-schema-snapshot-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: tools/xray-schema/go.mod
+          cache: false
+
+      - name: Build the extractor
+        run: go -C tools/xray-schema build -o "$RUNNER_TEMP/xray-schema" .
+
+      - name: Read the tested core
+        id: tested
+        run: |
+          set -euo pipefail
+          tested=$(sed -n 's/^XRAYUI_TESTED_CORE="\([^"]*\)".*/\1/p' src/backend/_globals.sh)
+          snapshot=$(jq -r '.tag // empty' tools/xray-schema/schema.json)
+          echo "XRAYUI_TESTED_CORE=$tested, snapshot tag=$snapshot"
+          if ! printf '%s\n' "$tested" | grep -Eq '^[0-9]+(\.[0-9]+)+$'; then
+            echo "::error file=src/backend/_globals.sh::XRAYUI_TESTED_CORE is missing or is not a version: '$tested'"
+            exit 1
+          fi
+          if [ "v$tested" != "$snapshot" ]; then
+            echo "::error file=tools/xray-schema/schema.json::The snapshot is for ${snapshot:-no tag}, but XRAYUI_TESTED_CORE is $tested. Regenerate it as described in tools/xray-schema/README.md."
+            exit 1
+          fi
+          echo "tag=$snapshot" >> "$GITHUB_OUTPUT"
+
+      - name: Check out Xray-core ${{ steps.tested.outputs.tag }}
+        uses: actions/checkout@v4
+        with:
+          repository: XTLS/Xray-core
+          ref: ${{ steps.tested.outputs.tag }}
+          path: xray-core
+          sparse-checkout: infra/conf
+          persist-credentials: false
+
+      - name: Snapshot is the extractor output for that tag
+        env:
+          TAG: ${{ steps.tested.outputs.tag }}
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/xray-schema" dump -tag "$TAG" "$GITHUB_WORKSPACE/xray-core/infra/conf" > "$RUNNER_TEMP/schema.json"
+          if ! diff -u tools/xray-schema/schema.json "$RUNNER_TEMP/schema.json"; then
+            echo "::error file=tools/xray-schema/schema.json::The snapshot differs from what tools/xray-schema produces for $TAG. Regenerate it as described in tools/xray-schema/README.md."
+            exit 1
+          fi
+
+  drift:
+    name: Latest Xray-core against the snapshot
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    concurrency:
+      group: xray-schema-drift
+      cancel-in-progress: false
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: tools/xray-schema/go.mod
+          cache: false
+
+      - name: Build the extractor
+        run: go -C tools/xray-schema build -o "$RUNNER_TEMP/xray-schema" .
+
+      - name: Pick the Xray-core release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          tag="${INPUT_TAG:-}"
+          if [ -z "$tag" ]; then
+            tag=$(gh api repos/XTLS/Xray-core/releases/latest --jq .tag_name)
+          fi
+          case "$tag" in v*) ;; *) tag="v$tag" ;; esac
+          if ! printf '%s\n' "$tag" | grep -Eq '^v[0-9]+(\.[0-9]+)+$'; then
+            echo "::error::Unexpected Xray-core tag '$tag'"
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "tested=$(jq -r .tag tools/xray-schema/schema.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Check out Xray-core ${{ steps.release.outputs.tag }}
+        uses: actions/checkout@v4
+        with:
+          repository: XTLS/Xray-core
+          ref: ${{ steps.release.outputs.tag }}
+          path: xray-core
+          sparse-checkout: infra/conf
+          persist-credentials: false
+
+      - name: Compare with the snapshot
+        id: diff
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/xray-schema" dump -tag "$TAG" "$GITHUB_WORKSPACE/xray-core/infra/conf" > "$RUNNER_TEMP/latest.json"
+          # diff exits 0 when the schemas match, 1 when they differ, 2 on an error
+          rc=0
+          "$RUNNER_TEMP/xray-schema" diff tools/xray-schema/schema.json "$RUNNER_TEMP/latest.json" > "$RUNNER_TEMP/report.md" || rc=$?
+          case "$rc" in
+            0) echo "changed=false" >> "$GITHUB_OUTPUT" ;;
+            1) echo "changed=true" >> "$GITHUB_OUTPUT" ;;
+            *) exit "$rc" ;;
+          esac
+          cat "$RUNNER_TEMP/report.md" >> "$GITHUB_STEP_SUMMARY"
+
+      # One open issue at a time: a new release or a raised tested core opens a new one and closes
+      # the old; a snapshot that matches the latest release closes it.
+      - name: Open, refresh or close the drift issue
+        if: github.event_name == 'schedule' || inputs.tag == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ steps.release.outputs.tag }}
+          TESTED: ${{ steps.release.outputs.tested }}
+          CHANGED: ${{ steps.diff.outputs.changed }}
+          README_URL: ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/tools/xray-schema/README.md
+          WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/workflows/xray-schema.yml
+        run: |
+          set -euo pipefail
+          label=xray-schema-drift
+          gh label create "$label" --color D93F0B --description "Xray-core reads a different config schema than the tested core" --force > /dev/null
+          open=$(gh issue list --state open --label "$label" --limit 50 --json number,title --jq '.[] | "\(.number)\t\(.title)"')
+
+          if [ "$CHANGED" != "true" ]; then
+            printf '%s\n' "$open" | while IFS=$'\t' read -r number _; do
+              if [ -n "$number" ]; then
+                gh issue close "$number" --reason completed --comment "Resolved: Xray-core $TAG reads the same config schema as $TESTED, the tested core." < /dev/null
+              fi
+            done
+            exit 0
+          fi
+
+          report="$RUNNER_TEMP/report.md"
+          if [ "$(wc -c < "$report")" -gt 60000 ]; then
+            head -c 60000 "$report" > "$RUNNER_TEMP/report.cut.md"
+            printf '\n\n_The report was cut at 60000 characters. The full report is in the summary of the latest run: %s_\n' "$WORKFLOW_URL" >> "$RUNNER_TEMP/report.cut.md"
+            report="$RUNNER_TEMP/report.cut.md"
+          fi
+
+          body="$RUNNER_TEMP/issue.md"
+          {
+            echo "Xray-core **$TAG** reads a different config schema than **$TESTED**, the version XRAYUI is tested with and fresh installs get (\`XRAYUI_TESTED_CORE\`)."
+            echo
+            echo "Release notes: https://github.com/XTLS/Xray-core/releases/tag/$TAG · All changes: https://github.com/XTLS/Xray-core/compare/$TESTED...$TAG"
+            echo
+            cat "$report"
+            echo
+            echo "---"
+            echo "Update XRAYUI for these changes, smoke-test $TAG on a router, then raise \`XRAYUI_TESTED_CORE\` and regenerate \`tools/xray-schema/schema.json\` as described in [the README]($README_URL). The next [run]($WORKFLOW_URL) closes this issue."
+          } > "$body"
+
+          title="Xray-core $TAG changed the config schema (tested: $TESTED)"
+          current=$(printf '%s\n' "$open" | awk -F'\t' -v t="$title" '$2 == t { print $1; exit }')
+          if [ -n "$current" ]; then
+            if [ "$(gh issue view "$current" --json body --jq .body)" != "$(cat "$body")" ]; then
+              gh issue edit "$current" --body-file "$body" > /dev/null
+              echo "Refreshed #$current"
+            else
+              echo "#$current is up to date"
+            fi
+          else
+            url=$(gh issue create --title "$title" --label "$label" --body-file "$body")
+            current=${url##*/}
+            echo "Opened $url"
+          fi
+          printf '%s\n' "$open" | while IFS=$'\t' read -r number _; do
+            if [ -n "$number" ] && [ "$number" != "$current" ]; then
+              gh issue close "$number" --reason "not planned" --comment "Superseded by #$current." < /dev/null
+            fi
+          done

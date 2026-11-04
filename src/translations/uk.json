@@ -826,7 +826,9 @@
     },
     "XrayVersion": {
       "not_installed": "не встановлено",
-      "not_working": "не працює"
+      "not_working": "не працює",
+      "newer_than_tested": "новіша за перевірену ({0})",
+      "newer_than_tested_hint": "Цей випуск XRAYUI перевірено з Xray-core {0}. У новішому ядрі налаштування, які записує XRAYUI, могли бути перейменовані або вилучені, а Xray пропускає їх без помилки. Натисніть на версію, щоб змінити ядро."
     },
     "XrayCoreVersionModal": {
       "modal_title": "Оновлення X-RAY Core",

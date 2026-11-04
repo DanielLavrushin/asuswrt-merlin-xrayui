@@ -826,7 +826,9 @@
     },
     "XrayVersion": {
       "not_installed": "未安装",
-      "not_working": "无法运行"
+      "not_working": "无法运行",
+      "newer_than_tested": "比已测试版本新（{0}）",
+      "newer_than_tested_hint": "此 XRAYUI 版本已在 Xray-core {0} 上测试。较新的核心可能已重命名或删除 XRAYUI 写入的设置，而 Xray 会忽略这些设置且不报错。点击版本号可切换核心。"
     },
     "XrayCoreVersionModal": {
       "modal_title": "X-RAY 核心更新",

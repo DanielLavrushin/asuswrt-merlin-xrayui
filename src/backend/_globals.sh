@@ -12,6 +12,9 @@ ADDON_TAG_UPPER="XRAYUI"
 ADDON_TITLE="Xray UI"
 
 XRAYUI_VERSION="1.0.0"
+# Xray-core version fresh installs get: the one this XRAYUI release was tested with.
+# Raise it together with tools/xray-schema/schema.json, see tools/xray-schema/README.md.
+XRAYUI_TESTED_CORE="26.9.9"
 
 ADDON_WEB_DIR="/www/user/$ADDON_TAG"
 

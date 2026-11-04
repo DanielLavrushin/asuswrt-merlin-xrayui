@@ -1,0 +1,1907 @@
+{
+  "tag": "v26.9.9",
+  "structs": {
+    "APIConfig": {
+      "file": "api.go",
+      "keys": [
+        "listen",
+        "services",
+        "tag"
+      ]
+    },
+    "Address": {
+      "file": "common.go",
+      "embeds": [
+        "net.Address"
+      ]
+    },
+    "Authenticator": {
+      "file": "transport_method.go",
+      "keys": [
+        "request",
+        "response"
+      ]
+    },
+    "AuthenticatorRequest": {
+      "file": "transport_method.go",
+      "keys": [
+        "headers",
+        "method",
+        "path",
+        "version"
+      ]
+    },
+    "AuthenticatorResponse": {
+      "file": "transport_method.go",
+      "keys": [
+        "headers",
+        "reason",
+        "status",
+        "version"
+      ]
+    },
+    "BalancingRule": {
+      "file": "router.go",
+      "keys": [
+        "fallbackTag",
+        "selector",
+        "strategy",
+        "tag"
+      ]
+    },
+    "BlackholeConfig": {
+      "file": "blackhole.go",
+      "keys": [
+        "response"
+      ]
+    },
+    "BridgeConfig": {
+      "file": "reverse.go",
+      "keys": [
+        "domain",
+        "tag"
+      ]
+    },
+    "BurstObservatoryConfig": {
+      "file": "observatory.go",
+      "keys": [
+        "pingConfig",
+        "subjectSelector"
+      ]
+    },
+    "Config": {
+      "file": "xray.go",
+      "keys": [
+        "api",
+        "burstObservatory",
+        "dns",
+        "env",
+        "fakeDns",
+        "geodata",
+        "inbounds",
+        "log",
+        "metrics",
+        "observatory",
+        "outbounds",
+        "policy",
+        "reverse",
+        "routing",
+        "stats",
+        "transport",
+        "version"
+      ]
+    },
+    "CustomSockoptConfig": {
+      "file": "transport_sockopt.go",
+      "keys": [
+        "level",
+        "network",
+        "opt",
+        "system",
+        "type",
+        "value"
+      ]
+    },
+    "CustomTransform": {
+      "file": "transport_finalmask.go",
+      "keys": [
+        "args",
+        "op"
+      ]
+    },
+    "CustomTransformArg": {
+      "file": "transport_finalmask.go",
+      "keys": [
+        "bytes",
+        "metadata",
+        "reuse",
+        "transform",
+        "type",
+        "u64"
+      ]
+    },
+    "DNSConfig": {
+      "file": "dns.go",
+      "keys": [
+        "clientIp",
+        "disableCache",
+        "disableFallback",
+        "disableFallbackIfMatch",
+        "enableParallelQuery",
+        "hosts",
+        "queryStrategy",
+        "serveExpiredTTL",
+        "serveStale",
+        "servers",
+        "tag",
+        "useSystemHosts"
+      ]
+    },
+    "DNSOutboundConfig": {
+      "file": "dns_proxy.go",
+      "keys": [
+        "address",
+        "blockTypes",
+        "network",
+        "nonIPQuery",
+        "port",
+        "rewriteAddress",
+        "rewriteNetwork",
+        "rewritePort",
+        "rules",
+        "userLevel"
+      ]
+    },
+    "DNSOutboundRuleConfig": {
+      "file": "dns_proxy.go",
+      "keys": [
+        "action",
+        "domain",
+        "qType",
+        "rCode"
+      ]
+    },
+    "DokodemoConfig": {
+      "file": "dokodemo.go",
+      "keys": [
+        "address",
+        "allowedNetwork",
+        "followRedirect",
+        "network",
+        "port",
+        "portMap",
+        "rewriteAddress",
+        "rewritePort",
+        "userLevel"
+      ]
+    },
+    "FakeDNSPoolElementConfig": {
+      "file": "fakedns.go",
+      "keys": [
+        "ipPool",
+        "poolSize"
+      ]
+    },
+    "FinalMask": {
+      "file": "transport_finalmask.go",
+      "keys": [
+        "quicParams",
+        "tcp",
+        "udp"
+      ]
+    },
+    "Fragment": {
+      "file": "freedom.go",
+      "keys": [
+        "interval",
+        "length",
+        "maxSplit",
+        "packets"
+      ]
+    },
+    "FragmentMask": {
+      "file": "transport_finalmask.go",
+      "keys": [
+        "delay",
+        "delays",
+        "length",
+        "lengths",
+        "maxSplit",
+        "packets"
+      ]
+    },
+    "FreedomConfig": {
+      "file": "freedom.go",
+      "keys": [
+        "domainStrategy",
+        "finalRules",
+        "fragment",
+        "ipsBlocked",
+        "noise",
+        "noises",
+        "proxyProtocol",
+        "redirect",
+        "targetStrategy",
+        "userLevel"
+      ]
+    },
+    "FreedomFinalRuleConfig": {
+      "file": "freedom.go",
+      "keys": [
+        "action",
+        "blockDelay",
+        "ip",
+        "network",
+        "port"
+      ]
+    },
+    "GRPCConfig": {
+      "file": "transport_method.go",
+      "keys": [
+        "authority",
+        "health_check_timeout",
+        "idle_timeout",
+        "initial_windows_size",
+        "multiMode",
+        "permit_without_stream",
+        "serviceName",
+        "user_agent"
+      ]
+    },
+    "GeodataAssetConfig": {
+      "file": "geodata.go",
+      "keys": [
+        "file",
+        "url"
+      ]
+    },
+    "GeodataConfig": {
+      "file": "geodata.go",
+      "keys": [
+        "assets",
+        "cron",
+        "outbound"
+      ]
+    },
+    "HTTPAccount": {
+      "file": "http.go",
+      "keys": [
+        "pass",
+        "user"
+      ]
+    },
+    "HTTPClientConfig": {
+      "file": "http.go",
+      "keys": [
+        "address",
+        "email",
+        "headers",
+        "level",
+        "pass",
+        "port",
+        "servers",
+        "user"
+      ]
+    },
+    "HTTPRemoteConfig": {
+      "file": "http.go",
+      "keys": [
+        "address",
+        "port",
+        "users"
+      ]
+    },
+    "HTTPServerConfig": {
+      "file": "http.go",
+      "keys": [
+        "accounts",
+        "allowTransparent",
+        "userLevel",
+        "users"
+      ]
+    },
+    "HappyEyeballsConfig": {
+      "file": "transport_sockopt.go",
+      "keys": [
+        "interleave",
+        "maxConcurrentTry",
+        "prioritizeIPv6",
+        "tryDelayMs"
+      ]
+    },
+    "HappyEyeballsConfig.UnmarshalJSON.innerHappyEyeballsConfig": {
+      "file": "transport_sockopt.go",
+      "keys": [
+        "interleave",
+        "maxConcurrentTry",
+        "prioritizeIPv6",
+        "tryDelayMs"
+      ]
+    },
+    "HeaderCustomTCP": {
+      "file": "transport_finalmask.go",
+      "keys": [
+        "clients",
+        "errors",
+        "servers"
+      ]
+    },
+    "HeaderCustomUDP": {
+      "file": "transport_finalmask.go",
+      "keys": [
+        "client",
+        "mode",
+        "server"
+      ]
+    },
+    "HealthCheckSettings": {
+      "file": "router_strategy.go",
+      "keys": [
+        "connectivity",
+        "destination",
+        "httpMethod",
+        "interval",
+        "sampling",
+        "timeout"
+      ]
+    },
+    "HostsWrapper": {
+      "file": "dns.go",
+      "keys": [
+        "Hosts"
+      ]
+    },
+    "HttpUpgradeConfig": {
+      "file": "transport_method.go",
+      "keys": [
+        "acceptProxyProtocol",
+        "headers",
+        "host",
+        "path"
+      ]
+    },
+    "HysteriaClientConfig": {
+      "file": "hysteria.go",
+      "keys": [
+        "address",
+        "port",
+        "version"
+      ]
+    },
+    "HysteriaConfig": {
+      "file": "transport_method.go",
+      "keys": [
+        "auth",
+        "masquerade",
+        "udpIdleTimeout",
+        "version"
+      ]
+    },
+    "HysteriaServerConfig": {
+      "file": "hysteria.go",
+      "keys": [
+        "clients",
+        "users",
+        "version"
+      ]
+    },
+    "HysteriaUserConfig": {
+      "file": "hysteria.go",
+      "keys": [
+        "auth",
+        "email",
+        "level"
+      ]
+    },
+    "InboundDetourConfig": {
+      "file": "xray.go",
+      "keys": [
+        "listen",
+        "port",
+        "protocol",
+        "settings",
+        "sniffing",
+        "streamSettings",
+        "tag"
+      ]
+    },
+    "Int32Range": {
+      "file": "common.go",
+      "keys": [
+        "From",
+        "Left",
+        "Right",
+        "To"
+      ]
+    },
+    "KCPConfig": {
+      "file": "transport_method.go",
+      "keys": [
+        "cwndMultiplier",
+        "downlinkCapacity",
+        "header",
+        "maxSendingWindow",
+        "mtu",
+        "seed",
+        "tti",
+        "uplinkCapacity"
+      ]
+    },
+    "LimitFallback": {
+      "file": "transport_security.go",
+      "keys": [
+        "AfterBytes",
+        "BurstBytesPerSec",
+        "BytesPerSec"
+      ]
+    },
+    "LogConfig": {
+      "file": "log.go",
+      "keys": [
+        "access",
+        "dnsLog",
+        "error",
+        "loglevel",
+        "maskAddress"
+      ]
+    },
+    "LoopbackConfig": {
+      "file": "loopback.go",
+      "keys": [
+        "inboundTag",
+        "sniffing"
+      ]
+    },
+    "Mask": {
+      "file": "transport_finalmask.go",
+      "keys": [
+        "settings",
+        "type"
+      ]
+    },
+    "Masquerade": {
+      "file": "transport_method.go",
+      "keys": [
+        "content",
+        "dir",
+        "headers",
+        "insecure",
+        "rewriteHost",
+        "statusCode",
+        "type",
+        "url",
+        "xForwarded"
+      ]
+    },
+    "MetricsConfig": {
+      "file": "metrics.go",
+      "keys": [
+        "listen",
+        "tag"
+      ]
+    },
+    "MkcpLegacy": {
+      "file": "transport_finalmask.go",
+      "keys": [
+        "header",
+        "value"
+      ]
+    },
+    "MuxConfig": {
+      "file": "xray.go",
+      "keys": [
+        "concurrency",
+        "enabled",
+        "xudpConcurrency",
+        "xudpProxyUDP443"
+      ]
+    },
+    "NameServerConfig": {
+      "file": "dns.go",
+      "keys": [
+        "address",
+        "clientIp",
+        "disableCache",
+        "domains",
+        "expectIPs",
+        "expectedIPs",
+        "finalQuery",
+        "port",
+        "queryStrategy",
+        "serveExpiredTTL",
+        "serveStale",
+        "skipFallback",
+        "tag",
+        "timeoutMs",
+        "unexpectedIPs"
+      ]
+    },
+    "NameServerConfig.UnmarshalJSON.advanced": {
+      "file": "dns.go",
+      "keys": [
+        "address",
+        "clientIp",
+        "disableCache",
+        "domains",
+        "expectIPs",
+        "expectedIPs",
+        "finalQuery",
+        "port",
+        "queryStrategy",
+        "serveExpiredTTL",
+        "serveStale",
+        "skipFallback",
+        "tag",
+        "timeoutMs",
+        "unexpectedIPs"
+      ]
+    },
+    "Noise": {
+      "file": "freedom.go",
+      "keys": [
+        "applyTo",
+        "delay",
+        "packet",
+        "type"
+      ]
+    },
+    "NoiseItem": {
+      "file": "transport_finalmask.go",
+      "keys": [
+        "delay",
+        "packet",
+        "rand",
+        "randRange",
+        "type"
+      ]
+    },
+    "NoiseMask": {
+      "file": "transport_finalmask.go",
+      "keys": [
+        "noise",
+        "reset"
+      ]
+    },
+    "ObservatoryConfig": {
+      "file": "observatory.go",
+      "keys": [
+        "enableConcurrency",
+        "probeInterval",
+        "probeURL",
+        "subjectSelector"
+      ]
+    },
+    "OutboundDetourConfig": {
+      "file": "xray.go",
+      "keys": [
+        "mux",
+        "protocol",
+        "proxySettings",
+        "sendThrough",
+        "settings",
+        "streamSettings",
+        "tag",
+        "targetStrategy"
+      ]
+    },
+    "Policy": {
+      "file": "policy.go",
+      "keys": [
+        "bufferSize",
+        "connIdle",
+        "downlinkOnly",
+        "handshake",
+        "statsUserDownlink",
+        "statsUserOnline",
+        "statsUserUplink",
+        "uplinkOnly"
+      ]
+    },
+    "PolicyConfig": {
+      "file": "policy.go",
+      "keys": [
+        "levels",
+        "system"
+      ]
+    },
+    "PortList": {
+      "file": "common.go",
+      "keys": [
+        "Range"
+      ]
+    },
+    "PortRange": {
+      "file": "common.go",
+      "keys": [
+        "From",
+        "To"
+      ]
+    },
+    "PortalConfig": {
+      "file": "reverse.go",
+      "keys": [
+        "domain",
+        "tag"
+      ]
+    },
+    "QuicParamsConfig": {
+      "file": "transport_finalmask.go",
+      "keys": [
+        "bbrProfile",
+        "brutalDisableLossCompensation",
+        "brutalDown",
+        "brutalUp",
+        "congestion",
+        "debug",
+        "disableChromeParrot",
+        "disableGSO",
+        "disablePathMTUDiscovery",
+        "disableStatelessReset",
+        "initConnectionReceiveWindow",
+        "initStreamReceiveWindow",
+        "keepAlivePeriod",
+        "maxConnectionReceiveWindow",
+        "maxIdleTimeout",
+        "maxIncomingStreams",
+        "maxStreamReceiveWindow"
+      ]
+    },
+    "REALITYConfig": {
+      "file": "transport_security.go",
+      "keys": [
+        "dest",
+        "fingerprint",
+        "limitFallbackDownload",
+        "limitFallbackUpload",
+        "masterKeyLog",
+        "maxClientVer",
+        "maxTimeDiff",
+        "minClientVer",
+        "mldsa65Seed",
+        "mldsa65Verify",
+        "password",
+        "privateKey",
+        "publicKey",
+        "serverName",
+        "serverNames",
+        "shortId",
+        "shortIds",
+        "show",
+        "spiderX",
+        "target",
+        "type",
+        "xver"
+      ]
+    },
+    "Realm": {
+      "file": "transport_finalmask.go",
+      "keys": [
+        "ipMode",
+        "portMapping",
+        "stunServers",
+        "tlsConfig",
+        "url"
+      ]
+    },
+    "ResponseConfig": {
+      "file": "blackhole.go",
+      "keys": [
+        "customResponseData",
+        "type"
+      ]
+    },
+    "ReverseConfig": {
+      "file": "reverse.go",
+      "keys": [
+        "bridges",
+        "portals"
+      ]
+    },
+    "RouterConfig": {
+      "file": "router.go",
+      "keys": [
+        "balancers",
+        "domainStrategy",
+        "rules"
+      ]
+    },
+    "RouterRule": {
+      "file": "router.go",
+      "keys": [
+        "balancerTag",
+        "outboundTag",
+        "ruleTag"
+      ]
+    },
+    "Salamander": {
+      "file": "transport_finalmask.go",
+      "keys": [
+        "packetSize",
+        "password"
+      ]
+    },
+    "ShadowsocksClientConfig": {
+      "file": "shadowsocks.go",
+      "keys": [
+        "address",
+        "email",
+        "level",
+        "method",
+        "password",
+        "port",
+        "servers"
+      ]
+    },
+    "ShadowsocksServerConfig": {
+      "file": "shadowsocks.go",
+      "keys": [
+        "clients",
+        "email",
+        "level",
+        "method",
+        "network",
+        "password",
+        "users"
+      ]
+    },
+    "ShadowsocksServerTarget": {
+      "file": "shadowsocks.go",
+      "keys": [
+        "address",
+        "email",
+        "level",
+        "method",
+        "password",
+        "port"
+      ]
+    },
+    "ShadowsocksUserConfig": {
+      "file": "shadowsocks.go",
+      "keys": [
+        "address",
+        "email",
+        "level",
+        "method",
+        "password",
+        "port"
+      ]
+    },
+    "SniffingConfig": {
+      "file": "xray.go",
+      "keys": [
+        "destOverride",
+        "domainsExcluded",
+        "enabled",
+        "ipsExcluded",
+        "metadataOnly",
+        "routeOnly"
+      ]
+    },
+    "SocketConfig": {
+      "file": "transport_sockopt.go",
+      "keys": [
+        "acceptProxyProtocol",
+        "addressPortStrategy",
+        "customSockopt",
+        "dialerProxy",
+        "domainStrategy",
+        "happyEyeballs",
+        "interface",
+        "mark",
+        "penetrate",
+        "tcpCongestion",
+        "tcpFastOpen",
+        "tcpKeepAliveIdle",
+        "tcpKeepAliveInterval",
+        "tcpMaxSeg",
+        "tcpMptcp",
+        "tcpUserTimeout",
+        "tcpWindowClamp",
+        "tproxy",
+        "trustedXForwardedFor",
+        "v6only"
+      ]
+    },
+    "SocksAccount": {
+      "file": "socks.go",
+      "keys": [
+        "pass",
+        "user"
+      ]
+    },
+    "SocksClientConfig": {
+      "file": "socks.go",
+      "keys": [
+        "address",
+        "email",
+        "level",
+        "pass",
+        "port",
+        "servers",
+        "user"
+      ]
+    },
+    "SocksRemoteConfig": {
+      "file": "socks.go",
+      "keys": [
+        "address",
+        "port",
+        "users"
+      ]
+    },
+    "SocksServerConfig": {
+      "file": "socks.go",
+      "keys": [
+        "accounts",
+        "auth",
+        "ip",
+        "udp",
+        "userLevel",
+        "users"
+      ]
+    },
+    "SplitHTTPConfig": {
+      "file": "transport_method.go",
+      "keys": [
+        "downloadSettings",
+        "extra",
+        "headers",
+        "host",
+        "mode",
+        "noGRPCHeader",
+        "noSSEHeader",
+        "path",
+        "scMaxBufferedPosts",
+        "scMaxEachPostBytes",
+        "scMinPostsIntervalMs",
+        "scStreamUpServerSecs",
+        "seqKey",
+        "seqPlacement",
+        "serverMaxHeaderBytes",
+        "sessionIDKey",
+        "sessionIDLength",
+        "sessionIDPlacement",
+        "sessionIDTable",
+        "uplinkChunkSize",
+        "uplinkDataKey",
+        "uplinkDataPlacement",
+        "uplinkHTTPMethod",
+        "xPaddingBytes",
+        "xPaddingHeader",
+        "xPaddingKey",
+        "xPaddingMethod",
+        "xPaddingObfsMode",
+        "xPaddingPlacement",
+        "xmux"
+      ]
+    },
+    "StrategyConfig": {
+      "file": "router.go",
+      "keys": [
+        "settings",
+        "type"
+      ]
+    },
+    "StreamConfig": {
+      "file": "transport_internet.go",
+      "keys": [
+        "address",
+        "finalmask",
+        "grpcSettings",
+        "httpupgradeSettings",
+        "hysteriaSettings",
+        "kcpSettings",
+        "method",
+        "network",
+        "port",
+        "rawSettings",
+        "realitySettings",
+        "security",
+        "sockopt",
+        "splithttpSettings",
+        "tcpSettings",
+        "tlsSettings",
+        "wsSettings",
+        "xhttpSettings"
+      ]
+    },
+    "Sudoku": {
+      "file": "transport_finalmask.go",
+      "keys": [
+        "ascii",
+        "customTable",
+        "customTables",
+        "custom_table",
+        "custom_tables",
+        "paddingMax",
+        "paddingMin",
+        "padding_max",
+        "padding_min",
+        "password"
+      ]
+    },
+    "SystemPolicy": {
+      "file": "policy.go",
+      "keys": [
+        "statsInboundDownlink",
+        "statsInboundUplink",
+        "statsOutboundDownlink",
+        "statsOutboundUplink"
+      ]
+    },
+    "TCPConfig": {
+      "file": "transport_method.go",
+      "keys": [
+        "acceptProxyProtocol",
+        "header"
+      ]
+    },
+    "TCPItem": {
+      "file": "transport_finalmask.go",
+      "keys": [
+        "capture",
+        "delay",
+        "packet",
+        "rand",
+        "randRange",
+        "reuse",
+        "transform",
+        "type"
+      ]
+    },
+    "TLSCertConfig": {
+      "file": "transport_security.go",
+      "keys": [
+        "buildChain",
+        "certificate",
+        "certificateFile",
+        "key",
+        "keyFile",
+        "ocspStapling",
+        "oneTimeLoading",
+        "usage"
+      ]
+    },
+    "TLSConfig": {
+      "file": "transport_security.go",
+      "keys": [
+        "allowInsecure",
+        "alpn",
+        "certificates",
+        "cipherSuites",
+        "curvePreferences",
+        "disableSystemRoot",
+        "echConfigList",
+        "echServerKeys",
+        "echSockopt",
+        "enableSessionResumption",
+        "fingerprint",
+        "masterKeyLog",
+        "maxVersion",
+        "minVersion",
+        "pinnedPeerCertSha256",
+        "rejectUnknownSni",
+        "serverName",
+        "verifyPeerCertByName"
+      ]
+    },
+    "TrojanClientConfig": {
+      "file": "trojan.go",
+      "keys": [
+        "address",
+        "email",
+        "flow",
+        "level",
+        "password",
+        "port",
+        "servers"
+      ]
+    },
+    "TrojanInboundFallback": {
+      "file": "trojan.go",
+      "keys": [
+        "alpn",
+        "dest",
+        "name",
+        "path",
+        "type",
+        "xver"
+      ]
+    },
+    "TrojanServerConfig": {
+      "file": "trojan.go",
+      "keys": [
+        "clients",
+        "fallbacks",
+        "users"
+      ]
+    },
+    "TrojanServerTarget": {
+      "file": "trojan.go",
+      "keys": [
+        "address",
+        "email",
+        "flow",
+        "level",
+        "password",
+        "port"
+      ]
+    },
+    "TrojanUserConfig": {
+      "file": "trojan.go",
+      "keys": [
+        "email",
+        "flow",
+        "level",
+        "password"
+      ]
+    },
+    "TunConfig": {
+      "file": "tun.go",
+      "keys": [
+        "autoOutboundsInterface",
+        "autoSystemRoutingTable",
+        "desc",
+        "dns",
+        "gateway",
+        "mtu",
+        "name",
+        "userLevel"
+      ]
+    },
+    "UDPHop": {
+      "file": "transport_finalmask.go",
+      "keys": [
+        "interval",
+        "mode",
+        "remoteIPs",
+        "remotePorts",
+        "sockopt"
+      ]
+    },
+    "UDPItem": {
+      "file": "transport_finalmask.go",
+      "keys": [
+        "capture",
+        "packet",
+        "rand",
+        "randRange",
+        "reuse",
+        "transform",
+        "type"
+      ]
+    },
+    "User": {
+      "file": "common.go",
+      "keys": [
+        "email",
+        "level"
+      ]
+    },
+    "VLessInboundConfig": {
+      "file": "vless.go",
+      "keys": [
+        "clients",
+        "decryption",
+        "fallbacks",
+        "flow",
+        "testseed",
+        "users"
+      ]
+    },
+    "VLessInboundFallback": {
+      "file": "vless.go",
+      "keys": [
+        "alpn",
+        "dest",
+        "name",
+        "path",
+        "type",
+        "xver"
+      ]
+    },
+    "VLessOutboundConfig": {
+      "file": "vless.go",
+      "keys": [
+        "address",
+        "email",
+        "encryption",
+        "flow",
+        "id",
+        "level",
+        "port",
+        "reverse",
+        "seed",
+        "testpre",
+        "testseed",
+        "vnext"
+      ]
+    },
+    "VLessOutboundVnext": {
+      "file": "vless.go",
+      "keys": [
+        "address",
+        "port",
+        "users"
+      ]
+    },
+    "VLessReverseConfig": {
+      "file": "vless.go",
+      "keys": [
+        "sniffing",
+        "tag"
+      ]
+    },
+    "VMessAccount": {
+      "file": "vmess.go",
+      "keys": [
+        "experiments",
+        "id",
+        "security"
+      ]
+    },
+    "VMessDefaultConfig": {
+      "file": "vmess.go",
+      "keys": [
+        "level"
+      ]
+    },
+    "VMessInboundConfig": {
+      "file": "vmess.go",
+      "keys": [
+        "clients",
+        "default",
+        "users"
+      ]
+    },
+    "VMessOutboundConfig": {
+      "file": "vmess.go",
+      "keys": [
+        "address",
+        "email",
+        "experiments",
+        "id",
+        "level",
+        "port",
+        "security",
+        "vnext"
+      ]
+    },
+    "VMessOutboundTarget": {
+      "file": "vmess.go",
+      "keys": [
+        "address",
+        "port",
+        "users"
+      ]
+    },
+    "VersionConfig": {
+      "file": "version.go",
+      "keys": [
+        "max",
+        "min"
+      ]
+    },
+    "WebSocketConfig": {
+      "file": "transport_method.go",
+      "keys": [
+        "acceptProxyProtocol",
+        "headers",
+        "heartbeatPeriod",
+        "host",
+        "path"
+      ]
+    },
+    "WebhookRuleConfig": {
+      "file": "router.go",
+      "keys": [
+        "deduplication",
+        "headers",
+        "url"
+      ]
+    },
+    "WireGuardConfig": {
+      "file": "wireguard.go",
+      "keys": [
+        "IsClient",
+        "address",
+        "domainStrategy",
+        "mtu",
+        "noKernelTun",
+        "peers",
+        "remoteDNS",
+        "reserved",
+        "secretKey"
+      ]
+    },
+    "WireGuardPeerConfig": {
+      "file": "wireguard.go",
+      "keys": [
+        "allowedIPs",
+        "email",
+        "endpoint",
+        "keepAlive",
+        "level",
+        "preSharedKey",
+        "publicKey"
+      ]
+    },
+    "XMC": {
+      "file": "transport_finalmask.go",
+      "keys": [
+        "hostname",
+        "password",
+        "profiles"
+      ]
+    },
+    "XMCProfile": {
+      "file": "transport_finalmask.go",
+      "keys": [
+        "texturesSignature",
+        "texturesValue",
+        "username",
+        "uuid"
+      ]
+    },
+    "Xdns": {
+      "file": "transport_finalmask.go",
+      "keys": [
+        "domain",
+        "domains",
+        "resolvers"
+      ]
+    },
+    "Xicmp": {
+      "file": "transport_finalmask.go",
+      "keys": [
+        "dgram",
+        "ips"
+      ]
+    },
+    "XmuxConfig": {
+      "file": "transport_method.go",
+      "keys": [
+        "cMaxReuseTimes",
+        "hKeepAlivePeriod",
+        "hMaxRequestTimes",
+        "hMaxReusableSecs",
+        "maxConcurrency",
+        "maxConnections"
+      ]
+    },
+    "json.Reader": {
+      "file": "json/reader.go",
+      "embeds": [
+        "io.Reader"
+      ]
+    },
+    "parseFieldRule.RawFieldRule": {
+      "file": "router.go",
+      "keys": [
+        "attrs",
+        "domain",
+        "domains",
+        "inboundTag",
+        "ip",
+        "localIP",
+        "localOS",
+        "localPort",
+        "network",
+        "port",
+        "process",
+        "protocol",
+        "source",
+        "sourceIP",
+        "sourcePort",
+        "user",
+        "vlessRoute",
+        "webhook"
+      ],
+      "embeds": [
+        "RouterRule"
+      ]
+    },
+    "strategyLeastLoadConfig": {
+      "file": "router_strategy.go",
+      "keys": [
+        "baselines",
+        "costs",
+        "expected",
+        "maxRTT",
+        "tolerance"
+      ]
+    }
+  },
+  "loaders": {
+    "inboundConfigLoader": {
+      "file": "xray.go",
+      "idKey": "protocol",
+      "configKey": "settings",
+      "entries": {
+        "dokodemo-door": "DokodemoConfig",
+        "http": "HTTPServerConfig",
+        "hysteria": "HysteriaServerConfig",
+        "mixed": "SocksServerConfig",
+        "shadowsocks": "ShadowsocksServerConfig",
+        "socks": "SocksServerConfig",
+        "trojan": "TrojanServerConfig",
+        "tun": "TunConfig",
+        "tunnel": "DokodemoConfig",
+        "vless": "VLessInboundConfig",
+        "vmess": "VMessInboundConfig",
+        "wireguard": "WireGuardConfig"
+      }
+    },
+    "outboundConfigLoader": {
+      "file": "xray.go",
+      "idKey": "protocol",
+      "configKey": "settings",
+      "entries": {
+        "blackhole": "BlackholeConfig",
+        "block": "BlackholeConfig",
+        "direct": "FreedomConfig",
+        "dns": "DNSOutboundConfig",
+        "freedom": "FreedomConfig",
+        "http": "HTTPClientConfig",
+        "hysteria": "HysteriaClientConfig",
+        "loopback": "LoopbackConfig",
+        "shadowsocks": "ShadowsocksClientConfig",
+        "socks": "SocksClientConfig",
+        "trojan": "TrojanClientConfig",
+        "vless": "VLessOutboundConfig",
+        "vmess": "VMessOutboundConfig",
+        "wireguard": "WireGuardConfig"
+      }
+    },
+    "strategyConfigLoader": {
+      "file": "router_strategy.go",
+      "idKey": "type",
+      "configKey": "settings",
+      "entries": {
+        "leastload": "strategyLeastLoadConfig",
+        "leastping": "strategyEmptyConfig",
+        "random": "strategyEmptyConfig",
+        "roundrobin": "strategyEmptyConfig"
+      }
+    },
+    "tcpHeaderLoader": {
+      "file": "transport_method.go",
+      "idKey": "type",
+      "configKey": "",
+      "entries": {
+        "http": "Authenticator",
+        "none": "NoOpConnectionAuthenticator"
+      }
+    },
+    "tcpmaskLoader": {
+      "file": "transport_finalmask.go",
+      "idKey": "type",
+      "configKey": "settings",
+      "entries": {
+        "fragment": "FragmentMask",
+        "header-custom": "HeaderCustomTCP",
+        "sudoku": "Sudoku",
+        "xmc": "XMC"
+      }
+    },
+    "udpmaskLoader": {
+      "file": "transport_finalmask.go",
+      "idKey": "type",
+      "configKey": "settings",
+      "entries": {
+        "header-custom": "HeaderCustomUDP",
+        "mkcp-legacy": "MkcpLegacy",
+        "noise": "NoiseMask",
+        "realm": "Realm",
+        "salamander": "Salamander",
+        "sudoku": "Sudoku",
+        "udphop": "UDPHop",
+        "xdns": "Xdns",
+        "xicmp": "Xicmp"
+      }
+    }
+  },
+  "switches": {
+    "APIConfig.Build.switch strings.ToLower(s)": {
+      "file": "api.go",
+      "values": [
+        "handlerservice",
+        "loggerservice",
+        "observatoryservice",
+        "reflectionservice",
+        "routingservice",
+        "statsservice"
+      ]
+    },
+    "BalancingRule.Build.switch r.Strategy.Type": {
+      "file": "router.go",
+      "values": [
+        "",
+        "leastload",
+        "leastping",
+        "random",
+        "roundrobin"
+      ]
+    },
+    "Bandwidth.Bps.switch unit": {
+      "file": "transport_method.go",
+      "values": [
+        "",
+        "b",
+        "bps",
+        "g",
+        "gb",
+        "gbps",
+        "k",
+        "kb",
+        "kbps",
+        "m",
+        "mb",
+        "mbps",
+        "t",
+        "tb",
+        "tbps"
+      ]
+    },
+    "BlackholeConfig.Build.switch responseName": {
+      "file": "blackhole.go",
+      "values": [
+        "",
+        "custom",
+        "http",
+        "none"
+      ]
+    },
+    "DNSOutboundConfig.buildLegacyDNSPolicy.switch mode": {
+      "file": "dns_proxy.go",
+      "values": [
+        "",
+        "drop",
+        "reject",
+        "skip"
+      ]
+    },
+    "DNSOutboundRuleConfig.Build.switch strings.ToLower(c.Action)": {
+      "file": "dns_proxy.go",
+      "values": [
+        "direct",
+        "drop",
+        "hijack",
+        "return"
+      ]
+    },
+    "FakeDNSPostProcessingStage.Process.switch strings.ToLower(config.DNSConfig.QueryStrategy)": {
+      "file": "fakedns.go",
+      "values": [
+        "use-ip-v4",
+        "use-ip-v6",
+        "use-ip4",
+        "use-ip6",
+        "use-ipv4",
+        "use-ipv6",
+        "use_ip4",
+        "use_ip6",
+        "use_ip_v4",
+        "use_ip_v6",
+        "use_ipv4",
+        "use_ipv6",
+        "useip4",
+        "useip6",
+        "useipv4",
+        "useipv6"
+      ]
+    },
+    "FragmentMask.Build.switch strings.ToLower(c.Packets)": {
+      "file": "transport_finalmask.go",
+      "values": [
+        "",
+        "tlshello"
+      ]
+    },
+    "FreedomConfig.Build.switch strings.ToLower(c.Fragment.Packets)": {
+      "file": "freedom.go",
+      "values": [
+        "",
+        "tlshello"
+      ]
+    },
+    "FreedomConfig.Build.switch strings.ToLower(targetStrategy)": {
+      "file": "freedom.go",
+      "values": [
+        "",
+        "asis",
+        "forceip",
+        "forceipv4",
+        "forceipv4v6",
+        "forceipv6",
+        "forceipv6v4",
+        "useip",
+        "useipv4",
+        "useipv4v6",
+        "useipv6",
+        "useipv6v4"
+      ]
+    },
+    "FreedomFinalRuleConfig.Build.switch strings.ToLower(c.Action)": {
+      "file": "freedom.go",
+      "values": [
+        "allow",
+        "block"
+      ]
+    },
+    "HeaderCustomUDP.Build.switch c.Mode": {
+      "file": "transport_finalmask.go",
+      "values": [
+        "",
+        "prefix",
+        "standalone"
+      ]
+    },
+    "LogConfig.Build.switch level": {
+      "file": "log.go",
+      "values": [
+        "debug",
+        "error",
+        "info",
+        "none"
+      ]
+    },
+    "MkcpLegacy.Build.switch strings.ToLower(c.Header)": {
+      "file": "transport_finalmask.go",
+      "values": [
+        "dns",
+        "dtls",
+        "srtp",
+        "utp",
+        "wechat",
+        "wireguard"
+      ]
+    },
+    "MuxConfig.Build.switch m.XudpProxyUDP443": {
+      "file": "xray.go",
+      "values": [
+        "",
+        "allow",
+        "reject",
+        "skip"
+      ]
+    },
+    "Network.Build.switch strings.ToLower(string(v))": {
+      "file": "common.go",
+      "values": [
+        "tcp",
+        "udp",
+        "unix"
+      ]
+    },
+    "OutboundDetourConfig.Build.switch strings.ToLower(c.TargetStrategy)": {
+      "file": "xray.go",
+      "values": [
+        "",
+        "asis",
+        "forceip",
+        "forceipv4",
+        "forceipv4v6",
+        "forceipv6",
+        "forceipv6v4",
+        "useip",
+        "useipv4",
+        "useipv4v6",
+        "useipv6",
+        "useipv6v4"
+      ]
+    },
+    "ParseNoise.switch noise.Type": {
+      "file": "freedom.go",
+      "values": [
+        "base64",
+        "hex",
+        "rand",
+        "str"
+      ]
+    },
+    "ParseNoise.switch strings.ToLower(noise.ApplyTo)": {
+      "file": "freedom.go",
+      "values": [
+        "",
+        "all",
+        "ip",
+        "ipv4",
+        "ipv6"
+      ]
+    },
+    "PraseByteSlice.switch strings.ToLower(typ)": {
+      "file": "transport_finalmask.go",
+      "values": [
+        "",
+        "array",
+        "base64",
+        "hex",
+        "str"
+      ]
+    },
+    "Realm.Build.switch u.Scheme": {
+      "file": "transport_finalmask.go",
+      "values": [
+        "realm",
+        "realm+http"
+      ]
+    },
+    "RouterConfig.getDomainStrategy.switch strings.ToLower(ds)": {
+      "file": "router.go",
+      "values": [
+        "ipifnonmatch",
+        "ipondemand"
+      ]
+    },
+    "SniffingConfig.Build.switch strings.ToLower(protocol)": {
+      "file": "xray.go",
+      "values": [
+        "fakedns",
+        "fakedns+others",
+        "http",
+        "https",
+        "quic",
+        "ssl",
+        "tls"
+      ]
+    },
+    "SocketConfig.Build.switch strings.ToLower(c.AddressPortStrategy)": {
+      "file": "transport_sockopt.go",
+      "values": [
+        "",
+        "none",
+        "srvaddressonly",
+        "srvportandaddress",
+        "srvportonly",
+        "txtaddressonly",
+        "txtportandaddress",
+        "txtportonly"
+      ]
+    },
+    "SocketConfig.Build.switch strings.ToLower(c.DomainStrategy)": {
+      "file": "transport_sockopt.go",
+      "values": [
+        "",
+        "asis",
+        "forceip",
+        "forceipv4",
+        "forceipv4v6",
+        "forceipv6",
+        "forceipv6v4",
+        "useip",
+        "useipv4",
+        "useipv4v6",
+        "useipv6",
+        "useipv6v4"
+      ]
+    },
+    "SocketConfig.Build.switch strings.ToLower(c.TProxy)": {
+      "file": "transport_sockopt.go",
+      "values": [
+        "redirect",
+        "tproxy"
+      ]
+    },
+    "SocksServerConfig.Build.switch v.AuthMethod": {
+      "file": "socks.go",
+      "values": [
+        "noauth",
+        "password"
+      ]
+    },
+    "SplitHTTPConfig.Build.switch c.Mode": {
+      "file": "transport_method.go",
+      "values": [
+        "",
+        "auto",
+        "packet-up",
+        "stream-one",
+        "stream-up"
+      ]
+    },
+    "SplitHTTPConfig.Build.switch c.SeqPlacement": {
+      "file": "transport_method.go",
+      "values": [
+        "",
+        "cookie",
+        "header",
+        "path",
+        "query"
+      ]
+    },
+    "SplitHTTPConfig.Build.switch c.SeqPlacement#2": {
+      "file": "transport_method.go",
+      "values": [
+        "cookie",
+        "header",
+        "query"
+      ]
+    },
+    "SplitHTTPConfig.Build.switch c.SessionIDPlacement": {
+      "file": "transport_method.go",
+      "values": [
+        "",
+        "cookie",
+        "header",
+        "path",
+        "query"
+      ]
+    },
+    "SplitHTTPConfig.Build.switch c.SessionIDPlacement#2": {
+      "file": "transport_method.go",
+      "values": [
+        "cookie",
+        "header",
+        "query"
+      ]
+    },
+    "SplitHTTPConfig.Build.switch c.XPaddingMethod": {
+      "file": "transport_method.go",
+      "values": [
+        "",
+        "repeat-x",
+        "tokenish"
+      ]
+    },
+    "SplitHTTPConfig.Build.switch c.XPaddingPlacement": {
+      "file": "transport_method.go",
+      "values": [
+        "",
+        "cookie",
+        "header",
+        "query",
+        "queryInHeader"
+      ]
+    },
+    "StreamConfig.Build.switch c.FinalMask.QuicParams.Congestion": {
+      "file": "transport_internet.go",
+      "values": [
+        "",
+        "bbr",
+        "brutal",
+        "force-brutal",
+        "reno"
+      ]
+    },
+    "StreamConfig.Build.switch strings.ToLower(c.Security)": {
+      "file": "transport_internet.go",
+      "values": [
+        "",
+        "none",
+        "reality",
+        "tls",
+        "xtls"
+      ]
+    },
+    "TLSCertConfig.Build.switch strings.ToLower(c.Usage)": {
+      "file": "transport_security.go",
+      "values": [
+        "encipherment",
+        "issue",
+        "verify"
+      ]
+    },
+    "TransportProtocol.Build.switch strings.ToLower(string(p))": {
+      "file": "transport_internet.go",
+      "values": [
+        "grpc",
+        "h2",
+        "h3",
+        "http",
+        "httpupgrade",
+        "hysteria",
+        "kcp",
+        "mkcp",
+        "quic",
+        "raw",
+        "splithttp",
+        "tcp",
+        "websocket",
+        "ws",
+        "xhttp"
+      ]
+    },
+    "UDPHop.Build.switch strings.ToLower(mode)": {
+      "file": "transport_finalmask.go",
+      "values": [
+        "intervallocal",
+        "intervalremote",
+        "perconnremote"
+      ]
+    },
+    "VLessInboundConfig.Build.switch s[1]": {
+      "file": "vless.go",
+      "values": [
+        "native",
+        "random",
+        "xorpub"
+      ]
+    },
+    "VLessOutboundConfig.Build.switch s[1]": {
+      "file": "vless.go",
+      "values": [
+        "native",
+        "random",
+        "xorpub"
+      ]
+    },
+    "VLessOutboundConfig.Build.switch s[2]": {
+      "file": "vless.go",
+      "values": [
+        "0rtt",
+        "1rtt"
+      ]
+    },
+    "VMessAccount.Build.switch strings.ToLower(a.Security)": {
+      "file": "vmess.go",
+      "values": [
+        "aes-128-gcm",
+        "auto",
+        "chacha20-poly1305"
+      ]
+    },
+    "WireGuardConfig.Build.switch strings.ToLower(c.DomainStrategy)": {
+      "file": "wireguard.go",
+      "values": [
+        "",
+        "forceip",
+        "forceipv4",
+        "forceipv4v6",
+        "forceipv6",
+        "forceipv6v4"
+      ]
+    },
+    "cipherFromString.switch strings.ToLower(c)": {
+      "file": "shadowsocks.go",
+      "values": [
+        "aead_aes_128_gcm",
+        "aead_aes_256_gcm",
+        "aead_chacha20_poly1305",
+        "aead_xchacha20_poly1305",
+        "aes-128-gcm",
+        "aes-256-gcm",
+        "chacha20-ietf-poly1305",
+        "chacha20-poly1305",
+        "xchacha20-ietf-poly1305",
+        "xchacha20-poly1305"
+      ]
+    },
+    "readSystemHosts.switch runtime.GOOS": {
+      "file": "dns.go",
+      "values": [
+        "windows"
+      ]
+    },
+    "resolveQueryStrategy.switch strings.ToLower(queryStrategy)": {
+      "file": "dns.go",
+      "values": [
+        "use-ip",
+        "use-ip-v4",
+        "use-ip-v6",
+        "use-ip4",
+        "use-ip6",
+        "use-ipv4",
+        "use-ipv6",
+        "use-sys",
+        "use-system",
+        "use_ip",
+        "use_ip4",
+        "use_ip6",
+        "use_ip_v4",
+        "use_ip_v6",
+        "use_ipv4",
+        "use_ipv6",
+        "use_sys",
+        "use_system",
+        "useip",
+        "useip4",
+        "useip6",
+        "useipv4",
+        "useipv6",
+        "usesys",
+        "usesystem"
+      ]
+    }
+  }
+}

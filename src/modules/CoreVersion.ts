@@ -4,6 +4,8 @@ import vClean from 'version-clean';
 
 const UNKNOWN_CORE = '0.0.0';
 const coreVersion = ref(UNKNOWN_CORE);
+// XRAYUI_TESTED_CORE from the backend: the core this release was tested with and fresh installs get
+const testedCore = ref('');
 
 export function setCoreVersion(version?: string): void {
   if (!version) return;
@@ -14,8 +16,21 @@ export function getCoreVersion(): string {
   return coreVersion.value;
 }
 
+export function setTestedCore(version?: string): void {
+  if (!version) return;
+  testedCore.value = vClean(version) ?? testedCore.value;
+}
+
+export function getTestedCore(): string {
+  return testedCore.value;
+}
+
 function coreKnown(): boolean {
   return coreVersion.value !== UNKNOWN_CORE;
+}
+
+export function coreNewerThanTested(): boolean {
+  return coreKnown() && testedCore.value !== '' && vCompare(coreVersion.value, testedCore.value) > 0;
 }
 
 export function coreAtLeast(target: string): boolean {

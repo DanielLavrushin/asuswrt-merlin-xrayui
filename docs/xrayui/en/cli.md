@@ -41,7 +41,7 @@ Install a specific XrayUI version.
 
 ### `xrayui update xray <version|latest>`
 
-Pin or upgrade the Xray‑core package.
+Pin or upgrade the Xray‑core package. A fresh install gets the Xray‑core version the XrayUI release was tested with; this command installs any other release, including newer ones.
 
 ## Health & diagnostics
 

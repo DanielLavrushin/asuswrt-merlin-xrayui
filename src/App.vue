@@ -13,7 +13,7 @@
   import MainForm from './components/MainForm.vue';
 
   import engine, { EngineResponseConfig, SubmitActions } from '@modules/Engine';
-  import { setCoreVersion } from '@modules/CoreVersion';
+  import { setCoreVersion, setTestedCore } from '@modules/CoreVersion';
 
   export default defineComponent({
     name: 'App',
@@ -42,6 +42,7 @@
               const response = await engine.getXrayResponse();
               if (response?.xray?.core_version) {
                 setCoreVersion(response.xray.core_version);
+                setTestedCore(response.xray.tested_core);
                 uiResponse.value = response;
                 break;
               }

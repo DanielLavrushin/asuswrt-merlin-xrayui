@@ -21,6 +21,7 @@
 - CHANGED: When auto-fallback finds no working server in the pool, it can fetch the subscription sources again after 15 minutes instead of an hour, so a server the provider replaced after a ban is picked up sooner. ([#439](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/439))
 - CHANGED: XHTTP settings that Xray ignored before take effect after the first **Apply** on this version. **Apply** stops with a message naming the inbound or outbound when an XHTTP setting cannot work in its **Transfer Mode**, such as GET without packet-up.
 - IMPROVED: Importing a link keeps the XHTTP settings from its `extra` parameter. Most **Performance Tuning** fields accept a range such as `1000-2000`.
+- IMPROVED: The system log warns when the firmware's **Parental Control** or **Network Services Filter** is on. Neither applies to devices whose traffic goes through Xray, because their rules are in the `FORWARD` chain, which redirected traffic never passes. The Bypass/Redirect Policy documentation explains how to keep a schedule working. ([#415](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/415))
 
 ## [0.70.2] - 2026-09-28
 

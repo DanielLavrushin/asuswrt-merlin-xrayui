@@ -92,3 +92,42 @@ flowchart TD
 | 6   | redirect + MAC         | mode: redirect, mac=AA:BB...        | Весь трафик для этого устройства `redirected` (исключённых портов нет). Другие устройства не затрагиваются. |
 | 7   | redirect + MAC + ports | mode: redirect, mac=..., ports=5060 | Для этого устройства: трафик на порту 5060 обходит Xray; весь остальной трафик `redirected`.                |
 | 8   | bypass + MAC + ports   | mode: bypass, mac=..., ports=5060   | Для этого устройства: трафик на порту 5060 перенаправляется в Xray; весь остальной трафик `bypasses` Xray.  |
+
+## Родительский контроль и фильтр сетевых служб
+
+**Родительский контроль** прошивки (расписание и блокировка) и **фильтр сетевых служб** (Network Services Filter) добавляют правила только в цепочку iptables `FORWARD`. Трафик, который XRAYUI перенаправляет в Xray, через `FORWARD` не проходит: он доставляется в Xray на самом роутере, а Xray открывает собственное соединение уже от роутера. Поэтому эти правила прошивки **не действуют** на устройства, чей трафик идёт через Xray. Если одна из этих функций включена, XRAYUI пишет предупреждение в системный журнал.
+
+Сохранить расписание можно двумя способами:
+
+- **Не пускать устройство в Xray.** Добавьте политику `bypass` с MAC-адресом устройства без портов (строка 5 в таблице выше). Его трафик снова пойдёт через `FORWARD`, и расписание прошивки заработает, но устройство перестанет проксироваться.
+- **Оставить устройство в Xray и блокировать его самостоятельно** в хуке **After firewall start** (**General Options** → **Hooks**). Правило должно стоять в `PREROUTING`, потому что именно там XRAYUI забирает трафик. Например, чтобы отключить интернет одному устройству с 22:00 до 07:00 (по времени роутера), оставив доступ к роутеру и локальной сети:
+
+```sh
+MAC="AA:BB:CC:DD:EE:FF"
+LAN="192.168.50.0/24"
+TIME="-m time --timestart 22:00 --timestop 07:00 --kerneltz"
+
+# IPv4
+iptables -t mangle -N SCHEDULE_BLOCK 2>/dev/null || iptables -t mangle -F SCHEDULE_BLOCK
+iptables -t mangle -A SCHEDULE_BLOCK -i br0 -m mac --mac-source $MAC ! -d $LAN -m addrtype ! --dst-type BROADCAST,MULTICAST $TIME -j DROP
+while iptables -t mangle -D PREROUTING -j SCHEDULE_BLOCK 2>/dev/null; do :; done
+iptables -t mangle -I PREROUTING 1 -j SCHEDULE_BLOCK
+
+# IPv6
+if ip6tables -t mangle -L PREROUTING -n >/dev/null 2>&1; then
+    ip6tables -t mangle -N SCHEDULE_BLOCK 2>/dev/null || ip6tables -t mangle -F SCHEDULE_BLOCK
+    ip6tables -t mangle -A SCHEDULE_BLOCK -i br0 -m mac --mac-source $MAC ! -d fe80::/10 -m addrtype ! --dst-type LOCAL,MULTICAST $TIME -j DROP
+    while ip6tables -t mangle -D PREROUTING -j SCHEDULE_BLOCK 2>/dev/null; do :; done
+    ip6tables -t mangle -I PREROUTING 1 -j SCHEDULE_BLOCK
+fi
+```
+
+> [!important]
+> Оставляйте обе части. Без части для IPv6 устройство с IPv6 продолжит выходить в интернет в запрещённые часы.
+>
+> Правила хранятся в отдельной цепочке `SCHEDULE_BLOCK`, которую хук при каждом запуске очищает и заполняет заново. Поэтому новое время или MAC-адрес заменяют старое правило, а не добавляют второе, а чтобы ограничить несколько устройств, добавьте по одной строке `-A SCHEDULE_BLOCK …` на устройство. Переход в цепочку при каждом запуске переносится в начало `PREROUTING`, потому что XRAYUI при каждом старте Xray ставит туда своё правило для уже открытых соединений. Если переход окажется ниже, соединения, открытые до начала запрета, продолжат работать.
+>
+> Удаление хука не удаляет правила. Чтобы сразу снять ограничение, выполните `iptables -t mangle -F SCHEDULE_BLOCK` и `ip6tables -t mangle -F SCHEDULE_BLOCK` или перезагрузите роутер.
+
+> [!note]
+> У клиентов VPN-сервера роутера (WireGuard, IPsec) нет MAC-адреса. Для них используйте интерфейс и адрес, например `-i wgs1 -s 10.6.0.2`.

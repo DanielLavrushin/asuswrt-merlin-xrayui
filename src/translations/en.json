@@ -363,6 +363,7 @@
       "alert_delete_confirm": "Delete this outbound?",
       "alert_delete_tag_in_rules_use": "This tag ({1}) is used in the routing rules ({0}). Move these rules to another outbound first (Routing → Rules → manage → Reassign…), then delete the outbound.",
       "alert_delete_tag_in_balancer_use": "This tag ({1}) is used as a fallback in the balancers ({0}). Please remove it from the balancers before deleting the outbound.",
+      "alert_delete_tag_in_dialer_proxy_use": "This outbound ({1}) is the Dealer Proxy of the outbounds ({0}). Change their Dealer Proxy (transport → Sockopt) first, then delete the outbound.",
       "hint_pool_inactive": "Auto-fallback is turned off in General Options, so this outbound is not switched automatically.",
       "status_unreachable": "Unreachable",
       "badge_tied": "tied",

@@ -359,6 +359,7 @@
       "alert_delete_confirm": "删除此出站？",
       "alert_delete_tag_in_rules_use": "此标签 ({1}) 在路由规则 ({0}) 中使用。请先将这些规则移到其他出站连接（路由 → 路由规则 → 管理 → 重新分配…），然后再删除出站。",
       "alert_delete_tag_in_balancer_use": "此标签 ({1}) 在均衡器 ({0}) 中被用作后备 (fallback)。请在删除出站之前从均衡器中移除它。",
+      "alert_delete_tag_in_dialer_proxy_use": "此出站 ({1}) 被出站 ({0}) 用作 Dealer 代理。请先更改它们的 Dealer 代理（传输 → Sockopt），然后再删除出站。",
       "hint_pool_inactive": "通用设置中的自动故障转移已关闭，此出站不会自动切换。",
       "status_unreachable": "不可达",
       "badge_tied": "并列",

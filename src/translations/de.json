@@ -318,6 +318,7 @@
       "label_create_new": "Neu erstellen",
       "alert_tag_exists": "Tag existiert bereits, ein anderes ist erforderlich.",
       "alert_delete_confirm": "Diesen Ausgang löschen?",
+      "alert_delete_tag_in_dialer_proxy_use": "Diese ausgehende Verbindung ({1}) ist der Ausgehende Proxy der ausgehenden Verbindungen ({0}). Ändere zuerst deren Ausgehenden Proxy (Transport → Sockopt) und lösche dann die ausgehende Verbindung.",
       "hint_pool_inactive": "Auto-Fallback ist in den allgemeinen Einstellungen deaktiviert, daher wird dieser Outbound nicht automatisch umgeschaltet.",
       "status_unreachable": "Nicht erreichbar"
     },

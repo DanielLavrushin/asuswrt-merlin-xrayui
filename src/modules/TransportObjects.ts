@@ -18,8 +18,13 @@ const nonDefaultNumber = (value: unknown, defaultValue: number, min = -Infinity)
   return Number.isFinite(parsed) && parsed >= min && parsed !== defaultValue ? parsed : undefined;
 };
 
-// A hop interval is a number or a "min-max" range. Core rejects anything under 5 seconds; empty means 30.
-const hopInterval = (value: unknown): number | string | undefined => (typeof value === 'string' && value.includes('-') ? value.trim() : nonDefaultNumber(value, 30, 5));
+// A hop interval is a number or a "min-max" range. Core rejects any bound under 5 seconds; empty means 30.
+const hopInterval = (value: unknown): number | string | undefined => {
+  if (typeof value !== 'string' || !value.includes('-')) return nonDefaultNumber(value, 30, 5);
+  const range = value.trim();
+  // the old fields read a 0 bound as the default, so "0-30" was valid there
+  return /^\d+-\d+$/.test(range) && range.split('-').every((bound) => Number(bound) >= 5) ? range : undefined;
+};
 
 const splitList = (value: unknown): string[] =>
   (Array.isArray(value) ? value : String(value ?? '').split(','))

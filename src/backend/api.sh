@@ -79,8 +79,11 @@ api_write_config() {
   local observatory_probe_interval=$(sanitize_probe_interval "$probe_interval")
   # Only the connection check reads probe results for every outbound; the clients check reads
   # StatsService, so without the connection check only the outbounds balancers need are probed.
-  local outbound_tags='[]'
+  # whether an observatory is needed, not whether there is anything to probe: a leastPing
+  # balancer stops Xray from starting without one, even with an empty selector list
+  local outbound_tags='[]' need_observatory=false
   if [ "$check_connection" = "true" ]; then
+    need_observatory=true
     outbound_tags=$(
       jq -c '
         [ .outbounds[]
@@ -90,6 +93,7 @@ api_write_config() {
       ' "$XRAY_CONFIG_FILE"
     )
   elif api_balancers_need_observatory; then
+    need_observatory=true
     outbound_tags=$(api_balancer_selectors)
   fi
   [ -n "$outbound_tags" ] || outbound_tags='[]'
@@ -108,7 +112,7 @@ api_write_config() {
     ' "$XRAY_CONFIG_FILE" 2>/dev/null
   )
   # the block carries its own trailing comma, so no observatory leaves valid JSON
-  if [ -z "$observatory_block" ] && [ "$outbound_tags" != "[]" ]; then
+  if [ -z "$observatory_block" ] && [ "$need_observatory" = "true" ]; then
     observatory_block="\"observatory\": {
     \"subjectSelector\": $outbound_tags,
     \"probeUrl\": $observatory_probe_url,

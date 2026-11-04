@@ -48,6 +48,7 @@
       </th>
       <td>
         <input type="checkbox" v-model="udphopEnabled" />
+        <div v-if="hopBlocked" style="color: #ffcc00">{{ $t('com.NetworkHysteria.warn_udphop_xicmp') }}</div>
       </td>
     </tr>
     <tr v-if="isOutbound && hopSettings">
@@ -277,7 +278,8 @@
     XraySudokuObject,
     XrayUdpHopMaskObject,
     XrayXicmpObject,
-    isUdpHopMask
+    isUdpHopMask,
+    udpHopBlocked
   } from '@/modules/TransportObjects';
   import { isIPAddress } from '@/modules/validators';
 
@@ -342,6 +344,8 @@
       const udpMasks = () => transport.value.finalmask?.udp ?? [];
       const obfsMask = computed(() => udpMasks().find((mask) => !isUdpHopMask(mask)));
       const hopSettings = computed(() => udpMasks().find(isUdpHopMask)?.settings as XrayUdpHopMaskObject | undefined);
+      // saving leaves the hop out next to xicmp; also covers a pair loaded from config.json or migrated
+      const hopBlocked = computed(() => !!hopSettings.value && udpHopBlocked(udpMasks()));
 
       const setUdpMasks = (masks: XrayFinalMaskObject[]) => {
         if (masks.length > 0) {
@@ -479,6 +483,7 @@
         congestionOptions,
         udphopEnabled,
         hopSettings,
+        hopBlocked,
         obfsMask,
         xicmpSettings,
         xicmpIps,

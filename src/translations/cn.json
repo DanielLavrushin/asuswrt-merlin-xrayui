@@ -935,6 +935,7 @@
       "hint_udphop_port": "要跳跃的服务器端口，例如 `20000-50000` 或 `443,20000-50000`。",
       "label_udphop_interval": "跳跃间隔",
       "hint_udphop_interval": "跳跃间隔（秒），至少为 5。默认为 30 秒。",
+      "warn_udphop_xicmp": "端口跳跃不能与 xicmp 掩码一起使用：ICMP 没有端口，并且同时设置两者时，Xray-core 26.9.9 及更高版本无法建立任何连接。保存时不会写入端口跳跃。",
       "label_finalmask_enabled": "启用 Finalmask",
       "hint_finalmask_enabled": "Finalmask 是一种 UDP 掩码/混淆层，可以伪装流量特征以避免检测。",
       "label_finalmask_type": "掩码类型",

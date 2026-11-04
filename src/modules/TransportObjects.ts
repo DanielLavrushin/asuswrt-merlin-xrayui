@@ -1082,6 +1082,8 @@ export class XrayStreamHysteriaSettingsObject implements ITransportNetwork {
 }
 
 export const isUdpHopMask = (mask: XrayFinalMaskObject): boolean => mask.type === 'udphop';
+// Port hopping is left out on save when one of these masks is set: xicmp carries the packets in ICMP.
+export const udpHopBlocked = (masks: XrayFinalMaskObject[]): boolean => masks.some((mask) => mask.type === 'xicmp');
 
 interface UdpHopStreamLike {
   network?: string;
@@ -1135,19 +1137,22 @@ export function migrateUdpHopToMask(stream: UdpHopStreamLike): void {
 export function migrateUdpHopForSerialization(stream: UdpHopStreamLike): void {
   if (stream.network !== 'hysteria') return;
   const udp = stream.finalmask?.udp ?? [];
-  const hops = udp.filter(isUdpHopMask);
   const others = udp.filter((mask) => !isUdpHopMask(mask));
+  // Hopping never works under xicmp: ICMP has no ports, and from 26.9.9 core fails every connection when both
+  // masks are set, since each one opens the socket itself ("incorrect index").
+  const hops = udpHopBlocked(others) ? [] : udp.filter(isUdpHopMask);
 
   if (coreSupports('udphopMask')) {
     if (stream.hysteriaSettings) delete stream.hysteriaSettings.udphop;
     if (stream.finalmask?.quicParams) delete stream.finalmask.quicParams.udpHop;
     // the outermost layer, which these cores expect last
-    if (hops.length > 0) stream.finalmask!.udp = [...others, ...hops];
+    if (others.length < udp.length) stream.finalmask!.udp = [...others, ...hops];
     return;
   }
 
-  if (hops.length === 0) return;
+  if (others.length === udp.length) return;
   stream.finalmask!.udp = others;
+  if (hops.length === 0) return;
   const hop = plainToInstance(XrayUdpHopMaskObject, hops[0].settings ?? {}).normalize();
   if (coreSupports('quicParamsUdpHop')) {
     const quicParams = (stream.finalmask!.quicParams ??= new XrayQuicParamsObject());

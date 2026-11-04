@@ -641,6 +641,7 @@
       "hint_udphop_port": "Serverports, zwischen denen gewechselt wird, z. B. `20000-50000` oder `443,20000-50000`.",
       "label_udphop_interval": "Hop-Intervall",
       "hint_udphop_interval": "Sekunden zwischen den Wechseln, mindestens 5. Standard ist 30 Sekunden.",
+      "warn_udphop_xicmp": "Port-Hopping funktioniert nicht mit der xicmp-Maske: ICMP hat keine Ports, und Xray-core 26.9.9 und neuer baut mit beiden Einstellungen keine Verbindung auf. Beim Speichern wird Port-Hopping weggelassen.",
       "label_finalmask_enabled": "Finalmask aktivieren",
       "hint_finalmask_enabled": "Finalmask ist eine UDP-Maskierungs-/Verschleierungsschicht, die Verkehrsmerkmale verschleiert, um Erkennung zu vermeiden.",
       "label_finalmask_type": "Maskentyp",

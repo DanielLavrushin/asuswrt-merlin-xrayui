@@ -1,11 +1,29 @@
 import { XrayParsedUrlObject, XrayStreamSettingsObject, XrayStreamTlsSettingsObject } from '../CommonObjects';
 import { XrayOutboundObject, XrayHysteriaOutboundObject } from '../OutboundObjects';
-import { XrayStreamHysteriaSettingsObject, XrayFinalMaskObject, XrayFinalMaskSettingsObject, XrayQuicParamsObject, XraySalamanderObject } from '../TransportObjects';
+import {
+  XrayStreamHysteriaSettingsObject,
+  XrayFinalMaskObject,
+  XrayFinalMaskSettingsObject,
+  XrayQuicParamsObject,
+  XraySalamanderObject,
+  XrayUdpHopMaskObject
+} from '../TransportObjects';
 
 // Xray 26.3.27+ expects brutal bandwidth strings like "100 mbps".
 // URL convention: `up`/`down`/`upmbps`/`downmbps` carry a bare number in mbps.
 function toBrutalBandwidth(raw: string): string {
   return /\D/.test(raw) ? raw : `${raw} mbps`;
+}
+
+// Port hopping: the official URI puts several ports in the authority (host:443,20000-50000), v2rayN uses `mport`.
+function hopPorts(parsedObj: XrayParsedUrlObject): string | undefined {
+  const mport = parsedObj.parsedParams.mport?.replaceAll(':', '-').trim();
+  if (mport) return mport;
+  const beforeQuery = parsedObj.url.split('://')[1]?.split(/[?#]/)[0] ?? '';
+  const hostPort = beforeQuery.slice(beforeQuery.lastIndexOf('@') + 1).split('/')[0];
+  const colon = hostPort.lastIndexOf(':');
+  const ports = colon > hostPort.lastIndexOf(']') ? hostPort.slice(colon + 1) : '';
+  return /^[\d,-]+$/.test(ports) && /[,-]/.test(ports) ? ports : undefined;
 }
 
 export default function HysteriaParser(parsedObj: XrayParsedUrlObject): XrayOutboundObject<XrayHysteriaOutboundObject> | null {
@@ -90,6 +108,16 @@ export default function HysteriaParser(parsedObj: XrayParsedUrlObject): XrayOutb
     finalMask.settings = salamander;
     proxy.streamSettings.finalmask ??= new XrayFinalMaskSettingsObject();
     proxy.streamSettings.finalmask.udp = [finalMask];
+  }
+
+  const remotePorts = hopPorts(parsedObj);
+  if (remotePorts) {
+    const hop = new XrayFinalMaskObject();
+    hop.type = 'udphop';
+    hop.settings = Object.assign(new XrayUdpHopMaskObject(), { remotePorts });
+    proxy.streamSettings.finalmask ??= new XrayFinalMaskSettingsObject();
+    // the outermost layer goes last
+    proxy.streamSettings.finalmask.udp = [...(proxy.streamSettings.finalmask.udp ?? []), hop];
   }
 
   return proxy;

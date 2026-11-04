@@ -41,33 +41,34 @@
         <span class="hint-color">e.g., 100 mbps</span>
       </td>
     </tr>
-    <tr>
+    <tr v-if="isOutbound">
       <th>
         {{ $t('com.NetworkHysteria.label_udphop_enabled') }}
         <hint v-html="$t('com.NetworkHysteria.hint_udphop_enabled')"></hint>
       </th>
       <td>
         <input type="checkbox" v-model="udphopEnabled" />
+        <div v-if="hopBlocked" style="color: #ffcc00">{{ $t('com.NetworkHysteria.warn_udphop_xicmp') }}</div>
       </td>
     </tr>
-    <tr v-if="udphopEnabled">
+    <tr v-if="isOutbound && hopSettings">
       <th>
         {{ $t('com.NetworkHysteria.label_udphop_port') }}
         <hint v-html="$t('com.NetworkHysteria.hint_udphop_port')"></hint>
       </th>
       <td>
-        <input type="text" class="input_15_table" v-model="transport.hysteriaSettings.udphop!.port" autocomplete="off" autocorrect="off" autocapitalize="off" />
+        <input type="text" class="input_15_table" v-model="hopSettings.remotePorts" autocomplete="off" autocorrect="off" autocapitalize="off" />
         <span class="hint-color">e.g., 20000-50000</span>
       </td>
     </tr>
-    <tr v-if="udphopEnabled">
+    <tr v-if="isOutbound && hopSettings">
       <th>
         {{ $t('com.NetworkHysteria.label_udphop_interval') }}
         <hint v-html="$t('com.NetworkHysteria.hint_udphop_interval')"></hint>
       </th>
       <td>
-        <input type="number" class="input_6_table" v-model.number="transport.hysteriaSettings.udphop!.interval" autocomplete="off" autocorrect="off" autocapitalize="off" />
-        <span class="hint-color">default: 30 (seconds)</span>
+        <input type="number" class="input_6_table" min="5" v-model.number="hopSettings.interval" autocomplete="off" autocorrect="off" autocapitalize="off" />
+        <span class="hint-color">default: 30 (seconds), min: 5</span>
       </td>
     </tr>
     <tr>
@@ -89,14 +90,14 @@
         <input type="checkbox" v-model="finalmaskEnabled" />
       </td>
     </tr>
-    <template v-if="finalmaskEnabled && transport.finalmask?.udp && transport.finalmask?.udp.length > 0">
+    <template v-if="obfsMask">
       <tr>
         <th>
           {{ $t('com.NetworkHysteria.label_finalmask_type') }}
           <hint v-html="$t('com.NetworkHysteria.hint_finalmask_type')"></hint>
         </th>
         <td>
-          <select class="input_option" v-model="transport.finalmask!.udp![0].type" @change="onMaskTypeChange">
+          <select class="input_option" v-model="obfsMask.type" @change="onMaskTypeChange">
             <option v-for="mt in maskTypes" :key="mt" :value="mt">{{ mt }}</option>
           </select>
         </td>
@@ -119,7 +120,29 @@
           <span class="hint-color">e.g., t.example.com</span>
         </td>
       </tr>
-      <template v-if="transport.finalmask?.udp[0].type === 'sudoku'">
+      <template v-if="xicmpSettings">
+        <tr v-if="isOutbound">
+          <th>
+            {{ $t('com.NetworkHysteria.label_xicmp_dgram') }}
+            <hint v-html="$t('com.NetworkHysteria.hint_xicmp_dgram')"></hint>
+          </th>
+          <td>
+            <input type="checkbox" v-model="xicmpSettings.dgram" />
+          </td>
+        </tr>
+        <tr>
+          <th>
+            {{ $t('com.NetworkHysteria.label_xicmp_ips') }}
+            <hint v-html="$t('com.NetworkHysteria.hint_xicmp_ips')"></hint>
+          </th>
+          <td>
+            <input type="text" class="input_25_table" v-model.lazy="xicmpIps" autocomplete="off" autocorrect="off" autocapitalize="off" />
+            <span class="hint-color">e.g., 203.0.113.10, 2001:db8::10</span>
+            <div v-if="invalidXicmpIps.length > 0" style="color: #ffcc00">{{ $t('com.NetworkHysteria.warn_xicmp_invalid_ips', [invalidXicmpIps.join(', ')]) }}</div>
+          </td>
+        </tr>
+      </template>
+      <template v-if="obfsMask.type === 'sudoku'">
         <tr>
           <th>
             {{ $t('com.NetworkHysteria.label_sudoku_ascii') }}
@@ -246,7 +269,19 @@
   import { defineComponent, ref, computed } from 'vue';
   import Hint from '@main/Hint.vue';
   import { XrayStreamSettingsObject } from '@/modules/CommonObjects';
-  import { XrayHysteriaMasqueradeObject, XrayUdpHopObject, XrayFinalMaskObject, XrayFinalMaskSettingsObject, XrayQuicParamsObject, XraySalamanderObject, XraySudokuObject } from '@/modules/TransportObjects';
+  import {
+    XrayHysteriaMasqueradeObject,
+    XrayFinalMaskObject,
+    XrayFinalMaskSettingsObject,
+    XrayQuicParamsObject,
+    XraySalamanderObject,
+    XraySudokuObject,
+    XrayUdpHopMaskObject,
+    XrayXicmpObject,
+    isUdpHopMask,
+    udpHopBlocked
+  } from '@/modules/TransportObjects';
+  import { isIPAddress } from '@/modules/validators';
 
   const passwordTypes = new Set(['salamander', 'mkcp-aes128gcm', 'sudoku']);
   const domainTypes = new Set(['header-dns', 'xdns']);
@@ -257,11 +292,14 @@
       Hint
     },
     props: {
-      transport: XrayStreamSettingsObject
+      transport: XrayStreamSettingsObject,
+      proxyType: { type: String, default: '' }
     },
     setup(props) {
       const transport = ref<XrayStreamSettingsObject>(props.transport ?? new XrayStreamSettingsObject());
       const congestionOptions = ['', ...XrayQuicParamsObject.congestionOptions];
+      // port hopping and the dgram socket are client side only
+      const isOutbound = computed(() => props.proxyType === 'outbound');
 
       const ensureQuicParams = (): XrayQuicParamsObject => {
         if (!transport.value.finalmask) transport.value.finalmask = new XrayFinalMaskSettingsObject();
@@ -302,76 +340,111 @@
         }
       });
 
+      // The `udphop` mask has its own rows; the mask editor below edits the first of the other masks.
+      const udpMasks = () => transport.value.finalmask?.udp ?? [];
+      const obfsMask = computed(() => udpMasks().find((mask) => !isUdpHopMask(mask)));
+      const hopSettings = computed(() => udpMasks().find(isUdpHopMask)?.settings as XrayUdpHopMaskObject | undefined);
+      // saving leaves the hop out next to xicmp; also covers a pair loaded from config.json or migrated
+      const hopBlocked = computed(() => !!hopSettings.value && udpHopBlocked(udpMasks()));
+
+      const setUdpMasks = (masks: XrayFinalMaskObject[]) => {
+        if (masks.length > 0) {
+          transport.value.finalmask ??= new XrayFinalMaskSettingsObject();
+          transport.value.finalmask.udp = masks;
+        } else if (transport.value.finalmask) {
+          transport.value.finalmask.udp = undefined;
+        }
+      };
+
       const udphopEnabled = computed({
-        get: () => !!transport.value.hysteriaSettings?.udphop,
-        set: (val) => {
-          if (!transport.value.hysteriaSettings) return;
-          if (val) {
-            transport.value.hysteriaSettings.udphop = new XrayUdpHopObject();
-          } else {
-            transport.value.hysteriaSettings.udphop = undefined;
-          }
+        get: () => !!hopSettings.value,
+        set: (val: boolean) => {
+          const others = udpMasks().filter((mask) => !isUdpHopMask(mask));
+          if (!val) return setUdpMasks(others);
+          const hop = new XrayFinalMaskObject();
+          hop.type = 'udphop';
+          hop.settings = new XrayUdpHopMaskObject();
+          // the outermost layer goes last
+          setUdpMasks([...others, hop]);
         }
       });
 
-      const maskTypes = XrayFinalMaskObject.udpMaskTypes;
+      // A loaded mask keeps its type in the list, even one without an editor on this core.
+      const maskTypes = computed(() => {
+        const offered = XrayFinalMaskObject.udpMaskTypes.filter((type) => XrayFinalMaskObject.hasEditor(type));
+        const current = obfsMask.value?.type;
+        return current && !offered.includes(current) ? [...offered, current] : offered;
+      });
       const sudokuAsciiOptions = XraySudokuObject.asciiOptions;
 
       const finalmaskEnabled = computed({
-        get: () => !!(transport.value.finalmask?.udp && transport.value.finalmask.udp.length > 0),
-        set: (val) => {
-          if (val) {
-            const finalMask = new XrayFinalMaskObject();
-            finalMask.settings = new XraySalamanderObject();
-            if (!transport.value.finalmask) transport.value.finalmask = new XrayFinalMaskSettingsObject();
-            transport.value.finalmask.udp = [finalMask];
-          } else if (transport.value.finalmask) {
-            transport.value.finalmask.udp = undefined;
-          }
+        get: () => !!obfsMask.value,
+        set: (val: boolean) => {
+          const hops = udpMasks().filter(isUdpHopMask);
+          if (!val) return setUdpMasks(hops);
+          const finalMask = new XrayFinalMaskObject();
+          finalMask.settings = new XraySalamanderObject();
+          setUdpMasks([finalMask, ...hops]);
         }
       });
 
       const onMaskTypeChange = () => {
-        const mask = transport.value.finalmask?.udp?.[0];
+        const mask = obfsMask.value;
         if (!mask) return;
         mask.settings = XrayFinalMaskObject.createSettings(mask.type);
       };
 
-      const hasPassword = computed(() => {
-        const type = transport.value.finalmask?.udp?.[0]?.type;
-        return type ? passwordTypes.has(type) : false;
-      });
+      const hasPassword = computed(() => passwordTypes.has(obfsMask.value?.type ?? ''));
 
       const hasDomain = computed(() => {
-        const type = transport.value.finalmask?.udp?.[0]?.type;
-        return type ? domainTypes.has(type) : false;
+        const type = obfsMask.value?.type ?? '';
+        return domainTypes.has(type) && XrayFinalMaskObject.hasEditor(type);
       });
 
       const finalmaskPassword = computed({
-        get: () => (transport.value.finalmask?.udp?.[0]?.settings as any)?.password ?? '',
+        get: () => (obfsMask.value?.settings as any)?.password ?? '',
         set: (val) => {
-          const udp = transport.value.finalmask?.udp;
-          if (udp && udp.length > 0) {
-            if (!udp[0].settings) {
-              udp[0].settings = XrayFinalMaskObject.createSettings(udp[0].type);
+          const mask = obfsMask.value;
+          if (mask) {
+            if (!mask.settings) {
+              mask.settings = XrayFinalMaskObject.createSettings(mask.type);
             }
-            (udp[0].settings as any).password = val;
+            (mask.settings as any).password = val;
           }
         }
       });
 
       const finalmaskDomain = computed({
-        get: () => (transport.value.finalmask?.udp?.[0]?.settings as any)?.domain ?? '',
+        get: () => (obfsMask.value?.settings as any)?.domain ?? '',
         set: (val: string) => {
-          const udp = transport.value.finalmask?.udp;
-          if (udp && udp.length > 0 && udp[0].settings) {
-            (udp[0].settings as any).domain = val;
+          const mask = obfsMask.value;
+          if (mask?.settings) {
+            (mask.settings as any).domain = val;
           }
         }
       });
 
+      const xicmpSettings = computed(() => {
+        const mask = obfsMask.value;
+        return mask?.type === 'xicmp' && XrayFinalMaskObject.hasEditor(mask.type) ? (mask.settings as XrayXicmpObject | undefined) : undefined;
+      });
+
+      const xicmpIps = computed({
+        get: () => (xicmpSettings.value?.ips ?? []).join(', '),
+        set: (val: string) => {
+          if (!xicmpSettings.value) return;
+          xicmpSettings.value.ips = val
+            .split(',')
+            .map((ip) => ip.trim())
+            .filter((ip) => ip !== '');
+        }
+      });
+
+      // saving drops these: Xray does not start with an address it cannot parse
+      const invalidXicmpIps = computed(() => (xicmpSettings.value?.ips ?? []).filter((ip) => !isIPAddress(ip)));
+
       const sudokuSettings = computed(() => {
-        const mask = transport.value.finalmask?.udp?.[0];
+        const mask = obfsMask.value;
         if (mask?.type === 'sudoku' && mask.settings) return mask.settings as XraySudokuObject;
         return new XraySudokuObject();
       });
@@ -403,11 +476,18 @@
 
       return {
         transport,
+        isOutbound,
         congestion,
         brutalUp,
         brutalDown,
         congestionOptions,
         udphopEnabled,
+        hopSettings,
+        hopBlocked,
+        obfsMask,
+        xicmpSettings,
+        xicmpIps,
+        invalidXicmpIps,
         finalmaskEnabled,
         finalmaskPassword,
         finalmaskDomain,

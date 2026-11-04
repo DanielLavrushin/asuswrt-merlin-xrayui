@@ -923,23 +923,23 @@ describe('TransportObjects', () => {
   });
 
   describe('XrayXicmpObject', () => {
-    it('returns undefined when all defaults', () => {
+    it('returns self when all defaults', () => {
       const xicmp = new XrayXicmpObject();
-      expect(xicmp.normalize()).toBeUndefined();
+      expect(xicmp.normalize()).toBe(xicmp);
     });
 
-    it('returns self when listenIp is non-default', () => {
+    it('returns self when ips are set', () => {
       const xicmp = new XrayXicmpObject();
-      xicmp.listenIp = '192.168.1.1';
+      xicmp.ips = ['192.168.1.1'];
       expect(xicmp.normalize()).toBe(xicmp);
-      expect(xicmp.listenIp).toBe('192.168.1.1');
+      expect(xicmp.ips).toEqual(['192.168.1.1']);
     });
 
-    it('returns self when id is non-zero', () => {
+    it('returns self when dgram is set', () => {
       const xicmp = new XrayXicmpObject();
-      xicmp.id = 5;
+      xicmp.dgram = true;
       expect(xicmp.normalize()).toBe(xicmp);
-      expect(xicmp.id).toBe(5);
+      expect(xicmp.dgram).toBe(true);
     });
   });
 

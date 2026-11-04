@@ -40,6 +40,13 @@ const CORE_FEATURES = {
   kcpLegacyTuning: { until: '26.4.13' },
   kcpCwnd: { since: '26.4.13' },
   xhttpSessionID: { since: '26.6.22' },
+  // Port hopping: hysteriaSettings.udphop before 26.3.23, finalmask.quicParams.udpHop until 26.9.9, then the `udphop` mask.
+  quicParamsUdpHop: { since: '26.3.23', until: '26.9.9' },
+  udphopMask: { since: '26.9.9' },
+  // xicmp settings were {listenIp, id} before 26.6.1.
+  xicmpIps: { since: '26.6.1' },
+  // xdns `domain` is a startup error ("feature removed") from 26.4.13 on.
+  xdnsLegacy: { until: '26.4.13' },
   // XTLS/Xray-core#6303 removed the unencrypted ciphers: Shadowsocks none/plain fail to start, VMess none/zero turn into auto.
   ssPlainCipher: { until: '26.7.11' },
   vmessPlainSecurity: { until: '26.7.11' }

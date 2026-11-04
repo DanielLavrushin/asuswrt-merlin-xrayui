@@ -31,6 +31,19 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Fresh installs get XRAYUI_TESTED_CORE (#451). It is raised by hand once the schema drift
+      # issue (#450) is handled and the new core passed a router smoke test, so only warn here.
+      - name: Check the tested Xray-core
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tested=$(sed -n 's/^XRAYUI_TESTED_CORE="\([^"]*\)".*/\1/p' src/backend/_globals.sh)
+          latest=$(gh api repos/XTLS/Xray-core/releases/latest --jq .tag_name 2>/dev/null || true)
+          echo "Fresh installs get Xray-core $tested. Latest Xray-core release: ${latest:-unknown}."
+          if [ -n "$latest" ] && [ "v$tested" != "$latest" ]; then
+            echo "::warning title=Tested Xray-core::Fresh installs of this release get Xray-core $tested, the latest is $latest. If $latest has been checked, raise XRAYUI_TESTED_CORE first (tools/xray-schema/README.md)."
+          fi
+
       - name: Setup PNPM
         uses: pnpm/action-setup@v4
         with:

@@ -31,7 +31,12 @@
               {{ !r.name ? getRuleName(r) : r.name }}
             </td>
             <td>
-              <select class="input_option rule-target" :value="targetKey(r)" @change="retarget([r], ($event.target as HTMLSelectElement).value)">
+              <select
+                class="input_option rule-target"
+                :aria-label="`${r.name || getRuleName(r)}: ${$t('com.RulesModal.reassign_field_outbound')}`"
+                :value="targetKey(r)"
+                @change="retarget([r], ($event.target as HTMLSelectElement).value)"
+              >
                 <option v-if="!targetOptions.some((o) => o.key === targetKey(r))" :value="targetKey(r)">{{ $t('com.RulesModal.target_missing', [targetLabel(targetKey(r))]) }}</option>
                 <option v-for="opt in targetOptions" :key="opt.key" :value="opt.key">{{ opt.label }}</option>
               </select>
@@ -70,7 +75,7 @@
             <hint v-html="$t('com.RulesModal.hint_reassign_field')"></hint>
           </th>
           <td>
-            <select class="input_option" v-model="reassignField">
+            <select class="input_option" v-model="reassignField" :aria-label="$t('com.RulesModal.label_reassign_field')">
               <option value="outbound">{{ $t('com.RulesModal.reassign_field_outbound') }}</option>
               <option value="inbound">{{ $t('com.RulesModal.reassign_field_inbound') }}</option>
             </select>
@@ -82,7 +87,7 @@
             <hint v-html="$t('com.RulesModal.hint_reassign_from')"></hint>
           </th>
           <td>
-            <select class="input_option" v-model="reassignFrom" v-if="reassignFromOptions.length">
+            <select class="input_option" v-model="reassignFrom" v-if="reassignFromOptions.length" :aria-label="$t('com.RulesModal.label_reassign_from')">
               <option v-for="opt in reassignFromOptions" :key="opt.key" :value="opt.key">{{ opt.label }} ({{ opt.count }})</option>
             </select>
             <span class="hint-color" v-else>{{ $t('com.RulesModal.reassign_nothing') }}</span>
@@ -94,7 +99,7 @@
             <hint v-html="$t('com.RulesModal.hint_reassign_to')"></hint>
           </th>
           <td>
-            <select class="input_option" v-model="reassignTo">
+            <select class="input_option" v-model="reassignTo" :aria-label="$t('com.RulesModal.label_reassign_to')">
               <option v-for="opt in reassignToOptions" :key="opt.key" :value="opt.key" :disabled="opt.key === reassignFrom">{{ opt.label }}</option>
             </select>
           </td>

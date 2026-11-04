@@ -153,8 +153,9 @@ export class XrayShadowsocksOutboundObject implements IProtocolType {
   };
 
   normalize = (): this | undefined => {
-    this.servers.forEach((server) => {
-      server.uot = server.uot && coreSupports('ssUot') ? true : undefined;
+    // Xray-core 26.6.22 removed `uot`: from each server, and from settings itself in the short form (`address`, `port`, … without `servers`).
+    [this as { uot?: boolean }, ...this.servers].forEach((target) => {
+      target.uot = target.uot && coreSupports('ssUot') ? true : undefined;
     });
     return this;
   };

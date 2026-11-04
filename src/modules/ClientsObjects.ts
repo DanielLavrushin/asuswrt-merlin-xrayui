@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { IClient } from './Interfaces';
+import { coreSupports } from './CoreVersion';
 
 export class XrayWireguardClientObject implements IClient {
   public publicKey!: string;
@@ -30,7 +31,9 @@ export class XrayVmessClientObject implements IClient {
   normalize = (): this => {
     this.email = this.email === '' ? undefined : this.email;
     this.level = this.level === 0 ? undefined : this.level;
-    this.security = this.security === '' ? 'none' : this.security;
+    // Empty means core's default 'auto', so leave the key out. none/zero are dropped where core turns them into auto anyway.
+    const removed = !coreSupports('vmessPlainSecurity') && ['none', 'zero'].includes(this.security?.toLowerCase() ?? '');
+    this.security = this.security && !removed ? this.security : undefined;
     return this;
   };
 }

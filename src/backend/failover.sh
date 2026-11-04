@@ -251,9 +251,10 @@ $id"
                 failover_mark_failed "$tag" "$id" "$now"
                 continue
             fi
+            FAILOVER_REJECT_REASON=""
             merged=$(failover_merge_outbound "$current" "$rep" "$link" "$tag")
             if [ -z "$merged" ] || ! failover_validate_outbound "$merged"; then
-                log_warn "Failover: skipping a $proto link that the installed Xray core rejects"
+                log_warn "Failover: skipping a $proto link that the installed Xray core rejects${FAILOVER_REJECT_REASON:+: $FAILOVER_REJECT_REASON}"
                 failover_mark_failed "$tag" "$id" "$now"
                 continue
             fi
@@ -480,16 +481,23 @@ failover_merge_outbound() {
           end' 2>/dev/null
 }
 
+# Fails when the installed Xray core would not start with the outbound; FAILOVER_REJECT_REASON then holds core's reason.
 failover_validate_outbound() {
     local tmp="/tmp/xrayui_fo_test.$$.json"
-    local rc
+    local rc out
+    FAILOVER_REJECT_REASON=""
     printf '%s' "$1" | jq -c '{outbounds: [del(.subPool, .surl)]}' >"$tmp" 2>/dev/null || {
         rm -f "$tmp"
         return 1
     }
-    xray run -test -config "$tmp" >/dev/null 2>&1
+    out=$(xray run -test -config "$tmp" 2>&1)
     rc=$?
     rm -f "$tmp"
+    if [ "$rc" -ne 0 ]; then
+        # "Failed to start: a > b > reason": the last part is core's own reason, e.g. a VLESS server reached without TLS.
+        out=$(printf '%s\n' "$out" | sed -n 's/^Failed to start: //p' | head -n 1)
+        FAILOVER_REJECT_REASON=$(printf '%s' "${out##* > }" | cut -c1-200 | tr -d '<')
+    fi
     return "$rc"
 }
 
@@ -706,7 +714,10 @@ failover_resync_pool_outbounds() {
             merged=$(failover_merge_outbound "$current" "$rep" "$replacement" "$tag")
             [ -n "$merged" ] || continue
             merged=$(printf '%s' "$merged" | jq -c --arg o "${new_origin:-$origin}" 'if $o == "" then del(.subPool.origin) else .subPool.origin = $o end')
-            failover_validate_outbound "$merged" || continue
+            if ! failover_validate_outbound "$merged"; then
+                log_warn "Failover: keeping '$tag' on its current endpoint, the installed Xray core rejects the new one${FAILOVER_REJECT_REASON:+: $FAILOVER_REJECT_REASON}"
+                continue
+            fi
         fi
 
         same=$(jq -n --argjson a "$current" --argjson b "$merged" '

@@ -59,6 +59,7 @@
               </option>
             </select>
             <span class="hint-color">required</span>
+            <div v-if="plainCipherRemoved" style="color: #ffcc00">{{ $t('com.ApplyChecks.warn_ss_plain_cipher') }}</div>
           </td>
         </tr>
         <tr v-show="!['none', 'plain'].includes(proxy.settings.servers[0].method)">
@@ -87,11 +88,12 @@
 </template>
 <script lang="ts">
   import engine from '@/modules/Engine';
-  import { defineComponent, ref } from 'vue';
+  import { computed, defineComponent, ref } from 'vue';
   import OutboundCommon from './OutboundCommon.vue';
   import { XrayOutboundObject } from '@/modules/OutboundObjects';
   import { XrayShadowsocksOutboundObject } from '@/modules/OutboundObjects';
-  import { XrayProtocol } from '@/modules/Options';
+  import { isShadowsocksPlainCipher, XrayProtocol } from '@/modules/Options';
+  import { coreSupports } from '@/modules/CoreVersion';
   import Hint from '@main/Hint.vue';
 
   export default defineComponent({
@@ -107,7 +109,7 @@
       const proxy = ref<XrayOutboundObject<XrayShadowsocksOutboundObject>>(
         props.proxy ?? new XrayOutboundObject<XrayShadowsocksOutboundObject>(XrayProtocol.SHADOWSOCKS, new XrayShadowsocksOutboundObject())
       );
-      const encryptions = [
+      const ciphers = [
         { e: '2022-blake3-aes-128-gcm', l: 16 },
         { e: '2022-blake3-aes-256-gcm', l: 32 },
         { e: '2022-blake3-chacha20-poly1305', l: 32 },
@@ -117,10 +119,15 @@
         { e: 'none', l: 0 },
         { e: 'plain', l: 0 }
       ];
+      const plainCipherRemoved = computed(() => !coreSupports('ssPlainCipher') && isShadowsocksPlainCipher(proxy.value.settings?.servers[0].method));
+      // A removed cipher the outbound already uses stays listed, so the select shows it next to the warning instead of going blank.
+      const encryptions = computed(() =>
+        ciphers.filter((c) => !isShadowsocksPlainCipher(c.e) || coreSupports('ssPlainCipher') || c.e === proxy.value.settings?.servers[0].method)
+      );
 
       const generate_password = () => {
         if (proxy.value.settings) {
-          const selectedEnc = encryptions.find((e) => e.e === proxy.value.settings?.servers[0].method);
+          const selectedEnc = ciphers.find((e) => e.e === proxy.value.settings?.servers[0].method);
           proxy.value.settings.servers[0].password = engine.generateRandomBase64(selectedEnc?.l);
         }
       };
@@ -150,6 +157,7 @@
       return {
         proxy,
         encryptions,
+        plainCipherRemoved,
         generate_password,
         applyParsed
       };

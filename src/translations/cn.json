@@ -1026,6 +1026,14 @@
       "scan_progress": "扫描进行中...",
       "info": "Reality TLS 扫描器可发现子网中的公共 TLS 端点，并突出显示最接近目标 IP（例如 VPS）的端点。结果以“雷达”形式可视化，并列在可排序的表格中，便于快速为基于 REALITY 的配置选择合适的主机。"
     },
+    "ApplyChecks": {
+      "error_ss_plain_cipher": "{tag} 的 Shadowsocks：Xray 26.7.11 及更高版本无法使用 {method} 加密方法启动。请选择其他方法。",
+      "error_ss_plain_cipher_client": "{tag} 的 Shadowsocks：客户端 {client} 使用 {method} 加密方法，Xray 不接受入站客户端使用该方法。请删除该客户端，并使用其他方法重新添加。",
+      "error_vless_no_tls": "{tag} 的 VLESS：服务器地址 {address} 为公网地址且未设置 TLS、REALITY 或 VLESS Encryption 时，Xray 无法启动。请在其传输设置中启用 TLS 或 REALITY。只有私有地址和本地名称（如 .lan）可以不使用它们。",
+      "error_trojan_no_tls": "{tag} 的 Trojan：服务器地址 {address} 为公网地址且未设置 TLS 或 REALITY 时，Xray 无法启动。请在其传输设置中启用 TLS 或 REALITY。只有私有地址和本地名称（如 .lan）可以不使用它们。",
+      "error_link_ss_plain_cipher": "Shadowsocks 服务器 {tag} 未使用加密（{method}）。Xray 26.7.11 及更高版本不支持，因此无法使用该服务器。",
+      "warn_ss_plain_cipher": "Xray 26.7.11 及更高版本无法使用此加密方法启动。"
+    },
     "Xhttp": {
       "modal_anti_detection": "反检测设置",
       "hint_anti_detection": "配置填充混淆、HTTP方法和会话/序列放置，以绕过基于CDN的流量过滤。",

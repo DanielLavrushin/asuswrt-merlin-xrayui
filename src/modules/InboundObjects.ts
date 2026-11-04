@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { IProtocolType } from './Interfaces';
-import { XrayAllocateObject, XraySniffingObject, XrayStreamSettingsObject, isObjectEmpty } from './CommonObjects';
+import { XraySniffingObject, XrayStreamSettingsObject, isObjectEmpty } from './CommonObjects';
 import {
   XrayVlessClientObject,
   XrayVmessClientObject,
@@ -23,7 +23,6 @@ export class XrayInboundObject<TProxy extends IProtocolType> {
   public tag?: string;
   public settings?: TProxy;
   public streamSettings?: XrayStreamSettingsObject = new XrayStreamSettingsObject();
-  public allocate?: XrayAllocateObject;
   public sniffing?: XraySniffingObject;
 
   constructor(protocol: string | undefined = undefined, settings: TProxy | undefined = undefined) {
@@ -53,9 +52,8 @@ export class XrayInboundObject<TProxy extends IProtocolType> {
       if (isObjectEmpty(this.sniffing)) this.sniffing = undefined;
     }
 
-    if (this.allocate) {
-      this.allocate = this.allocate.normalize();
-    }
+    // Xray-core 25.10.15 removed port allocation (`allocate`); configs saved by older XRAYUI versions still carry it.
+    delete (this as { allocate?: unknown }).allocate;
 
     if (this.settings && typeof (this.settings as any).normalize === 'function') {
       this.settings = (this.settings as any).normalize();
@@ -179,11 +177,12 @@ export class XraySocksInboundObject implements IProtocolType {
 
 export class XrayWireguardInboundObject implements IProtocolType {
   public secretKey!: string;
-  public kernelMode = true;
+  public noKernelTun?: boolean;
   public mtu = 1420;
   public peers: XrayWireguardClientObject[] = [];
 
   normalize = (): this | undefined => {
+    this.noKernelTun = this.noKernelTun ? true : undefined;
     return this;
   };
 }
@@ -266,4 +265,13 @@ export function migrateTunInbound(inbound: { protocol?: string; settings?: unkno
   delete legacy.address;
   delete legacy.routes;
   delete legacy.gso;
+}
+
+// Xray-core 24.10.31 replaced `kernelMode` with the inverted `noKernelTun` and ignores the old key.
+export function migrateWireguardInbound(inbound: { protocol?: string; settings?: unknown }): void {
+  if (inbound.protocol !== XrayProtocol.WIREGUARD || !inbound.settings) return;
+
+  const settings = inbound.settings as { kernelMode?: boolean; noKernelTun?: boolean };
+  if (settings.kernelMode === false) settings.noKernelTun ??= true;
+  delete settings.kernelMode;
 }

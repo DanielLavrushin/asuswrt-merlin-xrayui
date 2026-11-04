@@ -39,7 +39,11 @@ const CORE_FEATURES = {
   tunDesc: { since: '26.7.28' },
   kcpLegacyTuning: { until: '26.4.13' },
   kcpCwnd: { since: '26.4.13' },
-  xhttpSessionID: { since: '26.6.22' }
+  xhttpSessionID: { since: '26.6.22' },
+  tlsEchForceQuery: { until: '26.6.22' },
+  ssUot: { until: '26.6.22' },
+  wgDomainStrategy: { until: '26.9.30' },
+  tlsUseSystemCA: { since: '26.10.21' }
 } as const satisfies Record<string, CoreFeatureRule>;
 
 export type CoreFeature = keyof typeof CORE_FEATURES;

@@ -72,7 +72,7 @@
             <span class="hint-color">required</span>
           </td>
         </tr>
-        <tr>
+        <tr v-if="uotSupported">
           <th>
             UDP over TCP
             <hint> When enabled, UDP over TCP (UOT) will be used. </hint>
@@ -87,11 +87,12 @@
 </template>
 <script lang="ts">
   import engine from '@/modules/Engine';
-  import { defineComponent, ref } from 'vue';
+  import { computed, defineComponent, ref } from 'vue';
   import OutboundCommon from './OutboundCommon.vue';
   import { XrayOutboundObject } from '@/modules/OutboundObjects';
   import { XrayShadowsocksOutboundObject } from '@/modules/OutboundObjects';
   import { XrayProtocol } from '@/modules/Options';
+  import { coreSupports } from '@/modules/CoreVersion';
   import Hint from '@main/Hint.vue';
 
   export default defineComponent({
@@ -117,6 +118,7 @@
         { e: 'none', l: 0 },
         { e: 'plain', l: 0 }
       ];
+      const uotSupported = computed(() => coreSupports('ssUot'));
 
       const generate_password = () => {
         if (proxy.value.settings) {
@@ -150,6 +152,7 @@
       return {
         proxy,
         encryptions,
+        uotSupported,
         generate_password,
         applyParsed
       };

@@ -41,17 +41,7 @@
             <span class="hint-color">default: 1420</span>
           </td>
         </tr>
-        <tr>
-          <th>
-            {{ $t('com.WireguardOutbound.label_workers') }}
-            <hint v-html="$t('com.WireguardOutbound.hint_workers')"></hint>
-          </th>
-          <td>
-            <input v-model="proxy.settings.workers" type="number" maxlength="2" min="0" max="32" class="input_6_table" onkeypress="return validator.isNumber(this,event);" />
-            <span class="hint-color"></span>
-          </td>
-        </tr>
-        <tr>
+        <tr v-if="domainStrategySupported">
           <th>
             {{ $t('com.WireguardOutbound.label_domain_strategy') }}
             <hint v-html="$t('com.WireguardOutbound.hint_domain_strategy')"></hint>
@@ -183,12 +173,13 @@
   </div>
 </template>
 <script lang="ts">
-  import { defineComponent, ref, watch } from 'vue';
+  import { computed, defineComponent, ref, watch } from 'vue';
   import OutboundCommon from './OutboundCommon.vue';
   import { XrayOutboundObject } from '@/modules/OutboundObjects';
   import { XrayWireguardOutboundObject } from '@/modules/OutboundObjects';
   import { XrayPeerObject } from '@/modules/CommonObjects';
   import { XrayProtocol } from '@/modules/Options';
+  import { coreSupports } from '@/modules/CoreVersion';
   import Modal from '@main/Modal.vue';
   import Hint from '@main/Hint.vue';
 
@@ -211,6 +202,7 @@
       const modalPeer = ref();
       const modalPeers = ref();
       const reserved = ref<string>(proxy.value.settings.reserved?.join(', ') ?? '');
+      const domainStrategySupported = computed(() => coreSupports('wgDomainStrategy'));
 
       const modal_save_peer = () => {
         if (peerItem) {
@@ -278,6 +270,7 @@
         modalPeers,
         peerIps,
         strategyOptions: XrayWireguardOutboundObject.strategyOptions,
+        domainStrategySupported,
         modal_save_peer,
         modal_peers_close,
         manage_peers,

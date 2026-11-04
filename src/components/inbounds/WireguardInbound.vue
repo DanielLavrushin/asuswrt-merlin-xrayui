@@ -27,12 +27,12 @@
         </tr>
         <tr>
           <th>
-            KERNEL Mode
-            <hint> Enable kernel mode for the Wireguard protocol. The default value is `true` if it's supported and permission is sufficient. </hint>
+            No kernel TUN
+            <hint> Run Wireguard on gVisor instead of the kernel TUN interface. By default, Xray-core uses the kernel interface when it has `CAP_NET_ADMIN`. </hint>
           </th>
           <td>
-            <input type="checkbox" v-model="inbound.settings.kernelMode" />
-            <span class="hint-color">default: true</span>
+            <input type="checkbox" v-model="inbound.settings.noKernelTun" />
+            <span class="hint-color">default: false</span>
           </td>
         </tr>
         <tr>

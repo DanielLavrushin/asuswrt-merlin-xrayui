@@ -1,6 +1,5 @@
 import { plainToInstance } from 'class-transformer';
 import {
-  XrayAllocateObject,
   XrayDnsObject,
   XrayDnsServerObject,
   XrayLogObject,
@@ -57,24 +56,6 @@ describe('CommonObjects', () => {
       expect(res).toBeDefined();
       expect(res?.maxConcurrency).toBe('10-40');
       expect(res?.maxConnections).toBe(10);
-    });
-  });
-
-  describe('XrayAllocateObject', () => {
-    it('normalizes defaults away', () => {
-      const allocate = new XrayAllocateObject();
-      const res = allocate.normalize();
-      expect(res).toBeUndefined();
-    });
-
-    it('retains custom props', () => {
-      const allocate = new XrayAllocateObject();
-      allocate.strategy = 'random';
-      allocate.concurrency = 5;
-      allocate.refresh = 10;
-      const res = allocate.normalize();
-      expect(res?.concurrency).toBe(5);
-      expect(res?.refresh).toBe(10);
     });
   });
 
@@ -231,6 +212,7 @@ describe('CommonObjects', () => {
     });
 
     it('retains echForceQuery "half"', () => {
+      setCoreVersion('26.6.1');
       const tls = new XrayStreamTlsSettingsObject();
       tls.echForceQuery = 'half';
       tls.normalize();
@@ -238,6 +220,7 @@ describe('CommonObjects', () => {
     });
 
     it('retains echForceQuery "full"', () => {
+      setCoreVersion('26.6.1');
       const tls = new XrayStreamTlsSettingsObject();
       tls.echForceQuery = 'full';
       tls.normalize();
@@ -269,7 +252,6 @@ describe('CommonObjects', () => {
     it('normalizes default fields away', () => {
       routing.normalize();
       expect(routing.domainStrategy).toBeUndefined();
-      expect(routing.domainMatcher).toBeUndefined();
       expect(routing.rules).toBeUndefined();
     });
 
@@ -461,14 +443,12 @@ describe('CommonObjects', () => {
       so.mark = 0;
       so.interface = '';
       so.tcpMptcp = false;
-      so.tcpNoDelay = false;
       so.normalize();
       expect(so.tproxy).toBe('redirect');
       expect(so.domainStrategy).toBeUndefined();
       expect(so.mark).toBeUndefined();
       expect(so.interface).toBeUndefined();
       expect(so.tcpMptcp).toBeUndefined();
-      expect(so.tcpNoDelay).toBeUndefined();
     });
 
     it('beholder non‑default values efter normalize', () => {

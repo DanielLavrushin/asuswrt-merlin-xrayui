@@ -97,6 +97,7 @@
   import { createPoller } from '@/modules/Polling';
   import { liveStatus, refreshLiveStatus, clearLiveStatus, observationAge } from '@/modules/LiveStatus';
   import { computeOutboundMarks, OutboundMark, OutboundMarkItem } from '@/modules/BalancerStatus';
+  import { balancersWithoutOutbounds } from '@/modules/ApplyChecks';
 
   import FreedomOutbound from '@obd/FreedomOutbound.vue';
   import BlackholeOutbound from '@obd/BlackholeOutbound.vue';
@@ -319,6 +320,14 @@
           const chainedOutbounds = config.value.outbounds.filter((o) => o !== proxy && dialerSockopts(o, true).some((so) => so?.dialerProxy === proxy.tag));
           if (chainedOutbounds.length > 0) {
             alert(t('com.Outbounds.alert_delete_tag_in_dialer_proxy_use', [chainedOutbounds.map((o) => o.tag).join(', '), proxy.tag]));
+            return;
+          }
+
+          // a balancer left with no outbound and no fallback outbound sends its traffic through the first outbound
+          const emptyBefore = balancersWithoutOutbounds(config.value);
+          const emptied = balancersWithoutOutbounds({ ...config.value, outbounds: config.value.outbounds.filter((o) => o !== proxy) }).filter((tag) => !emptyBefore.includes(tag));
+          if (emptied.length > 0) {
+            alert(t('com.Outbounds.alert_delete_last_balancer_outbound', [emptied.join(', '), proxy.tag]));
             return;
           }
         }

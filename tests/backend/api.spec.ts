@@ -179,6 +179,39 @@ describeIf.each(SHELLS)('api.sh under %s', (_name, shell) => {
     expect(r.apiConfig?.burstObservatory).toEqual(burstObservatory);
   });
 
+  // #466: the clients check reads StatsService only, so it must not probe every outbound
+  it.each([
+    ['no balancer', {}],
+    ['a balancer that needs no probes', { routing: { balancers: [{ tag: 'bal', selector: ['p-'] }] } }]
+  ])('probes no outbound when only the clients check is on and there is %s', (_label, extra) => {
+    const config = { outbounds: [{ tag: 'p-a' }, { tag: 'reserve' }], ...extra };
+    const r = run(shell, { steps: ['apply'], env: { RS_CHECK_CONNECTION: 'false', RS_CLIENTS_CHECK: 'true' }, files: { 'opt/etc/xray/config.json': JSON.stringify(config) } });
+    expect(r.apiConfig).toMatchObject({ api: { tag: 'sys:api' }, metrics: { tag: 'sys:metrics_out' } });
+    expect(r.apiConfig).not.toHaveProperty('observatory');
+    expect(r.events).toContain('apply rc=0');
+  });
+
+  it('probes only the balancer selectors when only the clients check is on', () => {
+    const config = { outbounds: [{ tag: 'p-a' }, { tag: 'reserve' }], routing: { balancers: [{ tag: 'fast', selector: ['p-'], strategy: { type: 'leastPing' } }] } };
+    const r = run(shell, { steps: ['apply'], env: { RS_CHECK_CONNECTION: 'false', RS_CLIENTS_CHECK: 'true' }, files: { 'opt/etc/xray/config.json': JSON.stringify(config) } });
+    expect(r.apiConfig).toMatchObject({ api: { tag: 'sys:api' } });
+    expect(r.apiConfig?.observatory).toEqual(expect.objectContaining({ subjectSelector: ['p-'] }));
+  });
+
+  it('leaves a hand-written observatory alone when only the clients check is on', () => {
+    const config = { ...JSON.parse(balancerConfig({ strategy: { type: 'leastPing' } })), observatory: { subjectSelector: ['p-'] } };
+    const r = run(shell, { steps: ['apply'], env: { RS_CHECK_CONNECTION: 'false', RS_CLIENTS_CHECK: 'true' }, files: { 'opt/etc/xray/config.json': JSON.stringify(config) } });
+    expect(r.apiConfig).toMatchObject({ api: { tag: 'sys:api' } });
+    expect(r.apiConfig).not.toHaveProperty('observatory');
+  });
+
+  // a leastPing balancer stops Xray from starting without an observatory, even one with nothing to probe
+  it('keeps the observatory with an empty selector list when the connection check has nothing to probe', () => {
+    const config = { outbounds: [{ tag: 'block', protocol: 'blackhole' }], routing: { balancers: [{ tag: 'bal', selector: ['block'], strategy: { type: 'leastPing' } }] } };
+    const r = run(shell, { steps: ['apply'], env: { RS_CHECK_CONNECTION: 'true' }, files: { 'opt/etc/xray/config.json': JSON.stringify(config) } });
+    expect(r.apiConfig?.observatory).toEqual(expect.objectContaining({ subjectSelector: [] }));
+  });
+
   it('lists the clients that moved traffic since the last query', () => {
     const r = run(shell, { steps: ['clients'], env: { RS_PID: '4242' }, files: { 'opt/etc/xray/xrayui/config-api.json': CLIENTS_API_CONFIG, 'stats.json': STATS } });
     expect(JSON.parse(r.clients ?? '')).toEqual([{ ip: '', email: ['alice@example'] }]);

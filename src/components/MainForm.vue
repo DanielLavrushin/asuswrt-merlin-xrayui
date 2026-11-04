@@ -79,7 +79,7 @@
   import engine, { EngineResponseConfig, SubmitActions } from '@/modules/Engine';
   import { getCoreVersion } from '@/modules/CoreVersion';
   import { XhttpConfigError } from '@/modules/TransportObjects';
-  import { ApplyCheckError, checkBeforeApply } from '@/modules/ApplyChecks';
+  import { ApplyCheckError, balancersWithoutOutbounds, checkBeforeApply } from '@/modules/ApplyChecks';
 
   import Modal from '@main/Modal.vue';
 
@@ -182,6 +182,14 @@
       };
 
       const apply_settings = async () => {
+        // Xray starts fine with such a balancer, but its traffic leaves through the first outbound, so ask instead of stopping
+        const emptyBalancers = balancersWithoutOutbounds(config.value);
+        if (
+          emptyBalancers.length &&
+          !window.confirm(t('com.ApplyChecks.confirm_balancer_no_outbounds', { tags: emptyBalancers.join(', '), first: config.value.outbounds[0]?.tag ?? '' }))
+        )
+          return;
+
         if (logsManager.value?.follow) {
           logsManager.value.follow = false;
           window.showLoading(6000);

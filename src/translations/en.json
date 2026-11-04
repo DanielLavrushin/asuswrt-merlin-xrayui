@@ -383,7 +383,8 @@
       "balancer_checked": "Checked {0} s ago.",
       "balancer_next_nodelay": "Balancer {0} sends new connections here.",
       "balancer_fallback_nomatch": "Balancer {0} matches no outbound, so new connections go to its fallback outbound.",
-      "balancer_default_nomatch": "Balancer {0} matches no outbound and no fallback outbound is set, so new connections go to the first outbound in the list."
+      "balancer_default_nomatch": "Balancer {0} matches no outbound and no fallback outbound is set, so new connections go to the first outbound in the list.",
+      "alert_delete_last_balancer_outbound": "This outbound ({1}) is the only one these balancers select, and they have no fallback outbound: {0}. Without it, Xray would send their traffic through the first outbound in the list, which may be direct. Add another outbound that matches their selector, or set a fallback outbound, before deleting it."
     },
     "StreamSettingsModal": {
       "title": "Transport settings",
@@ -1044,7 +1045,8 @@
       "error_vless_no_tls": "VLESS in {tag}: Xray does not start when the server address {address} is public and there is no TLS, REALITY or VLESS Encryption. Turn on TLS or REALITY in its transport settings. Without them, only private addresses and local names such as .lan are allowed.",
       "error_trojan_no_tls": "Trojan in {tag}: Xray does not start when the server address {address} is public and there is no TLS or REALITY. Turn on TLS or REALITY in its transport settings. Without them, only private addresses and local names such as .lan are allowed.",
       "error_link_ss_plain_cipher": "Shadowsocks server {tag} uses no encryption ({method}). Xray 26.7.11 and later do not support it, so the server cannot be used.",
-      "warn_ss_plain_cipher": "Xray 26.7.11 and later do not start with this encryption method."
+      "warn_ss_plain_cipher": "Xray 26.7.11 and later do not start with this encryption method.",
+      "confirm_balancer_no_outbounds": "These balancers select no outbound and have no fallback outbound: {tags}. Xray will send their traffic through the first outbound in the list ({first}). Apply anyway?"
     },
     "Xhttp": {
       "modal_anti_detection": "Anti-Detection Settings",

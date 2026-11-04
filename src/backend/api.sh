@@ -77,15 +77,26 @@ api_write_config() {
   local observatory_probe_url
   observatory_probe_url=$(printf '%s' "${probe_url:-https://www.google.com/generate_204}" | jq -Rs '.')
   local observatory_probe_interval=$(sanitize_probe_interval "$probe_interval")
-  local outbound_tags
-  outbound_tags=$(
-    jq -c '
-      [ .outbounds[]
-      | select(.tag and .protocol != "blackhole")
-      | .tag ]
-      | unique
-    ' "$XRAY_CONFIG_FILE"
-  )
+  # Only the connection check reads probe results for every outbound; the clients check reads
+  # StatsService, so without the connection check only the outbounds balancers need are probed.
+  # whether an observatory is needed, not whether there is anything to probe: a leastPing
+  # balancer stops Xray from starting without one, even with an empty selector list
+  local outbound_tags='[]' need_observatory=false
+  if [ "$check_connection" = "true" ]; then
+    need_observatory=true
+    outbound_tags=$(
+      jq -c '
+        [ .outbounds[]
+        | select(.tag and .protocol != "blackhole")
+        | .tag ]
+        | unique
+      ' "$XRAY_CONFIG_FILE"
+    )
+  elif api_balancers_need_observatory; then
+    need_observatory=true
+    outbound_tags=$(api_balancer_selectors)
+  fi
+  [ -n "$outbound_tags" ] || outbound_tags='[]'
 
   # A later -c file replaces whole top-level keys and Xray would run observatory and
   # burstObservatory side by side, so re-emit the user's burstObservatory instead. Only the
@@ -97,16 +108,17 @@ api_write_config() {
       | objects
       | "\"burstObservatory\": " + (. + {pingConfig: (.pingConfig | objects // {})}
           + (if $probe_all == "true" then {subjectSelector: (((.subjectSelector // []) | map(strings)) + $tags | unique)} else {} end)
-        | tojson)
+        | tojson) + ","
     ' "$XRAY_CONFIG_FILE" 2>/dev/null
   )
-  if [ -z "$observatory_block" ]; then
+  # the block carries its own trailing comma, so no observatory leaves valid JSON
+  if [ -z "$observatory_block" ] && [ "$need_observatory" = "true" ]; then
     observatory_block="\"observatory\": {
     \"subjectSelector\": $outbound_tags,
     \"probeUrl\": $observatory_probe_url,
     \"probeInterval\": \"${observatory_probe_interval}s\",
     \"enableConcurrency\": true
-  }"
+  },"
   fi
 
   cat >"$xray_api_config" <<EOF
@@ -133,7 +145,7 @@ api_write_config() {
       "0": { "statsUserUplink": true, "statsUserDownlink": true }
     }
   },
-  $observatory_block,
+  $observatory_block
   "metrics": { "tag": "sys:metrics_out" }
 }
 EOF
@@ -236,6 +248,18 @@ api_balancers_need_observatory() {
   ' "$XRAY_CONFIG_FILE" >/dev/null 2>&1
 }
 
+# The selectors (tag prefixes) of the balancers that need probe results.
+api_balancer_selectors() {
+  jq -c "$API_BALANCER_NEEDS_OBSERVATORY"'
+    [ .routing.balancers[]?
+      | select(needs_observatory)
+      | .selector
+      | if type == "string" then split(",")[] elif type == "array" then .[] else empty end
+      | strings ]
+    | unique
+  ' "$XRAY_CONFIG_FILE"
+}
+
 api_write_observatory_config() {
   local xray_api_config selectors observatory_probe_url observatory_probe_interval
 
@@ -243,16 +267,7 @@ api_write_observatory_config() {
   mkdir -p /opt/etc/xray/xrayui
 
   xray_api_config=$(api_get_current_config)
-  selectors=$(
-    jq -c "$API_BALANCER_NEEDS_OBSERVATORY"'
-      [ .routing.balancers[]?
-        | select(needs_observatory)
-        | .selector
-        | if type == "string" then split(",")[] elif type == "array" then .[] else empty end
-        | strings ]
-      | unique
-    ' "$XRAY_CONFIG_FILE"
-  ) || return 1
+  selectors=$(api_balancer_selectors) || return 1
   observatory_probe_url=$(printf '%s' "${probe_url:-https://www.google.com/generate_204}" | jq -Rs '.')
   observatory_probe_interval=$(sanitize_probe_interval "$probe_interval")
 

@@ -75,7 +75,7 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, computed, nextTick, watch } from 'vue';
+  import { defineComponent, ref, computed, nextTick } from 'vue';
   import engine from '@/modules/Engine';
   import Modal from '@main/Modal.vue';
 
@@ -155,26 +155,28 @@
         if (proxy) {
           selectedInbound.value = proxy;
           selectedInboundType.value = proxy.protocol;
-
-          watch(
-            () => proxy.tag,
-            (newVal, oldVal) => {
-              if (oldVal && newVal && oldVal !== newVal) {
-                config.value.routing?.rules?.forEach((rule) => {
-                  if (rule.inboundTag && rule.inboundTag.indexOf(oldVal) >= 0) {
-                    rule.inboundTag = rule.inboundTag.map((tag) => (tag === oldVal ? newVal : tag));
-                  }
-                });
-              }
-            },
-            { immediate: true }
-          );
         }
+        // the tag input edits the live object, so references are renamed once on close, not on every keystroke
+        const originalTag = proxy?.tag;
 
         await nextTick();
 
         inboundModal.value.show(() => {
+          if (proxy && originalTag) renameTagRefs(proxy, originalTag);
           selectedInbound.value = selectedInboundType.value = undefined;
+        });
+      };
+
+      const renameTagRefs = (inbound: XrayInboundObject<IProtocolType>, originalTag: string) => {
+        const newTag = inbound.tag;
+        if (!newTag || newTag === originalTag) return;
+        // the tag belongs to another inbound: renaming would merge its rules irreversibly, so keep the old tag
+        if (config.value.inbounds.some((i) => i !== inbound && i.tag === newTag)) {
+          inbound.tag = originalTag;
+          return;
+        }
+        [...(config.value.routing?.rules ?? []), ...(config.value.routing?.disabled_rules ?? [])].forEach((r) => {
+          if (r.inboundTag?.includes(originalTag)) r.inboundTag = r.inboundTag.map((tag) => (tag === originalTag ? newTag : tag));
         });
       };
       const remove_proxy = async (proxy: XrayInboundObject<IProtocolType>) => {

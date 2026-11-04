@@ -256,24 +256,32 @@
         if (proxy) {
           selectedProxy.value = proxy;
           selectedProxyType.value = proxy.protocol;
-
-          watch(
-            () => proxy.tag,
-            (newVal, oldVal) => {
-              if (oldVal && newVal && oldVal !== newVal) {
-                config.value.routing?.rules?.map((r) => {
-                  r.outboundTag = r.outboundTag === oldVal ? newVal : r.outboundTag;
-                });
-              }
-            },
-            { immediate: true }
-          );
         }
+        // the tag input edits the live object, so references are renamed once on close, not on every keystroke
+        const originalTag = proxy?.tag;
 
         await nextTick();
         proxyModal.value.show(() => {
+          if (proxy && originalTag) renameTagRefs(proxy, originalTag);
           selectedProxy.value = undefined;
           selectedProxyType.value = undefined;
+        });
+      };
+
+      const renameTagRefs = (proxy: XrayOutboundObject<IProtocolType>, originalTag: string) => {
+        const newTag = proxy.tag;
+        if (!newTag || newTag === originalTag) return;
+        // the tag belongs to another outbound: renaming would merge its rules irreversibly, so keep the old tag
+        if (config.value.outbounds.some((o) => o !== proxy && o.tag === newTag)) {
+          proxy.tag = originalTag;
+          return;
+        }
+        const routing = config.value.routing;
+        [...(routing?.rules ?? []), ...(routing?.disabled_rules ?? [])].forEach((r) => {
+          if (r.outboundTag === originalTag) r.outboundTag = newTag;
+        });
+        (routing?.balancers ?? []).forEach((b) => {
+          if (b.fallbackTag === originalTag) b.fallbackTag = newTag;
         });
       };
 

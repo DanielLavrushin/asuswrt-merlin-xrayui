@@ -295,8 +295,13 @@
             return;
           }
 
-          // without its dialer proxy, every connection of the outbound fails
-          const dialerUsers = config.value.outbounds.filter((o) => o !== proxy && o.streamSettings?.sockopt?.dialerProxy === proxy.tag);
+          // without its dialer proxy, every connection of the outbound fails; an XHTTP download connection has its own sockopt,
+          // which is written only for xhttp with a download address
+          const usesAsDialer = (o: XrayOutboundObject<IProtocolType>) => {
+            const download = o.streamSettings?.network === 'xhttp' ? o.streamSettings.xhttpSettings?.extra?.downloadSettings : undefined;
+            return o.streamSettings?.sockopt?.dialerProxy === proxy.tag || (!!download?.address && download.sockopt?.dialerProxy === proxy.tag);
+          };
+          const dialerUsers = config.value.outbounds.filter((o) => o !== proxy && usesAsDialer(o));
           if (dialerUsers.length > 0) {
             alert(t('com.Outbounds.alert_delete_tag_in_dialer_proxy_use', [dialerUsers.map((o) => o.tag).join(', '), proxy.tag]));
             return;

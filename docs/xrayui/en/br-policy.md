@@ -104,20 +104,28 @@ There are two ways to keep a schedule working:
 MAC="AA:BB:CC:DD:EE:FF"
 LAN="192.168.50.0/24"
 TIME="-m time --timestart 22:00 --timestop 07:00 --kerneltz"
-RULE4="-i br0 -m mac --mac-source $MAC ! -d $LAN -m addrtype ! --dst-type BROADCAST,MULTICAST $TIME -j DROP"
-RULE6="-i br0 -m mac --mac-source $MAC ! -d fe80::/10 -m addrtype ! --dst-type LOCAL,MULTICAST $TIME -j DROP"
 
-while iptables -t mangle -D PREROUTING $RULE4 2>/dev/null; do :; done
-iptables -t mangle -I PREROUTING 1 $RULE4
+# IPv4
+iptables -t mangle -N SCHEDULE_BLOCK 2>/dev/null || iptables -t mangle -F SCHEDULE_BLOCK
+iptables -t mangle -A SCHEDULE_BLOCK -i br0 -m mac --mac-source $MAC ! -d $LAN -m addrtype ! --dst-type BROADCAST,MULTICAST $TIME -j DROP
+while iptables -t mangle -D PREROUTING -j SCHEDULE_BLOCK 2>/dev/null; do :; done
+iptables -t mangle -I PREROUTING 1 -j SCHEDULE_BLOCK
 
+# IPv6
 if ip6tables -t mangle -L PREROUTING -n >/dev/null 2>&1; then
-    while ip6tables -t mangle -D PREROUTING $RULE6 2>/dev/null; do :; done
-    ip6tables -t mangle -I PREROUTING 1 $RULE6
+    ip6tables -t mangle -N SCHEDULE_BLOCK 2>/dev/null || ip6tables -t mangle -F SCHEDULE_BLOCK
+    ip6tables -t mangle -A SCHEDULE_BLOCK -i br0 -m mac --mac-source $MAC ! -d fe80::/10 -m addrtype ! --dst-type LOCAL,MULTICAST $TIME -j DROP
+    while ip6tables -t mangle -D PREROUTING -j SCHEDULE_BLOCK 2>/dev/null; do :; done
+    ip6tables -t mangle -I PREROUTING 1 -j SCHEDULE_BLOCK
 fi
 ```
 
 > [!important]
-> Keep both parts: `RULE4` for IPv4 and `RULE6` for IPv6. Without `RULE6`, a device with IPv6 still reaches the internet during the blocked hours. The hook deletes the rule and inserts it again at the top on every run, because XRAYUI puts its own rule for already open connections at the top of `PREROUTING` each time Xray starts. If your rule stays below it, connections opened before the blocked hours keep working.
+> Keep both parts. Without the IPv6 part, a device with IPv6 still reaches the internet during the blocked hours.
+>
+> The rules live in their own `SCHEDULE_BLOCK` chain, which the hook empties and fills again on every run. A changed time or MAC address therefore replaces the old rule instead of adding a second one, and you can block more devices by adding one `-A SCHEDULE_BLOCK …` line per device. The jump to the chain is moved to the top of `PREROUTING` on every run, because XRAYUI puts its own rule for already open connections there each time Xray starts. If the jump stays below it, connections opened before the blocked hours keep working.
+>
+> Removing the hook does not remove the rules. To stop blocking right away, run `iptables -t mangle -F SCHEDULE_BLOCK` and `ip6tables -t mangle -F SCHEDULE_BLOCK`, or restart the router.
 
 > [!note]
 > Clients of the router's VPN server (WireGuard, IPsec) have no MAC address. Match them by interface and address instead, for example `-i wgs1 -s 10.6.0.2`.

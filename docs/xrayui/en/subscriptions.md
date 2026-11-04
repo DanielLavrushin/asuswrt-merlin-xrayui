@@ -104,7 +104,9 @@ By default, subscription sources are only fetched when you manually press the `F
 In `General Options` → `Subscriptions` tab, find the **Auto-refresh interval** setting and choose a schedule:
 
 - **Disabled** — manual refresh only (default)
-- **3 hours** — re-fetches your subscription sources every 3 hours
+- **30 minutes** — re-fetches your subscription sources every 30 minutes
+- **1 hour** — every hour
+- **3 hours** — every 3 hours
 - **6 hours** — every 6 hours
 - **12 hours** — every 12 hours
 
@@ -192,7 +194,7 @@ Only the connection details (address, keys, transport and security) are replaced
 
 - No more than **10 switches per hour** per outbound.
 - If every server in the pool failed recently, the list of failed servers is cleared and the pool is tried again on a later check.
-- If the pool has no usable server left, XRAYUI refreshes the subscription sources (at most once per hour).
+- If the pool has no usable server left, XRAYUI refreshes the subscription sources (at most once every 15 minutes).
 - Each check looks at no more than 20 servers per outbound; the rest are checked next time.
 
 Every step is written to the router's system log with the prefix `Failover:` (for example `logread | grep Failover`).

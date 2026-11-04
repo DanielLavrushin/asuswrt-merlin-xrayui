@@ -1,6 +1,6 @@
 # XRAYUI Changelog
 
-## [0.71.0] - 2026-11-xx
+## [0.71.0] - 2026-11-04
 
 - ADDED: The **X-RAY Core** version shows **newer than tested** when the installed Xray-core is newer than the version this XRAYUI release was tested with. ([#451](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/451))
 - ADDED: Each new Xray-core release is now checked automatically for config settings it renamed or dropped, before XRAYUI is tested with it. ([#450](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/450))

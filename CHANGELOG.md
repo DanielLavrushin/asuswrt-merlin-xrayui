@@ -3,6 +3,7 @@
 ## [0.71.0] - 2026-11-xx
 
 - ADDED: The **X-RAY Core** version shows **newer than tested** when the installed Xray-core is newer than the version this XRAYUI release was tested with. ([#451](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/451))
+- ADDED: Each new Xray-core release is now checked automatically for config settings it renamed or dropped, before XRAYUI is tested with it. ([#450](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/450))
 - ADDED: TCP transport has **Header obfuscation** with **Request path** and **Host**. gRPC outbounds have **Authority** and **Multi mode**.
 - ADDED: The update dialog lists recent XRAYUI releases, so you can install an older one (downgrade) or reinstall the current one. A downgrade asks for confirmation first, because an older version may not understand settings saved by a newer one. ([#409](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/409))
 - ADDED: **TCP keepalive idle** and **TCP keepalive interval** in an inbound's or outbound's **Transport** → **Sockopt** settings. Xray leaves keepalive off on inbound connections, so a client that vanished without closing its connection, for example a phone that lost signal, kept it open for hours and the router slowly ran out of memory. With, for example, 300 and 30 such connections are closed in under 10 minutes. Keepalive values already set in `config.json` are now shown in the UI too. ([#427](https://github.com/DanielLavrushin/asuswrt-merlin-xrayui/issues/427))

@@ -211,11 +211,16 @@ Detected by packet inspection, not port numbers.
 
 Use the up/down buttons to reorder rules. More specific rules go higher, catch-all rules at the bottom.
 
-### Changing a Rule's Outbound
+### Moving Rules to Another Outbound or Inbound
 
 To send a rule to another outbound or balancer, pick it in the rule's row in **Manage routing rules**. You don't have to open the rule.
 
-To move every rule from one outbound or balancer to another, for example from `proxy-swiss` to `proxy`, click **Reassign…**, choose **From** and **To**, and click **Move rules**. The number next to each **From** entry is how many rules use it. Disabled rules move too.
+To change many rules at once, click **Reassign…**:
+
+- **Change: Outbound or balancer** moves every rule from one outbound or balancer to another, for example from `proxy-swiss` to `proxy`.
+- **Change: Inbound** replaces one inbound with another in every rule that lists it. **— remove from rules —** takes it out of the rules instead, which is what you need before deleting an inbound. A rule that lists only that inbound is left unchanged, because a rule with no inbound applies to traffic from every inbound. Delete such rules or move them to another inbound.
+
+Choose **From** and **To**, and click **Reassign**. The number next to each **From** entry is how many rules use it. Disabled rules change too.
 
 > [!tip]
 > If you switch servers often, point the rules at a balancer whose selector picks only that one outbound. Switching servers is then one change in the balancer instead of one per rule. The selector matches the start of the tag, so `proxy` also selects `proxy-swiss`.

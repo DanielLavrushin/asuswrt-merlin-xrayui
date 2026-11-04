@@ -293,11 +293,18 @@
       "reassign": "Neu zuweisen…",
       "reassign_title": "Regeln neu zuweisen",
       "label_reassign_from": "Von",
-      "hint_reassign_from": "Die ausgehende Verbindung oder der Lastverteiler, an die die Regeln jetzt weiterleiten. Die Zahl in Klammern gibt an, wie viele Regeln sie nutzen, deaktivierte eingeschlossen.",
+      "hint_reassign_from": "Was die Regeln jetzt nutzen. Die Zahl in Klammern gibt an, wie viele Regeln es nutzen, deaktivierte eingeschlossen.",
       "label_reassign_to": "Nach",
-      "hint_reassign_to": "Die ausgehende Verbindung oder der Lastverteiler, an die diese Regeln stattdessen weiterleiten.",
-      "reassign_summary": "{0} Regel(n) werden verschoben.",
-      "reassign_apply": "Regeln verschieben"
+      "hint_reassign_to": "Was die Regeln stattdessen nutzen.<br>**Aus Regeln entfernen** nimmt die eingehende Verbindung aus der Liste der Regeln. Eine Regel, die nur diese eingehende Verbindung enthält, bleibt unverändert, weil sie ohne sie für den Datenverkehr aller eingehenden Verbindungen gelten würde.",
+      "reassign_summary": "{0} Regel(n) werden geändert.",
+      "reassign_apply": "Neu zuweisen",
+      "label_reassign_field": "Ändern",
+      "hint_reassign_field": "Welcher Teil der Regeln geändert wird. Eine Regel leitet an genau eine ausgehende Verbindung oder einen Lastverteiler weiter, kann aber mehrere eingehende Verbindungen enthalten. Eine Regel ohne eingehende Verbindung gilt für den Datenverkehr aller eingehenden Verbindungen.",
+      "reassign_field_outbound": "Ausgehende Verbindung oder Lastverteiler",
+      "reassign_field_inbound": "Eingehende Verbindung",
+      "reassign_remove": "— aus Regeln entfernen —",
+      "reassign_skipped": "{0} Regel(n) enthalten nur diese eingehende Verbindung und bleiben unverändert: ohne sie würden sie für den Datenverkehr aller eingehenden Verbindungen gelten. Lösche sie oder verschiebe sie auf eine andere eingehende Verbindung.",
+      "reassign_nothing": "Keine Regel enthält eine eingehende Verbindung."
     },
     "Inbounds": {
       "title": "Eingänge",

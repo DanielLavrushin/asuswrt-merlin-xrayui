@@ -193,16 +193,26 @@ export function checkBeforeApply(config: { inbounds?: ProxyLike[]; outbounds?: P
 }
 
 interface BalancerConfigLike {
+  inbounds?: { settings?: unknown }[];
   outbounds?: { tag?: string }[];
   routing?: { balancers?: { tag?: string; selector?: unknown; fallbackTag?: string }[] };
-  reverse?: { portals?: { tag?: string }[] };
+  reverse?: { portals?: { tag?: string; domain?: string }[] };
 }
 
 // Tags of balancers whose selector matches no outbound and that have no fallback outbound. Xray then sends their
 // traffic through the default route, the first outbound in the list, which may be direct (#467).
 export function balancersWithoutOutbounds(config: BalancerConfigLike): string[] {
-  // selectors are tag prefixes, as in Xray; reverse portals are outbound handlers in Xray too
-  const tags = [...(config.outbounds ?? []), ...(config.reverse?.portals ?? [])].map((o) => o.tag).filter((tag): tag is string => !!tag);
+  // The outbound handlers Xray registers, as BalancerStatus counts them: outbounds, reverse portals that survive
+  // XrayReverseObject.normalize() (tag and domain), and VLESS clients' reverse tags. Selectors are tag prefixes, as in Xray.
+  const portals = (config.reverse?.portals ?? []).filter((p) => p.domain);
+  const clientReverseTags = (config.inbounds ?? []).flatMap((inbound) => {
+    const clients = (inbound.settings as { clients?: unknown } | undefined)?.clients;
+    return Array.isArray(clients) ? clients.map((c) => (c as { reverse?: { tag?: unknown } } | null)?.reverse?.tag) : [];
+  });
+  const tags = [...(config.outbounds ?? []), ...portals]
+    .map((o): unknown => o.tag)
+    .concat(clientReverseTags)
+    .filter((tag): tag is string => typeof tag === 'string' && tag !== '');
   return (config.routing?.balancers ?? [])
     .filter((b) => {
       const selector = toSelector(b.selector);

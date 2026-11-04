@@ -34,17 +34,12 @@
     </th>
     <td>
       <input type="number" maxlength="5" class="input_6_table" v-model="inbound.port" autocorrect="off" autocapitalize="off" onkeypress="return validator.isNumber(this, event);" />
-      <span class="row-buttons">
-        <a class="button_gen button_gen_small" href="#" @click="show_allocate(inbound)">{{ $t('com.InboundCommon.label_port_allocate') }}</a>
-      </span>
-      <allocate-modal ref="allocateModal" />
     </td>
   </tr>
 </template>
 
 <script lang="ts">
   import { defineComponent, ref } from 'vue';
-  import AllocateModal from '@modal/AllocateModal.vue';
   import { XrayInboundObject } from '@/modules/InboundObjects';
   import { IProtocolType } from '@/modules/Interfaces';
   import engine from '@/modules/Engine';
@@ -54,26 +49,18 @@
   export default defineComponent({
     name: 'InboundCommon',
     components: {
-      Hint,
-      AllocateModal
+      Hint
     },
     props: {
       inbound: XrayInboundObject<IProtocolType>
     },
 
     setup(props) {
-      const allocateModal = ref();
       const inbound = ref<XrayInboundObject<IProtocolType>>(props.inbound ?? new XrayInboundObject<IProtocolType>());
 
-      const show_allocate = async (inbound: XrayInboundObject<IProtocolType>) => {
-        await allocateModal.value.show(inbound);
-      };
-
       return {
-        allocateModal,
         inbound,
         engine,
-        show_allocate,
         filterIPAddressKey
       };
     }

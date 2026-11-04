@@ -71,7 +71,6 @@
   import { defineComponent, ref, computed, watch, nextTick, inject, Ref } from 'vue';
   import { XrayOutboundObject } from '@/modules/OutboundObjects';
   import { IProtocolType } from '@/modules/Interfaces';
-  import AllocateModal from '@modal/AllocateModal.vue';
   import Hint from '@main/Hint.vue';
   import { EngineResponseConfig } from '@modules/Engine';
   import { XrayParsedUrlObject } from '@modules/CommonObjects';
@@ -81,7 +80,7 @@
 
   export default defineComponent({
     name: 'OutboundCommon',
-    components: { AllocateModal, Hint },
+    components: { Hint },
     props: { proxy: XrayOutboundObject<IProtocolType> },
     emits: ['apply-parsed'],
     setup(props, { emit }) {

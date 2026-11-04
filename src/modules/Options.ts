@@ -12,7 +12,6 @@ export const XrayOptions = {
   networkOptions: ['tcp', 'udp', 'tcp,udp'],
   protocolOptions: ['http', 'tls', 'bittorrent'],
   domainStrategyOptions: ['AsIs', 'IPIfNonMatch', 'IPOnDemand'],
-  domainMatcherOptions: ['hybrid', 'linear'],
   usageOptions: ['encipherment', 'verify', 'issue'],
   alpnOptions: ['h3', 'h2', 'http/1.1'],
   fingerprintOptions: ['randomized', 'random', 'chrome', 'firefox', 'ios', 'android', 'safari', 'edge', '360', 'qq'],

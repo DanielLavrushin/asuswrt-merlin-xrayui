@@ -86,23 +86,6 @@ export class XrayXmuxObject {
   };
 }
 
-export class XrayAllocateObject {
-  static readonly defaultRefresh = 5;
-  static readonly defaultConcurrency = 3;
-
-  public strategy = 'always';
-  public refresh? = this.strategy == 'random' ? XrayAllocateObject.defaultRefresh : undefined;
-  public concurrency? = this.strategy == 'random' ? XrayAllocateObject.defaultConcurrency : undefined;
-
-  normalize = (): this | undefined => {
-    if (this.strategy == 'always') return undefined;
-    this.refresh = this.refresh == 0 ? undefined : this.refresh;
-    this.concurrency = this.concurrency == 0 ? undefined : this.concurrency;
-
-    return this;
-  };
-}
-
 export class XrayStreamTlsCertificateObject {
   static readonly usageOptions = XrayOptions.usageOptions;
 
@@ -133,6 +116,7 @@ export class XrayStreamTlsSettingsObject implements ISecurityProtocol {
   public rejectUnknownSni? = false;
   public allowInsecure? = false;
   public disableSystemRoot? = false;
+  public useSystemCA?: boolean;
   public enableSessionResumption? = false;
   public alpn? = XrayStreamTlsSettingsObject.alpnOptions;
   public minVersion?: string;
@@ -159,12 +143,13 @@ export class XrayStreamTlsSettingsObject implements ISecurityProtocol {
     this.rejectUnknownSni = this.rejectUnknownSni ? this.rejectUnknownSni : undefined;
     this.allowInsecure = this.allowInsecure && coreSupports('allowInsecure') ? this.allowInsecure : undefined;
     this.disableSystemRoot = this.disableSystemRoot ? this.disableSystemRoot : undefined;
+    this.useSystemCA = this.useSystemCA && coreSupports('tlsUseSystemCA') ? true : undefined;
     this.enableSessionResumption = this.enableSessionResumption ? this.enableSessionResumption : undefined;
 
     this.alpn = this.alpn?.length == 0 || this.alpn == XrayStreamTlsSettingsObject.alpnOptions ? undefined : this.alpn;
     this.fingerprint = !this.fingerprint || this.fingerprint === '' ? undefined : this.fingerprint;
     this.echConfigList = !this.echConfigList || this.echConfigList === '' ? undefined : this.echConfigList;
-    this.echForceQuery = !this.echForceQuery || this.echForceQuery === 'none' || this.echForceQuery === '' ? undefined : this.echForceQuery;
+    this.echForceQuery = !this.echForceQuery || this.echForceQuery === 'none' || this.echForceQuery === '' || !coreSupports('tlsEchForceQuery') ? undefined : this.echForceQuery;
     this.echServerKeys = !this.echServerKeys || this.echServerKeys === '' ? undefined : this.echServerKeys;
     if (this.certificates && this.certificates.length > 0) {
       this.certificates.forEach((cert) => {
@@ -383,9 +368,7 @@ export class XrayReverseObject {
 
 export class XrayRoutingObject {
   static readonly domainStrategyOptions = ['AsIs', 'IPIfNonMatch', 'IPOnDemand'];
-  static readonly domainMatcherOptions = ['hybrid', 'linear'];
   public domainStrategy? = 'AsIs';
-  public domainMatcher? = 'hybrid';
   public rules?: XrayRoutingRuleObject[] = [];
   public disabled_rules?: XrayRoutingRuleObject[] = [];
   public balancers?: XrayBalancerObject[] = [];
@@ -393,7 +376,8 @@ export class XrayRoutingObject {
 
   public normalize(): this {
     this.domainStrategy = this.domainStrategy == 'AsIs' ? undefined : this.domainStrategy;
-    this.domainMatcher = this.domainMatcher == 'hybrid' ? undefined : this.domainMatcher;
+    // Xray-core 25.8.29 removed `domainMatcher`; configs saved by older XRAYUI versions still carry it.
+    delete (this as { domainMatcher?: string }).domainMatcher;
 
     if (this.policies) {
       this.policies.forEach((policy) => {
@@ -443,7 +427,6 @@ export class XrayRoutingObject {
     const rule = new XrayRoutingRuleObject();
     rule.name = name;
     rule.outboundTag = outboundTag;
-    rule.domainMatcher = this.domainMatcher;
     rule.domain = domains;
     rule.ip = ips;
     rule.type = 'field';
@@ -680,7 +663,6 @@ export class XrayRoutingRuleObject {
   public name?: string;
   public enabled? = true;
   public filtered? = false;
-  public domainMatcher? = 'hybrid';
   public domain?: string[];
   public ip?: string[];
   public port?: string;
@@ -698,7 +680,7 @@ export class XrayRoutingRuleObject {
   public normalize() {
     this.filtered = undefined; // This property is used for filtering in the UI, not for backend processing.
     this.enabled = undefined;
-    this.domainMatcher = this.domainMatcher == 'hybrid' ? undefined : this.domainMatcher;
+    delete (this as { domainMatcher?: string }).domainMatcher; // removed in Xray-core 25.8.29
     this.domain = this.domain?.length == 0 ? undefined : this.domain;
     this.ip = this.ip?.length == 0 ? undefined : this.ip;
     this.protocol = this.protocol?.length == 0 ? undefined : this.protocol;
@@ -875,14 +857,14 @@ export class XraySockoptObject {
   public tcpcongestion?: string;
   public interface?: string;
   public tcpMptcp?: boolean;
-  public tcpNoDelay?: boolean;
 
   normalize = (): this | undefined => {
     this.mark = !this.mark && this.mark == 0 ? undefined : this.mark;
     this.interface = this.interface == '' ? undefined : this.interface;
     this.tproxy = this.tproxy == 'off' || this.tproxy == '' ? undefined : this.tproxy;
     this.tcpMptcp = !this.tcpMptcp ? undefined : this.tcpMptcp;
-    this.tcpNoDelay = !this.tcpNoDelay ? undefined : this.tcpNoDelay;
+    // Xray-core 24.12.31 removed `tcpNoDelay`; configs saved by older XRAYUI versions still carry it.
+    delete (this as { tcpNoDelay?: boolean }).tcpNoDelay;
     this.domainStrategy = this.domainStrategy == 'AsIs' ? undefined : this.domainStrategy;
     this.dialerProxy = this.dialerProxy == '' ? undefined : this.dialerProxy;
     // Xray wants whole seconds and rejects a pair with one negative and one positive value (idle * interval < 0),

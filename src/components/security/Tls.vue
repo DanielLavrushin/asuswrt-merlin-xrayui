@@ -49,6 +49,16 @@
             <span class="hint-color">default: false</span>
           </td>
         </tr>
+        <tr v-if="proxyType === 'outbound' && useSystemCASupported">
+          <th>
+            {{ $t('com.Tls.label_use_system_ca') }}
+            <hint v-html="$t('com.Tls.hint_use_system_ca')"></hint>
+          </th>
+          <td>
+            <input v-model="transport.tlsSettings.useSystemCA" type="checkbox" class="input" :aria-label="$t('com.Tls.label_use_system_ca')" />
+            <span class="hint-color">default: false</span>
+          </td>
+        </tr>
         <tr v-if="proxyType === 'outbound'">
           <th>
             {{ $t('com.Tls.label_session_resumption') }}
@@ -201,7 +211,7 @@
             <span class="hint-color">optional</span>
           </td>
         </tr>
-        <tr v-if="proxyType === 'outbound' && isDnsEchConfig">
+        <tr v-if="proxyType === 'outbound' && isDnsEchConfig && echForceQuerySupported">
           <th>
             {{ $t('com.Tls.label_ech_force_query') }}
             <hint v-html="$t('com.Tls.hint_ech_force_query')"></hint>
@@ -355,6 +365,8 @@
       });
 
       const allowInsecureSupported = computed(() => coreSupports('allowInsecure'));
+      const echForceQuerySupported = computed(() => coreSupports('tlsEchForceQuery'));
+      const useSystemCASupported = computed(() => coreSupports('tlsUseSystemCA'));
 
       const pinnedCertificatesText = computed({
         get: () => {
@@ -458,6 +470,8 @@
         pinnedCertificatesText,
         isDnsEchConfig,
         allowInsecureSupported,
+        echForceQuerySupported,
+        useSystemCASupported,
         echForceQueryOptions: XrayOptions.echForceQueryOptions,
         echServerName,
         generatedEchConfigList,

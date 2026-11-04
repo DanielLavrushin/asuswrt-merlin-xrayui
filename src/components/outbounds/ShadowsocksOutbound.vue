@@ -73,7 +73,7 @@
             <span class="hint-color">required</span>
           </td>
         </tr>
-        <tr>
+        <tr v-if="uotSupported">
           <th>
             UDP over TCP
             <hint> When enabled, UDP over TCP (UOT) will be used. </hint>
@@ -124,6 +124,7 @@
       const encryptions = computed(() =>
         ciphers.filter((c) => !isShadowsocksPlainCipher(c.e) || coreSupports('ssPlainCipher') || c.e === proxy.value.settings?.servers[0].method)
       );
+      const uotSupported = computed(() => coreSupports('ssUot'));
 
       const generate_password = () => {
         if (proxy.value.settings) {
@@ -158,6 +159,7 @@
         proxy,
         encryptions,
         plainCipherRemoved,
+        uotSupported,
         generate_password,
         applyParsed
       };

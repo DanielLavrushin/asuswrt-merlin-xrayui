@@ -131,6 +131,10 @@ describe('Tls.vue', () => {
   });
 
   describe('ECH Force Query (outbound, conditional)', () => {
+    // echForceQuery exists only before Xray-core 26.6.22
+    beforeEach(() => setCoreVersion('26.6.1'));
+    afterEach(() => setCoreVersion('0.0.0'));
+
     it('hides echForceQuery when echConfigList is empty', () => {
       const wrapper = mountComponent('outbound');
       expect(wrapper.text()).not.toContain('com.Tls.label_ech_force_query');

@@ -62,16 +62,6 @@
         </tr>
         <tr>
           <th>
-            {{ $t('com.SockOpt.label_tcp_no_delay') }}
-            <hint v-html="$t('com.SockOpt.hint_tcp_no_delay')"></hint>
-          </th>
-          <td>
-            <input type="checkbox" v-model="sockopt.tcpNoDelay" />
-            <span class="hint-color">default false, recommended to be enabled with "Multipath": true</span>
-          </td>
-        </tr>
-        <tr>
-          <th>
             {{ $t('com.SockOpt.label_tcp_keepalive_idle') }}
             <hint v-html="$t('com.SockOpt.hint_tcp_keepalive_idle')"></hint>
           </th>

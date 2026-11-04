@@ -32,7 +32,6 @@ import {
   XrayRoutingRuleObject,
   XraySniffingObject,
   XrayRoutingPolicy,
-  XrayAllocateObject,
   XrayStreamRealitySettingsObject,
   XrayStreamTlsSettingsObject,
   XraySockoptObject,
@@ -60,7 +59,8 @@ import {
   XrayVmessInboundObject,
   XrayWireguardInboundObject,
   XrayHysteriaInboundObject,
-  migrateTunInbound
+  migrateTunInbound,
+  migrateWireguardInbound
 } from './InboundObjects';
 import {
   XrayStreamHttpSettingsObject,
@@ -845,9 +845,9 @@ export class Engine {
 
     config.inbounds.forEach((proxy, index) => {
       migrateTunInbound(proxy);
+      migrateWireguardInbound(proxy);
       proxy = deserializeProxy(proxy, inboundSettingsMap, XrayInboundObject);
       proxy.streamSettings = transformStreamSettings(proxy.streamSettings);
-      if (proxy.allocate) proxy.allocate = plainToInstance(XrayAllocateObject, proxy.allocate);
       if (proxy.sniffing) proxy.sniffing = plainToInstance(XraySniffingObject, proxy.sniffing);
       config.inbounds[index] = proxy;
     });

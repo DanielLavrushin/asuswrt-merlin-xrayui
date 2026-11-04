@@ -16,6 +16,7 @@ import {
 } from './CommonObjects';
 import { plainToInstance } from 'class-transformer';
 import { XrayVlessClientObject, XrayVmessClientObject } from './ClientsObjects';
+import { coreSupports } from './CoreVersion';
 
 export interface SubPoolMetadata {
   enabled: boolean;
@@ -150,6 +151,14 @@ export class XrayShadowsocksOutboundObject implements IProtocolType {
   getUserNames = (): string[] => {
     return this.servers.flatMap((c) => c.users?.map((u) => u.email).filter((email): email is string => !!email) ?? []);
   };
+
+  normalize = (): this | undefined => {
+    // Xray-core 26.6.22 removed `uot`: from each server, and from settings itself in the short form (`address`, `port`, … without `servers`).
+    [this as { uot?: boolean }, ...this.servers].forEach((target) => {
+      target.uot = target.uot && coreSupports('ssUot') ? true : undefined;
+    });
+    return this;
+  };
 }
 
 export class XrayTrojanOutboundObject implements IProtocolType {
@@ -173,13 +182,15 @@ export class XrayWireguardOutboundObject implements IProtocolType {
   public peers: XrayPeerObject[] = [];
   public mtu = 1420;
   public reserved?: number[];
-  public workers? = window.xray.router.cpu;
   public noKernelTun?: boolean;
 
-  public domainStrategy = 'ForceIP';
+  public domainStrategy? = 'ForceIP';
 
   normalize = (): this | undefined => {
     this.noKernelTun = this.noKernelTun ? true : undefined;
+    this.domainStrategy = coreSupports('wgDomainStrategy') ? this.domainStrategy : undefined;
+    // Xray-core 26.6.22 removed `workers`; configs saved by older XRAYUI versions still carry it.
+    delete (this as { workers?: number }).workers;
     return this;
   };
 }

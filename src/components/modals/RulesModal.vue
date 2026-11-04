@@ -139,20 +139,6 @@
         </tr>
         <tr>
           <th>
-            {{ $t('com.RulesModal.label_domain_matcher') }}
-            <hint v-html="$t('com.RulesModal.hint_domain_matcher')"></hint>
-          </th>
-          <td>
-            <select class="input_option" v-model="currentRule.domainMatcher">
-              <option v-for="opt in domainMatcherOptions" :key="opt" :value="opt">
-                {{ opt }}
-              </option>
-            </select>
-            <span class="hint-color">default: hybrid</span>
-          </td>
-        </tr>
-        <tr>
-          <th>
             {{ $t('com.RulesModal.label_network') }}
             <hint v-html="$t('com.RulesModal.hint_network')"></hint>
           </th>
@@ -262,7 +248,7 @@
   import { defineComponent, ref, computed, nextTick, Ref } from 'vue';
   import Modal from '@main/Modal.vue';
   import xrayConfig from '@/modules/XrayConfig';
-  import { XrayRoutingRuleObject, XrayRoutingObject } from '@/modules/CommonObjects';
+  import { XrayRoutingRuleObject } from '@/modules/CommonObjects';
   import Hint from '@main/Hint.vue';
   import draggable from 'vuedraggable';
   import { useI18n } from 'vue-i18n';
@@ -381,7 +367,6 @@
         newRule.outboundTag = targetType.value === 'outbound' ? currentRule.value.outboundTag : undefined;
         newRule.balancerTag = targetType.value === 'balancer' ? currentRule.value.balancerTag : undefined;
         newRule.inboundTag = [...(currentRule.value.inboundTag || [])];
-        newRule.domainMatcher = currentRule.value.domainMatcher;
         newRule.network = currentRule.value.network;
         newRule.protocol = [...(currentRule.value.protocol || [])];
         newRule.user = [...(currentRule.value.user || [])];
@@ -652,7 +637,6 @@
         onInput,
         chooseSuggestion,
         setPrefix,
-        domainMatcherOptions: XrayRoutingObject.domainMatcherOptions,
         networkOptions: XrayRoutingRuleObject.networkOptions,
         protocolOptions: XrayRoutingRuleObject.protocolOptions
       };

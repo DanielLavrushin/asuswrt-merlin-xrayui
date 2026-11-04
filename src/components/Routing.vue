@@ -23,20 +23,6 @@
           <span class="hint-color">default: AsIs</span>
         </td>
       </tr>
-      <tr>
-        <th>
-          {{ $t('com.Routing.label_domain_matcher') }}
-          <hint v-html="$t('com.Routing.hint_domain_matcher')"></hint>
-        </th>
-        <td>
-          <select class="input_option" v-model="routing.domainMatcher">
-            <option v-for="opt in domainMatcherOptions" :key="opt" :value="opt">
-              {{ opt }}
-            </option>
-          </select>
-          <span class="hint-color">default: hybrid</span>
-        </td>
-      </tr>
       <tr v-if="routing.policies">
         <th>
           {{ $t('com.Routing.label_policies') }}
@@ -189,8 +175,7 @@
         manage_balancers,
         countRules,
         countPolicies,
-        domainStrategyOptions: XrayRoutingObject.domainStrategyOptions,
-        domainMatcherOptions: XrayRoutingObject.domainMatcherOptions
+        domainStrategyOptions: XrayRoutingObject.domainStrategyOptions
       };
     }
   });

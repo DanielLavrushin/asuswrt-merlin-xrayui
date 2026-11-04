@@ -324,13 +324,6 @@ All traffic goes through Xray for evaluation.
 
 ## Advanced
 
-### Domain Matcher
-
-![](../.vuepress/public/images/routing/20251025013437.png)
-
-- **hybrid** (default) — balanced speed and accuracy
-- **linear** — sequential matching, more accurate but slower
-
 ### Balancers
 
 Balancers distribute traffic across multiple outbound connections. Instead of routing to a single outbound, a rule can route to a balancer, which then selects the best outbound based on the configured strategy.

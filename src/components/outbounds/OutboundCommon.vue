@@ -75,6 +75,8 @@
   import { EngineResponseConfig } from '@modules/Engine';
   import { XrayParsedUrlObject } from '@modules/CommonObjects';
   import ProxyParser from '@modules/parsers/ProxyParser';
+  import { ApplyCheckError } from '@modules/ApplyChecks';
+  import { useI18n } from 'vue-i18n';
 
   export default defineComponent({
     name: 'OutboundCommon',
@@ -82,6 +84,7 @@
     props: { proxy: XrayOutboundObject<IProtocolType> },
     emits: ['apply-parsed'],
     setup(props, { emit }) {
+      const { t } = useI18n();
       const proxy = ref<XrayOutboundObject<IProtocolType>>(props.proxy ?? new XrayOutboundObject<IProtocolType>());
       const isLocked = computed(() => !!proxy.value.surl?.trim());
       const rowRef = ref<HTMLElement | null>(null);
@@ -142,8 +145,15 @@
 
       const apply_subscription = () => {
         if (subscription.value) {
-          const parser = new ProxyParser(subscription.value.url);
-          const parsedProxy = parser.getOutbound();
+          let parsedProxy;
+          try {
+            parsedProxy = new ProxyParser(subscription.value.url).getOutbound();
+          } catch (error) {
+            if (!(error instanceof ApplyCheckError)) throw error;
+            window.alert(t(`com.ApplyChecks.${error.key}`, error.params));
+            subscription.value = protocols.value.find((p) => p.url === proxy.value.subPool?.active);
+            return;
+          }
 
           if (parsedProxy) {
             emit('apply-parsed', parsedProxy);

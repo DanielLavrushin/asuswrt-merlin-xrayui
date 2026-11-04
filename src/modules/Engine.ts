@@ -75,6 +75,7 @@ import {
   maskFromCoreForm,
   extractKcpMaskingForUi,
   migrateSplitHttpToXhttp,
+  migrateUdpHopToMask,
   XhttpConfigError
 } from './TransportObjects';
 import { XrayProtocol } from './Options';
@@ -236,6 +237,7 @@ export class EngineResponseConfig {
     ui_version: string;
     core_version: string;
     core_error?: string;
+    tested_core?: string;
     profile: string;
     profiles: string[];
     backups: string[];
@@ -826,7 +828,7 @@ export class Engine {
       const sockopt = proxy.streamSettings?.sockopt;
       const rotated = deserializeProxy(current, outboundSettingsMap, XrayOutboundObject);
       proxy.settings = rotated.settings;
-      proxy.streamSettings = transformStreamSettings(rotated.streamSettings);
+      proxy.streamSettings = transformStreamSettings(rotated.streamSettings, true);
       proxy.streamSettings.sockopt = sockopt;
       proxy.subPool = rotated.subPool;
     });
@@ -852,7 +854,7 @@ export class Engine {
 
     config.outbounds.forEach((proxy, index) => {
       proxy = deserializeProxy(proxy, outboundSettingsMap, XrayOutboundObject);
-      proxy.streamSettings = transformStreamSettings(proxy.streamSettings);
+      proxy.streamSettings = transformStreamSettings(proxy.streamSettings, true);
       config.outbounds[index] = proxy;
     });
 
@@ -932,6 +934,9 @@ function transformMaskArray(masks: any[] | undefined): XrayFinalMaskObject[] | u
       const settings = XrayFinalMaskObject.createSettings(mask.type ?? 'salamander');
       if (settings && 'password' in settings) (settings as any).password = mask.password;
       finalMask.settings = settings;
+    } else {
+      // core reads a missing `settings` as {}, which is a complete xicmp mask; without settings it was dropped on save
+      finalMask.settings = XrayFinalMaskObject.createSettings(mask.type);
     }
     return maskFromCoreForm(finalMask);
   });
@@ -953,7 +958,7 @@ function poolStreamKey(streamSettings: XrayStreamSettingsObject | undefined): st
   return JSON.stringify({ ...(streamSettings ?? {}), sockopt: undefined });
 }
 
-function transformStreamSettings(streamSettings: XrayStreamSettingsObject | undefined): XrayStreamSettingsObject {
+function transformStreamSettings(streamSettings: XrayStreamSettingsObject | undefined, outbound = false): XrayStreamSettingsObject {
   if (!streamSettings) return new XrayStreamSettingsObject();
   streamSettings = { ...streamSettings } as XrayStreamSettingsObject;
   migrateRawToTcp(streamSettings);
@@ -980,6 +985,8 @@ function transformStreamSettings(streamSettings: XrayStreamSettingsObject | unde
   migrateSplitHttpToXhttp(settings);
   if (settings.xhttpSettings) settings.xhttpSettings = XrayStreamHttpSettingsObject.fromPlain(settings.xhttpSettings);
   extractKcpMaskingForUi(settings);
+  // udphop is client side only, so an inbound's old hop settings never become a mask
+  if (outbound) migrateUdpHopToMask(settings);
 
   return settings;
 }

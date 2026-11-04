@@ -687,6 +687,9 @@ subscription_parse_shadowsocks() {
     local method="${methodpass%%:*}"
     local password="${methodpass#*:}"
     [ -n "$method" ] || return 1
+    case "$method" in
+    [Nn][Oo][Nn][Ee] | [Pp][Ll][Aa][Ii][Nn]) core_supports_ss_plain_cipher || return 1 ;;
+    esac
     local hp host port
     hp=$(subscription_split_hostport "$hostport") || return 1
     host="${hp% *}"

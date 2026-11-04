@@ -144,6 +144,7 @@ initial_response() {
         --arg xray_ver "$XRAY_VERSION" \
         --arg xray_err "$XRAYUI_CORE_ERR" \
         --arg xrayui_ver "$XRAYUI_VERSION" \
+        --arg tested_core "$XRAYUI_TESTED_CORE" \
         --argjson profiles "$profiles" \
         --argjson backups "$backups" \
         --argjson debug "$debug" \
@@ -188,6 +189,7 @@ initial_response() {
         | .xray.ui_version = $xrayui_ver
         | .xray.core_version = $xray_ver
         | .xray.core_error = $xray_err
+        | .xray.tested_core = $tested_core
         | .xray.profiles = $profiles
         | .xray.backups = $backups
         | .xray.debug = $debug
@@ -228,15 +230,16 @@ initial_response() {
             --arg xrayui_ver "$XRAYUI_VERSION" \
             --arg xray_ver "$XRAY_VERSION" \
             --arg xray_err "$XRAYUI_CORE_ERR" \
+            --arg tested_core "$XRAYUI_TESTED_CORE" \
             --argjson profiles "${profiles:-[]}" \
             --argjson backups "${backups:-[]}" \
             --argjson debug "$debug" \
             '{
                 geodata: { geoip_url: $geoipurl, geosite_url: $geositeurl, community: { "geoip.dat": $geoip, "geosite.dat": $geosite }, auto_update: $geo_auto_update },
-                xray: { uptime: $uptime, profile: $profile, skip_test: $skip_test, clients_check: $clients_check, check_connection: $check_connection, probe_url: $probe_url, probe_interval: $probe_interval, github_proxy: $github_proxy, dnsmasq: $dnsmasq, logs_dor: $logs_dor, logs_max_size: $logs_max_size, ipsec: $ipsec, startup_delay: $startup_delay, sleep_time: $sleep_time, dns_only: $dns_only, block_quic: $block_quic, tun_routing: $tun_routing, watchdog: $watchdog, watchdog_interval: $watchdog_interval, watchdog_max_attempts: $watchdog_max_attempts, subscription_auto_refresh: $sar, subscription_auto_fallback: ($saf == "true"), subscription_fallback_interval: ($sfi | tonumber), subscriptions: { links: [], filters: [] }, hooks: {}, ui_version: $xrayui_ver, core_version: $xray_ver, core_error: $xray_err, profiles: $profiles, backups: $backups, debug: $debug }
+                xray: { uptime: $uptime, profile: $profile, skip_test: $skip_test, clients_check: $clients_check, check_connection: $check_connection, probe_url: $probe_url, probe_interval: $probe_interval, github_proxy: $github_proxy, dnsmasq: $dnsmasq, logs_dor: $logs_dor, logs_max_size: $logs_max_size, ipsec: $ipsec, startup_delay: $startup_delay, sleep_time: $sleep_time, dns_only: $dns_only, block_quic: $block_quic, tun_routing: $tun_routing, watchdog: $watchdog, watchdog_interval: $watchdog_interval, watchdog_max_attempts: $watchdog_max_attempts, subscription_auto_refresh: $sar, subscription_auto_fallback: ($saf == "true"), subscription_fallback_interval: ($sfi | tonumber), subscriptions: { links: [], filters: [] }, hooks: {}, ui_version: $xrayui_ver, core_version: $xray_ver, core_error: $xray_err, tested_core: $tested_core, profiles: $profiles, backups: $backups, debug: $debug }
             }' >"$_tmp_response" 2>"$_jq_err"; then
             log_error "Error: jq -n also failed. jq error: $(cat "$_jq_err" 2>/dev/null). Writing bare minimum response."
-            echo '{"xray":{"ui_version":"'"$XRAYUI_VERSION"'","core_version":"'"$XRAY_VERSION"'","profiles":[],"backups":[]}}' >"$_tmp_response"
+            echo '{"xray":{"ui_version":"'"$XRAYUI_VERSION"'","core_version":"'"$XRAY_VERSION"'","tested_core":"'"$XRAYUI_TESTED_CORE"'","profiles":[],"backups":[]}}' >"$_tmp_response"
         fi
         rm -f "$_jq_err"
     else

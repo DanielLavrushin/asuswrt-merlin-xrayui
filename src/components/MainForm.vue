@@ -79,6 +79,7 @@
   import engine, { EngineResponseConfig, SubmitActions } from '@/modules/Engine';
   import { getCoreVersion } from '@/modules/CoreVersion';
   import { XhttpConfigError } from '@/modules/TransportObjects';
+  import { ApplyCheckError, checkBeforeApply } from '@/modules/ApplyChecks';
 
   import Modal from '@main/Modal.vue';
 
@@ -190,12 +191,14 @@
           await engine.executeWithLoadingProgress(async () => {
             await engine.keepRotatedOutbounds(config.value);
             const cfg = engine.prepareServerConfig(config.value);
+            checkBeforeApply(cfg);
             await engine.submit(SubmitActions.configurationApply, cfg);
             await engine.loadXrayConfig();
           });
         } catch (error) {
           window.hideLoading();
           if (error instanceof XhttpConfigError) window.alert(t(`com.Xhttp.${error.key}`, { tag: error.tag ?? '' }));
+          else if (error instanceof ApplyCheckError) window.alert(t(`com.ApplyChecks.${error.key}`, error.params));
           else window.alert(error instanceof Error ? error.message : String(error));
         }
       };

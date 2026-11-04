@@ -815,7 +815,9 @@
     },
     "XrayVersion": {
       "not_installed": "not installed",
-      "not_working": "not working"
+      "not_working": "not working",
+      "newer_than_tested": "newer than tested ({0})",
+      "newer_than_tested_hint": "This XRAYUI release was tested with Xray-core {0}. A newer core may have renamed or dropped settings that XRAYUI writes, and Xray ignores those without an error. Click the version to switch the core."
     },
     "XrayCoreVersionModal": {
       "modal_title": "X-RAY Core Update",
@@ -919,19 +921,25 @@
       "hint_down": "Maximum download bandwidth (e.g., `100mbps`, `1gbps`). Used by the congestion control algorithm.",
       "udphop_title": "UDP Hop Configuration",
       "label_udphop_enabled": "Enable UDP Hop",
-      "hint_udphop_enabled": "UDP Hop allows bouncing UDP packets across multiple ports to avoid detection and blocking.",
+      "hint_udphop_enabled": "Port hopping: every interval the client switches to another server port from **Port Range** and to a new local port, so a blocked or throttled port does not cut the connection. The server must accept the whole range, usually by redirecting it to its port with iptables or nftables. Xray-core 26.9.9 and later get it as the `udphop` finalmask, older cores in the place they read it.",
       "label_udphop_port": "Port Range",
-      "hint_udphop_port": "Port range for UDP hopping (e.g., `20000-50000`). Packets will hop between ports in this range.",
+      "hint_udphop_port": "Server ports to hop between, e.g. `20000-50000` or `443,20000-50000`.",
       "label_udphop_interval": "Hop Interval",
-      "hint_udphop_interval": "Time interval in seconds between port hops. Default is 30 seconds.",
+      "hint_udphop_interval": "Seconds between hops, at least 5. Default is 30 seconds.",
+      "warn_udphop_xicmp": "Port hopping does not work with the xicmp mask: ICMP has no ports, and Xray-core 26.9.9 and later fail every connection with both set. It is left out on save.",
       "label_finalmask_enabled": "Enable Finalmask",
       "hint_finalmask_enabled": "Finalmask is a UDP masking/obfuscation layer that disguises traffic characteristics to avoid detection.",
       "label_finalmask_type": "Mask Type",
-      "hint_finalmask_type": "Type of finalmask obfuscation. <ul><li>`salamander`: simple password-based UDP obfuscation</li><li>`sudoku`: byte-appearance transformation with configurable encoding</li></ul>",
+      "hint_finalmask_type": "Type of finalmask obfuscation. <ul><li>`salamander`: simple password-based UDP obfuscation</li><li>`sudoku`: byte-appearance transformation with configurable encoding</li></ul><hr/>`xdns` and `xicmp` are offered only for the Xray-core versions their settings here match: `xdns` before 26.4.13, `xicmp` from 26.6.1. A mask set by hand in `config.json` is kept as it is.",
       "label_finalmask_password": "Password",
       "hint_finalmask_password": "Shared secret for obfuscation. Must match the server configuration.",
       "label_finalmask_domain": "Domain",
       "hint_finalmask_domain": "Domain name for Finalmask obfuscation (e.g., `t.example.com`). Must match the server configuration.",
+      "label_xicmp_dgram": "Unprivileged ICMP Socket",
+      "hint_xicmp_dgram": "Sends ICMP through a datagram socket that needs no raw socket privileges (`dgram`). Linux and macOS clients only.",
+      "label_xicmp_ips": "IP Addresses",
+      "hint_xicmp_ips": "Comma-separated IP addresses, no CIDR ranges. On an outbound, the addresses ICMP is sent to instead of the server address; required when the server address is a domain. On an inbound, only ICMP from these addresses is accepted.",
+      "warn_xicmp_invalid_ips": "Not IP addresses, removed on save because Xray does not start with them: {0}",
       "label_sudoku_ascii": "ASCII Mode",
       "hint_sudoku_ascii": "Controls byte appearance. `prefer_entropy` produces high-entropy output. `prefer_ascii` produces printable ASCII-like output.",
       "label_sudoku_padding_min": "Padding Min (%)",
@@ -1012,6 +1020,14 @@
       "countries": "Countries",
       "closest": "Closest Domain",
       "scan_progress": "Scanning is in progress..."
+    },
+    "ApplyChecks": {
+      "error_ss_plain_cipher": "Shadowsocks in {tag}: Xray 26.7.11 and later do not start with the {method} encryption method. Choose another one.",
+      "error_ss_plain_cipher_client": "Shadowsocks in {tag}: client {client} uses the {method} encryption method, which Xray does not accept for inbound clients. Remove the client and add it again with another method.",
+      "error_vless_no_tls": "VLESS in {tag}: Xray does not start when the server address {address} is public and there is no TLS, REALITY or VLESS Encryption. Turn on TLS or REALITY in its transport settings. Without them, only private addresses and local names such as .lan are allowed.",
+      "error_trojan_no_tls": "Trojan in {tag}: Xray does not start when the server address {address} is public and there is no TLS or REALITY. Turn on TLS or REALITY in its transport settings. Without them, only private addresses and local names such as .lan are allowed.",
+      "error_link_ss_plain_cipher": "Shadowsocks server {tag} uses no encryption ({method}). Xray 26.7.11 and later do not support it, so the server cannot be used.",
+      "warn_ss_plain_cipher": "Xray 26.7.11 and later do not start with this encryption method."
     },
     "Xhttp": {
       "modal_anti_detection": "Anti-Detection Settings",

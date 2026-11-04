@@ -124,6 +124,7 @@
   import jsQR from 'jsqr';
   import { XrayObject } from '@/modules/XrayConfig';
   import ProxyParser from '@/modules/parsers/ProxyParser';
+  import { ApplyCheckError } from '@/modules/ApplyChecks';
   import parseJsonOutbound from '@/modules/parsers/JsonOutboundParser';
   import Hint from '@main/Hint.vue';
   import { plainToInstance } from 'class-transformer';
@@ -333,7 +334,7 @@
             const parser = new ProxyParser(state.protocol.url);
             primaryOutbound = parser.getOutbound();
           } catch (e) {
-            alert(t('com.ImportConfigModal.alert_not_supported_protocol'));
+            alert(e instanceof ApplyCheckError ? t(`com.ApplyChecks.${e.key}`, e.params) : t('com.ImportConfigModal.alert_not_supported_protocol'));
             console.error(e);
             return;
           }

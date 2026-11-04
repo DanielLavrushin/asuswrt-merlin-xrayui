@@ -19,7 +19,8 @@ export default function VlessParser(parsedObj: XrayParsedUrlObject): XrayOutboun
   const user = new XrayVmessClientObject();
   user.id = parsedObj.uuid;
   user.email = parsedObj.parsedParams.email ?? 'user-' + parsedObj.protocol;
-  user.security = parsedObj.parsedParams.scy ?? 'none';
+  // A link without "scy" means auto, as on the router; 'none' here turned off encryption on cores before 26.7.11.
+  user.security = parsedObj.parsedParams.scy || undefined;
   if (proxy.settings.vnext[0].users) proxy.settings.vnext[0].users.push(user);
 
   return proxy;

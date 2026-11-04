@@ -24,6 +24,8 @@ export const XrayOptions = {
   xhttpSessionPlacements: ['path', 'cookie', 'header', 'query'],
   xhttpUplinkDataPlacements: ['auto', 'body', 'cookie', 'header'],
   clientFlowOptions: ['none', 'xtls-rprx-vision'],
+  // Inbound Shadowsocks ciphers. 'none'/'plain' are left out: Xray never accepted them for inbound clients, and since 26.7.11
+  // it rejects them everywhere. The outbound editor offers them only while coreSupports('ssPlainCipher').
   encryptionOptions: [
     // Recommended encryption methods
     '2022-blake3-aes-128-gcm',
@@ -35,11 +37,13 @@ export const XrayOptions = {
     'chacha20-poly1305',
     'chacha20-ietf-poly1305',
     'xchacha20-poly1305',
-    'xchacha20-ietf-poly1305',
-    'none',
-    'plain'
-  ]
+    'xchacha20-ietf-poly1305'
+  ],
+  ssPlainCiphers: ['none', 'plain']
 };
+
+// Xray compares Shadowsocks cipher names case-insensitively.
+export const isShadowsocksPlainCipher = (method?: string): boolean => XrayOptions.ssPlainCiphers.includes(String(method ?? '').toLowerCase());
 
 export const XrayProtocol = {
   VLESS: 'vless',

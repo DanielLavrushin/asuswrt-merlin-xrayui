@@ -105,9 +105,21 @@ flowchart TD
 ```sh
 MAC="AA:BB:CC:DD:EE:FF"
 LAN="192.168.50.0/24"
-RULE="-i br0 -m mac --mac-source $MAC ! -d $LAN -m addrtype ! --dst-type BROADCAST -m time --timestart 22:00 --timestop 07:00 --kerneltz -j DROP"
-iptables -t mangle -C PREROUTING $RULE 2>/dev/null || iptables -t mangle -I PREROUTING 1 $RULE
+TIME="-m time --timestart 22:00 --timestop 07:00 --kerneltz"
+RULE4="-i br0 -m mac --mac-source $MAC ! -d $LAN -m addrtype ! --dst-type BROADCAST $TIME -j DROP"
+RULE6="-i br0 -m mac --mac-source $MAC ! -d fe80::/10 -m addrtype ! --dst-type LOCAL,MULTICAST $TIME -j DROP"
+
+while iptables -t mangle -D PREROUTING $RULE4 2>/dev/null; do :; done
+iptables -t mangle -I PREROUTING 1 $RULE4
+
+if ip6tables -t mangle -L PREROUTING -n >/dev/null 2>&1; then
+    while ip6tables -t mangle -D PREROUTING $RULE6 2>/dev/null; do :; done
+    ip6tables -t mangle -I PREROUTING 1 $RULE6
+fi
 ```
+
+> [!important]
+> Оставляйте обе части: `RULE4` для IPv4 и `RULE6` для IPv6. Без `RULE6` устройство с IPv6 продолжит выходить в интернет в запрещённые часы. Хук при каждом запуске удаляет правило и вставляет его заново наверх, потому что XRAYUI при каждом старте Xray ставит в начало `PREROUTING` своё правило для уже открытых соединений. Если ваше правило окажется ниже, соединения, открытые до начала запрета, продолжат работать.
 
 > [!note]
 > У клиентов VPN-сервера роутера (WireGuard, IPsec) нет MAC-адреса. Для них используйте интерфейс и адрес, например `-i wgs1 -s 10.6.0.2`.

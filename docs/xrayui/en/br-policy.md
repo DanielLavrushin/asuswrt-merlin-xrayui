@@ -103,9 +103,21 @@ There are two ways to keep a schedule working:
 ```sh
 MAC="AA:BB:CC:DD:EE:FF"
 LAN="192.168.50.0/24"
-RULE="-i br0 -m mac --mac-source $MAC ! -d $LAN -m addrtype ! --dst-type BROADCAST -m time --timestart 22:00 --timestop 07:00 --kerneltz -j DROP"
-iptables -t mangle -C PREROUTING $RULE 2>/dev/null || iptables -t mangle -I PREROUTING 1 $RULE
+TIME="-m time --timestart 22:00 --timestop 07:00 --kerneltz"
+RULE4="-i br0 -m mac --mac-source $MAC ! -d $LAN -m addrtype ! --dst-type BROADCAST $TIME -j DROP"
+RULE6="-i br0 -m mac --mac-source $MAC ! -d fe80::/10 -m addrtype ! --dst-type LOCAL,MULTICAST $TIME -j DROP"
+
+while iptables -t mangle -D PREROUTING $RULE4 2>/dev/null; do :; done
+iptables -t mangle -I PREROUTING 1 $RULE4
+
+if ip6tables -t mangle -L PREROUTING -n >/dev/null 2>&1; then
+    while ip6tables -t mangle -D PREROUTING $RULE6 2>/dev/null; do :; done
+    ip6tables -t mangle -I PREROUTING 1 $RULE6
+fi
 ```
+
+> [!important]
+> Keep both parts: `RULE4` for IPv4 and `RULE6` for IPv6. Without `RULE6`, a device with IPv6 still reaches the internet during the blocked hours. The hook deletes the rule and inserts it again at the top on every run, because XRAYUI puts its own rule for already open connections at the top of `PREROUTING` each time Xray starts. If your rule stays below it, connections opened before the blocked hours keep working.
 
 > [!note]
 > Clients of the router's VPN server (WireGuard, IPsec) have no MAC address. Match them by interface and address instead, for example `-i wgs1 -s 10.6.0.2`.

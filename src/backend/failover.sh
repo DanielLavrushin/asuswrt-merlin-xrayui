@@ -7,6 +7,7 @@ FAILOVER_MAX_TRIES_PER_RUN=3
 FAILOVER_MAX_EVALUATED=20
 FAILOVER_FAILED_TTL=21600
 FAILOVER_PROBE_GRACE=6
+FAILOVER_POOL_REFRESH_MIN=900
 FAILOVER_STATE="{}"
 
 failover_check() {
@@ -624,7 +625,7 @@ failover_request_pool_refresh() {
     local last
     [ -n "${subscriptionLinks:-}" ] || return 0
     last=$(failover_state_jq -r '._pool_refresh // 0')
-    [ $((now - last)) -ge 3600 ] || return 0
+    [ $((now - last)) -ge "$FAILOVER_POOL_REFRESH_MIN" ] || return 0
     failover_state_update --argjson now "$now" '._pool_refresh = $now'
     log_info "Failover: refreshing the subscription pool"
     subscription_fetch_protocols cron >/dev/null 2>&1 || log_warn "Failover: the subscription refresh brought no usable links"

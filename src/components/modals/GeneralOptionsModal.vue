@@ -338,6 +338,8 @@
               <td>
                 <select class="input_option" v-model="options.subscription_auto_refresh">
                   <option value="disabled">{{ $t('labels.disabled') }}</option>
+                  <option value="30m">{{ $t('com.GeneralOptionsModal.sub_refresh_30m') }}</option>
+                  <option value="1h">{{ $t('com.GeneralOptionsModal.sub_refresh_1h') }}</option>
                   <option value="3h">{{ $t('com.GeneralOptionsModal.sub_refresh_3h') }}</option>
                   <option value="6h">{{ $t('com.GeneralOptionsModal.sub_refresh_6h') }}</option>
                   <option value="12h">{{ $t('com.GeneralOptionsModal.sub_refresh_12h') }}</option>

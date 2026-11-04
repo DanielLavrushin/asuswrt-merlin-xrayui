@@ -137,6 +137,8 @@ cron_subscription_refresh_add() {
 
     local cron_expr=""
     case "$subscription_auto_refresh" in
+        30m) cron_expr="*/30 * * * *" ;;
+        1h)  cron_expr="0 * * * *" ;;
         3h)  cron_expr="0 */3 * * *" ;;
         6h)  cron_expr="0 */6 * * *" ;;
         12h) cron_expr="0 */12 * * *" ;;

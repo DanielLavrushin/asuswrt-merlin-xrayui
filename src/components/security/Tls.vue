@@ -55,7 +55,7 @@
             <hint v-html="$t('com.Tls.hint_use_system_ca')"></hint>
           </th>
           <td>
-            <input v-model="transport.tlsSettings.useSystemCA" type="checkbox" class="input" />
+            <input v-model="transport.tlsSettings.useSystemCA" type="checkbox" class="input" :aria-label="$t('com.Tls.label_use_system_ca')" />
             <span class="hint-color">default: false</span>
           </td>
         </tr>

@@ -288,7 +288,16 @@
       "target_balancer": "Lastverteiler",
       "label_balancer_tag": "Lastverteiler",
       "hint_balancer_tag": "Der Tag des Lastverteilers. Diese Regel leitet den passenden Datenverkehr an den angegebenen Lastverteiler weiter.",
-      "no_balancers": "Keine Lastverteiler definiert. Lastverteiler werden zuerst im Routing-Bereich hinzugefügt."
+      "no_balancers": "Keine Lastverteiler definiert. Lastverteiler werden zuerst im Routing-Bereich hinzugefügt.",
+      "target_missing": "{0} (nicht gefunden)",
+      "reassign": "Neu zuweisen…",
+      "reassign_title": "Regeln neu zuweisen",
+      "label_reassign_from": "Von",
+      "hint_reassign_from": "Die ausgehende Verbindung oder der Lastverteiler, an die die Regeln jetzt weiterleiten. Die Zahl in Klammern gibt an, wie viele Regeln sie nutzen, deaktivierte eingeschlossen.",
+      "label_reassign_to": "Nach",
+      "hint_reassign_to": "Die ausgehende Verbindung oder der Lastverteiler, an die diese Regeln stattdessen weiterleiten.",
+      "reassign_summary": "{0} Regel(n) werden verschoben.",
+      "reassign_apply": "Regeln verschieben"
     },
     "Inbounds": {
       "title": "Eingänge",

@@ -326,7 +326,16 @@
       "target_balancer": "负载均衡器",
       "label_balancer_tag": "负载均衡器",
       "hint_balancer_tag": "负载均衡器的标签。此规则将把匹配的流量转发到指定的负载均衡器。",
-      "no_balancers": "未定义负载均衡器。请先在路由部分添加负载均衡器。"
+      "no_balancers": "未定义负载均衡器。请先在路由部分添加负载均衡器。",
+      "target_missing": "{0}（未找到）",
+      "reassign": "重新分配…",
+      "reassign_title": "重新分配规则",
+      "label_reassign_from": "从",
+      "hint_reassign_from": "规则当前指向的出站连接或负载均衡器。括号中的数字是使用它的规则数量，包括已禁用的规则。",
+      "label_reassign_to": "到",
+      "hint_reassign_to": "这些规则将改为指向的出站连接或负载均衡器。",
+      "reassign_summary": "将移动 {0} 条规则。",
+      "reassign_apply": "移动规则"
     },
     "Inbounds": {
       "title": "入站",
@@ -341,7 +350,7 @@
       "label_create_new": "创建新的",
       "alert_tag_exists": "标签已存在，请选择另一个。",
       "alert_delete_confirm": "删除此出站？",
-      "alert_delete_tag_in_rules_use": "此标签 ({1}) 在路由规则 ({0}) 中使用。请在删除出站之前从规则中移除它。",
+      "alert_delete_tag_in_rules_use": "此标签 ({1}) 在路由规则 ({0}) 中使用。请先将这些规则移到其他出站连接（路由 → 路由规则 → 管理 → 重新分配…），然后再删除出站。",
       "alert_delete_tag_in_balancer_use": "此标签 ({1}) 在均衡器 ({0}) 中被用作后备 (fallback)。请在删除出站之前从均衡器中移除它。",
       "hint_pool_inactive": "通用设置中的自动故障转移已关闭，此出站不会自动切换。",
       "status_unreachable": "不可达",

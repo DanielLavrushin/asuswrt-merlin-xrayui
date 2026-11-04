@@ -330,7 +330,16 @@
       "target_balancer": "Balancer",
       "label_balancer_tag": "Balancer",
       "hint_balancer_tag": "The tag of the balancer. This rule will forward matched traffic to the specified load balancer.",
-      "no_balancers": "No balancers defined. Add balancers in the Routing section first."
+      "no_balancers": "No balancers defined. Add balancers in the Routing section first.",
+      "target_missing": "{0} (not found)",
+      "reassign": "Reassign…",
+      "reassign_title": "Reassign rules",
+      "label_reassign_from": "From",
+      "hint_reassign_from": "The outbound or balancer the rules route to now. The number in brackets is how many rules use it, disabled rules included.",
+      "label_reassign_to": "To",
+      "hint_reassign_to": "The outbound or balancer these rules will route to instead.",
+      "reassign_summary": "{0} rule(s) will move.",
+      "reassign_apply": "Move rules"
     },
     "Inbounds": {
       "title": "Inbounds",
@@ -345,7 +354,7 @@
       "label_create_new": "Create new",
       "alert_tag_exists": "Tag  already exists, please choose another one.",
       "alert_delete_confirm": "Delete this outbound?",
-      "alert_delete_tag_in_rules_use": "This tag ({1}) is used in the routing rules ({0}). Please remove it from the rules before deleting the outbound.",
+      "alert_delete_tag_in_rules_use": "This tag ({1}) is used in the routing rules ({0}). Move these rules to another outbound first (Routing → Rules → manage → Reassign…), then delete the outbound.",
       "alert_delete_tag_in_balancer_use": "This tag ({1}) is used as a fallback in the balancers ({0}). Please remove it from the balancers before deleting the outbound.",
       "hint_pool_inactive": "Auto-fallback is turned off in General Options, so this outbound is not switched automatically.",
       "status_unreachable": "Unreachable",

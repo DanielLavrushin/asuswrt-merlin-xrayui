@@ -31,7 +31,10 @@
               {{ !r.name ? getRuleName(r) : r.name }}
             </td>
             <td>
-              {{ r.balancerTag ? '⚖ ' + r.balancerTag : r.outboundTag }}
+              <select class="input_option rule-target" :value="targetKey(r)" @change="retarget([r], ($event.target as HTMLSelectElement).value)">
+                <option v-if="!targetOptions.some((o) => o.key === targetKey(r))" :value="targetKey(r)">{{ $t('com.RulesModal.target_missing', [targetLabel(targetKey(r))]) }}</option>
+                <option v-for="opt in targetOptions" :key="opt.key" :value="opt.key">{{ opt.label }}</option>
+              </select>
               <span v-if="balancerNowText(r)" class="balancer-now" :title="balancerNowText(r) + '\n' + $t('com.BalancerModal.hint_now')">&rarr; {{ balancerNowText(r) }}</span>
             </td>
             <td>
@@ -54,7 +57,40 @@
       <label class="rule-filter">
         <input type="text" placeholder="rule filter" v-model="filterText" @input="filter_rules" />
       </label>
+      <input class="button_gen button_gen_small" type="button" :value="$t('com.RulesModal.reassign')" :disabled="!usedTargets.length" @click.prevent="openReassign" />
       <input class="button_gen button_gen_small" type="button" :value="$t('com.RulesModal.add_new_rule')" @click.prevent="addRule" />
+    </template>
+  </modal>
+  <modal width="500" ref="modalReassign" :title="$t('com.RulesModal.reassign_title')">
+    <table class="FormTable modal-form-table">
+      <tbody>
+        <tr>
+          <th>
+            {{ $t('com.RulesModal.label_reassign_from') }}
+            <hint v-html="$t('com.RulesModal.hint_reassign_from')"></hint>
+          </th>
+          <td>
+            <select class="input_option" v-model="reassignFrom">
+              <option v-for="opt in usedTargets" :key="opt.key" :value="opt.key">{{ opt.label }} ({{ opt.count }})</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <th>
+            {{ $t('com.RulesModal.label_reassign_to') }}
+            <hint v-html="$t('com.RulesModal.hint_reassign_to')"></hint>
+          </th>
+          <td>
+            <select class="input_option" v-model="reassignTo">
+              <option v-for="opt in targetOptions" :key="opt.key" :value="opt.key" :disabled="opt.key === reassignFrom">{{ opt.label }}</option>
+            </select>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <template v-slot:footer>
+      <span class="hint-color reassign-summary" v-if="reassignTo && reassignTo !== reassignFrom">{{ $t('com.RulesModal.reassign_summary', [reassignCount]) }}</span>
+      <input class="button_gen button_gen_small" type="button" :value="$t('com.RulesModal.reassign_apply')" :disabled="!reassignTo || reassignTo === reassignFrom" @click.prevent="reassign" />
     </template>
   </modal>
   <modal width="755" ref="modalAdd" title="Rule">
@@ -302,6 +338,50 @@
         const edited = (xrayConfig.routing?.balancers || []).find((b) => b.tag === r.balancerTag);
         const now = balancerNow(edited);
         return now.state === 'view' ? describeViewShort(now.view, (key, args) => t(key, args)) : '';
+      };
+
+      const modalReassign = ref<InstanceType<typeof Modal> | null>(null);
+      const reassignFrom = ref('');
+      const reassignTo = ref('');
+
+      // one list for both target kinds; a rule routes to exactly one of them
+      const targetOptions = computed(() => [
+        ...outbounds.value.map((tag) => ({ key: `o:${tag}`, label: tag })),
+        ...balancerTags.value.map((tag) => ({ key: `b:${tag}`, label: `⚖ ${tag}` }))
+      ]);
+      const targetKey = (r: XrayRoutingRuleObject) => (r.balancerTag ? `b:${r.balancerTag}` : `o:${r.outboundTag ?? ''}`);
+      const targetLabel = (key: string) => (key.startsWith('b:') ? `⚖ ${key.slice(2)}` : key.slice(2));
+
+      // edits the shared rule objects in place, as the rule editor's v-model does
+      const retarget = (targets: XrayRoutingRuleObject[], key: string) => {
+        targets.forEach((r) => {
+          r.outboundTag = key.startsWith('o:') ? key.slice(2) : undefined;
+          r.balancerTag = key.startsWith('b:') ? key.slice(2) : undefined;
+        });
+        reindexRules();
+      };
+
+      const usedTargets = computed(() => {
+        const counts = new Map<string, number>();
+        allRules.value.filter((r) => !r.isSystem()).forEach((r) => counts.set(targetKey(r), (counts.get(targetKey(r)) ?? 0) + 1));
+        return Array.from(counts, ([key, count]) => ({ key, count, label: targetLabel(key) }));
+      });
+      const reassignCount = computed(() => usedTargets.value.find((o) => o.key === reassignFrom.value)?.count ?? 0);
+
+      const openReassign = () => {
+        reassignFrom.value = usedTargets.value[0]?.key ?? '';
+        reassignTo.value = '';
+        modalReassign.value?.show(() => {});
+      };
+
+      // disabled rules move too, so enabling one later doesn't bring back the old target
+      const reassign = () => {
+        if (!reassignFrom.value || !reassignTo.value || reassignFrom.value === reassignTo.value) return;
+        retarget(
+          allRules.value.filter((r) => !r.isSystem() && targetKey(r) === reassignFrom.value),
+          reassignTo.value
+        );
+        modalReassign.value?.close();
       };
 
       const currentPrefix = ref<'geosite:' | 'ext:xrayui:' | 'geoip:'>('geosite:');
@@ -606,6 +686,17 @@
         currentRule,
         modalList,
         modalAdd,
+        modalReassign,
+        reassignFrom,
+        reassignTo,
+        reassignCount,
+        targetOptions,
+        targetKey,
+        targetLabel,
+        retarget,
+        usedTargets,
+        openReassign,
+        reassign,
         ips,
         domains,
         source,
@@ -681,6 +772,12 @@
     tbody tr.rule-system td {
       color: rgb(255, 0, 255);
     }
+  }
+  .rule-target {
+    max-width: 160px;
+  }
+  .reassign-summary {
+    margin-right: 8px;
   }
   .rule-filter {
     float: left;

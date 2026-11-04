@@ -9,13 +9,17 @@ import {
   isObjectEmpty
 } from './CommonObjects';
 import { ITransportNetwork } from './Interfaces';
-import { coreAppliesLastMaskOutermost, coreExpectsOutermostMaskLast, coreSupports, coreUsesMkcpLegacyMaskType, mkcpMaskingMode } from './CoreVersion';
+import { coreAppliesLastMaskOutermost, coreExpectsOutermostMaskLast, coreSupports, coreUsesMkcpLegacyMaskType, mkcpMaskingMode, type CoreFeature } from './CoreVersion';
+import { isIPAddress } from './validators';
 
 const nonDefaultNumber = (value: unknown, defaultValue: number, min = -Infinity): number | undefined => {
   if (value === '' || value === null || value === undefined) return undefined;
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed >= min && parsed !== defaultValue ? parsed : undefined;
 };
+
+// A hop interval is a number or a "min-max" range. Core rejects anything under 5 seconds; empty means 30.
+const hopInterval = (value: unknown): number | string | undefined => (typeof value === 'string' && value.includes('-') ? value.trim() : nonDefaultNumber(value, 30, 5));
 
 const splitList = (value: unknown): string[] =>
   (Array.isArray(value) ? value : String(value ?? '').split(','))
@@ -484,14 +488,36 @@ export function migrateSplitHttpToXhttp(stream: SplitHttpMigratableStream): void
   stream.xhttpSettings = xhttp;
 }
 
+/** hysteriaSettings.udphop: where cores before 26.3.23 read port hopping. The UI edits the `udphop` mask instead. */
 export class XrayUdpHopObject {
   public port?: string;
-  public interval? = 30;
+  public interval?: number | string = 30;
 
   normalize = (): this | undefined => {
     this.port = !this.port || this.port === '' ? undefined : this.port;
     this.interval = this.interval === 30 ? undefined : this.interval;
     return isObjectEmpty(this) ? undefined : this;
+  };
+}
+
+/** Settings of the `udphop` UDP mask (core 26.9.9+). Client side only: a server refuses to start with it. */
+export class XrayUdpHopMaskObject {
+  // What hysteriaSettings.udphop and quicParams.udpHop did: a new local socket and a random server port every interval.
+  static readonly defaultMode = 'intervalLocal,intervalRemote';
+
+  public mode? = XrayUdpHopMaskObject.defaultMode;
+  public interval?: number | string;
+  public remoteIPs?: string[];
+  public remotePorts?: string;
+
+  normalize = (): this => {
+    // core refuses an empty mode, so the mask always keeps one
+    this.mode = splitList(this.mode).join(',') || XrayUdpHopMaskObject.defaultMode;
+    this.interval = hopInterval(this.interval);
+    const remoteIPs = splitList(this.remoteIPs);
+    this.remoteIPs = remoteIPs.length > 0 ? remoteIPs : undefined;
+    this.remotePorts = String(this.remotePorts ?? '').trim() || undefined;
+    return this;
   };
 }
 
@@ -614,16 +640,27 @@ export class XrayXdnsObject {
   };
 }
 
+/** xicmp settings since core 26.6.1. Empty settings are valid, so the mask is never dropped. */
 export class XrayXicmpObject {
-  public listenIp? = '0.0.0.0';
-  public id? = 0;
+  public dgram? = false;
+  public ips?: string[];
 
-  normalize = (): this | undefined => {
-    this.listenIp = this.listenIp === '0.0.0.0' || !this.listenIp ? undefined : this.listenIp;
-    this.id = this.id === 0 ? undefined : this.id;
-    return isObjectEmpty(this) ? undefined : this;
+  normalize = (): this => {
+    this.dgram = this.dgram || undefined;
+    // core does not start when an entry fails netip.ParseAddr
+    const ips = splitList(this.ips).filter(isIPAddress);
+    this.ips = ips.length > 0 ? ips : undefined;
+    if (coreSupports('xicmpIps')) {
+      // pre-26.6.1 schema, ignored by newer cores; older cores still read it, so it stays there
+      Reflect.deleteProperty(this, 'listenIp');
+      Reflect.deleteProperty(this, 'id');
+    }
+    return this;
   };
 }
+
+// Settings of a mask type XRAYUI has no editor for, kept as written.
+export type RawMaskSettings = Record<string, unknown>;
 
 export type FinalMaskSettingsType =
   | XraySalamanderObject
@@ -635,7 +672,9 @@ export type FinalMaskSettingsType =
   | XrayMkcpAes128GcmObject
   | XrayMkcpLegacyObject
   | XrayXdnsObject
-  | XrayXicmpObject;
+  | XrayXicmpObject
+  | XrayUdpHopMaskObject
+  | RawMaskSettings;
 
 export class XrayFinalMaskObject {
   static readonly udpMaskTypes = [
@@ -655,6 +694,8 @@ export class XrayFinalMaskObject {
     'xicmp'
   ];
   static readonly tcpMaskTypes = ['fragment', 'header-custom', 'sudoku'];
+  // Editors written for one core schema. Other cores do not get them offered and keep a hand-written mask as is.
+  static readonly editorFeature: Readonly<Record<string, CoreFeature>> = { xdns: 'xdnsLegacy', xicmp: 'xicmpIps' };
   static readonly noSettingsTypes = new Set([
     'header-dtls',
     'header-srtp',
@@ -679,6 +720,11 @@ export class XrayFinalMaskObject {
     return this;
   };
 
+  static hasEditor(type: string): boolean {
+    const feature = XrayFinalMaskObject.editorFeature[type];
+    return !feature || coreSupports(feature);
+  }
+
   static createSettings(type: string): FinalMaskSettingsType | undefined {
     switch (type) {
       case 'salamander':
@@ -701,6 +747,8 @@ export class XrayFinalMaskObject {
         return new XrayXdnsObject();
       case 'xicmp':
         return new XrayXicmpObject();
+      case 'udphop':
+        return new XrayUdpHopMaskObject();
       default:
         return undefined;
     }
@@ -729,8 +777,11 @@ export class XrayFinalMaskObject {
         return plainToInstance(XrayXdnsObject, data);
       case 'xicmp':
         return plainToInstance(XrayXicmpObject, data);
+      case 'udphop':
+        return plainToInstance(XrayUdpHopMaskObject, data);
       default:
-        return undefined;
+        // realm, filter, xmc and future types: dropping the settings dropped the whole mask on save
+        return data;
     }
   }
 }
@@ -890,9 +941,10 @@ export function extractKcpMaskingForUi(stream: KcpMaskStreamLike): void {
   stream.finalmask!.udp = remaining.length > 0 ? remaining : undefined;
 }
 
+/** finalmask.quicParams.udpHop: where cores 26.3.23 to 26.9.9 read port hopping. The UI edits the `udphop` mask instead. */
 export class XrayQuicParamsUdpHopObject {
   public ports?: string;
-  public interval?: string;
+  public interval?: number | string;
 
   normalize = (): this | undefined => {
     this.ports = !this.ports || this.ports === '' ? undefined : this.ports;
@@ -1022,4 +1074,80 @@ export class XrayStreamHysteriaSettingsObject implements ITransportNetwork {
 
     return isObjectEmpty(this) ? undefined : this;
   };
+}
+
+export const isUdpHopMask = (mask: XrayFinalMaskObject): boolean => mask.type === 'udphop';
+
+interface UdpHopStreamLike {
+  network?: string;
+  hysteriaSettings?: XrayStreamHysteriaSettingsObject;
+  finalmask?: XrayFinalMaskSettingsObject;
+}
+
+interface LegacyUdpHop {
+  port?: unknown;
+  ports?: unknown;
+  interval?: number | string;
+}
+
+const legacyHopPorts = (hop?: LegacyUdpHop): string => String(hop?.ports ?? hop?.port ?? '').trim();
+
+/**
+ * Folds the port hopping of cores before 26.9.9 into a `udphop` mask, the one form the UI edits:
+ * hysteriaSettings.udphop {port, interval} (before 26.3.23) and finalmask.quicParams.udpHop {ports, interval}
+ * (26.3.23 to 26.9.9). Core 26.9.9 dropped both keys without an error, so hopping silently stopped.
+ *
+ * Outbounds only: a server refuses to start with the mask ("udphop: client only").
+ * migrateUdpHopForSerialization writes the old form back for older cores.
+ */
+export function migrateUdpHopToMask(stream: UdpHopStreamLike): void {
+  if (stream.network !== 'hysteria') return;
+  const fromHysteria = stream.hysteriaSettings?.udphop as LegacyUdpHop | undefined;
+  const fromQuic = stream.finalmask?.quicParams?.udpHop as LegacyUdpHop | undefined;
+  if (stream.hysteriaSettings) delete stream.hysteriaSettings.udphop;
+  if (stream.finalmask?.quicParams) delete stream.finalmask.quicParams.udpHop;
+  if (stream.finalmask?.udp?.some(isUdpHopMask)) return;
+
+  // quicParams first: the cores that read it ignore hysteriaSettings.udphop.
+  // Without ports the old form never hopped, while the mask would still hop the local port.
+  const legacy = [fromQuic, fromHysteria].find((hop) => legacyHopPorts(hop) !== '');
+  if (!legacy) return;
+
+  const settings = new XrayUdpHopMaskObject();
+  settings.remotePorts = legacyHopPorts(legacy);
+  settings.interval = legacy.interval;
+  const mask = new XrayFinalMaskObject();
+  mask.type = 'udphop';
+  mask.settings = settings;
+  stream.finalmask ??= new XrayFinalMaskSettingsObject();
+  stream.finalmask.udp = [...(stream.finalmask.udp ?? []), mask];
+}
+
+/**
+ * Writes port hopping where the configured core reads it. Cores before 26.9.9 do not know the `udphop` mask and
+ * refuse to start with it, so they get the old {ports, interval} object, which has no `mode` and no `remoteIPs`.
+ */
+export function migrateUdpHopForSerialization(stream: UdpHopStreamLike): void {
+  if (stream.network !== 'hysteria') return;
+  const udp = stream.finalmask?.udp ?? [];
+  const hops = udp.filter(isUdpHopMask);
+  const others = udp.filter((mask) => !isUdpHopMask(mask));
+
+  if (coreSupports('udphopMask')) {
+    if (stream.hysteriaSettings) delete stream.hysteriaSettings.udphop;
+    if (stream.finalmask?.quicParams) delete stream.finalmask.quicParams.udpHop;
+    // the outermost layer, which these cores expect last
+    if (hops.length > 0) stream.finalmask!.udp = [...others, ...hops];
+    return;
+  }
+
+  if (hops.length === 0) return;
+  stream.finalmask!.udp = others;
+  const hop = plainToInstance(XrayUdpHopMaskObject, hops[0].settings ?? {}).normalize();
+  if (coreSupports('quicParamsUdpHop')) {
+    const quicParams = (stream.finalmask!.quicParams ??= new XrayQuicParamsObject());
+    quicParams.udpHop = Object.assign(new XrayQuicParamsUdpHopObject(), { ports: hop.remotePorts, interval: hop.interval });
+  } else if (stream.hysteriaSettings) {
+    stream.hysteriaSettings.udphop = Object.assign(new XrayUdpHopObject(), { port: hop.remotePorts, interval: hop.interval });
+  }
 }

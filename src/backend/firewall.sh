@@ -400,6 +400,22 @@ configure_firewall_rules() {
     log_ok "XRAYUI firewall rules applied successfully."
 }
 
+# Firmware Parental Control and Network Services Filter only add rules to
+# filter:FORWARD. Traffic sent to a dokodemo-door inbound (TPROXY/REDIRECT)
+# is delivered to Xray locally and never passes FORWARD, so those rules
+# silently stop applying to it.
+warn_firmware_filters_bypassed() {
+    local pc_all
+    pc_all=$(nvram get MULTIFILTER_ALL 2>/dev/null)
+    if [ -n "$pc_all" ] && [ "$pc_all" != "0" ] &&
+        nvram get MULTIFILTER_ENABLE 2>/dev/null | tr '>' '\n' | grep -qx '[12]'; then
+        log_warn "Firmware Parental Control does not apply to devices whose traffic goes through Xray: its rules are in the FORWARD chain, which redirected traffic never passes. Add a Bypass policy for those devices, or block them from the firewall_after_start hook."
+    fi
+    if [ "$(nvram get fw_lw_enable_x 2>/dev/null)" = "1" ]; then
+        log_warn "Firmware Network Services Filter does not apply to traffic that goes through Xray: its rules are in the FORWARD chain, which redirected traffic never passes."
+    fi
+}
+
 configure_inbounds() {
     log_info "Scanning for all dokodemo-door inbounds..."
     # Get all dokodemo-door inbounds in compact JSON format.
@@ -412,6 +428,8 @@ configure_inbounds() {
       )
   ' "$XRAY_CONFIG_FILE"
     )
+
+    [ -n "$dokodemo_inbounds" ] && warn_firmware_filters_bypassed
 
     # Split into two groups based on the tproxy flag.
     local direct_inbounds tproxy_inbounds

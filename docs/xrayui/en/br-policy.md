@@ -90,3 +90,22 @@ Below is a table arranged from the simplest configuration (only setting a mode) 
 | 6   | redirect + MAC         | mode: redirect, mac=AA:BB...        | All traffic for that device is `redirected` (no excluded ports). Other devices are unaffected.  |
 | 7   | redirect + MAC + ports | mode: redirect, mac=..., ports=5060 | For that device: traffic on port 5060 bypasses Xray; all other traffic is `redirected`.         |
 | 8   | bypass + MAC + ports   | mode: bypass, mac=..., ports=5060   | For that device: traffic on port 5060 is redirected to Xray; all other traffic `bypasses` Xray. |
+
+## Parental Control and Network Services Filter
+
+The firmware's **Parental Control** (time scheduling and blocking) and **Network Services Filter** only add rules to the iptables `FORWARD` chain. Traffic that XRAYUI redirects to Xray never passes `FORWARD`: it is delivered to Xray on the router, and Xray then opens its own connection from the router. As a result, those firmware rules **do not apply** to any device whose traffic goes through Xray. XRAYUI writes a warning to the system log when either feature is enabled.
+
+There are two ways to keep a schedule working:
+
+- **Leave the device out of Xray.** Add a `bypass` policy with the device's MAC address and no ports (row 5 in the table above). Its traffic goes through `FORWARD` again and the firmware schedule applies, but the device is no longer proxied.
+- **Keep the device proxied and block it yourself** from the **After firewall start** hook (**General Options** → **Hooks**). The rule has to be in `PREROUTING`, because that is where XRAYUI takes the traffic. For example, to cut internet access for one device from 22:00 to 07:00 (router time) while keeping access to the router and the local network:
+
+```sh
+MAC="AA:BB:CC:DD:EE:FF"
+LAN="192.168.50.0/24"
+RULE="-i br0 -m mac --mac-source $MAC ! -d $LAN -m addrtype ! --dst-type BROADCAST -m time --timestart 22:00 --timestop 07:00 --kerneltz -j DROP"
+iptables -t mangle -C PREROUTING $RULE 2>/dev/null || iptables -t mangle -I PREROUTING 1 $RULE
+```
+
+> [!note]
+> Clients of the router's VPN server (WireGuard, IPsec) have no MAC address. Match them by interface and address instead, for example `-i wgs1 -s 10.6.0.2`.
